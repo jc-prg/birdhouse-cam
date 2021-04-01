@@ -4,13 +4,18 @@ a:visited { color : white; }
 a:hover   { color : yellow; }
 body      { background-color : black; color : white; }
 
-.livestream_main {
-    width : 98%;
-    max-width        : 90vw;
-    max-height       : 90vh;
-    border:1px solid white;
+.livestream_main_container {
+    width        : 100%;
+    height       : 100%;
     }
 
+.livestream_main {
+    max-width        : 95vw;
+    max-height       : 95vh;
+    transform: scale(0.98);
+    border:1px solid white;
+    }
+    
 .livestream_2nd {
     width : 25%;
     max-width        : 25vw;
@@ -153,9 +158,9 @@ body      { background-color : black; color : white; }
     text-align       : center;
   }
 #overlay_image {
-    width            : 98%;
-    max-width        : 100vw;
-    max-height       : 100vh;
+    max-width        : 95vw;
+    max-height       : 95vh;
+    transform: scale(0.98);
     margin           : auto;
     background-color : white;
     border           : 5px solid white;
