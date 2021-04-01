@@ -6,7 +6,7 @@ body      { background-color : black; color : white; }
 
 .livestream_main {
     width : 98%;
-    max-width        : 98vh;
+    max-width        : 90vh;
     max-height       : 90vh;
     border:1px solid white;
     }
@@ -151,6 +151,7 @@ body      { background-color : black; color : white; }
     text-align       : center;
   }
 #overlay_image {
+    width            : 98%;
     max-width        : 100vh;
     max-height       : 100vh;
     margin           : auto;
