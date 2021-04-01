@@ -26,7 +26,7 @@ body      { background-color : black; color : white; }
     max-height       : 25vh;
     transform: scale(1.0);
     border:1px solid white;
-    }
+}
 
 .image_container { 
     padding : 2px; 
