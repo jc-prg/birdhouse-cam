@@ -491,11 +491,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            for directory in dir_list:
 
               if os.path.isfile(config.file(config="backup",date=directory)):
-                 file_data       = config.read(config="backup", date=directory)
-                 date            = file_data["info"]["date"]
-                 count           = file_data["info"]["count"]
-                 dir_size_cam    = 0
-                 dir_count_cam   = 0
+                 file_data        = config.read(config="backup", date=directory)
+                 date             = file_data["info"]["date"]
+                 count            = file_data["info"]["count"]
+                 dir_size_cam     = 0
+                 dir_count_cam    = 0
+                 dir_count_delete = 0
 
                  if imageTitle in file_data["files"]:
                     image = os.path.join(directory, file_data["files"][imageTitle]["lowres"])
@@ -511,15 +512,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         if "hires" in file_info:
                            hires_file = os.path.join(config.directory(config="backup"), directory, file_info["hires"])
                            if os.path.isfile(hires_file): dir_size_cam  += os.path.getsize(hires_file)
+                      if "delete" in file_info and int(file_info["delete"]) = 1:
+                        dir_count_delete += 1
                       dir_count_cam += 1
 
                  dir_size        = round(file_data["info"]["size"]/1024/1024,1)
                  dir_size_cam    = round(dir_size_cam/1024/1024,1)
                  dir_total_size += dir_size
                  files_total    += count
-
-                 if dir_count_cam > 0:  html  += self.printImageContainer(description="<b>"+date+"</b><br/>"+str(dir_count_cam)+" / "+str(dir_size_cam)+" MB", lowres=image, hires="/backup/"+directory+"/list_short.html", window="self") + "\n"
-                 else:                  html  += self.printImageContainer(description="<b>"+date+"</b><br/>Leer für "+which_cam, lowres="EMPTY") + "\n"
+                 
+                 if dir_count_delete > 0: delete_info = "<br/>" + str(dir_count_delete) + " zum L&ouml;schen markiert"
+                 else:                    delete_info = ""
+                 if dir_count_cam > 0:    html  += self.printImageContainer(description="<b>"+date+"</b><br/>"+str(dir_count_cam)+" / "+str(dir_size_cam)+" MB" + delete_info, lowres=image, hires="/backup/"+directory+"/list_short.html?"+which_cam, window="self") + "\n"
+                 else:                    html  += self.printImageContainer(description="<b>"+date+"</b><br/>Leer für "+which_cam, lowres="EMPTY") + "\n"
 
               ### >>> should not be necesarry any more ...
               else:
