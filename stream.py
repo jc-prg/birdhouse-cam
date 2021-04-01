@@ -212,18 +212,23 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             count += 1
             html  += "<a href='"+myPages[link][1]+cam+"'>"+myPages[link][0]+"</a>"
             if count < len(link_list): html += " / "
-            
-        if current != "" and len(camera.keys()) > 1:
-          selected    = 0
-          count       = 0
-          cameraKeys  = list(camera.keys())
-          for name in cameraKeys:
-            if cam == name:
-              selected = count
-              break
-            count += 1
-          selected += 1
-          if selected >= len(cameraKeys): selected = 0
+ 
+        cameraKeys = list(camera.keys())       
+        selected   = cameraKeys.index(cam) + 1
+        if selected - 1 > len(cameraKeys): selected = 0
+        
+#        if current != "" and len(camera.keys()) > 1:
+#          selected    = 0
+#          count       = 0
+#          cameraKeys  = list(camera.keys())
+#          for name in cameraKeys:
+#            if cam == name:
+#              selected = count
+#              break
+#            count += 1
+#          selected += 1
+#          if selected >= len(cameraKeys): selected = 0
+
           html  += " / <a href='"+myPages[current][1]+"?"+cameraKeys[selected]+"'>"+cameraKeys[selected]+"</a>"
           
         return html
