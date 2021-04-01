@@ -213,7 +213,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if current != "" and len(self.active_cams) > 1:
           selected   = self.active_cams.index(cam) + 1
           if selected >= len(self.active_cams): selected = 0
-          html  += " / <a href='"+myPages[current][1]+"?"+cameraKeys[selected]+"'>"+cameraKeys[selected].upper()+"</a>"
+          html  += " / <a href='"+myPages[current][1]+"?"+self.active_cams[selected]+"'>"+self.active_cams[selected].upper()+"</a>"
           
         return html
 
