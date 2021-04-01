@@ -216,7 +216,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if current != "" and len(camera.keys()) > 1:
           selected    = 0
           count       = 0
-          cameraKeys  = camera.keys()
+          cameraKeys  = list(camera.keys())
           for name in cameraKeys:
             if cam == name:
               selected = count
