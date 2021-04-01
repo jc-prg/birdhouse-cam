@@ -58,6 +58,7 @@ body      { background-color : black; color : white; }
 .camera_info {
     padding:2px;
     float:left;
+    text-align : center;
     width:100%
 }
 
@@ -111,4 +112,48 @@ body      { background-color : black; color : white; }
     z-index : 100;
     cursor : pointer;
 }
- 
+.overlay {
+    position : fixed;
+    display  : none;
+    top      : 0;
+    left     : 0;
+    height   : 100%;
+    width    : 100%;
+    z-index  : 101;
+    background-color : black;
+    opacity          : 80%;
+}
+.overlay_content {
+    position : fixed;
+    display  : none;
+    top      : 0;
+    left     : 0;
+    height   : 100%;
+    width    : 100%;
+    z-index  : 102;
+}
+#overlay_close {
+    position : absolute;
+    top      : 20px;
+    right    : 20px;
+    z-index  : 103;
+    cursor   : pointer;
+}
+#overlay_image_container {
+    display          : grid;
+    opacity          : 100%;
+    position         : absolute;
+    margin           : auto;
+    top              : 50%;
+    left             : 50%;
+    -ms-transform    : translate(-50%,-50%);
+    transform        : translate(-50%,-50%);
+    text-align       : center;
+  }
+#overlay_image {
+    max-width        : 100vh;
+    max-height       : 100vh;
+    margin           : auto;
+    background-color : white;
+    border           : 5px solid white;
+  }

@@ -12,12 +12,6 @@ import json, codecs
 import numpy as np
 import signal, sys, string
 
-import picamera
-import imutils, cv2
-from imutils.video import WebcamVideoStream
-from imutils.video import FPS
-from skimage.metrics import structural_similarity as ssim
-
 import threading
 import socketserver
 from threading       import Condition
@@ -187,7 +181,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
        return "<div class='trash'><div id='d_"+file+"_value' style='display:none;'>"+value+"</div><img class='trash_img' id='d_"+file+"' src='" + trash + "' onclick='"+onclick+"'/></div>\n"
 
 
-    def printImageContainer(self, description, lowres, hires='',star='', trash='', window='blank', lazzy=''):
+    def printImageContainer(self, description, lowres, hires='', javascript='' ,star='', trash='', window='blank', lazzy=''):
         html = "<div class='image_container'>"
         if star  != '':      html += star
         else:                html += "<div class='star'></div>"
@@ -198,8 +192,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if lowres == "EMPTY":
           html += "<div class='thumbnail_container'><div class='thumbnail' style='background-color:#222222;'><br/><br/><small>"+description+"</small></div></div>"
         else:
-          if hires != '':      html += "<div class='thumbnail_container'><a href='"+hires+"' target='_"+window+"'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail'/></a><br/><small>"+description+"</small></div>"
-          else:                html += "<div class='thumbnail_container'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail'/><br/><small>"+description+"</small></div>"
+          if hires != '':        html += "<div class='thumbnail_container'><a href='"+hires+"' target='_"+window+"'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail'/></a><br/><small>"+description+"</small></div>"
+          elif javascript != '': html += "<div class='thumbnail_container'><div onclick='javascript:"+javascript+"' style='cursor:pointer;'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail'/></div><br/><small>"+description+"</small></div>"
+          else:                  html += "<div class='thumbnail_container'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail'/><br/><small>"+description+"</small></div>"
         html += "</div>"
         return html
 
@@ -215,7 +210,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             html  += "<a href='"+myPages[link][1]+cam_link+"'>"+myPages[link][0]+"</a>"
             if count < len(link_list): html += " / "
  
-        if current != "" and len(camera.keys()) > 1:
+        count = 0;
+        for cam in camera: 
+          if camera[cam].active: count += 1
+        if current != "" and count > 1:
           cameraKeys = list(camera.keys())       
           selected   = cameraKeys.index(cam) + 1
           if selected >= len(cameraKeys): selected = 0
@@ -320,6 +318,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         else:
            which_cam = "cam1"
 
+        if camera[which_cam].active == False:
+           for cam in camera: 
+             if camera[cam].active: 
+               config.html_replace["active_cam"] = cam
+               which_cam = cam
+               break
+
         # index with embedded live stream
         if   self.path == '/': self.redirect("/index.html")
         elif self.path == '/index.html':
@@ -331,6 +336,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                index_file = "index.html"
 
+            config.html_replace["active_cam"] = which_cam
             config.html_replace["links"] = self.printLinks(link_list=("today","backup","favorit","cam_info"),cam=which_cam)
             self.streamFile(type='text/html', content=read_html('html',index_file), no_cache=True)
 
@@ -362,6 +368,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                   favorits[new]["source"] = ("backup",directory)
                   favorits[new]["date"]   = directory[6:8]+"."+directory[4:6]+"."+directory[0:4]
                   favorits[new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+                  favorits[new]["date2"]  = favorits[new]["date"]
 
             favorit_sort = list(reversed(sorted(favorits.keys())))
             for stamp in favorit_sort:
@@ -372,20 +379,22 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
               entry = favorits[stamp]
               if entry["source"][0] == "backup":
-                 dir            = os.path.join(entry["source"][0],entry["source"][1])
-                 index          = "/backup/"+entry["source"][1]+"/"
-                 entry["date"]  = "<a href='/backup/"+entry["source"][1]+"/list_short.html'>"+entry["date"]+"</a>"
+                 dir                 = os.path.join(entry["source"][0],entry["source"][1])
+                 index               = "/backup/"+entry["source"][1]+"/"
+                 entry["date_link"]  = "<a href='/backup/"+entry["source"][1]+"/list_short.html'>"+entry["date"]+"</a>"
               else:
                  dir   = ""
                  index = "/current/"
-                 entry["date"]  = "<a href='/list_short.html'>"+entry["date"]+"</a>"
+                 entry["date_link"]  = "<a href='/list_short.html'>"+entry["date"]+"</a>"
 
               if "favorit" in entry:                     star  = self.printStar(file=index+stamp2, favorit=entry["favorit"], check_ip=self.address_string())
               else:                                      star  = self.printStar(file=index+stamp2, favorit=0, check_ip=self.address_string())
               if "to_be_deleted" in entry:               trash = self.printTrash(file=index+stamp, delete=entry["to_be_deleted"], check_ip=self.address_string())
               else:                                      trash = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string())
 
-              html += self.printImageContainer(description="<b>"+entry["date"]+"</b><br/>"+entry["time"], lowres=os.path.join(dir,entry["lowres"]), hires=os.path.join(dir,entry["hires"]), star=star, window="blank")
+              description1 = "<b>"+entry["date_link"]+"</b><br/>"+entry["time"]
+              description2 = "<b>"+entry["date"]+"</b><br/>"+entry["time"]
+              html += self.printImageContainer(description=description1, lowres=os.path.join(dir,entry["lowres"]), javascript="imageOverlay(\""+os.path.join(dir,favorits[stamp]["hires"])+"\",\""+description2+"\");", star=star, window="blank")
 
             config.html_replace["file_list"] = html
             self.streamFile(type='text/html',content=read_html('html','list.html'), no_cache=True)
@@ -417,7 +426,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                files    = config.read(config="images")
                time_now = datetime.now().strftime('%H%M%S')
                index    = "/current/"
-               html     = self.printImageContainer(description="Live-Stream", lowres="stream.mjpg?"+which_cam, hires="/index.html",star="",window="self")
+               html     = self.printImageContainer(description="Live-Stream", lowres="stream.mjpg?"+which_cam, hires="/index.html?"+which_cam, star="", window="self")
+#               html     = self.printImageContainer(description="Live-Stream", lowres="stream.mjpg?"+which_cam, javascript="imageOverlay();", star="", window="self")               
 
                config.html_replace["subtitle"]  = myPages["today"][0] + " (" + camera[which_cam].name + ")"
                config.html_replace["links"]     = self.printLinks(link_list=("live","today_complete","backup","favorit"), current='today', cam=which_cam)
@@ -440,8 +450,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                        else:                                           star   = self.printStar(file=index+stamp, favorit=0, check_ip=self.address_string())
                        if "to_be_deleted" in files[stamp]:             trash  = self.printTrash(file=index+stamp, delete=files[stamp]["to_be_deleted"], check_ip=self.address_string())
                        else:                                           trash  = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string())
-                       if os.path.isfile(os.path.join(path,file_big)): html += self.printImageContainer(description=time+" ("+str(files[stamp]["similarity"])+"%)", lowres=file, hires=file_big, star=star, trash=trash)
-                       else:                                           html += self.printImageContainer(description=time+" ("+str(files[stamp]["similarity"])+"%)", lowres=file, hires="",       star=star, trash=trash)
+                       description = time+" ("+str(files[stamp]["similarity"])+"%)";
+                       if os.path.isfile(os.path.join(path,file_big)): html += self.printImageContainer(description=description, lowres=file, javascript="imageOverlay(\""+file_big+"\",\""+description+"\");", star=star, trash=trash)
+                       else:                                           html += self.printImageContainer(description=description, lowres=file, hires="",       star=star, trash=trash)
 
                # Yesterday
                html_yesterday = ""
@@ -458,7 +469,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                      else:                                           star  = self.printStar(file=index+stamp, favorit=0, check_ip=self.address_string())
                      if "to_be_deleted" in files[stamp]:             trash = self.printTrash(file=index+stamp, delete=files[stamp]["to_be_deleted"], check_ip=self.address_string())
                      else:                                           trash = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string())
-                     if os.path.isfile(os.path.join(path,file_big)): html_yesterday += self.printImageContainer(description=time+" ("+str(files[stamp]["similarity"])+"%)", lowres=file, hires=file_big, star=star, trash=trash)
+                     description = time+" ("+str(files[stamp]["similarity"])+"%)"
+                     if os.path.isfile(os.path.join(path,file_big)): html_yesterday += self.printImageContainer(description=description, lowres=file, javascript="imageOverlay(\""+file_big+"\",\""+description+"\");", star=star, trash=trash)
                      else:                                           html_yesterday += self.printImageContainer(description=time+" ("+str(files[stamp]["similarity"])+"%)", lowres=file, hires="",       star=star, trash=trash)
 
                if html_yesterday != "":
@@ -701,12 +713,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               info = camera[cam].param
               html += "<div class='camera_info'>"
               html += "<div class='camera_info_image'>"
-              html   += self.printImageContainer(description=cam, lowres="/detection/stream.mjpg?"+cam, hires="/index.html?"+cam, star='', window='self') + "<br/>"
+
+              description = cam+": "+info["name"]
+              if camera[cam].active:  html   += "<center>"+self.printImageContainer(description=cam, lowres="/detection/stream.mjpg?"+cam, javascript="imageOverlay(\""+"/detection/stream.mjpg?"+cam+"\",\""+description+"\");", star='', window='self') + "<br/></center>"
+              else:                   html   += "<i>Camera "+cam.upper()+"<br/>not available<br/>at the moment.</i>"
               html += "</div>"
               html += "<div class='camera_info_text'><big><b>"+cam+": "+info["name"]+"</b></big>"
               html   += "<ul>"
               html   += "<li>Type: "+info["type"] + "</li>"
-              html   += "<li>Active: "+str(info["active"]) + "</li>"
+              html   += "<li>Active: "+str(camera[cam].active) + "</li>"
               html   += "<li>Record: "+str(info["record"]) + "</li>"
               html   += "<li>Crop: "+str(info["image"]["crop"]) + "</li>"
               html   += "<li>Detection (red rectangle): <ul>"
