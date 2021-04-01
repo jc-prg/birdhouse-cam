@@ -16,10 +16,15 @@ body      { background-color : black; color : white; }
     border:1px solid white;
     }
     
+.livestream_2nd_container {
+    width        : 25%;
+    height       : 25%;
+}
+
 .livestream_2nd {
-    width : 25%;
     max-width        : 25vw;
     max-height       : 25vh;
+    transform: scale(0.25);
     border:1px solid white;
     }
 
