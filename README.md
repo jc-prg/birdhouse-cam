@@ -16,3 +16,10 @@ Raspberry Pi project to observe our birdhouse with multiple webcams (live stream
 * Python 3, PiCamera, CV2, imutils, JSON
 * HTML, CSS, JavaScript
 
+## Impressions
+![Screenshot 01](info/screenshot_06.png)
+![Screenshot 02](info/screenshot_07.png)
+![Screenshot 03](info/screenshot_08.png)
+![Screenshot 04](info/screenshot_09.png)
+![Screenshot 05](info/screenshot_10.png)
+
