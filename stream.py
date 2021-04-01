@@ -681,7 +681,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                           files_part[stamp] = files_all[stamp]
 
               if len(files_part) > 0:
-                 html += self.printImageGroup(title="Bilder "+hour+":00", id=hour_min, image_group=files_part, index=index, diff=count_diff, cam=which_cam)
+                 html += self.printImageGroup(title="Bilder "+hour+":00", id=hour_min, image_group=files_part, index=index, diff=count_diff, check_ip=self.address_string(), cam=which_cam)
 
            # Yesterday
            files_part = {}
@@ -700,7 +700,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     files_part[stamp] = files_all[stamp]
 
               if len(files_part) > 0:
-                 html_yesterday += self.printImageGroup(title="Bilder "+hour+":00", id=hour_min, image_group=files_part, index=index, diff=count_diff, cam=which_cam)
+                 html_yesterday += self.printImageGroup(title="Bilder "+hour+":00", id=hour_min, image_group=files_part, index=index, diff=count_diff, check_ip=self.address_string(), cam=which_cam)
 
            if html_yesterday != "":
               html += self.printYesterday()
