@@ -340,7 +340,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             html                             = ""
             favorits                         = {}
             config.html_replace["subtitle"]  = myPages["favorit"][0] + " (" + camera[which_cam].name + ")"
-            config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup"), current="favorit", cam=which_cam)
+            config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup"), cam=which_cam)
 
             files = config.cache(config="images")
             for stamp in files:
@@ -410,7 +410,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                time_now   = "000000"
 
                config.html_replace["subtitle"]  = myPages["backup"][0] + " " + files_data["info"]["date"] + " (" + camera[which_cam].name + ", " + str(files_data["info"]["count"]) + " Bilder)"
-               config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), cam=which_cam)
+               config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), current='backup', cam=which_cam)
 
            elif os.path.isfile(config.file(config="images")):
                path     = config.directory(config="images")
@@ -420,7 +420,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                html     = self.printImageContainer(description="Live-Stream", lowres="stream.mjpg?"+which_cam, hires="/index.html",star="",window="self")
 
                config.html_replace["subtitle"]  = myPages["today"][0] + " (" + camera[which_cam].name + ")"
-               config.html_replace["links"]     = self.printLinks(link_list=("live","today_complete","backup","favorit"), cam=which_cam)
+               config.html_replace["links"]     = self.printLinks(link_list=("live","today_complete","backup","favorit"), current='today', cam=which_cam)
 
            if files != {}:
                stamps   = list(reversed(sorted(files.keys())))
