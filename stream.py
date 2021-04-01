@@ -181,7 +181,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
        return "<div class='trash'><div id='d_"+file+"_value' style='display:none;'>"+value+"</div><img class='trash_img' id='d_"+file+"' src='" + trash + "' onclick='"+onclick+"'/></div>\n"
 
 
-    def printImageContainer(self, description, lowres, hires='', javascript='' ,star='', trash='', window='blank', lazzy=''):
+    def printImageContainer(self, description, lowres, hires='', javascript='' ,star='', trash='', window='blank', lazzy='', border='black'):
         html = "<div class='image_container'>"
         if star  != '':      html += star
         else:                html += "<div class='star'></div>"
@@ -192,9 +192,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if lowres == "EMPTY":
           html += "<div class='thumbnail_container'><div class='thumbnail' style='background-color:#222222;'><br/><br/><small>"+description+"</small></div></div>"
         else:
-          if hires != '':        html += "<div class='thumbnail_container'><a href='"+hires+"' target='_"+window+"'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail'/></a><br/><small>"+description+"</small></div>"
-          elif javascript != '': html += "<div class='thumbnail_container'><div onclick='javascript:"+javascript+"' style='cursor:pointer;'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail'/></div><br/><small>"+description+"</small></div>"
-          else:                  html += "<div class='thumbnail_container'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail'/><br/><small>"+description+"</small></div>"
+          if hires != '':        html += "<div class='thumbnail_container'><a href='"+hires+"' target='_"+window+"'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail' style='border:1px solid "+border+";'/></a><br/><small>"+description+"</small></div>"
+          elif javascript != '': html += "<div class='thumbnail_container'><div onclick='javascript:"+javascript+"' style='cursor:pointer;'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail' style='border:1px solid "+border+";'/></div><br/><small>"+description+"</small></div>"
+          else:                  html += "<div class='thumbnail_container'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail' style='border:1px solid "+border+";'/><br/><small>"+description+"</small></div>"
         html += "</div>"
         return html
 
@@ -715,7 +715,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               html += "<div class='camera_info_image'>"
 
               description = cam+": "+info["name"]
-              if camera[cam].active:  html   += "<center>"+self.printImageContainer(description=cam, lowres="/detection/stream.mjpg?"+cam, javascript="imageOverlay(\""+"/detection/stream.mjpg?"+cam+"\",\""+description+"\");", star='', window='self') + "<br/></center>"
+              if camera[cam].active:  html   += "<center>"+self.printImageContainer(description=cam, lowres="/detection/stream.mjpg?"+cam, javascript="imageOverlay(\""+"/detection/stream.mjpg?"+cam+"\",\""+description+"\");", star='', window='self', border='white') + "<br/></center>"
               else:                   html   += "<i>Camera "+cam.upper()+"<br/>not available<br/>at the moment.</i>"
               html += "</div>"
               html += "<div class='camera_info_text'><big><b>"+cam+": "+info["name"]+"</b></big>"
