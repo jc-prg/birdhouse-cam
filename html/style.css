@@ -1,0 +1,114 @@
+div       { font-size : 13px; }
+a:link    { color : yellow; }
+a:visited { color : white; }
+a:hover   { color : yellow; }
+body      { background-color : black; color : white; }
+
+.livestream_main {
+    width : 98%;
+    border:1px solid white;
+    max-height:1080px;
+    max-width:900px
+    }
+
+.livestream_2nd {
+    width : 25%;
+    border:1px solid white;
+    }
+
+.image_container { 
+    padding : 2px; 
+    float   : left; 
+    valign  : left;
+    height : 180px;
+}
+
+.image_container_big { 
+    padding : 2px; 
+    float   : left; 
+    valign  : left;
+    height : 220px;
+}
+
+.thumbnail { 
+    width  : 115px;
+    //height : 138px;
+    margin-bottom: 5px;
+}
+
+.thumbnail_big {
+    width  : 162px;
+    //height : 194px;
+    margin-bottom: 5px;
+}
+
+.thumbnail_container { 
+    position : relative; 
+    top : -40px; 
+    left : 0px;
+    z-index : 90;
+}
+
+.separator {
+    padding:2px;
+    float:left;
+    width:100%
+}
+
+.camera_info {
+    padding:2px;
+    float:left;
+    width:100%
+}
+
+.camera_info_image { 
+    float : left;
+    margin: 5px;
+    width : 30%;
+    min-width: 120px;
+}
+
+.camera_info_text { 
+    float : left;
+    margin: 5px;
+    text-align : left;
+    width : 50%;
+}
+
+.trash { 
+    position : relative;
+    top : 6px; 
+    left : -45px; 
+    width : 20px;
+    height : 20px;
+    z-index : 100;
+    cursor : pointer;
+}
+.trash_img { 
+    width : 20px;
+    height : 20px;
+}
+.star { 
+    position : relative;
+    top : 3px; 
+    left : -45px; 
+    width : 20px;
+    height : 20px;
+    z-index : 100;
+    cursor : pointer;
+}
+.star_img { 
+    width : 20px;
+    height : 20px;
+}
+
+.star_big { 
+    position : relative;
+    top : 0px; 
+    left : -70px; 
+    width : 20px;
+    height : 20px;
+    z-index : 100;
+    cursor : pointer;
+}
+ 
