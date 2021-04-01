@@ -6,10 +6,11 @@ import os
 
 myParameters = {
   "title"             : "Unser Nistkasten :-)",
-  "path"              : "/projects/birdhouse/",  #os.path.dirname(__file__),
+  "path"              : os.path.dirname(os.path.realpath(__file__)),
+  "port"              : 8000,
   "preview_backup"    : "070000",
   "diff_threshold"    : 95,
-  "ip_deny_favorit"   : "192.168.1.31",
+  "ip_deny_favorit"   : "192.168.1.31",    # put in the IP address of your proxy or router if you don't want to allow edits from outside
   "backup_time"       : "2100",
 
   "cameras"  : {

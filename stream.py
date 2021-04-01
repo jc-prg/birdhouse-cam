@@ -799,7 +799,7 @@ if __name__ == "__main__":
 #----------------------------------------------------
 
     try:
-        address = ('', 8000)
+        address = ('', config.param["port"])
         server  = StreamingServer(address, StreamingHandler)
         logging.info("Starting WebServer ...")
         server.serve_forever()
