@@ -12,12 +12,6 @@ import json, codecs
 import numpy as np
 import signal, sys, string
 
-import picamera
-import imutils, cv2
-from imutils.video import WebcamVideoStream
-from imutils.video import FPS
-from skimage.metrics import structural_similarity as ssim
-
 import threading
 import socketserver
 from threading       import Condition
@@ -106,7 +100,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         '''
         self.send_response(301)
         self.send_header('Location', '/index.html')
-        self.end_headers()
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        self.end_headers()	
 
     def sendError(self):
         '''
@@ -115,7 +112,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_error(404)
         self.end_headers()
 
-    def streamFile(self,type,content):
+    def streamFile(self,type,content,no_cache=False):
         '''
         send file content (HTML, image, ...)
         '''
@@ -123,6 +120,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            self.send_response(200)
            self.send_header('Content-Type', type)
            self.send_header('Content-Length', len(content))
+           if no_cache:
+             self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+             self.send_header("Pragma", "no-cache")
+             self.send_header("Expires", "0")
            self.end_headers()
            self.wfile.write(content)
         else:
@@ -180,7 +181,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
        return "<div class='trash'><div id='d_"+file+"_value' style='display:none;'>"+value+"</div><img class='trash_img' id='d_"+file+"' src='" + trash + "' onclick='"+onclick+"'/></div>\n"
 
 
-    def printImageContainer(self, description, lowres, hires='',star='', trash='', window='blank', lazzy=''):
+    def printImageContainer(self, description, lowres, hires='', javascript='' ,star='', trash='', window='blank', lazzy='', border='black'):
         html = "<div class='image_container'>"
         if star  != '':      html += star
         else:                html += "<div class='star'></div>"
@@ -191,20 +192,29 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if lowres == "EMPTY":
           html += "<div class='thumbnail_container'><div class='thumbnail' style='background-color:#222222;'><br/><br/><small>"+description+"</small></div></div>"
         else:
-          if hires != '':      html += "<div class='thumbnail_container'><a href='"+hires+"' target='_"+window+"'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail'/></a><br/><small>"+description+"</small></div>"
-          else:                html += "<div class='thumbnail_container'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail'/><br/><small>"+description+"</small></div>"
+          if hires != '':        html += "<div class='thumbnail_container'><a href='"+hires+"' target='_"+window+"'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail' style='border:1px solid "+border+";'/></a><br/><small>"+description+"</small></div>"
+          elif javascript != '': html += "<div class='thumbnail_container'><div onclick='javascript:"+javascript+"' style='cursor:pointer;'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail' style='border:1px solid "+border+";'/></div><br/><small>"+description+"</small></div>"
+          else:                  html += "<div class='thumbnail_container'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail' style='border:1px solid "+border+";'/><br/><small>"+description+"</small></div>"
         html += "</div>"
         return html
 
 
-    def printLinks(self, link_list, camera=""):
+    def printLinks(self, link_list, current="", cam=""):
         html  = ""
         count = 0
-        if camera != "": camera = '?' + camera
+        if cam != "": cam_link = '?' + cam
+        else:         cam_link = ""
+        
         for link in link_list:
             count += 1
-            html  += "<a href='"+myPages[link][1]+camera+"'>"+myPages[link][0]+"</a>"
+            html  += "<a href='"+myPages[link][1]+cam_link+"'>"+myPages[link][0]+"</a>"
             if count < len(link_list): html += " / "
+ 
+        if current != "" and len(self.active_cams) > 1:
+          selected   = self.active_cams.index(cam) + 1
+          if selected >= len(self.active_cams): selected = 0
+          html  += " / <a href='"+myPages[current][1]+"?"+self.active_cams[selected]+"'>"+self.active_cams[selected].upper()+"</a>"
+          
         return html
 
 
@@ -254,7 +264,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            config_data = config.read(config="images")
            config_data[param[3]]["favorit"] = param[4]
            config.write(config="images", config_data=config_data)
-           self.streamFile('application/json', json.dumps({ "path" : self.path }).encode(encoding='utf_8'));
+           self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
 
         # set / unset favorit
         elif self.path.startswith("/favorit/backup/"):
@@ -262,7 +272,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            config_data = config.read(config="backup", date=param[3])
            config_data["files"][param[4]]["favorit"] = param[5]
            config.write(config="backup",config_data=config_data, date=param[3])
-           self.streamFile('application/json', json.dumps({ "path" : self.path }).encode(encoding='utf_8'));
+           self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
 
         # set / unset favorit
         if self.path.startswith("/delete/current/"):
@@ -270,7 +280,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            config_data = config.read(config="images")
            config_data[param[3]]["to_be_deleted"] = param[4]
            config.write(config="images", config_data=config_data)
-           self.streamFile('application/json', json.dumps({ "path" : self.path }).encode(encoding='utf_8'));
+           self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
 
         # set / unset favorit
         elif self.path.startswith("/delete/backup/"):
@@ -278,7 +288,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            config_data = config.read(config="backup", date=param[3])
            config_data["files"][param[4]]["to_be_deleted"] = param[5]
            config.write(config="backup",config_data=config_data, date=param[3])
-           self.streamFile('application/json', json.dumps({ "path" : self.path }).encode(encoding='utf_8'));
+           self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
 
         else:
            self.sendError()
@@ -290,6 +300,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         check path and send requested content
         '''
         logging.debug("GET request with '" + self.path + "'.")
+        config.html_replace["title"] = config.param["title"]
 
         # check which camera has bin requested
         if "?" in self.path:
@@ -303,6 +314,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         else:
            which_cam = "cam1"
 
+        self.active_cams = []
+        for key in camera:
+          if camera[key].active: self.active_cams.append(key)
+        if camera[which_cam].active == False:
+          which_cam = active_cams[0]
+        config.html_replace["active_cam"] = which_cam
+
         # index with embedded live stream
         if   self.path == '/': self.redirect("/index.html")
         elif self.path == '/index.html':
@@ -314,8 +332,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                index_file = "index.html"
 
-            config.html_replace["links"] = self.printLinks(("today","backup","favorit","cam_info"),which_cam)
-            self.streamFile('text/html',read_html('html',index_file))
+            config.html_replace["active_cam"] = which_cam
+            config.html_replace["links"] = self.printLinks(link_list=("today","backup","favorit","cam_info"),cam=which_cam)
+            self.streamFile(type='text/html', content=read_html('html',index_file), no_cache=True)
 
         # List favorit images (marked with star)
         elif '/list_star.html' in self.path:
@@ -323,7 +342,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             html                             = ""
             favorits                         = {}
             config.html_replace["subtitle"]  = myPages["favorit"][0] + " (" + camera[which_cam].name + ")"
-            config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup"), camera=which_cam)
+            config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup"), cam=which_cam)
 
             files = config.cache(config="images")
             for stamp in files:
@@ -345,6 +364,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                   favorits[new]["source"] = ("backup",directory)
                   favorits[new]["date"]   = directory[6:8]+"."+directory[4:6]+"."+directory[0:4]
                   favorits[new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+                  favorits[new]["date2"]  = favorits[new]["date"]
 
             favorit_sort = list(reversed(sorted(favorits.keys())))
             for stamp in favorit_sort:
@@ -355,23 +375,25 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
               entry = favorits[stamp]
               if entry["source"][0] == "backup":
-                 dir            = os.path.join(entry["source"][0],entry["source"][1])
-                 index          = "/backup/"+entry["source"][1]+"/"
-                 entry["date"]  = "<a href='/backup/"+entry["source"][1]+"/list_short.html'>"+entry["date"]+"</a>"
+                 dir                 = os.path.join(entry["source"][0],entry["source"][1])
+                 index               = "/backup/"+entry["source"][1]+"/"
+                 entry["date_link"]  = "<a href='/backup/"+entry["source"][1]+"/list_short.html'>"+entry["date"]+"</a>"
               else:
                  dir   = ""
                  index = "/current/"
-                 entry["date"]  = "<a href='/list_short.html'>"+entry["date"]+"</a>"
+                 entry["date_link"]  = "<a href='/list_short.html'>"+entry["date"]+"</a>"
 
               if "favorit" in entry:                     star  = self.printStar(file=index+stamp2, favorit=entry["favorit"], check_ip=self.address_string())
               else:                                      star  = self.printStar(file=index+stamp2, favorit=0, check_ip=self.address_string())
               if "to_be_deleted" in entry:               trash = self.printTrash(file=index+stamp, delete=entry["to_be_deleted"], check_ip=self.address_string())
               else:                                      trash = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string())
 
-              html += self.printImageContainer(description="<b>"+entry["date"]+"</b><br/>"+entry["time"], lowres=os.path.join(dir,entry["lowres"]), hires=os.path.join(dir,entry["hires"]), star=star, window="blank")
+              description1 = "<b>"+entry["date_link"]+"</b><br/>"+entry["time"]
+              description2 = "<b>"+entry["date"]+"</b><br/>"+entry["time"]
+              html += self.printImageContainer(description=description1, lowres=os.path.join(dir,entry["lowres"]), javascript="imageOverlay(\""+os.path.join(dir,favorits[stamp]["hires"])+"\",\""+description2+"\");", star=star, window="blank")
 
             config.html_replace["file_list"] = html
-            self.streamFile('text/html',read_html('html','list.html'))
+            self.streamFile(type='text/html',content=read_html('html','list.html'), no_cache=True)
 
         # List only if threshold ...
         elif '/list_short.html' in self.path:
@@ -393,17 +415,18 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                time_now   = "000000"
 
                config.html_replace["subtitle"]  = myPages["backup"][0] + " " + files_data["info"]["date"] + " (" + camera[which_cam].name + ", " + str(files_data["info"]["count"]) + " Bilder)"
-               config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), camera=which_cam)
+               config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), current='backup', cam=which_cam)
 
            elif os.path.isfile(config.file(config="images")):
                path     = config.directory(config="images")
                files    = config.read(config="images")
                time_now = datetime.now().strftime('%H%M%S')
                index    = "/current/"
-               html     = self.printImageContainer(description="Live-Stream", lowres="stream.mjpg?"+which_cam, hires="/index.html",star="",window="self")
+               html     = self.printImageContainer(description="Live-Stream", lowres="stream.mjpg?"+which_cam, hires="/index.html?"+which_cam, star="", window="self")
+#               html     = self.printImageContainer(description="Live-Stream", lowres="stream.mjpg?"+which_cam, javascript="imageOverlay();", star="", window="self")               
 
                config.html_replace["subtitle"]  = myPages["today"][0] + " (" + camera[which_cam].name + ")"
-               config.html_replace["links"]     = self.printLinks(link_list=("live","today_complete","backup","favorit"), camera=which_cam)
+               config.html_replace["links"]     = self.printLinks(link_list=("live","today_complete","backup","favorit"), current='today', cam=which_cam)
 
            if files != {}:
                stamps   = list(reversed(sorted(files.keys())))
@@ -423,8 +446,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                        else:                                           star   = self.printStar(file=index+stamp, favorit=0, check_ip=self.address_string())
                        if "to_be_deleted" in files[stamp]:             trash  = self.printTrash(file=index+stamp, delete=files[stamp]["to_be_deleted"], check_ip=self.address_string())
                        else:                                           trash  = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string())
-                       if os.path.isfile(os.path.join(path,file_big)): html += self.printImageContainer(description=time+" ("+str(files[stamp]["similarity"])+"%)", lowres=file, hires=file_big, star=star, trash=trash)
-                       else:                                           html += self.printImageContainer(description=time+" ("+str(files[stamp]["similarity"])+"%)", lowres=file, hires="",       star=star, trash=trash)
+                       description = time+" ("+str(files[stamp]["similarity"])+"%)";
+                       if os.path.isfile(os.path.join(path,file_big)): html += self.printImageContainer(description=description, lowres=file, javascript="imageOverlay(\""+file_big+"\",\""+description+"\");", star=star, trash=trash)
+                       else:                                           html += self.printImageContainer(description=description, lowres=file, hires="",       star=star, trash=trash)
 
                # Yesterday
                html_yesterday = ""
@@ -441,7 +465,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                      else:                                           star  = self.printStar(file=index+stamp, favorit=0, check_ip=self.address_string())
                      if "to_be_deleted" in files[stamp]:             trash = self.printTrash(file=index+stamp, delete=files[stamp]["to_be_deleted"], check_ip=self.address_string())
                      else:                                           trash = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string())
-                     if os.path.isfile(os.path.join(path,file_big)): html_yesterday += self.printImageContainer(description=time+" ("+str(files[stamp]["similarity"])+"%)", lowres=file, hires=file_big, star=star, trash=trash)
+                     description = time+" ("+str(files[stamp]["similarity"])+"%)"
+                     if os.path.isfile(os.path.join(path,file_big)): html_yesterday += self.printImageContainer(description=description, lowres=file, javascript="imageOverlay(\""+file_big+"\",\""+description+"\");", star=star, trash=trash)
                      else:                                           html_yesterday += self.printImageContainer(description=time+" ("+str(files[stamp]["similarity"])+"%)", lowres=file, hires="",       star=star, trash=trash)
 
                if html_yesterday != "":
@@ -450,7 +475,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                html += "<div style='padding:2px;float:left;width:100%'><hr/>"+str(count)+" Bilder / &Auml;hnlichkeit &lt; "+str(camera[which_cam].param["similarity"]["threshold"])+"%</div>"
                config.html_replace["file_list"] = html
-               self.streamFile('text/html',read_html('html','list.html'))
+               self.streamFile(type='text/html',content=read_html('html','list.html'), no_cache=True)
 
            else:
              self.redirect("/list_new.html")
@@ -459,7 +484,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path == '/list_backup.html':
 
            config.html_replace["subtitle"] = myPages["backup"][0] + " (" + camera[which_cam].name + ")"
-           config.html_replace["links"]    = self.printLinks(("live","today","today_complete","favorit"), which_cam)
+           config.html_replace["links"]    = self.printLinks(link_list=("live","today","today_complete","favorit"), current="backup", cam=which_cam)
 
            path           = config.directory(config="backup")
            backup_config  = config.files["backup"]
@@ -469,25 +494,26 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            files_total    = 0
            html           = ""
 
-           imageTitle     = config.param["preview_backup"]
+           imageTitle     = str(config.param["preview_backup"]) + str(camera[which_cam].param["image_save"]["seconds"][0])
            imageToday     = config.imageName(type="lowres", timestamp=imageTitle, camera=which_cam)
            image          = os.path.join(config.directory(config="images"), imageToday)
-
+           
            if os.path.isfile(image):
               html        += self.printImageContainer(description=myPages["today"][0], lowres=imageToday, hires=myPages["today"][1]+"?"+which_cam, star='' ,window="self")
            elif which_cam == "cam1":
-              imageToday  = "image_"+imageTitle+".jpg"
+              imageToday  = "image_"+imageTitle+".jpg" # older archives
               image       = os.path.join(config.directory(config="images"), imageToday)
               html       += self.printImageContainer(description=myPages["today"][0], lowres=imageToday, hires=myPages["today"][1]+"?"+which_cam, star='' ,window="self")
 
            for directory in dir_list:
 
               if os.path.isfile(config.file(config="backup",date=directory)):
-                 file_data       = config.read(config="backup", date=directory)
-                 date            = file_data["info"]["date"]
-                 count           = file_data["info"]["count"]
-                 dir_size_cam    = 0
-                 dir_count_cam   = 0
+                 file_data        = config.read(config="backup", date=directory)
+                 date             = file_data["info"]["date"]
+                 count            = file_data["info"]["count"]
+                 dir_size_cam     = 0
+                 dir_count_cam    = 0
+                 dir_count_delete = 0
 
                  if imageTitle in file_data["files"]:
                     image = os.path.join(directory, file_data["files"][imageTitle]["lowres"])
@@ -503,15 +529,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         if "hires" in file_info:
                            hires_file = os.path.join(config.directory(config="backup"), directory, file_info["hires"])
                            if os.path.isfile(hires_file): dir_size_cam  += os.path.getsize(hires_file)
+                      if "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
+                        dir_count_delete += 1
                       dir_count_cam += 1
 
                  dir_size        = round(file_data["info"]["size"]/1024/1024,1)
                  dir_size_cam    = round(dir_size_cam/1024/1024,1)
                  dir_total_size += dir_size
                  files_total    += count
-
-                 if dir_count_cam > 0:  html  += self.printImageContainer(description="<b>"+date+"</b><br/>"+str(dir_count_cam)+" / "+str(dir_size_cam)+" MB", lowres=image, hires="/backup/"+directory+"/list_short.html", window="self") + "\n"
-                 else:                  html  += self.printImageContainer(description="<b>"+date+"</b><br/>Leer für "+which_cam, lowres="EMPTY") + "\n"
+                 
+                 if dir_count_delete > 0: delete_info = "<br/>(Recycle: " + str(dir_count_delete) + ")"
+                 else:                    delete_info = ""
+                 if dir_count_cam > 0:    html  += self.printImageContainer(description="<b>"+date+"</b><br/>"+str(dir_count_cam)+" / "+str(dir_size_cam)+" MB" + delete_info, lowres=image, hires="/backup/"+directory+"/list_short.html?"+which_cam, window="self") + "\n"
+                 else:                    html  += self.printImageContainer(description="<b>"+date+"</b><br/>Leer für "+which_cam, lowres="EMPTY") + "\n"
 
               ### >>> should not be necesarry any more ...
               else:
@@ -526,7 +556,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
            html += "<div style='padding:2px;float:left;width:100%'><hr/>Gesamt: " + str(round(dir_total_size,1)) + " MB / " + str(files_total) + " Bilder</div>"
            config.html_replace["file_list"] = html
-           self.streamFile('text/html',read_html('html','list.html'))
+           self.streamFile(type='text/html', content=read_html('html','list.html'), no_cache=True)
 
         # List all files NEW
         elif self.path.endswith('/list_new.html'):
@@ -546,7 +576,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               today     = datetime.now().strftime('%Y%m%d')
 
               config.html_replace["subtitle"] = myPages["today_complete"][0] + " (" + camera[which_cam].name +", " + str(len(files_all)) + " Bilder)"
-              config.html_replace["links"]    = self.printLinks(link_list=("live","today","backup"), camera=which_cam)
+              config.html_replace["links"]    = self.printLinks(link_list=("live","today","backup"), current="today_complete", cam=which_cam)
 
            hours = list(camera[which_cam].param["image_save"]["hours"])
            hours.sort(reverse=True)
@@ -595,7 +625,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            #if int(stamp) < int(time_now) or time_now == "000000":
 
            config.html_replace["file_list"] = html
-           self.streamFile('text/html',read_html('html','list.html'))
+           self.streamFile(type='text/html', content=read_html('html','list.html'), no_cache=True)
 
 
         # List all files
@@ -610,13 +640,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
            if files[1] == "backup":
              config.html_replace["subtitle"] = myPages["backup"][0] + " "+files[2][6:8] + "." + files[2][4:6] + "." + files[2][0:4]+" ("+camera[which_cam].name+", "+str(len(file_list))+" Bilder)"
-             config.html_replace["links"]    = self.printLinks(link_list=("live","today_complete","backup"), camera=which_cam)
+             config.html_replace["links"]    = self.printLinks(link_list=("live","today_complete","backup"), cam=which_cam)
              index     = "/backup/"
              time_now  = "000000"
 
            else:
              config.html_replace["subtitle"] = myPages["today_complete"][0] + " ("+camera[which_cam].name+", "+str(len(file_list))+" Bilder)"
-             config.html_replace["links"]    = self.printLinks(link_list=("live","today","backup"), camera=which_cam)
+             config.html_replace["links"]    = self.printLinks(link_list=("live","today","backup"), cam=which_cam)
              time_now  = datetime.now().strftime('%H%M%S')
              index     = "/current/"
              files     = config.read(config="images")
@@ -664,13 +694,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               html += html_yesterday
 
            config.html_replace["file_list"] = html
-           self.streamFile('text/html',read_html('html','list.html'))
+           self.streamFile(type='text/html', content=read_html('html','list.html'), no_cache=True)
 
         # extract and show single image
         elif self.path == '/image.jpg':
             camera[which_cam].setText = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
             camera[which_cam].writeImage('image_'+which_cam+'.jpg',camera[which_cam].convertFrame2Image(camera[which_cam].getFrame()))
-            self.streamFile('image/jpeg',read_image("",'image_'+which_cam+'.jpg'))
+            self.streamFile(type='image/jpeg', content=read_image("",'image_'+which_cam+'.jpg'))
 
         # show live stream
         elif self.path.endswith('/cameras.html'):
@@ -679,12 +709,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               info = camera[cam].param
               html += "<div class='camera_info'>"
               html += "<div class='camera_info_image'>"
-              html   += self.printImageContainer(description=cam, lowres="/detection/stream.mjpg?"+cam, hires="/index.html?"+cam, star='', window='self') + "<br/>"
+
+              description = cam+": "+info["name"]
+              if camera[cam].active:  html   += "<center>"+self.printImageContainer(description=cam, lowres="/detection/stream.mjpg?"+cam, javascript="imageOverlay(\""+"/detection/stream.mjpg?"+cam+"\",\""+description+"\");", star='', window='self', border='white') + "<br/></center>"
+              else:                   html   += "<i>Camera "+cam.upper()+"<br/>not available<br/>at the moment.</i>"
               html += "</div>"
               html += "<div class='camera_info_text'><big><b>"+cam+": "+info["name"]+"</b></big>"
               html   += "<ul>"
               html   += "<li>Type: "+info["type"] + "</li>"
-              html   += "<li>Active: "+str(info["active"]) + "</li>"
+              html   += "<li>Active: "+str(camera[cam].active) + "</li>"
               html   += "<li>Record: "+str(info["record"]) + "</li>"
               html   += "<li>Crop: "+str(info["image"]["crop"]) + "</li>"
               html   += "<li>Detection (red rectangle): <ul>"
@@ -695,9 +728,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               html += "</div>"
               html += "</div>"
 
-            config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), camera=which_cam)
+            config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), cam=which_cam)
             config.html_replace["file_list"] = html
-            self.streamFile('text/html',read_html('html','list.html'))
+            self.streamFile(type='text/html',  content=read_html('html','list.html'), no_cache=True)
 
 
         # show live stream
@@ -735,13 +768,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 stream = False
 
         # images, css, js
-        elif self.path.endswith('.css'):        self.streamFile('text/css' ,read_html('html',self.path))
-        elif self.path.endswith('.js'):         self.streamFile('text/javascript' ,read_html('html',self.path))
-        elif self.path.endswith('icon.png'):    self.streamFile('image/png',read_image('html','icon.png'))
-        elif self.path.endswith('favicon.ico'): self.streamFile('image/ico',read_image('html','favicon.ico'))
-        elif self.path.endswith(".png"):        self.streamFile('image/png',read_image("",self.path))
-        elif self.path.endswith(".jpg"):        self.streamFile('image/jpg',read_image("images",self.path))
-        elif self.path.endswith(".jpeg"):       self.streamFile('image/jpg',read_image("images",self.path))
+        elif self.path.endswith('.css'):        self.streamFile(type='text/css', content=read_html('html',self.path))
+        elif self.path.endswith('.js'):         self.streamFile(type='text/javascript',  content=read_html('html',self.path))
+        elif self.path.endswith('icon.png'):    self.streamFile(type='image/png', content=read_image('html','icon.png'))
+        elif self.path.endswith('favicon.ico'): self.streamFile(type='image/ico', content=read_image('html','favicon.ico'))
+        elif self.path.endswith(".png"):        self.streamFile(type='image/png', content=read_image("",self.path))
+        elif self.path.endswith(".jpg"):        self.streamFile(type='image/jpg', content=read_image("images",self.path))
+        elif self.path.endswith(".jpeg"):       self.streamFile(type='image/jpg', content=read_image("images",self.path))
 
         # unknown
         else:
@@ -764,7 +797,7 @@ if __name__ == "__main__":
     time.sleep(1)
 
     if not os.path.isdir(config.directory("images")):
-        logging.info("Created image directory...")
+        logging.info("Create image directory...")
         os.mkdir(config.directory("images"))
         logging.info("OK.")
 
@@ -799,7 +832,7 @@ if __name__ == "__main__":
 #----------------------------------------------------
 
     try:
-        address = ('', 8000)
+        address = ('', config.param["port"])
         server  = StreamingServer(address, StreamingHandler)
         logging.info("Starting WebServer ...")
         server.serve_forever()

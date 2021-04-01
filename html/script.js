@@ -1,5 +1,17 @@
 //----------------------------------------
 
+function imageOverlay(filename, description="", favorit="", to_be_deleted="") {
+        document.getElementById("overlay").style.display = "block";
+        document.getElementById("overlay_content").style.display = "block";
+        html  = "";
+        html += "<div id=\"overlay_close\" onclick='document.getElementById(\"overlay\").style.display = \"none\";document.getElementById(\"overlay_content\").style.display = \"none\";'>[X]</div>";
+        html += "<div id=\"overlay_image_container\"><img id='overlay_image' src='"+filename+"'><br/>&nbsp;<br/>"+description+"</div>";
+        document.getElementById("overlay_content").innerHTML = html;
+	}
+
+
+//----------------------------------------
+
 function requestAPI(command, index, value, callback) {
     var requestURL = command + index + "/" + value;
     var xhttp = new XMLHttpRequest();

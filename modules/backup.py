@@ -12,7 +12,6 @@ import json, codecs
 import numpy as np
 import string
 
-import picamera
 import imutils, cv2
 from imutils.video import WebcamVideoStream
 from imutils.video import FPS

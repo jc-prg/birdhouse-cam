@@ -5,7 +5,6 @@ import logging
 import numpy as np
 import string
 
-import picamera
 import imutils, cv2
 from imutils.video import WebcamVideoStream
 from imutils.video import FPS
@@ -59,6 +58,13 @@ class myCamera(threading.Thread):
        logging.info("Starting camera ("+self.type+"/"+self.name+") ...")
 
        if self.type == "pi":
+         try:
+            import picamera
+         except ImportError:
+            self.error  = True
+            self.active = False
+            logging.error("Python module for PiCamera isn't installed. Try 'pip3 install picamera'.")
+         
          try:
             self.camera            = picamera.PiCamera()
             self.output            = myCameraOutput()
