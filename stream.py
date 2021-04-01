@@ -512,7 +512,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         if "hires" in file_info:
                            hires_file = os.path.join(config.directory(config="backup"), directory, file_info["hires"])
                            if os.path.isfile(hires_file): dir_size_cam  += os.path.getsize(hires_file)
-                      if "delete" in file_info and int(file_info["delete"]) = 1:
+                      if "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
                         dir_count_delete += 1
                       dir_count_cam += 1
 
