@@ -187,9 +187,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
        else:
           trash   = "/html/recycle0.png"
           value   = "1"
-       if check_ip != config.param["ip_deny_favorit"]:  onclick = "setTrash(\""+file+"\",document.getElementById(\"d_"+file+"_value\").innerHTML,\""+config.imageName("lowres", stamp, cam)+"\");"
-       else:                                            onclick = ""
-       return "<div class='trash'><div id='d_"+file+"_value' style='display:none;'>"+value+"</div><img class='trash_img' id='d_"+file+"' src='" + trash + "' onclick='"+onclick+"'/></div>\n"
+       if check_ip != config.param["ip_deny_favorit"]:
+          onclick = "setTrash(\""+file+"\",document.getElementById(\"d_"+file+"_value\").innerHTML,\""+config.imageName("lowres", stamp, cam)+"\");"
+          return "<div class='trash'><div id='d_"+file+"_value' style='display:none;'>"+value+"</div><img class='trash_img' id='d_"+file+"' src='" + trash + "' onclick='"+onclick+"'/></div>\n"
+       else:
+          return "<div class='trash'></div>\n"
 
 
     def printImageContainer(self, description, lowres, hires='', javascript='' ,star='', trash='', window='blank', lazzy='', border='black'):
