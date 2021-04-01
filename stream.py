@@ -528,28 +528,29 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                # To be deleted
                html_recycle  = ""
                count_recycle = 0
-               for stamp in stamps:
-                 if "to_be_deleted" in files[stamp] and int(files[stamp]["to_be_deleted"]) == 1:
-                   if files[stamp]["camera"] == which_cam:
-                     count_recycle += 1
-                     time           = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
-                     file           = files[stamp]["lowres"]
-                     file_big       = files[stamp]["hires"]
-                     color          = "black"
+               if config.param["ip_deny_favorit"] != self.address_string():
+                 for stamp in stamps:
+                   if "to_be_deleted" in files[stamp] and int(files[stamp]["to_be_deleted"]) == 1:
+                     if files[stamp]["camera"] == which_cam:
+                       count_recycle += 1
+                       time           = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+                       file           = files[stamp]["lowres"]
+                       file_big       = files[stamp]["hires"]
+                       color          = "black"
 
-                     if "favorit" in files[stamp]:
-                       star  = self.printStar(file=index+stamp, favorit=files[stamp]["favorit"], check_ip=self.address_string(), cam=which_cam)
-                       if int(files[stamp]["favorit"]) == 1: color = "lime"
-                     else:
-                       star  = self.printStar(file=index+stamp, favorit=0, check_ip=self.address_string(), cam=which_cam)
-                     if "to_be_deleted" in files[stamp]:
-                       trash = self.printTrash(file=index+stamp, delete=files[stamp]["to_be_deleted"], check_ip=self.address_string(), cam=which_cam)
-                       if int(files[stamp]["to_be_deleted"]) == 1: color = "red"
-                     else:
-                       trash = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string(), cam=which_cam)
+                       if "favorit" in files[stamp]:
+                         star  = self.printStar(file=index+stamp, favorit=files[stamp]["favorit"], check_ip=self.address_string(), cam=which_cam)
+                         if int(files[stamp]["favorit"]) == 1: color = "lime"
+                       else:
+                         star  = self.printStar(file=index+stamp, favorit=0, check_ip=self.address_string(), cam=which_cam)
+                       if "to_be_deleted" in files[stamp]:
+                         trash = self.printTrash(file=index+stamp, delete=files[stamp]["to_be_deleted"], check_ip=self.address_string(), cam=which_cam)
+                         if int(files[stamp]["to_be_deleted"]) == 1: color = "red"
+                       else:
+                         trash = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string(), cam=which_cam)
                   
-                     if os.path.isfile(os.path.join(path,file_big)): html_recycle += self.printImageContainer(description=description, lowres=file, javascript="imageOverlay(\""+file_big+"\",\""+description+"\");", star=star, trash=trash, border="red")
-                     else:                                           html_recycle += self.printImageContainer(description=time+" ("+str(files[stamp]["similarity"])+"%)", lowres=file, hires="",       star=star, trash=trash, border="red")
+                       if os.path.isfile(os.path.join(path,file_big)): html_recycle += self.printImageContainer(description=description, lowres=file, javascript="imageOverlay(\""+file_big+"\",\""+description+"\");", star=star, trash=trash, border="red")
+                       else:                                           html_recycle += self.printImageContainer(description=time+" ("+str(files[stamp]["similarity"])+"%)", lowres=file, hires="",       star=star, trash=trash, border="red")
                
                if html_recycle != "":
                   html += self.printRecycle(count_recycle)
