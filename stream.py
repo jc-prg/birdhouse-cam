@@ -477,7 +477,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            files_total    = 0
            html           = ""
 
-           imageTitle     = config.param["preview_backup"]
+           imageTitle     = config.param["preview_backup"] + camera[which_cam].param["image_save"]["seconds"][0]
            imageToday     = config.imageName(type="lowres", timestamp=imageTitle, camera=which_cam)
            image          = os.path.join(config.directory(config="images"), imageToday)
 

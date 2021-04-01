@@ -7,11 +7,11 @@ import os
 myParameters = {
   "title"             : "Unser Nistkasten :-)",
   "path"              : os.getcwd(),       # initially start from the working dir
-  "port"              : 8000,
-  "preview_backup"    : "070000",
+  "port"              : 8000,              # http-port
+  "preview_backup"    : "0700",            # HHMM
   "diff_threshold"    : 95,
   "ip_deny_favorit"   : "192.168.1.31",    # put in the IP address of your proxy or router if you don't want to allow edits from outside
-  "backup_time"       : "2100",
+  "backup_time"       : "2100",            # HHMM
 
   "cameras"  : {
      "cam1"  : {
