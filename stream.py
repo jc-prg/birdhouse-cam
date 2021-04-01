@@ -173,9 +173,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
        else:
           star    = "/html/star0.png"
           value   = "1"
-       if check_ip != config.param["ip_deny_favorit"]:  onclick = "setFavorit(\""+file+"\",document.getElementById(\"s_"+file+"_value\").innerHTML,\""+config.imageName("lowres", stamp, cam)+"\");"
-       else:                                            onclick = ""
-       return "<div class='star'><div id='s_"+file+"_value' style='display:none;'>"+value+"</div><img class='star_img' id='s_"+file+"' src='" + star + "' onclick='"+onclick+"'/></div>\n"
+       if check_ip != config.param["ip_deny_favorit"]:
+          onclick = "setFavorit(\""+file+"\",document.getElementById(\"s_"+file+"_value\").innerHTML,\""+config.imageName("lowres", stamp, cam)+"\");"
+          return "<div class='star'><div id='s_"+file+"_value' style='display:none;'>"+value+"</div><img class='star_img' id='s_"+file+"' src='" + star + "' onclick='"+onclick+"'/></div>\n"
+       else:
+          onclick = ""
+          if int(favorit) == 1:
+            return "<div class='star'><div id='s_"+file+"_value' style='display:none;'>"+value+"</div><img class='star_img' id='s_"+file+"' src='" + star + "' onclick='"+onclick+"'/></div>\n"
+          else:
+            return "<div class='star'></div>\n"
 
 
     def printTrash(self,file="",delete=0,check_ip="",cam=""):
