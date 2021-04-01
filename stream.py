@@ -106,7 +106,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         '''
         self.send_response(301)
         self.send_header('Location', '/index.html')
-        self.end_headers()
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        self.end_headers()	
 
     def sendError(self):
         '''
@@ -115,7 +118,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_error(404)
         self.end_headers()
 
-    def streamFile(self,type,content):
+    def streamFile(self,type,content,no_cache=False):
         '''
         send file content (HTML, image, ...)
         '''
@@ -123,6 +126,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            self.send_response(200)
            self.send_header('Content-Type', type)
            self.send_header('Content-Length', len(content))
+           if no_cache:
+             self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+             self.send_header("Pragma", "no-cache")
+             self.send_header("Expires", "0")
            self.end_headers()
            self.wfile.write(content)
         else:
@@ -254,7 +261,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            config_data = config.read(config="images")
            config_data[param[3]]["favorit"] = param[4]
            config.write(config="images", config_data=config_data)
-           self.streamFile('application/json', json.dumps({ "path" : self.path }).encode(encoding='utf_8'));
+           self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
 
         # set / unset favorit
         elif self.path.startswith("/favorit/backup/"):
@@ -262,7 +269,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            config_data = config.read(config="backup", date=param[3])
            config_data["files"][param[4]]["favorit"] = param[5]
            config.write(config="backup",config_data=config_data, date=param[3])
-           self.streamFile('application/json', json.dumps({ "path" : self.path }).encode(encoding='utf_8'));
+           self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
 
         # set / unset favorit
         if self.path.startswith("/delete/current/"):
@@ -270,7 +277,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            config_data = config.read(config="images")
            config_data[param[3]]["to_be_deleted"] = param[4]
            config.write(config="images", config_data=config_data)
-           self.streamFile('application/json', json.dumps({ "path" : self.path }).encode(encoding='utf_8'));
+           self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
 
         # set / unset favorit
         elif self.path.startswith("/delete/backup/"):
@@ -278,7 +285,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            config_data = config.read(config="backup", date=param[3])
            config_data["files"][param[4]]["to_be_deleted"] = param[5]
            config.write(config="backup",config_data=config_data, date=param[3])
-           self.streamFile('application/json', json.dumps({ "path" : self.path }).encode(encoding='utf_8'));
+           self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
 
         else:
            self.sendError()
@@ -316,7 +323,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                index_file = "index.html"
 
             config.html_replace["links"] = self.printLinks(("today","backup","favorit","cam_info"),which_cam)
-            self.streamFile('text/html',read_html('html',index_file))
+            self.streamFile(type='text/html', content=read_html('html',index_file), no_cache=True)
 
         # List favorit images (marked with star)
         elif '/list_star.html' in self.path:
@@ -372,7 +379,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               html += self.printImageContainer(description="<b>"+entry["date"]+"</b><br/>"+entry["time"], lowres=os.path.join(dir,entry["lowres"]), hires=os.path.join(dir,entry["hires"]), star=star, window="blank")
 
             config.html_replace["file_list"] = html
-            self.streamFile('text/html',read_html('html','list.html'))
+            self.streamFile(type='text/html',content=read_html('html','list.html'), no_cache=True)
 
         # List only if threshold ...
         elif '/list_short.html' in self.path:
@@ -451,7 +458,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                html += "<div style='padding:2px;float:left;width:100%'><hr/>"+str(count)+" Bilder / &Auml;hnlichkeit &lt; "+str(camera[which_cam].param["similarity"]["threshold"])+"%</div>"
                config.html_replace["file_list"] = html
-               self.streamFile('text/html',read_html('html','list.html'))
+               self.streamFile(type='text/html',content=read_html('html','list.html'), no_cache=True)
 
            else:
              self.redirect("/list_new.html")
@@ -527,7 +534,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
            html += "<div style='padding:2px;float:left;width:100%'><hr/>Gesamt: " + str(round(dir_total_size,1)) + " MB / " + str(files_total) + " Bilder</div>"
            config.html_replace["file_list"] = html
-           self.streamFile('text/html',read_html('html','list.html'))
+           self.streamFile(type='text/html', content=read_html('html','list.html'), no_cache=True)
 
         # List all files NEW
         elif self.path.endswith('/list_new.html'):
@@ -596,7 +603,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            #if int(stamp) < int(time_now) or time_now == "000000":
 
            config.html_replace["file_list"] = html
-           self.streamFile('text/html',read_html('html','list.html'))
+           self.streamFile(type='text/html', content=read_html('html','list.html'), no_cache=True)
 
 
         # List all files
@@ -665,13 +672,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               html += html_yesterday
 
            config.html_replace["file_list"] = html
-           self.streamFile('text/html',read_html('html','list.html'))
+           self.streamFile(type='text/html', content=read_html('html','list.html'), no_cache=True)
 
         # extract and show single image
         elif self.path == '/image.jpg':
             camera[which_cam].setText = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
             camera[which_cam].writeImage('image_'+which_cam+'.jpg',camera[which_cam].convertFrame2Image(camera[which_cam].getFrame()))
-            self.streamFile('image/jpeg',read_image("",'image_'+which_cam+'.jpg'))
+            self.streamFile(type='image/jpeg', content=read_image("",'image_'+which_cam+'.jpg'))
 
         # show live stream
         elif self.path.endswith('/cameras.html'):
@@ -698,7 +705,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), camera=which_cam)
             config.html_replace["file_list"] = html
-            self.streamFile('text/html',read_html('html','list.html'))
+            self.streamFile(type='text/html',  content=read_html('html','list.html'), no_cache=True)
 
 
         # show live stream
@@ -736,13 +743,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 stream = False
 
         # images, css, js
-        elif self.path.endswith('.css'):        self.streamFile('text/css' ,read_html('html',self.path))
-        elif self.path.endswith('.js'):         self.streamFile('text/javascript' ,read_html('html',self.path))
-        elif self.path.endswith('icon.png'):    self.streamFile('image/png',read_image('html','icon.png'))
-        elif self.path.endswith('favicon.ico'): self.streamFile('image/ico',read_image('html','favicon.ico'))
-        elif self.path.endswith(".png"):        self.streamFile('image/png',read_image("",self.path))
-        elif self.path.endswith(".jpg"):        self.streamFile('image/jpg',read_image("images",self.path))
-        elif self.path.endswith(".jpeg"):       self.streamFile('image/jpg',read_image("images",self.path))
+        elif self.path.endswith('.css'):        self.streamFile(type='text/css', content=read_html('html',self.path))
+        elif self.path.endswith('.js'):         self.streamFile(type='text/javascript',  content=read_html('html',self.path))
+        elif self.path.endswith('icon.png'):    self.streamFile(type='image/png', content=read_image('html','icon.png'))
+        elif self.path.endswith('favicon.ico'): self.streamFile(type='image/ico', content=read_image('html','favicon.ico'))
+        elif self.path.endswith(".png"):        self.streamFile(type='image/png', content=read_image("",self.path))
+        elif self.path.endswith(".jpg"):        self.streamFile(type='image/jpg', content=read_image("images",self.path))
+        elif self.path.endswith(".jpeg"):       self.streamFile(type='image/jpg', content=read_image("images",self.path))
 
         # unknown
         else:
