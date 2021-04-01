@@ -3,8 +3,9 @@
 # Ideen:
 # - Videos aufzeichnen, z.B. wenn Bewegung detektiert wird
 # - Favoriten -> eindeutigen Timestamp (date + time)
-# - BACKUP auf mehrere Kameras anpassen!
-# - Similarity Threshold je Kamera separat!
+# - set to_be_deleted when below threshold; don't show / backup those files
+# - delete files with to_be_deleted == 1 in archive folders
+# - mark images with colored border in all day view
 
 import io, os, time
 import logging
@@ -157,28 +158,46 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         return "<div class='separator'><hr/>Gestern<hr/></div>"
 
 
-    def printStar(self,file="",favorit=0,check_ip=""):
+    def printRecycle(self, count=0):
+        amount = ""
+        if count > 0: amount = " ("+str(count)+")"
+        return "<div class='separator'><hr/>Recycle"+amount+"<hr/></div>"
+
+
+    def printStar(self,file="",favorit=0,check_ip="",cam=""):
+       stamp = file.split("/")
+       stamp = stamp[len(stamp)-1]
        if int(favorit) == 1:
           star    = "/html/star1.png"
           value   = "0"
        else:
           star    = "/html/star0.png"
           value   = "1"
-       if check_ip != config.param["ip_deny_favorit"]:  onclick = "setFavorit(\""+file+"\",document.getElementById(\"s_"+file+"_value\").innerHTML);"
-       else:                                            onclick = ""
-       return "<div class='star'><div id='s_"+file+"_value' style='display:none;'>"+value+"</div><img class='star_img' id='s_"+file+"' src='" + star + "' onclick='"+onclick+"'/></div>\n"
+       if check_ip != config.param["ip_deny_favorit"]:
+          onclick = "setFavorit(\""+file+"\",document.getElementById(\"s_"+file+"_value\").innerHTML,\""+config.imageName("lowres", stamp, cam)+"\");"
+          return "<div class='star'><div id='s_"+file+"_value' style='display:none;'>"+value+"</div><img class='star_img' id='s_"+file+"' src='" + star + "' onclick='"+onclick+"'/></div>\n"
+       else:
+          onclick = ""
+          if int(favorit) == 1:
+            return "<div class='star'><div id='s_"+file+"_value' style='display:none;'>"+value+"</div><img class='star_img' id='s_"+file+"' src='" + star + "' onclick='"+onclick+"'/></div>\n"
+          else:
+            return "<div class='star'></div>\n"
 
 
-    def printTrash(self,file="",delete=0,check_ip=""):
+    def printTrash(self,file="",delete=0,check_ip="",cam=""):
+       stamp = file.split("/")
+       stamp = stamp[len(stamp)-1]
        if int(delete) == 1:
           trash   = "/html/recycle1.png"
           value   = "0"
        else:
           trash   = "/html/recycle0.png"
           value   = "1"
-       if check_ip != config.param["ip_deny_favorit"]:  onclick = "setTrash(\""+file+"\",document.getElementById(\"d_"+file+"_value\").innerHTML);"
-       else:                                            onclick = ""
-       return "<div class='trash'><div id='d_"+file+"_value' style='display:none;'>"+value+"</div><img class='trash_img' id='d_"+file+"' src='" + trash + "' onclick='"+onclick+"'/></div>\n"
+       if check_ip != config.param["ip_deny_favorit"]:
+          onclick = "setTrash(\""+file+"\",document.getElementById(\"d_"+file+"_value\").innerHTML,\""+config.imageName("lowres", stamp, cam)+"\");"
+          return "<div class='trash'><div id='d_"+file+"_value' style='display:none;'>"+value+"</div><img class='trash_img' id='d_"+file+"' src='" + trash + "' onclick='"+onclick+"'/></div>\n"
+       else:
+          return "<div class='trash'></div>\n"
 
 
     def printImageContainer(self, description, lowres, hires='', javascript='' ,star='', trash='', window='blank', lazzy='', border='black'):
@@ -211,7 +230,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if count < len(link_list): html += " / "
  
         if current != "" and len(self.active_cams) > 1:
-          selected   = self.active_cams.index(cam) + 1
+          selected   = self.active_cams.index(cam) + 1 
           if selected >= len(self.active_cams): selected = 0
           html  += " / <a href='"+myPages[current][1]+"?"+self.active_cams[selected]+"'>"+self.active_cams[selected].upper()+"</a>"
           
@@ -219,21 +238,30 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
 
     def printImageGroup(self, title, id, image_group, index, diff, check_ip="", cam=''):
-           onclick = "onclick='showHideGroup(\""+id+"\")'"
-           html    = "<div class='separator' style='align:left;background-color:#111111;' align='left' "+onclick+">"
-           html   += "<a id='group_link_"+id+"' style='cursor:pointer;'>(+)</a> "
-           html   += title + " ... " + str(len(image_group))
-           if diff > 0: html += " -&gt; " + str(diff)
-           html += "</div><div class='separator'><hr/></div>\n"
-           id_list = ""
-           images  = ""
+           id_list     = ""
+           images      = ""
+           count_star  = 0
+           count_trash = 0
 
            for stamp in image_group:
-              time       = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
-              if "favorit" in image_group[stamp]:        star   = self.printStar(file=index+stamp, favorit=image_group[stamp]["favorit"], check_ip=check_ip)
-              else:                                      star   = self.printStar(file=index+stamp, favorit=0, check_ip=check_ip)
-              if "to_be_deleted" in image_group[stamp]:  trash  = self.printTrash(file=index+stamp, delete=image_group[stamp]["to_be_deleted"], check_ip=check_ip)
-              else:                                      trash  = self.printTrash(file=index+stamp, delete=0, check_ip=check_ip)
+              border  = "black"
+              time    = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+              
+              if "favorit" in image_group[stamp]:
+                star   = self.printStar(file=index+stamp, favorit=image_group[stamp]["favorit"], check_ip=check_ip, cam=cam)
+                if int(image_group[stamp]["favorit"]) == 1: 
+                  border      ="lime"
+                  count_star += 1
+              else:
+                star   = self.printStar(file=index+stamp, favorit=0, check_ip=check_ip, cam=cam)
+                
+              if "to_be_deleted" in image_group[stamp]:
+                trash  = self.printTrash(file=index+stamp, delete=image_group[stamp]["to_be_deleted"], check_ip=check_ip, cam=cam)
+                if int(image_group[stamp]["to_be_deleted"]) == 1:
+                  border       ="red"
+                  count_trash += 1
+              else:
+                trash  = self.printTrash(file=index+stamp, delete=0, check_ip=check_ip, cam=cam)
 
               similarity = str(image_group[stamp]["similarity"])+'%'
               threshold  = camera[cam].param["similarity"]["threshold"]
@@ -246,10 +274,18 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  hires = image_group[stamp]["hires"]
 
               id_list   += lowres + " "
-              images    += self.printImageContainer(description=time + " ("+similarity+")", lowres=lowres, hires=hires, star=star, trash=trash, lazzy='lazzy')
+              images    += self.printImageContainer(description=time + " ("+similarity+")", lowres=lowres, hires=hires, star=star, trash=trash, lazzy='lazzy', border=border)
 
-           html += "<div id='group_"+id+"' style='display:none;'>"+images+"</div>\n"
-           html += "<div id='group_ids_"+id+"' style='display:none;'>"+id_list+"</div>\n"
+           onclick = "onclick='showHideGroup(\""+id+"\")'"
+           html    = "<div class='separator' style='align:left;background-color:#111111;' align='left' "+onclick+">"
+           html   += "<a id='group_link_"+id+"' style='cursor:pointer;'>(+)</a> "
+           html   += title + " ... " + str(len(image_group)).zfill(3)
+           html   += "<font color='gray'>";
+           html   += " &nbsp; &nbsp; [Move: "+str(diff).zfill(3)+" | Star: "+str(count_star).zfill(2) + " | Recycle: " + str(count_trash).zfill(2) + "]"
+           html   += "</font>";
+           html   += "</div><div class='separator'><hr/></div>\n"
+           html   += "<div id='group_"+id+"' style='display:none;'>"+images+"</div>\n"
+           html   += "<div id='group_ids_"+id+"' style='display:none;'>"+id_list+"</div>\n"
            return html
 
     #-------------------------------------
@@ -263,6 +299,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            param = self.path.split("/")
            config_data = config.read(config="images")
            config_data[param[3]]["favorit"] = param[4]
+           if int(param[4]) == 1: config_data[param[3]]["to_be_deleted"] = 0
            config.write(config="images", config_data=config_data)
            self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
 
@@ -271,22 +308,25 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            param = self.path.split("/")
            config_data = config.read(config="backup", date=param[3])
            config_data["files"][param[4]]["favorit"] = param[5]
+           if int(param[5]) == 1: config_data["files"][param[4]]["to_be_deleted"] = 0
            config.write(config="backup",config_data=config_data, date=param[3])
            self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
 
-        # set / unset favorit
+        # mark / unmark for deletion
         if self.path.startswith("/delete/current/"):
            param = self.path.split("/")
            config_data = config.read(config="images")
            config_data[param[3]]["to_be_deleted"] = param[4]
+           if int(param[4]) == 1: config_data[param[3]]["favorit"] = 0
            config.write(config="images", config_data=config_data)
            self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
 
-        # set / unset favorit
+        # mark / unmark for deletion
         elif self.path.startswith("/delete/backup/"):
            param = self.path.split("/")
            config_data = config.read(config="backup", date=param[3])
            config_data["files"][param[4]]["to_be_deleted"] = param[5]
+           if int(param[5]) == 1: config_data["files"][param[4]]["favorit"] = 0
            config.write(config="backup",config_data=config_data, date=param[3])
            self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
 
@@ -318,7 +358,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         for key in camera:
           if camera[key].active: self.active_cams.append(key)
         if camera[which_cam].active == False:
-          which_cam = active_cams[0]
+          which_cam = self.active_cams[0]
         config.html_replace["active_cam"] = which_cam
 
         # index with embedded live stream
@@ -383,10 +423,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  index = "/current/"
                  entry["date_link"]  = "<a href='/list_short.html'>"+entry["date"]+"</a>"
 
-              if "favorit" in entry:                     star  = self.printStar(file=index+stamp2, favorit=entry["favorit"], check_ip=self.address_string())
-              else:                                      star  = self.printStar(file=index+stamp2, favorit=0, check_ip=self.address_string())
-              if "to_be_deleted" in entry:               trash = self.printTrash(file=index+stamp, delete=entry["to_be_deleted"], check_ip=self.address_string())
-              else:                                      trash = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string())
+              if "favorit" in entry:                     star  = self.printStar(file=index+stamp2, favorit=entry["favorit"], check_ip=self.address_string(), cam=which_cam)
+              else:                                      star  = self.printStar(file=index+stamp2, favorit=0, check_ip=self.address_string(), cam=which_cam)
+              if "to_be_deleted" in entry:               trash = self.printTrash(file=index+stamp, delete=entry["to_be_deleted"], check_ip=self.address_string(), cam=which_cam)
+              else:                                      trash = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string(), cam=which_cam)
 
               description1 = "<b>"+entry["date_link"]+"</b><br/>"+entry["time"]
               description2 = "<b>"+entry["date"]+"</b><br/>"+entry["time"]
@@ -423,7 +463,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                time_now = datetime.now().strftime('%H%M%S')
                index    = "/current/"
                html     = self.printImageContainer(description="Live-Stream", lowres="stream.mjpg?"+which_cam, hires="/index.html?"+which_cam, star="", window="self")
-#               html     = self.printImageContainer(description="Live-Stream", lowres="stream.mjpg?"+which_cam, javascript="imageOverlay();", star="", window="self")               
 
                config.html_replace["subtitle"]  = myPages["today"][0] + " (" + camera[which_cam].name + ")"
                config.html_replace["links"]     = self.printLinks(link_list=("live","today_complete","backup","favorit"), current='today', cam=which_cam)
@@ -434,21 +473,27 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                # Today
                for stamp in stamps:
                  if int(stamp) < int(time_now) or time_now == "000000":
-#                   if config.selectImage(timestamp=stamp, file_info=files[stamp], camera=which_cam):
                    if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp]):
                      if not "datestamp" in files[stamp] or files[stamp]["datestamp"] == today or file_dir[1] == "backup":
                        count   += 1
                        time     = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                        file     = files[stamp]["lowres"]
                        file_big = files[stamp]["hires"]
+                       color    = "black"
 
-                       if "favorit" in files[stamp]:                   star   = self.printStar(file=index+stamp, favorit=files[stamp]["favorit"], check_ip=self.address_string())
-                       else:                                           star   = self.printStar(file=index+stamp, favorit=0, check_ip=self.address_string())
-                       if "to_be_deleted" in files[stamp]:             trash  = self.printTrash(file=index+stamp, delete=files[stamp]["to_be_deleted"], check_ip=self.address_string())
-                       else:                                           trash  = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string())
+                       if "favorit" in files[stamp]:
+                         star   = self.printStar(file=index+stamp, favorit=files[stamp]["favorit"], check_ip=self.address_string(), cam=which_cam)
+                         if int(files[stamp]["favorit"]) == 1: color = "lime"
+                       else:
+                         star   = self.printStar(file=index+stamp, favorit=0, check_ip=self.address_string(), cam=which_cam)
+                       if "to_be_deleted" in files[stamp]:
+                         trash  = self.printTrash(file=index+stamp, delete=files[stamp]["to_be_deleted"], check_ip=self.address_string(), cam=which_cam)
+                         if int(files[stamp]["to_be_deleted"]) == 1: color = "red"
+                       else:
+                         trash  = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string(), cam=which_cam)
                        description = time+" ("+str(files[stamp]["similarity"])+"%)";
-                       if os.path.isfile(os.path.join(path,file_big)): html += self.printImageContainer(description=description, lowres=file, javascript="imageOverlay(\""+file_big+"\",\""+description+"\");", star=star, trash=trash)
-                       else:                                           html += self.printImageContainer(description=description, lowres=file, hires="",       star=star, trash=trash)
+                       if os.path.isfile(os.path.join(path,file_big)): html += self.printImageContainer(description=description, lowres=file, javascript="imageOverlay(\""+file_big+"\",\""+description+"\");", star=star, trash=trash, border=color)
+                       else:                                           html += self.printImageContainer(description=description, lowres=file, hires="",       star=star, trash=trash, border=color)
 
                # Yesterday
                html_yesterday = ""
@@ -460,19 +505,58 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                      time     = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                      file     = files[stamp]["lowres"]
                      file_big = files[stamp]["hires"]
+                     color    = "black"
 
-                     if "favorit" in files[stamp]:                   star  = self.printStar(file=index+stamp, favorit=files[stamp]["favorit"], check_ip=self.address_string())
-                     else:                                           star  = self.printStar(file=index+stamp, favorit=0, check_ip=self.address_string())
-                     if "to_be_deleted" in files[stamp]:             trash = self.printTrash(file=index+stamp, delete=files[stamp]["to_be_deleted"], check_ip=self.address_string())
-                     else:                                           trash = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string())
+                     if "favorit" in files[stamp]:
+                       star  = self.printStar(file=index+stamp, favorit=files[stamp]["favorit"], check_ip=self.address_string(), cam=which_cam)
+                       if int(files[stamp]["favorit"]) == 1: color = "lime"
+                     else:
+                       star  = self.printStar(file=index+stamp, favorit=0, check_ip=self.address_string(), cam=which_cam)
+                     if "to_be_deleted" in files[stamp]:
+                       trash = self.printTrash(file=index+stamp, delete=files[stamp]["to_be_deleted"], check_ip=self.address_string(), cam=which_cam)
+                       if int(files[stamp]["to_be_deleted"]) == 1: color = "red"
+                     else:
+                       trash = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string(), cam=which_cam)
                      description = time+" ("+str(files[stamp]["similarity"])+"%)"
-                     if os.path.isfile(os.path.join(path,file_big)): html_yesterday += self.printImageContainer(description=description, lowres=file, javascript="imageOverlay(\""+file_big+"\",\""+description+"\");", star=star, trash=trash)
-                     else:                                           html_yesterday += self.printImageContainer(description=time+" ("+str(files[stamp]["similarity"])+"%)", lowres=file, hires="",       star=star, trash=trash)
+                     if os.path.isfile(os.path.join(path,file_big)): html_yesterday += self.printImageContainer(description=description, lowres=file, javascript="imageOverlay(\""+file_big+"\",\""+description+"\");", star=star, trash=trash, border=color)
+                     else:                                           html_yesterday += self.printImageContainer(description=time+" ("+str(files[stamp]["similarity"])+"%)", lowres=file, hires="",       star=star, trash=trash, border=color)
 
                if html_yesterday != "":
                   html += self.printYesterday()
                   html += html_yesterday
 
+               # To be deleted
+               html_recycle  = ""
+               count_recycle = 0
+               if config.param["ip_deny_favorit"] != self.address_string():
+                 for stamp in stamps:
+                   if "to_be_deleted" in files[stamp] and int(files[stamp]["to_be_deleted"]) == 1:
+                     if files[stamp]["camera"] == which_cam:
+                       count_recycle += 1
+                       time           = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+                       file           = files[stamp]["lowres"]
+                       file_big       = files[stamp]["hires"]
+                       color          = "black"
+
+                       if "favorit" in files[stamp]:
+                         star  = self.printStar(file=index+stamp, favorit=files[stamp]["favorit"], check_ip=self.address_string(), cam=which_cam)
+                         if int(files[stamp]["favorit"]) == 1: color = "lime"
+                       else:
+                         star  = self.printStar(file=index+stamp, favorit=0, check_ip=self.address_string(), cam=which_cam)
+                       if "to_be_deleted" in files[stamp]:
+                         trash = self.printTrash(file=index+stamp, delete=files[stamp]["to_be_deleted"], check_ip=self.address_string(), cam=which_cam)
+                         if int(files[stamp]["to_be_deleted"]) == 1: color = "red"
+                       else:
+                         trash = self.printTrash(file=index+stamp, delete=0, check_ip=self.address_string(), cam=which_cam)
+                  
+                       if os.path.isfile(os.path.join(path,file_big)): html_recycle += self.printImageContainer(description=description, lowres=file, javascript="imageOverlay(\""+file_big+"\",\""+description+"\");", star=star, trash=trash, border="red")
+                       else:                                           html_recycle += self.printImageContainer(description=time+" ("+str(files[stamp]["similarity"])+"%)", lowres=file, hires="",       star=star, trash=trash, border="red")
+               
+               if html_recycle != "":
+                  html += self.printRecycle(count_recycle)
+                  html += html_recycle
+               
+               
                html += "<div style='padding:2px;float:left;width:100%'><hr/>"+str(count)+" Bilder / &Auml;hnlichkeit &lt; "+str(camera[which_cam].param["similarity"]["threshold"])+"%</div>"
                config.html_replace["file_list"] = html
                self.streamFile(type='text/html',content=read_html('html','list.html'), no_cache=True)
@@ -661,10 +745,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                    file_big = config.imageName(type="hires",timestamp=stamp)
 
                    if index == "/current/":
-                     if "favorit" in files[stamp]:                   star  = self.printStar(file=index+stamp, favorit=files[stamp]["favorit"], check_ip=self.address_string())
-                     else:                                           star  = self.printStar(file=index+stamp, favorit=0, check_ip=address_string())
-                     if "to_be_deleted" in image_group[stamp]:       trash = self.printStar(file=index+stamp, delete=image_group[stamp]["to_be_deleted"], check_ip=check_ip)
-                     else:                                           trash = self.printStar(file=index+stamp, delete=0, check_ip=check_ip)
+                     if "favorit" in files[stamp]:                   star  = self.printStar(file=index+stamp, favorit=files[stamp]["favorit"], check_ip=self.address_string(), cam=which_cam)
+                     else:                                           star  = self.printStar(file=index+stamp, favorit=0, check_ip=address_string(), cam=which_cam)
+                     if "to_be_deleted" in image_group[stamp]:       trash = self.printTrash(file=index+stamp, delete=image_group[stamp]["to_be_deleted"], check_ip=check_ip, cam=which_cam)
+                     else:                                           trash = self.printTrash(file=index+stamp, delete=0, check_ip=check_ip, cam=which_cam)
                    else: star = ""
 
                    if os.path.isfile(os.path.join(path,file_big)): html += self.printImageContainer(description=time, lowres=file, hires=file_big, star=star)
@@ -680,10 +764,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                    file_big = config.imageName(type="hires",timestamp=stamp)
 
                    if index == "/current/":
-                     if "favorit" in files[stamp]:                   star  = self.printStar(file=index+stamp, favorit=files[stamp]["favorit"], check_ip=address_string())
-                     else:                                           star  = self.printStar(file=index+stamp, favorit=0, check_ip=addess_string())
-                     if "to_be_deleted" in image_group[stamp]:       trash = self.printStar(file=index+stamp, delete=image_group[stamp]["to_be_deleted"], check_ip=check_ip)
-                     else:                                           trash = self.printStar(file=index+stamp, delete=0, check_ip=check_ip)
+                     if "favorit" in files[stamp]:                   star  = self.printStar(file=index+stamp, favorit=files[stamp]["favorit"], check_ip=address_string(), cam=which_cam)
+                     else:                                           star  = self.printStar(file=index+stamp, favorit=0, check_ip=addess_string(), cam=which_cam)
+                     if "to_be_deleted" in image_group[stamp]:       trash = self.printTrash(file=index+stamp, delete=image_group[stamp]["to_be_deleted"], check_ip=check_ip, cam=which_cam)
+                     else:                                           trash = self.printTrash(file=index+stamp, delete=0, check_ip=check_ip, cam=which_cam)
                    else: star = ""
 
                    if os.path.isfile(os.path.join(path,file_big)): html_yesterday += self.printImageContainer(description=time, lowres=file, hires=file_big, star=star)

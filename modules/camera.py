@@ -363,18 +363,23 @@ class myCamera(threading.Thread):
        '''
        calculate structual similarity index (SSIM) of two images
        '''
-       if detection_area != None:
-          logging.debug(self.id +"/compare 1: "+str(detection_area)+" / "+str(imageA.shape))
-          imageA, area = self.cropRawImage(frame=imageA, crop_area=detection_area, type="relative")
-          imageB, area = self.cropRawImage(frame=imageB, crop_area=detection_area, type="relative")
-          logging.debug(self.id +"/compare 2: "+str(area)+" / "+str(imageA.shape))
-
-       try:
-          (score, diff) = ssim(imageA, imageB, full=True)
-
-       except Exception as e:
-          logging.warning("Error comparing images: ", str(e))
+       if len(imageA) == 0 or len(imageB) == 0:
+          logging.warning("At least one file has a zero length: ", str(e))
           score = 0
+          
+       else:
+         if detection_area != None:
+            logging.debug(self.id +"/compare 1: "+str(detection_area)+" / "+str(imageA.shape))
+            imageA, area = self.cropRawImage(frame=imageA, crop_area=detection_area, type="relative")
+            imageB, area = self.cropRawImage(frame=imageB, crop_area=detection_area, type="relative")
+            logging.debug(self.id +"/compare 2: "+str(area)+" / "+str(imageA.shape))
+
+         try:
+            (score, diff) = ssim(imageA, imageB, full=True)
+
+         except Exception as e:
+            logging.warning("Error comparing images: ", str(e))
+            score = 0
 
        return round(score*100,1)
 

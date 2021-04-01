@@ -12,13 +12,13 @@ function imageOverlay(filename, description="", favorit="", to_be_deleted="") {
 
 //----------------------------------------
 
-function requestAPI(command, index, value, callback) {
+function requestAPI(command, index, value, lowres_file, callback) {
     var requestURL = command + index + "/" + value;
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
          if (this.readyState == 4 && this.status == 200) {
              //alert(this.responseText);
-             callback( command, index, value);
+             callback( command, index, value, lowres_file);
          }
          else if (this.readyState == 4) {
              alert("Fehler: "+requestURL);
@@ -32,28 +32,32 @@ function requestAPI(command, index, value, callback) {
 
 //----------------------------------------
 
-function setTrash(index, status) {
-        requestAPI("/delete", index, status, setTrashShow );
+function setTrash(index, status, lowres_file="") {
+        requestAPI("/delete", index, status, lowres_file, setTrashShow);
 	}
 
-function setTrashShow(command, index, status) {
-        document.getElementById("d_"+index).src          = "/html/recycle"+status+".png";
-        if (status == 1) { status = 0; }
-        else             { status = 1; }
+function setTrashShow(command, index, status, lowres_file="") {
+        if (status == 1) { setFavoritShow(command, index, 0, lowres_file); } // server-side: if favorit -> 1, trash -> 0
+        document.getElementById("d_"+index).src  = "/html/recycle"+status+".png";
+        if (status == 1) { status = 0; color = "red"; }
+        else             { status = 1; color = "black"; }
         document.getElementById("d_"+index+"_value").innerHTML = status;
+        document.getElementById(lowres_file).style.borderColor = color;
 	}
 
 //----------------------------------------
 
-function setFavorit(index, status) {
-        requestAPI("/favorit", index, status, setFavoritShow );
+function setFavorit(index, status, lowres_file="") {
+        requestAPI("/favorit", index, status, lowres_file, setFavoritShow);
 	}
 
-function setFavoritShow(command, index, status) {
+function setFavoritShow(command, index, status, lowres_file="") {
+        if (status == 1) { setTrashShow(command, index, 0, lowres_file); } // server-side: if favorit -> 1, trash -> 0
         document.getElementById("s_"+index).src          = "/html/star"+status+".png";
-        if (status == 1) { status = 0; }
-        else             { status = 1; }
+        if (status == 1) { status = 0; color = "lime"; }
+        else             { status = 1; color = "black"; }
         document.getElementById("s_"+index+"_value").innerHTML = status;
+        document.getElementById(lowres_file).style.borderColor = color;
 	}
 
 //----------------------------------------
