@@ -290,6 +290,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         check path and send requested content
         '''
         logging.debug("GET request with '" + self.path + "'.")
+        config.html_replace["title"] = self.config.param["title"]
 
         # check which camera has bin requested
         if "?" in self.path:

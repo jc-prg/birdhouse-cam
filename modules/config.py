@@ -47,6 +47,7 @@ class myConfig(threading.Thread):
          logging.info("Create main config file ...")
          self.write("main",self.param)
          logging.info("OK.")
+         
        else:
           self.param = self.read("main")
 
