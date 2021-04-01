@@ -204,14 +204,27 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         return html
 
 
-    def printLinks(self, link_list, camera=""):
+    def printLinks(self, link_list, current="", cam=""):
         html  = ""
         count = 0
-        if camera != "": camera = '?' + camera
+        if cam != "": cam = '?' + cam
         for link in link_list:
             count += 1
-            html  += "<a href='"+myPages[link][1]+camera+"'>"+myPages[link][0]+"</a>"
+            html  += "<a href='"+myPages[link][1]+cam+"'>"+myPages[link][0]+"</a>"
             if count < len(link_list): html += " / "
+            
+        if current != "" and len(camera > 1):
+          selected = 0
+          amount   = len(camera) 
+          count    = 0
+          cameras  = []
+          for name in camera:
+            cameras.append(name)
+            if cam == name: selected = count+1
+            count += 1
+          if selected > len(camera): selected = 0
+          html  += "<a href='"+myPages[current][1]+"?"+cameras[selected]+"'>"+cameras[selected]+"</a>"
+          
         return html
 
 
@@ -322,7 +335,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                index_file = "index.html"
 
-            config.html_replace["links"] = self.printLinks(("today","backup","favorit","cam_info"),which_cam)
+            config.html_replace["links"] = self.printLinks(link_list=("today","backup","favorit","cam_info"),cam=which_cam)
             self.streamFile(type='text/html', content=read_html('html',index_file), no_cache=True)
 
         # List favorit images (marked with star)
@@ -331,7 +344,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             html                             = ""
             favorits                         = {}
             config.html_replace["subtitle"]  = myPages["favorit"][0] + " (" + camera[which_cam].name + ")"
-            config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup"), camera=which_cam)
+            config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup"), current="favorit", cam=which_cam)
 
             files = config.cache(config="images")
             for stamp in files:
@@ -401,7 +414,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                time_now   = "000000"
 
                config.html_replace["subtitle"]  = myPages["backup"][0] + " " + files_data["info"]["date"] + " (" + camera[which_cam].name + ", " + str(files_data["info"]["count"]) + " Bilder)"
-               config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), camera=which_cam)
+               config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), cam=which_cam)
 
            elif os.path.isfile(config.file(config="images")):
                path     = config.directory(config="images")
@@ -411,7 +424,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                html     = self.printImageContainer(description="Live-Stream", lowres="stream.mjpg?"+which_cam, hires="/index.html",star="",window="self")
 
                config.html_replace["subtitle"]  = myPages["today"][0] + " (" + camera[which_cam].name + ")"
-               config.html_replace["links"]     = self.printLinks(link_list=("live","today_complete","backup","favorit"), camera=which_cam)
+               config.html_replace["links"]     = self.printLinks(link_list=("live","today_complete","backup","favorit"), cam=which_cam)
 
            if files != {}:
                stamps   = list(reversed(sorted(files.keys())))
@@ -467,7 +480,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path == '/list_backup.html':
 
            config.html_replace["subtitle"] = myPages["backup"][0] + " (" + camera[which_cam].name + ")"
-           config.html_replace["links"]    = self.printLinks(("live","today","today_complete","favorit"), which_cam)
+           config.html_replace["links"]    = self.printLinks(link_list=("live","today","today_complete","favorit"), current="backup", cam=which_cam)
 
            path           = config.directory(config="backup")
            backup_config  = config.files["backup"]
@@ -521,7 +534,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  dir_total_size += dir_size
                  files_total    += count
                  
-                 if dir_count_delete > 0: delete_info = "<br/>" + str(dir_count_delete) + " zum L&ouml;schen markiert"
+                 if dir_count_delete > 0: delete_info = "<br/>(Recycle: " + str(dir_count_delete) + ")"
                  else:                    delete_info = ""
                  if dir_count_cam > 0:    html  += self.printImageContainer(description="<b>"+date+"</b><br/>"+str(dir_count_cam)+" / "+str(dir_size_cam)+" MB" + delete_info, lowres=image, hires="/backup/"+directory+"/list_short.html?"+which_cam, window="self") + "\n"
                  else:                    html  += self.printImageContainer(description="<b>"+date+"</b><br/>Leer für "+which_cam, lowres="EMPTY") + "\n"
@@ -559,7 +572,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               today     = datetime.now().strftime('%Y%m%d')
 
               config.html_replace["subtitle"] = myPages["today_complete"][0] + " (" + camera[which_cam].name +", " + str(len(files_all)) + " Bilder)"
-              config.html_replace["links"]    = self.printLinks(link_list=("live","today","backup"), camera=which_cam)
+              config.html_replace["links"]    = self.printLinks(link_list=("live","today","backup"), current="today_complete", cam=which_cam)
 
            hours = list(camera[which_cam].param["image_save"]["hours"])
            hours.sort(reverse=True)
@@ -623,13 +636,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
            if files[1] == "backup":
              config.html_replace["subtitle"] = myPages["backup"][0] + " "+files[2][6:8] + "." + files[2][4:6] + "." + files[2][0:4]+" ("+camera[which_cam].name+", "+str(len(file_list))+" Bilder)"
-             config.html_replace["links"]    = self.printLinks(link_list=("live","today_complete","backup"), camera=which_cam)
+             config.html_replace["links"]    = self.printLinks(link_list=("live","today_complete","backup"), cam=which_cam)
              index     = "/backup/"
              time_now  = "000000"
 
            else:
              config.html_replace["subtitle"] = myPages["today_complete"][0] + " ("+camera[which_cam].name+", "+str(len(file_list))+" Bilder)"
-             config.html_replace["links"]    = self.printLinks(link_list=("live","today","backup"), camera=which_cam)
+             config.html_replace["links"]    = self.printLinks(link_list=("live","today","backup"), cam=which_cam)
              time_now  = datetime.now().strftime('%H%M%S')
              index     = "/current/"
              files     = config.read(config="images")
@@ -708,7 +721,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               html += "</div>"
               html += "</div>"
 
-            config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), camera=which_cam)
+            config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), cam=which_cam)
             config.html_replace["file_list"] = html
             self.streamFile(type='text/html',  content=read_html('html','list.html'), no_cache=True)
 
