@@ -6,7 +6,7 @@ import os
 
 myParameters = {
   "title"             : "Unser Nistkasten :-)",
-  "path"              : os.path.dirname(os.path.realpath(__file__)),
+  "path"              : os.getcwd(),       # initially start from the working dir
   "port"              : 8000,
   "preview_backup"    : "070000",
   "diff_threshold"    : 95,

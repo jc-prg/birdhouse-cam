@@ -764,7 +764,7 @@ if __name__ == "__main__":
     time.sleep(1)
 
     if not os.path.isdir(config.directory("images")):
-        logging.info("Created image directory...")
+        logging.info("Create image directory...")
         os.mkdir(config.directory("images"))
         logging.info("OK.")
 

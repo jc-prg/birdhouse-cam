@@ -44,7 +44,9 @@ class myConfig(threading.Thread):
        Core function (not clear what to do yet)
        '''
        if not self.exists("main"):
-          self.write("main",self.param)
+         logging.info("Create main config file ...")
+         self.write("main",self.param)
+         logging.info("OK.")
        else:
           self.param = self.read("main")
 
