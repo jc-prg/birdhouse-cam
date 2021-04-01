@@ -16,6 +16,13 @@ Raspberry Pi project to observe our birdhouse with multiple webcams (live stream
 * Python 3, PiCamera, CV2, imutils, JSON
 * HTML, CSS, JavaScript
 
+## Status // 04-2021
+
+Working but under development. Planned features:
+
+* Record videos
+* ...
+
 ## Impressions
 ![Screenshot 01](info/screenshot_06.png)
 ![Screenshot 02](info/screenshot_07.png)
