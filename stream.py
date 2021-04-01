@@ -230,14 +230,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
 
     def printImageGroup(self, title, id, image_group, index, diff, check_ip="", cam=''):
-           onclick = "onclick='showHideGroup(\""+id+"\")'"
-           html    = "<div class='separator' style='align:left;background-color:#111111;' align='left' "+onclick+">"
-           html   += "<a id='group_link_"+id+"' style='cursor:pointer;'>(+)</a> "
-           html   += title + " ... " + str(len(image_group))
-           if diff > 0: html += " -&gt; " + str(diff)
-           html += "</div><div class='separator'><hr/></div>\n"
-           id_list = ""
-           images  = ""
+           id_list     = ""
+           images      = ""
+           count_star  = 0
+           count_trash = 0
 
            for stamp in image_group:
               border  = "black"
@@ -245,13 +241,17 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               
               if "favorit" in image_group[stamp]:
                 star   = self.printStar(file=index+stamp, favorit=image_group[stamp]["favorit"], check_ip=check_ip, cam=cam)
-                if int(image_group[stamp]["favorit"]) == 1: border="lime"
+                if int(image_group[stamp]["favorit"]) == 1: 
+                  border      ="lime"
+                  count_star += 1
               else:
                 star   = self.printStar(file=index+stamp, favorit=0, check_ip=check_ip, cam=cam)
                 
               if "to_be_deleted" in image_group[stamp]:
                 trash  = self.printTrash(file=index+stamp, delete=image_group[stamp]["to_be_deleted"], check_ip=check_ip, cam=cam)
-                if int(image_group[stamp]["to_be_deleted"]) == 1: border="red"
+                if int(image_group[stamp]["to_be_deleted"]) == 1:
+                  border       ="red"
+                  count_trash += 1
               else:
                 trash  = self.printTrash(file=index+stamp, delete=0, check_ip=check_ip, cam=cam)
 
@@ -268,8 +268,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               id_list   += lowres + " "
               images    += self.printImageContainer(description=time + " ("+similarity+")", lowres=lowres, hires=hires, star=star, trash=trash, lazzy='lazzy', border=border)
 
-           html += "<div id='group_"+id+"' style='display:none;'>"+images+"</div>\n"
-           html += "<div id='group_ids_"+id+"' style='display:none;'>"+id_list+"</div>\n"
+           onclick = "onclick='showHideGroup(\""+id+"\")'"
+           html    = "<div class='separator' style='align:left;background-color:#111111;' align='left' "+onclick+">"
+           html   += "<a id='group_link_"+id+"' style='cursor:pointer;'>(+)</a> "
+           html   += title + " ... " + str(len(image_group)).zfill(3)
+           html   += "<font color='gray'>";
+           html   += " &nbsp; &nbsp; [Move: "+str(diff).zfill(3)+" | Star: "+str(count_star).zfill(2) + " | Recycle: " + str(count_trash).zfill(2) + "]"
+           html   += "</font>";
+           html   += "</div><div class='separator'><hr/></div>\n"
+           html   += "<div id='group_"+id+"' style='display:none;'>"+images+"</div>\n"
+           html   += "<div id='group_ids_"+id+"' style='display:none;'>"+id_list+"</div>\n"
            return html
 
     #-------------------------------------
@@ -447,7 +455,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                time_now = datetime.now().strftime('%H%M%S')
                index    = "/current/"
                html     = self.printImageContainer(description="Live-Stream", lowres="stream.mjpg?"+which_cam, hires="/index.html?"+which_cam, star="", window="self")
-#               html     = self.printImageContainer(description="Live-Stream", lowres="stream.mjpg?"+which_cam, javascript="imageOverlay();", star="", window="self")               
 
                config.html_replace["subtitle"]  = myPages["today"][0] + " (" + camera[which_cam].name + ")"
                config.html_replace["links"]     = self.printLinks(link_list=("live","today_complete","backup","favorit"), current='today', cam=which_cam)
@@ -458,7 +465,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                # Today
                for stamp in stamps:
                  if int(stamp) < int(time_now) or time_now == "000000":
-#                   if config.selectImage(timestamp=stamp, file_info=files[stamp], camera=which_cam):
                    if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp]):
                      if not "datestamp" in files[stamp] or files[stamp]["datestamp"] == today or file_dir[1] == "backup":
                        count   += 1
