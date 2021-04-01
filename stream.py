@@ -481,8 +481,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            imageToday     = config.imageName(type="lowres", timestamp=imageTitle, camera=which_cam)
            image          = os.path.join(config.directory(config="images"), imageToday)
            
-           logging.info(image)
-
            if os.path.isfile(image):
               html        += self.printImageContainer(description=myPages["today"][0], lowres=imageToday, hires=myPages["today"][1]+"?"+which_cam, star='' ,window="self")
            elif which_cam == "cam1":
