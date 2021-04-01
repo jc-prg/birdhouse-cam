@@ -6,9 +6,9 @@ body      { background-color : black; color : white; }
 
 .livestream_main {
     width : 98%;
+    max-width        : 98vh;
+    max-height       : 90vh;
     border:1px solid white;
-    max-height:1080px;
-    max-width:900px
     }
 
 .livestream_2nd {
