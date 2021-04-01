@@ -24,7 +24,7 @@ body      { background-color : black; color : white; }
 .livestream_2nd {
     max-width        : 25vw;
     max-height       : 25vh;
-    transform: scale(0.25);
+    transform: scale(1.0);
     border:1px solid white;
     }
 
