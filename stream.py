@@ -210,13 +210,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             html  += "<a href='"+myPages[link][1]+cam_link+"'>"+myPages[link][0]+"</a>"
             if count < len(link_list): html += " / "
  
-        count = 0;
-        for cam in camera: 
-          if camera[cam].active: count += 1
-        if current != "" and count > 1:
-          cameraKeys = list(camera.keys())       
-          selected   = cameraKeys.index(cam) + 1
-          if selected >= len(cameraKeys): selected = 0
+        if current != "" and len(self.active_cams) > 1:
+          selected   = self.active_cams.index(current) + 1
+          if selected >= len(self.active_cams): selected = 0
           html  += " / <a href='"+myPages[current][1]+"?"+cameraKeys[selected]+"'>"+cameraKeys[selected].upper()+"</a>"
           
         return html
@@ -318,12 +314,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         else:
            which_cam = "cam1"
 
+        self.active_cams = []
+        for key in camera:
+          if camera[key].active: self.active_cams.append(key)
         if camera[which_cam].active == False:
-           for cam in camera: 
-             if camera[cam].active: 
-               config.html_replace["active_cam"] = cam
-               which_cam = cam
-               break
+          which_cam = active_cams[0]
+        config.html_replace["active_cam"] = which_cam
 
         # index with embedded live stream
         if   self.path == '/': self.redirect("/index.html")
