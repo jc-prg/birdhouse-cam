@@ -507,7 +507,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                html     = self.printImageContainer(description="Live-Stream", lowres="stream.mjpg?"+which_cam, hires="/index.html?"+which_cam, star="", window="self")
 
                config.html_replace["subtitle"]  = myPages["today"][0] + " (" + camera[which_cam].name + ")"
-               config.html_replace["links"]     = self.printLinks(link_list=("live","today_complete","backup","favorit"), current='today', cam=which_cam)
+               if self.adminAllow():
+                 config.html_replace["links"]     = self.printLinks(link_list=("live","today_complete","backup","favorit"), current='today', cam=which_cam)
+               else:
+                 config.html_replace["links"]     = self.printLinks(link_list=("live","backup","favorit"), current='today', cam=which_cam)
 
            if files != {}:
                stamps   = list(reversed(sorted(files.keys())))
@@ -622,7 +625,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path == '/list_backup.html':
 
            config.html_replace["subtitle"] = myPages["backup"][0] + " (" + camera[which_cam].name + ")"
-           config.html_replace["links"]    = self.printLinks(link_list=("live","today","today_complete","favorit"), current="backup", cam=which_cam)
+           if self.adminAllow():
+             config.html_replace["links"]    = self.printLinks(link_list=("live","today","today_complete","favorit"), current="backup", cam=which_cam)
+           else:
+             config.html_replace["links"]    = self.printLinks(link_list=("live","today","favorit"), current="backup", cam=which_cam)
 
            path           = config.directory(config="backup")
            backup_config  = config.files["backup"]
@@ -778,7 +784,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
            if files[1] == "backup":
              config.html_replace["subtitle"] = myPages["backup"][0] + " "+files[2][6:8] + "." + files[2][4:6] + "." + files[2][0:4]+" ("+camera[which_cam].name+", "+str(len(file_list))+" Bilder)"
-             config.html_replace["links"]    = self.printLinks(link_list=("live","today_complete","backup"), cam=which_cam)
+             if self.adminAllow():
+               config.html_replace["links"]    = self.printLinks(link_list=("live","today_complete","backup"), cam=which_cam)
+             else:
+               config.html_replace["links"]    = self.printLinks(link_list=("live","backup"), cam=which_cam)
              index     = "/backup/"
              time_now  = "000000"
 
