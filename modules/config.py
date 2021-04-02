@@ -206,25 +206,5 @@ class myConfig(threading.Thread):
        return info
 
 
-   def selectImage(self, timestamp, file_info, camera=""):
-       '''
-       check image properties to decide if image is a selected one (for backup and view with selected images)
-       '''
-       if not "similarity" in file_info:                  return False
-
-       if camera == '' or ("camera" in file_info and file_info["camera"] == camera) or (not "camera" in file_info and camera == "cam1"):
-
-         threshold  = float(self.param["diff_threshold"])  #>>> set per camera
-         similarity = float(file_info["similarity"])
-
-         if "0000" in timestamp:                            return True
-         if similarity != 0 and similarity < threshold:     return True
-
-         if "favorit" in file_info:
-            favorit    = int(file_info["favorit"])
-            if favorit == 1:                                return True
-
-       return False
-
 #----------------------------------------------------
 
