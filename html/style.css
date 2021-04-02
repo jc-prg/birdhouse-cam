@@ -1,7 +1,7 @@
 div       { font-size : 13px; }
-a:link    { color : yellow; }
-a:visited { color : white; }
-a:hover   { color : yellow; }
+a:link    { color  : yellow; }
+a:visited { color  : white; }
+a:hover   { color  : yellow; }
 body      { background-color : black; color : white; }
 
 .livestream_main_container {
@@ -64,10 +64,22 @@ body      { background-color : black; color : white; }
 }
 
 .separator {
-    padding:2px;
-    float:left;
-    width:100%
+    padding : 2px;
+    margin  : 2px;
+    float   : left;
+    width   : 100%
 }
+
+.separator_group {
+    padding : 4px;
+    margin  : 2px;
+    float   : left;
+    width   : 100%;
+    cursor  : pointer;
+    background    : #222222;
+    border-bottom : 1px solid gray;
+    text-align    : left;
+    }
 
 .camera_info {
     padding:2px;
