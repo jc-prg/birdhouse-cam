@@ -12,7 +12,7 @@ function imageOverlay(filename, description="", favorit="", to_be_deleted="") {
 
 //----------------------------------------
 
-function requestAPI(command, index, value, lowres_file, callback) {
+function requestAPI(command, callback, index="", value="", lowres_file="") {
     var requestURL = command + index + "/" + value;
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
@@ -33,7 +33,7 @@ function requestAPI(command, index, value, lowres_file, callback) {
 //----------------------------------------
 
 function setTrash(index, status, lowres_file="") {
-        requestAPI("/delete", index, status, lowres_file, setTrashShow);
+        requestAPI("/delete", setTrashShow, index, status, lowres_file);
 	}
 
 function setTrashShow(command, index, status, lowres_file="") {
@@ -48,7 +48,7 @@ function setTrashShow(command, index, status, lowres_file="") {
 //----------------------------------------
 
 function setFavorit(index, status, lowres_file="") {
-        requestAPI("/favorit", index, status, lowres_file, setFavoritShow);
+        requestAPI("/favorit", setFavoritShow, index, status, lowres_file);
 	}
 
 function setFavoritShow(command, index, status, lowres_file="") {
