@@ -954,7 +954,7 @@ if __name__ == "__main__":
 #----------------------------------------------------
 # manual start to be implemented into UI
 
-    backup.backup_files()
+    #backup.backup_files()
     #backup.backup_files("20210402")
 
 #----------------------------------------------------
