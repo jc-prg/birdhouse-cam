@@ -163,7 +163,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         '''
         Check if administration is allowed based on the IP4 the request comes from
         '''
-        logging.info("Check if administration is allowed: "+self.address_string()+" / "+str(config.param["ip4_admin_deny"]))
+        logging.debug("Check if administration is allowed: "+self.address_string()+" / "+str(config.param["ip4_admin_deny"]))
         if self.address_string() in config.param["ip4_admin_deny"]: return False
         else:                                                       return True
 
@@ -171,12 +171,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
     def printYesterday(self):
         return "<div class='separator'><hr/>Gestern<hr/></div>"
-
-
-    def printRecycle(self, count=0):
-        amount = ""
-        if count > 0: amount = " ("+str(count)+")"
-        return "<div class='separator'><hr/>Recycle"+amount+"<hr/></div>"
 
 
     def printLinks(self, link_list, current="", cam=""):
@@ -271,6 +265,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  javascript  = star = trash = lazzy = ""
 
               else:              
+                if "_" in stamp: stamp_time = stamp.split("_")[1]
                 time       = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]             
                 similarity = str(image_group[stamp]["similarity"])+'%'
                 threshold  = camera[cam].param["similarity"]["threshold"]
@@ -473,7 +468,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             # today
             files = config.read(config="images")
-            index = "/current"
+            index = "/current/"
             for stamp in files:
               if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
                 new = datetime.now().strftime("%Y%m%d")+"_"+stamp
@@ -484,25 +479,25 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             html += self.printImageGroup(title="Heute", group_id="today", image_group=favorits, index=index, header=True, opened=True, cam=which_cam)
 
-            favorits       = {}
             path           = config.directory(config="backup")
             dir_list       = [f for f in os.listdir(path) if os.path.isdir(os.path.join(path, f))]
             for directory in dir_list:
-              index = "/backup/"+directory
+              index    = "/backup/"
               if config.exists(config="backup", date=directory):
                 files_data = config.read(config="backup", date=directory)
                 files      = files_data["files"]
                 date       = directory[6:8]+"."+directory[4:6]+"."+directory[0:4]
                 for stamp in files:
                   if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
-                    new = directory+"_"+stamp
-                    favorits[new]           = files[stamp]
-                    favorits[new]["source"] = ("backup",directory)
-                    favorits[new]["date"]   = date
-                    favorits[new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
-                    favorits[new]["date2"]  = favorits[new]["date"]
+                    new = stamp #directory+"_"+stamp
+                    favorits[directory]                = {}
+                    favorits[directory][new]           = files[stamp]
+                    favorits[directory][new]["source"] = ("backup",directory)
+                    favorits[directory][new]["date"]   = date
+                    favorits[directory][new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+                    favorits[directory][new]["date2"]  = favorits[directory][new]["date"]
 
-                html += self.printImageGroup(title=date, group_id=directory, image_group=favorits, index=index, header=True, opened=True, cam=which_cam)
+                html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], index=index, header=True, opened=True, cam=which_cam)
 
             config.html_replace["file_list"] = html
             self.streamFile(type='text/html',content=read_html('html','list.html'), no_cache=True)
