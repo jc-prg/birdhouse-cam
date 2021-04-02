@@ -266,12 +266,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
               else:              
                 if "_" in stamp: stamp_time = stamp.split("_")[1]
+                else:            stamp_time = stamp
                 time       = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]             
                 similarity = str(image_group[stamp]["similarity"])+'%'
                 threshold  = camera[cam].param["similarity"]["threshold"]
                 
                 if "favorit" in image_group[stamp]:
-                  star   = self.printStar(file=index+stamp, favorit=image_group[stamp]["favorit"], cam=cam)
+                  star   = self.printStar(file=index+stamp_time, favorit=image_group[stamp]["favorit"], cam=cam)
                   if int(image_group[stamp]["favorit"]) == 1: 
                     border      = "lime"
                     count_star += 1
@@ -279,12 +280,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                   star   = self.printStar(file=index+stamp, favorit=0, cam=cam)
                 
                 if "to_be_deleted" in image_group[stamp]:
-                  trash  = self.printTrash(file=index+stamp, delete=image_group[stamp]["to_be_deleted"], cam=cam)
+                  trash  = self.printTrash(file=index+stamp_time, delete=image_group[stamp]["to_be_deleted"], cam=cam)
                   if int(image_group[stamp]["to_be_deleted"]) == 1:
                     border       = "red"
                     count_trash += 1
                 else:
-                  trash  = self.printTrash(file=index+stamp, delete=0, cam=cam)
+                  trash  = self.printTrash(file=index+stamp_time, delete=0, cam=cam)
 
                 if float(image_group[stamp]["similarity"]) < float(threshold) and float(image_group[stamp]["similarity"]) > 0:
                   if border == "black":
@@ -305,6 +306,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                    lazzy      = "lazzy"
                 else:
                    lazzy      = ""
+
+              if "backup" in index:
+                hires  = index + hires
+                lowres = index + lowres
 
               images    += self.printImageContainer(description=description, lowres=lowres, hires=hires, star=star, trash=trash, javascript=javascript, lazzy=lazzy, border=border)
                  
@@ -481,23 +486,25 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             path           = config.directory(config="backup")
             dir_list       = [f for f in os.listdir(path) if os.path.isdir(os.path.join(path, f))]
+            dir_list       = list(reversed(sorted(dir_list)))
             for directory in dir_list:
               index    = "/backup/"
               if config.exists(config="backup", date=directory):
                 files_data = config.read(config="backup", date=directory)
                 files      = files_data["files"]
                 date       = directory[6:8]+"."+directory[4:6]+"."+directory[0:4]
+                favorits[directory] = {}
                 for stamp in files:
                   if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
-                    new = stamp #directory+"_"+stamp
-                    favorits[directory]                = {}
+                    new = directory+"_"+stamp
                     favorits[directory][new]           = files[stamp]
                     favorits[directory][new]["source"] = ("backup",directory)
                     favorits[directory][new]["date"]   = date
                     favorits[directory][new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                     favorits[directory][new]["date2"]  = favorits[directory][new]["date"]
 
-                html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], index=index, header=True, opened=True, cam=which_cam)
+                if len(favorits[directory]) > 0:
+                   html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], index=index, header=True, opened=True, cam=which_cam)
 
             config.html_replace["file_list"] = html
             self.streamFile(type='text/html',content=read_html('html','list.html'), no_cache=True)
