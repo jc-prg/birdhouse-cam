@@ -173,7 +173,9 @@ class myBackupRestore(threading.Thread):
            files_backup = { "files" : {}, "info" : {}}
            files_backup["files"]             = files
            files_backup["info"]["count"]     = len(files)
-           files_backup["info"]["threshold"] = self.config.param["diff_threshold"]
+           files_backup["info"]["threshold"] = {}
+           for cam in self.camera:
+             files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
            files_backup["info"]["date"]      = backup_date[6:8]+"."+backup_date[4:6]+"."+backup_date[0:4]
            files_backup["info"]["size"]      = sum(os.path.getsize(os.path.join(directory,f)) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory,f)))
            self.config.write(config="backup", config_data=backup_files, date=backup_date)
@@ -216,7 +218,9 @@ class myBackupRestore(threading.Thread):
 
          files_backup["info"]["count"]     = count
          files_backup["info"]["size"]      = backup_size
-         files_backup["info"]["threshold"] = self.config.param["diff_threshold"]
+         files_backup["info"]["threshold"] = {}
+         for cam in self.camera:
+           files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
          files_backup["info"]["date"]      = backup_date[6:8]+"."+backup_date[4:6]+"."+backup_date[0:4]
 
          self.config.write(config="backup",config_data=files_backup,date=directory)
