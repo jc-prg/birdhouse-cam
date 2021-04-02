@@ -64,12 +64,12 @@ function setFavoritShow(command, index, status, lowres_file="") {
 
 function showHideGroup(id) {
         if (document.getElementById("group_"+id).style.display == "none") {
-        	document.getElementById("group_"+id).style.display = "block"
-        	document.getElementById("group_link_"+id).innerHTML = "(&minus;)"
-		images     = document.getElementById("group_ids_"+id).innerHTML;
+                document.getElementById("group_"+id).style.display = "block"
+                document.getElementById("group_link_"+id).innerHTML = "(&minus;)"
+                images     = document.getElementById("group_ids_"+id).innerHTML;
                 image_list = images.split(" ");
                 for (let i=0; i<image_list.length; i++) {
-			img      = document.getElementById(image_list[i]);
+			 img      = document.getElementById(image_list[i]);
                         img_file = img.getAttribute('data-src');
                         img.src  = img_file;
 			}
