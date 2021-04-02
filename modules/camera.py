@@ -175,13 +175,16 @@ class myCamera(threading.Thread):
        self.running = False
        time.sleep(1)
 
-       if self.type == "pi":
-          self.camera.stop_recording()
-          self.camera.close()
+       if not self.error and self.active:
+         if self.type == "pi":
+           self.camera.stop_recording()
+           self.camera.close()
 
-       elif self.type == "usb":
-          self.camera.stop()
-          self.cameraFPS.stop()
+         elif self.type == "usb":
+           self.camera.stop()
+           self.cameraFPS.stop()
+          
+       logging.info("OK.")
 
 
    #----------------------------------
