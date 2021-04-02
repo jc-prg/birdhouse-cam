@@ -50,6 +50,12 @@ class myConfig(threading.Thread):
          
        else:
           self.param = self.read("main")
+          
+   def reload(self):
+       '''
+       Reload main configuration
+       '''
+       self.param = self.read("main")
 
 
    def check_locked(self, filename):
