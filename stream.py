@@ -3,9 +3,9 @@
 # Ideen:
 # - Videos aufzeichnen, z.B. wenn Bewegung detektiert wird
 # - Favoriten -> eindeutigen Timestamp (date + time)
-# - set to_be_deleted when below threshold; don't show / backup those files
+# - Idea: set to_be_deleted when below threshold; don't show / backup those files
 # - delete files with to_be_deleted == 1 in archive folders
-# - mark images with colored border in all day view
+# - Restart camera threads via API, Shutdown all services via API, Trigger RPi halt/reboot via API
 
 import io, os, time
 import logging
@@ -153,6 +153,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.wfile.write(b'\r\n')
 
     #-------------------------------------
+    
+    def adminAllowed(self):
+        '''
+        Check if administration is allowed based on the IP4 the request comes from
+        '''
+        logging.info("Check if administration is allowed: "+self.address_string()+" / "+str(config.param["ip4_admin_deny"]))
+        if self.address_string() in config.param["ip4_admin_deny"]: return False
+        else:                                                       return True
+
+    #-------------------------------------
 
     def printYesterday(self):
         return "<div class='separator'><hr/>Gestern<hr/></div>"
@@ -173,7 +183,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
        else:
           star    = "/html/star0.png"
           value   = "1"
-       if check_ip != config.param["ip_deny_favorit"]:
+       #if check_ip != config.param["ip_deny_favorit"]:
+       if self.adminAllowed():
           onclick = "setFavorit(\""+file+"\",document.getElementById(\"s_"+file+"_value\").innerHTML,\""+config.imageName("lowres", stamp, cam)+"\");"
           return "<div class='star'><div id='s_"+file+"_value' style='display:none;'>"+value+"</div><img class='star_img' id='s_"+file+"' src='" + star + "' onclick='"+onclick+"'/></div>\n"
        else:
@@ -193,7 +204,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
        else:
           trash   = "/html/recycle0.png"
           value   = "1"
-       if check_ip != config.param["ip_deny_favorit"]:
+#       if check_ip != config.param["ip_deny_favorit"]:
+       if self.adminAllowed():
           onclick = "setTrash(\""+file+"\",document.getElementById(\"d_"+file+"_value\").innerHTML,\""+config.imageName("lowres", stamp, cam)+"\");"
           return "<div class='trash'><div id='d_"+file+"_value' style='display:none;'>"+value+"</div><img class='trash_img' id='d_"+file+"' src='" + trash + "' onclick='"+onclick+"'/></div>\n"
        else:
@@ -328,6 +340,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            config_data["files"][param[4]]["to_be_deleted"] = param[5]
            if int(param[5]) == 1: config_data["files"][param[4]]["favorit"] = 0
            config.write(config="backup",config_data=config_data, date=param[3])
+           self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
+           
+        # restart camera
+        elif self.path.startswith("/restart-cameras/"):
+           logging.info("Restart of camera threads requested ...")
+           for cam in camera:
+             camera[cam].stop()
+             camera[cam].start()
            self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
 
         else:
@@ -499,7 +519,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                html_yesterday = ""
                for stamp in stamps:
                  if int(stamp) >= int(time_now) and time_now != "000000":
-#                   if config.selectImage(timestamp=stamp, file_info=files[stamp], camera=which_cam):
                    if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp]):
                      count   += 1
                      time     = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
@@ -528,7 +547,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                # To be deleted
                html_recycle  = ""
                count_recycle = 0
-               if config.param["ip_deny_favorit"] != self.address_string():
+               if self.adminAllowed():
+#               if config.param["ip_deny_favorit"] != self.address_string():
                  for stamp in stamps:
                    if "to_be_deleted" in files[stamp] and int(files[stamp]["to_be_deleted"]) == 1:
                      if files[stamp]["camera"] == which_cam:
@@ -880,10 +900,11 @@ if __name__ == "__main__":
 
     time.sleep(1)
 
-    if not os.path.isdir(config.directory("images")):
+    if not os.path.isdir(os.path.join(config.param["path"],config.directory("images"))):
         logging.info("Create image directory...")
-        os.mkdir(config.directory("images"))
+        os.mkdir(os.path.join(config.param["path"],config.directory("images")))
         logging.info("OK.")
+
 
     # start cameras
     camera = {}
