@@ -324,9 +324,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
              if count_diff > 0:        color2 = "aqua"
              if count_trash > 0:       color3 = "red"           
              html   += "[All: <font color='"+color0+"'>"+str(len(image_group)).zfill(3) + "</font> "
-             html   += "| Favorit: <font color='"+color1+"'>"+str(count_star).zfill(3) + "</font> "
-             html   += "| Detect: <font color='"+color2+"'>"+str(count_diff).zfill(3)+"</font> "
-             html   += "| Recycle: <font color='"+color3+"'>" + str(count_trash).zfill(3) + "</font>]"
+             html   += "| Favorit: <font color='"+color1+"'>"+str(count_star).zfill(2) + "</font> "
+             html   += "| Detect: <font color='"+color2+"'>"+str(count_diff).zfill(2)+"</font> "
+             html   += "| Recycle: <font color='"+color3+"'>" + str(count_trash).zfill(2) + "</font>]"
              html   += "</font>";
              html   += "</div>\n"
 
