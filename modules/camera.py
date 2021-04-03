@@ -20,18 +20,23 @@ from datetime        import datetime
 
 class myVideoRecording(threading.Thread):
 
-   def __init__(self, camera, name, directory):
+   def __init__(self, camera, param, directory):
        '''
        Initialize new thread and set inital parameters
        '''
        threading.Thread.__init__(self)
        self.camera       = camera
-       self.name         = name
+       self.name         = param["name"]
+       self.param        = param
        self.recording    = False
        self.directory    = directory
        self.max_length   = 0.25*60
        self.info         = {}
        self.ffmpeg_cmd   = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} -vcodec libx264 -crf 18 {OUTPUT_FILENAME}"
+       self.ffmpeg_cmd   = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} -b 1000k -strict -2 "
+       self.ffmpeg_cmd  += "-vcodec libx264 -profile:v main -level 3.1 -preset medium -x264-params ref=4 -movflags +faststart -crf 18 {OUTPUT_FILENAME}"
+       self.ffmpeg_cmd   = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} "
+       self.ffmpeg_cmd  += "-c:v libx264 -pix_fmt yuv420p {OUTPUT_FILENAME}"
        self.count_length = 8
 
    #----------------------------------
@@ -46,6 +51,11 @@ class myVideoRecording(threading.Thread):
          "start_stamp" : 0,
          "status"      : "ready"
          }
+       if "video" in self.param and "max_length" in self.param["video"]:
+          self.max_length = self.param["video"]["max_length"]
+          logging.info("Set max video recording length for " + self.camera + " to " + str(self.max_length))
+       else:
+          logging.info("Use default max video recording length for " + self.camera + " = " + str(self.max_length))
        return
 
    
@@ -55,8 +65,8 @@ class myVideoRecording(threading.Thread):
        '''
        logging.info("Starting video recording ...")
        self.recording            = True
-       self.info["start"]        = datetime.now().strftime('%Y%m%d_%H%M%S')
-       self.info["start_stamp"]  = datetime.now().timestamp()
+       self.info["date_start"]   = datetime.now().strftime('%Y%m%d_%H%M%S')
+       self.info["stamp_start"]  = datetime.now().timestamp()
        self.info["status"]       = "recording"
        self.info["camera"]       = self.camera
        self.info["camera_name"]  = self.name
@@ -71,9 +81,11 @@ class myVideoRecording(threading.Thread):
        '''
        logging.info("Stopping video recording ...")
        self.recording         = False
-       self.info["end"]       = datetime.now().strftime('%Y%m%d_%H%M%S')
+       self.info["date_end"]  = datetime.now().strftime('%Y%m%d_%H%M%S')
+       self.info["stamp_end"] = datetime.now().timestamp()
        self.info["status"]    = "processing"
-       self.info["framerate"] = round(float(self.info["image_count"]) / float(self.max_length), 1)
+       self.info["length"]    = round(self.info["stamp_end"] - self.info["stamp_start"],1)
+       self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
        
        self.create_video()
 
@@ -81,7 +93,7 @@ class myVideoRecording(threading.Thread):
 
        if not self.config.exists("videos"):  config_file = {}
        else:                                 config_file = self.config.read("videos")
-       config_file[self.info["start"]] = self.info
+       config_file[self.info["date_start"]] = self.info
        self.config.write("videos",config_file)           
        
        time.sleep(1)
@@ -94,7 +106,7 @@ class myVideoRecording(threading.Thread):
        Check if maximum length is achieved
        '''
        if self.info["status"] == "recording":
-          max_time = float(self.info["start_stamp"] + self.max_length) 
+          max_time = float(self.info["stamp_start"] + self.max_length) 
           if max_time < float(datetime.now().timestamp()):
              logging.info("Maximum recording time achieved ...")
              logging.info(str(max_time) + " < " + str(datetime.now().timestamp()))
@@ -127,8 +139,8 @@ class myVideoRecording(threading.Thread):
        '''
        generate filename for images
        '''
-       if ftype == "image":   return "video-" + self.camera + "_" + self.info["start"] + "_"
-       elif ftype == "video": return "video-" +  self.camera + "_" + self.info["start"] + ".mp4"
+       if ftype == "image":   return "video-" + self.camera + "_" + self.info["date_start"] + "_"
+       elif ftype == "video": return "video-" +  self.camera + "_" + self.info["date_start"] + ".mp4"
        else:                  return
 
 
@@ -252,9 +264,10 @@ class myCamera(threading.Thread):
           logging.error("Unknown type of camera!")
           
        if not self.error:
-          self.video = myVideoRecording(camera=self.id, name=self.name, directory=self.config.directory("videos"))
-          self.video.start()
+        if self.param["video"]["allow_recording"]:
+          self.video = myVideoRecording(camera=self.id, param=self.param, directory=self.config.directory("videos"))
           self.video.config = config
+          self.video.start()
 
        self.previous_image    = None
        self.previous_stamp    = "000000"

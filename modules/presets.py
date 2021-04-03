@@ -38,6 +38,10 @@ myParameters = {
           "seconds"   : ("00","20","40"),
           "hours"     : ("06","07","08","09","10","11","12","13","14","15","16","17","18","19","20")
           },
+       "video" : {
+          "allow_recording" : True,
+          "max_length"      : 180,
+          },
        "preview_scale" : 18
        },
      "cam2"  : {
@@ -62,6 +66,10 @@ myParameters = {
           "color"     : "ORIGINAL",
           "seconds"   : ("10","30","50"),
           "hours"     : ("06","07","08","09","10","11","12","13","14","15","16","17","18","19","20")
+          },
+       "video" : {
+          "allow_recording" : True,
+          "max_length"      : 180,
           },
        "preview_scale" : 18
        }

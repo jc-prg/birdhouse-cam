@@ -1,15 +1,15 @@
 #!/usr/bin/python3
 
+# In Progress:
+# - Record view start / stop max. length
+#   -> max length in config file
+#   -> insert a red "RECORDING ..." into live streaming and pause live streaming
 # Backlog:
-# - kill -> sauberes runterfahren
-# - Record view, when pressing start -> max. XX min or press stop earlier
-#   -> implement in camera.py
-#   -> no thumbnails / images during this time
-#   -> define in config.json: (a) max. minutes and (b) if record is allowed
 # - In progress (error!): Restart camera threads via API, Shutdown all services via API, Trigger RPi halt/reboot via API
 # - delete files with to_be_deleted == 1 in archive folders
 # - password for external access (to enable admin from outside)
 # - Idea: set to_be_deleted when below threshold; don't show / backup those files
+
 
 import io, os, time
 import logging
@@ -239,7 +239,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           return "<div class='trash'></div>\n"
 
 
-    def printImageContainer(self, description, lowres, hires='', javascript='' ,star='', trash='', window='blank', lazzy='', border='black'):
+    def printImageContainer(self, description, lowres, hires='', javascript='' ,star='', trash='', window='self', lazzy='', border='black'):
         html = "<div class='image_container'>\n"
         if star  != '':      html += star
         else:                html += "<div class='star'></div>"
@@ -832,14 +832,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
              files_all = config.read(config="videos")
            
              if len(files_all) > 0:
-               html  += "Liste vorhandener Videos"
-               html  += "<ul>"
+               html  += "<div class='separator' style='width:100%'>"
+               html  += "<b>Liste vorhandener Videos</b>"
+               html  += "</div>\n"
+               
+               html  += "<div>\n"
+               
                for video in files_all:
-                  html += "<li><a href='" + files_all[video]["video_file"] + "' window='_blank'>"
-                  html += files_all[video]["video_file"] 
-                  html += "</a></li>"
-           
-               html  += "</ul>"
+                  html += "<div class='image_container'>"
+#                  html += "<video src=\"" + files_all[video]["video_file"] + "\" style='margin:5px;width:100px;' controls>Video not supported/<video>"
+                  html += "<img src=\"/videos/" + files_all[video]["thumbnail"] + "\" style='margin:5px;width:100px;' class='thumbnail'/>"
+                  html += "<br/><a href='" + files_all[video]["video_file"] + "' target='_blank'>"+ video.replace("_","<br/>") + "</a>"
+                  html += "\n</div>\n"
+                  
+               html += "</div>\n"
            
            config.html_replace["subtitle"]  = myPages["videos"][0] + " (" + camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
            config.html_replace["links"]     = self.printLinks(link_list=("live","today","favorit","backup"), current="today_complete", cam=which_cam)
@@ -947,7 +953,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               html     += "<li>Area: "+str(info["similarity"]["detection_area"]) + "</li>"
               html   += "</ul></li>"
               html   += "</ul>"
-              if camera[cam].active:
+              if camera[cam].active and camera[cam].param["video"]["allow_recording"]:
                 html   += "<hr/>"
                 html   += "<center><button onclick='requestAPI(\"/start/recording/"+cam+"\");'>Record</button> &nbsp;"
                 html   += "<button onclick='requestAPI(\"/stop/recording/"+cam+"\");'>Stop</button></center>"
@@ -999,7 +1005,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 stream = False
 
         # images, css, js
-        elif self.path.endswith('.css'):        self.streamFile(type='text/css', content=read_html('html',self.path))
+        elif self.path.startswith('/videos') and self.path.endswith('.jpeg'):
+                                                self.streamFile(type='image/jpg', content=read_image('',self.path))
+        elif self.path.endswith('.css'):        self.streamFile(type='text/css',  content=read_html('html',self.path))
         elif self.path.endswith('.js'):         self.streamFile(type='text/javascript',  content=read_html('html',self.path))
         elif self.path.endswith('icon.png'):    self.streamFile(type='image/png', content=read_image('html','icon.png'))
         elif self.path.endswith('favicon.ico'): self.streamFile(type='image/ico', content=read_image('html','favicon.ico'))
