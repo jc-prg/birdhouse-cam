@@ -32,11 +32,12 @@ function requestAPI(command, callback, index="", value="", lowres_file="") {
 
 //----------------------------------------
 
-function setTrash(index, status, lowres_file="") {
-        requestAPI("/delete", setTrashShow, index, status, lowres_file);
+function setRecycle(index, status, lowres_file="") {
+        requestAPI("/delete", setRecycleShow, index, status, lowres_file);
 	}
 
-function setTrashShow(command, index, status, lowres_file="") {
+function setRecycleShow(command, index, status, lowres_file="") {
+        console.log("setRecycleShow: "+lowres_file+" | "+status+" | "+index)
         if (status == 1) { setFavoritShow(command, index, 0, lowres_file); } // server-side: if favorit -> 1, trash -> 0
         document.getElementById("d_"+index).src  = "/html/recycle"+status+".png";
         if (status == 1) { status = 0; color = "red"; }
@@ -52,7 +53,8 @@ function setFavorit(index, status, lowres_file="") {
 	}
 
 function setFavoritShow(command, index, status, lowres_file="") {
-        if (status == 1) { setTrashShow(command, index, 0, lowres_file); } // server-side: if favorit -> 1, trash -> 0
+        console.log("setFavoritShow: "+lowres_file+" | "+status+" | "+index)
+        if (status == 1) { setRecycleShow(command, index, 0, lowres_file); } // server-side: if favorit -> 1, trash -> 0
         document.getElementById("s_"+index).src          = "/html/star"+status+".png";
         if (status == 1) { status = 0; color = "lime"; }
         else             { status = 1; color = "black"; }

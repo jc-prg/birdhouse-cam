@@ -224,27 +224,33 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           trash   = "/html/recycle0.png"
           value   = "1"
        if self.adminAllowed():
-          onclick = "setTrash(\""+file+"\",document.getElementById(\"d_"+file+"_value\").innerHTML,\""+config.imageName("lowres", stamp, cam)+"\");"
+          onclick = "setRecycle(\""+file+"\",document.getElementById(\"d_"+file+"_value\").innerHTML,\""+config.imageName("lowres", stamp, cam)+"\");"
           return "<div class='trash'><div id='d_"+file+"_value' style='display:none;'>"+value+"</div><img class='trash_img' id='d_"+file+"' src='" + trash + "' onclick='"+onclick+"'/></div>\n"
        else:
           return "<div class='trash'></div>\n"
 
 
     def printImageContainer(self, description, lowres, hires='', javascript='' ,star='', trash='', window='blank', lazzy='', border='black'):
-        html = "<div class='image_container'>"
+        html = "<div class='image_container'>\n"
         if star  != '':      html += star
         else:                html += "<div class='star'></div>"
         if trash  != '':     html += trash
         else:                html += "<div class='trash'></div>"
         if lazzy == 'lazzy': lazzy = "data-"
         else:                lazzy = ""
+        
+        lowres_file = lowres.split("/")
+        lowres_file = lowres_file[len(lowres_file)-1]
+        
+        html += "<div class='thumbnail_container'>\n"
         if lowres == "EMPTY":
-          html += "<div class='thumbnail_container'><div class='thumbnail' style='background-color:#222222;'><br/><br/><small>"+description+"</small></div></div>"
+          html += "<div class='thumbnail' style='background-color:#222222;'><br/><br/><small>"+description+"</small></div>"
         else:
-          if hires != '':        html += "<div class='thumbnail_container'><a href='"+hires+"' target='_"+window+"'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail' style='border:1px solid "+border+";'/></a><br/><small>"+description+"</small></div>"
-          elif javascript != '': html += "<div class='thumbnail_container'><div onclick='javascript:"+javascript+"' style='cursor:pointer;'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail' style='border:1px solid "+border+";'/></div><br/><small>"+description+"</small></div>"
-          else:                  html += "<div class='thumbnail_container'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail' style='border:1px solid "+border+";'/><br/><small>"+description+"</small></div>"
-        html += "</div>"
+          if hires != '':        html += "<a href='"+hires+"' target='_"+window+"'><img "+lazzy+"src='"+lowres+"' id='"+lowres_file+"' class='thumbnail' style='border:1px solid "+border+";'/></a><br/><small>"+description+"</small>"
+          elif javascript != '': html += "<div onclick='javascript:"+javascript+"' style='cursor:pointer;'><img "+lazzy+"src='"+lowres+"' id='"+lowres_file+"' class='thumbnail' style='border:1px solid "+border+";'/></div><br/><small>"+description+"</small>"
+          else:                  html += "<img "+lazzy+"src='"+lowres+"' id='"+lowres_file+"' class='thumbnail' style='border:1px solid "+border+";'/><br/><small>"+description+"</small>"
+        html += "\n</div>\n"
+        html += "</div>\n"
         return html
 
 
@@ -297,7 +303,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                 if float(image_group[stamp]["similarity"]) < float(threshold) and float(image_group[stamp]["similarity"]) > 0:
                   if border == "black":
-                   similarity  = "<u>"+similarity+"</u>"
                    border      = "aqua"
                    count["detect"] += 1
 
