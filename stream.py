@@ -826,6 +826,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif '/videos.html' in self.path:
         
            html      = ""
+           files_all = {}
            path      = config.directory(config="videos")
 
            if config.exists("videos"):
@@ -847,6 +848,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                   html += "\n</div>\n"
                   
                html += "</div>\n"
+               
+             else:               
+               html  += "<div class='separator' style='width:100%;color:lightred;'>Keine Videos vorhanden</div>"
+           else:
+               html  += "<div class='separator' style='width:100%;color:lightred;'>Keine Videos vorhanden</div>"
            
            config.html_replace["subtitle"]  = myPages["videos"][0] + " (" + camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
            config.html_replace["links"]     = self.printLinks(link_list=("live","today","favorit","backup"), current="today_complete", cam=which_cam)
