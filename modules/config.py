@@ -32,11 +32,12 @@ class myConfig(threading.Thread):
            "videos" : "videos/"
            }
        self.files          = {
-           "main"   : "config.json",
+           "backup" : "config_images.json",
            "images" : "config_images.json",
-           "backup" : "config_images.json"
+           "main"   : "config.json",
+           "videos" : "config_videos.json"
            }
-           
+
        self.main_directory = main_directory
 
        if not self.exists("main"):

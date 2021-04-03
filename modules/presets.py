@@ -75,7 +75,7 @@ myPages = {
   "today_complete"  : ("Alle heute","/list_new.html"),
   "favorit"         : ("Favoriten","/list_star.html"),
   "cam_info"        : ("Kamera-Info","/cameras.html"),
-  "video"           : ("Kamera-Info","/videos.html"),
+  "videos"          : ("Videos","/videos.html"),
   "save"            : ("Speichern","/image.jpg")
 }
 

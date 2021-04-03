@@ -17,6 +17,154 @@ from datetime        import datetime
 
 #----------------------------------------------------
 
+
+class myVideoRecording(threading.Thread):
+
+   def __init__(self, camera, name, directory):
+       '''
+       Initialize new thread and set inital parameters
+       '''
+       threading.Thread.__init__(self)
+       self.camera       = camera
+       self.name         = name
+       self.recording    = False
+       self.directory    = directory
+       self.max_length   = 0.25*60
+       self.info         = {}
+       self.ffmpeg_cmd   = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} -vcodec libx264 -crf 18 {OUTPUT_FILENAME}"
+       self.count_length = 8
+
+   #----------------------------------
+   
+   def run(self):
+       '''
+       Initialize, set inital values
+       '''
+       logging.info("Initialize video recording ...")
+       self.info = {
+         "start"       : 0,
+         "start_stamp" : 0,
+         "status"      : "ready"
+         }
+       return
+
+   
+   def start_recording(self):
+       '''
+       Start recording
+       '''
+       logging.info("Starting video recording ...")
+       self.recording            = True
+       self.info["start"]        = datetime.now().strftime('%Y%m%d_%H%M%S')
+       self.info["start_stamp"]  = datetime.now().timestamp()
+       self.info["status"]       = "recording"
+       self.info["camera"]       = self.camera
+       self.info["camera_name"]  = self.name
+       self.info["directory"]    = self.directory
+       self.info["image_count"]  = 0
+       return
+
+       
+   def stop_recording(self):
+       '''
+       Stop recording and trigger video creation
+       '''
+       logging.info("Stopping video recording ...")
+       self.recording         = False
+       self.info["end"]       = datetime.now().strftime('%Y%m%d_%H%M%S')
+       self.info["status"]    = "processing"
+       self.info["framerate"] = round(float(self.info["image_count"]) / float(self.max_length), 1)
+       
+       self.create_video()
+
+       self.info["status"]    = "finished"
+
+       if not self.config.exists("videos"):  config_file = {}
+       else:                                 config_file = self.config.read("videos")
+       config_file[self.info["start"]] = self.info
+       self.config.write("videos",config_file)           
+       
+       time.sleep(1)
+       self.info = {}
+       return
+
+
+   def autostop(self):
+       '''
+       Check if maximum length is achieved
+       '''
+       if self.info["status"] == "recording":
+          max_time = float(self.info["start_stamp"] + self.max_length) 
+          if max_time < float(datetime.now().timestamp()):
+             logging.info("Maximum recording time achieved ...")
+             logging.info(str(max_time) + " < " + str(datetime.now().timestamp()))
+             return True
+       return False
+
+
+   def status(self):
+       '''
+       Return recording status
+       '''
+       return self.record_video_info
+
+
+   def save_image(self, image):
+       '''
+       Save image
+       '''
+       self.info["image_count"] += 1
+       self.info["image_files"] = self.filename("image")
+       self.info["video_file"]  = self.filename("video")
+       filename = self.info["image_files"] + str(self.info["image_count"]).zfill(self.count_length) + ".jpg"
+       path     = os.path.join(self.directory, filename)
+       logging.debug("Save image as: " + path)
+
+       return cv2.imwrite(path, image)
+
+       
+   def filename(self, ftype="image"):
+       '''
+       generate filename for images
+       '''
+       if ftype == "image":   return "video-" + self.camera + "_" + self.info["start"] + "_"
+       elif ftype == "video": return "video-" +  self.camera + "_" + self.info["start"] + ".mp4"
+       else:                  return
+
+
+   def create_video(self):
+       '''
+       Create video from images
+       '''
+       cmd_create = self.ffmpeg_cmd
+       cmd_create = cmd_create.replace("{INPUT_FILENAMES}", os.path.join(self.config.directory("videos"), self.filename("image") + "%" + str(self.count_length).zfill(2) + "d.jpg"))
+       cmd_create = cmd_create.replace("{OUTPUT_FILENAME}", os.path.join(self.config.directory("videos"), self.filename("video")))
+       cmd_create = cmd_create.replace("{FRAMERATE}", str(round(self.info["framerate"])))
+       number     = 1
+       self.info["thumbnail"] = self.filename("image") + "thumb.jpeg"
+       cmd_thumb  = "cp " + os.path.join(self.config.directory("videos"), self.filename("image") + str(number).zfill(self.count_length) + ".jpg ") + os.path.join(self.config.directory("videos"), self.filename("image") + "thumb.jpeg")
+       cmd_delete = "rm " + os.path.join(self.config.directory("videos"), self.filename("image") + "*.jpg")
+       logging.info("start video creation with ffmpeg ...")
+       
+       logging.debug(cmd_create)       
+       message  = os.system(cmd_create)
+       logging.debug(message)       
+
+
+       logging.debug(cmd_thumb)       
+       message = os.system(cmd_thumb)
+       logging.debug(message)       
+
+       logging.debug(cmd_delete)       
+       message = os.system(cmd_delete)
+       logging.debug(message)       
+
+       logging.info("OK.")
+       return
+
+
+#----------------------------------------------------
+
 class myCameraOutput(object):
 
     def __init__(self):
@@ -45,16 +193,16 @@ class myCamera(threading.Thread):
        Initialize new thread and set inital parameters
        '''
        threading.Thread.__init__(self)
-       self.id        = id
-       self.param     = param
-       self.name      = param["name"]
-       self.active    = param["active"]
-       self.config    = config
-       self.type      = type
-       self.record    = record
-       self.running   = True
-       self.error     = False
-
+       self.id           = id
+       self.param        = param
+       self.name         = param["name"]
+       self.active       = param["active"]
+       self.config       = config
+       self.type         = type
+       self.record       = record
+       self.running      = True
+       self.error        = False
+       
        logging.info("Starting camera ("+self.type+"/"+self.name+") ...")
 
        if self.type == "pi":
@@ -102,6 +250,11 @@ class myCamera(threading.Thread):
           self.error  = True
           self.active = False
           logging.error("Unknown type of camera!")
+          
+       if not self.error:
+          self.video = myVideoRecording(camera=self.id, name=self.name, directory=self.config.directory("videos"))
+          self.video.start()
+          self.video.config = config
 
        self.previous_image    = None
        self.previous_stamp    = "000000"
@@ -117,25 +270,40 @@ class myCamera(threading.Thread):
        logging.debug("SECONDS: "+str(self.param["image_save"]["seconds"]))
 
        while (self.running and not self.error):
-          time.sleep(1)
           seconds = datetime.now().strftime('%S')
           hours   = datetime.now().strftime('%H')
           stamp   = datetime.now().strftime('%H%M%S')
+          
+          # Video Recording
+          if self.video.recording:
+          
+             if self.video.autostop():
+                self.video.stop_recording()
+                break
 
-          if self.record:
+             image     = self.getImage()
+             image     = self.convertImage2RawImage(image)
+             self.video.save_image(image=image)
 
-            if (seconds in self.param["image_save"]["seconds"]) and (hours in self.param["image_save"]["hours"]):
-               text  = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-               self.setText(text)
+             logging.debug(".... Video Recording: " + str(self.video.info["start_stamp"]) + " -> " + str(datetime.now().strftime("%H:%M:%S")))
+#             time.sleep(0.1)
 
-               image         = self.getImage()
-               image         = self.convertImage2RawImage(image)
-               image_compare = self.convertRawImage2Gray(image)
+          # Image Recording
+          else:
+            time.sleep(1)
+            if self.record:
+              if (seconds in self.param["image_save"]["seconds"]) and (hours in self.param["image_save"]["hours"]):
+                 text  = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+                 self.setText(text)
 
-               if self.previous_image is not None:
-                  similarity = str(self.compareRawImages(imageA=image_compare, imageB=self.previous_image, detection_area=self.param["similarity"]["detection_area"]))
+                 image         = self.getImage()
+                 image         = self.convertImage2RawImage(image)
+                 image_compare = self.convertRawImage2Gray(image)
 
-               image_info = {
+                 if self.previous_image is not None:
+                    similarity = str(self.compareRawImages(imageA=image_compare, imageB=self.previous_image, detection_area=self.param["similarity"]["detection_area"]))
+
+                 image_info = {
                           "camera"      : self.id,
                           "hires"       : self.config.imageName("hires",  stamp, self.id),
                           "lowres"      : self.config.imageName("lowres", stamp, self.id),
@@ -146,17 +314,17 @@ class myCamera(threading.Thread):
                           "similarity"  : similarity
                           }
 
-               pathLowres = os.path.join(self.config.param["path"], self.param["image_save"]["path"], self.config.imageName("lowres", stamp, self.id))
-               pathHires  = os.path.join(self.config.param["path"], self.param["image_save"]["path"], self.config.imageName("hires",  stamp, self.id))
+                 pathLowres = os.path.join(self.config.param["path"], self.param["image_save"]["path"], self.config.imageName("lowres", stamp, self.id))
+                 pathHires  = os.path.join(self.config.param["path"], self.param["image_save"]["path"], self.config.imageName("hires",  stamp, self.id))
 
-               logging.debug("WRITE:" +pathLowres)
+                 logging.debug("WRITE:" +pathLowres)
 
-               self.writeImageInfo(time=stamp, data=image_info)
-               self.writeImage(filename=pathHires,  image=image)
-               self.writeImage(filename=pathLowres, image=image, scale_percent=self.param["preview_scale"])
+                 self.writeImageInfo(time=stamp, data=image_info)
+                 self.writeImage(filename=pathHires,  image=image)
+                 self.writeImage(filename=pathLowres, image=image, scale_percent=self.param["preview_scale"])
 
-               self.previous_image = image_compare
-               self.previous_stamp = stamp
+                 self.previous_image = image_compare
+                 self.previous_stamp = stamp
 
 
    def wait(self):
@@ -185,7 +353,6 @@ class myCamera(threading.Thread):
            self.cameraFPS.stop()
           
        logging.info("OK.")
-
 
    #----------------------------------
 
@@ -436,4 +603,4 @@ class myCamera(threading.Thread):
           self.config.write("images",files)
 
 
-#----------------------------------------------------
+

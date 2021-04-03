@@ -426,15 +426,46 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            param = self.path.split("/")
            config_data = config.read(config="backup", date=param[3])
            if param[4] in config_data["files"]:
-             config_data["files"][param[4]]["to_be_deleted"] = param[5]
-             if int(param[5]) == 1: config_data["files"][param[4]]["favorit"] = 0
-             config.write(config="backup",config_data=config_data, date=param[3])
+              config_data["files"][param[4]]["to_be_deleted"] = param[5]
+              if int(param[5]) == 1: config_data["files"][param[4]]["favorit"] = 0
+              config.write(config="backup",config_data=config_data, date=param[3])
            else:
-             response["error"] = "no image found with stamp "+str(param[4])
+              response["error"] = "no image found with stamp "+str(param[4])
 
            response["command"] = ["mark/unmark for deletion (backup)", param[5]]
            self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
            
+        # start video recording
+        elif self.path.startswith("/start/recording/"):
+           param     = self.path.split("/")
+           which_cam = param[3]
+           if which_cam in camera and not camera[which_cam].error and camera[which_cam].active:
+              if not camera[which_cam].video.recording:   camera[which_cam].video.start_recording()
+              else:                                       response["error"] = "camera is already recording "+str(param[3])       
+           elif camera[which_cam].error or camera[which_cam].active == False:
+              response["error"] = "camera is not active "+str(param[3])       
+           else:
+              response["error"] = "camera doesn't exist "+str(param[3])       
+
+           response["command"] = ["start recording"]
+           self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+
+        # end video recording
+        elif self.path.startswith("/stop/recording/"):
+           param     = self.path.split("/")
+           which_cam = param[3]
+           if which_cam in camera and not camera[which_cam].error and camera[which_cam].active:
+              if camera[which_cam].video.recording:  camera[which_cam].video.stop_recording()
+              else:                                  response["error"] = "camera isn't recording at the moment "+str(param[3])       
+           elif camera[which_cam].error or camera[which_cam].active == False:
+              response["error"] = "camera is not active "+str(param[3])       
+           else:
+              response["error"] = "camera doesn't exist "+str(param[3])       
+
+           response["command"] = ["start recording"]
+           self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+
+
         # restart camera // doesn't close the camera correctly at the moment
         elif self.path.startswith("/restart-cameras/"):
            logging.info("Restart of camera threads requested ...")
@@ -791,6 +822,31 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            self.streamFile(type='text/html', content=read_html('html','list.html'), no_cache=True)
 
 
+        # List all video files
+        elif '/videos.html' in self.path:
+        
+           html      = ""
+           path      = config.directory(config="videos")
+
+           if config.exists("videos"):
+             files_all = config.read(config="videos")
+           
+             if len(files_all) > 0:
+               html  += "Liste vorhandener Videos"
+               html  += "<ul>"
+               for video in files_all:
+                  html += "<li><a href='" + files_all[video]["video_file"] + "' window='_blank'>"
+                  html += files_all[video]["video_file"] 
+                  html += "</a></li>"
+           
+               html  += "</ul>"
+           
+           config.html_replace["subtitle"]  = myPages["videos"][0] + " (" + camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
+           config.html_replace["links"]     = self.printLinks(link_list=("live","today","favorit","backup"), current="today_complete", cam=which_cam)
+           config.html_replace["file_list"] = html
+           self.streamFile(type='text/html', content=read_html('html','list.html'), no_cache=True)
+           
+           
         # List all files
         elif '/list.html' in self.path:
 
@@ -891,6 +947,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               html     += "<li>Area: "+str(info["similarity"]["detection_area"]) + "</li>"
               html   += "</ul></li>"
               html   += "</ul>"
+              if camera[cam].active:
+                html   += "<hr/>"
+                html   += "<center><button onclick='requestAPI(\"/start/recording/"+cam+"\");'>Record</button> &nbsp;"
+                html   += "<button onclick='requestAPI(\"/stop/recording/"+cam+"\");'>Stop</button></center>"
               html += "</div>"
               html += "</div>"
               
@@ -899,7 +959,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 #              html += "<button onclick='requestAPI(\"/restart-cameras\");'>Kameras neu starten</button>"
 #              html += "</div>"
 
-            config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), cam=which_cam)
+            config.html_replace["links"]     = self.printLinks(link_list=("live","today","videos","favorit"), cam=which_cam)
             config.html_replace["file_list"] = html
             self.streamFile(type='text/html',  content=read_html('html','list.html'), no_cache=True)
 
@@ -946,6 +1006,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.endswith(".png"):        self.streamFile(type='image/png', content=read_image("",self.path))
         elif self.path.endswith(".jpg"):        self.streamFile(type='image/jpg', content=read_image("images",self.path))
         elif self.path.endswith(".jpeg"):       self.streamFile(type='image/jpg', content=read_image("images",self.path))
+        elif self.path.endswith(".mp4"):        self.streamFile(type='video/mp4', content=read_image("videos",self.path))
 
         # unknown
         else:
