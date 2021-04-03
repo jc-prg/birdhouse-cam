@@ -267,6 +267,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               else:              
                 if "_" in stamp: stamp_time = stamp.split("_")[1]
                 else:            stamp_time = stamp
+
                 time       = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]             
                 similarity = str(image_group[stamp]["similarity"])+'%'
                 threshold  = camera[cam].param["similarity"]["threshold"]
@@ -277,7 +278,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     border      = "lime"
                     count_star += 1
                 else:
-                  star   = self.printStar(file=index+stamp, favorit=0, cam=cam)
+                  star   = self.printStar(file=index+stamp_time, favorit=0, cam=cam)
                 
                 if "to_be_deleted" in image_group[stamp]:
                   trash  = self.printTrash(file=index+stamp_time, delete=image_group[stamp]["to_be_deleted"], cam=cam)
@@ -293,12 +294,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                    border      = "aqua"
                    count_diff += 1
 
+                if "backup" in index: url_dir = index
+                else:                 url_dir = ""
+
                 hires       = ""
                 description = time + " ("+similarity+")"
-                lowres      = image_group[stamp]["lowres"]
+                lowres      = url_dir + image_group[stamp]["lowres"]
                 if "hires" in image_group[stamp]:
                    hires      = "" # image_group[stamp]["hires"]
-                   javascript ="imageOverlay(\"" + image_group[stamp]["hires"] + "\",\"" + description + "\");"
+                   javascript ="imageOverlay(\"" + url_dir + image_group[stamp]["hires"] + "\",\"" + description + "\");"
 
                 if header and not opened:
                    display    = "style='display:none;'"
@@ -307,12 +311,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 else:
                    lazzy      = ""
 
-              if "backup" in index:
-                hires  = index + hires
-                lowres = index + lowres
-
               images    += self.printImageContainer(description=description, lowres=lowres, hires=hires, star=star, trash=trash, javascript=javascript, lazzy=lazzy, border=border)
-                 
+
            html = ""
            if header:
              if opened: sign = "−"
@@ -488,7 +488,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             dir_list       = [f for f in os.listdir(path) if os.path.isdir(os.path.join(path, f))]
             dir_list       = list(reversed(sorted(dir_list)))
             for directory in dir_list:
-              index    = "/backup/"
+              index    = "/backup/"+directory+"/"
               if config.exists(config="backup", date=directory):
                 files_data = config.read(config="backup", date=directory)
                 files      = files_data["files"]
@@ -518,8 +518,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            file_dir      = self.path.split("/")
            backup_config = config.files["images"]
            today         = datetime.now().strftime("%Y%m%d")
-
-           logging.error("list_short")
 
            if file_dir[1] == "backup":
                path       = config.directory(config="backup", date=file_dir[2])
@@ -561,9 +559,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                        "camera" : which_cam,
                        "type"   : "addon",
                        "title"  : "Live-Stream"
-               	}                      
+               	}
                	
-               html_today += self.printImageGroup(title="Today", group_id="today", image_group=files_today, index=index, header=False, opened=True, cam=which_cam)
+               if self.adminAllowed(): header = True
+               else:                   header = False
+
+               html_today += self.printImageGroup(title="Today", group_id="today", image_group=files_today, index=index, header=header, opened=True, cam=which_cam)
 
                # Yesterday
                html_yesterday  = ""
@@ -572,11 +573,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  if int(stamp) >= int(time_now) and time_now != "000000":
                    if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp]):
                       files_yesterday[stamp] = files[stamp]
-                      
-                 if len(files_yesterday) > 0:      
-                   html_yesterday += self.printImageGroup(title="Gestern", group_id="yesterday", image_group=files_yesterday, index=index, header=True, opened=True, cam=which_cam)
-                   html_yesterday += "<div class='separator'>&nbsp;<br/>&nbsp;</div>"
-                   
+
+               html_yesterday += self.printImageGroup(title="Gestern", group_id="yesterday", image_group=files_yesterday, index=index, header=True, opened=False, cam=which_cam)
+
                # To be deleted
                html_recycle  = ""
                files_recycle = {}
@@ -599,6 +598,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                self.streamFile(type='text/html',content=read_html('html','list.html'), no_cache=True)
 
            else:
+             logging.error("list_short 05 "+str(len(files)))
              self.redirect("/list_new.html")
 
         # List all backup directories
@@ -700,7 +700,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               today     = datetime.now().strftime('%Y%m%d')
 
               config.html_replace["subtitle"] = myPages["today_complete"][0] + " (" + camera[which_cam].name +", " + str(len(files_all)) + " Bilder)"
-              config.html_replace["links"]    = self.printLinks(link_list=("live","today","backup"), current="today_complete", cam=which_cam)
+              config.html_replace["links"]    = self.printLinks(link_list=("live","today","favorit","backup"), current="today_complete", cam=which_cam)
 
            hours = list(camera[which_cam].param["image_save"]["hours"])
            hours.sort(reverse=True)
