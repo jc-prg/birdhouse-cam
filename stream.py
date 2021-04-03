@@ -839,10 +839,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                html  += "<div>\n"
                
                for video in files_all:
+                  link  = camera[which_cam].param["video"]["streaming_server"] + files_all[video]["video_file"]
                   html += "<div class='image_container'>"
 #                  html += "<video src=\"" + files_all[video]["video_file"] + "\" style='margin:5px;width:100px;' controls>Video not supported/<video>"
                   html += "<img src=\"/videos/" + files_all[video]["thumbnail"] + "\" style='margin:5px;width:100px;' class='thumbnail'/>"
-                  html += "<br/><a href='" + files_all[video]["video_file"] + "' target='_blank'>"+ video.replace("_","<br/>") + "</a>"
+                  html += "<br/><a href='" + link + "' target='_blank'>"+ video.replace("_","<br/>") + "</a>"
                   html += "\n</div>\n"
                   
                html += "</div>\n"

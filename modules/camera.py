@@ -32,11 +32,16 @@ class myVideoRecording(threading.Thread):
        self.directory    = directory
        self.max_length   = 0.25*60
        self.info         = {}
-       self.ffmpeg_cmd   = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} -vcodec libx264 -crf 18 {OUTPUT_FILENAME}"
-       self.ffmpeg_cmd   = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} -b 1000k -strict -2 "
-       self.ffmpeg_cmd  += "-vcodec libx264 -profile:v main -level 3.1 -preset medium -x264-params ref=4 -movflags +faststart -crf 18 {OUTPUT_FILENAME}"
        self.ffmpeg_cmd   = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} "
-       self.ffmpeg_cmd  += "-c:v libx264 -pix_fmt yuv420p {OUTPUT_FILENAME}"
+       self.ffmpeg_cmd  += "-vcodec libx264 -crf 18"
+       
+# Other working options:
+#       self.ffmpeg_cmd  += "-b 1000k -strict -2 -vcodec libx264 -profile:v main -level 3.1 -preset medium -x264-params ref=4 -movflags +faststart -crf 18"
+#       self.ffmpeg_cmd  += "-c:v libx264 -pix_fmt yuv420p"
+#       self.ffmpeg_cmd  += "-profile:v baseline -level 3.0 -crf 18"
+#       self.ffmpeg_cmd  += "-vcodec libx264 -preset fast -profile:v baseline -lossless 1 -vf \"scale=720:540,setsar=1,pad=720:540:0:0\" -acodec aac -ac 2 -ar 22050 -ab 48k"
+       
+       self.ffmpeg_cmd  += " {OUTPUT_FILENAME}"
        self.count_length = 8
 
    #----------------------------------
@@ -298,7 +303,7 @@ class myCamera(threading.Thread):
              image     = self.convertImage2RawImage(image)
              self.video.save_image(image=image)
 
-             logging.debug(".... Video Recording: " + str(self.video.info["start_stamp"]) + " -> " + str(datetime.now().strftime("%H:%M:%S")))
+             logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(datetime.now().strftime("%H:%M:%S")))
 #             time.sleep(0.1)
 
           # Image Recording

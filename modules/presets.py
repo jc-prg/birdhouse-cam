@@ -39,8 +39,9 @@ myParameters = {
           "hours"     : ("06","07","08","09","10","11","12","13","14","15","16","17","18","19","20")
           },
        "video" : {
-          "allow_recording" : True,
-          "max_length"      : 180,
+          "allow_recording"  : True,
+          "max_length"       : 180,
+          "streaming_server" : "http://192.168.1.20:8008/"
           },
        "preview_scale" : 18
        },
@@ -68,8 +69,9 @@ myParameters = {
           "hours"     : ("06","07","08","09","10","11","12","13","14","15","16","17","18","19","20")
           },
        "video" : {
-          "allow_recording" : True,
-          "max_length"      : 180,
+          "allow_recording"  : True,
+          "max_length"       : 180,
+          "streaming_server" : "http://192.168.1.20:8008/"
           },
        "preview_scale" : 18
        }
