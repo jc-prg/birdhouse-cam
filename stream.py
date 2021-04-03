@@ -961,16 +961,11 @@ if __name__ == "__main__":
     #logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.DEBUG)
     signal.signal(signal.SIGINT,  onexit)
     signal.signal(signal.SIGTERM, onkill)
-    config = myConfig(myParameters)
-    config.start()
-
-    time.sleep(1)
-
-    if not os.path.isdir(os.path.join(config.param["path"],config.directory("images"))):
-        logging.info("Create image directory...")
-        os.mkdir(os.path.join(config.param["path"],config.directory("images")))
-        logging.info("OK.")
-
+    
+    config   = myConfig(param_init=myParameters, main_directory=os.path.dirname(os.path.abspath(__file__)))
+    config.start()    
+    config.directory_create("images")
+    config.directory_create("videos")
 
     # start cameras
     camera = {}
