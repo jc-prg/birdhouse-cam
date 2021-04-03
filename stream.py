@@ -1,8 +1,5 @@
 #!/usr/bin/python3
 
-# Bugs / tbc.
-# - use star / recyle in favorits
-# - header yesterday für list_new -> to be tested
 # Backlog:
 # - kill -> sauberes runterfahren
 # - Record view, when pressing start -> max. XX min or press stop earlier
@@ -39,6 +36,7 @@ def onexit(signum, handler):
     Clean exit on Strg+C
     All shutdown functions are defined in the "finally:" section in the end of this script
     '''
+    time.sleep(1)
     print ('\nSTRG+C pressed! (Signal: %s)' % (signum,))
     while True:
         confirm = input('Enter "yes" to cancel programm now or "no" to keep running [yes/no]: ').strip().lower()
@@ -51,6 +49,17 @@ def onexit(signum, handler):
         else:
             print ('Sorry, no valid answer...\n')
         pass
+
+def onkill(signum, handler):
+    '''
+    Clean exit on kill command
+    All shutdown functions are defined in the "finally:" section in the end of this script
+    '''
+    print('\nKILL command detected! (Signal: %s)' % (signum,))
+    sys.exit()
+
+
+#----------------------------------------------------
 
 
 def read_html(directory,filename):
@@ -950,8 +959,8 @@ if __name__ == "__main__":
 
     logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.INFO)
     #logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.DEBUG)
-    signal.signal(signal.SIGINT, onexit)
-
+    signal.signal(signal.SIGINT,  onexit)
+    signal.signal(signal.SIGTERM, onkill)
     config = myConfig(myParameters)
     config.start()
 
