@@ -4,9 +4,11 @@ import os
 
 #----------------------------------------------------
 
+initial_path = os.path.dirname(os.path.abspath(__file__)).replace("/modules","")
+
 myParameters = {
   "title"             : "Unser Nistkasten :-)",
-  "path"              : os.getcwd(),       # initially start from the working dir
+  "path"              : initial_path,      # initially start from the working dir
   "port"              : 8000,              # http-port
   "preview_backup"    : "0700",            # HHMM
   "ip4_admin_deny"    : ["192.168.1.31"],  # put in the IP address of your proxy or router if you don't want to allow edits from outside
@@ -73,6 +75,7 @@ myPages = {
   "today_complete"  : ("Alle heute","/list_new.html"),
   "favorit"         : ("Favoriten","/list_star.html"),
   "cam_info"        : ("Kamera-Info","/cameras.html"),
+  "videos"          : ("Videos","/videos.html"),
   "save"            : ("Speichern","/image.jpg")
 }
 

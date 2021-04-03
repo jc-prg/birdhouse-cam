@@ -15,41 +15,47 @@ from modules.presets import myPages
 
 class myConfig(threading.Thread):
 
-   def __init__(self,param):
+   def __init__(self, param_init, main_directory):
        '''
        Initialize new thread and set inital parameters
        '''
        threading.Thread.__init__(self)
-       self.param          = param
+       self.param_init     = param_init
        self.locked         = {}
-       self.main_directory = self.param["path"] #os.path.dirname(os.path.realpath(__file__))
        self.config_cache   = {}
        self.html_replace   = {}
-       self.html_replace["title"]      = self.param["title"]
        self.html_replace["start_date"] = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
        self.directories    = {
            "main"   : "",
            "images" : "images/",
-           "backup" : "images/"
+           "backup" : "images/",
+           "videos" : "videos/"
            }
        self.files          = {
-           "main"   : "config.json",
+           "backup" : "config_images.json",
            "images" : "config_images.json",
-           "backup" : "config_images.json"
+           "main"   : "config.json",
+           "videos" : "config_videos.json"
            }
+
+       self.main_directory = main_directory
+
+       if not self.exists("main"):
+         logging.info("Create main config file (" + os.path.join(self.main_directory, self.files["main"]) + ") ...")
+         self.write("main", self.param_init)
+         logging.info("OK.")
+         
+       self.param          = self.read("main")
+       self.main_directory = self.param["path"]
+       
 
 
    def run(self):
        '''
        Core function (not clear what to do yet)
        '''
-       if not self.exists("main"):
-         logging.info("Create main config file ...")
-         self.write("main",self.param)
-         logging.info("OK.")
-         
-       else:
-          self.param = self.read("main")
+       time.sleep(1)
+       return       
           
    def reload(self):
        '''
@@ -87,20 +93,11 @@ class myConfig(threading.Thread):
        '''
        write json file including locking mechanism
        '''
-       #filename_temp = filename + ".temp"
        self.check_locked(filename)
        self.locked[filename] = True
-       #try:
        with open(filename, 'wb') as json_file:
             json.dump(data, codecs.getwriter('utf-8')(json_file), ensure_ascii=False, sort_keys=True, indent=4)
-       #   os.popen('rm ' + filename)
-       #   os.popen('mv ' + filename_temp + ' ' + filename)
-       #except Exception as e:
-       #   logging.error("Could not write file "+filename+": "+str(e))
        self.locked[filename] = False
-
-####>>>> write into temp file first and opy to final name then (overwrite)
-## os.popen('cp ' + os.path.join(dir_source,file_lowres) + ' ' + os.path.join(directory,file_lowres))
 
 
    def directory(self, config, date=""):
@@ -109,6 +106,21 @@ class myConfig(threading.Thread):
        '''
        return os.path.join(self.main_directory, self.directories[config], date)
 
+
+   def directory_create(self, config, date=""):
+       '''
+       return directory of config file
+       '''
+       if not os.path.isdir(os.path.join(self.main_directory,self.directory(config))):
+          logging.info("Creating directory for " + config + " ...")
+          os.mkdir(os.path.join(self.main_directory,self.directory(config)))
+          logging.info("OK.")
+       
+       if date != "" and not os.path.isdir(os.path.join(self.main_directory,self.directory(config),date)):
+          logging.info("Creating directory for " + config + " ...")
+          os.mkdir(os.path.join(self.main_directory,self.directory(config), date))
+          logging.info("OK.")
+       
 
    def file(self, config, date=""):
        '''

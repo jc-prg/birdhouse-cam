@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # Backlog:
-# - backup - clean diff_threshold
+# - kill -> sauberes runterfahren
 # - Record view, when pressing start -> max. XX min or press stop earlier
 #   -> implement in camera.py
 #   -> no thumbnails / images during this time
@@ -9,7 +9,6 @@
 # - In progress (error!): Restart camera threads via API, Shutdown all services via API, Trigger RPi halt/reboot via API
 # - delete files with to_be_deleted == 1 in archive folders
 # - password for external access (to enable admin from outside)
-# - Favoriten -> eindeutigen Timestamp (date + time)
 # - Idea: set to_be_deleted when below threshold; don't show / backup those files
 
 import io, os, time
@@ -37,6 +36,7 @@ def onexit(signum, handler):
     Clean exit on Strg+C
     All shutdown functions are defined in the "finally:" section in the end of this script
     '''
+    time.sleep(1)
     print ('\nSTRG+C pressed! (Signal: %s)' % (signum,))
     while True:
         confirm = input('Enter "yes" to cancel programm now or "no" to keep running [yes/no]: ').strip().lower()
@@ -49,6 +49,17 @@ def onexit(signum, handler):
         else:
             print ('Sorry, no valid answer...\n')
         pass
+
+def onkill(signum, handler):
+    '''
+    Clean exit on kill command
+    All shutdown functions are defined in the "finally:" section in the end of this script
+    '''
+    print('\nKILL command detected! (Signal: %s)' % (signum,))
+    sys.exit()
+
+
+#----------------------------------------------------
 
 
 def read_html(directory,filename):
@@ -222,36 +233,43 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           trash   = "/html/recycle0.png"
           value   = "1"
        if self.adminAllowed():
-          onclick = "setTrash(\""+file+"\",document.getElementById(\"d_"+file+"_value\").innerHTML,\""+config.imageName("lowres", stamp, cam)+"\");"
+          onclick = "setRecycle(\""+file+"\",document.getElementById(\"d_"+file+"_value\").innerHTML,\""+config.imageName("lowres", stamp, cam)+"\");"
           return "<div class='trash'><div id='d_"+file+"_value' style='display:none;'>"+value+"</div><img class='trash_img' id='d_"+file+"' src='" + trash + "' onclick='"+onclick+"'/></div>\n"
        else:
           return "<div class='trash'></div>\n"
 
 
     def printImageContainer(self, description, lowres, hires='', javascript='' ,star='', trash='', window='blank', lazzy='', border='black'):
-        html = "<div class='image_container'>"
+        html = "<div class='image_container'>\n"
         if star  != '':      html += star
         else:                html += "<div class='star'></div>"
         if trash  != '':     html += trash
         else:                html += "<div class='trash'></div>"
         if lazzy == 'lazzy': lazzy = "data-"
         else:                lazzy = ""
+        
+        lowres_file = lowres.split("/")
+        lowres_file = lowres_file[len(lowres_file)-1]
+        
+        html += "<div class='thumbnail_container'>\n"
         if lowres == "EMPTY":
-          html += "<div class='thumbnail_container'><div class='thumbnail' style='background-color:#222222;'><br/><br/><small>"+description+"</small></div></div>"
+          html += "<div class='thumbnail' style='background-color:#222222;'><br/><br/><small>"+description+"</small></div>"
         else:
-          if hires != '':        html += "<div class='thumbnail_container'><a href='"+hires+"' target='_"+window+"'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail' style='border:1px solid "+border+";'/></a><br/><small>"+description+"</small></div>"
-          elif javascript != '': html += "<div class='thumbnail_container'><div onclick='javascript:"+javascript+"' style='cursor:pointer;'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail' style='border:1px solid "+border+";'/></div><br/><small>"+description+"</small></div>"
-          else:                  html += "<div class='thumbnail_container'><img "+lazzy+"src='"+lowres+"' id='"+lowres+"' class='thumbnail' style='border:1px solid "+border+";'/><br/><small>"+description+"</small></div>"
-        html += "</div>"
+          if hires != '':        html += "<a href='"+hires+"' target='_"+window+"'><img "+lazzy+"src='"+lowres+"' id='"+lowres_file+"' class='thumbnail' style='border:1px solid "+border+";'/></a><br/><small>"+description+"</small>"
+          elif javascript != '': html += "<div onclick='javascript:"+javascript+"' style='cursor:pointer;'><img "+lazzy+"src='"+lowres+"' id='"+lowres_file+"' class='thumbnail' style='border:1px solid "+border+";'/></div><br/><small>"+description+"</small>"
+          else:                  html += "<img "+lazzy+"src='"+lowres+"' id='"+lowres_file+"' class='thumbnail' style='border:1px solid "+border+";'/><br/><small>"+description+"</small>"
+        html += "\n</div>\n"
+        html += "</div>\n"
         return html
 
 
-    def printImageGroup(self, title, group_id, image_group, index, header=True, opened=False, cam=''):
+    def printImageGroup(self, title, group_id, image_group, index, header=True, header_open=False, header_count=['all','star','detect','recycle'], cam=''):
            '''
            create html for a list of images including all checks
            '''
            id_list     = images     = display     = ""
-           count_star  = count_diff = count_trash = 0
+           count       = { 'all' : 0, 'star' : 0, 'detect' : 0, 'recycle' : 0 }
+           color       = { 'all' : 'white', 'star' : 'lime', 'detect' : 'aqua', 'recycle' : 'red' }
 
            stamps = list(reversed(sorted(image_group.keys())))
            for stamp in stamps:
@@ -265,41 +283,49 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  javascript  = star = trash = lazzy = ""
 
               else:              
-                if "_" in stamp: stamp_time = stamp.split("_")[1]
-                time       = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]             
+                if "_" in stamp: 
+                   stamp_date, stamp_time = stamp.split("_")
+                   time       = stamp_date[6:8] + "." + stamp_date[4:6] + "." + stamp_date[0:4] + " " + stamp_time[0:2] + ":" + stamp_time[2:4]
+                   time      += "<br/>"
+                else:
+                   stamp_time = stamp
+                   time       = stamp_time[0:2] + ":" + stamp_time[2:4] + ":" + stamp_time[4:6]
+                   
                 similarity = str(image_group[stamp]["similarity"])+'%'
                 threshold  = camera[cam].param["similarity"]["threshold"]
                 
                 if "favorit" in image_group[stamp]:
-                  star   = self.printStar(file=index+stamp, favorit=image_group[stamp]["favorit"], cam=cam)
+                  star   = self.printStar(file=index+stamp_time, favorit=image_group[stamp]["favorit"], cam=cam)
                   if int(image_group[stamp]["favorit"]) == 1: 
                     border      = "lime"
-                    count_star += 1
+                    count["star"] += 1
                 else:
-                  star   = self.printStar(file=index+stamp, favorit=0, cam=cam)
+                  star   = self.printStar(file=index+stamp_time, favorit=0, cam=cam)
                 
                 if "to_be_deleted" in image_group[stamp]:
-                  trash  = self.printTrash(file=index+stamp, delete=image_group[stamp]["to_be_deleted"], cam=cam)
+                  trash  = self.printTrash(file=index+stamp_time, delete=image_group[stamp]["to_be_deleted"], cam=cam)
                   if int(image_group[stamp]["to_be_deleted"]) == 1:
                     border       = "red"
-                    count_trash += 1
+                    count["recycle"] += 1
                 else:
-                  trash  = self.printTrash(file=index+stamp, delete=0, cam=cam)
+                  trash  = self.printTrash(file=index+stamp_time, delete=0, cam=cam)
 
                 if float(image_group[stamp]["similarity"]) < float(threshold) and float(image_group[stamp]["similarity"]) > 0:
                   if border == "black":
-                   similarity  = "<u>"+similarity+"</u>"
                    border      = "aqua"
-                   count_diff += 1
+                   count["detect"] += 1
+
+                if "backup" in index: url_dir = index
+                else:                 url_dir = ""
 
                 hires       = ""
                 description = time + " ("+similarity+")"
-                lowres      = image_group[stamp]["lowres"]
+                lowres      = url_dir + image_group[stamp]["lowres"]
                 if "hires" in image_group[stamp]:
                    hires      = "" # image_group[stamp]["hires"]
-                   javascript ="imageOverlay(\"" + image_group[stamp]["hires"] + "\",\"" + description + "\");"
+                   javascript ="imageOverlay(\"" + url_dir + image_group[stamp]["hires"] + "\",\"" + description + "\");"
 
-                if header and not opened:
+                if header and not header_open:
                    display    = "style='display:none;'"
                    id_list   += lowres + " "
                    lazzy      = "lazzy"
@@ -307,29 +333,34 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                    lazzy      = ""
 
               images    += self.printImageContainer(description=description, lowres=lowres, hires=hires, star=star, trash=trash, javascript=javascript, lazzy=lazzy, border=border)
-                 
+
            html = ""
            if header:
-             if opened: sign = "−"
-             else:      sign = "+"
+             if header_open: sign = "−"
+             else:           sign = "+"
+             count["all"]         = len(image_group)
 
              onclick = "onclick='showHideGroup(\"" + group_id + "\")'"
              html   += "\n\n<div class='separator_group' "+onclick+">"
              html   += "<a id='group_link_" + group_id + "' style='cursor:pointer;'>(" + sign + ")</a> "
              html   += title
-             html   += "<font color='gray'> &nbsp; &nbsp; ";
-             color0 = color1 = color2 = color3 = "gray"
-             if len(image_group) > 0:  color0 = "white"
-             if count_star > 0:        color1 = "lime"
-             if count_diff > 0:        color2 = "aqua"
-             if count_trash > 0:       color3 = "red"           
-             html   += "[All: <font color='"+color0+"'>"+str(len(image_group)).zfill(3) + "</font> "
-             html   += "| Favorit: <font color='"+color1+"'>"+str(count_star).zfill(2) + "</font> "
-             html   += "| Detect: <font color='"+color2+"'>"+str(count_diff).zfill(2)+"</font> "
-             html   += "| Recycle: <font color='"+color3+"'>" + str(count_trash).zfill(2) + "</font>]"
-             html   += "</font>";
+             html   += "<font color='gray'> &nbsp; &nbsp; [";
+             i = 0
+             for c in header_count:
+               if c in count:
+                 color_p = "gray"
+                 fill    = 2
+                 if count[c] > 0: color_p = color[c]
+                 if c == "all"  : fill    = 3
+                 html += c + ": <font color='"+color_p+"'>"+str(count[c]).zfill(fill) + "</font>"
+                 i    += 1
+                 if i < len(header_count): html += " | "
+               else:
+                 logging.warning("imageGroup: header_count="+str(c)+" value doesn't exist")
+                 html += "all: <font color='white'>"+str(count['all']).zfill(3) + "</font> "
+                 break
+             html   += "]</font>";
              html   += "</div>\n"
-
 
            html   += "<div id='group_ids_" + group_id + "' style='display:none;'>"+id_list+"</div>\n"             
            html   += "<div id='group_" + group_id + "' " + display + "><div class='separator'>&nbsp;</div>"+images+"</div>\n"
@@ -352,47 +383,89 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if self.path.startswith("/favorit/current/"):
            param = self.path.split("/")
            config_data = config.read(config="images")
-           config_data[param[3]]["favorit"] = param[4]
-           if int(param[4]) == 1: config_data[param[3]]["to_be_deleted"] = 0
-           config.write(config="images", config_data=config_data)
-
-           response["command"] = ("set/unset favorit", param[4])
+           if param[3] in config_data:
+             config_data[param[3]]["favorit"] = param[4]
+             if int(param[4]) == 1: config_data[param[3]]["to_be_deleted"] = 0
+             config.write(config="images", config_data=config_data)
+           else:
+             response["error"] = "no image found with stamp "+str(param[3])
+  
+           response["command"] = ["set/unset favorit", param[3], param[4]]
            self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
         # set / unset favorit
         elif self.path.startswith("/favorit/backup/"):
            param = self.path.split("/")
            config_data = config.read(config="backup", date=param[3])
-           config_data["files"][param[4]]["favorit"] = param[5]
-           if int(param[5]) == 1: config_data["files"][param[4]]["to_be_deleted"] = 0
-           config.write(config="backup",config_data=config_data, date=param[3])
-           self.streamFile(type='application/json', content=json.dumps({ "path" : self.path }).encode(encoding='utf_8'), no_cache=True);
+           if param[4] in config_data["files"]:
+             config_data["files"][param[4]]["favorit"] = param[5]
+             if int(param[5]) == 1: config_data["files"][param[4]]["to_be_deleted"] = 0
+             config.write(config="backup",config_data=config_data, date=param[3])
+           else:
+             response["error"] = "no image found with stamp "+str(param[4])
 
-           response["command"] = ("set/unset favorit (backup)", param[5])
+           response["command"] = ["set/unset favorit (backup)", param[5]]
            self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
         # mark / unmark for deletion
-        if self.path.startswith("/delete/current/"):
+        elif self.path.startswith("/delete/current/"):
            param = self.path.split("/")
            config_data = config.read(config="images")
-           config_data[param[3]]["to_be_deleted"] = param[4]
-           if int(param[4]) == 1: config_data[param[3]]["favorit"] = 0
-           config.write(config="images", config_data=config_data)
+           if param[3] in config_data:
+             config_data[param[3]]["to_be_deleted"] = param[4]
+             if int(param[4]) == 1: config_data[param[3]]["favorit"] = 0
+             config.write(config="images", config_data=config_data)
+           else:
+             response["error"] = "no image found with stamp "+str(param[3])
 
-           response["command"] = ("mark/unmark for deletion", param[4])
+           response["command"] = ["mark/unmark for deletion", param[4]]
            self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
         # mark / unmark for deletion
         elif self.path.startswith("/delete/backup/"):
            param = self.path.split("/")
            config_data = config.read(config="backup", date=param[3])
-           config_data["files"][param[4]]["to_be_deleted"] = param[5]
-           if int(param[5]) == 1: config_data["files"][param[4]]["favorit"] = 0
-           config.write(config="backup",config_data=config_data, date=param[3])
+           if param[4] in config_data["files"]:
+              config_data["files"][param[4]]["to_be_deleted"] = param[5]
+              if int(param[5]) == 1: config_data["files"][param[4]]["favorit"] = 0
+              config.write(config="backup",config_data=config_data, date=param[3])
+           else:
+              response["error"] = "no image found with stamp "+str(param[4])
 
-           response["command"] = ("mark/unmark for deletion (backup)", param[5])
+           response["command"] = ["mark/unmark for deletion (backup)", param[5]]
            self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
            
+        # start video recording
+        elif self.path.startswith("/start/recording/"):
+           param     = self.path.split("/")
+           which_cam = param[3]
+           if which_cam in camera and not camera[which_cam].error and camera[which_cam].active:
+              if not camera[which_cam].video.recording:   camera[which_cam].video.start_recording()
+              else:                                       response["error"] = "camera is already recording "+str(param[3])       
+           elif camera[which_cam].error or camera[which_cam].active == False:
+              response["error"] = "camera is not active "+str(param[3])       
+           else:
+              response["error"] = "camera doesn't exist "+str(param[3])       
+
+           response["command"] = ["start recording"]
+           self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+
+        # end video recording
+        elif self.path.startswith("/stop/recording/"):
+           param     = self.path.split("/")
+           which_cam = param[3]
+           if which_cam in camera and not camera[which_cam].error and camera[which_cam].active:
+              if camera[which_cam].video.recording:  camera[which_cam].video.stop_recording()
+              else:                                  response["error"] = "camera isn't recording at the moment "+str(param[3])       
+           elif camera[which_cam].error or camera[which_cam].active == False:
+              response["error"] = "camera is not active "+str(param[3])       
+           else:
+              response["error"] = "camera doesn't exist "+str(param[3])       
+
+           response["command"] = ["start recording"]
+           self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+
+
         # restart camera // doesn't close the camera correctly at the moment
         elif self.path.startswith("/restart-cameras/"):
            logging.info("Restart of camera threads requested ...")
@@ -408,7 +481,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                camera[cam].start()
                camera[cam].param["path"] = config.param["path"]
                camera[cam].setText("Restarting ...")
-             response["command"] = ("Restart cameras")
+             response["command"] = ["Restart cameras"]
 
         else:
            self.sendError()
@@ -477,27 +550,29 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 favorits[new]["date"]   = "Aktuell"
                 favorits[new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
 
-            html += self.printImageGroup(title="Heute", group_id="today", image_group=favorits, index=index, header=True, opened=True, cam=which_cam)
+            html += self.printImageGroup(title="Heute &nbsp; &nbsp; &nbsp; &nbsp;", group_id="today", image_group=favorits, index=index, header=True, header_open=True, header_count=['star'], cam=which_cam)
 
             path           = config.directory(config="backup")
             dir_list       = [f for f in os.listdir(path) if os.path.isdir(os.path.join(path, f))]
+            dir_list       = list(reversed(sorted(dir_list)))
             for directory in dir_list:
-              index    = "/backup/"
+              index    = "/backup/"+directory+"/"
               if config.exists(config="backup", date=directory):
                 files_data = config.read(config="backup", date=directory)
                 files      = files_data["files"]
                 date       = directory[6:8]+"."+directory[4:6]+"."+directory[0:4]
+                favorits[directory] = {}
                 for stamp in files:
                   if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
-                    new = stamp #directory+"_"+stamp
-                    favorits[directory]                = {}
+                    new = directory+"_"+stamp
                     favorits[directory][new]           = files[stamp]
                     favorits[directory][new]["source"] = ("backup",directory)
                     favorits[directory][new]["date"]   = date
                     favorits[directory][new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                     favorits[directory][new]["date2"]  = favorits[directory][new]["date"]
 
-                html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], index=index, header=True, opened=True, cam=which_cam)
+                if len(favorits[directory]) > 0:
+                   html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], index=index, header=True, header_open=True, header_count=['star'], cam=which_cam)
 
             config.html_replace["file_list"] = html
             self.streamFile(type='text/html',content=read_html('html','list.html'), no_cache=True)
@@ -511,8 +586,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            file_dir      = self.path.split("/")
            backup_config = config.files["images"]
            today         = datetime.now().strftime("%Y%m%d")
-
-           logging.error("list_short")
 
            if file_dir[1] == "backup":
                path       = config.directory(config="backup", date=file_dir[2])
@@ -554,9 +627,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                        "camera" : which_cam,
                        "type"   : "addon",
                        "title"  : "Live-Stream"
-               	}                      
+               	}
                	
-               html_today += self.printImageGroup(title="Today", group_id="today", image_group=files_today, index=index, header=False, opened=True, cam=which_cam)
+               if self.adminAllowed(): header = True
+               else:                   header = False
+
+               html_today += self.printImageGroup(title="Heute &nbsp; ", group_id="today", image_group=files_today, index=index, header=header, header_open=True, header_count=['all','star','detect'], cam=which_cam)
 
                # Yesterday
                html_yesterday  = ""
@@ -565,11 +641,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  if int(stamp) >= int(time_now) and time_now != "000000":
                    if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp]):
                       files_yesterday[stamp] = files[stamp]
-                      
-                 if len(files_yesterday) > 0:      
-                   html_yesterday += self.printImageGroup(title="Gestern", group_id="yesterday", image_group=files_yesterday, index=index, header=True, opened=True, cam=which_cam)
-                   html_yesterday += "<div class='separator'>&nbsp;<br/>&nbsp;</div>"
-                   
+
+               if file_dir[1] != "backup":
+                  html_yesterday += self.printImageGroup(title="Gestern", group_id="yesterday", image_group=files_yesterday, index=index, header=True, header_open=False, header_count=['all','star','detect'],  cam=which_cam)
+
                # To be deleted
                html_recycle  = ""
                files_recycle = {}
@@ -580,7 +655,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                        files_recycle[stamp] = files[stamp]
                        
                  if len(files_recycle) > 0:      
-                   html_recycle += self.printImageGroup(title="Recycle", group_id="recycle", image_group=files_recycle, index=index, header=True, opened=False, cam=which_cam)
+                   html_recycle += self.printImageGroup(title="Recycle", group_id="recycle", image_group=files_recycle, index=index, header=True, header_open=False, header_count=['recycle'],  cam=which_cam)
 
                html += html_today
                html += html_yesterday               
@@ -592,6 +667,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                self.streamFile(type='text/html',content=read_html('html','list.html'), no_cache=True)
 
            else:
+             logging.error("list_short 05 "+str(len(files)))
              self.redirect("/list_new.html")
 
         # List all backup directories
@@ -693,7 +769,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               today     = datetime.now().strftime('%Y%m%d')
 
               config.html_replace["subtitle"] = myPages["today_complete"][0] + " (" + camera[which_cam].name +", " + str(len(files_all)) + " Bilder)"
-              config.html_replace["links"]    = self.printLinks(link_list=("live","today","backup"), current="today_complete", cam=which_cam)
+              config.html_replace["links"]    = self.printLinks(link_list=("live","today","favorit","backup"), current="today_complete", cam=which_cam)
 
            hours = list(camera[which_cam].param["image_save"]["hours"])
            hours.sort(reverse=True)
@@ -714,11 +790,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                           files_part[stamp] = files_all[stamp]
 
               if len(files_part) > 0:
-                 html += self.printImageGroup(title="Bilder "+hour+":00", group_id=hour_min, image_group=files_part, index=index, header=True, opened=False, cam=which_cam)
+                 html += self.printImageGroup(title="Bilder "+hour+":00", group_id=hour_min, image_group=files_part, index=index, header=True, header_open=False, cam=which_cam)
 
            # Yesterday
            files_part = {}
-           html_yesterday = ""
+           html_yesterday   = ""
+           header_yesterday = True
            for hour in hours:
               hour_min    = hour + "0000"
               hour_max    = str(int(hour)+1) + "0000"
@@ -733,7 +810,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     files_part[stamp] = files_all[stamp]
 
               if len(files_part) > 0:
-                 html_yesterday += self.printImageGroup(title="Bilder "+hour+":00", group_id=hour_min, image_group=files_part, index=index, header=True, opened=False, cam=which_cam)
+                 if header_yesterday: 
+                    html_yesterday += self.printYesterday()
+                    header_yesterday = False
+                 html_yesterday += self.printImageGroup(title="Bilder "+hour+":00", group_id=hour_min, image_group=files_part, index=index, header=True, header_open=False, cam=which_cam)
 
            html += html_yesterday
            html += "<div class='separator'>&nbsp;<br/>&nbsp;</div>"
@@ -742,6 +822,31 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            self.streamFile(type='text/html', content=read_html('html','list.html'), no_cache=True)
 
 
+        # List all video files
+        elif '/videos.html' in self.path:
+        
+           html      = ""
+           path      = config.directory(config="videos")
+
+           if config.exists("videos"):
+             files_all = config.read(config="videos")
+           
+             if len(files_all) > 0:
+               html  += "Liste vorhandener Videos"
+               html  += "<ul>"
+               for video in files_all:
+                  html += "<li><a href='" + files_all[video]["video_file"] + "' window='_blank'>"
+                  html += files_all[video]["video_file"] 
+                  html += "</a></li>"
+           
+               html  += "</ul>"
+           
+           config.html_replace["subtitle"]  = myPages["videos"][0] + " (" + camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
+           config.html_replace["links"]     = self.printLinks(link_list=("live","today","favorit","backup"), current="today_complete", cam=which_cam)
+           config.html_replace["file_list"] = html
+           self.streamFile(type='text/html', content=read_html('html','list.html'), no_cache=True)
+           
+           
         # List all files
         elif '/list.html' in self.path:
 
@@ -842,6 +947,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               html     += "<li>Area: "+str(info["similarity"]["detection_area"]) + "</li>"
               html   += "</ul></li>"
               html   += "</ul>"
+              if camera[cam].active:
+                html   += "<hr/>"
+                html   += "<center><button onclick='requestAPI(\"/start/recording/"+cam+"\");'>Record</button> &nbsp;"
+                html   += "<button onclick='requestAPI(\"/stop/recording/"+cam+"\");'>Stop</button></center>"
               html += "</div>"
               html += "</div>"
               
@@ -850,7 +959,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 #              html += "<button onclick='requestAPI(\"/restart-cameras\");'>Kameras neu starten</button>"
 #              html += "</div>"
 
-            config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), cam=which_cam)
+            config.html_replace["links"]     = self.printLinks(link_list=("live","today","videos","favorit"), cam=which_cam)
             config.html_replace["file_list"] = html
             self.streamFile(type='text/html',  content=read_html('html','list.html'), no_cache=True)
 
@@ -897,6 +1006,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.endswith(".png"):        self.streamFile(type='image/png', content=read_image("",self.path))
         elif self.path.endswith(".jpg"):        self.streamFile(type='image/jpg', content=read_image("images",self.path))
         elif self.path.endswith(".jpeg"):       self.streamFile(type='image/jpg', content=read_image("images",self.path))
+        elif self.path.endswith(".mp4"):        self.streamFile(type='video/mp4', content=read_image("videos",self.path))
 
         # unknown
         else:
@@ -911,18 +1021,13 @@ if __name__ == "__main__":
 
     logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.INFO)
     #logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.DEBUG)
-    signal.signal(signal.SIGINT, onexit)
-
-    config = myConfig(myParameters)
-    config.start()
-
-    time.sleep(1)
-
-    if not os.path.isdir(os.path.join(config.param["path"],config.directory("images"))):
-        logging.info("Create image directory...")
-        os.mkdir(os.path.join(config.param["path"],config.directory("images")))
-        logging.info("OK.")
-
+    signal.signal(signal.SIGINT,  onexit)
+    signal.signal(signal.SIGTERM, onkill)
+    
+    config   = myConfig(param_init=myParameters, main_directory=os.path.dirname(os.path.abspath(__file__)))
+    config.start()    
+    config.directory_create("images")
+    config.directory_create("videos")
 
     # start cameras
     camera = {}

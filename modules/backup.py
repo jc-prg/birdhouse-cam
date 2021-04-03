@@ -165,6 +165,7 @@ class myBackupRestore(threading.Thread):
        '''
        if other_date == "": backup_date   = datetime.now().strftime('%Y%m%d')
        else:                backup_date   = other_date
+       
        directory = self.config.directory(config="images", date=backup_date)
 
        if os.path.isdir(directory):
@@ -178,10 +179,10 @@ class myBackupRestore(threading.Thread):
              files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
            files_backup["info"]["date"]      = backup_date[6:8]+"."+backup_date[4:6]+"."+backup_date[0:4]
            files_backup["info"]["size"]      = sum(os.path.getsize(os.path.join(directory,f)) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory,f)))
-           self.config.write(config="backup", config_data=backup_files, date=backup_date)
+           self.config.write(config="backup", config_data=files_backup, date=backup_date)
 
        else:
-         os.mkdir(directory)
+         self.config.directory_create(config="images", date=backup_date)
          files        = self.config.read(config="images")
          files_backup = { "files" : {}, "info" : {}}
          stamps       = list(reversed(sorted(files.keys())))
