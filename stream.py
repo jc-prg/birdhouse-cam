@@ -611,7 +611,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                    if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp]):
                       files_yesterday[stamp] = files[stamp]
 
-               html_yesterday += self.printImageGroup(title="Gestern", group_id="yesterday", image_group=files_yesterday, index=index, header=True, header_open=False, header_count=['all','star','detect'],  cam=which_cam)
+               if file_dir[1] != "backup":
+                  html_yesterday += self.printImageGroup(title="Gestern", group_id="yesterday", image_group=files_yesterday, index=index, header=True, header_open=False, header_count=['all','star','detect'],  cam=which_cam)
 
                # To be deleted
                html_recycle  = ""
