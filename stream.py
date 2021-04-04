@@ -526,8 +526,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                index_file = "index.html"
 
             config.html_replace["active_cam"] = which_cam
-            if adminAllowed(): config.html_replace["links"] = self.printLinks(link_list=("today","backup","favorit","cam_info"),cam=which_cam)
-            else:              config.html_replace["links"] = self.printLinks(link_list=("today","backup","favorit"),cam=which_cam)
+            if self.adminAllowed(): config.html_replace["links"] = self.printLinks(link_list=("today","backup","favorit","cam_info"),cam=which_cam)
+            else:                   config.html_replace["links"] = self.printLinks(link_list=("today","backup","favorit"),cam=which_cam)
             self.streamFile(type='text/html', content=read_html('html',index_file), no_cache=True)
 
         # List favorit images (marked with star)
