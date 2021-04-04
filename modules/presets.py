@@ -38,6 +38,11 @@ myParameters = {
           "seconds"   : ("00","20","40"),
           "hours"     : ("06","07","08","09","10","11","12","13","14","15","16","17","18","19","20")
           },
+       "video" : {
+          "allow_recording"  : True,
+          "max_length"       : 180,
+          "streaming_server" : "http://192.168.1.20:8008/"
+          },
        "preview_scale" : 18
        },
      "cam2"  : {
@@ -63,6 +68,11 @@ myParameters = {
           "seconds"   : ("10","30","50"),
           "hours"     : ("06","07","08","09","10","11","12","13","14","15","16","17","18","19","20")
           },
+       "video" : {
+          "allow_recording"  : True,
+          "max_length"       : 180,
+          "streaming_server" : "http://192.168.1.20:8008/"
+          },
        "preview_scale" : 18
        }
   }
@@ -74,7 +84,7 @@ myPages = {
   "today"           : ("Heute","/list_short.html"),
   "today_complete"  : ("Alle heute","/list_new.html"),
   "favorit"         : ("Favoriten","/list_star.html"),
-  "cam_info"        : ("Kamera-Info","/cameras.html"),
+  "cam_info"        : ("Kameras","/cameras.html"),
   "videos"          : ("Videos","/videos.html"),
   "save"            : ("Speichern","/image.jpg")
 }

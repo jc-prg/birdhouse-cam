@@ -1,15 +1,13 @@
 #!/usr/bin/python3
 
+# In Progress:
+# - ...
 # Backlog:
-# - kill -> sauberes runterfahren
-# - Record view, when pressing start -> max. XX min or press stop earlier
-#   -> implement in camera.py
-#   -> no thumbnails / images during this time
-#   -> define in config.json: (a) max. minutes and (b) if record is allowed
 # - In progress (error!): Restart camera threads via API, Shutdown all services via API, Trigger RPi halt/reboot via API
 # - delete files with to_be_deleted == 1 in archive folders
 # - password for external access (to enable admin from outside)
 # - Idea: set to_be_deleted when below threshold; don't show / backup those files
+
 
 import io, os, time
 import logging
@@ -239,7 +237,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           return "<div class='trash'></div>\n"
 
 
-    def printImageContainer(self, description, lowres, hires='', javascript='' ,star='', trash='', window='blank', lazzy='', border='black'):
+    def printImageContainer(self, description, lowres, hires='', javascript='' ,star='', trash='', window='self', lazzy='', border='black'):
         html = "<div class='image_container'>\n"
         if star  != '':      html += star
         else:                html += "<div class='star'></div>"
@@ -528,7 +526,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                index_file = "index.html"
 
             config.html_replace["active_cam"] = which_cam
-            config.html_replace["links"] = self.printLinks(link_list=("today","backup","favorit","cam_info"),cam=which_cam)
+            if adminAllowed(): config.html_replace["links"] = self.printLinks(link_list=("today","backup","favorit","cam_info"),cam=which_cam)
+            else:              config.html_replace["links"] = self.printLinks(link_list=("today","backup","favorit"),cam=which_cam)
             self.streamFile(type='text/html', content=read_html('html',index_file), no_cache=True)
 
         # List favorit images (marked with star)
@@ -826,23 +825,32 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif '/videos.html' in self.path:
         
            html      = ""
+           files_all = {}
            path      = config.directory(config="videos")
 
            if config.exists("videos"):
              files_all = config.read(config="videos")
            
              if len(files_all) > 0:
-               html  += "Liste vorhandener Videos"
-               html  += "<ul>"
+               html  += "<div class='separator' style='width:100%'>"
+               html  += "<b>Liste vorhandener Videos</b>"
+               html  += "</div>\n"
+               
+               html  += "<div>\n"
+               
                for video in files_all:
-                  html += "<li><a href='" + files_all[video]["video_file"] + "' window='_blank'>"
-                  html += files_all[video]["video_file"] 
-                  html += "</a></li>"
-           
-               html  += "</ul>"
+                  description = files_all[video]["date"].replace(" ","<br/>") + "<br/>" + files_all[video]["camera"].upper() + ": " + files_all[video]["camera_name"]
+                  video_link  = camera[which_cam].param["video"]["streaming_server"] + files_all[video]["video_file"]
+                  javascript  = "videoOverlay(\"" + video_link + "\",\"" + description + "\");"
+                  html       += self.printImageContainer(description=description, lowres="videos/"+files_all[video]["thumbnail"], javascript=javascript, star='', window='self', border='white')
+                  
+               html += "</div>\n"
+               
+             else: html  += "<div class='separator' style='width:100%;text-color:lightred;'>Keine Videos vorhanden</div>"
+           else:   html  += "<div class='separator' style='width:100%;text-color:lightred;'>Keine Videos vorhanden</div>"
            
            config.html_replace["subtitle"]  = myPages["videos"][0] + " (" + camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
-           config.html_replace["links"]     = self.printLinks(link_list=("live","today","favorit","backup"), current="today_complete", cam=which_cam)
+           config.html_replace["links"]     = self.printLinks(link_list=("live","cam_info","today","favorit"), current="today_complete", cam=which_cam)
            config.html_replace["file_list"] = html
            self.streamFile(type='text/html', content=read_html('html','list.html'), no_cache=True)
            
@@ -879,8 +887,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
              if ".jpg" in file:
                 stamp     = file[6:12]
                 if int(stamp) < int(time_now) or time_now == "000000":
-                   time     = file[6:8]+":"+file[8:10]+":"+file[10:12]
-                   file_big = config.imageName(type="hires",timestamp=stamp)
+                   description = file[6:8]+":"+file[8:10]+":"+file[10:12]
+                   file_big    = config.imageName(type="hires",timestamp=stamp)
 
                    if index == "/current/":
                      if "favorit" in files[stamp]:                   star  = self.printStar(file=index+stamp, favorit=files[stamp]["favorit"],             cam=which_cam)
@@ -889,8 +897,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                      else:                                           trash = self.printTrash(file=index+stamp, delete=0,                                   cam=which_cam)
                    else: star = ""
 
-                   if os.path.isfile(os.path.join(path,file_big)): html += self.printImageContainer(description=time, lowres=file, hires=file_big, star=star)
-                   else:                                           html += self.printImageContainer(description=time, lowres=file, hires="", star=star)
+                   if os.path.isfile(os.path.join(path,file_big)): html += self.printImageContainer(description=description, lowres=file, hires=file_big, star=star)
+                   else:                                           html += self.printImageContainer(description=description, lowres=file, hires="", star=star)
 
            # Yesterday
            html_yesterday = ""
@@ -898,7 +906,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
              if ".jpg" in file:
                 stamp     = file[6:12]
                 if int(stamp) >= int(time_now) and time_now != "000000":
-                   time     = file[6:8]+":"+file[8:10]+":"+file[10:12]
+                   description     = file[6:8]+":"+file[8:10]+":"+file[10:12]
                    file_big = config.imageName(type="hires",timestamp=stamp)
 
                    if index == "/current/":
@@ -908,8 +916,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                      else:                                           trash = self.printTrash(file=index+stamp, delete=0,                                    cam=which_cam)
                    else: star = ""
 
-                   if os.path.isfile(os.path.join(path,file_big)): html_yesterday += self.printImageContainer(description=time, lowres=file, hires=file_big, star=star)
-                   else:                                           html_yesterday += self.printImageContainer(description=time, lowres=file, hires="", star=star)
+                   if os.path.isfile(os.path.join(path,file_big)): html_yesterday += self.printImageContainer(description=description, lowres=file, hires=file_big, star=star)
+                   else:                                           html_yesterday += self.printImageContainer(description=description, lowres=file, hires="", star=star)
 
            if html_yesterday != "":
               html += self.printYesterday()
@@ -926,39 +934,45 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # show live stream
         elif self.path.endswith('/cameras.html'):
-            html = ""
+            html  = ""
+            count = 0
             for cam in camera:
               info = camera[cam].param
               html += "<div class='camera_info'>"
               html += "<div class='camera_info_image'>"
 
-              description = cam+": "+info["name"]
-              if camera[cam].active:  html   += "<center>"+self.printImageContainer(description=cam, lowres="/detection/stream.mjpg?"+cam, javascript="imageOverlay(\""+"/detection/stream.mjpg?"+cam+"\",\""+description+"\");", star='', window='self', border='white') + "<br/></center>"
-              else:                   html   += "<i>Camera "+cam.upper()+"<br/>not available<br/>at the moment.</i>"
+              description = cam.upper() + ": " + info["name"]
+              if camera[cam].active:  html   += "<center>"  + self.printImageContainer(description=description, lowres="/detection/stream.mjpg?"+cam, javascript="imageOverlay(\""+"/detection/stream.mjpg?"+cam+"\",\""+description+"\");", star='', window='self', border='white') + "<br/></center>"
+              else:                   html   += "<i>Camera "+ cam.upper() + "<br/>not available<br/>at the moment.</i>"
               html += "</div>"
-              html += "<div class='camera_info_text'><big><b>"+cam+": "+info["name"]+"</b></big>"
+              html += "<div class='camera_info_text'><big><b>" + cam.upper() + ": " + info["name"] + "</b></big>"
               html   += "<ul>"
-              html   += "<li>Type: "+info["type"] + "</li>"
-              html   += "<li>Active: "+str(camera[cam].active) + "</li>"
-              html   += "<li>Record: "+str(info["record"]) + "</li>"
-              html   += "<li>Crop: "+str(info["image"]["crop"]) + "</li>"
+              html   += "<li>Type: "   + info["type"] + "</li>"
+              html   += "<li>Active: " + str(camera[cam].active) + "</li>"
+              html   += "<li>Record: " + str(info["record"]) + "</li>"
+              html   += "<li>Crop: "   + str(info["image"]["crop"]) + "</li>"
               html   += "<li>Detection (red rectangle): <ul>"
-              html     += "<li>Threshold: "+str(info["similarity"]["threshold"]) + "%</li>"
-              html     += "<li>Area: "+str(info["similarity"]["detection_area"]) + "</li>"
+              html     += "<li>Threshold: " + str(info["similarity"]["threshold"]) + "%</li>"
+              html     += "<li>Area: "      + str(info["similarity"]["detection_area"]) + "</li>"
               html   += "</ul></li>"
               html   += "</ul>"
-              if camera[cam].active:
-                html   += "<hr/>"
-                html   += "<center><button onclick='requestAPI(\"/start/recording/"+cam+"\");'>Record</button> &nbsp;"
-                html   += "<button onclick='requestAPI(\"/stop/recording/"+cam+"\");'>Stop</button></center>"
-              html += "</div>"
-              html += "</div>"
+              if self.adminAllowed():
+                if camera[cam].active and camera[cam].param["video"]["allow_recording"]:
+                  html   += "<hr width='100%'/>"
+                  html   += "<center><button onclick='requestAPI(\"/start/recording/"+cam+"\");'>Record</button> &nbsp;"
+                  html   += "<button onclick='requestAPI(\"/stop/recording/"+cam+"\");'>Stop</button></center>"
+              html  += "</div>"
+              html  += "</div>"
+              count += 1
+              if count < len(camera):
+               html += "<div class='separator'><hr/>"
               
 #            if self.adminAllowed():
 #              html += "<div class='separator'><hr/>"
 #              html += "<button onclick='requestAPI(\"/restart-cameras\");'>Kameras neu starten</button>"
 #              html += "</div>"
 
+            config.html_replace["subtitle"]  = myPages["cam_info"][0]
             config.html_replace["links"]     = self.printLinks(link_list=("live","today","videos","favorit"), cam=which_cam)
             config.html_replace["file_list"] = html
             self.streamFile(type='text/html',  content=read_html('html','list.html'), no_cache=True)
@@ -967,39 +981,43 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # show live stream
         elif self.path.endswith('/stream.mjpg'):
 
+            if camera[which_cam].type != "pi" and camera[which_cam].type != "usb":
+               logging.warning("Unknown type of camera ("+camera[which_cam].type+"/"+camera[which_cam].name+")")
+               stream = False
+               self.sendError()
+               return
+               
             self.streamVideoHeader()
             count    = 0
             addText  = ""
             imageOld = []
             stream   = True
+            
             try:
                 while stream:
-
                   if camera[which_cam].type == "pi":
                      camera[which_cam].setText(datetime.now().strftime('%d.%m.%Y %H:%M:%S'))
-                     frame = camera[which_cam].getImage() # .getFrame()
-                     if self.path.startswith("/detection/"):
-                       frame = camera[which_cam].drawImageDetectionArea(image=frame)
-                     camera[which_cam].wait()
-                     self.streamVideoFrame(frame)
 
-                  elif camera[which_cam].type == "usb":
-                     frame = camera[which_cam].getImage()
-                     if self.path.startswith("/detection/"):
-                       frame = camera[which_cam].drawImageDetectionArea(image=frame)
-                     camera[which_cam].wait()
-                     self.streamVideoFrame(frame)
-
-                  else:
-                     logging.warning("Unknown type of camera ("+camera[which_cam].type+"/"+camera[which_cam].name+")")
-                     stream = False
+                  frame = camera[which_cam].getImage()
+                  
+                  if camera[which_cam].video.recording:                                          
+                     frame = camera[which_cam].setText2Image(frame, "Recording", position=(100,100), color=(0,0,255), fontScale=1, thickness=1)
+                     time.sleep(1)                     
+                     
+                  if self.path.startswith("/detection/"):
+                     frame = camera[which_cam].drawImageDetectionArea(image=frame)
+                     
+                  camera[which_cam].wait()
+                  self.streamVideoFrame(frame)
 
             except Exception as e:
                 logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
                 stream = False
 
         # images, css, js
-        elif self.path.endswith('.css'):        self.streamFile(type='text/css', content=read_html('html',self.path))
+        elif self.path.startswith('/videos') and self.path.endswith('.jpeg'):
+                                                self.streamFile(type='image/jpg', content=read_image('',self.path))
+        elif self.path.endswith('.css'):        self.streamFile(type='text/css',  content=read_html('html',self.path))
         elif self.path.endswith('.js'):         self.streamFile(type='text/javascript',  content=read_html('html',self.path))
         elif self.path.endswith('icon.png'):    self.streamFile(type='image/png', content=read_image('html','icon.png'))
         elif self.path.endswith('favicon.ico'): self.streamFile(type='image/ico', content=read_image('html','favicon.ico'))

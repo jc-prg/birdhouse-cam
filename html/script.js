@@ -1,13 +1,35 @@
 //----------------------------------------
 
+function videoOverlay(filename, description="", favorit="", to_be_deleted="") {
+        document.getElementById("overlay").style.display = "block";
+        document.getElementById("overlay_content").style.display = "block";
+        html  = "";
+        html += "<div id=\"overlay_close\" onclick='overlayHide();'>[X]</div>";
+        html += "<div id=\"overlay_image_container\">";
+        html += "<video id='overlay_video' src=\"" + filename + "\" controls>Video not supported</video>"
+        html += "<br/>&nbsp;<br/>"+description+"</div>";
+        document.getElementById("overlay_content").innerHTML = html;
+	}
+
+
+//----------------------------------------
+
 function imageOverlay(filename, description="", favorit="", to_be_deleted="") {
         document.getElementById("overlay").style.display = "block";
         document.getElementById("overlay_content").style.display = "block";
         html  = "";
-        html += "<div id=\"overlay_close\" onclick='document.getElementById(\"overlay\").style.display = \"none\";document.getElementById(\"overlay_content\").style.display = \"none\";'>[X]</div>";
+        html += "<div id=\"overlay_close\" onclick='overlayHide();'>[X]</div>";
         html += "<div id=\"overlay_image_container\"><img id='overlay_image' src='"+filename+"'><br/>&nbsp;<br/>"+description+"</div>";
         document.getElementById("overlay_content").innerHTML = html;
 	}
+
+
+//----------------------------------------
+
+function overlayHide() {
+       document.getElementById("overlay").style.display = "none";
+       document.getElementById("overlay_content").style.display = "none";
+       }
 
 
 //----------------------------------------

@@ -9,19 +9,13 @@ Raspberry Pi project to observe our birdhouse with multiple webcams (live stream
 * Mark photos as favorits, show a list of all favorit photos
 * Mark photos as to be deleted / not to be archived
 * Archive photos with movement and favorit photos once a day
+* Record and stream videos (including to iOS devices)
 
 ## Technology
 
 * Raspberry Pi 3B
-* Python 3, PiCamera, CV2, imutils, JSON
+* Python 3, PiCamera, CV2, imutils, JSON, Flask
 * HTML, CSS, JavaScript
-
-## Status // 04-2021
-
-Working but under development. Planned features:
-
-* Record videos
-* ...
 
 ## Impressions
 ![Screenshot 01](info/screenshot_06.png)
