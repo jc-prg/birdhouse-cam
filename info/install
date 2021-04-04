@@ -9,3 +9,4 @@ pip3 install picamera
 pip3 install imutils
 pip3 install opencv-python
 pip3 install -U scikit-image
+pip3 install flask
