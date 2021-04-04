@@ -70,6 +70,7 @@ class myVideoRecording(threading.Thread):
        '''
        logging.info("Starting video recording ...")
        self.recording            = True
+       self.info["date"]         = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
        self.info["date_start"]   = datetime.now().strftime('%Y%m%d_%H%M%S')
        self.info["stamp_start"]  = datetime.now().timestamp()
        self.info["status"]       = "recording"
@@ -382,17 +383,25 @@ class myCamera(threading.Thread):
           self.camera.annotate_text = str(text)
 
 
-   def setText2Image(self,image,text):
+   def setText2RawImage(self, image, text, position=(30,40), font=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.8, color=(255,255,255), thickness=2):
        '''
        Add text on image
        '''
-       font      = cv2.FONT_HERSHEY_SIMPLEX
-       fontScale = 0.8
-       org       = (30,40)
-       color     = (120,120,120)
-       thickness = 2
-       image     = cv2.putText(image, text, org, font, fontScale, color, thickness, cv2.LINE_AA)
+       logging.info("2: " + str(text) + " - " + str(position)+" - "+str(color) + " - " + str(thickness))
+       image     = cv2.putText(image, text, position, font, fontScale, color, thickness, cv2.LINE_AA)
        return image
+
+
+   def setText2Image(self, image, text, position=(30,40), font=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.8, color=(255,255,255), thickness=2):
+       '''
+       Add text on image
+       '''
+       logging.info("1: " + str(text) + " - " + str(position)+" - "+str(color) + " - " + str(thickness))
+       image = self.convertImage2RawImage(image)
+       image = self.setText2RawImage(image, text, position=position, font=font, fontScale=fontScale, color=color, thickness=thickness)
+       image = self.convertRawImage2Image(image)
+       return image
+
 
    #----------------------------------
 

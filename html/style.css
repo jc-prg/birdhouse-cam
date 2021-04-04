@@ -165,6 +165,7 @@ body      { background-color : black; color : white; }
     z-index  : 103;
     cursor   : pointer;
 }
+
 #overlay_image_container {
     display          : grid;
     opacity          : 100%;
@@ -175,7 +176,9 @@ body      { background-color : black; color : white; }
     -ms-transform    : translate(-50%,-50%);
     transform        : translate(-50%,-50%);
     text-align       : center;
+    z-index          : 103;
   }
+  
 #overlay_image {
     max-width        : 95vw;
     max-height       : 95vh;
@@ -183,4 +186,15 @@ body      { background-color : black; color : white; }
     margin           : auto;
     background-color : white;
     border           : 5px solid white;
+    z-index          : 103;
+  }
+  
+#overlay_video {
+    max-width        : 95vw;
+    max-height       : 95vh;
+    transform: scale(0.98);
+    margin           : auto;
+    background-color : white;
+    border           : 5px solid white;
+    z-index          : 103;
   }
