@@ -1,14 +1,20 @@
 //----------------------------------------
 
 function videoOverlay(filename, description="", favorit="", to_be_deleted="") {
-        document.getElementById("overlay").style.display = "block";
-        document.getElementById("overlay_content").style.display = "block";
-        html  = "";
-        html += "<div id=\"overlay_close\" onclick='overlayHide();'>[X]</div>";
-        html += "<div id=\"overlay_image_container\">";
-        html += "<video id='overlay_video' src=\"" + filename + "\" controls>Video not supported</video>"
-        html += "<br/>&nbsp;<br/>"+description+"</div>";
-        document.getElementById("overlay_content").innerHTML = html;
+        check_iOS = iOS();
+        if (check_iOS == true) {
+          window.location.href = filename;
+          }
+        else {
+          document.getElementById("overlay").style.display = "block";
+          document.getElementById("overlay_content").style.display = "block";
+          html  = "";
+          html += "<div id=\"overlay_close\" onclick='overlayHide();'>[X]</div>";
+          html += "<div id=\"overlay_image_container\">";
+          html += "<video id='overlay_video' src=\"" + filename + "\" controls>Video not supported</video>"
+          html += "<br/>&nbsp;<br/>"+description+"</div>";
+          document.getElementById("overlay_content").innerHTML = html;
+          }
 	}
 
 
@@ -103,3 +109,18 @@ function showHideGroup(id) {
         	document.getElementById("group_link_"+id).innerHTML = "(+)"
 		}
 	}
+	
+//----------------------------------------
+	
+function iOS() {
+  return [
+    'iPad Simulator',
+    'iPhone Simulator',
+    'iPod Simulator',
+    'iPad',
+    'iPhone',
+    'iPod'
+  ].includes(navigator.platform)
+  // iPad on iOS 13 detection
+  || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
+}
