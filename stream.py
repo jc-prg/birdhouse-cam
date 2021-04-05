@@ -262,7 +262,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         return html
 
 
-    def printImageGroup(self, title, group_id, image_group, index, header=True, header_open=False, header_count=['all','star','detect','recycle'], cam=''):
+    def printImageGroup(self, title, group_id, image_group, index, header=True, header_open=False, header_count=['all','star','detect','recycle'], cam='', intro=''):
            '''
            create html for a list of images including all checks
            '''
@@ -326,7 +326,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                 if header and not header_open:
                    display    = "style='display:none;'"
-                   id_list   += lowres + " "
+                   id_list   += image_group[stamp]["lowres"] + " "
                    lazzy      = "lazzy"
                 else:
                    lazzy      = ""
@@ -361,6 +361,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
              html   += "]</font>";
              html   += "</div>\n"
 
+           if intro != "": html += "<div  id='group_intro_" + group_id + "' class='separator' style='display:none;'>"+intro+"</div>"
            html   += "<div id='group_ids_" + group_id + "' style='display:none;'>"+id_list+"</div>\n"             
            html   += "<div id='group_" + group_id + "' " + display + "><div class='separator'>&nbsp;</div>"+images+"</div>\n"
            return html
@@ -407,7 +408,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
         # mark / unmark for deletion
-        elif self.path.startswith("/delete/current/"):
+        elif self.path.startswith("/recycle/current/"):
            param = self.path.split("/")
            config_data = config.read(config="images")
            if param[3] in config_data:
@@ -421,7 +422,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
         # mark / unmark for deletion
-        elif self.path.startswith("/delete/backup/"):
+        elif self.path.startswith("/recycle/backup/"):
            param = self.path.split("/")
            config_data = config.read(config="backup", date=param[3])
            if param[4] in config_data["files"]:
@@ -432,6 +433,18 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               response["error"] = "no image found with stamp "+str(param[4])
 
            response["command"] = ["mark/unmark for deletion (backup)", param[5]]
+           self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+           
+           
+        elif self.path.startswith('/remove/'):
+           param = self.path.split("/")
+           if "delete_not_used" in param: delete_not_used = True
+           else:                          delete_not_used = False
+           if param[2] == "backup":       response = backup.delete_marked_files(date=param[3], delete_not_used=delete_not_used)
+           elif param[2] == "today":      response = backup.delete_marked_files(date="",       delete_not_used=delete_not_used)
+           else:                          response["error"] = "not clear, which files shall be deleted"
+           
+           response["command"] = ["delete files that are marked as 'to_be_deleted'" ,param]
            self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
            
         # start video recording
@@ -588,22 +601,24 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            today         = datetime.now().strftime("%Y%m%d")
 
            if file_dir[1] == "backup":
-               path        = config.directory(config="backup", date=file_dir[2])
-               files_data  = config.read(config="backup", date=file_dir[2])
-               files       = files_data["files"]
-               index       = self.path.replace("list_short.html","")
-               time_now    = "000000"
-               first_title = ""
+               path             = config.directory(config="backup", date=file_dir[2])
+               files_data       = config.read(config="backup", date=file_dir[2])
+               files            = files_data["files"]
+               check_similarity = False
+               index            = self.path.replace("list_short.html","")
+               time_now         = "000000"
+               first_title      = ""
 
                config.html_replace["subtitle"]  = myPages["backup"][0] + " " + files_data["info"]["date"] + " (" + camera[which_cam].name + ", " + str(files_data["info"]["count"]) + " Bilder)"
                config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), current='backup', cam=which_cam)
 
            elif os.path.isfile(config.file(config="images")):
-               path        = config.directory(config="images")
-               files       = config.read(config="images")
-               time_now    = datetime.now().strftime('%H%M%S')
-               index       = "/current/"
-               first_title = "Heute &nbsp; "
+               path             = config.directory(config="images")
+               files            = config.read(config="images")
+               time_now         = datetime.now().strftime('%H%M%S')
+               check_similarity = True
+               index            = "/current/"
+               first_title      = "Heute &nbsp; "
 
                config.html_replace["subtitle"]    = myPages["today"][0] + " (" + camera[which_cam].name + ")"
                if self.adminAllowed():
@@ -613,13 +628,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
            if files != {}:
                stamps   = list(reversed(sorted(files.keys())))
-
+               
                # Today
                html_today  = ""
                files_today = {}
                for stamp in stamps:
                  if int(stamp) < int(time_now) or time_now == "000000":
-                   if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp]):
+                   if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp], check_similarity=check_similarity):
                      if not "datestamp" in files[stamp] or files[stamp]["datestamp"] == today or file_dir[1] == "backup":
                         files_today[stamp] = files[stamp]
 
@@ -644,7 +659,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                files_yesterday = {}
                for stamp in stamps:
                  if int(stamp) >= int(time_now) and time_now != "000000":
-                   if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp]):
+                   if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp], check_similarity=check_similarity):
                       files_yesterday[stamp] = files[stamp]
 
                if file_dir[1] != "backup":
@@ -659,8 +674,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                      if files[stamp]["camera"] == which_cam:
                        files_recycle[stamp] = files[stamp]
                        
-                 if len(files_recycle) > 0:      
-                   html_recycle += self.printImageGroup(title="Recycle", group_id="recycle", image_group=files_recycle, index=index, header=True, header_open=False, header_count=['recycle'],  cam=which_cam)
+                 if len(files_recycle) > 0:
+                   if file_dir[1] == "backup": url = "/remove/backup/" + file_dir[2]
+                   else:                       url = "/remove/today"
+                   
+                   intro          = "<a onclick='removeFiles(\"" + url + "\");' style='cursor:pointer;'>Delete all files marked for recycling ...</a>"
+                   html_recycle += self.printImageGroup(title="Recycle", group_id="recycle", image_group=files_recycle, index=index, header=True, header_open=False, header_count=['recycle'], cam=which_cam, intro=intro)
 
                html += html_today
                html += html_yesterday               
@@ -1036,15 +1055,24 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         else:
             self.sendError()
 
-
 #----------------------------------------------------
-
 
 # execute only if run as a script
 if __name__ == "__main__":
 
-    logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.INFO)
-    #logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.DEBUG)
+    if len(sys.argv) > 0 and "--logfile" in sys.argv:
+       logging.basicConfig(filename=os.path.join(os.path.dirname(__file__),"stream.log"),
+                           filemode='a',
+                           format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                           datefmt='%d.%m.%y %H:%M:%S',
+                           level=logging.INFO)
+       logging.info('-------------------------------------------')
+       logging.info('Started ...')
+       logging.info('-------------------------------------------')
+    else:
+       logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.INFO)
+       #logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.DEBUG)
+       
     signal.signal(signal.SIGINT,  onexit)
     signal.signal(signal.SIGTERM, onkill)
     
