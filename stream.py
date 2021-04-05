@@ -1036,15 +1036,21 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         else:
             self.sendError()
 
-
 #----------------------------------------------------
-
 
 # execute only if run as a script
 if __name__ == "__main__":
 
-    logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.INFO)
-    #logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.DEBUG)
+    if len(sys.argv) > 0 and "--logfile" in sys.argv:
+       logging.basicConfig(filename='/log/server.log',
+                           filemode='a',
+                           format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                           datefmt='%d.%m.%y %H:%M:%S',
+                           level=logging.INFO)
+    else:
+       logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.INFO)
+       #logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.DEBUG)
+       
     signal.signal(signal.SIGINT,  onexit)
     signal.signal(signal.SIGTERM, onkill)
     
