@@ -3,6 +3,7 @@
 # In Progress:
 # - ...
 # Backlog:
+# - dont backup if marked for deletion !!!
 # - In progress (error!): Restart camera threads via API, Shutdown all services via API, Trigger RPi halt/reboot via API
 # - delete files with to_be_deleted == 1 in archive folders
 # - password for external access (to enable admin from outside)
@@ -587,20 +588,22 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            today         = datetime.now().strftime("%Y%m%d")
 
            if file_dir[1] == "backup":
-               path       = config.directory(config="backup", date=file_dir[2])
-               files_data = config.read(config="backup", date=file_dir[2])
-               files      = files_data["files"]
-               index      = self.path.replace("list_short.html","")
-               time_now   = "000000"
+               path        = config.directory(config="backup", date=file_dir[2])
+               files_data  = config.read(config="backup", date=file_dir[2])
+               files       = files_data["files"]
+               index       = self.path.replace("list_short.html","")
+               time_now    = "000000"
+               first_title = ""
 
                config.html_replace["subtitle"]  = myPages["backup"][0] + " " + files_data["info"]["date"] + " (" + camera[which_cam].name + ", " + str(files_data["info"]["count"]) + " Bilder)"
                config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), current='backup', cam=which_cam)
 
            elif os.path.isfile(config.file(config="images")):
-               path     = config.directory(config="images")
-               files    = config.read(config="images")
-               time_now = datetime.now().strftime('%H%M%S')
-               index    = "/current/"
+               path        = config.directory(config="images")
+               files       = config.read(config="images")
+               time_now    = datetime.now().strftime('%H%M%S')
+               index       = "/current/"
+               first_title = "Heute &nbsp; "
 
                config.html_replace["subtitle"]    = myPages["today"][0] + " (" + camera[which_cam].name + ")"
                if self.adminAllowed():
@@ -620,7 +623,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                      if not "datestamp" in files[stamp] or files[stamp]["datestamp"] == today or file_dir[1] == "backup":
                         files_today[stamp] = files[stamp]
 
-               files_today["999999"] = {
+               if first_title == "":
+                  first_title =  files[stamp]["date"]
+               else:
+                 files_today["999999"] = {
                        "lowres" : "stream.mjpg?"+which_cam,
                        "hires"  : "/index.html?"+which_cam,
                        "camera" : which_cam,
@@ -631,7 +637,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                if self.adminAllowed(): header = True
                else:                   header = False
 
-               html_today += self.printImageGroup(title="Heute &nbsp; ", group_id="today", image_group=files_today, index=index, header=header, header_open=True, header_count=['all','star','detect'], cam=which_cam)
+               html_today += self.printImageGroup(title=first_title, group_id="today", image_group=files_today, index=index, header=header, header_open=True, header_count=['all','star','detect'], cam=which_cam)
 
                # Yesterday
                html_yesterday  = ""
