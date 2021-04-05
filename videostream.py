@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 import os, re
+from modules.config  import myConfig
+
 from flask import Flask, send_file, make_response, redirect
 from flask import Response, request
 app = Flask(__name__)
@@ -41,7 +43,11 @@ def serve_ios(full_path):
     
 #-----------------------------------
 
+config   = myConfig(param_init={}, main_directory=os.path.dirname(os.path.abspath(__file__)))
+config.start()    
+
 MEDIA_PATH = '/projects/test/birdhouse-cam/videos'
+MEDIA_PATH = os.path.join(config.param["path"], "videos")
 
 
 @app.route('/<vid_name>')
@@ -56,4 +62,5 @@ def after_request(response):
     
 
 if __name__ == '__main__':
+
     app.run(host="0.0.0.0", port=8008)
