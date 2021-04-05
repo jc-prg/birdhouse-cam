@@ -60,8 +60,21 @@ function requestAPI(command, callback, index="", value="", lowres_file="") {
 
 //----------------------------------------
 
+function removeFiles(command) {
+   if (confirm("Sollen die Dateien wirklich gelöscht werden?") == true) {
+      requestAPI(command, removeFilesAnswer);
+      }
+   }
+   
+function removeFilesAnswer() {
+   alert("Files removed");
+   location.reload();
+   }
+
+//----------------------------------------
+
 function setRecycle(index, status, lowres_file="") {
-        requestAPI("/delete", setRecycleShow, index, status, lowres_file);
+        requestAPI("/recycle", setRecycleShow, index, status, lowres_file);
 	}
 
 function setRecycleShow(command, index, status, lowres_file="") {
@@ -95,6 +108,7 @@ function setFavoritShow(command, index, status, lowres_file="") {
 function showHideGroup(id) {
         if (document.getElementById("group_"+id).style.display == "none") {
                 document.getElementById("group_"+id).style.display = "block"
+        	document.getElementById("group_intro_"+id).style.display = "block"
                 document.getElementById("group_link_"+id).innerHTML = "(&minus;)"
                 images     = document.getElementById("group_ids_"+id).innerHTML;
                 image_list = images.split(" ");
@@ -106,6 +120,7 @@ function showHideGroup(id) {
 		}
 	else {
         	document.getElementById("group_"+id).style.display = "none"
+        	document.getElementById("group_intro_"+id).style.display = "none"
         	document.getElementById("group_link_"+id).innerHTML = "(+)"
 		}
 	}
