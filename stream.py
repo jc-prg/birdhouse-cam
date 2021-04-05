@@ -588,22 +588,24 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            today         = datetime.now().strftime("%Y%m%d")
 
            if file_dir[1] == "backup":
-               path        = config.directory(config="backup", date=file_dir[2])
-               files_data  = config.read(config="backup", date=file_dir[2])
-               files       = files_data["files"]
-               index       = self.path.replace("list_short.html","")
-               time_now    = "000000"
-               first_title = ""
+               path             = config.directory(config="backup", date=file_dir[2])
+               files_data       = config.read(config="backup", date=file_dir[2])
+               files            = files_data["files"]
+               check_similarity = False
+               index            = self.path.replace("list_short.html","")
+               time_now         = "000000"
+               first_title      = ""
 
                config.html_replace["subtitle"]  = myPages["backup"][0] + " " + files_data["info"]["date"] + " (" + camera[which_cam].name + ", " + str(files_data["info"]["count"]) + " Bilder)"
                config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), current='backup', cam=which_cam)
 
            elif os.path.isfile(config.file(config="images")):
-               path        = config.directory(config="images")
-               files       = config.read(config="images")
-               time_now    = datetime.now().strftime('%H%M%S')
-               index       = "/current/"
-               first_title = "Heute &nbsp; "
+               path             = config.directory(config="images")
+               files            = config.read(config="images")
+               time_now         = datetime.now().strftime('%H%M%S')
+               check_similarity = True
+               index            = "/current/"
+               first_title      = "Heute &nbsp; "
 
                config.html_replace["subtitle"]    = myPages["today"][0] + " (" + camera[which_cam].name + ")"
                if self.adminAllowed():
@@ -613,13 +615,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
            if files != {}:
                stamps   = list(reversed(sorted(files.keys())))
-
+               
                # Today
                html_today  = ""
                files_today = {}
                for stamp in stamps:
                  if int(stamp) < int(time_now) or time_now == "000000":
-                   if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp]):
+                   if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp], check_similarity=check_similarity):
                      if not "datestamp" in files[stamp] or files[stamp]["datestamp"] == today or file_dir[1] == "backup":
                         files_today[stamp] = files[stamp]
 
@@ -644,7 +646,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                files_yesterday = {}
                for stamp in stamps:
                  if int(stamp) >= int(time_now) and time_now != "000000":
-                   if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp]):
+                   if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp], check_similarity=check_similarity):
                       files_yesterday[stamp] = files[stamp]
 
                if file_dir[1] != "backup":

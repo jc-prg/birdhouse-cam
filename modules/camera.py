@@ -583,7 +583,7 @@ class myCamera(threading.Thread):
 
    #----------------------------------
 
-   def selectImage(self, timestamp, file_info):
+   def selectImage(self, timestamp, file_info, check_similarity=True):
        '''
        check image properties to decide if image is a selected one (for backup and view with selected images)
        '''
@@ -595,11 +595,12 @@ class myCamera(threading.Thread):
              delete    = int(file_info["to_be_deleted"])
              if delete == 1:                                                return False
 
-          threshold  = float(self.param["similarity"]["threshold"])
-          similarity = float(file_info["similarity"])
-
           if "00"+str(self.param["image_save"]["seconds"][0]) in timestamp: return True
-          if similarity != 0 and similarity < threshold:                    return True
+
+          if check_similarity:
+             threshold  = float(self.param["similarity"]["threshold"])
+             similarity = float(file_info["similarity"])
+             if similarity != 0 and similarity < threshold:                 return True
 
           if "favorit" in file_info:
              favorit    = int(file_info["favorit"])
