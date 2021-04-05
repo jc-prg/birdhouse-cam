@@ -58,9 +58,9 @@ class myVideoRecording(threading.Thread):
          }
        if "video" in self.param and "max_length" in self.param["video"]:
           self.max_length = self.param["video"]["max_length"]
-          logging.info("Set max video recording length for " + self.camera + " to " + str(self.max_length))
+          logging.debug("Set max video recording length for " + self.camera + " to " + str(self.max_length))
        else:
-          logging.info("Use default max video recording length for " + self.camera + " = " + str(self.max_length))
+          logging.debug("Use default max video recording length for " + self.camera + " = " + str(self.max_length))
        return
 
    
