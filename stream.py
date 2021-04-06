@@ -3,9 +3,11 @@
 # In Progress:
 # - ...
 # Backlog:
-# - dont backup if marked for deletion !!!
+# - don't backup if marked for deletion !!! DOUBLE CHECK
+# - enable favorit and recycle functionality for videos
+# - show videos in favorits section
+# - show videos in day views (with play icon on it)
 # - In progress (error!): Restart camera threads via API, Shutdown all services via API, Trigger RPi halt/reboot via API
-# - delete files with to_be_deleted == 1 in archive folders
 # - password for external access (to enable admin from outside)
 # - Idea: set to_be_deleted when below threshold; don't show / backup those files
 
@@ -1033,8 +1035,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             imageOld = []
             stream   = True
             
-            try:
-                while stream:
+            while stream:
                   if camera[which_cam].type == "pi":
                      camera[which_cam].setText(datetime.now().strftime('%d.%m.%Y %H:%M:%S'))
 
@@ -1047,12 +1048,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                   if self.path.startswith("/detection/"):
                      frame = camera[which_cam].drawImageDetectionArea(image=frame)
                      
+              try:
                   camera[which_cam].wait()
                   self.streamVideoFrame(frame)
 
-            except Exception as e:
-                logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
-                stream = False
+              except Exception as e:
+                  stream = False
+                  if "Errno 104" in str(e) or "Errno 32" in str(e):
+                     logging.debug('Removed streaming client %s: %s', self.client_address, str(e))
+                  else:                                              
+                     logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
 
         # images, css, js
         elif self.path.startswith('/videos') and self.path.endswith('.jpeg'):
