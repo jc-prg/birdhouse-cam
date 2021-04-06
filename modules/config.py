@@ -194,9 +194,12 @@ class myConfig(threading.Thread):
        if camera != "": camera += '_'
        #camera = "" #>>> im moment noch keine CAM im namen !!!
 
-       if type == "lowres":   return "image_" + camera + timestamp + ".jpg"
-       elif type == "hires":  return "image_" + camera + "big_" + timestamp + ".jpeg"
-       else:                  return "image_" + camera + timestamp + ".jpg"
+       if type == "lowres":    return "image_" + camera + timestamp + ".jpg"
+       elif type == "hires":   return "image_" + camera + "big_" + timestamp + ".jpeg"
+       elif type == "thumb":   return "video_" + camera + timestamp + "_thumb.jpeg"
+       elif type == "video":   return "video_" + camera + timestamp + ".mp4"
+       elif type == "vimages": return "video_" + camera + timestamp + "_"
+       else:                   return "image_" + camera + timestamp + ".jpg"
 
 
    def imageName2Param(self, filename):

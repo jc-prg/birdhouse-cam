@@ -219,13 +219,17 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         else:
            star    = "/html/star0.png"
            value   = "1"
+           
+        if "/videos/" in file: img_id = config.imageName(type="thumb",  timestamp=stamp, camera=cam)
+        else:                  img_id = config.imageName(type="lowres", timestamp=stamp, camera=cam)
+        
         if self.adminAllowed():
-           onclick = "setFavorit(\""+file+"\",document.getElementById(\"s_"+file+"_value\").innerHTML,\""+config.imageName("lowres", stamp, cam)+"\");"
-           return "<div class='star'><div id='s_"+file+"_value' style='display:none;'>"+value+"</div><img class='star_img' id='s_"+file+"' src='" + star + "' onclick='"+onclick+"'/></div>\n"
+           onclick = "setFavorit(\"" + file + "\",document.getElementById(\"s_" + file + "_value\").innerHTML,\"" + img_id + "\");"
+           return "<div class='star'><div id='s_" + file + "_value' style='display:none;'>" + value + "</div><img class='star_img' id='s_" + file + "' src='" + star + "' onclick='" + onclick + "'/></div>\n"
         else:
            onclick = ""
            if int(favorit) == 1:
-              return "<div class='star'><div id='s_"+file+"_value' style='display:none;'>"+value+"</div><img class='star_img' id='s_"+file+"' src='" + star + "' onclick='"+onclick+"'/></div>\n"
+              return "<div class='star'><div id='s_" + file + "_value' style='display:none;'>" + value + "</div><img class='star_img' id='s_" + file + "' src='" + star + "' onclick='" + onclick + "'/></div>\n"
            else:
               return "<div class='star'></div>\n"
 
@@ -242,9 +246,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         else:
            trash   = "/html/recycle0.png"
            value   = "1"
+           
+        if "/videos/" in file: img_id = config.imageName(type="thumb",  timestamp=stamp, camera=cam)
+        else:                  img_id = config.imageName(type="lowres", timestamp=stamp, camera=cam)
+        
         if self.adminAllowed():
-           onclick = "setRecycle(\""+file+"\",document.getElementById(\"d_"+file+"_value\").innerHTML,\""+config.imageName("lowres", stamp, cam)+"\");"
-           return "<div class='trash'><div id='d_"+file+"_value' style='display:none;'>"+value+"</div><img class='trash_img' id='d_"+file+"' src='" + trash + "' onclick='"+onclick+"'/></div>\n"
+           onclick = "setRecycle(\"" + file + "\",document.getElementById(\"d_" + file + "_value\").innerHTML,\"" + img_id + "\");"
+           return "<div class='trash'><div id='d_" + file + "_value' style='display:none;'>" + value + "</div><img class='trash_img' id='d_" + file + "' src='" + trash + "' onclick='" + onclick + "'/></div>\n"
         else:
            return "<div class='trash'></div>\n"
 
@@ -276,7 +284,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         return html
 
 
-    def printImageGroup(self, title, group_id, image_group, index, header=True, header_open=False, header_count=['all','star','detect','recycle'], cam='', intro=''):
+    def printImageGroup(self, title, group_id, image_group, category, header=True, header_open=False, header_count=['all','star','detect','recycle'], cam='', intro=''):
         '''
         create html for a list of images including all checks
         '''
@@ -287,7 +295,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         stamps = list(reversed(sorted(image_group.keys())))
         for stamp in stamps:
            border     = "black"
-              
+           if "_" in stamp: 
+              stamp_date, stamp_time = stamp.split("_")
+              time       = stamp_date[6:8] + "." + stamp_date[4:6] + "." + stamp_date[0:4] + " " + stamp_time[0:2] + ":" + stamp_time[2:4]
+              time      += "<br/>"
+           else:
+              stamp_time = stamp
+              time       = stamp_time[0:2] + ":" + stamp_time[2:4] + ":" + stamp_time[4:6]
+           
+           if "backup" in category:  url_dir = category  
+           elif "video" in category: url_dir = category  
+           else:                     url_dir = ""
+           
+           # addons, e.g. small live stream with special links
            if "type" in image_group[stamp] and image_group[stamp]["type"] == "addon":
               entry       = image_group[stamp]
               description = entry["title"]
@@ -295,48 +315,52 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               hires       = entry["hires"]
               javascript  = star = trash = lazzy = ""
 
-           else:              
-             if "_" in stamp: 
-                stamp_date, stamp_time = stamp.split("_")
-                time       = stamp_date[6:8] + "." + stamp_date[4:6] + "." + stamp_date[0:4] + " " + stamp_time[0:2] + ":" + stamp_time[2:4]
-                time      += "<br/>"
-             else:
-                stamp_time = stamp
-                time       = stamp_time[0:2] + ":" + stamp_time[2:4] + ":" + stamp_time[4:6]
-                   
-             similarity = str(image_group[stamp]["similarity"])+'%'
-             threshold  = camera[cam].param["similarity"]["threshold"]
-                
+           # images and videos
+           else:
+             
+             if "video_file":  stamp_file = stamp
+             else:             stamp_file = stamp_time
+           
              if "favorit" in image_group[stamp]:
-                star   = self.printStar(file=index+stamp_time, favorit=image_group[stamp]["favorit"], cam=cam)
+                star   = self.printStar(file=category+stamp_file, favorit=image_group[stamp]["favorit"], cam=cam)
                 if int(image_group[stamp]["favorit"]) == 1: 
-                   border      = "lime"
+                   border         = "lime"
                    count["star"] += 1
              else:
-                star   = self.printStar(file=index+stamp_time, favorit=0, cam=cam)
+                star   = self.printStar(file=category+stamp_file, favorit=0, cam=cam)
                 
              if "to_be_deleted" in image_group[stamp]:
-                trash  = self.printRecycle(file=index+stamp_time, delete=image_group[stamp]["to_be_deleted"], cam=cam)
+                trash  = self.printRecycle(file=category+stamp_file, recycle=image_group[stamp]["to_be_deleted"], cam=cam)
                 if int(image_group[stamp]["to_be_deleted"]) == 1:
-                   border       = "red"
+                   border            = "red"
                    count["recycle"] += 1
              else:
-                trash  = self.printRecycle(file=index+stamp_time, delete=0, cam=cam)
+                trash  = self.printRecycle(file=category+stamp_file, recycle=0, cam=cam)
 
-             if float(image_group[stamp]["similarity"]) < float(threshold) and float(image_group[stamp]["similarity"]) > 0:
-                if border == "black":
-                   border      = "aqua"
-                   count["detect"] += 1
+             # if image
+             if "lowres" in image_group[stamp]:
+                threshold  = camera[cam].param["similarity"]["threshold"]
+                similarity = str(image_group[stamp]["similarity"])+'%'                
+                if float(image_group[stamp]["similarity"]) < float(threshold) and float(image_group[stamp]["similarity"]) > 0:
+                   if border == "black":
+                      border           = "aqua"
+                      count["detect"] += 1
 
-             if "backup" in index: url_dir = index
-             else:                 url_dir = ""
-
-             hires       = ""
-             description = time + " ("+similarity+")"
-             lowres      = url_dir + image_group[stamp]["lowres"]
-             if "hires" in image_group[stamp]:
-                hires      = "" # image_group[stamp]["hires"]
-                javascript ="imageOverlay(\"" + url_dir + image_group[stamp]["hires"] + "\",\"" + description + "\");"
+                hires        = ""
+                description  = time + " ("+similarity+")"
+                lowres       = url_dir + image_group[stamp]["lowres"]
+                if "hires" in image_group[stamp]:
+                   hires      = "" # image_group[stamp]["hires"]
+                   javascript ="imageOverlay(\"" + url_dir + image_group[stamp]["hires"] + "\",\"" + description + "\");"
+                   
+             # if video
+             elif "video_file" in image_group[stamp]:
+                description = image_group[stamp]["date"].replace(" ","<br/>") + "<br/>" + image_group[stamp]["camera"].upper() + ": " + image_group[stamp]["camera_name"]
+                lowres      = "videos/" + image_group[stamp]["thumbnail"]
+                hires       = ""
+                video_link  = camera[cam].param["video"]["streaming_server"] + image_group[stamp]["video_file"]
+                javascript  = "videoOverlay(\"" + video_link + "\",\"" + description + "\");"
+                image_group[stamp]["lowres"] = image_group[stamp]["thumbnail"]
 
              if header and not header_open:
                 display    = "style='display:none;'"
@@ -345,7 +369,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
              else:
                 lazzy      = ""
 
-           images    += self.printImageContainer(description=description, lowres=lowres, hires=hires, star=star, trash=trash, javascript=javascript, lazzy=lazzy, border=border)
+           images += self.printImageContainer(description=description, lowres=lowres, hires=hires, star=star, trash=trash, javascript=javascript, lazzy=lazzy, border=border)
 
         html = ""
         if header:
@@ -394,62 +418,80 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
         
         # set / unset favorit
-        if self.path.startswith("/favorit/current/"):
+        if self.path.startswith("/favorit/"):
            param = self.path.split("/")
-           config_data = config.read(config="images")
-           if param[3] in config_data:
-             config_data[param[3]]["favorit"] = param[4]
-             if int(param[4]) == 1: config_data[param[3]]["to_be_deleted"] = 0
-             config.write(config="images", config_data=config_data)
-           else:
-             response["error"] = "no image found with stamp "+str(param[3])
-  
-           response["command"] = ["set/unset favorit", param[3], param[4]]
+
+           if param[2] == "current":
+              config_data         = config.read(config="images")
+              response["command"] = ["set/unset favorit", param[3], param[4]]
+              if param[3] in config_data:
+                 config_data[param[3]]["favorit"] = param[4]
+                 if int(param[4]) == 1: config_data[param[3]]["to_be_deleted"] = 0
+                 config.write(config="images", config_data=config_data)
+              else:
+                 response["error"] = "no image found with stamp "+str(param[3])
+
+           elif param[2] == "backup":
+              config_data         = config.read(config="backup", date=param[3])
+              response["command"] = ["set/unset favorit (backup)", param[5]]
+              if param[4] in config_data["files"]:
+                 config_data["files"][param[4]]["favorit"] = param[5]
+                 if int(param[5]) == 1: config_data["files"][param[4]]["to_be_deleted"] = 0
+                 config.write(config="backup",config_data=config_data, date=param[3])
+              else:
+                 response["error"] = "no image found with stamp "+str(param[4])
+
+           elif param[2] == "videos":
+              config_data         = config.read(config="videos")
+              response["command"] = ["set/unset favorit (videos)", param[3], param[4]]
+              if param[3] in config_data:
+                 config_data[param[3]]["favorit"] = param[4]
+                 if int(param[4]) == 1: config_data[param[3]]["to_be_deleted"] = 0
+                 config.write(config="videos", config_data=config_data)
+              else:
+                 response["error"] = "no video found with stamp "+str(param[3])
+
            self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
-        # set / unset favorit
-        elif self.path.startswith("/favorit/backup/"):
-           param = self.path.split("/")
-           config_data = config.read(config="backup", date=param[3])
-           if param[4] in config_data["files"]:
-             config_data["files"][param[4]]["favorit"] = param[5]
-             if int(param[5]) == 1: config_data["files"][param[4]]["to_be_deleted"] = 0
-             config.write(config="backup",config_data=config_data, date=param[3])
-           else:
-             response["error"] = "no image found with stamp "+str(param[4])
-
-           response["command"] = ["set/unset favorit (backup)", param[5]]
-           self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
         # mark / unmark for deletion
-        elif self.path.startswith("/recycle/current/"):
+        elif self.path.startswith("/recycle/"):
            param = self.path.split("/")
-           config_data = config.read(config="images")
-           if param[3] in config_data:
-             config_data[param[3]]["to_be_deleted"] = param[4]
-             if int(param[4]) == 1: config_data[param[3]]["favorit"] = 0
-             config.write(config="images", config_data=config_data)
-           else:
-             response["error"] = "no image found with stamp "+str(param[3])
 
-           response["command"] = ["mark/unmark for deletion", param[4]]
+           if param[2] == "current":
+              config_data         = config.read(config="images")
+              response["command"] = ["mark/unmark for deletion", param[4]]
+              if param[3] in config_data:
+                 config_data[param[3]]["to_be_deleted"] = param[4]
+                 if int(param[4]) == 1: config_data[param[3]]["favorit"] = 0
+                 config.write(config="images", config_data=config_data)
+              else:
+                 response["error"] = "no image found with stamp "+str(param[3])
+
+           elif param[2] == "backup":
+              config_data         = config.read(config="backup", date=param[3])
+              response["command"] = ["mark/unmark for deletion (backup)", param[5]]
+              if param[4] in config_data["files"]:
+                 config_data["files"][param[4]]["to_be_deleted"] = param[5]
+                 if int(param[5]) == 1: config_data["files"][param[4]]["favorit"] = 0
+                 config.write(config="backup",config_data=config_data, date=param[3])
+              else:
+                 response["error"] = "no image found with stamp "+str(param[4])
+
+           elif param[2] == "videos":
+              config_data         = config.read(config="videos")
+              response["command"] = ["mark/unmark for deletion", param[4]]
+              if param[3] in config_data:
+                 config_data[param[3]]["to_be_deleted"] = param[4]
+                 if int(param[4]) == 1: config_data[param[3]]["favorit"] = 0
+                 config.write(config="videos", config_data=config_data)
+              else:
+                 response["error"] = "no video found with stamp "+str(param[3])
+           
            self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
-        # mark / unmark for deletion
-        elif self.path.startswith("/recycle/backup/"):
-           param = self.path.split("/")
-           config_data = config.read(config="backup", date=param[3])
-           if param[4] in config_data["files"]:
-              config_data["files"][param[4]]["to_be_deleted"] = param[5]
-              if int(param[5]) == 1: config_data["files"][param[4]]["favorit"] = 0
-              config.write(config="backup",config_data=config_data, date=param[3])
-           else:
-              response["error"] = "no image found with stamp "+str(param[4])
 
-           response["command"] = ["mark/unmark for deletion (backup)", param[5]]
-           self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
-           
-           
+        # remove marked files           
         elif self.path.startswith('/remove/'):
            param = self.path.split("/")
            if "delete_not_used" in param: delete_not_used = True
@@ -570,7 +612,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             # today
             files      = config.read(config="images")
-            index      = "/current/"
+            category   = "/current/"
             date_today = datetime.now().strftime("%Y%m%d")
             for stamp in files:
               if date_today == files[stamp]["datestamp"] and "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
@@ -581,14 +623,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  favorits[new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
 
             if len(favorits) > 0:
-               html += self.printImageGroup(title="Heute &nbsp; &nbsp; &nbsp; &nbsp;", group_id="today", image_group=favorits, index=index, header=True, header_open=True, header_count=['star'], cam=which_cam)
+               html += self.printImageGroup(title="Heute &nbsp; &nbsp; &nbsp; &nbsp;", group_id="today", image_group=favorits, category=category, header=True, header_open=True, header_count=['star'], cam=which_cam)
 
             # other days
             path           = config.directory(config="backup")
             dir_list       = [f for f in os.listdir(path) if os.path.isdir(os.path.join(path, f))]
             dir_list       = list(reversed(sorted(dir_list)))
             for directory in dir_list:
-              index    = "/backup/"+directory+"/"
+              category     = "/backup/"+directory+"/"
               if config.exists(config="backup", date=directory):
                 files_data = config.read(config="backup", date=directory)
                 files      = files_data["files"]
@@ -605,7 +647,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                       favorits[directory][new]["date2"]  = favorits[directory][new]["date"]
 
                 if len(favorits[directory]) > 0:
-                   html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], index=index, header=True, header_open=True, header_count=['star'], cam=which_cam)
+                   html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], category=category, header=True, header_open=True, header_count=['star'], cam=which_cam)
 
             config.html_replace["file_list"] = html
             self.streamFile(type='text/html',content=read_html('html','list.html'), no_cache=True)
@@ -629,7 +671,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                files_data       = config.read(config="backup", date=date_backup)
                files            = files_data["files"]
                check_similarity = False
-               index            = self.path.replace("list_short.html","")
+               category         = self.path.replace("list_short.html","")
                time_now         = "000000"
                first_title      = ""
 
@@ -641,7 +683,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                files            = config.read(config="images")
                time_now         = datetime.now().strftime('%H%M%S')
                check_similarity = True
-               index            = "/current/"
+               category         = "/current/"
                first_title      = "Heute &nbsp; "
 
                config.html_replace["subtitle"]    = myPages["today"][0] + " (" + camera[which_cam].name + ")"
@@ -654,11 +696,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                stamps   = list(reversed(sorted(files.keys())))
                
                # Today or backup
-               html_today  = ""
                files_today = {}
-               
-               logging.info(date_today + " - " + date_yesterday + " - " + date_backup)
-               
+               html_today  = ""              
                for stamp in stamps:
                  if ((int(stamp) < int(time_now) or time_now == "000000") and files[stamp]["datestamp"] == date_today) or files[stamp]["datestamp"] == date_backup:
                    if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp], check_similarity=check_similarity):
@@ -680,12 +719,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                if self.adminAllowed(): header = True
                else:                   header = False
 
-               html_today += self.printImageGroup(title=first_title, group_id="today", image_group=files_today, index=index, header=header, header_open=True, header_count=['all','star','detect'], cam=which_cam)
+               html_today += self.printImageGroup(title=first_title, group_id="today", image_group=files_today, category=category, header=header, header_open=True, header_count=['all','star','detect'], cam=which_cam)
 
                # Yesterday
+               html_yesterday  = ""
+               files_yesterday = {}
                if file_dir[1] != "backup":
-                 html_yesterday  = ""
-                 files_yesterday = {}
                  for stamp in stamps: 
                    if "date_stamp" in files[stamp] and files[stamp]["datestamp"] == date_yesterday:
                      if int(stamp) >= int(time_now) and time_now != "000000":
@@ -694,7 +733,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                          count += 1
                          
                  if len(files_yesterday) > 0:
-                    html_yesterday += self.printImageGroup(title="Gestern", group_id="yesterday", image_group=files_yesterday, index=index, header=True, header_open=False, header_count=['all','star','detect'],  cam=which_cam)
+                    html_yesterday += self.printImageGroup(title="Gestern", group_id="yesterday", image_group=files_yesterday, category=category, header=True, header_open=False, header_count=['all','star','detect'],  cam=which_cam)
 
                # To be deleted
                html_recycle  = ""
@@ -711,7 +750,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                    else:                       url = "/remove/today"
                    
                    intro          = "<a onclick='removeFiles(\"" + url + "\");' style='cursor:pointer;'>Delete all files marked for recycling ...</a>"
-                   html_recycle += self.printImageGroup(title="Recycle", group_id="recycle", image_group=files_recycle, index=index, header=True, header_open=False, header_count=['recycle'], cam=which_cam, intro=intro)
+                   html_recycle += self.printImageGroup(title="Recycle", group_id="recycle", image_group=files_recycle, category=category, header=True, header_open=False, header_count=['recycle'], cam=which_cam, intro=intro)
 
                html += html_today
                html += html_yesterday               
@@ -812,7 +851,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               redirect(self.path.replace("/list_new.html","/list_short.html"))
 
            else:
-              index     = "/current/"
+              category  = "/current/"
               path      = config.directory(config="images")
               files_all = config.read(config="images")
               files     = config.read(config="images")
@@ -841,7 +880,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                           files_part[stamp] = files_all[stamp]
 
               if len(files_part) > 0:
-                 html += self.printImageGroup(title="Bilder "+hour+":00", group_id=hour_min, image_group=files_part, index=index, header=True, header_open=False, cam=which_cam)
+                 html += self.printImageGroup(title="Bilder "+hour+":00", group_id=hour_min, image_group=files_part, category=category, header=True, header_open=False, cam=which_cam)
 
            # Yesterday
            files_part = {}
@@ -864,7 +903,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  if header_yesterday: 
                     html_yesterday  += "<div class='separator'><hr/>Gestern<hr/></div>"
                     header_yesterday = False
-                 html_yesterday += self.printImageGroup(title="Bilder "+hour+":00", group_id=hour_min, image_group=files_part, index=index, header=True, header_open=False, cam=which_cam)
+                 html_yesterday += self.printImageGroup(title="Bilder "+hour+":00", group_id=hour_min, image_group=files_part, category=category, header=True, header_open=False, cam=which_cam)
 
            html += html_yesterday
            html += "<div class='separator'>&nbsp;<br/>&nbsp;</div>"
@@ -876,41 +915,37 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # List all video files
         elif '/videos.html' in self.path:
         
-           html      = ""
-           files_all = {}
-           path      = config.directory(config="videos")
-
+           html         = ""
+           files_all    = {}
+           path         = config.directory(config="videos")
+           category     = "/videos/"
+           files_delete = {}
+           files_show   = {}
+           
            if config.exists("videos"):
              files_all = config.read(config="videos")
-           
-             if len(files_all) > 0:
-               html  += "<div class='separator' style='width:100%'>"
-               html  += "<b>Liste vorhandener Videos</b>"
-               html  += "</div>\n"
-               
-               html  += "<div>\n"
-               
-               for video in files_all:
-                  description = files_all[video]["date"].replace(" ","<br/>") + "<br/>" + files_all[video]["camera"].upper() + ": " + files_all[video]["camera_name"]
-                  video_link  = camera[which_cam].param["video"]["streaming_server"] + files_all[video]["video_file"]
-                  javascript  = "videoOverlay(\"" + video_link + "\",\"" + description + "\");"
-                  html       += self.printImageContainer(description=description, lowres="videos/"+files_all[video]["thumbnail"], javascript=javascript, star='', window='self', border='white')
+             for file in files_all:
+               if "to_be_deleted" in files_all[file] and int(files_all[file]["to_be_deleted"]) == 1: files_delete[file] = files_all[file]
+               else:                                                                                 files_show[file]   = files_all[file]
                   
-               html += "</div>\n"
-               
-             else: html  += "<div class='separator' style='width:100%;text-color:lightred;'>Keine Videos vorhanden</div>"
-           else:   html  += "<div class='separator' style='width:100%;text-color:lightred;'>Keine Videos vorhanden</div>"
-           
+             if len(files_show) > 0:   html  += self.printImageGroup(title="Aufgezeichnete Videos", group_id="videos", image_group=files_show, category=category, header=True, header_open=True, header_count=['all','star'], cam=which_cam)
+             if len(files_delete) > 0: html  += self.printImageGroup(title="Zu recycelnde Videos", group_id="videos", image_group=files_delete, category=category, header=True, header_open=True, header_count=['recycle'], cam=which_cam)
+             
+           if html == "": 
+             html  += "<div class='separator' style='width:100%;text-color:lightred;'>Keine Videos vorhanden</div>"
+
            config.html_replace["subtitle"]  = myPages["videos"][0] + " (" + camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
            config.html_replace["links"]     = self.printLinks(link_list=("live","cam_info","today","favorit"), current="today_complete", cam=which_cam)
            config.html_replace["file_list"] = html
            self.streamFile(type='text/html', content=read_html('html','list.html'), no_cache=True)
-                      
+
+         
         # extract and show single image
         elif self.path == '/image.jpg':
             camera[which_cam].setText = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
             camera[which_cam].writeImage('image_'+which_cam+'.jpg',camera[which_cam].convertFrame2Image(camera[which_cam].getFrame()))
             self.streamFile(type='image/jpeg', content=read_image("",'image_'+which_cam+'.jpg'))
+
 
         # show live stream
         elif self.path.endswith('/cameras.html'):
@@ -992,10 +1027,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
               except Exception as e:
                   stream = False
-                  if "Errno 104" in str(e) or "Errno 32" in str(e):
-                     logging.debug('Removed streaming client %s: %s', self.client_address, str(e))
-                  else:                                              
-                     logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
+                  if "Errno 104" in str(e) or "Errno 32" in str(e):  logging.debug('Removed streaming client %s: %s', self.client_address, str(e))
+                  else:                                              logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
 
         # images, css, js
         elif self.path.startswith('/videos') and self.path.endswith('.jpeg'):
