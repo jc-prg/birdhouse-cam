@@ -20,7 +20,7 @@ import threading
 import socketserver
 from threading       import Condition
 from http            import server
-from datetime        import datetime
+from datetime        import datetime, timedelta
 
 from modules.backup  import myBackupRestore
 from modules.camera  import myCamera
@@ -553,18 +553,21 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup"), cam=which_cam)
 
             # today
-            files = config.read(config="images")
-            index = "/current/"
+            files      = config.read(config="images")
+            index      = "/current/"
+            date_today = datetime.now().strftime("%Y%m%d")
             for stamp in files:
-              if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
-                new = datetime.now().strftime("%Y%m%d")+"_"+stamp
-                favorits[new]           = files[stamp]
-                favorits[new]["source"] = ("images","")
-                favorits[new]["date"]   = "Aktuell"
-                favorits[new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+              if date_today == files[stamp]["datestamp"] and "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
+                 new = datetime.now().strftime("%Y%m%d")+"_"+stamp
+                 favorits[new]           = files[stamp]
+                 favorits[new]["source"] = ("images","")
+                 favorits[new]["date"]   = "Aktuell"
+                 favorits[new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
 
-            html += self.printImageGroup(title="Heute &nbsp; &nbsp; &nbsp; &nbsp;", group_id="today", image_group=favorits, index=index, header=True, header_open=True, header_count=['star'], cam=which_cam)
+            if len(favorits) > 0:
+               html += self.printImageGroup(title="Heute &nbsp; &nbsp; &nbsp; &nbsp;", group_id="today", image_group=favorits, index=index, header=True, header_open=True, header_count=['star'], cam=which_cam)
 
+            # other days
             path           = config.directory(config="backup")
             dir_list       = [f for f in os.listdir(path) if os.path.isdir(os.path.join(path, f))]
             dir_list       = list(reversed(sorted(dir_list)))
@@ -576,13 +579,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 date       = directory[6:8]+"."+directory[4:6]+"."+directory[0:4]
                 favorits[directory] = {}
                 for stamp in files:
-                  if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
-                    new = directory+"_"+stamp
-                    favorits[directory][new]           = files[stamp]
-                    favorits[directory][new]["source"] = ("backup",directory)
-                    favorits[directory][new]["date"]   = date
-                    favorits[directory][new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
-                    favorits[directory][new]["date2"]  = favorits[directory][new]["date"]
+                  if "datestamp" in files[stamp] and files[stamp]["datestamp"] == directory:
+                    if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
+                      new = directory+"_"+stamp
+                      favorits[directory][new]           = files[stamp]
+                      favorits[directory][new]["source"] = ("backup",directory)
+                      favorits[directory][new]["date"]   = date
+                      favorits[directory][new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+                      favorits[directory][new]["date2"]  = favorits[directory][new]["date"]
 
                 if len(favorits[directory]) > 0:
                    html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], index=index, header=True, header_open=True, header_count=['star'], cam=which_cam)
@@ -593,16 +597,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # List only if threshold ...
         elif '/list_short.html' in self.path:
 
-           html          = ""
-           files         = {}
-           count         = 0
-           file_dir      = self.path.split("/")
-           backup_config = config.files["images"]
-           today         = datetime.now().strftime("%Y%m%d")
+           html           = ""
+           files          = {}
+           count          = 0
+           file_dir       = self.path.split("/")
+           backup_config  = config.files["images"]
+           date_today     = datetime.now().strftime("%Y%m%d")
+           date_yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
+           if len(file_dir) > 2: date_backup = file_dir[2]
+           else:                 date_backup = ""
 
            if file_dir[1] == "backup":
-               path             = config.directory(config="backup", date=file_dir[2])
-               files_data       = config.read(config="backup", date=file_dir[2])
+               path             = config.directory(config="backup", date=date_backup)
+               files_data       = config.read(config="backup", date=date_backup)
                files            = files_data["files"]
                check_similarity = False
                index            = self.path.replace("list_short.html","")
@@ -622,21 +629,25 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                config.html_replace["subtitle"]    = myPages["today"][0] + " (" + camera[which_cam].name + ")"
                if self.adminAllowed():
-                 config.html_replace["links"]     = self.printLinks(link_list=("live","today_complete","backup","favorit"), current='today', cam=which_cam)
+                 config.html_replace["links"]     = self.printLinks(link_list=("live","today_complete","backup","favorit","videos"), current='today', cam=which_cam)
                else:
                  config.html_replace["links"]     = self.printLinks(link_list=("live","backup","favorit"), current='today', cam=which_cam)
 
            if files != {}:
                stamps   = list(reversed(sorted(files.keys())))
                
-               # Today
+               # Today or backup
                html_today  = ""
                files_today = {}
+               
+               logging.info(date_today + " - " + date_yesterday + " - " + date_backup)
+               
                for stamp in stamps:
-                 if int(stamp) < int(time_now) or time_now == "000000":
+                 if ((int(stamp) < int(time_now) or time_now == "000000") and files[stamp]["datestamp"] == date_today) or files[stamp]["datestamp"] == date_backup:
                    if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp], check_similarity=check_similarity):
-                     if not "datestamp" in files[stamp] or files[stamp]["datestamp"] == today or file_dir[1] == "backup":
+                     if not "datestamp" in files[stamp] or files[stamp]["datestamp"] == date_today or file_dir[1] == "backup":
                         files_today[stamp] = files[stamp]
+                        count += 1
 
                if first_title == "":
                   first_title =  files[stamp]["date"]
@@ -655,15 +666,18 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                html_today += self.printImageGroup(title=first_title, group_id="today", image_group=files_today, index=index, header=header, header_open=True, header_count=['all','star','detect'], cam=which_cam)
 
                # Yesterday
-               html_yesterday  = ""
-               files_yesterday = {}
-               for stamp in stamps:
-                 if int(stamp) >= int(time_now) and time_now != "000000":
-                   if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp], check_similarity=check_similarity):
-                      files_yesterday[stamp] = files[stamp]
-
                if file_dir[1] != "backup":
-                  html_yesterday += self.printImageGroup(title="Gestern", group_id="yesterday", image_group=files_yesterday, index=index, header=True, header_open=False, header_count=['all','star','detect'],  cam=which_cam)
+                 html_yesterday  = ""
+                 files_yesterday = {}
+                 for stamp in stamps: 
+                   if "date_stamp" in files[stamp] and files[stamp]["datestamp"] == date_yesterday:
+                     if int(stamp) >= int(time_now) and time_now != "000000":
+                       if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp], check_similarity=check_similarity):
+                         files_yesterday[stamp] = files[stamp]
+                         count += 1
+                         
+                 if len(files_yesterday) > 0:
+                    html_yesterday += self.printImageGroup(title="Gestern", group_id="yesterday", image_group=files_yesterday, index=index, header=True, header_open=False, header_count=['all','star','detect'],  cam=which_cam)
 
                # To be deleted
                html_recycle  = ""
@@ -673,6 +687,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                    if "to_be_deleted" in files[stamp] and int(files[stamp]["to_be_deleted"]) == 1:
                      if files[stamp]["camera"] == which_cam:
                        files_recycle[stamp] = files[stamp]
+                       count += 1
                        
                  if len(files_recycle) > 0:
                    if file_dir[1] == "backup": url = "/remove/backup/" + file_dir[2]
@@ -758,7 +773,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  if dir_count_delete > 0: delete_info = "<br/>(Recycle: " + str(dir_count_delete) + ")"
                  else:                    delete_info = ""
                  if dir_count_cam > 0:    html  += self.printImageContainer(description="<b>"+date+"</b><br/>"+str(dir_count_cam)+" / "+str(dir_size_cam)+" MB" + delete_info, lowres=image, hires="/backup/"+directory+"/list_short.html?"+which_cam, window="self") + "\n"
-                 else:                    html  += self.printImageContainer(description="<b>"+date+"</b><br/>Leer für "+which_cam, lowres="EMPTY") + "\n"
+                 #else:                    html  += self.printImageContainer(description="<b>"+date+"</b><br/>Leer für "+which_cam, lowres="EMPTY") + "\n"
 
               ### >>> should not be necesarry any more ...
               else:
