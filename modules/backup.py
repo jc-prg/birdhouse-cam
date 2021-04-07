@@ -161,16 +161,16 @@ class myBackupRestore(threading.Thread):
        if os.path.isdir(directory):
          # if the directory but no config file exists for backup directory create a new one
          if not os.path.isfile(self.config.file(config="backup", date=backup_date)):
-           files                             = self.compare_files_init(date=backup_date)
-           files_backup                      = { "files" : {}, "info" : {}}
-           files_backup["files"]             = files
-           files_backup["info"]["count"]     = len(files)
-           files_backup["info"]["threshold"] = {}
-           for cam in self.camera:
-             files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
-           files_backup["info"]["date"]      = backup_date[6:8]+"."+backup_date[4:6]+"."+backup_date[0:4]
-           files_backup["info"]["size"]      = sum(os.path.getsize(os.path.join(directory,f)) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory,f)))
-           self.config.write(config="backup", config_data=files_backup, date=backup_date)
+            files                             = self.compare_files_init(date=backup_date)
+            files_backup                      = { "files" : {}, "info" : {}}
+            files_backup["files"]             = files
+            files_backup["info"]["count"]     = len(files)
+            files_backup["info"]["threshold"] = {}
+            for cam in self.camera:
+              files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
+            files_backup["info"]["date"]      = backup_date[6:8]+"."+backup_date[4:6]+"."+backup_date[0:4]
+            files_backup["info"]["size"]      = sum(os.path.getsize(os.path.join(directory,f)) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory,f)))
+            self.config.write(config="backup", config_data=files_backup, date=backup_date)
 
        # if no directory exists, create directory, copy files and create a new config file (copy existing information)
        else:
@@ -187,22 +187,22 @@ class myBackupRestore(threading.Thread):
            for stamp in stamps:
 
              if self.camera[cam].selectImage(timestamp=stamp, file_info=files[stamp]) and files[stamp]["datestamp"] == backup_date:
-               count      += 1
-               update_new  = files[stamp]
-               file_lowres = self.config.imageName(type="lowres", timestamp=stamp, camera=cam)
-               file_hires  = self.config.imageName(type="hires",  timestamp=stamp, camera=cam)
+                count      += 1
+                update_new  = files[stamp]
+                file_lowres = self.config.imageName(type="lowres", timestamp=stamp, camera=cam)
+                file_hires  = self.config.imageName(type="hires",  timestamp=stamp, camera=cam)
 
-               if not "similarity" in update_new: update_new["similarity"] = 100
-               if not "hires"      in update_new: update_new["hires"]      = file_hires
-               if not "favorit"    in update_new: update_new["favorit"]    = 0
+                if not "similarity" in update_new: update_new["similarity"] = 100
+                if not "hires"      in update_new: update_new["hires"]      = file_hires
+                if not "favorit"    in update_new: update_new["favorit"]    = 0
 
-               if os.path.isfile(os.path.join(dir_source,file_lowres)):
-                 update_new["size"]           = (os.path.getsize(os.path.join(dir_source,file_lowres)) + os.path.getsize(os.path.join(dir_source,file_hires)))
-                 backup_size                 += update_new["size"]
-                 files_backup["files"][stamp] = update_new
+                if os.path.isfile(os.path.join(dir_source,file_lowres)):
+                   update_new["size"]           = (os.path.getsize(os.path.join(dir_source,file_lowres)) + os.path.getsize(os.path.join(dir_source,file_hires)))
+                   backup_size                 += update_new["size"]
+                   files_backup["files"][stamp] = update_new
 
-                 os.popen('cp ' + os.path.join(dir_source,file_lowres) + ' ' + os.path.join(directory,file_lowres))
-                 os.popen('cp ' + os.path.join(dir_source,file_hires)  + ' ' + os.path.join(directory,file_hires))
+                   os.popen('cp ' + os.path.join(dir_source,file_lowres) + ' ' + os.path.join(directory,file_lowres))
+                   os.popen('cp ' + os.path.join(dir_source,file_hires)  + ' ' + os.path.join(directory,file_hires))
 
            logging.info(cam + ": " +str(count) + " Bilder gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
 
