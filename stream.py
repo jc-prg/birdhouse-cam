@@ -3,8 +3,8 @@
 # In Progress:
 # - ...
 # Backlog:
+# - don't use similarity for backup!
 # - don't backup if marked for deletion !!! DOUBLE CHECK
-# - enable favorit and recycle functionality for videos
 # - show videos in favorits section
 # - show videos in day views (with play icon on it)
 # - In progress (error!): Restart camera threads via API, Shutdown all services via API, Trigger RPi halt/reboot via API
@@ -656,20 +656,21 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # List only if threshold ...
         elif '/list_short.html' in self.path:
 
+           param          = self.path.split("/")
+
            html           = ""
-           files          = {}
+           files_all      = {}
            count          = 0
-           file_dir       = self.path.split("/")
-           backup_config  = config.files["images"]
            date_today     = datetime.now().strftime("%Y%m%d")
            date_yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
-           if len(file_dir) > 2: date_backup = file_dir[2]
-           else:                 date_backup = ""
+           
+           if len(param) > 2: date_backup = param[2]
+           else:              date_backup = ""
 
-           if file_dir[1] == "backup":
+           if param[1] == "backup":
                path             = config.directory(config="backup", date=date_backup)
                files_data       = config.read(config="backup", date=date_backup)
-               files            = files_data["files"]
+               files_all        = files_data["files"]
                check_similarity = False
                category         = self.path.replace("list_short.html","")
                time_now         = "000000"
@@ -680,7 +681,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
            elif os.path.isfile(config.file(config="images")):
                path             = config.directory(config="images")
-               files            = config.read(config="images")
+               files_all        = config.read(config="images")
                time_now         = datetime.now().strftime('%H%M%S')
                check_similarity = True
                category         = "/current/"
@@ -692,21 +693,21 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                else:
                  config.html_replace["links"]     = self.printLinks(link_list=("live","backup","favorit"), current='today', cam=which_cam)
 
-           if files != {}:
-               stamps   = list(reversed(sorted(files.keys())))
-               
+           if files_all != {}:
+
                # Today or backup
-               files_today = {}
-               html_today  = ""              
+               files_today     = {}
+               html_today      = ""              
+               stamps          = list(reversed(sorted(files_all.keys())))
                for stamp in stamps:
-                 if ((int(stamp) < int(time_now) or time_now == "000000") and files[stamp]["datestamp"] == date_today) or files[stamp]["datestamp"] == date_backup:
-                   if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp], check_similarity=check_similarity):
-                     if not "datestamp" in files[stamp] or files[stamp]["datestamp"] == date_today or file_dir[1] == "backup":
-                        files_today[stamp] = files[stamp]
+                 if ((int(stamp) < int(time_now) or time_now == "000000") and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
+                   if camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
+                     if not "datestamp" in files_all[stamp] or files_all[stamp]["datestamp"] == date_today or param[1] == "backup":
+                        files_today[stamp] = files_all[stamp]
                         count += 1
 
                if first_title == "":
-                  first_title =  files[stamp]["date"]
+                  first_title =  files_all[stamp]["date"]
                else:
                  files_today["999999"] = {
                        "lowres" : "stream.mjpg?"+which_cam,
@@ -724,13 +725,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                # Yesterday
                html_yesterday  = ""
                files_yesterday = {}
-               if file_dir[1] != "backup":
+               stamps          = list(reversed(sorted(files_all.keys())))
+               if param[1] != "backup":
                  for stamp in stamps: 
-                   if "date_stamp" in files[stamp] and files[stamp]["datestamp"] == date_yesterday:
-                     if int(stamp) >= int(time_now) and time_now != "000000":
-                       if camera[which_cam].selectImage(timestamp=stamp, file_info=files[stamp], check_similarity=check_similarity):
-                         files_yesterday[stamp] = files[stamp]
-                         count += 1
+                     if (int(stamp) >= int(time_now) and time_now != "000000") and "datestamp" in files_all[stamp] and files_all[stamp]["datestamp"] == date_yesterday:
+                       if camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
+                          files_yesterday[stamp] = files_all[stamp]
+                          count += 1
                          
                  if len(files_yesterday) > 0:
                     html_yesterday += self.printImageGroup(title="Gestern", group_id="yesterday", image_group=files_yesterday, category=category, header=True, header_open=False, header_count=['all','star','detect'],  cam=which_cam)
@@ -740,14 +741,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                files_recycle = {}
                if self.adminAllowed():
                  for stamp in stamps:
-                   if "to_be_deleted" in files[stamp] and int(files[stamp]["to_be_deleted"]) == 1:
-                     if files[stamp]["camera"] == which_cam:
-                       files_recycle[stamp] = files[stamp]
+                   if "to_be_deleted" in files_all[stamp] and int(files_all[stamp]["to_be_deleted"]) == 1:
+                     if files_all[stamp]["camera"] == which_cam:
+                       files_recycle[stamp] = files_all[stamp]
                        count += 1
                        
                  if len(files_recycle) > 0:
-                   if file_dir[1] == "backup": url = "/remove/backup/" + file_dir[2]
-                   else:                       url = "/remove/today"
+                   if param[1] == "backup": url = "/remove/backup/" + param[2]
+                   else:                    url = "/remove/today"
                    
                    intro          = "<a onclick='removeFiles(\"" + url + "\");' style='cursor:pointer;'>Delete all files marked for recycling ...</a>"
                    html_recycle += self.printImageGroup(title="Recycle", group_id="recycle", image_group=files_recycle, category=category, header=True, header_open=False, header_count=['recycle'], cam=which_cam, intro=intro)
@@ -756,9 +757,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                html += html_yesterday               
                html += html_recycle
                html += "<div class='separator'>&nbsp;<br/>&nbsp;</div>"
-               
                html += "<div style='padding:2px;float:left;width:100%'><hr/>"+str(count)+" Bilder / &Auml;hnlichkeit &lt; "+str(camera[which_cam].param["similarity"]["threshold"])+"%</div>"
+               
                config.html_replace["file_list"] = html
+               
                self.streamFile(type='text/html',content=read_html('html','list.html'), no_cache=True)
 
            else:
@@ -769,14 +771,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # List all backup directories
         elif self.path == '/list_backup.html':
 
-           config.html_replace["subtitle"] = myPages["backup"][0] + " (" + camera[which_cam].name + ")"
-           if self.adminAllowed():
-             config.html_replace["links"]    = self.printLinks(link_list=("live","today","today_complete","favorit"), current="backup", cam=which_cam)
-           else:
-             config.html_replace["links"]    = self.printLinks(link_list=("live","today","favorit"), current="backup", cam=which_cam)
 
            path           = config.directory(config="backup")
-           backup_config  = config.files["backup"]
            dir_list       = [f for f in os.listdir(path) if os.path.isdir(os.path.join(path, f))]
            dir_list.sort(reverse=True)
            dir_total_size = 0
@@ -837,29 +833,29 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  self.sendError()
 
            html += "<div style='padding:2px;float:left;width:100%'><hr/>Gesamt: " + str(round(dir_total_size,1)) + " MB / " + str(files_total) + " Bilder</div>"
+
            config.html_replace["file_list"] = html
+           config.html_replace["subtitle"] = myPages["backup"][0] + " (" + camera[which_cam].name + ")"
+           config.html_replace["links"] = self.printLinks(link_list=("live","today","favorit"), current="backup", cam=which_cam)
+           if self.adminAllowed(): 
+              config.html_replace["links"] = self.printLinks(link_list=("live","today","today_complete","favorit"), current="backup", cam=which_cam)
+           
            self.streamFile(type='text/html', content=read_html('html','list.html'), no_cache=True)
 
 
         # List all files NEW
         elif self.path.endswith('/list_new.html'):
 
-           html         = ""
-           files        = self.path.split("/")
+           param        = self.path.split("/")
+           if param[1] == "backup": redirect(self.path.replace("/list_new.html","/list_short.html"))
 
-           if files[1] == "backup":
-              redirect(self.path.replace("/list_new.html","/list_short.html"))
-
-           else:
-              category  = "/current/"
-              path      = config.directory(config="images")
-              files_all = config.read(config="images")
-              files     = config.read(config="images")
-              time_now  = datetime.now().strftime('%H%M%S')
-              today     = datetime.now().strftime('%Y%m%d')
-
-              config.html_replace["subtitle"] = myPages["today_complete"][0] + " (" + camera[which_cam].name +", " + str(len(files_all)) + " Bilder)"
-              config.html_replace["links"]    = self.printLinks(link_list=("live","today","favorit","backup"), current="today_complete", cam=which_cam)
+           html           = ""
+           category       = "/current/"
+           path           = config.directory(config="images")
+           files_all      = config.read(config="images")
+           time_now       = datetime.now().strftime('%H%M%S')
+           date_today     = datetime.now().strftime("%Y%m%d")
+           date_yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
 
            hours = list(camera[which_cam].param["image_save"]["hours"])
            hours.sort(reverse=True)
@@ -873,7 +869,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               stamps      = list(reversed(sorted(files_all.keys())))
               for stamp in stamps:
                  if int(stamp) <= int(time_now) and int(stamp) >= int(hour_min) and int(stamp) < int(hour_max):
-                    if not "datestamp" in files_all[stamp] or files_all[stamp]["datestamp"] == today:
+                    if "datestamp" in files_all[stamp] and files_all[stamp]["datestamp"] == date_today:
                        if "camera" in files_all[stamp] and files_all[stamp]["camera"] == which_cam:
                           threshold = camera[which_cam].param["similarity"]["threshold"]
                           if float(files_all[stamp]["similarity"]) < float(threshold) and float(files_all[stamp]["similarity"]) > 0: count_diff += 1
@@ -894,10 +890,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               stamps      = list(reversed(sorted(files_all.keys())))
               for stamp in stamps:
                 if int(stamp) > int(time_now) and int(stamp) >= int(hour_min) and int(stamp) < int(hour_max):
-                  if "camera" in files_all[stamp] and files_all[stamp]["camera"] == which_cam:
-                    threshold = camera[which_cam].param["similarity"]["threshold"]
-                    if float(files_all[stamp]["similarity"]) < float(threshold) and float(files_all[stamp]["similarity"]) > 0: count_diff += 1
-                    files_part[stamp] = files_all[stamp]
+                  if "datestamp" in files_all[stamp] and files_all[stamp]["datestamp"] == date_yesterday:
+                     if "camera" in files_all[stamp] and files_all[stamp]["camera"] == which_cam:
+                        threshold = camera[which_cam].param["similarity"]["threshold"]
+                        if float(files_all[stamp]["similarity"]) < float(threshold) and float(files_all[stamp]["similarity"]) > 0: count_diff += 1
+                        files_part[stamp] = files_all[stamp]
 
               if len(files_part) > 0:
                  if header_yesterday: 
@@ -909,16 +906,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            html += "<div class='separator'>&nbsp;<br/>&nbsp;</div>"
 
            config.html_replace["file_list"] = html
+           config.html_replace["subtitle"]  = myPages["today_complete"][0] + " (" + camera[which_cam].name +", " + str(len(files_all)) + " Bilder)"
+           config.html_replace["links"]     = self.printLinks(link_list=("live","today","favorit","backup"), current="today_complete", cam=which_cam)
+
            self.streamFile(type='text/html', content=read_html('html','list.html'), no_cache=True)
 
 
         # List all video files
         elif '/videos.html' in self.path:
         
-           html         = ""
-           files_all    = {}
            path         = config.directory(config="videos")
            category     = "/videos/"
+           html         = ""
+           files_all    = {}
            files_delete = {}
            files_show   = {}
            
