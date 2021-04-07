@@ -56,6 +56,7 @@ def onexit(signum, handler):
             print ('Sorry, no valid answer...\n')
         pass
 
+
 def onkill(signum, handler):
     '''
     Clean exit on kill command
@@ -370,7 +371,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
 
         # index with embedded live stream
-        if   self.path == '/': self.redirect("/index.html")
+        if   self.path == '/':
+
+          self.redirect("/index.html")
+
+
         elif self.path.endswith('.html'):
         
           if   self.path.endswith('/index.html'):       template = views.createIndex(server=self)
@@ -382,12 +387,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           elif self.path.endswith('/cameras.html'):     template = views.createCameraList(server=self)
           
           self.streamFile(type='text/html', content=read_html('html',template), no_cache=True)
+
          
         # extract and show single image
         elif self.path == '/image.jpg':
+        
             camera[which_cam].setText = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
             camera[which_cam].writeImage('image_'+which_cam+'.jpg',camera[which_cam].convertFrame2Image(camera[which_cam].getFrame()))
             self.streamFile(type='image/jpeg', content=read_image("",'image_'+which_cam+'.jpg'))
+
 
         # show live stream
         elif self.path.endswith('/stream.mjpg'):
@@ -426,6 +434,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                   if "Errno 104" in str(e) or "Errno 32" in str(e):  logging.debug('Removed streaming client %s: %s', self.client_address, str(e))
                   else:                                              logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
 
+
         # images, css, js
         elif self.path.endswith('.png'):        self.streamFile(type='image/png',       content=read_image('',self.path))
         elif self.path.endswith('.css'):        self.streamFile(type='text/css',        content=read_html( '',self.path))
@@ -448,6 +457,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 # execute only if run as a script
 if __name__ == "__main__":
 
+    # set logging
     if len(sys.argv) > 0 and "--logfile" in sys.argv:
        logging.basicConfig(filename=os.path.join(os.path.dirname(__file__),"stream.log"),
                            filemode='a',
@@ -461,9 +471,11 @@ if __name__ == "__main__":
        logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.INFO)
        #logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.DEBUG)
        
+    # set system signal handler
     signal.signal(signal.SIGINT,  onexit)
     signal.signal(signal.SIGTERM, onkill)
-    
+
+    # start config    
     config = myConfig(param_init=myParameters, main_directory=os.path.dirname(os.path.abspath(__file__)))
     config.start()    
     config.directory_create("images")
@@ -478,15 +490,17 @@ if __name__ == "__main__":
            camera[cam].start()
            camera[cam].param["path"] = config.param["path"]
            camera[cam].setText("Starting ...")
-           
+
+    # start views           
     views = myViews(config=config, camera=camera)
     views.start()
 
+    # start backups
     time.sleep(1)
-
     backup = myBackupRestore(config, camera)
     backup.start()
 
+    # check if config files for main image directory exists and create if not exists
     if not os.path.isfile(config.file("images")):
         logging.info("Create image list for main directory ...")
         backup.compare_files_init()
