@@ -605,6 +605,7 @@ class myCamera(threading.Thread):
              threshold  = float(self.param["similarity"]["threshold"])
              similarity = float(file_info["similarity"])
              if similarity != 0 and similarity < threshold:                 return True
+          else:                                                             return True ### to be checked !!!
 
           if "favorit" in file_info:
              favorit    = int(file_info["favorit"])
