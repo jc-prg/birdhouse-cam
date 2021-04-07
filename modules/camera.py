@@ -98,7 +98,7 @@ class myVideoRecording(threading.Thread):
        self.info["status"]    = "finished"
 
        if not self.config.exists("videos"):  config_file = {}
-       else:                                 config_file = self.config.read("videos")
+       else:                                 config_file = self.config.read_cache("videos")
        config_file[self.info["date_start"]] = self.info
        self.config.write("videos",config_file)           
        
@@ -311,13 +311,12 @@ class myCamera(threading.Thread):
              self.video.save_image(image=image)
 
              logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(datetime.now().strftime("%H:%M:%S")))
-#             time.sleep(0.1)
 
           # Image Recording
           else:
-            time.sleep(1)
-            if self.record:
-              if (seconds in self.param["image_save"]["seconds"]) and (hours in self.param["image_save"]["hours"]):
+             time.sleep(1)
+             if self.record:
+               if (seconds in self.param["image_save"]["seconds"]) and (hours in self.param["image_save"]["hours"]):
                  text  = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
                  self.setText(text)
 
@@ -601,15 +600,15 @@ class myCamera(threading.Thread):
 
           if "00"+str(self.param["image_save"]["seconds"][0]) in timestamp: return True
 
+          if "favorit" in file_info:
+             favorit    = int(file_info["favorit"])
+             if favorit == 1:                                               return True
+
           if check_similarity:
              threshold  = float(self.param["similarity"]["threshold"])
              similarity = float(file_info["similarity"])
              if similarity != 0 and similarity < threshold:                 return True
           else:                                                             return True ### to be checked !!!
-
-          if "favorit" in file_info:
-             favorit    = int(file_info["favorit"])
-             if favorit == 1:                                               return True
 
        return False
 
@@ -631,7 +630,7 @@ class myCamera(threading.Thread):
        Write image information to file
        '''
        if os.path.isfile(self.config.file("images")):
-          files = self.config.read("images")
+          files       = self.config.read_cache("images")
           files[time] = data
           self.config.write("images",files)
 

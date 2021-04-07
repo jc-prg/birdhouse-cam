@@ -76,6 +76,8 @@ class myConfig(threading.Thread):
             if count > 10:
                logging.warning("Waiting! File '"+filename+"' is locked ("+str(count)+")")
                time.sleep(1)
+       if count > 10:
+          logging.warning("File '"+filename+"' is not locked any more ("+str(count)+")")
        return "OK"
 
 
@@ -139,13 +141,38 @@ class myConfig(threading.Thread):
        return config_data
 
 
+   def read_cache(self, config, date=""):
+       '''
+       return from cache, read file if not in cache already
+       '''
+       if not config in self.config_cache and date == "":     
+          self.config_cache[config] = self.read(config)
+             
+       elif not config in self.config_cache and date != "":
+          self.config_cache[config]       = {}
+          self.config_cache[config][date] = self.read(config, date)
+          
+       elif not date in self.config_cache[config] and date != "":
+          self.config_cache[config][date] = self.read(config, date)
+          
+       if date == "":  return self.config_cache[config]
+       else:           return self.config_cache[config][date]
+
+
    def write(self, config, config_data, date=""):
        '''
-       write dict to json config file
+       write dict to json config file and update cache
        '''
        config_file = os.path.join(self.main_directory, self.directories[config], date, self.files[config])
        self.write_json(config_file, config_data)
-       self.config_cache[config] = config_data
+       
+       if date == "":
+          self.config_cache[config]       = config_data
+       elif config in self.config_cache:
+          self.config_cache[config][date] = config_data
+       else:
+          self.config_cache[config]       = {}
+          self.config_cache[config][date] = config_data
 
 
    def write_image(self, config, file_data, date="", time=''):
@@ -165,25 +192,6 @@ class myConfig(threading.Thread):
        config_file = os.path.join(self.main_directory ,self.directories[config], date, self.files[config])
        return os.path.isfile(config_file)
 
-
-   def cache(self, config, date=""):
-       '''
-       return from cache, read file if not in cache already
-       '''
-       if config in self.config_cache and date == "":
-          return self.config_cache[config]
-
-       elif date == "":
-          self.config_cache[config] = self.read(config)
-          return self.config_cache[config]
-
-       elif config in self.config_cache and date in self.config_cache[config]:
-          return self.config_cache[config][date]
-
-       else:
-          if not config in self.config_cache: self.config_cache[config] = {}
-          self.config_cache[config][date] = self.read(config,date=date)
-          return self.config_cache[config][date]
 
    #------------------------------------
 
