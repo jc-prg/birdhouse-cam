@@ -383,10 +383,7 @@ class myViews(threading.Thread):
             if self.config.exists(config="backup", date=directory):
                files_data = self.config.read_cache(config="backup", date=directory)
                
-               if not "info" in file_data or not "files" in file_data:
-                 html  += self.printImageContainer(description="<b>"+directory+"</b><br/>Fehler in Config-Datei!", lowres="EMPTY") + "\n"
-                 
-               else:
+               if "info" in file_data and "files" in file_data:
                  files      = files_data["files"]
                  date       = directory[6:8]+"."+directory[4:6]+"."+directory[0:4]
                  favorits[directory] = {}
