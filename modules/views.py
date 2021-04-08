@@ -382,10 +382,15 @@ class myViews(threading.Thread):
             category     = "/backup/"+directory+"/"
             if self.config.exists(config="backup", date=directory):
                files_data = self.config.read_cache(config="backup", date=directory)
-               files      = files_data["files"]
-               date       = directory[6:8]+"."+directory[4:6]+"."+directory[0:4]
-               favorits[directory] = {}
-               for stamp in files:
+               
+               if not "info" in file_data or not "files" in file_data:
+                 html  += self.printImageContainer(description="<b>"+directory+"</b><br/>Fehler in Config-Datei!", lowres="EMPTY") + "\n"
+                 
+               else:
+                 files      = files_data["files"]
+                 date       = directory[6:8]+"."+directory[4:6]+"."+directory[0:4]
+                 favorits[directory] = {}
+                 for stamp in files:
                   if "datestamp" in files[stamp] and files[stamp]["datestamp"] == directory:
                     if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
                       new = directory+"_"+stamp
@@ -395,8 +400,8 @@ class myViews(threading.Thread):
                       favorits[directory][new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                       favorits[directory][new]["date2"]  = favorits[directory][new]["date"]
 
-               if len(favorits[directory]) > 0:
-                  html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], category=category, header=True, header_open=True, header_count=['star'], cam=which_cam)
+                 if len(favorits[directory]) > 0:
+                    html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], category=category, header=True, header_open=True, header_count=['star'], cam=which_cam)
 
         content["subtitle"]  = myPages["favorit"][0] + " (" + self.camera[which_cam].name + ")"
         content["links"]     = self.printLinks(link_list=("live","today","backup"), cam=which_cam)
