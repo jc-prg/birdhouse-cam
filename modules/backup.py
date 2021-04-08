@@ -4,6 +4,7 @@ import os, time
 import logging
 import codecs
 import string
+import cv2
 
 import threading
 from datetime        import datetime
