@@ -69,7 +69,7 @@ def onkill(signum, handler):
 #----------------------------------------------------
 
 
-def read_html(directory,filename):
+def read_html(directory, filename, content=""):
    '''
    read html file, replace placeholders and return for stream via webserver
    '''
@@ -83,9 +83,13 @@ def read_html(directory,filename):
 
    with open(file, "r") as page:
      PAGE = page.read()
+     
+     for param in content:
+       if "<!--"+param+"-->" in PAGE: PAGE = PAGE.replace("<!--"+param+"-->",str(content[param]))
+       
      for param in config.html_replace:
-       if "<!--"+param+"-->" in PAGE:
-         PAGE = PAGE.replace("<!--"+param+"-->",str(config.html_replace[param]))
+       if "<!--"+param+"-->" in PAGE: PAGE = PAGE.replace("<!--"+param+"-->",str(config.html_replace[param]))
+       
      PAGE = PAGE.encode('utf-8')
    return PAGE
 
@@ -138,7 +142,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.end_headers()
 
 
-    def streamFile(self,type,content,no_cache=False):
+    def streamFile(self,ftype,content,no_cache=False):
         '''
         send file content (HTML, image, ...)
         '''
@@ -150,7 +154,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
              self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
              self.send_header("Pragma", "no-cache")
              self.send_header("Expires", "0")
-           self.end_headers()
+           self.end_headers()          
            self.wfile.write(content)
         else:
            self.sendError()
@@ -200,7 +204,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         response = {}
         if not self.adminAllowed():
            response["error"] = "Administration not allowed for this IP-Address!"
-           self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
         
         # set / unset favorit
         if self.path.startswith("/favorit/"):
@@ -236,7 +240,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               else:
                  response["error"] = "no video found with stamp "+str(param[3])
 
-           self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
 
         # mark / unmark for deletion
@@ -273,7 +277,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               else:
                  response["error"] = "no video found with stamp "+str(param[3])
            
-           self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
 
         # remove marked files           
@@ -286,7 +290,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            else:                          response["error"] = "not clear, which files shall be deleted"
            
            response["command"] = ["delete files that are marked as 'to_be_deleted'" ,param]
-           self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
            
         # start video recording
         elif self.path.startswith("/start/recording/"):
@@ -301,7 +305,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               response["error"] = "camera doesn't exist "+str(param[3])       
 
            response["command"] = ["start recording"]
-           self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
         # end video recording
         elif self.path.startswith("/stop/recording/"):
@@ -316,7 +320,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               response["error"] = "camera doesn't exist "+str(param[3])       
 
            response["command"] = ["start recording"]
-           self.streamFile(type='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
 
         # restart camera // doesn't close the camera correctly at the moment
@@ -378,15 +382,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         elif self.path.endswith('.html'):
         
-          if   self.path.endswith('/index.html'):       template = views.createIndex(server=self)
-          elif self.path.endswith('/list_star.html'):   template = views.createFavorits(server=self)
-          elif self.path.endswith('/list_short.html'):  template = views.createList(server=self)
-          elif self.path.endswith('/list_backup.html'): template = views.createBackupList(server=self)
-          elif self.path.endswith('/list_new.html'):    template = views.createCompleteListToday(server=self)
-          elif self.path.endswith('/videos.html'):      template = views.createVideoList(server=self)
-          elif self.path.endswith('/cameras.html'):     template = views.createCameraList(server=self)
+          if   self.path.endswith('/index.html'):       template, content = views.createIndex(server=self)
+          elif self.path.endswith('/list_star.html'):   template, content = views.createFavorits(server=self)
+          elif self.path.endswith('/list_short.html'):  template, content = views.createList(server=self)
+          elif self.path.endswith('/list_backup.html'): template, content = views.createBackupList(server=self)
+          elif self.path.endswith('/list_new.html'):    template, content = views.createCompleteListToday(server=self)
+          elif self.path.endswith('/videos.html'):      template, content = views.createVideoList(server=self)
+          elif self.path.endswith('/cameras.html'):     template, content = views.createCameraList(server=self)
           
-          self.streamFile(type='text/html', content=read_html('html',template), no_cache=True)
+          self.streamFile(ftype='text/html', content=read_html(directory='html', filename=template, content=content), no_cache=True)
 
          
         # extract and show single image
@@ -394,7 +398,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         
             camera[which_cam].setText = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
             camera[which_cam].writeImage('image_'+which_cam+'.jpg',camera[which_cam].convertFrame2Image(camera[which_cam].getFrame()))
-            self.streamFile(type='image/jpeg', content=read_image("",'image_'+which_cam+'.jpg'))
+            self.streamFile(ftype='image/jpeg', content=read_image(directory="", filename='image_'+which_cam+'.jpg'))
 
 
         # show live stream
@@ -436,17 +440,17 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
 
         # images, css, js
-        elif self.path.endswith('.png'):        self.streamFile(type='image/png',       content=read_image('',self.path))
-        elif self.path.endswith('.css'):        self.streamFile(type='text/css',        content=read_html( '',self.path))
-        elif self.path.endswith('.js'):         self.streamFile(type='text/javascript', content=read_html( '',self.path))
-        elif self.path.endswith('favicon.ico'): self.streamFile(type='image/ico', content=read_image('html','favicon.ico'))
+        elif self.path.endswith('.png'):        self.streamFile(ftype='image/png',       content=read_image(directory='',       filename=self.path))
+        elif self.path.endswith('.css'):        self.streamFile(ftype='text/css',        content=read_html( directory='',       filename=self.path))
+        elif self.path.endswith('.js'):         self.streamFile(ftype='text/javascript', content=read_html( directory='',       filename=self.path))
+        elif self.path.endswith('favicon.ico'): self.streamFile(ftype='image/ico',       content=read_image(directory='html',   filename='favicon.ico'))
 
-        elif self.path.endswith('.mp4'):        self.streamFile(type='video/mp4', content=read_image("videos",self.path))
+        elif self.path.endswith('.mp4'):        self.streamFile(ftype='video/mp4',       content=read_image(directory="videos", filename=self.path))
         elif self.path.startswith('/videos') and self.path.endswith('.jpeg'):
-                                                self.streamFile(type='image/jpg', content=read_image('',self.path))
+                                                self.streamFile(ftype='image/jpg',       content=read_image(directory='',       filename=self.path))
        
-        elif self.path.endswith(".jpg"):        self.streamFile(type='image/jpg', content=read_image("images",self.path))
-        elif self.path.endswith(".jpeg"):       self.streamFile(type='image/jpg', content=read_image("images",self.path))
+        elif self.path.endswith(".jpg"):        self.streamFile(ftype='image/jpg',       content=read_image(directory="images", filename=self.path))
+        elif self.path.endswith(".jpeg"):       self.streamFile(ftype='image/jpg',       content=read_image(directory="images", filename=self.path))
 
         # unknown
         else:
@@ -530,6 +534,7 @@ if __name__ == "__main__":
           if camera[cam].active:
              camera[cam].stop()
         backup.stop()
+        views.stop()
 
         logging.info("Stopping WebServer ...")
         server.server_close()

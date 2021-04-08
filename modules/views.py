@@ -56,6 +56,12 @@ class myViews(threading.Thread):
         '''
         return
     
+    def stop(self):
+        '''
+        Do nothing at the moment
+        '''
+        return
+    
     #-------------------------------------
     
     def adminAllowed(self):
@@ -88,7 +94,6 @@ class myViews(threading.Thread):
           which_cam = self.active_cams[0]
         
         self.which_cam  = which_cam
-        self.config.html_replace["active_cam"] = which_cam
         return path, which_cam
 
     #-------------------------------------
@@ -320,8 +325,11 @@ class myViews(threading.Thread):
         '''
         Index page with live streaming pictures
         '''        
-        self.server     = server
-        path, which_cam = self.selectedCamera()
+        self.server           = server
+        path, which_cam       = self.selectedCamera()
+        content               = {}
+        content["active_cam"] = which_cam
+
         
         if self.camera["cam1"].active and self.camera["cam2"].active:
            if self.which_cam == "cam1":   template = "index_cam1+cam2.html"
@@ -331,21 +339,23 @@ class myViews(threading.Thread):
         else:
            template = "index.html"
 
-        if self.adminAllowed(): self.config.html_replace["links"] = self.printLinks(link_list=("today","backup","favorit","cam_info"), cam=self.which_cam)
-        else:                   self.config.html_replace["links"] = self.printLinks(link_list=("today","backup","favorit"), cam=self.which_cam)
+        if self.adminAllowed(): content["links"] = self.printLinks(link_list=("today","backup","favorit","cam_info"), cam=self.which_cam)
+        else:                   content["links"] = self.printLinks(link_list=("today","backup","favorit"), cam=self.which_cam)
         
-        return template
+        return template, content
 
 
     def createFavorits(self, server):
         '''
         Page with pictures (and videos) marked as favorits and sorted by date
         '''
-        self.server     = server
-        path, which_cam = self.selectedCamera()
-        template        = "list.html"
-        html            = ""
-        favorits        = {}
+        self.server           = server
+        path, which_cam       = self.selectedCamera()
+        content               = {}
+        content["active_cam"] = which_cam
+        template              = "list.html"
+        html                  = ""
+        favorits              = {}
 
         # today
         date_today = datetime.now().strftime("%Y%m%d")
@@ -388,24 +398,26 @@ class myViews(threading.Thread):
                if len(favorits[directory]) > 0:
                   html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], category=category, header=True, header_open=True, header_count=['star'], cam=which_cam)
 
-        self.config.html_replace["subtitle"]  = myPages["favorit"][0] + " (" + self.camera[which_cam].name + ")"
-        self.config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup"), cam=which_cam)
-        self.config.html_replace["file_list"] = html
+        content["subtitle"]  = myPages["favorit"][0] + " (" + self.camera[which_cam].name + ")"
+        content["links"]     = self.printLinks(link_list=("live","today","backup"), cam=which_cam)
+        content["file_list"] = html
         
-        return template
+        return template, content
 
 
     def createList(self, server):
         '''
         Page with pictures (and videos) of a single day
         '''
-        self.server     = server
-        path, which_cam = self.selectedCamera()
-        param           = server.path.split("/")
-        template        = "list.html"
-        html            = ""
-        files_all       = {}
-        count           = 0
+        self.server           = server
+        path, which_cam       = self.selectedCamera()
+        content               = {}
+        content["active_cam"] = which_cam
+        param                 = server.path.split("/")
+        template              = "list.html"
+        html                  = ""
+        files_all             = {}
+        count                 = 0
 
         date_today      = datetime.now().strftime("%Y%m%d")
         date_yesterday  = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")   
@@ -421,8 +433,8 @@ class myViews(threading.Thread):
            time_now         = "000000"
            first_title      = ""
 
-           self.config.html_replace["subtitle"]  = myPages["backup"][0] + " " + files_data["info"]["date"] + " (" + self.camera[which_cam].name + ", " + str(files_data["info"]["count"]) + " Bilder)"
-           self.config.html_replace["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), current='backup', cam=which_cam)
+           content["subtitle"]  = myPages["backup"][0] + " " + files_data["info"]["date"] + " (" + self.camera[which_cam].name + ", " + str(files_data["info"]["count"]) + " Bilder)"
+           content["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), current='backup', cam=which_cam)
 
         elif os.path.isfile(self.config.file(config="images")):
            path             = self.config.directory(config="images")
@@ -432,9 +444,9 @@ class myViews(threading.Thread):
            category         = "/current/"
            first_title      = "Heute &nbsp; "
 
-           self.config.html_replace["subtitle"]    = myPages["today"][0] + " (" + self.camera[which_cam].name + ")"
-           if self.adminAllowed(): self.config.html_replace["links"]  = self.printLinks(link_list=("live","today_complete","backup","favorit","videos"), current='today', cam=which_cam)
-           else:                   self.config.html_replace["links"]  = self.printLinks(link_list=("live","backup","favorit"), current='today', cam=which_cam)
+           content["subtitle"]    = myPages["today"][0] + " (" + self.camera[which_cam].name + ")"
+           if self.adminAllowed(): content["links"]  = self.printLinks(link_list=("live","today_complete","backup","favorit","videos"), current='today', cam=which_cam)
+           else:                   content["links"]  = self.printLinks(link_list=("live","backup","favorit"), current='today', cam=which_cam)
 
         if files_all != {}:
 
@@ -505,20 +517,22 @@ class myViews(threading.Thread):
         else:
            html += "<div class='separator'>Keine Bilder vorhanden.</div>"
 
-        self.config.html_replace["file_list"] = html
-        return template
+        content["file_list"] = html
+        return template, content
 
 
     def createBackupList(self, server):
         '''
         Page with backup/archive directory
         '''
-        self.server     = server
-        path, which_cam = self.selectedCamera()
-        param           = server.path.split("/")
-        template        = "list.html"
-        html            = ""
-        files_all       = {}
+        self.server           = server
+        path, which_cam       = self.selectedCamera()
+        content               = {}
+        content["active_cam"] = which_cam
+        param                 = server.path.split("/")
+        template              = "list.html"
+        html                  = ""
+        files_all             = {}
 
         main_directory  = self.config.directory(config="backup")
         dir_list        = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
@@ -581,25 +595,27 @@ class myViews(threading.Thread):
 
         html += "<div style='padding:2px;float:left;width:100%'><hr/>Gesamt: " + str(round(dir_total_size,1)) + " MB / " + str(files_total) + " Bilder</div>"
 
-        self.config.html_replace["file_list"] = html
-        self.config.html_replace["subtitle"]  = myPages["backup"][0] + " (" + self.camera[which_cam].name + ")"
-        self.config.html_replace["links"]     = self.printLinks(link_list=("live","today","favorit"), current="backup", cam=which_cam)
+        content["file_list"] = html
+        content["subtitle"]  = myPages["backup"][0] + " (" + self.camera[which_cam].name + ")"
+        content["links"]     = self.printLinks(link_list=("live","today","favorit"), current="backup", cam=which_cam)
         if self.adminAllowed(): 
-          self.config.html_replace["links"]  = self.printLinks(link_list=("live","today","today_complete","favorit"), current="backup", cam=which_cam)
+          content["links"]  = self.printLinks(link_list=("live","today","today_complete","favorit"), current="backup", cam=which_cam)
 
-        self.config.html_replace["file_list"] = html
-        return template
+        content["file_list"] = html
+        return template, content
 
 
     def createCompleteListToday(self, server):
         '''
         Page with all pictures of the current day
         '''
-        self.server     = server
-        path, which_cam = self.selectedCamera()
-        param           = server.path.split("/")
-        template        = "list.html"
-        html            = ""
+        self.server           = server
+        path, which_cam       = self.selectedCamera()
+        content               = {}
+        content["active_cam"] = which_cam
+        param                 = server.path.split("/")
+        template              = "list.html"
+        html                  = ""
 
         category       = "/current/"
         path           = self.config.directory(config="images")
@@ -657,22 +673,24 @@ class myViews(threading.Thread):
         html += html_yesterday
         html += "<div class='separator'>&nbsp;<br/>&nbsp;</div>"
 
-        self.config.html_replace["file_list"] = html
-        self.config.html_replace["subtitle"]  = myPages["today_complete"][0] + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Bilder)"
-        self.config.html_replace["links"]     = self.printLinks(link_list=("live","today","favorit","backup"), current="today_complete", cam=which_cam)
+        content["file_list"] = html
+        content["subtitle"]  = myPages["today_complete"][0] + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Bilder)"
+        content["links"]     = self.printLinks(link_list=("live","today","favorit","backup"), current="today_complete", cam=which_cam)
 
-        return template
+        return template, content
 
 
     def createVideoList(self, server):
         '''
         Page with all videos 
         '''
-        self.server     = server
-        path, which_cam = self.selectedCamera()
-        param           = server.path.split("/")
-        template        = "list.html"
-        html            = ""
+        self.server           = server
+        path, which_cam       = self.selectedCamera()
+        content               = {}
+        content["active_cam"] = which_cam
+        param                 = server.path.split("/")
+        template              = "list.html"
+        html                  = ""
 
         directory       = self.config.directory(config="videos")
         category        = "/videos/"
@@ -693,23 +711,25 @@ class myViews(threading.Thread):
         if html == "": 
            html  += "<div class='separator' style='width:100%;text-color:lightred;'>Keine Videos vorhanden</div>"
 
-        self.config.html_replace["subtitle"]  = myPages["videos"][0] + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
-        self.config.html_replace["links"]     = self.printLinks(link_list=("live","cam_info","today","favorit"), current="today_complete", cam=which_cam)
-        self.config.html_replace["file_list"] = html
+        content["subtitle"]  = myPages["videos"][0] + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
+        content["links"]     = self.printLinks(link_list=("live","cam_info","today","favorit"), current="today_complete", cam=which_cam)
+        content["file_list"] = html
 
-        return template
+        return template, content
 
 
     def createCameraList(self, server):
         '''
         Page with all videos 
         '''
-        self.server     = server
-        path, which_cam = self.selectedCamera()
-        param           = server.path.split("/")
-        template        = "list.html"
-        html            = ""
-        count           = 0
+        self.server           = server
+        path, which_cam       = self.selectedCamera()
+        content               = {}
+        content["active_cam"] = which_cam
+        param                 = server.path.split("/")
+        template              = "list.html"
+        html                  = ""
+        count                 = 0
             
         for cam in self.camera:
             info = self.camera[cam].param
@@ -747,11 +767,11 @@ class myViews(threading.Thread):
 #              html += "<button onclick='requestAPI(\"/restart-cameras\");'>Kameras neu starten</button>"
 #              html += "</div>"
 
-        self.config.html_replace["subtitle"]  = myPages["cam_info"][0]
-        self.config.html_replace["links"]     = self.printLinks(link_list=("live","today","videos","favorit"), cam=which_cam)
-        self.config.html_replace["file_list"] = html
+        content["subtitle"]  = myPages["cam_info"][0]
+        content["links"]     = self.printLinks(link_list=("live","today","videos","favorit"), cam=which_cam)
+        content["file_list"] = html
 
-        return template
+        return template, content
 
     #-------------------------------------
 
