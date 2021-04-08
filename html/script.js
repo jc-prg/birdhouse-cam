@@ -108,7 +108,7 @@ function setFavoritShow(command, index, status, lowres_file="") {
 function showHideGroup(id) {
         if (document.getElementById("group_"+id).style.display == "none") {
                 document.getElementById("group_"+id).style.display = "block"
-        	document.getElementById("group_intro_"+id).style.display = "block"
+        	if (document.getElementById("group_intro_"+id)) { document.getElementById("group_intro_"+id).style.display = "block"; }
                 document.getElementById("group_link_"+id).innerHTML = "(&minus;)"
                 images     = document.getElementById("group_ids_"+id).innerHTML;
                 image_list = images.split(" ");
@@ -119,9 +119,9 @@ function showHideGroup(id) {
 			}
 		}
 	else {
-        	document.getElementById("group_"+id).style.display = "none"
-        	document.getElementById("group_intro_"+id).style.display = "none"
-        	document.getElementById("group_link_"+id).innerHTML = "(+)"
+        	document.getElementById("group_"+id).style.display = "none";
+        	if (document.getElementById("group_intro_"+id)) { document.getElementById("group_intro_"+id).style.display = "none"; }
+        	document.getElementById("group_link_"+id).innerHTML = "(+)";
 		}
 	}
 	

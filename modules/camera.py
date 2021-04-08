@@ -98,7 +98,7 @@ class myVideoRecording(threading.Thread):
        self.info["status"]    = "finished"
 
        if not self.config.exists("videos"):  config_file = {}
-       else:                                 config_file = self.config.read("videos")
+       else:                                 config_file = self.config.read_cache("videos")
        config_file[self.info["date_start"]] = self.info
        self.config.write("videos",config_file)           
        
@@ -132,7 +132,7 @@ class myVideoRecording(threading.Thread):
        Save image
        '''
        self.info["image_count"] += 1
-       self.info["image_files"] = self.filename("image")
+       self.info["image_files"] = self.filename("vimages")
        self.info["video_file"]  = self.filename("video")
        filename = self.info["image_files"] + str(self.info["image_count"]).zfill(self.count_length) + ".jpg"
        path     = os.path.join(self.directory, filename)
@@ -145,9 +145,15 @@ class myVideoRecording(threading.Thread):
        '''
        generate filename for images
        '''
-       if ftype == "image":   return "video-" + self.camera + "_" + self.info["date_start"] + "_"
-       elif ftype == "video": return "video-" +  self.camera + "_" + self.info["date_start"] + ".mp4"
-       else:                  return
+       
+       if ftype == "video":     return self.config.imageName(type="video",   timestamp=self.info["date_start"], camera=self.camera)
+       elif ftype == "thumb":   return self.config.imageName(type="thumb",   timestamp=self.info["date_start"], camera=self.camera)
+       elif ftype == "vimages": return self.config.imageName(type="vimages", timestamp=self.info["date_start"], camera=self.camera)
+       else:                    return
+       
+#       if ftype == "image":   return "video-" + self.camera + "_" + self.info["date_start"] + "_"
+#       elif ftype == "video": return "video-" +  self.camera + "_" + self.info["date_start"] + ".mp4"
+#       else:                  return
 
 
    def create_video(self):
@@ -155,25 +161,25 @@ class myVideoRecording(threading.Thread):
        Create video from images
        '''
        cmd_create = self.ffmpeg_cmd
-       cmd_create = cmd_create.replace("{INPUT_FILENAMES}", os.path.join(self.config.directory("videos"), self.filename("image") + "%" + str(self.count_length).zfill(2) + "d.jpg"))
+       cmd_create = cmd_create.replace("{INPUT_FILENAMES}", os.path.join(self.config.directory("videos"), self.filename("vimages") + "%" + str(self.count_length).zfill(2) + "d.jpg"))
        cmd_create = cmd_create.replace("{OUTPUT_FILENAME}", os.path.join(self.config.directory("videos"), self.filename("video")))
        cmd_create = cmd_create.replace("{FRAMERATE}", str(round(self.info["framerate"])))
-       number     = 1
-       self.info["thumbnail"] = self.filename("image") + "thumb.jpeg"
-       cmd_thumb  = "cp " + os.path.join(self.config.directory("videos"), self.filename("image") + str(number).zfill(self.count_length) + ".jpg ") + os.path.join(self.config.directory("videos"), self.filename("image") + "thumb.jpeg")
-       cmd_delete = "rm " + os.path.join(self.config.directory("videos"), self.filename("image") + "*.jpg")
+
+       self.info["thumbnail"] = self.filename("thumb")
+       cmd_thumb  = "cp " + os.path.join(self.config.directory("videos"), self.filename("vimages") + str(1).zfill(self.count_length) + ".jpg ") + os.path.join(self.config.directory("videos"), self.filename("thumb"))
+       cmd_delete = "rm " + os.path.join(self.config.directory("videos"), self.filename("vimages") + "*.jpg")
        logging.info("start video creation with ffmpeg ...")
        
-       logging.debug(cmd_create)       
+       logging.info(cmd_create)       
        message  = os.system(cmd_create)
        logging.debug(message)       
 
 
-       logging.debug(cmd_thumb)       
+       logging.info(cmd_thumb)       
        message = os.system(cmd_thumb)
        logging.debug(message)       
 
-       logging.debug(cmd_delete)       
+       logging.info(cmd_delete)       
        message = os.system(cmd_delete)
        logging.debug(message)       
 
@@ -305,13 +311,12 @@ class myCamera(threading.Thread):
              self.video.save_image(image=image)
 
              logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(datetime.now().strftime("%H:%M:%S")))
-#             time.sleep(0.1)
 
           # Image Recording
           else:
-            time.sleep(1)
-            if self.record:
-              if (seconds in self.param["image_save"]["seconds"]) and (hours in self.param["image_save"]["hours"]):
+             time.sleep(1)
+             if self.record:
+               if (seconds in self.param["image_save"]["seconds"]) and (hours in self.param["image_save"]["hours"]):
                  text  = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
                  self.setText(text)
 
@@ -387,7 +392,6 @@ class myCamera(threading.Thread):
        '''
        Add text on image
        '''
-       logging.info("2: " + str(text) + " - " + str(position)+" - "+str(color) + " - " + str(thickness))
        image     = cv2.putText(image, text, position, font, fontScale, color, thickness, cv2.LINE_AA)
        return image
 
@@ -396,7 +400,6 @@ class myCamera(threading.Thread):
        '''
        Add text on image
        '''
-       logging.info("1: " + str(text) + " - " + str(position)+" - "+str(color) + " - " + str(thickness))
        image = self.convertImage2RawImage(image)
        image = self.setText2RawImage(image, text, position=position, font=font, fontScale=fontScale, color=color, thickness=thickness)
        image = self.convertRawImage2Image(image)
@@ -561,7 +564,7 @@ class myCamera(threading.Thread):
        calculate structual similarity index (SSIM) of two images
        '''
        if len(imageA) == 0 or len(imageB) == 0:
-          logging.warning("At least one file has a zero length: ", str(e))
+          logging.warning("At least one file has a zero length - A:" + str(len(imageA)) + "/ B:" + str(len(imageB)))
           score = 0
           
        else:
@@ -575,7 +578,7 @@ class myCamera(threading.Thread):
             (score, diff) = ssim(imageA, imageB, full=True)
 
          except Exception as e:
-            logging.warning("Error comparing images: ", str(e))
+            logging.warning("Error comparing images: " + str(e))
             score = 0
 
        return round(score*100,1)
@@ -597,14 +600,15 @@ class myCamera(threading.Thread):
 
           if "00"+str(self.param["image_save"]["seconds"][0]) in timestamp: return True
 
+          if "favorit" in file_info:
+             favorit    = int(file_info["favorit"])
+             if favorit == 1:                                               return True
+
           if check_similarity:
              threshold  = float(self.param["similarity"]["threshold"])
              similarity = float(file_info["similarity"])
              if similarity != 0 and similarity < threshold:                 return True
-
-          if "favorit" in file_info:
-             favorit    = int(file_info["favorit"])
-             if favorit == 1:                                               return True
+          else:                                                             return True ### to be checked !!!
 
        return False
 
@@ -626,7 +630,7 @@ class myCamera(threading.Thread):
        Write image information to file
        '''
        if os.path.isfile(self.config.file("images")):
-          files = self.config.read("images")
+          files       = self.config.read_cache("images")
           files[time] = data
           self.config.write("images",files)
 
