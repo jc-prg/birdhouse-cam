@@ -24,16 +24,17 @@ import signal, sys, string
 
 import threading
 import socketserver
-from threading       import Condition
-from http            import server
-from datetime        import datetime, timedelta
+from threading        import Condition
+from http             import server
+from datetime         import datetime, timedelta
 
-from modules.backup  import myBackupRestore
-from modules.camera  import myCamera
-from modules.config  import myConfig
-from modules.presets import myParameters
-from modules.presets import myPages
-from modules.views   import myViews
+from modules.backup   import myBackupRestore
+from modules.camera   import myCamera
+from modules.config   import myConfig
+from modules.commands import myCommands
+from modules.presets  import myParameters
+from modules.presets  import myPages
+from modules.views    import myViews
 
 #----------------------------------------------------
 
@@ -202,147 +203,23 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         global config, camera, backup
         
         response = {}
+
         if not self.adminAllowed():
            response["error"] = "Administration not allowed for this IP-Address!"
            self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+
         
-        # set / unset favorit
-        if self.path.startswith("/favorit/"):
-           param = self.path.split("/")
-
-           if param[2] == "current":
-              config_data         = config.read_cache(config="images")
-              response["command"] = ["set/unset favorit", param[3], param[4]]
-              if param[3] in config_data:
-                 config_data[param[3]]["favorit"] = param[4]
-                 if int(param[4]) == 1: config_data[param[3]]["to_be_deleted"] = 0
-                 config.write(config="images", config_data=config_data)
-              else:
-                 response["error"] = "no image found with stamp "+str(param[3])
-
-           elif param[2] == "backup":
-              config_data         = config.read_cache(config="backup", date=param[3])
-              response["command"] = ["set/unset favorit (backup)", param[5]]
-              if param[4] in config_data["files"]:
-                 config_data["files"][param[4]]["favorit"] = param[5]
-                 if int(param[5]) == 1: config_data["files"][param[4]]["to_be_deleted"] = 0
-                 config.write(config="backup",config_data=config_data, date=param[3])
-              else:
-                 response["error"] = "no image found with stamp "+str(param[4])
-
-           elif param[2] == "videos":
-              config_data         = config.read_cache(config="videos")
-              response["command"] = ["set/unset favorit (videos)", param[3], param[4]]
-              if param[3] in config_data:
-                 config_data[param[3]]["favorit"] = param[4]
-                 if int(param[4]) == 1: config_data[param[3]]["to_be_deleted"] = 0
-                 config.write(config="videos", config_data=config_data)
-              else:
-                 response["error"] = "no video found with stamp "+str(param[3])
-
-           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
-
-
-        # mark / unmark for deletion
-        elif self.path.startswith("/recycle/"):
-           param = self.path.split("/")
-
-           if param[2] == "current":
-              config_data         = config.read_cache(config="images")
-              response["command"] = ["mark/unmark for deletion", param[4]]
-              if param[3] in config_data:
-                 config_data[param[3]]["to_be_deleted"] = param[4]
-                 if int(param[4]) == 1: config_data[param[3]]["favorit"] = 0
-                 config.write(config="images", config_data=config_data)
-              else:
-                 response["error"] = "no image found with stamp "+str(param[3])
-
-           elif param[2] == "backup":
-              config_data         = config.read_cache(config="backup", date=param[3])
-              response["command"] = ["mark/unmark for deletion (backup)", param[5]]
-              if param[4] in config_data["files"]:
-                 config_data["files"][param[4]]["to_be_deleted"] = param[5]
-                 if int(param[5]) == 1: config_data["files"][param[4]]["favorit"] = 0
-                 config.write(config="backup",config_data=config_data, date=param[3])
-              else:
-                 response["error"] = "no image found with stamp "+str(param[4])
-
-           elif param[2] == "videos":
-              config_data         = config.read_cache(config="videos")
-              response["command"] = ["mark/unmark for deletion", param[4]]
-              if param[3] in config_data:
-                 config_data[param[3]]["to_be_deleted"] = param[4]
-                 if int(param[4]) == 1: config_data[param[3]]["favorit"] = 0
-                 config.write(config="videos", config_data=config_data)
-              else:
-                 response["error"] = "no video found with stamp "+str(param[3])
-           
-           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
-
-
-        # remove marked files           
-        elif self.path.startswith('/remove/'):
-           param = self.path.split("/")
-           if "delete_not_used" in param: delete_not_used = True
-           else:                          delete_not_used = False
-           if param[2] == "backup":       response = backup.delete_marked_files(date=param[3], delete_not_used=delete_not_used)
-           elif param[2] == "today":      response = backup.delete_marked_files(date="",       delete_not_used=delete_not_used)
-           else:                          response["error"] = "not clear, which files shall be deleted"
-           
-           response["command"] = ["delete files that are marked as 'to_be_deleted'" ,param]
-           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
-           
-        # start video recording
-        elif self.path.startswith("/start/recording/"):
-           param     = self.path.split("/")
-           which_cam = param[3]
-           if which_cam in camera and not camera[which_cam].error and camera[which_cam].active:
-              if not camera[which_cam].video.recording:   camera[which_cam].video.start_recording()
-              else:                                       response["error"] = "camera is already recording "+str(param[3])       
-           elif camera[which_cam].error or camera[which_cam].active == False:
-              response["error"] = "camera is not active "+str(param[3])       
-           else:
-              response["error"] = "camera doesn't exist "+str(param[3])       
-
-           response["command"] = ["start recording"]
-           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
-
-        # end video recording
-        elif self.path.startswith("/stop/recording/"):
-           param     = self.path.split("/")
-           which_cam = param[3]
-           if which_cam in camera and not camera[which_cam].error and camera[which_cam].active:
-              if camera[which_cam].video.recording:  camera[which_cam].video.stop_recording()
-              else:                                  response["error"] = "camera isn't recording at the moment "+str(param[3])       
-           elif camera[which_cam].error or camera[which_cam].active == False:
-              response["error"] = "camera is not active "+str(param[3])       
-           else:
-              response["error"] = "camera doesn't exist "+str(param[3])       
-
-           response["command"] = ["start recording"]
-           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
-
-
-        # restart camera // doesn't close the camera correctly at the moment
-        elif self.path.startswith("/restart-cameras/"):
-           logging.info("Restart of camera threads requested ...")
-           for cam in camera:
-             camera[cam].stop()
-
-           camera = {}
-           config.reload()
-           for cam in config.param["cameras"]:
-             settings = config.param["cameras"][cam]
-             camera[cam] = myCamera(id=cam, type=settings["type"], record=settings["record"], param=settings, config=config)
-             if not camera[cam].error:
-               camera[cam].start()
-               camera[cam].param["path"] = config.param["path"]
-               camera[cam].setText("Restarting ...")
-             response["command"] = ["Restart cameras"]
-
+        if self.path.startswith("/favorit/"):            response = commands.setStatusFavorit(self)
+        elif self.path.startswith("/recycle/"):          response = commands.setStatusRecycle(self)
+        elif self.path.startswith('/remove/'):           response = commands.deleteMarkedFiles(self)
+        elif self.path.startswith("/start/recording/"):  response = commands.startRecording(self)
+        elif self.path.startswith("/stop/recording/"):   response = commands.stopRecording(self)
+        elif self.path.startswith("/restart-cameras/"):  response = commands.restartCameras(self)
         else:
            self.sendError()
            return
+
+        self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
            
 
     #-------------------------------------
@@ -358,7 +235,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         config.html_replace["active_cam"] = which_cam
 
         # index with embedded live stream
-        if   self.path == '/':
+        if   self.path == '/': 
 
           self.redirect("/index.html")
 
@@ -375,7 +252,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           
           self.streamFile(ftype='text/html', content=read_html(directory='html', filename=template, content=content), no_cache=True)
 
-         
+
         # extract and show single image
         elif '/image.jpg' in self.path:
         
@@ -475,14 +352,17 @@ if __name__ == "__main__":
            camera[cam].param["path"] = config.param["path"]
            camera[cam].setText("Starting ...")
 
-    # start views           
-    views = myViews(config=config, camera=camera)
-    views.start()
-
     # start backups
     time.sleep(1)
     backup = myBackupRestore(config, camera)
     backup.start()
+
+    # start views and commands
+    views = myViews(config=config, camera=camera)
+    views.start()
+
+    commands = myCommands(config=config, camera=camera, backup=backup)
+    commands.start()
 
     # check if config files for main image directory exists and create if not exists
     if not os.path.isfile(config.file("images")):
