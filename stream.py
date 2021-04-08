@@ -352,27 +352,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         check path and send requested content
         '''
         logging.debug("GET request with '" + self.path + "'.")
-        config.html_replace["title"] = config.param["title"]
+        path, which_cam = views.selectedCamera(self.path)
 
-        # check which camera has bin requested
-        if "?" in self.path:
-           param = self.path.split("?")
-           path      = param[0]
-           which_cam = param[1]
-           if not which_cam in camera:
-              logging.warning("Unknown camera requested.")
-              self.sendError()
-              return
-        else:
-           which_cam = "cam1"
-
-        self.active_cams = []
-        for key in camera:
-          if camera[key].active: self.active_cams.append(key)
-        if camera[which_cam].active == False:
-          which_cam = self.active_cams[0]
+        config.html_replace["title"]      = config.param["title"]
         config.html_replace["active_cam"] = which_cam
-
 
         # index with embedded live stream
         if   self.path == '/':
@@ -411,9 +394,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                return
                
             self.streamVideoHeader()
-            count    = 0
-            addText  = ""
-            imageOld = []
             stream   = True
             
             while stream:
@@ -430,20 +410,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  frame = camera[which_cam].drawImageDetectionArea(image=frame)
                      
               try:
-                  camera[which_cam].wait()
-                  self.streamVideoFrame(frame)
+                 camera[which_cam].wait()
+                 self.streamVideoFrame(frame)
 
               except Exception as e:
-                  stream = False
-                  if "Errno 104" in str(e) or "Errno 32" in str(e):  logging.debug('Removed streaming client %s: %s', self.client_address, str(e))
-                  else:                                              logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
+                 stream = False
+                 if "Errno 104" in str(e) or "Errno 32" in str(e):  logging.debug('Removed streaming client %s: %s', self.client_address, str(e))
+                 else:                                              logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
 
 
         # images, css, js
-        elif self.path.endswith('.png'):        self.streamFile(ftype='image/png',       content=read_image(directory='',       filename=self.path))
         elif self.path.endswith('.css'):        self.streamFile(ftype='text/css',        content=read_html( directory='',       filename=self.path))
         elif self.path.endswith('.js'):         self.streamFile(ftype='text/javascript', content=read_html( directory='',       filename=self.path))
-        elif self.path.endswith('favicon.ico'): self.streamFile(ftype='image/ico',       content=read_image(directory='html',   filename='favicon.ico'))
+        elif self.path.endswith('.png'):        self.streamFile(ftype='image/png',       content=read_image(directory='',       filename=self.path))
+        elif self.path.endswith('favicon.ico'): self.streamFile(ftype='image/ico',       content=read_image(directory='html',   filename=self.path))
 
         elif self.path.endswith('.mp4'):        self.streamFile(ftype='video/mp4',       content=read_image(directory="videos", filename=self.path))
         elif self.path.startswith('/videos') and self.path.endswith('.jpeg'):

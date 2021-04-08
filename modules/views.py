@@ -73,11 +73,13 @@ class myViews(threading.Thread):
         else:                                                                   return True
 
 
-    def selectedCamera(self):
+    def selectedCamera(self, check_path=""):
         '''
         Check path, which cam has been selected
         '''
-        path = self.server.path
+        if check_path == "": path = self.server.path
+        else:                path = check_path
+        
         if "?" in path:
            param       = path.split("?")
            path        = param[0]
@@ -93,7 +95,8 @@ class myViews(threading.Thread):
         if self.camera[which_cam].active == False:
           which_cam = self.active_cams[0]
         
-        logging.debug("Selected CAM = " + which_cam + " (" + self.server.path + ")")
+        if check_path == "": logging.debug("Selected CAM = " + which_cam + " (" + self.server.path + ")")
+        else:                logging.debug("Selected CAM = " + which_cam + " (" + check_path + ")")
         
         self.which_cam  = which_cam
         return path, which_cam
@@ -192,7 +195,7 @@ class myViews(threading.Thread):
           html += "<div class='thumbnail' style='background-color:#222222;'><br/><br/><small>"+description+"</small></div>"
         else:
           if hires != '':        html += "<a href='"+hires+"' target='_"+window+"'><img "+lazzy+"src='"+lowres+"' id='"+lowres_file+"' class='thumbnail' style='border:1px solid "+border+";'/></a><br/><small>"+description+"</small>"
-          elif javascript != '': html += "<div onclick='javascript:"+javascript+"' style='cursor:pointer;'><img "+lazzy+"src='"+lowres+"' id='"+lowres_file+"' class='thumbnail' style='border:1px solid "+border+";'/></div><br/><small>"+description+"</small>"
+          elif javascript != '': html += "<a onclick='javascript:"+javascript+"' style='cursor:pointer;'><img "+lazzy+"src='"+lowres+"' id='"+lowres_file+"' class='thumbnail' style='border:1px solid "+border+";'/></a><br/><small>"+description+"</small>"
           else:                  html += "<img "+lazzy+"src='"+lowres+"' id='"+lowres_file+"' class='thumbnail' style='border:1px solid "+border+";'/><br/><small>"+description+"</small>"
         html += "\n</div>\n"
         html += "</div>\n"
@@ -459,6 +462,7 @@ class myViews(threading.Thread):
            html_today      = ""              
            stamps          = list(reversed(sorted(files_all.keys())))
            for stamp in stamps:
+             if not "datestamp" in files_all[stamp]: files_all[stamp]["datestamp"] = date_backup
              if ((int(stamp) < int(time_now) or time_now == "000000") and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
                if self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
                  if not "datestamp" in files_all[stamp] or files_all[stamp]["datestamp"] == date_today or param[1] == "backup":
