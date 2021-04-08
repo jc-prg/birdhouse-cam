@@ -383,7 +383,7 @@ class myViews(threading.Thread):
             if self.config.exists(config="backup", date=directory):
                files_data = self.config.read_cache(config="backup", date=directory)
                
-               if "info" in file_data and "files" in file_data:
+               if "info" in files_data and "files" in files_data:
                  files      = files_data["files"]
                  date       = directory[6:8]+"."+directory[4:6]+"."+directory[0:4]
                  favorits[directory] = {}
