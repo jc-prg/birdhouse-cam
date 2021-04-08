@@ -357,7 +357,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # check which camera has bin requested
         if "?" in self.path:
            param = self.path.split("?")
-           self.path = param[0]
+           path      = param[0]
            which_cam = param[1]
            if not which_cam in camera:
               logging.warning("Unknown camera requested.")
@@ -382,19 +382,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         elif self.path.endswith('.html'):
         
-          if   self.path.endswith('/index.html'):       template, content = views.createIndex(server=self)
-          elif self.path.endswith('/list_star.html'):   template, content = views.createFavorits(server=self)
-          elif self.path.endswith('/list_short.html'):  template, content = views.createList(server=self)
-          elif self.path.endswith('/list_backup.html'): template, content = views.createBackupList(server=self)
-          elif self.path.endswith('/list_new.html'):    template, content = views.createCompleteListToday(server=self)
-          elif self.path.endswith('/videos.html'):      template, content = views.createVideoList(server=self)
-          elif self.path.endswith('/cameras.html'):     template, content = views.createCameraList(server=self)
+          if   '/index.html' in self.path:       template, content = views.createIndex(server=self)
+          elif '/list_star.html' in self.path:   template, content = views.createFavorits(server=self)
+          elif '/list_short.html' in self.path:  template, content = views.createList(server=self)
+          elif '/list_backup.html' in self.path: template, content = views.createBackupList(server=self)
+          elif '/list_new.html' in self.path:    template, content = views.createCompleteListToday(server=self)
+          elif '/videos.html' in self.path:      template, content = views.createVideoList(server=self)
+          elif '/cameras.html' in self.path:     template, content = views.createCameraList(server=self)
           
           self.streamFile(ftype='text/html', content=read_html(directory='html', filename=template, content=content), no_cache=True)
 
          
         # extract and show single image
-        elif self.path == '/image.jpg':
+        elif '/image.jpg' in self.path:
         
             camera[which_cam].setText = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
             camera[which_cam].writeImage('image_'+which_cam+'.jpg',camera[which_cam].convertFrame2Image(camera[which_cam].getFrame()))
@@ -402,7 +402,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
 
         # show live stream
-        elif self.path.endswith('/stream.mjpg'):
+        elif '/stream.mjpg' in self.path:
 
             if camera[which_cam].type != "pi" and camera[which_cam].type != "usb":
                logging.warning("Unknown type of camera ("+camera[which_cam].type+"/"+camera[which_cam].name+")")
