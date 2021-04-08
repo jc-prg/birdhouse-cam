@@ -432,6 +432,14 @@ class myViews(threading.Thread):
                  if len(favorits[directory]) > 0:
                     html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], category=category, header=True, header_open=True, header_count=['star'], cam=which_cam)
 
+            if directory in files_videos:
+              for stamp in files_videos[date_today]:
+                new = stamp
+                favorits[new]           = files_videos[directory][stamp]
+                favorits[new]["source"] = ("videos","")
+                favorits[new]["date"]   = "Aktuell"
+                favorits[new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+
         content["subtitle"]  = myPages["favorit"][0] + " (" + self.camera[which_cam].name + ")"
         content["links"]     = self.printLinks(link_list=("live","today","videos","backup"), cam=which_cam)
         content["file_list"] = html
