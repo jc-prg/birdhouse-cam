@@ -435,10 +435,10 @@ class myViews(threading.Thread):
             if directory in files_videos:
               for stamp in files_videos[date_today]:
                 new = stamp
-                favorits[new]           = files_videos[directory][stamp]
-                favorits[new]["source"] = ("videos","")
-                favorits[new]["date"]   = "Aktuell"
-                favorits[new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+                favorits[directory][new]           = files_videos[directory][stamp]
+                favorits[directory][new]["source"] = ("videos","")
+                favorits[directory][new]["date"]   = "Aktuell"
+                favorits[directory][new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
 
         content["subtitle"]  = myPages["favorit"][0] + " (" + self.camera[which_cam].name + ")"
         content["links"]     = self.printLinks(link_list=("live","today","videos","backup"), cam=which_cam)
