@@ -564,7 +564,7 @@ class myCamera(threading.Thread):
        calculate structual similarity index (SSIM) of two images
        '''
        if len(imageA) == 0 or len(imageB) == 0:
-          logging.warning("At least one file has a zero length: ", str(e))
+          logging.warning("At least one file has a zero length - A:" + str(len(imageA)) + "/ B:" + str(len(imageB)))
           score = 0
           
        else:
@@ -578,7 +578,7 @@ class myCamera(threading.Thread):
             (score, diff) = ssim(imageA, imageB, full=True)
 
          except Exception as e:
-            logging.warning("Error comparing images: ", str(e))
+            logging.warning("Error comparing images: " + str(e))
             score = 0
 
        return round(score*100,1)
