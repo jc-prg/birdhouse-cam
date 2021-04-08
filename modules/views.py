@@ -553,20 +553,25 @@ class myViews(threading.Thread):
 
         for directory in dir_list:
 
-          if os.path.isfile(self.config.file(config="backup",date=directory)):
+          if os.path.isfile(self.config.file(config="backup", date=directory)):
              file_data        = self.config.read_cache(config="backup", date=directory)
-             date             = file_data["info"]["date"]
-             count            = file_data["info"]["count"]
-             dir_size_cam     = 0
-             dir_count_cam    = 0
-             dir_count_delete = 0
+             
+             if not "info" in file_data or not "files" in file_data:
+               html  += self.printImageContainer(description="<b>"+directory+"</b><br/>Fehler in Config-Datei!", lowres="EMPTY") + "\n"
+               
+             else:
+               date             = file_data["info"]["date"]
+               count            = file_data["info"]["count"]
+               dir_size_cam     = 0
+               dir_count_cam    = 0
+               dir_count_delete = 0
 
-             if imageTitle in file_data["files"]:
-                image = os.path.join(directory, file_data["files"][imageTitle]["lowres"])
+               if imageTitle in file_data["files"]:
+                  image = os.path.join(directory, file_data["files"][imageTitle]["lowres"])
 
-             for file in file_data["files"]:
-                file_info    = file_data["files"][file]
-                if ("camera" in file_info and file_info["camera"] == which_cam) or (which_cam == "cam1" and not "camera" in file_info):
+               for file in file_data["files"]:
+                  file_info    = file_data["files"][file]
+                  if ("camera" in file_info and file_info["camera"] == which_cam) or (which_cam == "cam1" and not "camera" in file_info):
 
                       if "size" in file_info: dir_size_cam  += file_info["size"]
                       else:
@@ -579,15 +584,15 @@ class myViews(threading.Thread):
                         dir_count_delete += 1
                       dir_count_cam += 1
 
-             dir_size        = round(file_data["info"]["size"]/1024/1024,1)
-             dir_size_cam    = round(dir_size_cam/1024/1024,1)
-             dir_total_size += dir_size
-             files_total    += count
+               dir_size        = round(file_data["info"]["size"]/1024/1024,1)
+               dir_size_cam    = round(dir_size_cam/1024/1024,1)
+               dir_total_size += dir_size
+               files_total    += count
                  
-             if dir_count_delete > 0: delete_info = "<br/>(Recycle: " + str(dir_count_delete) + ")"
-             else:                    delete_info = ""
-             if dir_count_cam > 0:    html  += self.printImageContainer(description="<b>"+date+"</b><br/>"+str(dir_count_cam)+" / "+str(dir_size_cam)+" MB" + delete_info, lowres=image, hires="/backup/"+directory+"/list_short.html?"+which_cam, window="self") + "\n"
-             #else:                    html  += self.printImageContainer(description="<b>"+date+"</b><br/>Leer für "+which_cam, lowres="EMPTY") + "\n"
+               if dir_count_delete > 0: delete_info = "<br/>(Recycle: " + str(dir_count_delete) + ")"
+               else:                    delete_info = ""
+               if dir_count_cam > 0:    html  += self.printImageContainer(description="<b>"+date+"</b><br/>"+str(dir_count_cam)+" / "+str(dir_size_cam)+" MB" + delete_info, lowres=image, hires="/backup/"+directory+"/list_short.html?"+which_cam, window="self") + "\n"
+               #else:                    html  += self.printImageContainer(description="<b>"+date+"</b><br/>Leer für "+which_cam, lowres="EMPTY") + "\n"
 
           else:
              logging.error("Archive: no config file available: /backup/" + directory)
