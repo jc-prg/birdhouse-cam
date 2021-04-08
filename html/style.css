@@ -63,6 +63,18 @@ body      { background-color : black; color : white; }
     z-index : 90;
 }
 
+.play_button {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    left: 50%;
+    top: 40%;
+    margin-left: -15px; /*half of the width */
+    margin-top: -15px; /*half of the height */
+    cursor: pointer;
+    opacity: 70%;
+}
+
 .separator {
     padding : 2px;
     margin  : 2px;

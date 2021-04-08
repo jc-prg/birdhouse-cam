@@ -190,13 +190,18 @@ class myViews(threading.Thread):
         lowres_file = lowres.split("/")
         lowres_file = lowres_file[len(lowres_file)-1]
         
+        if ".mp4" in javascript: play = "<img src=\"/html/play.png\" class=\"play_button\" onclick='javascript:" + javascript + "'/>\n"
+        else:                    play = ""
+        
         html += "<div class='thumbnail_container'>\n"
         if lowres == "EMPTY":
           html += "<div class='thumbnail' style='background-color:#222222;'><br/><br/><small>"+description+"</small></div>"
         else:
-          if hires != '':        html += "<a href='"+hires+"' target='_"+window+"'><img "+lazzy+"src='"+lowres+"' id='"+lowres_file+"' class='thumbnail' style='border:1px solid "+border+";'/></a><br/><small>"+description+"</small>"
-          elif javascript != '': html += "<a onclick='javascript:"+javascript+"' style='cursor:pointer;'><img "+lazzy+"src='"+lowres+"' id='"+lowres_file+"' class='thumbnail' style='border:1px solid "+border+";'/></a><br/><small>"+description+"</small>"
-          else:                  html += "<img "+lazzy+"src='"+lowres+"' id='"+lowres_file+"' class='thumbnail' style='border:1px solid "+border+";'/><br/><small>"+description+"</small>"
+          if hires != '':        html += "<a href='" + hires + "' target='_" + window + "'><img " + lazzy + "src='" + lowres + "' id='" + lowres_file + "' class='thumbnail' style='border:1px solid " + border + ";'/></a><br/><small>" + description + "</small>"
+          elif javascript != '': html += "<a onclick='javascript:" + javascript + "' style='cursor:pointer;'><img " + lazzy + "src='" + lowres + "' id='" + lowres_file + "' class='thumbnail' style='border:1px solid " + border + ";'/></a><br/>" + play + "<small>"+description+"</small>"
+          else:                  html += "<img " + lazzy + "src='" + lowres + "' id='" + lowres_file + "' class='thumbnail' style='border:1px solid " + border + ";'/><br/><small>" + description + "</small>"
+
+
         html += "\n</div>\n"
         html += "</div>\n"
         return html
@@ -344,8 +349,8 @@ class myViews(threading.Thread):
         else:
            template = "index.html"
 
-        if self.adminAllowed(): content["links"] = self.printLinks(link_list=("today","backup","favorit","cam_info"), cam=which_cam)
-        else:                   content["links"] = self.printLinks(link_list=("today","backup","favorit"), cam=which_cam)
+        if self.adminAllowed(): content["links"] = self.printLinks(link_list=("favorit","today","backup","cam_info"), cam=which_cam)
+        else:                   content["links"] = self.printLinks(link_list=("favorit","today","backup"), cam=which_cam)
         
         return template, content
 
@@ -362,6 +367,20 @@ class myViews(threading.Thread):
         html                  = ""
         favorits              = {}
 
+        # videos
+        directory       = self.config.directory(config="videos")
+        category        = "/videos/"
+        files_all       = {}
+        files_videos    = {}
+                  
+        if self.config.exists("videos"):
+           files_all = self.config.read_cache(config="videos")
+           for file in files_all:
+               date = files_all[file]["date_start"].split("_")[0]
+               if "favorit" in files_all[file] and int(files_all[file]["favorit"]) == 1: 
+                  if not date in files_videos: files_videos[date] = {}
+                  files_videos[date][file] = files_all[file]
+
         # today
         date_today = datetime.now().strftime("%Y%m%d")
         files      = self.config.read_cache(config="images")
@@ -372,6 +391,14 @@ class myViews(threading.Thread):
                new = datetime.now().strftime("%Y%m%d")+"_"+stamp
                favorits[new]           = files[stamp]
                favorits[new]["source"] = ("images","")
+               favorits[new]["date"]   = "Aktuell"
+               favorits[new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+
+        if date_today in files_videos:
+          for stamp in files_videos[date_today]:
+               new = stamp
+               favorits[new]           = files_videos[date_today][stamp]
+               favorits[new]["source"] = ("videos","")
                favorits[new]["date"]   = "Aktuell"
                favorits[new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
 
@@ -406,7 +433,7 @@ class myViews(threading.Thread):
                     html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], category=category, header=True, header_open=True, header_count=['star'], cam=which_cam)
 
         content["subtitle"]  = myPages["favorit"][0] + " (" + self.camera[which_cam].name + ")"
-        content["links"]     = self.printLinks(link_list=("live","today","backup"), cam=which_cam)
+        content["links"]     = self.printLinks(link_list=("live","today","videos","backup"), cam=which_cam)
         content["file_list"] = html
         
         return template, content
@@ -452,8 +479,8 @@ class myViews(threading.Thread):
            first_title      = "Heute &nbsp; "
 
            content["subtitle"]    = myPages["today"][0] + " (" + self.camera[which_cam].name + ")"
-           if self.adminAllowed(): content["links"]  = self.printLinks(link_list=("live","today_complete","backup","favorit","videos"), current='today', cam=which_cam)
-           else:                   content["links"]  = self.printLinks(link_list=("live","backup","favorit"), current='today', cam=which_cam)
+           if self.adminAllowed(): content["links"]  = self.printLinks(link_list=("live","favorit","today_complete","videos","backup"), current='today', cam=which_cam)
+           else:                   content["links"]  = self.printLinks(link_list=("live","favorit","videos","backup"), current='today', cam=which_cam)
 
         if files_all != {}:
 
@@ -610,9 +637,9 @@ class myViews(threading.Thread):
 
         content["file_list"] = html
         content["subtitle"]  = myPages["backup"][0] + " (" + self.camera[which_cam].name + ")"
-        content["links"]     = self.printLinks(link_list=("live","today","favorit"), current="backup", cam=which_cam)
+        content["links"]     = self.printLinks(link_list=("live","favorit","today","videos"), current="backup", cam=which_cam)
         if self.adminAllowed(): 
-          content["links"]  = self.printLinks(link_list=("live","today","today_complete","favorit"), current="backup", cam=which_cam)
+          content["links"]   = self.printLinks(link_list=("live","favorit","today","today_complete","videos"), current="backup", cam=which_cam)
 
         content["file_list"] = html
         return template, content
@@ -688,7 +715,7 @@ class myViews(threading.Thread):
 
         content["file_list"] = html
         content["subtitle"]  = myPages["today_complete"][0] + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Bilder)"
-        content["links"]     = self.printLinks(link_list=("live","today","favorit","backup"), current="today_complete", cam=which_cam)
+        content["links"]     = self.printLinks(link_list=("live","favorit","today","videos","backup"), current="today_complete", cam=which_cam)
 
         return template, content
 
@@ -725,7 +752,7 @@ class myViews(threading.Thread):
            html  += "<div class='separator' style='width:100%;text-color:lightred;'>Keine Videos vorhanden</div>"
 
         content["subtitle"]  = myPages["videos"][0] + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
-        content["links"]     = self.printLinks(link_list=("live","cam_info","today","favorit"), current="today_complete", cam=which_cam)
+        content["links"]     = self.printLinks(link_list=("live","favorit","cam_info","today","backup"), current="today_complete", cam=which_cam)
         content["file_list"] = html
 
         return template, content
@@ -781,7 +808,7 @@ class myViews(threading.Thread):
 #              html += "</div>"
 
         content["subtitle"]  = myPages["cam_info"][0]
-        content["links"]     = self.printLinks(link_list=("live","today","videos","favorit"), cam=which_cam)
+        content["links"]     = self.printLinks(link_list=("live","favorit","today","videos","backup"), cam=which_cam)
         content["file_list"] = html
 
         return template, content
