@@ -85,21 +85,32 @@ class myConfig(threading.Thread):
        '''
        read json file including check if locked
        '''
-       self.check_locked(filename)
-       with open(filename) as json_file:
-         data = json.load(json_file)
-       return data
+       try:
+         self.check_locked(filename)
+         with open(filename) as json_file:
+           data = json.load(json_file)
+         return data
+         
+       except Exception as e:
+         logging.error("Could not read JSON file: "+filename)
+         logging.error(str(e))
+         return {}
 
 
    def write_json(self, filename, data):
        '''
        write json file including locking mechanism
        '''
-       self.check_locked(filename)
-       self.locked[filename] = True
-       with open(filename, 'wb') as json_file:
+       try:
+         self.check_locked(filename)
+         self.locked[filename] = True
+         with open(filename, 'wb') as json_file:
             json.dump(data, codecs.getwriter('utf-8')(json_file), ensure_ascii=False, sort_keys=True, indent=4)
-       self.locked[filename] = False
+         self.locked[filename] = False
+         
+       except Exception as e:
+         logging.error("Could not write JSON file: "+filename)
+         logging.error(str(e))
 
 
    def directory(self, config, date=""):
@@ -137,7 +148,7 @@ class myConfig(threading.Thread):
        '''
        config_file = os.path.join(self.main_directory, self.directories[config], date, self.files[config])
        config_data = self.read_json(config_file)
-       self.config_cache[config] = config_data
+       logging.debug("Read JSON file "+config_file)
        return config_data
 
 
@@ -145,15 +156,17 @@ class myConfig(threading.Thread):
        '''
        return from cache, read file if not in cache already
        '''
+       #return self.read(config=config, date=date)
+
        if not config in self.config_cache and date == "":     
-          self.config_cache[config] = self.read(config)
+          self.config_cache[config] = self.read(config=config, date="")
              
        elif not config in self.config_cache and date != "":
           self.config_cache[config]       = {}
-          self.config_cache[config][date] = self.read(config, date)
+          self.config_cache[config][date] = self.read(config=config, date=date)
           
        elif not date in self.config_cache[config] and date != "":
-          self.config_cache[config][date] = self.read(config, date)
+          self.config_cache[config][date] = self.read(config=config, date=date)
           
        if date == "":  return self.config_cache[config]
        else:           return self.config_cache[config][date]
