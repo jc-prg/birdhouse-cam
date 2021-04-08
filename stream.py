@@ -380,7 +380,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           self.redirect("/index.html")
 
 
-        elif self.path.endswith('.html'):
+        elif '.html' in self.path:
         
           if   '/index.html' in self.path:       template, content = views.createIndex(server=self)
           elif '/list_star.html' in self.path:   template, content = views.createFavorits(server=self)
