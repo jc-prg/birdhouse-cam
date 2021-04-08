@@ -3,10 +3,6 @@
 # In Progress:
 # - ...
 # Backlog:
-# -> GET to myViews
-# -> POST to myAPI
-#
-# - show videos in favorits section
 # - show videos in day views (with play icon on it)
 # - Optimize data handling
 #   -> Queue for writing into JSON (e.g. for status changes)
