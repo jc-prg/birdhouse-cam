@@ -332,15 +332,15 @@ class myViews(threading.Thread):
 
         
         if self.camera["cam1"].active and self.camera["cam2"].active:
-           if self.which_cam == "cam1":   template = "index_cam1+cam2.html"
-           elif self.which_cam == "cam2": template = "index_cam2+cam1.html"
+           if which_cam == "cam1":        template = "index_cam1+cam2.html"
+           elif which_cam == "cam2":      template = "index_cam2+cam1.html"
            else:                          template = "index.html"
            
         else:
            template = "index.html"
 
-        if self.adminAllowed(): content["links"] = self.printLinks(link_list=("today","backup","favorit","cam_info"), cam=self.which_cam)
-        else:                   content["links"] = self.printLinks(link_list=("today","backup","favorit"), cam=self.which_cam)
+        if self.adminAllowed(): content["links"] = self.printLinks(link_list=("today","backup","favorit","cam_info"), cam=which_cam)
+        else:                   content["links"] = self.printLinks(link_list=("today","backup","favorit"), cam=which_cam)
         
         return template, content
 
