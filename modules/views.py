@@ -93,6 +93,8 @@ class myViews(threading.Thread):
         if self.camera[which_cam].active == False:
           which_cam = self.active_cams[0]
         
+        logging.info("Selected CAM = " + which_cam)
+        
         self.which_cam  = which_cam
         return path, which_cam
 
