@@ -349,9 +349,14 @@ class myViews(threading.Thread):
         else:
            template = "index.html"
 
-        if self.adminAllowed(): content["links"] = self.printLinks(link_list=("favorit","today","backup","cam_info"), cam=which_cam)
-        else:                   content["links"] = self.printLinks(link_list=("favorit","today","backup"), cam=which_cam)
+        if self.adminAllowed():
+           content["links"]   = self.printLinks(link_list=("favorit","today","backup","cam_info"), cam=which_cam)
+           content["record"]  = "<br/><button onclick='requestAPI(\"/start/recording/"+which_cam+"\");'>Record</button> &nbsp;"
+           content["record"] += "<button onclick='requestAPI(\"/stop/recording/"+which_cam+"\");'>Stop</button>"
+        else:
+           content["links"]   = self.printLinks(link_list=("favorit","today","backup"), cam=which_cam)
         
+
         return template, content
 
 
