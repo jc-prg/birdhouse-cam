@@ -241,8 +241,8 @@ class myViews(threading.Thread):
            # images and videos
            else:
              
-             if "video_file":  stamp_file = stamp
-             else:             stamp_file = stamp_time
+             if "video_file" in image_group[stamp]:  stamp_file = stamp
+             else:                                   stamp_file = stamp_time
            
              if "favorit" in image_group[stamp]:
                 star   = self.printStar(file=category+stamp_file, favorit=image_group[stamp]["favorit"], cam=cam)
@@ -434,7 +434,7 @@ class myViews(threading.Thread):
                      new = stamp
                      favorits[directory][new]           = files_videos[directory][stamp]
                      favorits[directory][new]["source"] = ("videos","")
-                     favorits[directory][new]["date"]   = "Aktuell"
+                     favorits[directory][new]["date"]   = date
                      favorits[directory][new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                      
                  if len(favorits[directory]) > 0:
@@ -755,7 +755,7 @@ class myViews(threading.Thread):
                else:                                                                                 files_show[file]   = files_all[file]
                   
            if len(files_show) > 0:   html  += self.printImageGroup(title="Aufgezeichnete Videos", group_id="videos", image_group=files_show, category=category, header=True, header_open=True, header_count=['all','star'], cam=which_cam)
-           if len(files_delete) > 0: html  += self.printImageGroup(title="Zu recycelnde Videos", group_id="videos", image_group=files_delete, category=category, header=True, header_open=True, header_count=['recycle'], cam=which_cam)
+           if len(files_delete) > 0: html  += self.printImageGroup(title="Zu recycelnde Videos", group_id="videos_recylce", image_group=files_delete, category=category, header=True, header_open=False, header_count=['recycle'], cam=which_cam)
              
         if html == "": 
            html  += "<div class='separator' style='width:100%;text-color:lightred;'>Keine Videos vorhanden</div>"
