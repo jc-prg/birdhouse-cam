@@ -23,7 +23,8 @@ Raspberry Pi project to observe our birdhouse with multiple webcams (live stream
 ## Technology
 
 * Raspberry Pi 3B+
-* Camera module HD with IR sensor + USB camera
+* Camera module for RPi / HD with IR sensor
+* USB camera
 * Python 3, PiCamera, CV2, imutils, JSON, Flask
 * HTML, CSS, JavaScript
 
