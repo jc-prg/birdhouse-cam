@@ -20,8 +20,9 @@ Raspberry Pi project to observe our birdhouse with multiple webcams (live stream
 ## Installation
 
 * Prepare a Raspberry Pi 3B or new with the latest version of Rasbian
-* Ensure Python 3 is installed, install git
-* Install ...
+* Ensure Python 3 is installed
+* Install git: ```bash sudo apt-get install git ```
+* Install birdhouse-cam:
 ```bash 
 # Get source code
 $ git clone http://github.com/jc-prg/birdhouse-cam.git
@@ -37,7 +38,7 @@ $ ./stream.py
 # Edit config file
 $ nano config.json
 ```
-* Add the following lines to crontab
+* Add the following lines to crontab (start on boot):
 ```bash 
 @reboot /usr/bin/python3 /<path_to_script>/stream.py --logfile
 @reboot /usr/bin/python3 /<path_to_script>/videostream.py
