@@ -1,5 +1,6 @@
 # Birdhouse Camera
-Raspberry Pi project to observe our birdhouse with multiple webcams (live stream, record images, ...)
+
+Raspberry Pi project to observe our birdhouse with multiple webcams (live stream, record images and videos, mark favorits ...)
 
 ## Features
 
@@ -16,7 +17,7 @@ Raspberry Pi project to observe our birdhouse with multiple webcams (live stream
 
 ## Birdhouse
 
-* German instructions: [Nistkästen selber bauen](https://www.nabu.de/tiere-und-pflanzen/voegel/helfen/nistkaesten/index.html)
+* German instructions: [NABU - Nistkästen selber bauen](https://www.nabu.de/tiere-und-pflanzen/voegel/helfen/nistkaesten/index.html)
 * English instructions: [Simple birdhouse](https://suncatcherstudio.com/birds/birdhouse-plans-simple/)
 
 ## Technology
@@ -38,8 +39,8 @@ $ git clone http://github.com/jc-prg/birdhouse-cam.git
 $ cd birdhouse-cam
 
 # Install required Python modules and ffmpeg
-$ info/install
-$ info/install_ffmpeg
+$ ./info/install
+$ ./info/install_ffmpeg
 
 # Initial start -> check via http://<your-ip-address>:8000/ and stop via <Ctrl>+<C>
 $ ./stream.py
