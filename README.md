@@ -16,8 +16,8 @@ Raspberry Pi project to observe our birdhouse with multiple webcams (live stream
 
 ## Birdhouse
 
-* German instructions [Nistkästen selber bauen](https://www.nabu.de/tiere-und-pflanzen/voegel/helfen/nistkaesten/index.html)
-* English instructions [Simple birdhouse](https://suncatcherstudio.com/birds/birdhouse-plans-simple/)
+* German instructions: [Nistkästen selber bauen](https://www.nabu.de/tiere-und-pflanzen/voegel/helfen/nistkaesten/index.html)
+* English instructions: [Simple birdhouse](https://suncatcherstudio.com/birds/birdhouse-plans-simple/)
 
 ## Technology
 
