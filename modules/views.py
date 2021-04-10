@@ -241,8 +241,8 @@ class myViews(threading.Thread):
            # images and videos
            else:
              
-             if "video_file":  stamp_file = stamp
-             else:             stamp_file = stamp_time
+             if "video_file" in image_group[stamp]:  stamp_file = stamp
+             else:                                   stamp_file = stamp_time
            
              if "favorit" in image_group[stamp]:
                 star   = self.printStar(file=category+stamp_file, favorit=image_group[stamp]["favorit"], cam=cam)
@@ -348,10 +348,15 @@ class myViews(threading.Thread):
            
         else:
            template = "index.html"
-
-        if self.adminAllowed(): content["links"] = self.printLinks(link_list=("favorit","today","backup","cam_info"), cam=which_cam)
-        else:                   content["links"] = self.printLinks(link_list=("favorit","today","backup"), cam=which_cam)
+           
+        if self.adminAllowed():
+           content["links"]   = self.printLinks(link_list=("favorit","today","backup","cam_info"), cam=which_cam)
+           content["record"]  = "<br/><button onclick='requestAPI(\"/start/recording/"+which_cam+"\");'>Record</button> &nbsp;"
+           content["record"] += "<button onclick='requestAPI(\"/stop/recording/"+which_cam+"\");'>Stop</button>"
+        else:
+           content["links"]   = self.printLinks(link_list=("favorit","today","backup"), cam=which_cam)
         
+
         return template, content
 
 
@@ -434,14 +439,14 @@ class myViews(threading.Thread):
                      new = stamp
                      favorits[directory][new]           = files_videos[directory][stamp]
                      favorits[directory][new]["source"] = ("videos","")
-                     favorits[directory][new]["date"]   = "Aktuell"
+                     favorits[directory][new]["date"]   = date
                      favorits[directory][new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                      
                  if len(favorits[directory]) > 0:
                     html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], category=category, header=True, header_open=True, header_count=['star'], cam=which_cam)
 
 
-        content["subtitle"]  = myPages["favorit"][0] + " (" + self.camera[which_cam].name + ")"
+        content["subtitle"]  = myPages["favorit"][0]
         content["links"]     = self.printLinks(link_list=("live","today","videos","backup"), cam=which_cam)
         content["file_list"] = html
         
@@ -497,16 +502,21 @@ class myViews(threading.Thread):
            files_today     = {}
            html_today      = ""              
            stamps          = list(reversed(sorted(files_all.keys())))
+           
            for stamp in stamps:
+           
              if not "datestamp" in files_all[stamp]: files_all[stamp]["datestamp"] = date_backup
+             if not "date" in files_all[stamp]:      files_all[stamp]["date"]      = date_backup[6:8]+"."+date_backup[4:6]+"."+date_backup[0:4]
+             
              if ((int(stamp) < int(time_now) or time_now == "000000") and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
-               if self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
-                 if not "datestamp" in files_all[stamp] or files_all[stamp]["datestamp"] == date_today or param[1] == "backup":
+               if not "camera" in files_all[stamp] or self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
+                 if files_all[stamp]["datestamp"] == date_today or param[1] == "backup":
                     files_today[stamp] = files_all[stamp]
                     count += 1
 
            if first_title == "":
-              first_title =  files_all[stamp]["date"]
+              first_title = files_all[stamp]["date"]
+              
            else:
               files_today["999999"] = {
                        "lowres" : "stream.mjpg?"+which_cam,
@@ -590,6 +600,7 @@ class myViews(threading.Thread):
            
         if os.path.isfile(image):
            html        += self.printImageContainer(description=myPages["today"][0], lowres=imageToday, hires=myPages["today"][1]+"?"+which_cam, star='' ,window="self")
+           
         elif which_cam == "cam1":
            imageToday  = "image_"+imageTitle+".jpg" # older archives
            image       = os.path.join(self.config.directory(config="images"), imageToday)
@@ -598,7 +609,7 @@ class myViews(threading.Thread):
         for directory in dir_list:
 
           if os.path.isfile(self.config.file(config="backup", date=directory)):
-             file_data        = self.config.read_cache(config="backup", date=directory)
+             file_data = self.config.read_cache(config="backup", date=directory)
              
              if not "info" in file_data or not "files" in file_data:
                html  += self.printImageContainer(description="<b>"+directory+"</b><br/>Fehler in Config-Datei!", lowres="EMPTY") + "\n"
@@ -612,10 +623,14 @@ class myViews(threading.Thread):
 
                if imageTitle in file_data["files"]:
                   image = os.path.join(directory, file_data["files"][imageTitle]["lowres"])
+               else:
+                  first_img = list(reversed(sorted(file_data["files"].keys())))[0]
+                  image = os.path.join(directory, file_data["files"][first_img]["lowres"])
 
                for file in file_data["files"]:
                   file_info    = file_data["files"][file]
-                  if ("camera" in file_info and file_info["camera"] == which_cam) or (which_cam == "cam1" and not "camera" in file_info):
+                  if ("camera" in file_info and file_info["camera"] == which_cam) or not "camera" in file_info:
+                    if ("datestamp" in file_info and file_info["datestamp"] == directory) or not "datestamp" in file_info:
 
                       if "size" in file_info: dir_size_cam  += file_info["size"]
                       else:
@@ -755,7 +770,9 @@ class myViews(threading.Thread):
                else:                                                                                 files_show[file]   = files_all[file]
                   
            if len(files_show) > 0:   html  += self.printImageGroup(title="Aufgezeichnete Videos", group_id="videos", image_group=files_show, category=category, header=True, header_open=True, header_count=['all','star'], cam=which_cam)
-           if len(files_delete) > 0: html  += self.printImageGroup(title="Zu recycelnde Videos", group_id="videos", image_group=files_delete, category=category, header=True, header_open=True, header_count=['recycle'], cam=which_cam)
+           if len(files_delete) > 0: html  += self.printImageGroup(title="Zu recycelnde Videos", group_id="videos_recylce", image_group=files_delete, category=category, header=True, header_open=False, header_count=['recycle'], cam=which_cam)
+           if len(files_show) > 0 or len(files_delete) > 0: html += "<div class='separator'>&nbsp;<br/>&nbsp;</div>"
+           
              
         if html == "": 
            html  += "<div class='separator' style='width:100%;text-color:lightred;'>Keine Videos vorhanden</div>"

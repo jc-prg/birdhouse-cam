@@ -7,23 +7,29 @@
 <LINK rel=apple-touch-icon href="/html/icon.png" />
 <LINK rel=apple-touch-icon-precomposed href="/html/icon.png" />
 <link rel="stylesheet" href="/html/style.css">
+<script type="text/javascript" src="/html/script.js"></script>
 </head>
 <body>
 <center><h2><!--title--></h2>
 <div>
-<div class='livestream_main_container' style='position:relative;top:20px;'>
-  <a href='list_short.html?cam1'><img src="/stream.mjpg?cam1" class='livestream_main'></a>
-  <div class='livestream_2nd_container' style='position:relative;bottom:10%;right:-35%;'>
+<div class='livestream_main_container' style='position:relative;top:-140px;'>
+
+  <div class='livestream_2nd_container' style='position:relative;top:140px;left:-30%;'>
     <a href='/index.html?cam2'><img src="/stream.mjpg?cam2" class='livestream_2nd'></a>
   </div>
-  <div style='position:relative;bottom:10%;'>
+  
+  <a href='list_short.html?cam1'><img src="/stream.mjpg?cam1" class='livestream_main'></a>
+  
+  <div style="z-index:101;"><!--record--></div>
+  <br/>
+  <div>
   <hr/>
   <!--links-->
   <hr/>
+  <div style='position:relative;top:20px;'>
+  <small><a onclick="javascript:window.location.reload();" style="cursor:pointer;color:gray;">Server Start: <!--start_date--></a></small><br/>
+  </div>
 </div>
-</div>
-<div style='position:relative;top:20px;'>
-<small><a onclick="javascript:window.location.reload();" style="cursor:pointer;color:gray;">Server Start: <!--start_date--></a></small><br/>
 </div>
 </center>
 </div>
