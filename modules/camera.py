@@ -454,7 +454,8 @@ class myCamera(threading.Thread):
 
        if self.image_size == [0,0]: 
           self.image_size = self.sizeRawImage(raw)
-          self.video.image_size = self.image_size
+          if self.video:
+             self.video.image_size = self.image_size
           
        return raw
 
