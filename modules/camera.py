@@ -555,11 +555,11 @@ class myCamera(threading.Thread):
        try:
          height = frame.shape[0]
          width  = frame.shape[1]
-         
+         return [width, height]
+        
        except Exception as e:
          logging.warning("Could not analyze image: "+str(e))
-         
-       return [width, height]
+         return [0, 0]        
 
    #----------------------------------
 
