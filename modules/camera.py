@@ -332,6 +332,7 @@ class myCamera(threading.Thread):
 
              image     = self.getImage()
              image     = self.convertImage2RawImage(image)
+             self.video.image_size = self.image_size
              self.video.save_image(image=image)
 
              logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(datetime.now().strftime("%H:%M:%S")))
@@ -454,8 +455,6 @@ class myCamera(threading.Thread):
 
        if self.image_size == [0,0]: 
           self.image_size = self.sizeRawImage(raw)
-          if self.video:
-             self.video.image_size = self.image_size
           
        return raw
 
