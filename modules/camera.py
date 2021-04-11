@@ -29,6 +29,7 @@ class myVideoRecording(threading.Thread):
        self.name         = param["name"]
        self.param        = param
        self.recording    = False
+       self.processing   = False
        self.directory    = directory
        self.max_length   = 0.25*60
        self.info         = {}
@@ -160,6 +161,7 @@ class myVideoRecording(threading.Thread):
        '''
        Create video from images
        '''
+       self.processing = True
        cmd_create = self.ffmpeg_cmd
        cmd_create = cmd_create.replace("{INPUT_FILENAMES}", os.path.join(self.config.directory("videos"), self.filename("vimages") + "%" + str(self.count_length).zfill(2) + "d.jpg"))
        cmd_create = cmd_create.replace("{OUTPUT_FILENAME}", os.path.join(self.config.directory("videos"), self.filename("video")))
@@ -183,6 +185,7 @@ class myVideoRecording(threading.Thread):
        message = os.system(cmd_delete)
        logging.debug(message)       
 
+       self.processing = False
        logging.info("OK.")
        return
 

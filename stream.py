@@ -276,8 +276,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               frame = camera[which_cam].getImage()
                   
               if camera[which_cam].video.recording:                                          
-                 frame = camera[which_cam].setText2Image(frame, "Recording", position=(100,100), color=(0,0,255), fontScale=1, thickness=1)
-                 time.sleep(1)                     
+                 frame = camera[which_cam].setText2Image(frame, "Recording", position=(100,100), color=(0,0,255), fontScale=1, thickness=2)
                      
               if self.path.startswith("/detection/"):
                  frame = camera[which_cam].drawImageDetectionArea(image=frame)
@@ -291,6 +290,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  if "Errno 104" in str(e) or "Errno 32" in str(e):  logging.debug('Removed streaming client %s: %s', self.client_address, str(e))
                  else:                                              logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
 
+              for cam in camera:
+                if camera[cam].video.processing:                                          
+                  time.sleep(0.3)                     
+                  break
+                if camera[cam].video.recording:                                          
+                  time.sleep(1)                     
+                  break
 
         # images, css, js
         elif self.path.endswith('.css'):        self.streamFile(ftype='text/css',        content=read_html( directory='',       filename=self.path))
