@@ -276,7 +276,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
               frame = camera[which_cam].getImage()
                   
               if camera[which_cam].video.recording:                                          
-                 frame = camera[which_cam].setText2Image(frame, "Recording", position=(100,100), color=(0,0,255), fontScale=1, thickness=2)
+                 length    = str(round(camera[which_cam].video.info_recording()["length"]))
+                 framerate = str(round(camera[which_cam].video.info_recording()["framerate"]))
+                 frame = camera[which_cam].setText2Image(frame, "Recording", position=(20,40), color=(0,0,255), fontScale=1, thickness=2)
+                 frame = camera[which_cam].setText2Image(frame, "("+length+"s/"+framerate+"fps)", position=(200,40), color=(0,0,255), fontScale=0.5, thickness=1)
+                 
+              if camera[which_cam].video.processing:                                          
+                 length    = str(round(camera[which_cam].video.info_recording()["length"]))
+                 frame = camera[which_cam].setText2Image(frame, "Processing", position=(20,40), color=(0,255,255), fontScale=1, thickness=2)
+                 frame = camera[which_cam].setText2Image(frame, "("+length+"s)", position=(200,40), color=(0,255,255), fontScale=0.5, thickness=1)
                      
               if self.path.startswith("/detection/"):
                  frame = camera[which_cam].drawImageDetectionArea(image=frame)
@@ -291,12 +299,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  else:                                              logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
 
               for cam in camera:
-                if camera[cam].video.processing:                                          
-                  time.sleep(0.3)                     
-                  break
-                if camera[cam].video.recording:                                          
-                  time.sleep(1)                     
-                  break
+                if not camera[cam].error:
+                  if camera[cam].video.processing:                                          
+                    time.sleep(0.3)                     
+                    break
+                  if camera[cam].video.recording:                                          
+                    time.sleep(1)                     
+                    break
 
         # images, css, js
         elif self.path.endswith('.css'):        self.streamFile(ftype='text/css',        content=read_html( directory='',       filename=self.path))

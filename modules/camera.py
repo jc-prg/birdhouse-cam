@@ -92,7 +92,10 @@ class myVideoRecording(threading.Thread):
        self.info["stamp_end"] = datetime.now().timestamp()
        self.info["status"]    = "processing"
        self.info["length"]    = round(self.info["stamp_end"] - self.info["stamp_start"],1)
-       self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+       if float(self.info["length"]) > 1:
+          self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+       else:
+          self.info["framerate"] = 0
        
        self.create_video()
 
@@ -106,6 +109,19 @@ class myVideoRecording(threading.Thread):
        time.sleep(1)
        self.info = {}
        return
+       
+      
+   def info_recording(self):
+       '''
+       Get info of recording
+       '''
+       if self.recording:    self.info["length"] = round(datetime.now().timestamp() - self.info["stamp_start"],1)
+       elif self.processing: self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"],1)
+       
+       if float(self.info["length"]) > 1: self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+       else:                              self.info["framerate"] = 0
+       
+       return self.info
 
 
    def autostop(self):
