@@ -29,6 +29,7 @@ class myVideoRecording(threading.Thread):
        self.name         = param["name"]
        self.param        = param
        self.recording    = False
+       self.processing   = False
        self.directory    = directory
        self.max_length   = 0.25*60
        self.info         = {}
@@ -91,7 +92,10 @@ class myVideoRecording(threading.Thread):
        self.info["stamp_end"] = datetime.now().timestamp()
        self.info["status"]    = "processing"
        self.info["length"]    = round(self.info["stamp_end"] - self.info["stamp_start"],1)
-       self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+       if float(self.info["length"]) > 1:
+          self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+       else:
+          self.info["framerate"] = 0
        
        self.create_video()
 
@@ -105,6 +109,21 @@ class myVideoRecording(threading.Thread):
        time.sleep(1)
        self.info = {}
        return
+       
+      
+   def info_recording(self):
+       '''
+       Get info of recording
+       '''
+       if self.recording:    self.info["length"] = round(datetime.now().timestamp() - self.info["stamp_start"],1)
+       elif self.processing: self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"],1)
+       
+       self.info["image_size"]   = self.image_size
+
+       if float(self.info["length"]) > 1: self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+       else:                              self.info["framerate"] = 0
+       
+       return self.info
 
 
    def autostop(self):
@@ -160,6 +179,7 @@ class myVideoRecording(threading.Thread):
        '''
        Create video from images
        '''
+       self.processing = True
        cmd_create = self.ffmpeg_cmd
        cmd_create = cmd_create.replace("{INPUT_FILENAMES}", os.path.join(self.config.directory("videos"), self.filename("vimages") + "%" + str(self.count_length).zfill(2) + "d.jpg"))
        cmd_create = cmd_create.replace("{OUTPUT_FILENAME}", os.path.join(self.config.directory("videos"), self.filename("video")))
@@ -183,6 +203,7 @@ class myVideoRecording(threading.Thread):
        message = os.system(cmd_delete)
        logging.debug(message)       
 
+       self.processing = False
        logging.info("OK.")
        return
 
@@ -226,6 +247,7 @@ class myCamera(threading.Thread):
        self.record       = record
        self.running      = True
        self.error        = False
+       self.image_size   = [0, 0]
        
        logging.info("Starting camera ("+self.type+"/"+self.name+") ...")
 
@@ -277,9 +299,11 @@ class myCamera(threading.Thread):
           
        if not self.error:
         if self.param["video"]["allow_recording"]:
+          test = self.getImage()
           self.video = myVideoRecording(camera=self.id, param=self.param, directory=self.config.directory("videos"))
           self.video.config = config
           self.video.start()
+          self.video.image_size = self.image_size
 
        self.previous_image    = None
        self.previous_stamp    = "000000"
@@ -308,7 +332,12 @@ class myCamera(threading.Thread):
 
              image     = self.getImage()
              image     = self.convertImage2RawImage(image)
+             self.video.image_size = self.image_size
              self.video.save_image(image=image)
+
+             if self.image_size == [0,0]: 
+                self.image_size = self.sizeRawImage(image)
+                self.video.image_size = self.image_size          
 
              logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(datetime.now().strftime("%H:%M:%S")))
 
@@ -324,6 +353,10 @@ class myCamera(threading.Thread):
                  image         = self.convertImage2RawImage(image)
                  image_compare = self.convertRawImage2Gray(image)
 
+                 if self.image_size == [0,0]: 
+                    self.image_size = self.sizeRawImage(image)
+                    self.video.image_size = self.image_size          
+
                  if self.previous_image is not None:
                     similarity = str(self.compareRawImages(imageA=image_compare, imageB=self.previous_image, detection_area=self.param["similarity"]["detection_area"]))
 
@@ -335,7 +368,8 @@ class myCamera(threading.Thread):
                           "datestamp"   : datetime.now().strftime("%Y%m%d"),
                           "date"        : datetime.now().strftime("%d.%m.%Y"),
                           "time"        : datetime.now().strftime("%H:%M:%S"),
-                          "similarity"  : similarity
+                          "similarity"  : similarity,
+                          "size"        : self.image_size
                           }
 
                  pathLowres = os.path.join(self.config.param["path"], self.param["image_save"]["path"], self.config.imageName("lowres", stamp, self.id))
@@ -516,6 +550,21 @@ class myCamera(threading.Thread):
        image     = cv2.line(image, (x_end,y_end),     (x_end, y_start), color, thickness)
 
        return image
+
+   #----------------------------------
+   
+   def sizeRawImage(self, frame):
+       '''
+       Return size of raw image
+       '''
+       try:
+         height = frame.shape[0]
+         width  = frame.shape[1]
+         return [width, height]
+        
+       except Exception as e:
+         logging.warning("Could not analyze image: "+str(e))
+         return [0, 0]        
 
    #----------------------------------
 
