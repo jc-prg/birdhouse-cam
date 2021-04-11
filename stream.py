@@ -282,9 +282,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  frame = camera[which_cam].setText2Image(frame, "("+length+"s/"+framerate+"fps)", position=(200,40), color=(0,0,255), fontScale=0.5, thickness=1)
                  
               if camera[which_cam].video.processing:                                          
-                 length    = str(round(camera[which_cam].video.info_recording()["length"]))
+                 length     = str(round(camera[which_cam].video.info_recording()["length"]))
+                 image_size = str(camera[which_cam].video.info_recording()["image_size"])
                  frame = camera[which_cam].setText2Image(frame, "Processing", position=(20,40), color=(0,255,255), fontScale=1, thickness=2)
-                 frame = camera[which_cam].setText2Image(frame, "("+length+"s)", position=(200,40), color=(0,255,255), fontScale=0.5, thickness=1)
+                 frame = camera[which_cam].setText2Image(frame, "("+length+"s/"+image_size+")", position=(200,40), color=(0,255,255), fontScale=0.5, thickness=1)
                      
               if self.path.startswith("/detection/"):
                  frame = camera[which_cam].drawImageDetectionArea(image=frame)

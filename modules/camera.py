@@ -79,6 +79,7 @@ class myVideoRecording(threading.Thread):
        self.info["camera_name"]  = self.name
        self.info["directory"]    = self.directory
        self.info["image_count"]  = 0
+       self.info["image_size"]   = self.image_size
        return
 
        
@@ -245,6 +246,7 @@ class myCamera(threading.Thread):
        self.record       = record
        self.running      = True
        self.error        = False
+       self.image_size   = [0, 0]
        
        logging.info("Starting camera ("+self.type+"/"+self.name+") ...")
 
@@ -296,9 +298,11 @@ class myCamera(threading.Thread):
           
        if not self.error:
         if self.param["video"]["allow_recording"]:
+          test = self.getImage()
           self.video = myVideoRecording(camera=self.id, param=self.param, directory=self.config.directory("videos"))
           self.video.config = config
           self.video.start()
+          self.video.image_size = self.image_size
 
        self.previous_image    = None
        self.previous_stamp    = "000000"
@@ -354,7 +358,8 @@ class myCamera(threading.Thread):
                           "datestamp"   : datetime.now().strftime("%Y%m%d"),
                           "date"        : datetime.now().strftime("%d.%m.%Y"),
                           "time"        : datetime.now().strftime("%H:%M:%S"),
-                          "similarity"  : similarity
+                          "similarity"  : similarity,
+                          "size"        : self.image_size
                           }
 
                  pathLowres = os.path.join(self.config.param["path"], self.param["image_save"]["path"], self.config.imageName("lowres", stamp, self.id))
@@ -446,6 +451,9 @@ class myCamera(threading.Thread):
        else:
            logging.error("Camera type not supported ("+str(self.type)+").")
 
+       if self.image_size != [0,0]: 
+          self.image_size = sizeRawImage(raw)
+          
        return raw
 
 
@@ -535,6 +543,21 @@ class myCamera(threading.Thread):
        image     = cv2.line(image, (x_end,y_end),     (x_end, y_start), color, thickness)
 
        return image
+
+   #----------------------------------
+   
+   def sizeRawImage(self, frame):
+       '''
+       Return size of raw image
+       '''
+       try:
+         height = frame.shape[0]
+         width  = frame.shape[1]
+         
+       except Exception as e:
+         logging.warning("Could not analyze image: "+str(e))
+         
+       return [width, height]
 
    #----------------------------------
 
