@@ -335,6 +335,10 @@ class myCamera(threading.Thread):
              self.video.image_size = self.image_size
              self.video.save_image(image=image)
 
+             if self.image_size == [0,0]: 
+                self.image_size = self.sizeRawImage(image)
+                self.video.image_size = self.image_size          
+
              logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(datetime.now().strftime("%H:%M:%S")))
 
           # Image Recording
@@ -348,6 +352,10 @@ class myCamera(threading.Thread):
                  image         = self.getImage()
                  image         = self.convertImage2RawImage(image)
                  image_compare = self.convertRawImage2Gray(image)
+
+                 if self.image_size == [0,0]: 
+                    self.image_size = self.sizeRawImage(image)
+                    self.video.image_size = self.image_size          
 
                  if self.previous_image is not None:
                     similarity = str(self.compareRawImages(imageA=image_compare, imageB=self.previous_image, detection_area=self.param["similarity"]["detection_area"]))
@@ -453,9 +461,6 @@ class myCamera(threading.Thread):
        else:
            logging.error("Camera type not supported ("+str(self.type)+").")
 
-       if self.image_size == [0,0]: 
-          self.image_size = self.sizeRawImage(raw)
-          
        return raw
 
 
