@@ -453,7 +453,7 @@ class myCamera(threading.Thread):
            logging.error("Camera type not supported ("+str(self.type)+").")
 
        if self.image_size == [0,0]: 
-          self.image_size = sizeRawImage(raw)
+          self.image_size = self.sizeRawImage(raw)
           self.video.image_size = self.image_size
           
        return raw
