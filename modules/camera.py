@@ -79,7 +79,6 @@ class myVideoRecording(threading.Thread):
        self.info["camera_name"]  = self.name
        self.info["directory"]    = self.directory
        self.info["image_count"]  = 0
-       self.info["image_size"]   = self.image_size
        return
 
        
@@ -119,6 +118,8 @@ class myVideoRecording(threading.Thread):
        if self.recording:    self.info["length"] = round(datetime.now().timestamp() - self.info["stamp_start"],1)
        elif self.processing: self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"],1)
        
+       self.info["image_size"]   = self.image_size
+
        if float(self.info["length"]) > 1: self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
        else:                              self.info["framerate"] = 0
        
@@ -453,6 +454,7 @@ class myCamera(threading.Thread):
 
        if self.image_size != [0,0]: 
           self.image_size = sizeRawImage(raw)
+          self.video.image_size = self.image_size
           
        return raw
 
