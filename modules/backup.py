@@ -256,8 +256,6 @@ class myBackupRestore(threading.Thread):
             count += 1
             delete_keys.append(key)           
            
-       logging.info("Before deletion: " + str(len(files))) 
-       ####
        for key in delete_keys:
          try:
            for file_type in file_types:
@@ -271,8 +269,6 @@ class myBackupRestore(threading.Thread):
            if not "error" in response: response["error"] = ""
            logging.error("Error while deleting file '" + key + "' ... " + str(e))
            response["error"] += "delete file '" + key + "': " + str(e) + "\n"
-       ####
-       logging.info("After deletion: " + str(len(files))) 
 
        if delete_not_used:
          for file in files_in_dir:
