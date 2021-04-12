@@ -10,6 +10,22 @@ body      { background-color : black; color : white; }
     z-index      : 99;
     }
 
+.livestream_main_container.cam1 {
+    position     : relative;
+    top          : 20px;
+}
+
+.livestream_main_container.cam1cam2 {
+    position     : relative;
+    top          : -140px;
+}
+
+
+.livestream_main_container.cam2cam1 {
+    position     : relative;
+    top          : 20px;
+}
+
 .livestream_main {
     max-width        : 95vw;
     max-height       : 95vh;
@@ -17,24 +33,52 @@ body      { background-color : black; color : white; }
     border:1px solid white;
     }
     
+.livestream_record {
+    position  : relative;
+    z-index   : 105;
+}
+
+.livestream_record.cam2cam1 {
+    top       : -200px;
+    left      : -15%;
+}
+    
+.livestream_record.cam1cam2 {
+}
+    
+.livestream_record.cam1 {
+}
+    
 .livestream_2nd_container {
     width        : 25%;
     height       : 25%;
     z-index      : 100;
 }
 
+.livestream_2nd_container.cam1cam2 {
+    position     : relative;
+    top          : 140px;
+    left         : -35%;
+}
+
+.livestream_2nd_container.cam2cam1 {
+    position     : relative;
+    bottom       : 10%;
+    right        : -32%;
+}
+
 .livestream_2nd {
     max-width        : 25vw;
     max-height       : 25vh;
-    transform: scale(1.0);
-    border:1px solid white;
+    transform        : scale(1.0);
+    border           : 1px solid white;
 }
 
 .image_container { 
     padding : 2px; 
     float   : left; 
     valign  : left;
-    height : 180px;
+    height  : 180px;
 }
 
 .image_container_big { 
