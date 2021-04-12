@@ -776,7 +776,10 @@ class myViews(threading.Thread):
                   
            if self.adminAllowed():            
               if len(files_show) > 0:   html  += self.printImageGroup(title="Aufgezeichnete Videos", group_id="videos", image_group=files_show, category=category, header=True, header_open=True, header_count=['all','star'], cam=which_cam)
-              if len(files_delete) > 0: html  += self.printImageGroup(title="Zu recycelnde Videos", group_id="videos_recylce", image_group=files_delete, category=category, header=True, header_open=False, header_count=['recycle'], cam=which_cam)
+              if len(files_delete) > 0:
+                 url    = "/remove/video"
+                 intro  = "<a onclick='removeFiles(\"" + url + "\");' style='cursor:pointer;'>Delete all files marked for recycling ...</a>"
+                 html  += self.printImageGroup(title="Zu recycelnde Videos", group_id="videos_recylce", image_group=files_delete, category=category, header=True, header_open=False, header_count=['recycle'], cam=which_cam, intro=intro)
            else:
               if len(files_show) > 0:   html  += self.printImageGroup(title="Aufgezeichnete Videos", group_id="videos", image_group=files_show, category=category, header=False, header_open=True, header_count=['all','star'], cam=which_cam)
 
