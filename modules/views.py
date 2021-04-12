@@ -670,9 +670,8 @@ class myViews(threading.Thread):
 
         content["file_list"] = html
         content["subtitle"]  = myPages["backup"][0] + " (" + self.camera[which_cam].name + ")"
-        content["links"]     = self.printLinks(link_list=("live","favorit","today","videos"), current="backup", cam=which_cam)
-        if self.adminAllowed(): 
-          content["links"]   = self.printLinks(link_list=("live","favorit","today","today_complete","videos"), current="backup", cam=which_cam)
+        if self.adminAllowed(): content["links"]  = self.printLinks(link_list=("live","favorit","today","today_complete","videos"), current="backup", cam=which_cam)
+        else:                   content["links"]  = self.printLinks(link_list=("live","favorit","today","videos"), current="backup", cam=which_cam)
 
         content["file_list"] = html
         return template, content
@@ -794,7 +793,8 @@ class myViews(threading.Thread):
            html  += "<div class='separator' style='width:100%;text-color:lightred;'>Keine Videos vorhanden</div>"
 
         content["subtitle"]  = myPages["videos"][0] + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
-        content["links"]     = self.printLinks(link_list=("live","favorit","cam_info","today","backup"), current="today_complete", cam=which_cam)
+        if self.adminAllowed():  content["links"] = self.printLinks(link_list=("live","favorit","cam_info","today","backup"), current="today_complete", cam=which_cam)
+        else:                    content["links"] = self.printLinks(link_list=("live","favorit","today","backup"), current="today_complete", cam=which_cam)
         content["file_list"] = html
 
         return template, content
