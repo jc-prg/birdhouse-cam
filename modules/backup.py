@@ -219,48 +219,60 @@ class myBackupRestore(threading.Thread):
 
    #-----------------------------------
    
-   def delete_marked_files(self, date="", delete_not_used=False):
+   def delete_marked_files(self, ftype="image", date="", delete_not_used=False):
        '''
        delete files which are marked to be recycled for a specific date + database entry
        '''       
        response = {}
 
-       if date == "":  
-          files        = self.config.read(config='images')
-          directory    = self.config.directory(config='images')
+       if ftype == "image":
+         if date == "":  
+           files        = self.config.read(config='images')
+           directory    = self.config.directory(config='images')
+         else:
+           config_file  = self.config.read(config='backup', date=date)
+           directory    = self.config.directory(config='backup', date=date)
+           files        = config_file["files"]
+       elif ftype == "video":
+         files        = self.config.read(config='videos')
+         directory    = self.config.directory(config='videos')
        else:
-          config_file  = self.config.read(config='backup', date=date)
-          directory    = self.config.directory(config='backup', date=date)
-          files        = config_file["files"]
-
+         response["error"] = "file type not supported"
+         
+       file_types          = ["lowres","hires","video_file","thumbnail"]
        files_in_dir        = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and not ".json" in f]
        files_in_config     = []
        delete_keys         = []
-       delete_files        = []
        
        count = 0
-       for file in files:
-         if "date" in files[file] and files[file]["date"] == date[6:8]+"."+date[4:6]+"."+date[0:4]:
-            if "lowres" in files[file]: files_in_config.append(files[file]["lowres"])
-            if "hires"  in files[file]: files_in_config.append(files[file]["hires"])
-           
-         if "to_be_deleted" in files[file] and int(files[file]["to_be_deleted"]) == 1:
+       for key in files:
+       
+         if date != "": check_date = date[6:8]+"."+date[4:6]+"."+date[0:4]
+         if date == "" or ("date" in files[key] and check_date in files[key]["date"]):
+           for file_type in file_types:
+             if file_type in files[key]: files_in_config.append(files[key][file_type])
+                        
+         if "to_be_deleted" in files[key] and int(files[key]["to_be_deleted"]) == 1:
             count += 1
-            delete_keys.append(file)
-            if "lowres" in files[file]: delete_files.append(files[file]["lowres"])
-            if "hires"  in files[file]: delete_files.append(files[file]["hires"])
-            
+            delete_keys.append(key)           
+           
+       logging.info("Before deletion: " + str(len(files))) 
+       ####
        for key in delete_keys:
          try:
-           os.remove(os.path.join(directory, files[key]["lowres"]))
-           os.remove(os.path.join(directory, files[key]["hires"]))
+           for file_type in file_types:
+             if file_type in files[key]: 
+               if os.path.isfile(os.path.join(directory, files[key][file_type])):
+                 os.remove(os.path.join(directory, files[key][file_type]))
+                 logging.info("Delete - " + str(key) + ": " + os.path.join(directory, files[key][file_type]))
            del files[key]
-           print(key)
-           
+             
          except Exception as e:
            if not "error" in response: response["error"] = ""
-           logging.error("Error while deleting files ... " + str(e))
-           response["error"] += "delete file: " + str(e) + "\n"
+           logging.error("Error while deleting file '" + key + "' ... " + str(e))
+           response["error"] += "delete file '" + key + "': " + str(e) + "\n"
+       ####
+       logging.info("After deletion: " + str(len(files))) 
 
        if delete_not_used:
          for file in files_in_dir:
@@ -273,12 +285,15 @@ class myBackupRestore(threading.Thread):
        response["deleted_keys"]   = delete_keys
        response["files_not_used"] = len(files_in_dir) - len(files_in_config)
        response["files_used"]     = len(files_in_config)
-          
-       if date == "":
-          self.config.write(config='images', config_data=files)
-       else:
-          config_file["files"] = files
-          self.config.write(config='backup', config_data=config_file, date=date)
+       
+       if ftype == "image":
+         if date == "":
+           self.config.write(config='images', config_data=files)
+         else:
+           config_file["files"] = files
+           self.config.write(config='backup', config_data=config_file, date=date)
+       elif ftype == "video":
+         self.config.write(config='videos', config_data=files)
 
        logging.info("Deleted " + str(count) + " marked files in " + directory + ".")
        return response
