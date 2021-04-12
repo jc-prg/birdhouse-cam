@@ -245,7 +245,9 @@ class myViews(threading.Thread):
              else:                                   stamp_file = stamp_time
            
              if "favorit" in image_group[stamp]:
-                star   = self.printStar(file=category+stamp_file, favorit=image_group[stamp]["favorit"], cam=cam)
+                if "camera" in image_group[stamp]: selected_cam = image_group[stamp]["camera"]
+                else:                              selected_cam = cam
+                star   = self.printStar(file=category+stamp_file, favorit=image_group[stamp]["favorit"], cam=selected_cam)
                 if int(image_group[stamp]["favorit"]) == 1: 
                    border         = "lime"
                    count["star"] += 1
@@ -253,7 +255,9 @@ class myViews(threading.Thread):
                 star   = self.printStar(file=category+stamp_file, favorit=0, cam=cam)
                 
              if "to_be_deleted" in image_group[stamp]:
-                trash  = self.printRecycle(file=category+stamp_file, recycle=image_group[stamp]["to_be_deleted"], cam=cam)
+                if "camera" in image_group[stamp]: selected_cam = image_group[stamp]["camera"]
+                else:                              selected_cam = cam
+                trash  = self.printRecycle(file=category+stamp_file, recycle=image_group[stamp]["to_be_deleted"], cam=selected_cam)
                 if int(image_group[stamp]["to_be_deleted"]) == 1:
                    border            = "red"
                    count["recycle"] += 1
@@ -617,6 +621,7 @@ class myViews(threading.Thread):
              else:
                date             = file_data["info"]["date"]
                count            = file_data["info"]["count"]
+               first_img        = ""
                dir_size_cam     = 0
                dir_count_cam    = 0
                dir_count_delete = 0
@@ -624,8 +629,12 @@ class myViews(threading.Thread):
                if imageTitle in file_data["files"]:
                   image = os.path.join(directory, file_data["files"][imageTitle]["lowres"])
                else:
-                  first_img = list(reversed(sorted(file_data["files"].keys())))[0]
-                  image = os.path.join(directory, file_data["files"][first_img]["lowres"])
+                  for file in list(sorted(file_data["files"].keys())):
+                     if ("camera" in file_data["files"][file] and file_data["files"][file]["camera"] == which_cam):
+                        first_img = file
+                        break
+                  if first_img != "":           
+                    image = os.path.join(directory, file_data["files"][first_img]["lowres"])
 
                for file in file_data["files"]:
                   file_info    = file_data["files"][file]
@@ -769,8 +778,15 @@ class myViews(threading.Thread):
                if "to_be_deleted" in files_all[file] and int(files_all[file]["to_be_deleted"]) == 1: files_delete[file] = files_all[file]
                else:                                                                                 files_show[file]   = files_all[file]
                   
-           if len(files_show) > 0:   html  += self.printImageGroup(title="Aufgezeichnete Videos", group_id="videos", image_group=files_show, category=category, header=True, header_open=True, header_count=['all','star'], cam=which_cam)
-           if len(files_delete) > 0: html  += self.printImageGroup(title="Zu recycelnde Videos", group_id="videos_recylce", image_group=files_delete, category=category, header=True, header_open=False, header_count=['recycle'], cam=which_cam)
+           if self.adminAllowed():            
+              if len(files_show) > 0:   html  += self.printImageGroup(title="Aufgezeichnete Videos", group_id="videos", image_group=files_show, category=category, header=True, header_open=True, header_count=['all','star'], cam=which_cam)
+              if len(files_delete) > 0:
+                 url    = "/remove/video"
+                 intro  = "<a onclick='removeFiles(\"" + url + "\");' style='cursor:pointer;'>Delete all files marked for recycling ...</a>"
+                 html  += self.printImageGroup(title="Zu recycelnde Videos", group_id="videos_recylce", image_group=files_delete, category=category, header=True, header_open=False, header_count=['recycle'], cam=which_cam, intro=intro)
+           else:
+              if len(files_show) > 0:   html  += self.printImageGroup(title="Aufgezeichnete Videos", group_id="videos", image_group=files_show, category=category, header=False, header_open=True, header_count=['all','star'], cam=which_cam)
+
            if len(files_show) > 0 or len(files_delete) > 0: html += "<div class='separator'>&nbsp;<br/>&nbsp;</div>"
            
              

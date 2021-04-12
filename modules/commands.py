@@ -168,8 +168,9 @@ class myCommands(threading.Thread):
 
         if "delete_not_used" in param: delete_not_used = True
         else:                          delete_not_used = False
-        if param[2] == "backup":       response = self.backup.delete_marked_files(date=param[3], delete_not_used=delete_not_used)
-        elif param[2] == "today":      response = self.backup.delete_marked_files(date="",       delete_not_used=delete_not_used)
+        if param[2] == "backup":       response = self.backup.delete_marked_files(ftype="image", date=param[3], delete_not_used=delete_not_used)
+        elif param[2] == "today":      response = self.backup.delete_marked_files(ftype="image", date="",       delete_not_used=delete_not_used)
+        elif param[2] == "video":      response = self.backup.delete_marked_files(ftype="video", date="",       delete_not_used=delete_not_used)
         else:                          response["error"] = "not clear, which files shall be deleted"           
         response["command"] = ["delete files that are marked as 'to_be_deleted'" ,param]
 
