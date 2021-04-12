@@ -245,7 +245,9 @@ class myViews(threading.Thread):
              else:                                   stamp_file = stamp_time
            
              if "favorit" in image_group[stamp]:
-                star   = self.printStar(file=category+stamp_file, favorit=image_group[stamp]["favorit"], cam=cam)
+                if "camera" in image_group[stamp]: selected_cam = image_group[stamp]["camera"]
+                else:                              selected_cam = cam
+                star   = self.printStar(file=category+stamp_file, favorit=image_group[stamp]["favorit"], cam=selected_cam)
                 if int(image_group[stamp]["favorit"]) == 1: 
                    border         = "lime"
                    count["star"] += 1
@@ -253,7 +255,9 @@ class myViews(threading.Thread):
                 star   = self.printStar(file=category+stamp_file, favorit=0, cam=cam)
                 
              if "to_be_deleted" in image_group[stamp]:
-                trash  = self.printRecycle(file=category+stamp_file, recycle=image_group[stamp]["to_be_deleted"], cam=cam)
+                if "camera" in image_group[stamp]: selected_cam = image_group[stamp]["camera"]
+                else:                              selected_cam = cam
+                trash  = self.printRecycle(file=category+stamp_file, recycle=image_group[stamp]["to_be_deleted"], cam=selected_cam)
                 if int(image_group[stamp]["to_be_deleted"]) == 1:
                    border            = "red"
                    count["recycle"] += 1
