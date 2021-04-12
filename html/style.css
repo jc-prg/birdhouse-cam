@@ -4,68 +4,47 @@ a:visited { color  : white; }
 a:hover   { color  : yellow; }
 body      { background-color : black; color : white; }
 
+
+.livestream_main {
+    max-width        : 95vw;
+    max-height       : 95vh;
+    transform        : scale(0.98);
+    border           : 1px solid white;
+    }
+    
 .livestream_main_container {
+    position     : relative;
     width        : 100%;
     height       : 100%;
     z-index      : 99;
     }
 
-.livestream_main_container.cam1 {
-    position     : relative;
-    top          : 20px;
-}
-
-.livestream_main_container.cam1cam2 {
-    position     : relative;
-    top          : -140px;
-}
+.livestream_main_container.cam1     { top : 20px; }
+.livestream_main_container.cam1cam2 { top : -140px; }
+.livestream_main_container.cam2cam1 { top : 20px; }
 
 
-.livestream_main_container.cam2cam1 {
-    position     : relative;
-    top          : 20px;
-}
+.livestream_links                   { position : relative; }
+.livestream_links.cam1              { bottom :  -5%; }
+.livestream_links.cam1cam2          { bottom :  0px; }
+.livestream_links.cam2cam1          { bottom : 80px; }
 
-.livestream_main {
-    max-width        : 95vw;
-    max-height       : 95vh;
-    transform: scale(0.98);
-    border:1px solid white;
-    }
-    
+
+.livestream_startinfo               { position : relative; }
+.livestream_startinfo.cam1          { top :  40px; }
+.livestream_startinfo.cam1cam2      { top :  20px; }
+.livestream_startinfo.cam2cam1      { top : -120px; } 
+
+
 .livestream_record {
     position  : relative;
     z-index   : 105;
 }
 
-.livestream_record.cam2cam1 {
-    top       : -200px;
-    left      : -15%;
-}
+.livestream_record.cam1             {}
+.livestream_record.cam1cam2         {}
+.livestream_record.cam2cam1         { top : -200px; left : -15%; }
     
-.livestream_record.cam1cam2 {
-}
-    
-.livestream_record.cam1 {
-}
-    
-.livestream_2nd_container {
-    width        : 25%;
-    height       : 25%;
-    z-index      : 100;
-}
-
-.livestream_2nd_container.cam1cam2 {
-    position     : relative;
-    top          : 140px;
-    left         : -35%;
-}
-
-.livestream_2nd_container.cam2cam1 {
-    position     : relative;
-    bottom       : 10%;
-    right        : -32%;
-}
 
 .livestream_2nd {
     max-width        : 25vw;
@@ -73,6 +52,17 @@ body      { background-color : black; color : white; }
     transform        : scale(1.0);
     border           : 1px solid white;
 }
+
+.livestream_2nd_container {
+    position     : relative;
+    width        : 25%;
+    height       : 25%;
+    z-index      : 100;
+}
+
+.livestream_2nd_container.cam1cam2 { top    : 140px; left  : -35%; }
+.livestream_2nd_container.cam2cam1 { bottom : 10%;   right : -32%; }
+
 
 .image_container { 
     padding : 2px; 
