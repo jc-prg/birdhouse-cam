@@ -19,21 +19,21 @@ body      { background-color : black; color : white; }
     z-index      : 99;
     }
 
-.livestream_main_container.cam1     { top : 20px; }
+.livestream_main_container.cam1     { top :   20px; }
 .livestream_main_container.cam1cam2 { top : -140px; }
-.livestream_main_container.cam2cam1 { top : 20px; }
+.livestream_main_container.cam2cam1 { top :   20px; }
 
 
 .livestream_links                   { position : relative; }
 .livestream_links.cam1              { bottom :  -5%; }
-.livestream_links.cam1cam2          { bottom :  0px; }
-.livestream_links.cam2cam1          { bottom : 80px; }
+.livestream_links.cam1cam2          { bottom : -20px; }
+.livestream_links.cam2cam1          { bottom :  60px; }
 
 
 .livestream_startinfo               { position : relative; }
-.livestream_startinfo.cam1          { top :  40px; }
-.livestream_startinfo.cam1cam2      { top :  20px; }
-.livestream_startinfo.cam2cam1      { top : -120px; } 
+.livestream_startinfo.cam1          { top :   40px; }
+.livestream_startinfo.cam1cam2      { top :   30px; }
+.livestream_startinfo.cam2cam1      { top : -100px; } 
 
 
 .livestream_record {
@@ -61,7 +61,7 @@ body      { background-color : black; color : white; }
 }
 
 .livestream_2nd_container.cam1cam2 { top    : 140px; left  : -35%; }
-.livestream_2nd_container.cam2cam1 { bottom : 10%;   right : -32%; }
+.livestream_2nd_container.cam2cam1 { bottom : 13%;   right : -32%; }
 
 
 .image_container { 
