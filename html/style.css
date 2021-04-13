@@ -36,7 +36,7 @@ body      { background-color : black; color : white; }
 }
 
 .livestream_links                   { position : relative; }
-.livestream_startinfo               { position : relative; }
+.livestream_startinfo               { position : relative;  cursor   : pointer;  color : gray; font-size : 10px; }
 .livestream_record                  { position : relative;  z-index  : 105; }
 
 /* one live stream with cam1 */
