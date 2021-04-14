@@ -78,7 +78,7 @@ body      { background-color : black; color : white; }
     
 /* Both streams in big if bigger screen */
 
-@media (min-width: 1200px) {
+@media (min-width: 800px) {
 
   .livestream_main {}
   .livestream_main_container {}
