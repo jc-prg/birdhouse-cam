@@ -97,11 +97,11 @@ body      { background-color : black; color : white; }
   .livestream_content    {}
   .livestream_footer     {}
 
-  .livestream_main_container.cam1cam2 { top    :     0%; left   : -25%;   width : auto; }
-  .livestream_2nd_container.cam1cam2  { top    :  -100%; left   :  25%;  width : auto; }
-  .livestream_record.cam1cam2         { top    :  -110%; left   :  25%; }
-  .livestream_links.cam1cam2          { top    :  20px; left   : 0%; }
-  .livestream_startinfo.cam1cam2      { top    :  20px; left   : 0%; }
+  .livestream_main_container.cam1cam2 { top    :     0%;  left   : -25%;   width : auto; }
+  .livestream_2nd_container.cam1cam2  { top    :  -100%;  left   :  25%;  width : auto; }
+  .livestream_record.cam1cam2         { top    :  -105vh; left   :  25%; }
+  .livestream_links.cam1cam2          { top    :    20px; left   : 0%; }
+  .livestream_startinfo.cam1cam2      { top    :    20px; left   : 0%; }
 
   .livestream_main_container.cam2cam1 { top    :    0%;  left   : -25%;  z-index : 106;  }
   .livestream_2nd_container.cam2cam1  { top    : -100%;  left   :  25%;  z-index : 106;  }
