@@ -217,7 +217,13 @@ class myViews(threading.Thread):
 
         stamps = list(reversed(sorted(image_group.keys())))
         for stamp in stamps:
-           border     = "black"
+           border      = "black"
+           description = lowres = hires = javascript = lazzy = ""
+           
+### <<<<>>>> Check, why those vars are not initialized before self.printImageContainer ~line 300
+# >>> compare config_videos.json!
+# >>> sth went wrong during recording (video and thumb doesn't exist any more, record with "autostop")
+
            if "_" in stamp: 
               stamp_date, stamp_time = stamp.split("_")
               time       = stamp_date[6:8] + "." + stamp_date[4:6] + "." + stamp_date[0:4] + " " + stamp_time[0:2] + ":" + stamp_time[2:4]
