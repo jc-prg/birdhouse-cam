@@ -106,8 +106,8 @@ body      { background-color : black; color : white; }
   .livestream_main_container.cam2cam1 { top    :    0%;  left   : -25%;  z-index : 106;  }
   .livestream_2nd_container.cam2cam1  { position : absolute; top : 70px;  left : 25%; }
   .livestream_record.cam2cam1         { top    :   10vh; left   : -25%; }
-  .livestream_links.cam2cam1          { top    :   10vh; left   : 0%; }
-  .livestream_startinfo.cam2cam1      { top    :   10vh; left   : 0%; } 
+  .livestream_links.cam2cam1          { top    :   15vh; left   : 0%; }
+  .livestream_startinfo.cam2cam1      { top    :   15vh; left   : 0%; } 
 
 }
 
