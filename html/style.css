@@ -70,11 +70,11 @@ body      { background-color : black; color : white; }
 
 /* two live streams with cam2 as main stream */
 
-.livestream_main_container.cam2cam1 { top    :   20px; }
-.livestream_2nd_container.cam2cam1  { bottom :   13%;  right : -32%; }
-.livestream_record.cam2cam1         { top    : -200px; left  : -15%; }
-.livestream_startinfo.cam2cam1      { top    : -100px; } 
-.livestream_links.cam2cam1          { bottom :   60px; }
+.livestream_main_container.cam2cam1 { top :   20px; }
+.livestream_2nd_container.cam2cam1  { top : -100%;  right : -32%; }
+.livestream_record.cam2cam1         { top : -250px; }
+.livestream_links.cam2cam1          { top :    0px; }
+.livestream_startinfo.cam2cam1      { top :    0px; } 
     
 /* Both streams in big if bigger screen */
 
@@ -88,6 +88,7 @@ body      { background-color : black; color : white; }
       width        : 100%;
       height       : 100%;
   }
+  
   .livestream_2nd {
       max-width    : 95vw;
       max-height   : 95vh;
