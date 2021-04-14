@@ -99,15 +99,15 @@ body      { background-color : black; color : white; }
 
   .livestream_main_container.cam1cam2 { top    :     0%;  left   : -25%;   width : auto; }
   .livestream_2nd_container.cam1cam2  { position : absolute; top : 70px;  left : 25%; }
-  .livestream_record.cam1cam2         { top    :  -10vh; left   :  25%; }
+  .livestream_record.cam1cam2         { top    :   -10vh; left   :  25%; }
   .livestream_links.cam1cam2          { top    :    20px; left   : 0%; }
   .livestream_startinfo.cam1cam2      { top    :    20px; left   : 0%; }
 
   .livestream_main_container.cam2cam1 { top    :    0%;  left   : -25%;  z-index : 106;  }
   .livestream_2nd_container.cam2cam1  { position : absolute; top : 70px;  left : 25%; }
-  .livestream_record.cam2cam1         { top    : -10vh; left   : -25%; }
-  .livestream_links.cam2cam1          { top    :   20px; left   : 0%; }
-  .livestream_startinfo.cam2cam1      { top    :   20px; left   : 0%; } 
+  .livestream_record.cam2cam1         { top    :   10vh; left   : -25%; }
+  .livestream_links.cam2cam1          { top    :   10vh; left   : 0%; }
+  .livestream_startinfo.cam2cam1      { top    :   10vh; left   : 0%; } 
 
 }
 
