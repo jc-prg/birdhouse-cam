@@ -13,7 +13,6 @@ body      { background-color : black; color : white; }
     width        : 100%; 
     max-height   : 95vh; 
     valign       : left;
-    border       : solid 1px yellow; 
 }
 
 .livestream_footer {
@@ -49,7 +48,7 @@ body      { background-color : black; color : white; }
 }
 
 .livestream_links                   { position : relative; }
-.livestream_startinfo               { position : relative;  cursor   : pointer;  color : gray; font-size : 10px; top : -160px;}
+.livestream_startinfo               { position : relative;  cursor   : pointer;  color : gray; font-size : 10px; top : -160px; }
 .livestream_record                  { position : relative;  z-index  : 105; }
 
 /* one live stream with cam1 */
