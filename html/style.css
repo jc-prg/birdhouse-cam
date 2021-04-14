@@ -8,7 +8,6 @@ body      { background-color : black; color : white; }
 
 /* configuration of streams on index - potentially has to be adapted for different webcam resolutions */
 /* sample configuration: cam1/PiCamera = 1920x1080 + cam2/usb = 640x480 */
-/* further optimization required ... */
 
 .livestream_content { 
     width        : 100%; 
@@ -63,22 +62,22 @@ body      { background-color : black; color : white; }
 /* two live streams with cam1 as main stream */
 
 .livestream_main_container.cam1cam2 { top :   -0px; }
-.livestream_2nd_container.cam1cam2  { top :  -80vh;  left  : 30%; }
-.livestream_record.cam1cam2         { top :  -45vh; }
+.livestream_2nd_container.cam1cam2  { position : absolute; top : 40px;  left : 30px; }
+.livestream_record.cam1cam2         { top :    0px; }
 .livestream_links.cam1cam2          { top :   50px; }
 .livestream_startinfo.cam1cam2      { top :   50px; }
 
 /* two live streams with cam2 as main stream */
 
 .livestream_main_container.cam2cam1 { top :   20px; }
-.livestream_2nd_container.cam2cam1  { top :  -85vh;  left : -32%; }
-.livestream_record.cam2cam1         { top : -250px; }
-.livestream_links.cam2cam1          { top :    0px; }
-.livestream_startinfo.cam2cam1      { top :    0px; } 
+.livestream_2nd_container.cam2cam1  { position : absolute; top : 40px;  left : 30px; }
+.livestream_record.cam2cam1         { top :  -100px; }
+.livestream_links.cam2cam1          { top :   -50px; }
+.livestream_startinfo.cam2cam1      { top :   -50px; } 
     
 /* Both streams in big if bigger screen */
 
-@media (min-width: 800px) {
+@media (min-width: 1000px) {
 
   .livestream_main {}
   .livestream_main_container {}
@@ -99,14 +98,14 @@ body      { background-color : black; color : white; }
   .livestream_footer     {}
 
   .livestream_main_container.cam1cam2 { top    :     0%;  left   : -25%;   width : auto; }
-  .livestream_2nd_container.cam1cam2  { top    :   -90vh;  left   :  25%;  width : auto; }
-  .livestream_record.cam1cam2         { top    :  -105vh; left   :  25%; }
+  .livestream_2nd_container.cam1cam2  { position : absolute; top : 70px;  left : 25%; }
+  .livestream_record.cam1cam2         { top    :  -10vh; left   :  25%; }
   .livestream_links.cam1cam2          { top    :    20px; left   : 0%; }
   .livestream_startinfo.cam1cam2      { top    :    20px; left   : 0%; }
 
   .livestream_main_container.cam2cam1 { top    :    0%;  left   : -25%;  z-index : 106;  }
-  .livestream_2nd_container.cam2cam1  { top    :  -90vh;  left   :  25%;  z-index : 106;  }
-  .livestream_record.cam2cam1         { top    : -105vh; left   : -25%; }
+  .livestream_2nd_container.cam2cam1  { position : absolute; top : 70px;  left : 25%; }
+  .livestream_record.cam2cam1         { top    : -10vh; left   : -25%; }
   .livestream_links.cam2cam1          { top    :   20px; left   : 0%; }
   .livestream_startinfo.cam2cam1      { top    :   20px; left   : 0%; } 
 
