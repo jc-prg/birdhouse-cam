@@ -29,7 +29,7 @@ body      { background-color : black; color : white; }
 .livestream_main_container {
     position     : relative;
     width        : 100%;
-    height       : 100%;
+/*    height       : 100%; */
     z-index      : 99;
 }
 
@@ -63,17 +63,17 @@ body      { background-color : black; color : white; }
 
 .livestream_main_container.cam1cam2 { top :   -0px; }
 .livestream_2nd_container.cam1cam2  { position : absolute; top : 40px;  left : 30px; }
-.livestream_record.cam1cam2         { top :    0px; }
-.livestream_links.cam1cam2          { top :   50px; }
-.livestream_startinfo.cam1cam2      { top :   50px; }
+.livestream_record.cam1cam2         { top :   50px; }
+.livestream_links.cam1cam2          { top :   100px; }
+.livestream_startinfo.cam1cam2      { top :   100px; }
 
 /* two live streams with cam2 as main stream */
 
 .livestream_main_container.cam2cam1 { top :   20px; }
 .livestream_2nd_container.cam2cam1  { position : absolute; top : 40px;  left : 30px; }
-.livestream_record.cam2cam1         { top :  -100px; }
-.livestream_links.cam2cam1          { top :   -50px; }
-.livestream_startinfo.cam2cam1      { top :   -50px; } 
+.livestream_record.cam2cam1         { top :   50px; }
+.livestream_links.cam2cam1          { top :   100px; }
+.livestream_startinfo.cam2cam1      { top :   100px; } 
     
 /* Both streams in big if bigger screen */
 
