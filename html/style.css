@@ -1,56 +1,43 @@
+/* configuration of default HTML elements */ 
+
 div       { font-size : 13px; }
 a:link    { color  : yellow; }
 a:visited { color  : white; }
 a:hover   { color  : yellow; }
 body      { background-color : black; color : white; }
 
+/* configuration of streams on index - potentially has to be adapted for different webcam resolutions */
+/* sample configuration: cam1/PiCamera = 1920x1080 + cam2/usb = 640x480 */
+
+.livestream_content { 
+    width        : 100%; 
+    max-height   : 95vh; 
+    valign       : left;
+}
+
+.livestream_footer {
+    width        : 100%; 
+}
 
 .livestream_main {
-    max-width        : 95vw;
-    max-height       : 95vh;
-    transform        : scale(0.98);
-    border           : 1px solid white;
-    }
+    max-width    : 95vw;
+    max-height   : 95vh;
+    transform    : scale(0.98);
+    border       : 1px solid white;
+}
     
 .livestream_main_container {
     position     : relative;
     width        : 100%;
     height       : 100%;
     z-index      : 99;
-    }
-
-.livestream_main_container.cam1     { top :   20px; }
-.livestream_main_container.cam1cam2 { top : -140px; }
-.livestream_main_container.cam2cam1 { top :   20px; }
-
-
-.livestream_links                   { position : relative; }
-.livestream_links.cam1              { bottom :  -5%; }
-.livestream_links.cam1cam2          { bottom : -20px; }
-.livestream_links.cam2cam1          { bottom :  60px; }
-
-
-.livestream_startinfo               { position : relative; }
-.livestream_startinfo.cam1          { top :   40px; }
-.livestream_startinfo.cam1cam2      { top :   30px; }
-.livestream_startinfo.cam2cam1      { top : -100px; } 
-
-
-.livestream_record {
-    position  : relative;
-    z-index   : 105;
 }
 
-.livestream_record.cam1             {}
-.livestream_record.cam1cam2         {}
-.livestream_record.cam2cam1         { top : -200px; left : -15%; }
-    
-
 .livestream_2nd {
-    max-width        : 25vw;
-    max-height       : 25vh;
-    transform        : scale(1.0);
-    border           : 1px solid white;
+    max-width    : 25vw;
+    max-height   : 25vh;
+    transform    : scale(1.0);
+    border       : 1px solid white;
 }
 
 .livestream_2nd_container {
@@ -60,9 +47,71 @@ body      { background-color : black; color : white; }
     z-index      : 100;
 }
 
-.livestream_2nd_container.cam1cam2 { top    : 140px; left  : -35%; }
-.livestream_2nd_container.cam2cam1 { bottom : 13%;   right : -32%; }
+.livestream_links                   { position : relative; }
+.livestream_startinfo               { position : relative;  cursor   : pointer;  color : gray; font-size : 10px; top : -160px; }
+.livestream_record                  { position : relative;  z-index  : 105; }
 
+/* one live stream with cam1 */
+
+.livestream_main_container.cam1     { top    :   20px; }
+.livestream_2nd_container.cam1      {}
+.livestream_links.cam1              { bottom :   -5%; }
+.livestream_record.cam1             {}
+.livestream_startinfo.cam1          { top    :   40px; }
+
+/* two live streams with cam1 as main stream */
+
+.livestream_main_container.cam1cam2 { top :   -0px; }
+.livestream_2nd_container.cam1cam2  { top : -100%;  left  : 30%; }
+.livestream_record.cam1cam2         { top : -160px; }
+.livestream_links.cam1cam2          { top :   50px; }
+.livestream_startinfo.cam1cam2      { top :   50px; }
+
+/* two live streams with cam2 as main stream */
+
+.livestream_main_container.cam2cam1 { top :   20px; }
+.livestream_2nd_container.cam2cam1  { top : -100%;  right : -32%; }
+.livestream_record.cam2cam1         { top : -250px; }
+.livestream_links.cam2cam1          { top :    0px; }
+.livestream_startinfo.cam2cam1      { top :    0px; } 
+    
+/* Both streams in big if bigger screen */
+
+@media (min-width: 800px) {
+
+  .livestream_main {}
+  .livestream_main_container {}
+
+  .livestream_2nd_container {
+      valign       : left;
+      width        : 100%;
+      height       : 100%;
+  }
+  
+  .livestream_2nd {
+      max-width    : 95vw;
+      max-height   : 95vh;
+      transform    : scale(0.98);
+  }
+
+  .livestream_content    {}
+  .livestream_footer     {}
+
+  .livestream_main_container.cam1cam2 { top    :     0%; left   : -25%;   width : auto; }
+  .livestream_2nd_container.cam1cam2  { top    :  -100%; left   :  25%;  width : auto; }
+  .livestream_record.cam1cam2         { top    :  -110%; left   :  25%; }
+  .livestream_links.cam1cam2          { top    :  20px; left   : 0%; }
+  .livestream_startinfo.cam1cam2      { top    :  20px; left   : 0%; }
+
+  .livestream_main_container.cam2cam1 { top    :    0%;  left   : -25%;  z-index : 106;  }
+  .livestream_2nd_container.cam2cam1  { top    : -100%;  left   :  25%;  z-index : 106;  }
+  .livestream_record.cam2cam1         { top    : -105vh; left   : -25%; }
+  .livestream_links.cam2cam1          { top    :   20px; left   : 0%; }
+  .livestream_startinfo.cam2cam1      { top    :   20px; left   : 0%; } 
+
+}
+
+/* configuration of image / thumbnail sizes */
 
 .image_container { 
     padding : 2px; 
@@ -97,17 +146,7 @@ body      { background-color : black; color : white; }
     z-index : 90;
 }
 
-.play_button {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    left: 50%;
-    top: 40%;
-    margin-left: -15px; /*half of the width */
-    margin-top: -15px; /*half of the height */
-    cursor: pointer;
-    opacity: 70%;
-}
+/* configuration of separator and group headers */
 
 .separator {
     padding : 2px;
@@ -126,6 +165,8 @@ body      { background-color : black; color : white; }
     border-bottom : 1px solid gray;
     text-align    : left;
     }
+    
+/* configuration of elements on camera info page */
 
 .camera_info {
     padding:2px;
@@ -148,6 +189,20 @@ body      { background-color : black; color : white; }
     width : 50%;
 }
 
+/* configuration of delete, recycle and video play symbols (overlay on images) */
+
+.play_button {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    left: 50%;
+    top: 40%;
+    margin-left: -15px; /*half of the width */
+    margin-top: -15px; /*half of the height */
+    cursor: pointer;
+    opacity: 70%;
+}
+
 .trash { 
     position : relative;
     top : 6px; 
@@ -157,6 +212,7 @@ body      { background-color : black; color : white; }
     z-index : 100;
     cursor : pointer;
 }
+
 .trash_img { 
     width : 20px;
     height : 20px;
@@ -184,6 +240,9 @@ body      { background-color : black; color : white; }
     z-index : 100;
     cursor : pointer;
 }
+
+/* configuration of hires overlay - image and video */
+
 .overlay {
     position : fixed;
     display  : none;
@@ -195,6 +254,7 @@ body      { background-color : black; color : white; }
     background-color : black;
     opacity          : 80%;
 }
+
 .overlay_content {
     position : fixed;
     display  : none;
@@ -204,6 +264,7 @@ body      { background-color : black; color : white; }
     width    : 100%;
     z-index  : 102;
 }
+
 #overlay_close {
     position : absolute;
     top      : 20px;
@@ -244,3 +305,5 @@ body      { background-color : black; color : white; }
     border           : 5px solid white;
     z-index          : 103;
   }
+  
+  
