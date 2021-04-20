@@ -894,6 +894,9 @@ class myViews(threading.Thread):
             
             html += data["video_file"]
             
+## link video player
+## link video player to shortend version, if available
+            
             html += "</div>\n"
             html += "<div class='camera_info_text'>"
             
@@ -902,7 +905,9 @@ class myViews(threading.Thread):
             html += "Framerate: " + str(data["framerate"]) + "<br/>"
             html += "Bildgr&ouml;&szlig;e: " + str(data["image_size"]) + "<br/>"
             
-            if "video_file_short" in data: html += "Kurzversion: vorhanden <br/>"
+## create shortend video based on TC in and TC out (start with seconds, overwrite)
+            
+            if "video_file_short" in data: html += "Kurzversion: vorhanden ("+str(data["video_file_short_length"])+"s)<br/>"
             else:                          html += "Kurzversion: nicht vorhanden <br/>"
 
             html += "&nbsp;<br/>"

@@ -717,6 +717,10 @@ class myCamera(threading.Thread):
           result      = self.video.trim_video(input_file=input_file, output_file=output_file, start_timecode=start, end_timecode=end)
           if result == "OK":
              config_file[video_id]["video_file_short"] = output_file
+             config_file[video_id]["video_file_short_start"]   = float(start)
+             config_file[video_id]["video_file_short_end"]     = float(end)
+             config_file[video_id]["video_file_short_length"]  = float(end) - float(start)
+             
              self.config.write("videos",config_file)           
              return { "result" : "OK" }
           else:
