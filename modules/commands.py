@@ -246,3 +246,29 @@ class myCommands(threading.Thread):
         
     #-------------------------------------
     
+    def createShortVideo(self, server):
+        '''
+        create a short video and save in DB (not deleting the old video at the moment)
+        '''
+        param        = server.path.split("/")
+        response     = {}
+        
+        if len(param) < 6:
+           response["result"] = "Error: Parameters are missing (/create-short-video/video-id/start-timecode/end-timecode/which-cam/)"
+           logging.warning("Create short version of video ... Parameters are missing.")
+           
+        else:
+           logging.info("Create short version of video '"+str(param[2])+"' ["+str(param[3])+":"+str(param[4])+"] ...")
+           which_cam    = param[5]
+           config_data  = self.config.read_cache(config="videos")
+           
+           if param[2] not in config_data:
+              response["result"] = "Error: video ID '"+str(param[2])+"' doesn't exist."
+              logging.warning("VideoID '"+str(param[2])+"' doesn't exist.")
+              
+           else:
+              response            = self.camera[which_cam].trimVideo(video_id=param[2], start=param[3], end=param[4])
+              response["command"] = ["Create short version of video"]
+              response["video"]   = { "video_id" : param[2], "start" : param[3], "end" : param[4] }
+    
+        return response

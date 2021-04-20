@@ -288,6 +288,14 @@ class myViews(threading.Thread):
                    javascript ="imageOverlay(\"" + url_dir + image_group[stamp]["hires"] + "\",\"" + description + "\");"
                    
              # if video
+             elif "video_file_short" in image_group[stamp]:
+                description = image_group[stamp]["date"].replace(" ","<br/>") + "<br/>" + image_group[stamp]["camera"].upper() + ": " + image_group[stamp]["camera_name"] + "*"
+                lowres      = "videos/" + image_group[stamp]["thumbnail"]
+                hires       = ""
+                video_link  = self.camera[cam].param["video"]["streaming_server"] + image_group[stamp]["video_file_short"]
+                javascript  = "videoOverlay(\"" + video_link + "\",\"" + description + "\");"
+                image_group[stamp]["lowres"] = image_group[stamp]["thumbnail"]
+
              elif "video_file" in image_group[stamp]:
                 description = image_group[stamp]["date"].replace(" ","<br/>") + "<br/>" + image_group[stamp]["camera"].upper() + ": " + image_group[stamp]["camera_name"]
                 lowres      = "videos/" + image_group[stamp]["thumbnail"]

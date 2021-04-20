@@ -205,12 +205,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
         
-        if self.path.startswith("/favorit/"):            response = commands.setStatusFavorit(self)
-        elif self.path.startswith("/recycle/"):          response = commands.setStatusRecycle(self)
-        elif self.path.startswith('/remove/'):           response = commands.deleteMarkedFiles(self)
-        elif self.path.startswith("/start/recording/"):  response = commands.startRecording(self)
-        elif self.path.startswith("/stop/recording/"):   response = commands.stopRecording(self)
-        elif self.path.startswith("/restart-cameras/"):  response = commands.restartCameras(self)
+        if self.path.startswith("/favorit/"):              response = commands.setStatusFavorit(self)
+        elif self.path.startswith("/recycle/"):            response = commands.setStatusRecycle(self)
+        elif self.path.startswith('/remove/'):             response = commands.deleteMarkedFiles(self)
+        elif self.path.startswith("/start/recording/"):    response = commands.startRecording(self)
+        elif self.path.startswith("/stop/recording/"):     response = commands.stopRecording(self)
+        elif self.path.startswith("/restart-cameras/"):    response = commands.restartCameras(self)
+        elif self.path.startswith("/create-short-video/"): response = commands.createShortVideo(self)
         else:
            self.sendError()
            return
