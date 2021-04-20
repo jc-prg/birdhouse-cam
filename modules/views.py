@@ -290,6 +290,7 @@ class myViews(threading.Thread):
              # if video
              elif "video_file_short" in image_group[stamp]:
                 description = image_group[stamp]["date"].replace(" ","<br/>") + "<br/>" + image_group[stamp]["camera"].upper() + ": " + image_group[stamp]["camera_name"] + "*"
+                description = "<a href=\"/"+stamp+"/video-info.html\">" + description + "</a>"
                 lowres      = "videos/" + image_group[stamp]["thumbnail"]
                 hires       = ""
                 video_link  = self.camera[cam].param["video"]["streaming_server"] + image_group[stamp]["video_file_short"]
@@ -298,6 +299,7 @@ class myViews(threading.Thread):
 
              elif "video_file" in image_group[stamp]:
                 description = image_group[stamp]["date"].replace(" ","<br/>") + "<br/>" + image_group[stamp]["camera"].upper() + ": " + image_group[stamp]["camera_name"]
+                description = "<a href=\"/"+stamp+"/video-info.html\">" + description + "</a>"
                 lowres      = "videos/" + image_group[stamp]["thumbnail"]
                 hires       = ""
                 video_link  = self.camera[cam].param["video"]["streaming_server"] + image_group[stamp]["video_file"]
@@ -870,4 +872,53 @@ class myViews(threading.Thread):
         return template, content
 
     #-------------------------------------
+    
+    def detailViewVideo(self, server):
+        '''
+        Show details and edit options for a video file
+        '''
+        self.server           = server
+        path, which_cam       = self.selectedCamera()
+        content               = {}
+        content["active_cam"] = which_cam
+        param                 = server.path.split("/")
+        template              = "list.html"
+        html                  = ""
+        count                 = 0
+        
+        config_data           = self.config.read_cache(config="videos")
+        if param[1] in config_data and "video_file" in config_data[param[1]]:
+            data  = config_data[param[1]]
+            html += "<div class='camera_info'>\n"
+            html += "<div class='camera_info_image'>"
+            
+            html += data["video_file"]
+            
+            html += "</div>\n"
+            html += "<div class='camera_info_text'>"
+            
+            html += "<b>" + data["date"] + "</b><br/>&nbsp;<br/>"
+            html += "L&auml;nge: " + str(data["length"]) + "<br/>"
+            html += "Framerate: " + str(data["framerate"]) + "<br/>"
+            html += "Bildgr&ouml;&szlig;e: " + str(data["image_size"]) + "<br/>"
+            
+            if "video_file_short" in data: html += "Kurzversion: vorhanden <br/>"
+            else:                          html += "Kurzversion: nicht vorhanden <br/>"
+
+            html += "&nbsp;<br/>"
+
+            html += "</div>\n"
+            html += "</div>\n"
+
+        elif param[1] in config_data:
+           html += "<div class='separator'>Keine Videodatei f&uuml;r die ID &quot;" + param[1] + "&quot; verf&uuml;gbar.</div>"        
+        
+        else:
+           html += "<div class='separator'>Kein Video mit dieser ID &quot;" + param[1] + "&quot; verf&uuml;gbar.</div>"        
+
+        content["subtitle"]  = myPages["video_info"][0]
+        content["links"]     = self.printLinks(link_list=("live","favorit","videos"), cam=which_cam)
+        content["file_list"] = html
+
+        return template, content
 
