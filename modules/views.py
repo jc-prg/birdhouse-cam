@@ -939,11 +939,11 @@ class myViews(threading.Thread):
 
             html += "<b>" + data["date"] + "</b><br/>&nbsp;<br/>"
             html += "Kamera: " + data["camera"].upper() + " - " + data["camera_name"] + "<br/>"
-            html += "L&auml;nge: " + str(data["length"]) + "<br/>"
-            html += "Framerate: " + str(data["framerate"]) + "<br/>"
+            html += "L&auml;nge: " + str(round(data["length"],1)) + " s<br/>"
+            html += "Framerate: " + str(data["framerate"]) + " fps<br/>"
             html += "Bildgr&ouml;&szlig;e: " + str(data["image_size"]) + "<br/>"
             
-            if "video_file_short" in data: html += "Kurzversion: "+str(data["video_file_short_length"])+"<br/>"
+            if "video_file_short" in data: html += "Kurzversion: "+str(round(data["video_file_short_length"],1))+" s<br/>"
             else:                          html += "Kurzversion: nicht vorhanden <br/>"
 
             if self.adminAllowed():
