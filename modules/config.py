@@ -29,7 +29,8 @@ class myConfig(threading.Thread):
            "main"   : "",
            "images" : "images/",
            "backup" : "images/",
-           "videos" : "videos/"
+           "videos" : "videos/",
+           "html"   : "html/"
            }
        self.files          = {
            "backup" : "config_images.json",

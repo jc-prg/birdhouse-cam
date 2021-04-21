@@ -55,6 +55,12 @@ $ nano config.json
 @reboot /usr/bin/python3 /<path_to_script>/videostream.py
 ```
 
+## Sources
+
+Thanks for your inspiration and code snippets:
+
+* [https://github.com/Freshman-tech/custom-html5-video](https://github.com/Freshman-tech/custom-html5-video)
+
 ## Impressions
 ![Screenshot 01](info/screenshot_06.png)
 ![Screenshot 02](info/screenshot_07.png)
