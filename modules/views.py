@@ -311,7 +311,8 @@ class myViews(threading.Thread):
              # if video
              elif "video_file_short" in image_group[stamp]:
                 description = image_group[stamp]["date"].replace(" ","<br/>") + "<br/>" + image_group[stamp]["camera"].upper() + ": " + image_group[stamp]["camera_name"] + "*"
-                description = "<a href=\"/"+stamp+"/video-info.html\">" + description + "</a>"
+                #description = "<a href=\"/"+stamp+"/video-info.html\">" + description + "</a>"
+                description = "<a href=/"+stamp+"/video-info.html>" + description + "</a>"
                 lowres      = "videos/" + image_group[stamp]["thumbnail"]
                 hires       = ""
                 video_link  = self.camera[cam].param["video"]["streaming_server"] + image_group[stamp]["video_file_short"]
@@ -320,7 +321,8 @@ class myViews(threading.Thread):
 
              elif "video_file" in image_group[stamp]:
                 description = image_group[stamp]["date"].replace(" ","<br/>") + "<br/>" + image_group[stamp]["camera"].upper() + ": " + image_group[stamp]["camera_name"]
-                description = "<a href=\"/"+stamp+"/video-info.html\">" + description + "</a>"
+                #description = "<a href=\"/"+stamp+"/video-info.html\">" + description + "</a>"
+                description = "<a href=/"+stamp+"/video-info.html>" + description + "</a>"
                 lowres      = "videos/" + image_group[stamp]["thumbnail"]
                 hires       = ""
                 video_link  = self.camera[cam].param["video"]["streaming_server"] + image_group[stamp]["video_file"]
