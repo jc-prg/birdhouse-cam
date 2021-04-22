@@ -34,6 +34,27 @@ from modules.config  import myConfig
 from modules.presets import myParameters
 from modules.presets import myPages
 
+
+#----------------------------------------------------
+
+def read_html(filename, content=""):
+   '''
+   read html file, replace placeholders and return for stream via webserver
+   '''
+   if not os.path.isfile(filename):
+     logging.warning("File '"+filename+"' does not exist!")
+     return ""
+
+   with open(filename, "r") as page:
+     PAGE = page.read()
+     
+   if content != "":
+     for param in content:
+       if "<!--"+param+"-->" in PAGE: PAGE = PAGE.replace("<!--"+param+"-->",content[param])
+       
+   #PAGE = PAGE.encode('utf-8')
+   return PAGE
+
 #----------------------------------------------------
 
 
@@ -288,8 +309,18 @@ class myViews(threading.Thread):
                    javascript ="imageOverlay(\"" + url_dir + image_group[stamp]["hires"] + "\",\"" + description + "\");"
                    
              # if video
+             elif "video_file_short" in image_group[stamp]:
+                description = image_group[stamp]["date"].replace(" ","<br/>") + "<br/>" + image_group[stamp]["camera"].upper() + ": " + image_group[stamp]["camera_name"] + "*"
+                description = "<a href=\"/"+stamp+"/video-info.html\">" + description + "</a>"
+                lowres      = "videos/" + image_group[stamp]["thumbnail"]
+                hires       = ""
+                video_link  = self.camera[cam].param["video"]["streaming_server"] + image_group[stamp]["video_file_short"]
+                javascript  = "videoOverlay(\"" + video_link + "\",\"" + description + "\");"
+                image_group[stamp]["lowres"] = image_group[stamp]["thumbnail"]
+
              elif "video_file" in image_group[stamp]:
                 description = image_group[stamp]["date"].replace(" ","<br/>") + "<br/>" + image_group[stamp]["camera"].upper() + ": " + image_group[stamp]["camera_name"]
+                description = "<a href=\"/"+stamp+"/video-info.html\">" + description + "</a>"
                 lowres      = "videos/" + image_group[stamp]["thumbnail"]
                 hires       = ""
                 video_link  = self.camera[cam].param["video"]["streaming_server"] + image_group[stamp]["video_file"]
@@ -862,4 +893,94 @@ class myViews(threading.Thread):
         return template, content
 
     #-------------------------------------
+    
+    def detailViewVideo(self, server):
+        '''
+        Show details and edit options for a video file
+        '''
+        self.server           = server
+        path, which_cam       = self.selectedCamera()
+        content               = {}
+        content["active_cam"] = which_cam
+        param                 = server.path.split("/")
+        template              = "list.html"
+        html                  = ""
+        count                 = 0
+        
+        config_data           = self.config.read_cache(config="videos")
+        if param[1] in config_data and "video_file" in config_data[param[1]]:
+            data        = config_data[param[1]]
+            description = ""
+            html += "<div class='camera_info'>\n"
+            html += "<div class='camera_info_image'>"
+            
+            if "video_file" in data:
+               description = "<b>Vollst&auml;ndiges Video</b>"
+               lowres      = "/videos/"+data["thumbnail"]
+               video_link  = self.camera[which_cam].param["video"]["streaming_server"] + data["video_file"]
+               javascript  = "videoOverlay(\"" + video_link + "\",\"" + description + "\");"           
+               html += self.printImageContainer(description=description, lowres=lowres, javascript=javascript, star='', window='self', border='white') 
+               
+            if "video_file_short" in data:
+               description  = "<b>Gek&uuml;rztes Video</b>"
+               description2 = description + "<br/>Start: "+str(round(data["video_file_short_start"],1))+"s / Ende: "+str(round(data["video_file_short_end"],1))+"s"
+               lowres       = "/videos/"+data["thumbnail"]
+               video_link   = self.camera[which_cam].param["video"]["streaming_server"] + data["video_file_short"]
+               javascript   = "videoOverlay(\"" + video_link + "\",\"" + description2 + "\");"           
+               html += self.printImageContainer(description=description, lowres=lowres, javascript=javascript, star='', window='self', border='white') 
+               
+            if description == "":
+               html += "<center>"
+               html += "Kein Videofile vorhanden."
+               html += "</center>"
+                        
+            html += "</div>\n"
+            html += "<div class='camera_info_text'>"
+
+            html += "<b>" + data["date"] + "</b><br/>&nbsp;<br/>"
+            html += "Kamera: " + data["camera"].upper() + " - " + data["camera_name"] + "<br/>"
+            html += "L&auml;nge: " + str(round(data["length"],1)) + " s<br/>"
+            html += "Framerate: " + str(data["framerate"]) + " fps<br/>"
+            if "image_size" in data:
+               html += "Bildgr&ouml;&szlig;e: " + str(data["image_size"]) + "<br/>"
+            
+            if "video_file_short" in data: html += "Kurzversion: "+str(round(data["video_file_short_length"],1))+" s<br/>"
+            else:                          html += "Kurzversion: nicht vorhanden <br/>"
+
+            if self.adminAllowed():
+               html += "&nbsp;<br/>"
+               html += "Bearbeiten: &nbsp;  <button onclick=\"toggleVideoEdit();\" class=\"button-video-edit\">&nbsp;K&uuml;rzen&nbsp;</button>"
+               
+            html += "&nbsp;<br/>"
+            html += "</div>\n"
+            html += "</div>\n"
+            
+            if self.adminAllowed():
+
+               files = {}
+               files["VIDEOFILE"]  = self.camera[which_cam].param["video"]["streaming_server"] + data["video_file"]
+               files["THUMBNAIL"]  = data["thumbnail"]
+               files["LENGTH"]     = str(data["length"])
+               files["VIDEOID"]    = param[1]
+               files["ACTIVE" ]    = which_cam
+               files["JAVASCRIPT"] = "createShortVideo();"
+            
+               filename = os.path.join(self.config.param["path"],self.config.directory(config="html"),"video-player.html")
+               logging.info(filename)
+            
+               html += "<div id='camera_video_edit' class='camera_video_edit'>\n"
+               html += read_html(filename=filename, content=files)
+               html += "<br/>&nbsp;</div>\n"
+
+        elif param[1] in config_data:
+           html += "<div class='separator'>Keine Videodatei f&uuml;r die ID &quot;" + param[1] + "&quot; verf&uuml;gbar.</div>"        
+        
+        else:
+           html += "<div class='separator'>Kein Video mit dieser ID &quot;" + param[1] + "&quot; verf&uuml;gbar.</div>"        
+
+        content["subtitle"]  = myPages["video_info"][0]
+        content["links"]     = self.printLinks(link_list=("live","favorit","videos"), cam=which_cam)
+        content["file_list"] = html
+
+        return template, content
 

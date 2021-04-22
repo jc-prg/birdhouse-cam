@@ -169,24 +169,33 @@ body      { background-color : black; color : white; }
 /* configuration of elements on camera info page */
 
 .camera_info {
-    padding:2px;
-    float:left;
+    padding    : 2px;
+    float      : left;
     text-align : center;
-    width:100%
+    width      : 100%
 }
 
 .camera_info_image { 
-    float : left;
-    margin: 5px;
-    width : 30%;
-    min-width: 120px;
+    float      : left;
+    margin     : 5px;
+    width      : 30%;
+    min-width  : 120px;
 }
 
 .camera_info_text { 
-    float : left;
-    margin: 5px;
+    float      : left;
+    margin     : 5px;
     text-align : left;
-    width : 50%;
+    width      : 50%;
+}
+
+.camera_video_edit { 
+    float      : left;
+    margin     : 5px;
+    display    : none;
+    width      : 100%;
+    text-align : center;
+    padding    : auto; 
 }
 
 /* configuration of delete, recycle and video play symbols (overlay on images) */
@@ -306,4 +315,20 @@ body      { background-color : black; color : white; }
     z-index          : 103;
   }
   
-  
+/* input video edit */
+
+.input-video-edit {
+    width            : 80px;
+    height           : 25px;
+    background       : gray;
+    border-radius    : 5px;
+    color            : black;
+}
+
+.button-video-edit {
+//    width            : 80px;
+    height           : 25px;
+    background       : gray;
+    border-radius    : 5px;
+    color            : black;
+}

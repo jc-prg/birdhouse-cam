@@ -67,9 +67,45 @@ function removeFiles(command) {
    }
    
 function removeFilesAnswer() {
-   alert("Files removed");
-   location.reload();
-   }
+	alert("Files removed");
+	location.reload();
+	}
+
+//----------------------------------------
+
+function createShortVideo() {
+        video_id = document.getElementById("video-id");
+        if (video_id != null) {
+                video_id_value = video_id.value;
+                tc_in          = document.getElementById("tc-in").value;
+                tc_out         = document.getElementById("tc-out").value;
+                cam            = document.getElementById("active-cam").value;
+                
+                //alert("/create-short-video/"+video_id_value+"/"+tc_in+"/"+tc_out+"/"+cam);
+	        requestAPI("/create-short-video/"+video_id_value+"/"+tc_in+"/"+tc_out+"/"+cam+"/", callback=createShortVideoShow, index=video_id);
+	        }
+	else {
+	        console.error("createShortVideo: Field 'video-id' is missing!");
+		}
+	}
+	
+	
+function createShortVideoShow(index) {
+	alert("Short video created: " + index);
+	location.reload();
+	}
+	
+	
+function toggleVideoEdit() {
+        video_edit = document.getElementById("camera_video_edit");
+        if (video_edit != null) {
+        	if (video_edit.style.display == "none")	{ video_edit.style.display = "block"; }
+        	else						{ video_edit.style.display = "none"; }
+        	}
+	else {
+	        console.error("toggleVideoEdit: Video edit doesn't exist.");
+		}
+	}
 
 //----------------------------------------
 

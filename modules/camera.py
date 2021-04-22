@@ -43,6 +43,7 @@ class myVideoRecording(threading.Thread):
 #       self.ffmpeg_cmd  += "-vcodec libx264 -preset fast -profile:v baseline -lossless 1 -vf \"scale=720:540,setsar=1,pad=720:540:0:0\" -acodec aac -ac 2 -ar 22050 -ab 48k"
        
        self.ffmpeg_cmd  += " {OUTPUT_FILENAME}"
+       self.ffmpeg_trim  = "ffmpeg -y -i {INPUT_FILENAME} -c copy -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
        self.count_length = 8
 
    #----------------------------------
@@ -207,6 +208,26 @@ class myVideoRecording(threading.Thread):
        logging.info("OK.")
        return
 
+
+   def trim_video(self, input_file, output_file, start_timecode, end_timecode):
+       '''
+       creates a shortend version of the video
+       '''
+       input_file  = os.path.join(self.config.directory("videos"), input_file)
+       output_file = os.path.join(self.config.directory("videos"), output_file)
+       
+       cmd  = self.ffmpeg_trim
+       cmd  = cmd.replace("{START_TIME}",      str(start_timecode))
+       cmd  = cmd.replace("{END_TIME}",        str(end_timecode))
+       cmd  = cmd.replace("{INPUT_FILENAME}",  str(input_file))
+       cmd  = cmd.replace("{OUTPUT_FILENAME}", str(output_file))
+
+       logging.info(cmd)
+       message = os.system(cmd)
+       logging.debug(message)
+       
+       if os.path.isfile(output_file):  return "OK"
+       else:                            return "Error"
 
 #----------------------------------------------------
 
@@ -683,5 +704,30 @@ class myCamera(threading.Thread):
           files[time] = data
           self.config.write("images",files)
 
+   #----------------------------------
 
+   def trimVideo(self, video_id, start, end):
+       '''
+       create a shorter video based on date and time
+       '''
+       config_file = self.config.read_cache("videos")
+       if video_id in config_file:
+          input_file  = config_file[video_id]["video_file"]
+          output_file = input_file.replace(".mp4","_short.mp4")
+          result      = self.video.trim_video(input_file=input_file, output_file=output_file, start_timecode=start, end_timecode=end)
+          if result == "OK":
+             config_file[video_id]["video_file_short"] = output_file
+             config_file[video_id]["video_file_short_start"]   = float(start)
+             config_file[video_id]["video_file_short_end"]     = float(end)
+             config_file[video_id]["video_file_short_length"]  = float(end) - float(start)
+             
+             self.config.write("videos",config_file)           
+             return { "result" : "OK" }
+          else:
+             return { "result" : "Error while creating shorter video." }
+
+       else:
+          logging.warning("No video with the ID "+str(video_id)+" available.")
+          return { "result" : "No video with the ID "+str(video_id)+" available." }
+       
 

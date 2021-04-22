@@ -205,12 +205,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
         
-        if self.path.startswith("/favorit/"):            response = commands.setStatusFavorit(self)
-        elif self.path.startswith("/recycle/"):          response = commands.setStatusRecycle(self)
-        elif self.path.startswith('/remove/'):           response = commands.deleteMarkedFiles(self)
-        elif self.path.startswith("/start/recording/"):  response = commands.startRecording(self)
-        elif self.path.startswith("/stop/recording/"):   response = commands.stopRecording(self)
-        elif self.path.startswith("/restart-cameras/"):  response = commands.restartCameras(self)
+        if self.path.startswith("/favorit/"):              response = commands.setStatusFavorit(self)
+        elif self.path.startswith("/recycle/"):            response = commands.setStatusRecycle(self)
+        elif self.path.startswith('/remove/'):             response = commands.deleteMarkedFiles(self)
+        elif self.path.startswith("/start/recording/"):    response = commands.startRecording(self)
+        elif self.path.startswith("/stop/recording/"):     response = commands.stopRecording(self)
+        elif self.path.startswith("/restart-cameras/"):    response = commands.restartCameras(self)
+        elif self.path.startswith("/create-short-video/"): response = commands.createShortVideo(self)
         else:
            self.sendError()
            return
@@ -244,6 +245,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           elif '/list_backup.html' in self.path: template, content = views.createBackupList(server=self)
           elif '/list_new.html' in self.path:    template, content = views.createCompleteListToday(server=self)
           elif '/videos.html' in self.path:      template, content = views.createVideoList(server=self)
+          elif '/video-info.html' in self.path:  template, content = views.detailViewVideo(server=self)
           elif '/cameras.html' in self.path:     template, content = views.createCameraList(server=self)
           
           self.streamFile(ftype='text/html', content=read_html(directory='html', filename=template, content=content), no_cache=True)

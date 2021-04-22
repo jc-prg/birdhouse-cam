@@ -1,6 +1,7 @@
 # Birdhouse Camera
 
 Raspberry Pi project to observe our birdhouse with multiple webcams (live stream, record images and videos, mark favorits ...)
+Hint: The descriptions in the web client are all in German at the moment.
 
 ## Features
 
@@ -13,6 +14,7 @@ Raspberry Pi project to observe our birdhouse with multiple webcams (live stream
 * List favorit photos and videos in a list
 * Hide / delete marked photos
 * Archive photos with movement and favorit photos once a day
+* Trim videos
 * Deny recording and admin functionality for specific IP adresses (e.g. router or proxy, to deny for access from the internet)
 
 ## Birdhouse
@@ -54,6 +56,12 @@ $ nano config.json
 @reboot /usr/bin/python3 /<path_to_script>/stream.py --logfile
 @reboot /usr/bin/python3 /<path_to_script>/videostream.py
 ```
+
+## Sources
+
+Thanks for your inspiration and code snippets:
+
+* [https://github.com/Freshman-tech/custom-html5-video](https://github.com/Freshman-tech/custom-html5-video)
 
 ## Impressions
 ![Screenshot 01](info/screenshot_06.png)
