@@ -1,21 +1,5 @@
 #!/usr/bin/python3
 
-# In Progress:
-# - ...
-# Backlog:
-# -> GET to myViews
-# -> POST to myAPI
-#
-# - show videos in favorits section
-# - show videos in day views (with play icon on it)
-# - Optimize data handling
-#   -> Queue for writing into JSON (e.g. for status changes)
-#   -> using a CouchDB instead of JSON files
-# - In progress (error!): Restart camera threads via API, Shutdown all services via API, Trigger RPi halt/reboot via API
-# - password for external access (to enable admin from outside)
-# - Idea: set to_be_deleted when below threshold; don't show / backup those files
-
-
 import io, os, time
 import logging
 import json, codecs

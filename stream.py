@@ -3,11 +3,9 @@
 # In Progress:
 # - ...
 # Backlog:
-# - show videos in day views (with play icon on it)
 # - Optimize data handling
 #   -> Queue for writing into JSON (e.g. for status changes)
 #   -> using a CouchDB instead of JSON files
-# - In progress (error!): Restart camera threads via API, Shutdown all services via API, Trigger RPi halt/reboot via API
 # - password for external access (to enable admin from outside)
 # - Idea: set to_be_deleted when below threshold; don't show / backup those files
 
@@ -210,7 +208,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.startswith('/remove/'):             response = commands.deleteMarkedFiles(self)
         elif self.path.startswith("/start/recording/"):    response = commands.startRecording(self)
         elif self.path.startswith("/stop/recording/"):     response = commands.stopRecording(self)
-        elif self.path.startswith("/restart-cameras/"):    response = commands.restartCameras(self)
         elif self.path.startswith("/create-short-video/"): response = commands.createShortVideo(self)
         else:
            self.sendError()
