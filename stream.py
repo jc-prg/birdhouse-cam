@@ -3,11 +3,13 @@
 # In Progress:
 # - ...
 # Backlog:
+# - use jc://app-framework/ as client
 # - Optimize data handling
 #   -> Queue for writing into JSON (e.g. for status changes)
 #   -> using a CouchDB instead of JSON files
 # - password for external access (to enable admin from outside)
 # - Idea: set to_be_deleted when below threshold; don't show / backup those files
+# - (re)start backup manually
 
 
 import io, os, time
@@ -31,6 +33,15 @@ from modules.presets  import myPages
 from modules.views    import myViews
 
 #----------------------------------------------------
+
+APIdescription = {
+      "name"    : "BirdhouseCAM",
+      "version" : "v0.1"
+      }
+APIstart       = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+
+#----------------------------------------------------
+
 
 def onexit(signum, handler):
     '''
@@ -229,7 +240,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         config.html_replace["active_cam"] = which_cam
 
         # index with embedded live stream
-        if   self.path == '/': 
+        if self.path == '/': 
 
           self.redirect("/index.html")
 
@@ -245,7 +256,36 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           elif '/video-info.html' in self.path:  template, content = views.detailViewVideo(server=self)
           elif '/cameras.html' in self.path:     template, content = views.createCameraList(server=self)
           
-          self.streamFile(ftype='text/html', content=read_html(directory='html', filename=template, content=content), no_cache=True)
+          if "api/" in self.path: 
+          
+             if "links_json" in content: content["links"] = content["links_json"]
+             if "links_json" in content: del content["links_json"]
+             if "file_list"  in content: del content["file_list"]
+             
+             cameras = {}   
+             for cam in camera:
+                if camera[cam].active:
+                   cameras[cam]                = {}
+                   cameras[cam]["name"]        = camera[cam].name
+                   cameras[cam]["type"]        = camera[cam].type
+                   cameras[cam]["record"]      = camera[cam].record
+                   cameras[cam]["image"]       = camera[cam].image_size
+                   cameras[cam]["stream"]      = "/stream.mjpg?"+cam
+             
+             response             = {}
+             response["STATUS"]   = {
+                     "start_time"    : APIstart,
+                     "current_time"  : datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                     "admin_allowed" : self.adminAllowed()
+                     }
+             response["API"]              = APIdescription
+             response["DATA"]             = content
+             response["DATA"]["cameras"]  = cameras
+             
+             self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+             
+          else:
+             self.streamFile(ftype='text/html', content=read_html(directory='html', filename=template, content=content), no_cache=True)
 
 
         # extract and show single image
