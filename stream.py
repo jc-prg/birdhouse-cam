@@ -30,6 +30,7 @@ from modules.config   import myConfig
 from modules.commands import myCommands
 from modules.presets  import myParameters
 from modules.presets  import myPages
+from modules.presets  import myMIMEtypes
 from modules.views    import myViews
 
 #----------------------------------------------------
@@ -39,6 +40,7 @@ APIdescription = {
       "version" : "v0.1"
       }
 APIstart       = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+APPframework   = "v0.7.1"
 
 #----------------------------------------------------
 
@@ -137,6 +139,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.send_header("Pragma", "no-cache")
         self.send_header("Expires", "0")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.end_headers()	
 
 
@@ -154,8 +159,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         '''
         if len(content) > 0:
            self.send_response(200)
-           self.send_header('Content-Type', type)
-           self.send_header('Content-Length', len(content))
+           self.send_header('Access-Control-Allow-Credentials', 'true')
+           self.send_header('Access-Control-Allow-Origin',      '*')
+           self.send_header('Content-type',   ftype)
+           self.send_header('Content-length', str(len(content)))
            if no_cache:
              self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
              self.send_header("Pragma", "no-cache")
@@ -164,7 +171,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            self.wfile.write(content)
         else:
            self.sendError()
-
+           
 
     def streamVideoHeader(self):
         '''
@@ -175,6 +182,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-cache, private')
         self.send_header('Pragma', 'no-cache')
         self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.end_headers()
 
 
@@ -198,6 +208,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         logging.debug("Check if administration is allowed: "+self.address_string()+" / "+str(config.param["ip4_admin_deny"]))
         if self.address_string() in config.param["ip4_admin_deny"]: return False
         else:                                                       return True
+
+    #-------------------------------------
+
+    def do_OPTIONS(self):
+        self.send_response(200, "ok")
+        self.send_header('Access-Control-Allow-Credentials', 'true')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', '*')
+        self.send_header("Access-Control-Allow-Headers", "*")
+        self.end_headers()
 
     #-------------------------------------
 
@@ -235,6 +255,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         '''
         logging.debug("GET request with '" + self.path + "'.")
         path, which_cam = views.selectedCamera(self.path)
+        file_ending     = self.path.split(".")
+        file_ending     = "."+file_ending[len(file_ending)-1].lower()
+        
+        logging.info(file_ending)
 
         config.html_replace["title"]      = config.param["title"]
         config.html_replace["active_cam"] = which_cam
@@ -245,7 +269,73 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           self.redirect("/index.html")
 
 
-        elif '.html' in self.path:
+        # REST API call :  /api/<cmd>/<camera>/param1>/<param2>
+        elif self.path.startswith("/api/"):
+         
+          param   = self.path.split("/") 
+          command = param[2]
+          status  = "Success"
+          version = {}
+          
+          if len(param) > 3: 
+             which_cam = param[3]
+             
+          if   command == "INDEX":        template, content = views.createIndex(server=self)
+          elif command == "FAVORITS":     template, content = views.createFavorits(server=self)
+          elif command == "DAY":          template, content = views.createList(server=self)
+          elif command == "DAY_COMPLETE": template, content = views.createCompleteListToday(server=self)
+          elif command == "ARCHIVE":      template, content = views.createBackupList(server=self)
+          elif command == "VIDEOS":       template, content = views.createVideoList(server=self)
+          elif command == "CAMERAS":      template, content = views.createCameraList(server=self)
+          elif command == "status" or command == "version":
+             template, content = views.createIndex(server=self)
+             if len(param) > 3 and param[2] == "version":
+                 version["Code"] = "800"
+                 version["Msg"]  = "Version OK."
+                 if param[3] != APPframework:
+                    version["Code"] = "802"
+                    version["Msg"]  = "Update required."
+          else:
+             content = {}
+             status  = "Error: command not found."
+
+          if "links_json" in content: content["links"] = content["links_json"]
+          if "links_json" in content: del content["links_json"]
+          if "file_list"  in content: del content["file_list"]
+          content["title"] = config.param["title"]
+             
+          cameras = {}   
+          for cam in camera:
+                if camera[cam].active:
+                   cameras[cam]                = {}
+                   cameras[cam]["name"]        = camera[cam].name
+                   cameras[cam]["type"]        = camera[cam].type
+                   cameras[cam]["record"]      = camera[cam].record
+                   cameras[cam]["image"]       = camera[cam].image_size
+                   cameras[cam]["server_port"] = config.param["port"]
+                   cameras[cam]["stream"]      = "/stream.mjpg?"+cam
+             
+          response             = {}
+          response["STATUS"]   = {
+                     "start_time"    : APIstart,
+                     "current_time"  : datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                     "admin_allowed" : self.adminAllowed(),
+                     "check-version" : version,
+                     "api-call"      : status
+                     }
+          response["API"]                 = APIdescription
+          response["DATA"]                = content
+          response["DATA"]["cameras"]     = cameras
+          response["DATA"]["selected"]    = which_cam
+          response["DATA"]["active_page"] = command
+             
+          self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+
+
+
+        elif '.html' in self.path or "/api/" in self.path:
+        
+          content = {}
         
           if   '/index.html' in self.path:       template, content = views.createIndex(server=self)
           elif '/list_star.html' in self.path:   template, content = views.createFavorits(server=self)
@@ -256,36 +346,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           elif '/video-info.html' in self.path:  template, content = views.detailViewVideo(server=self)
           elif '/cameras.html' in self.path:     template, content = views.createCameraList(server=self)
           
-          if "api/" in self.path: 
-          
-             if "links_json" in content: content["links"] = content["links_json"]
-             if "links_json" in content: del content["links_json"]
-             if "file_list"  in content: del content["file_list"]
-             
-             cameras = {}   
-             for cam in camera:
-                if camera[cam].active:
-                   cameras[cam]                = {}
-                   cameras[cam]["name"]        = camera[cam].name
-                   cameras[cam]["type"]        = camera[cam].type
-                   cameras[cam]["record"]      = camera[cam].record
-                   cameras[cam]["image"]       = camera[cam].image_size
-                   cameras[cam]["stream"]      = "/stream.mjpg?"+cam
-             
-             response             = {}
-             response["STATUS"]   = {
-                     "start_time"    : APIstart,
-                     "current_time"  : datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
-                     "admin_allowed" : self.adminAllowed()
-                     }
-             response["API"]              = APIdescription
-             response["DATA"]             = content
-             response["DATA"]["cameras"]  = cameras
-             
-             self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
-             
-          else:
-             self.streamFile(ftype='text/html', content=read_html(directory='html', filename=template, content=content), no_cache=True)
+          self.streamFile(ftype='text/html', content=read_html(directory='html', filename=template, content=content), no_cache=True)
 
 
         # extract and show single image
@@ -349,19 +410,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     time.sleep(1)                     
                     break
 
-        # images, css, js
-        elif self.path.endswith('.css'):        self.streamFile(ftype='text/css',        content=read_html( directory='',       filename=self.path))
-        elif self.path.endswith('.js'):         self.streamFile(ftype='text/javascript', content=read_html( directory='',       filename=self.path))
-        elif self.path.endswith('.png'):        self.streamFile(ftype='image/png',       content=read_image(directory='',       filename=self.path))
-        elif self.path.endswith('favicon.ico'): self.streamFile(ftype='image/ico',       content=read_image(directory='html',   filename=self.path))
-
-        elif self.path.endswith('.mp4'):        self.streamFile(ftype='video/mp4',       content=read_image(directory="videos", filename=self.path))
-        elif self.path.startswith('/videos') and self.path.endswith('.jpeg'):
-                                                self.streamFile(ftype='image/jpg',       content=read_image(directory='',       filename=self.path))
-       
-        elif self.path.endswith(".jpg"):        self.streamFile(ftype='image/jpg',       content=read_image(directory="images", filename=self.path))
-        elif self.path.endswith(".jpeg"):       self.streamFile(ftype='image/jpg',       content=read_image(directory="images", filename=self.path))
-
+        # favicon
+        elif self.path.endswith('favicon.ico'):
+           self.streamFile(ftype='image/ico', content=read_image(directory='html', filename=self.path))
+        
+        # images, js, css, ...
+        elif file_ending in myMIMEtypes:
+        
+           if "text" in myMIMEtypes[file_ending]: self.streamFile(ftype=myMIMEtypes[file_ending], content=read_html( directory='', filename=self.path))
+           else:                                  self.streamFile(ftype=myMIMEtypes[file_ending], content=read_image(directory='', filename=self.path))
+           
         # unknown
         else:
             self.sendError()

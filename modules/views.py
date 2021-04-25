@@ -91,8 +91,18 @@ class myViews(threading.Thread):
            which_cam   = param[1]
            if not which_cam in self.camera:
               logging.warning("Unknown camera requested.")
-              return ""
-        else: which_cam = "cam1"
+              return path, ""
+              
+        elif "/api" in path:
+           param        = path.split("/")
+           if len(param) > 3:
+              which_cam = param[3]
+           if not which_cam in self.camera or len(param) <= 3:
+              logging.warning("Unknown camera requested.")
+              return path, ""
+        
+        else:
+           which_cam = "cam1"
                
         self.active_cams = []
         for key in self.camera:
@@ -136,12 +146,12 @@ class myViews(threading.Thread):
         '''
         json  = {}
         count = 0
-        if cam != "": cam_link = '?' + cam
+        if cam != "": cam_link = cam
         else:         cam_link = ""
         
         for link in link_list:
             json[link] = {}
-            json[link]["link"]        = "/api" + myPages[link][1] + cam_link
+            json[link]["link"]        = "/api" + myPages[link][2] + cam_link
             json[link]["description"] = myPages[link][0]
             json[link]["position"]    = count
             count += 1
@@ -151,7 +161,7 @@ class myViews(threading.Thread):
            selected   = self.active_cams.index(cam) + 1 
            if selected >= len(self.active_cams): selected = 0
            json["active_cam"] = {}
-           json["active_cam"]["link"]        = "/api" + myPages[current][1]+"?"+self.active_cams[selected]
+           json["active_cam"]["link"]        = "/api" + myPages[current][2] + self.active_cams[selected]
            json["active_cam"]["description"] = self.active_cams[selected].upper()
            json["active_cam"]["position"]    = count
 
@@ -262,12 +272,14 @@ class myViews(threading.Thread):
               time       = stamp_date[6:8] + "." + stamp_date[4:6] + "." + stamp_date[0:4] + " " + stamp_time[0:2] + ":" + stamp_time[2:4]
               time      += "<br/>"
            else:
+              if "datestamp" in image_group[stamp]:  stamp_date = image_group[stamp]["datestamp"]
+              else:                                  stamp_date = ""
               stamp_time = stamp
               time       = stamp_time[0:2] + ":" + stamp_time[2:4] + ":" + stamp_time[4:6]
            
-           if "backup" in category:  url_dir = category  
-           elif "video" in category: url_dir = category  
-           else:                     url_dir = ""
+           if "backup" in category:  url_dir = os.path.join(self.config.directories["backup"], stamp_date)
+           elif "video" in category: url_dir = self.config.directories["videos"]
+           else:                     url_dir = self.config.directories["images"]
            
            # addons, e.g. small live stream with special links
            if "type" in image_group[stamp] and image_group[stamp]["type"] == "addon":
@@ -315,10 +327,10 @@ class myViews(threading.Thread):
 
                 hires        = ""
                 description  = time + " ("+similarity+")"
-                lowres       = url_dir + image_group[stamp]["lowres"]
+                lowres       = os.path.join("/", url_dir, image_group[stamp]["lowres"])
                 if "hires" in image_group[stamp]:
                    hires      = "" # image_group[stamp]["hires"]
-                   javascript ="imageOverlay(\"" + url_dir + image_group[stamp]["hires"] + "\",\"" + description + "\");"
+                   javascript ="imageOverlay(\"" + os.path.join("/", url_dir, image_group[stamp]["hires"]) + "\",\"" + description + "\");"
                    
              # if video
              elif "video_file_short" in image_group[stamp]:
@@ -461,7 +473,7 @@ class myViews(threading.Thread):
                favorits[new]["date"]      = "Aktuell"
                favorits[new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                favorits[new]["type"]      = "image"
-               favorits[new]["directory"] = "/images/"
+               favorits[new]["directory"] = "/"+self.config.directories["images"]
 
         if date_today in files_videos:
           for stamp in files_videos[date_today]:
@@ -471,7 +483,7 @@ class myViews(threading.Thread):
                favorits[new]["date"]      = "Aktuell"
                favorits[new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                favorits[new]["type"]      = "video"
-               favorits[new]["directory"] = "/videos/"
+               favorits[new]["directory"] = "/"+self.config.directories["videos"]
 
         if len(favorits) > 0:
            html += self.printImageGroup(title="Heute &nbsp; &nbsp; &nbsp; &nbsp;", group_id="today", image_group=favorits, category=category, header=True, header_open=True, header_count=['star'], cam=which_cam)
@@ -505,7 +517,7 @@ class myViews(threading.Thread):
                       favorits[directory][new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                       favorits[directory][new]["date2"]     = favorits[directory][new]["date"]
                       favorits[directory][new]["type"]      = "image"
-                      favorits[directory][new]["directory"] = "/images/"+directory+"/"
+                      favorits[directory][new]["directory"] = "/"+self.config.directories["backup"]+directory+"/"
 
                  if directory in files_videos:
                    for stamp in files_videos[directory]:
@@ -515,7 +527,7 @@ class myViews(threading.Thread):
                      favorits[directory][new]["date"]      = date
                      favorits[directory][new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                      favorits[directory][new]["type"]      = "video"
-                     favorits[directory][new]["directory"] = "/videos/"
+                     favorits[directory][new]["directory"] = "/"+self.config.directories["videos"]
                      
                  if len(favorits[directory]) > 0:
                     html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], category=category, header=True, header_open=True, header_count=['star'], cam=which_cam)
@@ -606,7 +618,7 @@ class myViews(threading.Thread):
                if not "camera" in files_all[stamp] or self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
                  if files_all[stamp]["datestamp"] == date_today or param[1] == "backup":
                     files_today[stamp]              = files_all[stamp]
-                    files_today[stamp]["directory"] = "/images/" + subdirectory
+                    files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
                     count += 1
                     
 
@@ -637,7 +649,7 @@ class myViews(threading.Thread):
                if (int(stamp) >= int(time_now) and time_now != "000000") and "datestamp" in files_all[stamp] and files_all[stamp]["datestamp"] == date_yesterday:
                  if self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
                     files_yesterday[stamp]              = files_all[stamp]
-                    files_yesterday[stamp]["directory"] = "/images/"
+                    files_yesterday[stamp]["directory"] = "/" + self.config.directories["images"]
                     count += 1
                          
            if len(files_yesterday) > 0:
@@ -653,7 +665,7 @@ class myViews(threading.Thread):
                if "to_be_deleted" in files_all[stamp] and int(files_all[stamp]["to_be_deleted"]) == 1:
                  if files_all[stamp]["camera"] == which_cam:
                     files_recycle[stamp]              = files_all[stamp]
-                    files_recycle[stamp]["directory"] = "/images/"+subdirectory
+                    files_recycle[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
                     count += 1
                        
            if len(files_recycle) > 0:
@@ -759,6 +771,7 @@ class myViews(threading.Thread):
                dir_size_cam    = round(dir_size_cam/1024/1024,1)
                dir_total_size += dir_size
                files_total    += count
+               image           = os.path.join(self.config.directories["backup"],image)
                  
                if dir_count_delete > 0: delete_info = "<br/>(Recycle: " + str(dir_count_delete) + ")"
                else:                    delete_info = ""
@@ -767,7 +780,7 @@ class myViews(threading.Thread):
 
                image_file = image.replace(directory+"/","")
                content["entries"][directory] = {
-                  "directory"    : "/images/"+directory+"/",
+                  "directory"    : "/" + self.config.directories["backup"] + directory + "/",
                   "type"         : "directory",
                   "date"         : file_data["info"]["date"],
                   "count"        : file_data["info"]["count"],
@@ -840,7 +853,7 @@ class myViews(threading.Thread):
                          threshold = self.camera[which_cam].param["similarity"]["threshold"]
                          if float(files_all[stamp]["similarity"]) < float(threshold) and float(files_all[stamp]["similarity"]) > 0: count_diff += 1
                          files_part[stamp]              = files_all[stamp]
-                         files_part[stamp]["directory"] = "/images/"
+                         files_part[stamp]["directory"] = "/" + self.config.directories["images"]
 
             if len(files_part) > 0:
                html += self.printImageGroup(title="Bilder "+hour+":00", group_id=hour_min, image_group=files_part, category=category, header=True, header_open=False, cam=which_cam)
