@@ -93,7 +93,8 @@ myPages = {
 myMIMEtypes = {
   '.css'  : 'text/css',
   '.html' : 'text/html',
-  '.js'   : 'text/javascript',
+  '.js'   : 'application/javascript',
+  '.json' : 'application/json',
   '.png'  : 'image/png',
   '.ico'  : 'image/ico',
   '.mp4'  : 'video/mp4',

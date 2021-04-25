@@ -417,8 +417,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # images, js, css, ...
         elif file_ending in myMIMEtypes:
         
-           if "text" in myMIMEtypes[file_ending]: self.streamFile(ftype=myMIMEtypes[file_ending], content=read_html( directory='', filename=self.path))
-           else:                                  self.streamFile(ftype=myMIMEtypes[file_ending], content=read_image(directory='', filename=self.path))
+           if "text" in myMIMEtypes[file_ending]:          self.streamFile(ftype=myMIMEtypes[file_ending], content=read_html( directory='', filename=self.path))
+           elif "application" in myMIMEtypes[file_ending]: self.streamFile(ftype=myMIMEtypes[file_ending], content=read_html( directory='', filename=self.path))
+           else:                                           self.streamFile(ftype=myMIMEtypes[file_ending], content=read_image(directory='', filename=self.path))
            
         # unknown
         else:
