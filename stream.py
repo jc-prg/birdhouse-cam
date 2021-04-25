@@ -280,13 +280,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           if len(param) > 3: 
              which_cam = param[3]
              
-          if   command == "INDEX":        template, content = views.createIndex(server=self)
-          elif command == "FAVORITS":     template, content = views.createFavorits(server=self)
-          elif command == "DAY":          template, content = views.createList(server=self)
-          elif command == "DAY_COMPLETE": template, content = views.createCompleteListToday(server=self)
-          elif command == "ARCHIVE":      template, content = views.createBackupList(server=self)
-          elif command == "VIDEOS":       template, content = views.createVideoList(server=self)
-          elif command == "CAMERAS":      template, content = views.createCameraList(server=self)
+          if   command == "INDEX":          template, content = views.createIndex(server=self)
+          elif command == "FAVORITS":       template, content = views.createFavorits(server=self)
+          elif command == "TODAY":          template, content = views.createList(server=self)
+          elif command == "TODAY_COMPLETE": template, content = views.createCompleteListToday(server=self)
+          elif command == "ARCHIVE":        template, content = views.createBackupList(server=self)
+          elif command == "VIDEOS":         template, content = views.createVideoList(server=self)
+          elif command == "CAMERAS":        template, content = views.createCameraList(server=self)
           elif command == "status" or command == "version":
              template, content = views.createIndex(server=self)
              if len(param) > 3 and param[2] == "version":
@@ -314,6 +314,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                    cameras[cam]["image"]       = camera[cam].image_size
                    cameras[cam]["server_port"] = config.param["port"]
                    cameras[cam]["stream"]      = "/stream.mjpg?"+cam
+                   cameras[cam]["similarity"]  = camera[cam].param["similarity"]
              
           response             = {}
           response["STATUS"]   = {

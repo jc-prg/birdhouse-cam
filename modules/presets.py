@@ -79,14 +79,14 @@ myParameters = {
 }
 
 myPages = {
-  "live"            : ("Live-Stream", "/index.html",       "/INDEX/"),
-  "backup"          : ("Archiv",      "/list_backup.html", "/ARCHIVE/"),
-  "today"           : ("Heute",       "/list_short.html",  "/DAY/"),
-  "today_complete"  : ("Alle heute",  "/list_new.html",    "/DAY_COMPLETE/"),
-  "favorit"         : ("Favoriten",   "/list_star.html",   "/FAVORITS/"),
-  "cam_info"        : ("Kameras",     "/cameras.html",     "/CAMERAS/"),
+  "live"            : ("Live-Stream", "/index.html",       "INDEX"),
+  "backup"          : ("Archiv",      "/list_backup.html", "ARCHIVE"),
+  "today"           : ("Heute",       "/list_short.html",  "TODAY"),
+  "today_complete"  : ("Alle heute",  "/list_new.html",    "TODAY_COMPLETE"),
+  "favorit"         : ("Favoriten",   "/list_star.html",   "FAVORITS"),
+  "cam_info"        : ("Kameras",     "/cameras.html",     "CAMERAS"),
   "video_info"      : ("Video Info",  "/video-info.html",  ""),
-  "videos"          : ("Videos",      "/videos.html",      "/VIDEOS/"),
+  "videos"          : ("Videos",      "/videos.html",      "VIDEOS"),
   "save"            : ("Speichern",   "/image.jpg",        "")
 }
 
