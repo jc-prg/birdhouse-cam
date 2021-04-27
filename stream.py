@@ -309,14 +309,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           cameras = {}   
           for cam in camera:
                 if camera[cam].active:
-                   cameras[cam]                = {}
-                   cameras[cam]["name"]        = camera[cam].name
-                   cameras[cam]["type"]        = camera[cam].type
-                   cameras[cam]["record"]      = camera[cam].record
-                   cameras[cam]["image"]       = camera[cam].image_size
-                   cameras[cam]["server_port"] = config.param["port"]
-                   cameras[cam]["stream"]      = "/stream.mjpg?"+cam
-                   cameras[cam]["similarity"]  = camera[cam].param["similarity"]
+                   cameras[cam]                     = {}
+                   cameras[cam]["name"]             = camera[cam].name
+                   cameras[cam]["camera_type"]      = camera[cam].type
+                   cameras[cam]["record"]           = camera[cam].record
+                   cameras[cam]["image"]            = camera[cam].image_size
+                   cameras[cam]["stream"]           = "/stream.mjpg?"+cam
+                   cameras[cam]["streaming_server"] = camera[cam].param["video"]["streaming_server"]
+                   cameras[cam]["server_port"]      = config.param["port"]
+                   cameras[cam]["similarity"]       = camera[cam].param["similarity"]
              
           response             = {}
           response["STATUS"]   = {

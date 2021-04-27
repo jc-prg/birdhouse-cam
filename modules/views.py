@@ -1004,10 +1004,13 @@ class myViews(threading.Thread):
         count                 = 0
             
         for cam in self.camera:
-            info                                 = self.camera[cam].param
-            content["entries"][cam]              = self.camera[cam].param
-            content["entries"][cam]["lowres"]    = "/detection/stream.mjpg?"+cam
-            content["entries"][cam]["hires"]     = "/detection/stream.mjpg?"+cam
+            info                                   = self.camera[cam].param
+            content["entries"][cam]                = self.camera[cam].param
+            content["entries"][cam]["lowres"]      = "/detection/stream.mjpg?"+cam
+            content["entries"][cam]["hires"]       = "/detection/stream.mjpg?"+cam
+            content["entries"][cam]["type"]        = "camera"
+            content["entries"][cam]["camera_type"] = self.camera[cam].type
+            content["entries"][cam]["active"]      = self.camera[cam].active
             
             html += "<div class='camera_info'>"
             html += "<div class='camera_info_image'>"
@@ -1018,7 +1021,7 @@ class myViews(threading.Thread):
             html += "</div>"
             html += "<div class='camera_info_text'><big><b>" + cam.upper() + ": " + info["name"] + "</b></big>"
             html   += "<ul>"
-            html   += "<li>Type: "   + info["type"] + "</li>"
+            html   += "<li>Type: "   + content["entries"][cam]["camera_type"] + "</li>"
             html   += "<li>Active: " + str(self.camera[cam].active) + "</li>"
             html   += "<li>Record: " + str(info["record"]) + "</li>"
             html   += "<li>Crop: "   + str(info["image"]["crop"]) + "</li>"
