@@ -1,0 +1,10 @@
+/* DEFAULT (small) -> iPhone XS -> Laptop and wider */
+/* format for iPhone XS in landscape and bigger devices */
+
+@media (min-width: 720px) {
+
+.livestream_main { max-width : 710px; }
+.separator_group { font-size : 13px; }
+
+}
+
