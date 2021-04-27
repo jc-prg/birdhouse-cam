@@ -456,11 +456,11 @@ class myViews(threading.Thread):
         if self.config.exists("videos"):
            files_all = self.config.read_cache(config="videos")
            for file in files_all:
-               date = files_all[file]["date_start"].split("_")[0]
+               date = file.split("_")[0]
                if "favorit" in files_all[file] and int(files_all[file]["favorit"]) == 1: 
                   if not date in files_videos: files_videos[date] = {}
                   files_videos[date][file] = files_all[file]
-
+                  
         # today
         date_today = datetime.now().strftime("%Y%m%d")
         files      = self.config.read_cache(config="images")
@@ -474,6 +474,7 @@ class myViews(threading.Thread):
                favorits[new]["date"]      = "Aktuell"
                favorits[new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                favorits[new]["type"]      = "image"
+               favorits[new]["category"]  = category+stamp
                favorits[new]["directory"] = "/"+self.config.directories["images"]
 
         if date_today in files_videos:
@@ -484,6 +485,7 @@ class myViews(threading.Thread):
                favorits[new]["date"]      = "Aktuell"
                favorits[new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                favorits[new]["type"]      = "video"
+               favorits[new]["category"]  = category+stamp
                favorits[new]["directory"] = "/"+self.config.directories["videos"]
 
         if len(favorits) > 0:
@@ -492,46 +494,63 @@ class myViews(threading.Thread):
            content["view_count"]      = ["star"]           
            content["groups"]["today"] = []
            for entry in favorits: 
-             content["entries"][entry] = favorits
+             content["entries"][entry] = favorits[entry]
              content["groups"]["today"].append(entry)
-
+             
         # other days
         main_directory = self.config.directory(config="backup")
         dir_list       = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
         dir_list       = list(reversed(sorted(dir_list)))
         
+        video_list = []
+        for file_date in files_videos:
+          if file_date not in dir_list:
+            dir_list.append(file_date)
+            video_list.append(file_date)
+        
+        dir_list       = list(reversed(sorted(dir_list)))
+
+        logging.error("---")
+        logging.error(str(dir_list))
+        logging.error(str(video_list))
+                
         for directory in dir_list:
-            category     = "/backup/"+directory+"/"
+            category            = "/backup/"+directory+"/"
+            favorits[directory] = {}
+            
             if self.config.exists(config="backup", date=directory):
                files_data = self.config.read_cache(config="backup", date=directory)
-               
                if "info" in files_data and "files" in files_data:
                  files      = files_data["files"]
                  date       = directory[6:8]+"."+directory[4:6]+"."+directory[0:4]
-                 favorits[directory] = {}
-                 for stamp in files:
-                  if "datestamp" in files[stamp] and files[stamp]["datestamp"] == directory:
-                    if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
-                      new = directory+"_"+stamp
-                      favorits[directory][new]              = files[stamp]
-                      favorits[directory][new]["source"]    = ("backup",directory)
-                      favorits[directory][new]["date"]      = date
-                      favorits[directory][new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
-                      favorits[directory][new]["date2"]     = favorits[directory][new]["date"]
-                      favorits[directory][new]["type"]      = "image"
-                      favorits[directory][new]["directory"] = "/"+self.config.directories["backup"]+directory+"/"
+                 
+                 if directory not in video_list:
+                   for stamp in files:
+                    if "datestamp" in files[stamp] and files[stamp]["datestamp"] == directory:
+                      if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
+                        new = directory+"_"+stamp
+                        favorits[directory][new]              = files[stamp]
+                        favorits[directory][new]["source"]    = ("backup",directory)
+                        favorits[directory][new]["date"]      = date
+                        favorits[directory][new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+                        favorits[directory][new]["date2"]     = favorits[directory][new]["date"]
+                        favorits[directory][new]["type"]      = "image"
+                        favorits[directory][new]["category"]  = category+stamp
+                        favorits[directory][new]["directory"] = "/"+self.config.directories["backup"]+directory+"/"
 
-                 if directory in files_videos:
+            if directory in files_videos:
                    for stamp in files_videos[directory]:
-                     new = stamp
+                     new   = stamp
+                     date  = directory[6:8]+"."+directory[4:6]+"."+directory[0:4]
                      favorits[directory][new]              = files_videos[directory][stamp]
                      favorits[directory][new]["source"]    = ("videos","")
-                     favorits[directory][new]["date"]      = date
+                     favorits[directory][new]["date"]      = date  #?????
                      favorits[directory][new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                      favorits[directory][new]["type"]      = "video"
+                     favorits[directory][new]["category"]  = "/videos/"+stamp
                      favorits[directory][new]["directory"] = "/"+self.config.directories["videos"]
                      
-                 if len(favorits[directory]) > 0:
+            if len(favorits[directory]) > 0:
                     html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], category=category, header=True, header_open=True, header_count=['star'], cam=which_cam)
                     
                     content["groups"][date] = []
@@ -555,15 +574,24 @@ class myViews(threading.Thread):
         Page with pictures (and videos) of a single day
         '''
         self.server           = server
+        param                 = server.path.split("/")
         path, which_cam       = self.selectedCamera()
+
+        if param[1] != "api":
+           if len(param) > 2: date_backup = param[2]
+           else:              date_backup = ""
+        else:
+           if len(param) > 4: date_backup = param[4]
+           else:              date_backup = ""
+
         content               = {
             "active_cam"        : which_cam,
+            "active_date"       : date_backup,
             "view"              : "list",
             "entries"           : {},
             "entries_delete"    : {},
             "entries_yesterday" : {}
             }
-        param                 = server.path.split("/")
         template              = "list.html"
         html                  = ""
         files_all             = {}
@@ -571,10 +599,9 @@ class myViews(threading.Thread):
 
         date_today      = datetime.now().strftime("%Y%m%d")
         date_yesterday  = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")   
-        if len(param) > 2: date_backup = param[2]
-        else:              date_backup = ""
-
-        if param[1] == "backup":
+        
+        if date_backup != "":
+           backup           = True
            path             = self.config.directory(config="backup", date=date_backup)
            files_data       = self.config.read_cache(config="backup", date=date_backup)
            files_all        = files_data["files"]
@@ -589,6 +616,7 @@ class myViews(threading.Thread):
            content["links_json"]  = self.printLinksJSON(link_list=("live","today","backup","favorit"), current='backup', cam=which_cam)
 
         elif os.path.isfile(self.config.file(config="images")):
+           backup           = False
            path             = self.config.directory(config="images")
            files_all        = self.config.read_cache(config="images")
            time_now         = datetime.now().strftime('%H%M%S')
@@ -619,17 +647,18 @@ class myViews(threading.Thread):
              
              if ((int(stamp) < int(time_now) or time_now == "000000") and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
                if not "camera" in files_all[stamp] or self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
-                 if files_all[stamp]["datestamp"] == date_today or param[1] == "backup":
+                 if files_all[stamp]["datestamp"] == date_today or backup:
                     files_today[stamp]              = files_all[stamp]
                     files_today[stamp]["type"]      = "image"
+                    files_today[stamp]["category"]  = category+stamp
+                    files_today[stamp]["detect"]    = self.camera[which_cam].detectImage(file_info=files_today[stamp])
                     files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
                     count += 1
                     
-
            if first_title == "":
               first_title = files_all[stamp]["date"]
               
-           else:
+           elif not backup:
               files_today["999999"] = {
                        "lowres" : "stream.mjpg?"+which_cam,
                        "hires"  : "/index.html?"+which_cam,
@@ -648,12 +677,14 @@ class myViews(threading.Thread):
            html_yesterday  = ""
            files_yesterday = {}
            stamps          = list(reversed(sorted(files_all.keys())))
-           if param[1] != "backup":
+           if not backup:
              for stamp in stamps: 
                if (int(stamp) >= int(time_now) and time_now != "000000") and "datestamp" in files_all[stamp] and files_all[stamp]["datestamp"] == date_yesterday:
                  if self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
                     files_yesterday[stamp]              = files_all[stamp]
                     files_yesterday[stamp]["type"]      = "image"
+                    files_yesterday[stamp]["category"]  = category+stamp
+                    files_yesterday[stamp]["detect"]    = self.camera[which_cam].detectImage(file_info=files_yesterday[stamp])
                     files_yesterday[stamp]["directory"] = "/" + self.config.directories["images"]
                     count += 1
                          
@@ -671,12 +702,13 @@ class myViews(threading.Thread):
                  if files_all[stamp]["camera"] == which_cam:
                     files_recycle[stamp]              = files_all[stamp]
                     files_recycle[stamp]["type"]      = "image"
+                    files_recycle[stamp]["category"]  = category+stamp
                     files_recycle[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
                     count += 1
                        
            if len(files_recycle) > 0:
-              if param[1] == "backup": url = "/remove/backup/" + param[2]
-              else:                    url = "/remove/today"
+              if backup: url = "/remove/backup/" + date_backup
+              else:      url = "/remove/today"
                    
               intro          = "<a onclick='removeFiles(\"" + url + "\");' style='cursor:pointer;'>Delete all files marked for recycling ...</a>"
               html_recycle             += self.printImageGroup(title="Recycle", group_id="recycle", image_group=files_recycle, category=category, header=True, header_open=False, header_count=['recycle'], cam=which_cam, intro=intro)
@@ -786,10 +818,13 @@ class myViews(threading.Thread):
                #else:                    html  += self.printImageContainer(description="<b>"+date+"</b><br/>Leer für "+which_cam, lowres="EMPTY") + "\n"
 
                image_file = image.replace(directory+"/","")
+               image_file = image_file.replace(self.config.directories["backup"],"")
                content["entries"][directory] = {
                   "directory"    : "/" + self.config.directories["backup"] + directory + "/",
                   "type"         : "directory",
+                  "camera"       : which_cam,
                   "date"         : file_data["info"]["date"],
+                  "datestamp"    : directory,
                   "count"        : file_data["info"]["count"],
                   "count_delete" : dir_count_delete,
                   "count_cam"    : dir_count_cam,
@@ -861,6 +896,9 @@ class myViews(threading.Thread):
                          threshold = self.camera[which_cam].param["similarity"]["threshold"]
                          if float(files_all[stamp]["similarity"]) < float(threshold) and float(files_all[stamp]["similarity"]) > 0: count_diff += 1
                          files_part[stamp]              = files_all[stamp]
+                         files_part[stamp]["type"]      = "image"
+                         files_part[stamp]["detect"]    = self.camera[which_cam].detectImage(file_info=files_part[stamp])
+                         files_part[stamp]["category"]  = category+stamp
                          files_part[stamp]["directory"] = "/" + self.config.directories["images"]
 
             if len(files_part) > 0:
@@ -908,6 +946,7 @@ class myViews(threading.Thread):
            for file in files_all:
                files_all[file]["directory"] = self.camera[which_cam].param["video"]["streaming_server"]
                files_all[file]["type"]      = "video"
+               files_all[file]["category"]  = category+file
                if "to_be_deleted" in files_all[file] and int(files_all[file]["to_be_deleted"]) == 1: files_delete[file] = files_all[file]
                else:                                                                                 files_show[file]   = files_all[file]
                   
