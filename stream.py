@@ -233,6 +233,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            response["error"] = "Administration not allowed for this IP-Address!"
            self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
+        if self.path.startswith("/api"):                   self.path = self.path.replace("/api","")
         
         if self.path.startswith("/favorit/"):              response = commands.setStatusFavorit(self)
         elif self.path.startswith("/recycle/"):            response = commands.setStatusRecycle(self)
@@ -240,6 +241,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.startswith("/start/recording/"):    response = commands.startRecording(self)
         elif self.path.startswith("/stop/recording/"):     response = commands.stopRecording(self)
         elif self.path.startswith("/create-short-video/"): response = commands.createShortVideo(self)
+
         else:
            self.sendError()
            return
