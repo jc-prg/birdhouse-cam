@@ -288,6 +288,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           elif command == "TODAY_COMPLETE": template, content = views.createCompleteListToday(server=self)
           elif command == "ARCHIVE":        template, content = views.createBackupList(server=self)
           elif command == "VIDEOS":         template, content = views.createVideoList(server=self)
+          elif command == "VIDEO_DETAIL":   template, content = views.detailViewVideo(server=self)
           elif command == "CAMERAS":        template, content = views.createCameraList(server=self)
           elif command == "status" or command == "version":
              template, content = views.createIndex(server=self)

@@ -1060,15 +1060,22 @@ class myViews(threading.Thread):
         content               = {}
         content["active_cam"] = which_cam
         content["view"]       = "detail_video"
+        content["entries"]    = {}
         param                 = server.path.split("/")
         template              = "list.html"
         html                  = ""
         count                 = 0
         
+        if "api" in param:    video_id = param[4]
+        else:                 video_id = param[1]
+        
         config_data           = self.config.read_cache(config="videos")
-        if param[1] in config_data and "video_file" in config_data[param[1]]:
-            data        = config_data[param[1]]
-            description = ""
+        if video_id in config_data and "video_file" in config_data[video_id]:
+        
+            data                         = config_data[video_id]
+            content["entries"][video_id] = data
+            description                  = ""
+            
             html += "<div class='camera_info'>\n"
             html += "<div class='camera_info_image'>"
             
@@ -1119,7 +1126,7 @@ class myViews(threading.Thread):
                files["VIDEOFILE"]  = self.camera[which_cam].param["video"]["streaming_server"] + data["video_file"]
                files["THUMBNAIL"]  = data["thumbnail"]
                files["LENGTH"]     = str(data["length"])
-               files["VIDEOID"]    = param[1]
+               files["VIDEOID"]    = video_id
                files["ACTIVE" ]    = which_cam
                files["JAVASCRIPT"] = "createShortVideo();"
             
@@ -1139,6 +1146,7 @@ class myViews(threading.Thread):
         content["view_count"] = []
         content["subtitle"]   = myPages["video_info"][0]
         content["links"]      = self.printLinks(link_list=("live","favorit","videos"), cam=which_cam)
+        content["links_json"] = self.printLinksJSON(link_list=("live","favorit","today","videos","backup"), cam=which_cam)
         content["file_list"]  = html
 
         return template, content
