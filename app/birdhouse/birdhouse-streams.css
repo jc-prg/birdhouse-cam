@@ -1,0 +1,103 @@
+/* configuration of streaming HTML elements */ 
+
+.livestream_content { 
+    width        : 100%; 
+    max-height   : 95vh; 
+    valign       : left;
+}
+
+.livestream_footer {
+    width        : 100%; 
+}
+
+.livestream_main {
+    max-width    : 95vw;
+    max-height   : 95vh;
+    transform    : scale(0.98);
+    border       : 1px solid white;
+}
+    
+.livestream_main_container {
+    position     : relative;
+    width        : 100%;
+/*    height       : 100%; */
+    z-index      : 99;
+}
+
+.livestream_2nd {
+    max-width    : 25vw;
+    max-height   : 25vh;
+    transform    : scale(1.0);
+    border       : 1px solid white;
+}
+
+.livestream_2nd_container {
+    position     : relative;
+    width        : 25%;
+    height       : 25%;
+    z-index      : 100;
+}
+
+.livestream_links                   { position : relative; }
+.livestream_startinfo               { position : relative;  cursor   : pointer;  color : gray; font-size : 10px; top : -160px; }
+.livestream_record                  { position : relative;  z-index  : 105; }
+
+/* one live stream with cam1 */
+
+.livestream_main_container.cam1     { top    :   20px; }
+.livestream_2nd_container.cam1      {}
+.livestream_links.cam1              { bottom :   -5%; }
+.livestream_record.cam1             {}
+.livestream_startinfo.cam1          { top    :   40px; }
+
+/* two live streams with cam1 as main stream */
+
+.livestream_main_container.cam1cam2 { top :   -0px; }
+.livestream_2nd_container.cam1cam2  { position : absolute; top : 40px;  left : 30px; }
+.livestream_record.cam1cam2         { top :   50px; }
+.livestream_links.cam1cam2          { top :   100px; }
+.livestream_startinfo.cam1cam2      { top :   100px; }
+
+/* two live streams with cam2 as main stream */
+
+.livestream_main_container.cam2cam1 { top :   20px; }
+.livestream_2nd_container.cam2cam1  { position : absolute; top : 40px;  left : 30px; }
+.livestream_record.cam2cam1         { top :   50px; }
+.livestream_links.cam2cam1          { top :   100px; }
+.livestream_startinfo.cam2cam1      { top :   100px; } 
+    
+/* Both streams in big if bigger screen */
+
+@media (min-width: 1000px) {
+
+  .livestream_main {}
+  .livestream_main_container {}
+
+  .livestream_2nd_container {
+      valign       : left;
+      width        : 100%;
+      height       : 100%;
+  }
+  
+  .livestream_2nd {
+      max-width    : 95vw;
+      max-height   : 95vh;
+      transform    : scale(0.98);
+  }
+
+  .livestream_content    {}
+  .livestream_footer     {}
+
+  .livestream_main_container.cam1cam2 { top    :     0%;  left   : -25%;   width : auto; }
+  .livestream_2nd_container.cam1cam2  { position : absolute; top : 70px;  left : 25%; }
+  .livestream_record.cam1cam2         { top    :   -10vh; left   :  25%; }
+  .livestream_links.cam1cam2          { top    :    20px; left   : 0%; }
+  .livestream_startinfo.cam1cam2      { top    :    20px; left   : 0%; }
+
+  .livestream_main_container.cam2cam1 { top    :    0%;  left   : -25%;  z-index : 106;  }
+  .livestream_2nd_container.cam2cam1  { position : absolute; top : 70px;  left : 25%; }
+  .livestream_record.cam2cam1         { top    :   10vh; left   : -25%; }
+  .livestream_links.cam2cam1          { top    :   15vh; left   : 0%; }
+  .livestream_startinfo.cam2cam1      { top    :   15vh; left   : 0%; } 
+
+}

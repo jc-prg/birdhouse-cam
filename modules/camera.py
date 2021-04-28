@@ -655,6 +655,17 @@ class myCamera(threading.Thread):
 
 
    #----------------------------------
+   
+   def detectImage(self, file_info):
+       '''
+       check if similarity is under threshold
+       '''
+       threshold  = float(self.param["similarity"]["threshold"])
+       similarity = float(file_info["similarity"])
+       if similarity != 0 and similarity < threshold: return 1
+       else:                                          return 0
+
+   #----------------------------------
 
    def selectImage(self, timestamp, file_info, check_similarity=True):
        '''
@@ -682,6 +693,7 @@ class myCamera(threading.Thread):
 
        return False
 
+   #----------------------------------
 
    def writeImage(self,filename,image,scale_percent=100):
        '''

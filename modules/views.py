@@ -1,21 +1,5 @@
 #!/usr/bin/python3
 
-# In Progress:
-# - ...
-# Backlog:
-# -> GET to myViews
-# -> POST to myAPI
-#
-# - show videos in favorits section
-# - show videos in day views (with play icon on it)
-# - Optimize data handling
-#   -> Queue for writing into JSON (e.g. for status changes)
-#   -> using a CouchDB instead of JSON files
-# - In progress (error!): Restart camera threads via API, Shutdown all services via API, Trigger RPi halt/reboot via API
-# - password for external access (to enable admin from outside)
-# - Idea: set to_be_deleted when below threshold; don't show / backup those files
-
-
 import io, os, time
 import logging
 import json, codecs
@@ -107,8 +91,18 @@ class myViews(threading.Thread):
            which_cam   = param[1]
            if not which_cam in self.camera:
               logging.warning("Unknown camera requested.")
-              return ""
-        else: which_cam = "cam1"
+              return path, ""
+              
+        elif "/api" in path:
+           param        = path.split("/")
+           if len(param) > 3:
+              which_cam = param[3]
+           if not which_cam in self.camera or len(param) <= 3:
+              logging.warning("Unknown camera requested.")
+              return path, ""
+        
+        else:
+           which_cam = "cam1"
                
         self.active_cams = []
         for key in self.camera:
@@ -144,6 +138,35 @@ class myViews(threading.Thread):
            html  += " / <a href='"+myPages[current][1]+"?"+self.active_cams[selected]+"'>"+self.active_cams[selected].upper()+"</a>"
 
         return html
+
+
+    def printLinksJSON(self, link_list, current="", cam=""):
+        '''
+        create a list of links based on URLs and descriptions defined in preset.py -> for JSON API
+        '''
+        json  = {}
+        count = 0
+        if cam != "": cam_link = cam
+        else:         cam_link = ""
+        
+        for link in link_list:
+            json[link] = {}
+            json[link]["link"]        = myPages[link][2]
+            json[link]["camera"]      = cam_link
+            json[link]["description"] = myPages[link][0]
+            json[link]["position"]    = count
+            count += 1
+            
+
+        if current != "" and len(self.active_cams) > 1:
+           selected   = self.active_cams.index(cam) + 1 
+           if selected >= len(self.active_cams): selected = 0
+           json["active_cam"] = {}
+           json["active_cam"]["link"]        = "/api" + myPages[current][2] + self.active_cams[selected]
+           json["active_cam"]["description"] = self.active_cams[selected].upper()
+           json["active_cam"]["position"]    = count
+
+        return json
 
 
     def printStar(self,file="",favorit=0,cam=""):
@@ -250,12 +273,14 @@ class myViews(threading.Thread):
               time       = stamp_date[6:8] + "." + stamp_date[4:6] + "." + stamp_date[0:4] + " " + stamp_time[0:2] + ":" + stamp_time[2:4]
               time      += "<br/>"
            else:
+              if "datestamp" in image_group[stamp]:  stamp_date = image_group[stamp]["datestamp"]
+              else:                                  stamp_date = ""
               stamp_time = stamp
               time       = stamp_time[0:2] + ":" + stamp_time[2:4] + ":" + stamp_time[4:6]
            
-           if "backup" in category:  url_dir = category  
-           elif "video" in category: url_dir = category  
-           else:                     url_dir = ""
+           if "backup" in category:  url_dir = os.path.join(self.config.directories["backup"], stamp_date)
+           elif "video" in category: url_dir = self.config.directories["videos"]
+           else:                     url_dir = self.config.directories["images"]
            
            # addons, e.g. small live stream with special links
            if "type" in image_group[stamp] and image_group[stamp]["type"] == "addon":
@@ -303,10 +328,10 @@ class myViews(threading.Thread):
 
                 hires        = ""
                 description  = time + " ("+similarity+")"
-                lowres       = url_dir + image_group[stamp]["lowres"]
+                lowres       = os.path.join("/", url_dir, image_group[stamp]["lowres"])
                 if "hires" in image_group[stamp]:
                    hires      = "" # image_group[stamp]["hires"]
-                   javascript ="imageOverlay(\"" + url_dir + image_group[stamp]["hires"] + "\",\"" + description + "\");"
+                   javascript ="imageOverlay(\"" + os.path.join("/", url_dir, image_group[stamp]["hires"]) + "\",\"" + description + "\");"
                    
              # if video
              elif "video_file_short" in image_group[stamp]:
@@ -372,7 +397,7 @@ class myViews(threading.Thread):
         return html
 
     #-------------------------------------
-
+    #--------------------------------------
     
     def createIndex(self, server):
         '''
@@ -382,7 +407,7 @@ class myViews(threading.Thread):
         path, which_cam       = self.selectedCamera()
         content               = {}
         content["active_cam"] = which_cam
-
+        content["view"]       = "index"
         
         if self.camera["cam1"].active and self.camera["cam2"].active:
            if which_cam == "cam1":        template = "index_cam1+cam2.html"
@@ -393,15 +418,18 @@ class myViews(threading.Thread):
            template = "index.html"
            
         if self.adminAllowed():
-           content["links"]   = self.printLinks(link_list=("favorit","today","backup","cam_info"), cam=which_cam)
-           content["record"]  = "<br/>" + which_cam.upper() + ": <button onclick='requestAPI(\"/start/recording/" + which_cam + "\");'>Record</button> &nbsp;"
-           content["record"] += "<button onclick='requestAPI(\"/stop/recording/" + which_cam + "\");'>Stop</button>"
+           content["links"]       = self.printLinks(link_list=("favorit","today","backup","cam_info"), cam=which_cam)
+           content["links_json"]  = self.printLinksJSON(link_list=("favorit","today","backup","cam_info"), cam=which_cam)
+           content["record"]      = "<br/>" + which_cam.upper() + ": <button onclick='requestAPI(\"/start/recording/" + which_cam + "\");'>Record</button> &nbsp;"
+           content["record"]      += "<button onclick='requestAPI(\"/stop/recording/" + which_cam + "\");'>Stop</button>"
         else:
-           content["links"]   = self.printLinks(link_list=("favorit","today","backup"), cam=which_cam)
+           content["links"]       = self.printLinks(link_list=("favorit","today","backup"), cam=which_cam)
+           content["links_json"]  = self.printLinksJSON(link_list=("favorit","today","backup"), cam=which_cam)
         
 
         return template, content
 
+    #--------------------------------------
 
     def createFavorits(self, server):
         '''
@@ -409,8 +437,12 @@ class myViews(threading.Thread):
         '''
         self.server           = server
         path, which_cam       = self.selectedCamera()
-        content               = {}
-        content["active_cam"] = which_cam
+        content               = {
+            "active_cam"        : which_cam,
+            "view"              : "favorits",
+            "entries"           : {},
+            "groups"            : {}
+            }
         template              = "list.html"
         html                  = ""
         favorits              = {}
@@ -424,11 +456,11 @@ class myViews(threading.Thread):
         if self.config.exists("videos"):
            files_all = self.config.read_cache(config="videos")
            for file in files_all:
-               date = files_all[file]["date_start"].split("_")[0]
+               date = file.split("_")[0]
                if "favorit" in files_all[file] and int(files_all[file]["favorit"]) == 1: 
                   if not date in files_videos: files_videos[date] = {}
                   files_videos[date][file] = files_all[file]
-
+                  
         # today
         date_today = datetime.now().strftime("%Y%m%d")
         files      = self.config.read_cache(config="images")
@@ -437,74 +469,129 @@ class myViews(threading.Thread):
         for stamp in files:
             if date_today == files[stamp]["datestamp"] and "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
                new = datetime.now().strftime("%Y%m%d")+"_"+stamp
-               favorits[new]           = files[stamp]
-               favorits[new]["source"] = ("images","")
-               favorits[new]["date"]   = "Aktuell"
-               favorits[new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+               favorits[new]              = files[stamp]
+               favorits[new]["source"]    = ("images","")
+               favorits[new]["date"]      = "Aktuell"
+               favorits[new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+               favorits[new]["type"]      = "image"
+               favorits[new]["category"]  = category+stamp
+               favorits[new]["directory"] = "/"+self.config.directories["images"]
 
         if date_today in files_videos:
           for stamp in files_videos[date_today]:
                new = stamp
-               favorits[new]           = files_videos[date_today][stamp]
-               favorits[new]["source"] = ("videos","")
-               favorits[new]["date"]   = "Aktuell"
-               favorits[new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+               favorits[new]              = files_videos[date_today][stamp]
+               favorits[new]["source"]    = ("videos","")
+               favorits[new]["date"]      = "Aktuell"
+               favorits[new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+               favorits[new]["type"]      = "video"
+               favorits[new]["category"]  = category+stamp
+               favorits[new]["directory"] = "/"+self.config.directories["videos"]
 
         if len(favorits) > 0:
            html += self.printImageGroup(title="Heute &nbsp; &nbsp; &nbsp; &nbsp;", group_id="today", image_group=favorits, category=category, header=True, header_open=True, header_count=['star'], cam=which_cam)
 
+           content["view_count"]      = ["star"]           
+           content["groups"]["today"] = []
+           for entry in favorits: 
+             content["entries"][entry] = favorits[entry]
+             content["groups"]["today"].append(entry)
+             
         # other days
         main_directory = self.config.directory(config="backup")
         dir_list       = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
         dir_list       = list(reversed(sorted(dir_list)))
         
+        video_list = []
+        for file_date in files_videos:
+          if file_date not in dir_list:
+            dir_list.append(file_date)
+            video_list.append(file_date)
+        
+        dir_list       = list(reversed(sorted(dir_list)))
+
+        logging.error("---")
+        logging.error(str(dir_list))
+        logging.error(str(video_list))
+                
         for directory in dir_list:
-            category     = "/backup/"+directory+"/"
+            category            = "/backup/"+directory+"/"
+            favorits[directory] = {}
+            
             if self.config.exists(config="backup", date=directory):
                files_data = self.config.read_cache(config="backup", date=directory)
-               
                if "info" in files_data and "files" in files_data:
                  files      = files_data["files"]
                  date       = directory[6:8]+"."+directory[4:6]+"."+directory[0:4]
-                 favorits[directory] = {}
-                 for stamp in files:
-                  if "datestamp" in files[stamp] and files[stamp]["datestamp"] == directory:
-                    if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
-                      new = directory+"_"+stamp
-                      favorits[directory][new]           = files[stamp]
-                      favorits[directory][new]["source"] = ("backup",directory)
-                      favorits[directory][new]["date"]   = date
-                      favorits[directory][new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
-                      favorits[directory][new]["date2"]  = favorits[directory][new]["date"]
+                 
+                 if directory not in video_list:
+                   for stamp in files:
+                    if "datestamp" in files[stamp] and files[stamp]["datestamp"] == directory:
+                      if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
+                        new = directory+"_"+stamp
+                        favorits[directory][new]              = files[stamp]
+                        favorits[directory][new]["source"]    = ("backup",directory)
+                        favorits[directory][new]["date"]      = date
+                        favorits[directory][new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+                        favorits[directory][new]["date2"]     = favorits[directory][new]["date"]
+                        favorits[directory][new]["type"]      = "image"
+                        favorits[directory][new]["category"]  = category+stamp
+                        favorits[directory][new]["directory"] = "/"+self.config.directories["backup"]+directory+"/"
 
-                 if directory in files_videos:
+            if directory in files_videos:
                    for stamp in files_videos[directory]:
-                     new = stamp
-                     favorits[directory][new]           = files_videos[directory][stamp]
-                     favorits[directory][new]["source"] = ("videos","")
-                     favorits[directory][new]["date"]   = date
-                     favorits[directory][new]["time"]   = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+                     new   = stamp
+                     date  = directory[6:8]+"."+directory[4:6]+"."+directory[0:4]
+                     favorits[directory][new]              = files_videos[directory][stamp]
+                     favorits[directory][new]["source"]    = ("videos","")
+                     favorits[directory][new]["date"]      = date  #?????
+                     favorits[directory][new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
+                     favorits[directory][new]["type"]      = "video"
+                     favorits[directory][new]["category"]  = "/videos/"+stamp
+                     favorits[directory][new]["directory"] = "/"+self.config.directories["videos"]
                      
-                 if len(favorits[directory]) > 0:
+            if len(favorits[directory]) > 0:
                     html += self.printImageGroup(title=date, group_id=directory, image_group=favorits[directory], category=category, header=True, header_open=True, header_count=['star'], cam=which_cam)
+                    
+                    content["groups"][date] = []
+                    for entry in favorits[directory]:
+                      content["entries"][entry] = favorits[directory][entry]
+                      content["groups"][date].append(entry)
 
 
-        content["subtitle"]  = myPages["favorit"][0]
-        content["links"]     = self.printLinks(link_list=("live","today","videos","backup"), cam=which_cam)
-        content["file_list"] = html
+        content["view_count"]  = ["star"]           
+        content["subtitle"]    = myPages["favorit"][0]
+        content["links"]       = self.printLinks(link_list=("live","today","videos","backup"), cam=which_cam)
+        content["links_json"]  = self.printLinksJSON(link_list=("live","today","videos","backup"), cam=which_cam)
+        content["file_list"]   = html
         
         return template, content
 
+    #--------------------------------------
 
     def createList(self, server):
         '''
         Page with pictures (and videos) of a single day
         '''
         self.server           = server
-        path, which_cam       = self.selectedCamera()
-        content               = {}
-        content["active_cam"] = which_cam
         param                 = server.path.split("/")
+        path, which_cam       = self.selectedCamera()
+
+        if param[1] != "api":
+           if len(param) > 2: date_backup = param[2]
+           else:              date_backup = ""
+        else:
+           if len(param) > 4: date_backup = param[4]
+           else:              date_backup = ""
+
+        content               = {
+            "active_cam"        : which_cam,
+            "active_date"       : date_backup,
+            "view"              : "list",
+            "entries"           : {},
+            "entries_delete"    : {},
+            "entries_yesterday" : {}
+            }
         template              = "list.html"
         html                  = ""
         files_all             = {}
@@ -512,32 +599,39 @@ class myViews(threading.Thread):
 
         date_today      = datetime.now().strftime("%Y%m%d")
         date_yesterday  = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")   
-        if len(param) > 2: date_backup = param[2]
-        else:              date_backup = ""
-
-        if param[1] == "backup":
+        
+        if date_backup != "":
+           backup           = True
            path             = self.config.directory(config="backup", date=date_backup)
            files_data       = self.config.read_cache(config="backup", date=date_backup)
            files_all        = files_data["files"]
            check_similarity = False
            category         = "/backup/" + date_backup + "/"
+           subdirectory     = date_backup + "/"
            time_now         = "000000"
            first_title      = ""
 
-           content["subtitle"]  = myPages["backup"][0] + " " + files_data["info"]["date"] + " (" + self.camera[which_cam].name + ", " + str(files_data["info"]["count"]) + " Bilder)"
-           content["links"]     = self.printLinks(link_list=("live","today","backup","favorit"), current='backup', cam=which_cam)
+           content["subtitle"]    = myPages["backup"][0] + " " + files_data["info"]["date"] + " (" + self.camera[which_cam].name + ", " + str(files_data["info"]["count"]) + " Bilder)"
+           content["links"]       = self.printLinks(link_list=("live","today","backup","favorit"), current='backup', cam=which_cam)
+           content["links_json"]  = self.printLinksJSON(link_list=("live","today","backup","favorit"), current='backup', cam=which_cam)
 
         elif os.path.isfile(self.config.file(config="images")):
+           backup           = False
            path             = self.config.directory(config="images")
            files_all        = self.config.read_cache(config="images")
            time_now         = datetime.now().strftime('%H%M%S')
            check_similarity = True
            category         = "/current/"
+           subdirectory     = ""
            first_title      = "Heute &nbsp; "
 
            content["subtitle"]    = myPages["today"][0] + " (" + self.camera[which_cam].name + ")"
-           if self.adminAllowed(): content["links"]  = self.printLinks(link_list=("live","favorit","today_complete","videos","backup"), current='today', cam=which_cam)
-           else:                   content["links"]  = self.printLinks(link_list=("live","favorit","videos","backup"), current='today', cam=which_cam)
+           if self.adminAllowed():
+              content["links"]      = self.printLinks(link_list=("live","favorit","today_complete","videos","backup"), current='today', cam=which_cam)
+              content["links_json"] = self.printLinksJSON(link_list=("live","favorit","today_complete","videos","backup"), current='today', cam=which_cam)
+           else:
+              content["links"]      = self.printLinks(link_list=("live","favorit","videos","backup"), current='today', cam=which_cam)
+              content["links_json"] = self.printLinksJSON(link_list=("live","favorit","videos","backup"), current='today', cam=which_cam)
 
         if files_all != {}:
 
@@ -553,14 +647,18 @@ class myViews(threading.Thread):
              
              if ((int(stamp) < int(time_now) or time_now == "000000") and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
                if not "camera" in files_all[stamp] or self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
-                 if files_all[stamp]["datestamp"] == date_today or param[1] == "backup":
-                    files_today[stamp] = files_all[stamp]
+                 if files_all[stamp]["datestamp"] == date_today or backup:
+                    files_today[stamp]              = files_all[stamp]
+                    files_today[stamp]["type"]      = "image"
+                    files_today[stamp]["category"]  = category+stamp
+                    files_today[stamp]["detect"]    = self.camera[which_cam].detectImage(file_info=files_today[stamp])
+                    files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
                     count += 1
-
+                    
            if first_title == "":
               first_title = files_all[stamp]["date"]
               
-           else:
+           elif not backup:
               files_today["999999"] = {
                        "lowres" : "stream.mjpg?"+which_cam,
                        "hires"  : "/index.html?"+which_cam,
@@ -572,21 +670,28 @@ class myViews(threading.Thread):
            if self.adminAllowed(): header = True
            else:                   header = False
 
-           html_today += self.printImageGroup(title=first_title, group_id="today", image_group=files_today, category=category, header=header, header_open=True, header_count=['all','star','detect'], cam=which_cam)
+           html_today           += self.printImageGroup(title=first_title, group_id="today", image_group=files_today, category=category, header=header, header_open=True, header_count=['all','star','detect'], cam=which_cam)
+           content["entries"]    = files_today
 
            # Yesterday
            html_yesterday  = ""
            files_yesterday = {}
            stamps          = list(reversed(sorted(files_all.keys())))
-           if param[1] != "backup":
+           if not backup:
              for stamp in stamps: 
                if (int(stamp) >= int(time_now) and time_now != "000000") and "datestamp" in files_all[stamp] and files_all[stamp]["datestamp"] == date_yesterday:
                  if self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
-                    files_yesterday[stamp] = files_all[stamp]
+                    files_yesterday[stamp]              = files_all[stamp]
+                    files_yesterday[stamp]["type"]      = "image"
+                    files_yesterday[stamp]["category"]  = category+stamp
+                    files_yesterday[stamp]["detect"]    = self.camera[which_cam].detectImage(file_info=files_yesterday[stamp])
+                    files_yesterday[stamp]["directory"] = "/" + self.config.directories["images"]
                     count += 1
                          
            if len(files_yesterday) > 0:
-              html_yesterday += self.printImageGroup(title="Gestern", group_id="yesterday", image_group=files_yesterday, category=category, header=True, header_open=False, header_count=['all','star','detect'],  cam=which_cam)
+              html_yesterday              += self.printImageGroup(title="Gestern", group_id="yesterday", image_group=files_yesterday, category=category, header=True, header_open=False, header_count=['all','star','detect'],  cam=which_cam)
+              content["entries_yesterday"] = files_yesterday
+
 
            # To be deleted
            html_recycle  = ""
@@ -595,15 +700,19 @@ class myViews(threading.Thread):
              for stamp in stamps:
                if "to_be_deleted" in files_all[stamp] and int(files_all[stamp]["to_be_deleted"]) == 1:
                  if files_all[stamp]["camera"] == which_cam:
-                    files_recycle[stamp] = files_all[stamp]
+                    files_recycle[stamp]              = files_all[stamp]
+                    files_recycle[stamp]["type"]      = "image"
+                    files_recycle[stamp]["category"]  = category+stamp
+                    files_recycle[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
                     count += 1
                        
            if len(files_recycle) > 0:
-              if param[1] == "backup": url = "/remove/backup/" + param[2]
-              else:                    url = "/remove/today"
+              if backup: url = "/remove/backup/" + date_backup
+              else:      url = "/remove/today"
                    
               intro          = "<a onclick='removeFiles(\"" + url + "\");' style='cursor:pointer;'>Delete all files marked for recycling ...</a>"
-              html_recycle += self.printImageGroup(title="Recycle", group_id="recycle", image_group=files_recycle, category=category, header=True, header_open=False, header_count=['recycle'], cam=which_cam, intro=intro)
+              html_recycle             += self.printImageGroup(title="Recycle", group_id="recycle", image_group=files_recycle, category=category, header=True, header_open=False, header_count=['recycle'], cam=which_cam, intro=intro)
+              content["entries_delete"] = files_recycle
 
            html += html_today
            html += html_yesterday               
@@ -614,9 +723,11 @@ class myViews(threading.Thread):
         else:
            html += "<div class='separator'>Keine Bilder vorhanden.</div>"
 
-        content["file_list"] = html
+        content["view_count"] = ["all","star","detect"]
+        content["file_list"]  = html
         return template, content
 
+    #--------------------------------------
 
     def createBackupList(self, server):
         '''
@@ -624,8 +735,11 @@ class myViews(threading.Thread):
         '''
         self.server           = server
         path, which_cam       = self.selectedCamera()
-        content               = {}
-        content["active_cam"] = which_cam
+        content               = {
+           "active_cam" : which_cam,
+           "view"       : "backup",
+           "entries"    : {}
+           }
         param                 = server.path.split("/")
         template              = "list.html"
         html                  = ""
@@ -650,12 +764,13 @@ class myViews(threading.Thread):
            html       += self.printImageContainer(description=myPages["today"][0], lowres=imageToday, hires=myPages["today"][1]+"?"+which_cam, star='' ,window="self")
 
         for directory in dir_list:
-
+        
           if os.path.isfile(self.config.file(config="backup", date=directory)):
              file_data = self.config.read_cache(config="backup", date=directory)
              
              if not "info" in file_data or not "files" in file_data:
                html  += self.printImageContainer(description="<b>"+directory+"</b><br/>Fehler in Config-Datei!", lowres="EMPTY") + "\n"
+               content["entries"][directory]["error"] = True
                
              else:
                date             = file_data["info"]["date"]
@@ -695,11 +810,29 @@ class myViews(threading.Thread):
                dir_size_cam    = round(dir_size_cam/1024/1024,1)
                dir_total_size += dir_size
                files_total    += count
+               image           = os.path.join(self.config.directories["backup"],image)
                  
                if dir_count_delete > 0: delete_info = "<br/>(Recycle: " + str(dir_count_delete) + ")"
                else:                    delete_info = ""
                if dir_count_cam > 0:    html  += self.printImageContainer(description="<b>"+date+"</b><br/>"+str(dir_count_cam)+" / "+str(dir_size_cam)+" MB" + delete_info, lowres=image, hires="/backup/"+directory+"/list_short.html?"+which_cam, window="self") + "\n"
                #else:                    html  += self.printImageContainer(description="<b>"+date+"</b><br/>Leer für "+which_cam, lowres="EMPTY") + "\n"
+
+               image_file = image.replace(directory+"/","")
+               image_file = image_file.replace(self.config.directories["backup"],"")
+               content["entries"][directory] = {
+                  "directory"    : "/" + self.config.directories["backup"] + directory + "/",
+                  "type"         : "directory",
+                  "camera"       : which_cam,
+                  "date"         : file_data["info"]["date"],
+                  "datestamp"    : directory,
+                  "count"        : file_data["info"]["count"],
+                  "count_delete" : dir_count_delete,
+                  "count_cam"    : dir_count_cam,
+                  "dir_size"     : dir_size,
+                  "dir_size_cam" : dir_size_cam,
+                  "lowres"       : image_file
+                  }
+
 
           else:
              logging.error("Archive: no config file available: /backup/" + directory)
@@ -707,14 +840,19 @@ class myViews(threading.Thread):
 
         html += "<div style='padding:2px;float:left;width:100%'><hr/>Gesamt: " + str(round(dir_total_size,1)) + " MB / " + str(files_total) + " Bilder</div>"
 
-        content["file_list"] = html
-        content["subtitle"]  = myPages["backup"][0] + " (" + self.camera[which_cam].name + ")"
-        if self.adminAllowed(): content["links"]  = self.printLinks(link_list=("live","favorit","today","today_complete","videos"), current="backup", cam=which_cam)
-        else:                   content["links"]  = self.printLinks(link_list=("live","favorit","today","videos"), current="backup", cam=which_cam)
+        content["view_count"] = []           
+        content["file_list"]  = html
+        content["subtitle"]   = myPages["backup"][0] + " (" + self.camera[which_cam].name + ")"
+        if self.adminAllowed():
+           content["links"]      = self.printLinks(link_list=("live","favorit","today","today_complete","videos"), current="backup", cam=which_cam)
+           content["links_json"] = self.printLinksJSON(link_list=("live","favorit","today","today_complete","videos"), current="backup", cam=which_cam)
+        else:
+           content["links"]      = self.printLinks(link_list=("live","favorit","today","videos"), current="backup", cam=which_cam)
+           content["links_json"] = self.printLinksJSON(link_list=("live","favorit","today","videos"), current="backup", cam=which_cam)
 
-        content["file_list"] = html
         return template, content
 
+    #--------------------------------------
 
     def createCompleteListToday(self, server):
         '''
@@ -722,8 +860,13 @@ class myViews(threading.Thread):
         '''
         self.server           = server
         path, which_cam       = self.selectedCamera()
-        content               = {}
-        content["active_cam"] = which_cam
+        content               = {
+            "active_cam" :  which_cam,
+            "view"       : "list_complete",
+            "entries"    : {},
+            "groups"     : {}
+            }
+            
         param                 = server.path.split("/")
         template              = "list.html"
         html                  = ""
@@ -752,44 +895,31 @@ class myViews(threading.Thread):
                       if "camera" in files_all[stamp] and files_all[stamp]["camera"] == which_cam:
                          threshold = self.camera[which_cam].param["similarity"]["threshold"]
                          if float(files_all[stamp]["similarity"]) < float(threshold) and float(files_all[stamp]["similarity"]) > 0: count_diff += 1
-                         files_part[stamp] = files_all[stamp]
+                         files_part[stamp]              = files_all[stamp]
+                         files_part[stamp]["type"]      = "image"
+                         files_part[stamp]["detect"]    = self.camera[which_cam].detectImage(file_info=files_part[stamp])
+                         files_part[stamp]["category"]  = category+stamp
+                         files_part[stamp]["directory"] = "/" + self.config.directories["images"]
 
             if len(files_part) > 0:
                html += self.printImageGroup(title="Bilder "+hour+":00", group_id=hour_min, image_group=files_part, category=category, header=True, header_open=False, cam=which_cam)
-
-        # Yesterday
-        files_part = {}
-        html_yesterday   = ""
-        header_yesterday = True
-        for hour in hours:
-            hour_min    = hour + "0000"
-            hour_max    = str(int(hour)+1) + "0000"
-            files_part  = {}
-            count_diff  = 0
-            stamps      = list(reversed(sorted(files_all.keys())))
-            for stamp in stamps:
-               if int(stamp) > int(time_now) and int(stamp) >= int(hour_min) and int(stamp) < int(hour_max):
-                  if "datestamp" in files_all[stamp] and files_all[stamp]["datestamp"] == date_yesterday:
-                     if "camera" in files_all[stamp] and files_all[stamp]["camera"] == which_cam:
-                        threshold = self.camera[which_cam].param["similarity"]["threshold"]
-                        if float(files_all[stamp]["similarity"]) < float(threshold) and float(files_all[stamp]["similarity"]) > 0: count_diff += 1
-                        files_part[stamp] = files_all[stamp]
-
-            if len(files_part) > 0:
-               if header_yesterday: 
-                  html_yesterday  += "<div class='separator'><hr/>Gestern<hr/></div>"
-                  header_yesterday = False
-               html_yesterday += self.printImageGroup(title="Bilder "+hour+":00", group_id=hour_min, image_group=files_part, category=category, header=True, header_open=False, cam=which_cam)
-
-        html += html_yesterday
+               
+               content["groups"][hour+":00"] = []
+               for entry in files_part:
+                  content["entries"][entry] = files_part[entry]
+                  content["groups"][hour+":00"].append(entry)
+                  
         html += "<div class='separator'>&nbsp;<br/>&nbsp;</div>"
 
-        content["file_list"] = html
-        content["subtitle"]  = myPages["today_complete"][0] + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Bilder)"
-        content["links"]     = self.printLinks(link_list=("live","favorit","today","videos","backup"), current="today_complete", cam=which_cam)
+        content["view_count"]  = ["all","star","detect","recycle"]
+        content["file_list"]   = html
+        content["subtitle"]    = myPages["today_complete"][0] + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Bilder)"
+        content["links"]       = self.printLinks(link_list=("live","favorit","today","videos","backup"), current="today_complete", cam=which_cam)
+        content["links_json"]  = self.printLinksJSON(link_list=("live","favorit","today","videos","backup"), current="today_complete", cam=which_cam)
 
         return template, content
 
+    #--------------------------------------
 
     def createVideoList(self, server):
         '''
@@ -799,6 +929,7 @@ class myViews(threading.Thread):
         path, which_cam       = self.selectedCamera()
         content               = {}
         content["active_cam"] = which_cam
+        content["view"]       = "list_videos"
         param                 = server.path.split("/")
         template              = "list.html"
         html                  = ""
@@ -813,31 +944,49 @@ class myViews(threading.Thread):
         if self.config.exists("videos"):
            files_all = self.config.read_cache(config="videos")
            for file in files_all:
+               files_all[file]["directory"] = self.camera[which_cam].param["video"]["streaming_server"]
+               files_all[file]["type"]      = "video"
+               files_all[file]["category"]  = category+file
                if "to_be_deleted" in files_all[file] and int(files_all[file]["to_be_deleted"]) == 1: files_delete[file] = files_all[file]
                else:                                                                                 files_show[file]   = files_all[file]
                   
            if self.adminAllowed():            
-              if len(files_show) > 0:   html  += self.printImageGroup(title="Aufgezeichnete Videos", group_id="videos", image_group=files_show, category=category, header=True, header_open=True, header_count=['all','star'], cam=which_cam)
+              if len(files_show) > 0:   
+                 html  += self.printImageGroup(title="Aufgezeichnete Videos", group_id="videos", image_group=files_show, category=category, header=True, header_open=True, header_count=['all','star'], cam=which_cam)
+                 content["entries"] = files_show
+                 
               if len(files_delete) > 0:
                  url    = "/remove/video"
                  intro  = "<a onclick='removeFiles(\"" + url + "\");' style='cursor:pointer;'>Delete all files marked for recycling ...</a>"
                  html  += self.printImageGroup(title="Zu recycelnde Videos", group_id="videos_recylce", image_group=files_delete, category=category, header=True, header_open=False, header_count=['recycle'], cam=which_cam, intro=intro)
+                 content["entries_delete"] = files_delete
+                 
            else:
-              if len(files_show) > 0:   html  += self.printImageGroup(title="Aufgezeichnete Videos", group_id="videos", image_group=files_show, category=category, header=False, header_open=True, header_count=['all','star'], cam=which_cam)
+              if len(files_show) > 0:
+                 html  += self.printImageGroup(title="Aufgezeichnete Videos", group_id="videos", image_group=files_show, category=category, header=False, header_open=True, header_count=['all','star'], cam=which_cam)
+                 content["entries"] = files_show
 
            if len(files_show) > 0 or len(files_delete) > 0: html += "<div class='separator'>&nbsp;<br/>&nbsp;</div>"
            
              
         if html == "": 
-           html  += "<div class='separator' style='width:100%;text-color:lightred;'>Keine Videos vorhanden</div>"
+           html             += "<div class='separator' style='width:100%;text-color:lightred;'>Keine Videos vorhanden</div>"
+           content["entries"]  = {}
 
-        content["subtitle"]  = myPages["videos"][0] # + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
-        if self.adminAllowed():  content["links"] = self.printLinks(link_list=("live","favorit","cam_info","today","backup"), current="today_complete", cam=which_cam)
-        else:                    content["links"] = self.printLinks(link_list=("live","favorit","today","backup"), current="today_complete", cam=which_cam)
-        content["file_list"] = html
+        content["view_count"] = ["all","star","detect","recycle"]
+        content["file_list"]  = html
+        content["subtitle"]   = myPages["videos"][0] # + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
+        
+        if self.adminAllowed():  
+           content["links"]       = self.printLinks(link_list=("live","favorit","cam_info","today","backup"), current="today_complete", cam=which_cam)
+           content["links_json"]  = self.printLinksJSON(link_list=("live","favorit","cam_info","today","backup"), current="today_complete", cam=which_cam)
+        else:                    
+           content["links"]       = self.printLinks(link_list=("live","favorit","today","backup"), current="today_complete", cam=which_cam)
+           content["links_json"]  = self.printLinksJSON(link_list=("live","favorit","today","backup"), current="today_complete", cam=which_cam)
 
         return template, content
 
+    #--------------------------------------
 
     def createCameraList(self, server):
         '''
@@ -847,13 +996,22 @@ class myViews(threading.Thread):
         path, which_cam       = self.selectedCamera()
         content               = {}
         content["active_cam"] = which_cam
+        content["view"]       = "list_cameras"
+        content["entries"]    = {}
         param                 = server.path.split("/")
         template              = "list.html"
         html                  = ""
         count                 = 0
             
         for cam in self.camera:
-            info = self.camera[cam].param
+            info                                   = self.camera[cam].param
+            content["entries"][cam]                = self.camera[cam].param
+            content["entries"][cam]["lowres"]      = "/detection/stream.mjpg?"+cam
+            content["entries"][cam]["hires"]       = "/detection/stream.mjpg?"+cam
+            content["entries"][cam]["type"]        = "camera"
+            content["entries"][cam]["camera_type"] = self.camera[cam].type
+            content["entries"][cam]["active"]      = self.camera[cam].active
+            
             html += "<div class='camera_info'>"
             html += "<div class='camera_info_image'>"
 
@@ -863,7 +1021,7 @@ class myViews(threading.Thread):
             html += "</div>"
             html += "<div class='camera_info_text'><big><b>" + cam.upper() + ": " + info["name"] + "</b></big>"
             html   += "<ul>"
-            html   += "<li>Type: "   + info["type"] + "</li>"
+            html   += "<li>Type: "   + content["entries"][cam]["camera_type"] + "</li>"
             html   += "<li>Active: " + str(self.camera[cam].active) + "</li>"
             html   += "<li>Record: " + str(info["record"]) + "</li>"
             html   += "<li>Crop: "   + str(info["image"]["crop"]) + "</li>"
@@ -883,14 +1041,11 @@ class myViews(threading.Thread):
             if count < len(self.camera):
                html += "<div class='separator'><hr/>"
               
-#            if self.adminAllowed():
-#              html += "<div class='separator'><hr/>"
-#              html += "<button onclick='requestAPI(\"/restart-cameras\");'>Kameras neu starten</button>"
-#              html += "</div>"
-
-        content["subtitle"]  = myPages["cam_info"][0]
-        content["links"]     = self.printLinks(link_list=("live","favorit","today","videos","backup"), cam=which_cam)
-        content["file_list"] = html
+        content["view_count"]  = []
+        content["subtitle"]    = myPages["cam_info"][0]
+        content["links"]       = self.printLinks(link_list=("live","favorit","today","videos","backup"), cam=which_cam)
+        content["links_json"]  = self.printLinksJSON(link_list=("live","favorit","today","videos","backup"), cam=which_cam)
+        content["file_list"]   = html
 
         return template, content
 
@@ -904,15 +1059,23 @@ class myViews(threading.Thread):
         path, which_cam       = self.selectedCamera()
         content               = {}
         content["active_cam"] = which_cam
+        content["view"]       = "detail_video"
+        content["entries"]    = {}
         param                 = server.path.split("/")
         template              = "list.html"
         html                  = ""
         count                 = 0
         
+        if "api" in param:    video_id = param[4]
+        else:                 video_id = param[1]
+        
         config_data           = self.config.read_cache(config="videos")
-        if param[1] in config_data and "video_file" in config_data[param[1]]:
-            data        = config_data[param[1]]
-            description = ""
+        if video_id in config_data and "video_file" in config_data[video_id]:
+        
+            data                         = config_data[video_id]
+            content["entries"][video_id] = data
+            description                  = ""
+            
             html += "<div class='camera_info'>\n"
             html += "<div class='camera_info_image'>"
             
@@ -963,7 +1126,7 @@ class myViews(threading.Thread):
                files["VIDEOFILE"]  = self.camera[which_cam].param["video"]["streaming_server"] + data["video_file"]
                files["THUMBNAIL"]  = data["thumbnail"]
                files["LENGTH"]     = str(data["length"])
-               files["VIDEOID"]    = param[1]
+               files["VIDEOID"]    = video_id
                files["ACTIVE" ]    = which_cam
                files["JAVASCRIPT"] = "createShortVideo();"
             
@@ -980,9 +1143,11 @@ class myViews(threading.Thread):
         else:
            html += "<div class='separator'>Kein Video mit dieser ID &quot;" + param[1] + "&quot; verf&uuml;gbar.</div>"        
 
-        content["subtitle"]  = myPages["video_info"][0]
-        content["links"]     = self.printLinks(link_list=("live","favorit","videos"), cam=which_cam)
-        content["file_list"] = html
+        content["view_count"] = []
+        content["subtitle"]   = myPages["video_info"][0]
+        content["links"]      = self.printLinks(link_list=("live","favorit","videos"), cam=which_cam)
+        content["links_json"] = self.printLinksJSON(link_list=("live","favorit","today","videos","backup"), cam=which_cam)
+        content["file_list"]  = html
 
         return template, content
 

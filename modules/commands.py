@@ -1,21 +1,5 @@
 #!/usr/bin/python3
 
-# In Progress:
-# - ...
-# Backlog:
-# -> GET to myViews
-# -> POST to myAPI
-#
-# - show videos in favorits section
-# - show videos in day views (with play icon on it)
-# - Optimize data handling
-#   -> Queue for writing into JSON (e.g. for status changes)
-#   -> using a CouchDB instead of JSON files
-# - In progress (error!): Restart camera threads via API, Shutdown all services via API, Trigger RPi halt/reboot via API
-# - password for external access (to enable admin from outside)
-# - Idea: set to_be_deleted when below threshold; don't show / backup those files
-
-
 import io, os, time
 import logging
 import json, codecs
@@ -218,32 +202,6 @@ class myCommands(threading.Thread):
 
         return response
 
-    #-------------------------------------
-    
-    def restartCameras(self, server):
-        '''
-        restart cameras -> not ready yet
-        '''        
-        param    = server.path.split("/")
-        response = {}
-        
-        logging.info("Restart of camera threads requested ...")
-        for cam in self.camera:
-           self.camera[cam].stop()
-
-        self.camera = {}
-        self.config.reload()
-        for cam in self.config.param["cameras"]:
-          settings = self.config.param["cameras"][cam]
-          self.camera[cam] = myCamera(id=cam, type=settings["type"], record=settings["record"], param=settings, config=config)
-          if not camera[cam].error:
-             self.camera[cam].start()
-             self.camera[cam].param["path"] = config.param["path"]
-             self.camera[cam].setText("Restarting ...")
-          response["command"] = ["Restart cameras"]
-
-        return response
-        
     #-------------------------------------
     
     def createShortVideo(self, server):

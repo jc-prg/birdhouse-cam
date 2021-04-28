@@ -47,7 +47,7 @@ myParameters = {
        },
      "cam2"  : {
        "type"              : "usb",
-       "name"              : "Außen",
+       "name"              : "Au&szlig;en",
        "source"            : 1,
        "active"            : True,
        "record"            : True,
@@ -79,15 +79,27 @@ myParameters = {
 }
 
 myPages = {
-  "live"            : ("Live-Stream","/index.html"),
-  "backup"          : ("Archiv","/list_backup.html"),
-  "today"           : ("Heute","/list_short.html"),
-  "today_complete"  : ("Alle heute","/list_new.html"),
-  "favorit"         : ("Favoriten","/list_star.html"),
-  "cam_info"        : ("Kameras","/cameras.html"),
-  "video_info"      : ("Video Info","/video-info.html"),
-  "videos"          : ("Videos","/videos.html"),
-  "save"            : ("Speichern","/image.jpg")
+  "live"            : ("Live-Stream", "/index.html",       "INDEX"),
+  "backup"          : ("Archiv",      "/list_backup.html", "ARCHIVE"),
+  "today"           : ("Heute",       "/list_short.html",  "TODAY"),
+  "today_complete"  : ("Alle heute",  "/list_new.html",    "TODAY_COMPLETE"),
+  "favorit"         : ("Favoriten",   "/list_star.html",   "FAVORITS"),
+  "cam_info"        : ("Kameras",     "/cameras.html",     "CAMERAS"),
+  "video_info"      : ("Video Info",  "/video-info.html",  ""),
+  "videos"          : ("Videos",      "/videos.html",      "VIDEOS"),
+  "save"            : ("Speichern",   "/image.jpg",        "")
+}
+
+myMIMEtypes = {
+  '.css'  : 'text/css',
+  '.html' : 'text/html',
+  '.js'   : 'application/javascript',
+  '.json' : 'application/json',
+  '.png'  : 'image/png',
+  '.ico'  : 'image/ico',
+  '.mp4'  : 'video/mp4',
+  '.jpg'  : 'image/jpg',
+  '.jpeg' : 'image/jpg',
 }
 
 
