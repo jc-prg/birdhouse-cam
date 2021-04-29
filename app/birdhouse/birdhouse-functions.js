@@ -1,4 +1,11 @@
-//----------------------------------------
+//--------------------------------------
+// jc://birdhouse/, (c) Christoph Kloth
+//--------------------------------------
+// additional functions 
+//--------------------------------------
+/* INDEX:
+*/
+//--------------------------------------
 
 function videoOverlay(filename, description="", favorit="", to_be_deleted="") {
         check_iOS = iOS();
@@ -97,7 +104,11 @@ function createShortVideo() {
                 cam            = document.getElementById("active-cam").value;
                 
                 //alert("/create-short-video/"+video_id_value+"/"+tc_in+"/"+tc_out+"/"+cam);
-	        requestAPI("/create-short-video/"+video_id_value+"/"+tc_in+"/"+tc_out+"/"+cam+"/", callback=createShortVideoShow, index=video_id);
+//	        requestAPI("/create-short-video/"+video_id_value+"/"+tc_in+"/"+tc_out+"/"+cam+"/", callback=createShortVideoShow, index=video_id);
+	        
+	        commands = ["create-short-video",video_id_value,tc_in,tc_out,cam];
+	        mboxApp.requestAPI('POST', commands, '', birdhouse_AnswerTrim,'','createShortVideo');
+//	        #POST#,[#remove#"+command+"],##,birdhouse_AnswerDelete,##,#birdhouse_ImageGroup#)
 	        }
 	else {
 	        console.error("createShortVideo: Field 'video-id' is missing!");
@@ -111,11 +122,16 @@ function createShortVideoShow(index) {
 	}
 	
 	
-function toggleVideoEdit() {
-        video_edit = document.getElementById("camera_video_edit");
-        if (video_edit != null) {
-        	if (video_edit.style.display == "none")	{ video_edit.style.display = "block"; }
-        	else						{ video_edit.style.display = "none"; }
+function toggleVideoEdit(status="") {
+        video_edit1 = document.getElementById("camera_video_edit");
+        video_edit2 = document.getElementById("camera_video_edit_overlay");
+        if (video_edit1 != null) {
+        	if (status == "") {
+	        	if (video_edit1.style.display == "none")	{ video_edit1.style.display = "block"; video_edit2.style.display = "block"; }
+        		else						{ video_edit1.style.display = "none";  video_edit2.style.display = "none"; }
+        		}
+        	else if (status == false) { video_edit1.style.display = "none";  video_edit2.style.display = "none"; }
+        	else if (status == true)  { video_edit1.style.display = "block"; video_edit2.style.display = "block"; }
         	}
 	else {
 	        console.error("toggleVideoEdit: Video edit doesn't exist.");

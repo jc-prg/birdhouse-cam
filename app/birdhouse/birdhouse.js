@@ -1,7 +1,7 @@
 //--------------------------------------
-// jc://app-framework/, (c) Christoph Kloth
+// jc://birdhouse/, (c) Christoph Kloth
 //--------------------------------------
-// main functions to load the app
+// main functions 
 //--------------------------------------
 /* INDEX:
 */
@@ -13,6 +13,12 @@ var color_code = {
 	"recycle" : "red",
 	"default" : "white"
 	}
+	
+var app_active_cam        = "";
+var app_available_cameras = [];
+var app_active_page       = "";
+var app_active_date       = "";
+var app_admin_allowed     = false;
 
 //-----------------------------------------
 // load content from API and call print
@@ -31,97 +37,118 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 	}
 	
 //-----------------------------------------
-	// print titel and footer
-//-----------------------------------------
-
-function birdhousePrintTitle(data, active_page="", camera="") {
-
-	if (data["DATA"]["title"] != undefined)	{ setNavTitle(data["DATA"]["title"]); setTextById("title",data["DATA"]["title"]); }
-	else						{ setNavTitle("<No Name>"); }
-	if (data["DATA"]["subtitle"] != undefined)	{ setTextById("frame1", "<center><h2>" + data["DATA"]["subtitle"] + "</h2></center>"); }
-	else						{ setTextById("frame1", "<center><h2>" + data["DATA"]["title"] + "</h2></center>"); }
-	if (data["DATA"]["links"] != undefined)	{ setTextById("frame3", "<center>" + birdhouse_Links(data["DATA"]["links"]) + "</center>"); }
-	if (data["STATUS"]["start_time"] != undefined){ setTextById("frame4", "<center><small>" + lang( "STARTTIME") + ": " + data["STATUS"]["start_time"] + "</small></center>"); }
-	else						{ setTextById("frame4", ""); }
-	}
-
-//-----------------------------------------
-// handle status updates based on active page
+// print views based on active page
 //-----------------------------------------
 
 function birdhousePrint(data, active_page="", camera="") {
 
+	birdhouseSetMainVars(data);
 	birdhousePrintTitle(data, active_page, camera);	
 	birdhouseCameras = {};
-	if (data["DATA"]["cameras"] != undefined) { birdhouseCameras = data["DATA"]["cameras"]; }
-	if (data["DATA"]["active_camera"] != undefined) { app_active_cam = data["DATA"]["active_camera"]; }
+	
+	if (data["DATA"]["cameras"] != undefined)	{ birdhouseCameras = data["DATA"]["cameras"]; }
+	if (camera == "") 				{ camera = app_active_cam; }
 
-	if (active_page == "" && data["DATA"]["active_page"] != undefined) {
-		active_page = data["DATA"]["active_page"];
-		}
-		
 	// check if admin allowed! -> create respective menu
 	
-	if (active_page == "INDEX")			{ birdhouse_INDEX(data, camera); }
-	else if (active_page == "CAMERAS")		{ birdhouse_CAMERAS(lang("CAMERAS"),     data, camera); }
-	else if (active_page == "FAVORITS")		{ birdhouse_LIST(lang("FAVORITS"),       data, camera); }
-	else if (active_page == "VIDEOS")		{ birdhouse_LIST(lang("VIDEOS"),         data, camera); }
-	else if (active_page == "ARCHIVE")		{ birdhouse_LIST(lang("ARCHIVE"),        data, camera); }
-	else if (active_page == "TODAY")		{ birdhouse_LIST(lang("TODAY"),          data, camera); }
-	else if (active_page == "TODAY_COMPLETE")	{ birdhouse_LIST(lang("TODAY_COMPLETE"), data, camera, false); }
-	else						{ setTextById("frame2",lang("ERROR") + ": "+active_page); }
+	if (app_active_page == "INDEX")		{ birdhouse_INDEX(data, camera); }
+	else if (app_active_page == "CAMERAS")	{ birdhouse_CAMERAS(lang("CAMERAS"),     data, camera); }
+	else if (app_active_page == "FAVORITS")	{ birdhouse_LIST(lang("FAVORITS"),       data, camera); }
+	else if (app_active_page == "ARCHIVE")	{ birdhouse_LIST(lang("ARCHIVE"),        data, camera); }
+	else if (app_active_page == "TODAY")		{ birdhouse_LIST(lang("TODAY"),          data, camera); }
+	else if (app_active_page == "TODAY_COMPLETE")	{ birdhouse_LIST(lang("TODAY_COMPLETE"), data, camera, false); }
+	else if (app_active_page == "VIDEOS")		{ birdhouse_LIST(lang("VIDEOS"),         data, camera); }
+	else if (app_active_page == "VIDEO_DETAIL")	{ birdhouse_VIDEO_DETAIL(lang("VIDEOS"), data, camera); }
+	else						{ setTextById("frame2",lang("ERROR") + ": "+app_active_page); }
 	
 	scroll(0,0);
 	}
 	
 	
 //-----------------------------------------
+// print titel and footer, set vars
+//-----------------------------------------
+
+function birdhousePrintTitle(data, active_page="", camera="") {
+
+	var title = document.getElementById("navTitle");
+	if (title.innerHTML == "..." && data["DATA"]["title"] != undefined)	{ setNavTitle(data["DATA"]["title"]); setTextById("title",data["DATA"]["title"]); }
+	if (data["DATA"]["subtitle"] != undefined)		{ setTextById("frame1", "<center><h2>" + data["DATA"]["subtitle"] + "</h2></center>"); }
+	else							{ setTextById("frame1", "<center><h2>" + data["DATA"]["title"] + "</h2></center>"); }
+	if (data["DATA"]["links"] != undefined)		{ setTextById("frame3", "<center>" + birdhouse_Links(data["DATA"]["links"]) + "</center>"); }
+	if (data["STATUS"]["start_time"] != undefined)	{ setTextById("frame4", "<center><small>" + lang( "STARTTIME") + ": " + data["STATUS"]["start_time"] + "</small></center>"); }
+	else							{ setTextById("frame4", ""); }
+	}
+
+function birdhouseSetMainVars(data) {
+
+	if (data["DATA"]["cameras"] != undefined)							{ app_available_cameras = Object.keys(data["DATA"]["cameras"]); }
+	if (data["DATA"]["active_cam"] != undefined && data["DATA"]["active_cam"] != "")		{ app_active_cam        = data["DATA"]["active_cam"]; }
+	else												{ app_active_cam        = app_available_cameras[0]; }
+	if (data["DATA"]["active_page"] != "" && data["DATA"]["active_page"] != undefined && data["DATA"]["active_page"] != "status")	{ app_active_page       = data["DATA"]["active_page"]; }
+	else if (data["DATA"]["active_page"] != "status")						{ app_active_page = "INDEX"; }
+	if (data["DATA"]["active_date"] != "" && data["DATA"]["active_date"] != undefined)		{ app_active_date = data["DATA"]["active_date"]; }
+	else 												{ app_active_date = ""; }
+	if (data["STATUS"]["admin_allowed"] != undefined)						{ app_admin_allowed = data["STATUS"]["admin_allowed"]; }
+	}
+	
+function birdhouseSwitchCam() {
+	var current_cam = 0;
+	for (i=0;i<app_available_cameras.length;i++) {
+		if (app_available_cameras[i] == app_active_cam) { current_cam = i; }
+		}
+	var next_cam = current_cam + 1;
+	if (next_cam > app_available_cameras.length-1) { next_cam = 0; }
+	
+	birdhousePrint_load(view=app_active_page, camera=app_available_cameras[next_cam], date=app_active_date);
+	}	
+
+//-----------------------------------------
+// views
+//-----------------------------------------
 	
 function birdhouse_INDEX(data, camera) {
 
-	if (data["DATA"]["active_cam"] == undefined || data["DATA"]["active_cam"] == "")	{ active_camera = camera; }
-	else 											{ active_camera = data["DATA"]["active_cam"]; }
-        
-	var html        = "";
-	var cameras     = Object.keys(data["DATA"]["cameras"]);
-	var stream_link = RESTurl_noport + ":" + data["DATA"]["cameras"][active_camera]["server_port"];
-	stream_link    += data["DATA"]["cameras"][active_camera]["stream"];
-	var livestream  = "<img src='"+stream_link+"' id='stream_"+active_camera+"' class='livestream_main'/>";
+	var html          = "";
+	var active_camera = camera;
+	var cameras       = data["DATA"]["cameras"];
+	var stream_server = RESTurl_noport + ":" + data["DATA"]["cameras"][active_camera]["server_port"]; // check if required ...
+	var active_cam    = {};
+	var other_cams    = [];
 	
-	var onclick        = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
-	var command_record = "mboxApp.requestAPI(\"POST\",[\"start\",\"recording\",\""+active_camera+"\"],\"\",\"\",\"\",\"birdhouse_INDEX\");"; //requestAPI(\"/start/recording/cam2\");
-	var command_stop   = "mboxApp.requestAPI(\"POST\",[\"stop\", \"recording\",\""+active_camera+"\"],\"\",\"\",\"\",\"birdhouse_INDEX\");";; //requestAPI(\"/stop/recording/cam2\");
-	
-	
-	
-	if (cameras.length == 1) {
-		style_cam = "cam1";
-		html     += "<center><div class='livestream_main_container "+style_cam+"'>";
-		html     += "  <a onclick='"+onclick+"' style='cursor:pointer;'>" + livestream + "</a>";
-		html     += "  <div class='livestream_record cam1'>";
-		html     += "     <button onclick='"+command_record+"' class='button-video-record'>Record ("+active_camera+")</button> &nbsp;";
-		html     += "     <button onclick='"+command_stop+"' class='button-video-record'>Stop ("+active_camera+")</button>";
-		html     += "     <br/>&nbsp;<br/>";
-		html     += "     <br/>&nbsp;";
-		html     += "</div></center>";
+	for (let key in cameras) {
+		if (key == active_camera) {
+			active_cam  = {
+				"name"        : key,
+				"stream"      : cameras[key]["stream"],
+				"description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
+				}
+			}
+		else {
+			var other_cam  = {
+				"name"        : key,
+				"stream"      : cameras[key]["stream"],
+				"description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
+				}
+			other_cams.push(other_cam);
+			}
+		}
+	if (active_cam == {}) { active_cam = other_cams[0]; other_cams.shift(); }
+	if (cameras.length == 1) {	
+		var onclick  = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
+		html += birdhouse_Camera(main=true, view="cam1", onclick=onclick, camera=active_cam, stream_server=stream_server);
 		}
 	else {
-		// version with 2 cameras is missing
-		html     = livestream;
+		var onclick  = "birdhousePrint_load(view=\"INDEX\", camera=\""+other_cams[0]["name"]+"\");";
+		html += birdhouse_Camera(main=false, view="cam1cam2", onclick=onclick, camera=other_cams[0], stream_server=stream_server);
+
+		onclick      = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
+		html += birdhouse_Camera(main=true, view="cam1cam2", onclick=onclick, camera=active_cam, stream_server=stream_server);
 		}
-	
-/*	
-<div class='livestream_main_container cam1'>
-  <a href='list_short.html?cam2'><img src="/stream.mjpg?cam2" class='livestream_main'></a>  
-  <div class='livestream_record cam1'><br/>CAM2: <button onclick='requestAPI("/start/recording/cam2");'>Record</button> &nbsp;<button onclick='requestAPI("/stop/recording/cam2");'>Stop</button></div>
-  <div class='livestream_links cam1'><hr/><a href='/list_star.html?cam2'>Favoriten</a> / <a href='/list_short.html?cam2'>Heute</a> / <a href='/list_backup.html?cam2'>Archiv</a> / <a href='/cameras.html?cam2'>Kameras</a><hr/></div>
-  <div class='livestream_startinfo cam1' onclick="javascript:window.location.reload();">Server Start: 25.04.2021 22:40:54</div>
-</div>
-*/
 		
 	setTextById("frame2",html);
 	}
-
+	
 //-----------------------------------------
 
 function birdhouse_CAMERAS( title, data ) {
@@ -155,41 +182,86 @@ function birdhouse_CAMERAS( title, data ) {
 	        html  += "</div></div>";
 	        html  += "</div>";
 		}
-		
-/*
-<center><button onclick='requestAPI("/start/recording/cam2");'>Record</button> &nbsp;<button onclick='requestAPI("/stop/recording/cam2");'>Stop</button></center>
-*/
 	setTextById("frame2",html);
 	}
-	
-function birdhouse_VIDEODETAIL() {
-/*
-<div class='camera_info'>
-  <div class='camera_info_image'>
-	<div class='image_container'>
-	<div class='star'></div><div class='trash'></div>
-	<div class='thumbnail_container'>
-	<a onclick='javascript:videoOverlay("http://192.168.1.20:8008/video_cam2_20210427_215943.mp4","<b>Vollst&auml;ndiges Video</b>");' style='cursor:pointer;'><img src='/videos/video_cam2_20210427_215943_thumb.jpeg' id='video_cam2_20210427_215943_thumb.jpeg' class='thumbnail' style='border:1px solid white;'/></a><br/><img src="/html/play.png" class="play_button" onclick='javascript:videoOverlay("http://192.168.1.20:8008/video_cam2_20210427_215943.mp4","<b>Vollst&auml;ndiges Video</b>");'/>
-	<small><b>Vollst&auml;ndiges Video</b></small>
-	</div>
-  </div>
-</div>
-<div class='camera_info_text'>
-  <b>27.04.2021 21:59:43</b><br/>&nbsp;<br/>
-  Kamera: CAM2 - Außen<br/>L&auml;nge: 8.0 s<br/>
-  Framerate: 44.4 fps<br/>Bildgr&ouml;&szlig;e: [480, 480]<br/>
-  Kurzversion: nicht vorhanden <br/>&nbsp;<br/>
-  Bearbeiten: &nbsp;  <button onclick="toggleVideoEdit();" class="button-video-edit">&nbsp;K&uuml;rzen&nbsp;</button>&nbsp;<br/>
-</div>
-<div id='camera_video_edit' class='camera_video_edit'>
-<!-- INSERT TEMPLATE -->
-</div>
-*/
+
+//-----------------------------------------
+
+function birdhouse_VIDEO_DETAIL( title, data ) {
+	var html = "";
+	video = data["DATA"]["entries"];
+
+	for (let key in video) {
+		var short                     = false;
+	        var video_name                = video[key]["date"];
+	        var video_stream              = birdhouse_Image(video_name, video[key]);
+	        
+	        if (video[key]["video_file_short"] != undefined && video[key]["video_file_short"] != "") {
+	                short                     = true;
+		        var video_short           = {};
+		        Object.assign( video_short, video[key] );
+		        var short_video_file      = video[key]["video_file_short"];
+		        video_short["video_file"] = short_video_file;
+		        video_stream_short        = birdhouse_Image("Short", video_short);
+		        }
+	        
+		html += video[key]["video_file"];
+		html += video[key]["video_file_short"];
+		
+		html += "<div class='camera_info'>";
+		html += "<div class='camera_info_image'>";
+		html += video_stream;
+		if (short) {
+			html += video_stream_short;
+			}
+		html += "</div>";
+		html += "<div class='camera_info_text'>";
+		html += "<h3>"+video_name+"</h3>";
+		html += "&nbsp;<br/>";
+		html += lang("CAMERA")     + ": " + video[key]["camera"].toUpperCase() + " - " + video[key]["camera_name"] + "<br/>";
+		html += lang("LENGTH")     + ": " + video[key]["length"]      + " s<br/>";
+		html += lang("FRAMERATE")  + ": " + video[key]["framerate"]   + " fps<br/>";
+		html += lang("FRAMECOUNT") + ": " + video[key]["image_count"] + "<br/>";
+		html += lang("IMAGESIZE")  + ": " + video[key]["image_size"]  + "<br/>";
+		html += lang("FILES")  + ": " + video[key]["video_file"]  + "<br/>";
+		if (short) {
+			html += lang("FILES")  + ": " + video[key]["video_file_short"]  + "<br/>";
+			html += lang("SHORT_VERSION") + ": " + Math.round(video[key]["video_file_short_length"]*10)/10 + " s<br/>";
+			}
+		html += "&nbsp;<br/>";
+		html += lang("EDIT") + ":&nbsp; <button onclick=\"toggleVideoEdit();\" class=\"button-video-edit\">&nbsp;"+lang("SHORTEN_VIDEO")+"&nbsp;</button>&nbsp;<br/>";
+		html += "</div>";
+		
+		var player = "<div id='camera_video_edit_overlay' class='camera_video_edit_overlay' style='display:none'></div>";
+		player += "<div id='camera_video_edit' class='camera_video_edit' style='display:none'>";
+		player += "<div style='height:46px;width:100%'></div>";
+		var trim_command = "createShortVideo();"; 
+		
+		loadJS(videoplayer_script, "", document.body);
+		
+		video_values = {};
+		video_values["VIDEOID"]    = key;
+		video_values["ACTIVE"]     = app_active_cam;
+		video_values["LENGTH"]     = video[key]["length"];
+		video_values["THUMBNAIL"]  = "";
+		video_values["VIDEOFILE"]  = video[key]["directory"] + video[key]["video_file"];
+		video_values["JAVASCRIPT"] = trim_command;
+		videoplayer  = videoplayer_template;
+		for (let key in video_values) {
+			videoplayer = videoplayer.replace("<!--"+key+"-->",video_values[key]);
+			}
+		player += videoplayer;
+		player += "</div>";
+		setTextById("videoplayer",player);
+		}
+
+	setTextById("frame2",html);
 	}
 
 //-----------------------------------------
 
 function birdhouse_LIST(title, data, camera, header_open=true) {
+
 	var html              = "";
 	var entry_category    = [];
 
@@ -198,7 +270,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var entries_yesterday = data["DATA"]["entries_yesterday"];
 	var entries_delete    = data["DATA"]["entries_delete"];
 	var active_date       = data["DATA"]["active_date"];
-	var active_page       = data["DATA"]["active_page"];
+//	var active_page       = data["DATA"]["active_page"];
+	var active_page       = app_active_page;
 	var groups            = data["DATA"]["groups"];
 	var admin             = data["STATUS"]["admin_allowed"];
 	
@@ -234,11 +307,35 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	}
 	
 //-----------------------------------------
+// detail and elements for views
+//-----------------------------------------
 
-function birdhouse_DeleteAnswer(data) {
-	console.log(data);
-	appMsg.alert(lang("DELETE_DONE") + "<br/>(" + data["deleted_count"] + " " + lang("FILES")+")","");
-	// check how to reload the current view ...
+function birdhouse_Camera(main, view, onclick, camera, stream_server) {
+	var html      = "";
+	var style_cam = view;
+	
+	console.log(camera);
+	
+	if (main) { var container = 'main'; }
+	else      { var container = '2nd'; }
+
+	var stream_link    = stream_server + camera["stream"];
+	var livestream     = "<img src='"+stream_link+"' id='stream_"+camera["name"]+"' class='livestream_"+container+"'/>";
+	var command_record = "mboxApp.requestAPI(\"POST\",[\"start\",\"recording\",\""+camera["name"]+"\"],\"\",\"\",\"\",\"birdhouse_INDEX\");"; //requestAPI(\"/start/recording/cam2\");
+	var command_stop   = "mboxApp.requestAPI(\"POST\",[\"stop\", \"recording\",\""+camera["name"]+"\"],\"\",\"\",\"\",\"birdhouse_INDEX\");";; //requestAPI(\"/stop/recording/cam2\");
+	
+	html     += "<center><div class='livestream_"+container+"_container "+view+"'>";
+	html     += "  <a onclick='"+onclick+"' style='cursor:pointer;'>" + livestream + "</a>";
+	if (main) {
+		html     += "  <div class='livestream_record "+view+"'>";
+		html     += "     <button onclick='"+command_record+"' class='button-video-record'>Record ("+camera["name"]+")</button> &nbsp;";
+		html     += "     <button onclick='"+command_stop+"' class='button-video-record'>Stop ("+camera["name"]+")</button>";
+//		html     += "     <br/>&nbsp;<br/>";
+//		html     += "     <br/>&nbsp;";
+		}
+	html     += "</div></center>";
+
+	return html;
 	}
 
 //-----------------------------------------
@@ -275,7 +372,7 @@ function birdhouse_ImageGroup(title, entries, entry_count, entry_category, heade
 		if (entry_category.length == 1)	{ command = ",#"+entry_category[0]+"#"; }
 		if (entry_category.length == 2)	{ command = ",#"+entry_category[0]+"#,#"+entry_category[1]+"#"; }
 		if (command != "") {
-			var del_command = "mboxApp.requestAPI(#POST#,[#remove#"+command+"],##,birdhouse_DeleteAnswer,##,#birdhouse_ImageGroup#);"; 
+			var del_command = "mboxApp.requestAPI(#POST#,[#remove#"+command+"],##,birdhouse_AnswerDelete,##,#birdhouse_ImageGroup#);"; 
 			var onclick     = "appMsg.confirm(\""+lang("DELETE_SURE")+"\",\""+del_command+"\");";
 			html    += "<div id='group_intro_recycle' class='separator' style='display: block;'><center><br/>";
 			html    += "<a onclick='"+onclick+"' style='cursor:pointer;'>" + lang("RECYCLE_DELETE") + "</a>";
@@ -396,6 +493,10 @@ function birdhouse_Image(title, entry, header_open=true, admin=false) {
 		var play_button = "<img src=\"birdhouse/img/play.png\" class=\"play_button\" onclick='"+onclick+"' />";
 		entry["lowres"] = entry["thumbnail"];
 		description     = description.replace(/\[br\/\]/g,"<br/>");
+		if (admin) {
+			var cmd_edit = "birdhousePrint_load(view=\"VIDEO_DETAIL\", camera=\""+app_active_cam+"\", date=\""+entry["date_start"]+"\");"
+			description += "<br/><a onclick='"+cmd_edit+"' style='cursor:pointer;'>"+lang("EDIT")+"</a>";
+			}
 		edit            = true;
 		}
 	if (header_open == false) {
@@ -457,6 +558,48 @@ function birdhouse_Links(link_list) {
 		}
 	return html;
 	}
+
+
+//-----------------------------------------
+// Answer
+//-----------------------------------------
+
+function birdhouse_AnswerDelete(data) {
+	console.log(data);
+	appMsg.alert(lang("DELETE_DONE") + "<br/>(" + data["deleted_count"] + " " + lang("FILES")+")","");
+	// check how to reload the current view ...
+	}
+
+//-----------------------------------------
+
+function birdhouse_AnswerTrim(data) {
+	console.log(data);
+	appMsg.alert(lang("TRIM_DONE"));
+	// check how to reload the current view ...
+	}
+
+//-----------------------------------------
+// load addition javascript
+//-----------------------------------------
+
+var loadJS = function(url, implementationCode, location){
+    //url is URL of external file, implementationCode is the code
+    //to be called from the file, location is the location to 
+    //insert the <script> element
+
+    //var scriptTag = document.createElement('script');
+    var scriptTag = document.getElementById('videoplayer-script');
+    scriptTag.src = url;
+
+    scriptTag.onload = implementationCode;
+    scriptTag.onreadystatechange = implementationCode;
+
+    location.appendChild(scriptTag);
+};
+
+var yourCodeToBeCalled = function(){
+//your code goes here
+}
 
 //-----------------------------------------
 // EOF

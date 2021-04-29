@@ -5,6 +5,27 @@ a:link    { color  : blue; }
 a:visited { color  : darkblue; }
 a:hover   { color  : darkblue; font-weight : bold; }
 
+h1 { margin : 4px; }
+h2 { margin : 4px; }
+h3 { margin : 4px; }
+
+.frame_column { color : black; }
+
+/**/
+
+#headerRight {
+  position 		: fixed;
+  top			: 8px;
+  right		: 40px;
+  background-image	: url('img/switch-camera-white.png');
+  background-size	: 25px;
+  height		: 25px;
+  width		: 25px;
+  color		: white;
+  z-index		: 93;
+  cursor		: pointer;
+}
+
 /* configuration of image / thumbnail sizes */
 
 .image_container { 
@@ -91,12 +112,43 @@ a:hover   { color  : darkblue; font-weight : bold; }
 }
 
 .camera_video_edit { 
+    position   : fixed;
+    top        : 0px;
+    left       : 0px;
+    height     : 100%;
+    width      : 100%;
+    text-align : center;
+    z-index    : 81;
+
+/*    
     float      : left;
     margin     : 5px;
     display    : none;
     width      : 100%;
     text-align : center;
     padding    : auto; 
+*/
+}
+.camera_video_edit_overlay { 
+    position   : fixed;
+    top        : 0px;
+    left       : 0px;
+    height     : 100%;
+    width      : 100%;
+    text-align : center;
+    opacity    : 50%;
+    z-index    : 80;
+    background-color: black;
+}
+
+.camera_video_trim {
+    width     : 800px;
+    max-width : 80vw;
+    background-color: darkgray;
+    border : solid 1px white;
+    border-radius : 4px;
+    padding : 4px;
+    margin : 4px;	
 }
 
 /* configuration of delete, recycle and video play symbols (overlay on images) */
@@ -228,16 +280,19 @@ a:hover   { color  : darkblue; font-weight : bold; }
 
 .button-video-edit {
 //    width            : 80px;
-    height           : 25px;
+    height           : 28px;
     background       : gray;
     border-radius    : 5px;
     color            : black;
+    border           : 1px solid white;
 }
 
 .button-video-record {
     width            : 100px;
-    height           : 25px;
+    height           : 28px;
     background       : gray;
     border-radius    : 5px;
     color            : black;
+    border           : 1px solid white;
 }
+
