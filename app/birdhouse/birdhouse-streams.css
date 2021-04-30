@@ -54,8 +54,8 @@
 
 /* two live streams with cam1 as main stream */
 
-.livestream_main_container.cam1cam2 { top :   -15vh;}
-.livestream_2nd_container.cam1cam2  { position : relative; top : 0px;  left : +25vw; }
+.livestream_main_container.cam1cam2 { top :   -70px;}
+.livestream_2nd_container.cam1cam2  { position : relative; top : 5px;  left : +25vw; }
 .livestream_record.cam1cam2         { top :   0px; }
 .livestream_links.cam1cam2          { top :   100px; }
 .livestream_startinfo.cam1cam2      { top :   100px; }
