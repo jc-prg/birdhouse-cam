@@ -73,7 +73,7 @@ class myBackupRestore(threading.Thread):
        Compare image files and write to config file
        '''
 
-       if os.path.isfile(self.config.file("images")) and subdir == "": files = self.config.read(config='images')
+       if os.path.isfile(self.config.file("images")) and subdir == "": files = self.config.read_cache(config='images')
        else:                                                           files = {}
 
        list = self.update_image_config(list=list, files=files, subdir=subdir)
@@ -176,7 +176,7 @@ class myBackupRestore(threading.Thread):
        # if no directory exists, create directory, copy files and create a new config file (copy existing information)
        else:
          self.config.directory_create(config="images", date=backup_date)
-         files        = self.config.read(config="images")
+         files        = self.config.read_cache(config="images")
          files_backup = { "files" : {}, "info" : {}}
          stamps       = list(reversed(sorted(files.keys())))
          dir_source   = self.config.directory(config="images")
@@ -227,14 +227,14 @@ class myBackupRestore(threading.Thread):
 
        if ftype == "image":
          if date == "":  
-           files        = self.config.read(config='images')
+           files        = self.config.read_cache(config='images')
            directory    = self.config.directory(config='images')
          else:
-           config_file  = self.config.read(config='backup', date=date)
+           config_file  = self.config.read_cache(config='backup', date=date)
            directory    = self.config.directory(config='backup', date=date)
            files        = config_file["files"]
        elif ftype == "video":
-         files        = self.config.read(config='videos')
+         files        = self.config.read_cache(config='videos')
          directory    = self.config.directory(config='videos')
        else:
          response["error"] = "file type not supported"
