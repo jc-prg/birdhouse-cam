@@ -4,6 +4,7 @@
 
 var app_frame_count   = 4;
 var app_setting_count = 4;
+var app_last_load     = 0;
 
 //--------------------------------
 // create menu entries
@@ -43,6 +44,13 @@ function app_initialize(data) {
 
 function app_status(data) {
 	if (reload) { birdhousePrint_load("INDEX","cam1"); }
+	
+	var current_timestamp = Date.now();
+	var difference = (current_timestamp - app_last_load)/1000;
+	if (difference > 20)		{ setTextById("statusLED","<div id='red'></div>"); }
+	else if (difference > 10)	{ setTextById("statusLED","<div id='yellow'></div>"); }
+	else if (difference <= 10)	{ setTextById("statusLED","<div id='green'></div>"); }
+	app_last_load = current_timestamp;
 	}
 	
 //--------------------------------
