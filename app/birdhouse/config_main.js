@@ -34,9 +34,7 @@ function app_menu_entries() {
 //--------------------------------
 
 function app_initialize(data) {
-	birdhouseSetMainVars(data);
-	var cam_switch = document.getElementById("headerRight");
-	cam_switch.onclick = function () { birdhouseSwitchCam(); }
+	setTextById("headerRight", birdhouseHeaderFunctions() );
 	}
 
 //--------------------------------
