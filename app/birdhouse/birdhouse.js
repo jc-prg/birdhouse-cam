@@ -96,7 +96,7 @@ function birdhouseHeaderFunctions() {
 	var html = "";
 	var switch_cam  = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();'>";
 	var reload_view = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
-	html = reload_view + "&nbsp;" + switch_cam;
+	html = reload_view + "&nbsp;&nbsp;" + switch_cam + "&nbsp;&nbsp;";
 	return html;
 	}
 	

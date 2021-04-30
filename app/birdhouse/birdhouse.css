@@ -22,12 +22,12 @@ h3 { margin : 4px; }
   color		: white;
   z-index		: 93;
   text-align           : right;
-  cursor		: pointer;
 }
 
 .headerRight img {
-    height  : 25px;
-    width   : 25px;
+  height               : 23px;
+  width                : 23px;
+  cursor		: pointer;
 }
 
 
