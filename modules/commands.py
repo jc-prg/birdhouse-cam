@@ -29,10 +29,16 @@ class myCommands(threading.Thread):
         Initialize new thread and set inital parameters
         '''
         threading.Thread.__init__(self)
-        self.camera    = camera
-        self.config    = config
-        self.backup    = backup
-        self.which_cam = ""
+        self.camera         = camera
+        self.config         = config
+        self.backup         = backup
+        self.processing     = True
+        self.which_cam      = ""
+        self.status_queue           = {}
+        self.status_queue["images"] = []
+        self.status_queue["videos"] = []
+        self.status_queue["backup"] = []
+        
 
     #-------------------------------------
     
@@ -40,16 +46,46 @@ class myCommands(threading.Thread):
         '''
         Do nothing at the moment
         '''
+        config_files = ["images","videos"]
+        while self.processing:
+           time.sleep(10)
+           
+           for config_file in config_files:
+             entries = self.config.read_cache(config_file)
+             self.config.lock(config_file)
+             
+             while len(self.status_queue[config_file]) > 0:
+                [ date, key, change_status, status ] = self.status_queue[config_file].pop()
+
+                if key in entries: 
+                   test = "yes"
+                   entries[key][change_status] = status
+                else:
+                   test="no"
+                   
+                logging.info("QUEUE: "+config_file+" // "+key+" - "+change_status+"="+str(status)+" ... "+test)
+             
+             self.config.unlock(config_file)
+             self.config.write(config_file, entries)   
+                           
         return
     
     def stop(self):
         '''
         Do nothing at the moment
         '''
+        self.processing = False
         return
     
     #-------------------------------------
 
+    def addToQueue( self, config, date, key, change_status, status ):
+        '''
+        add entry to queue
+        '''
+        self.status_queue[config].append( [ date, key, change_status, status ] )
+    
+    #-------------------------------------
     
     def adminAllowed(self):
         '''
@@ -68,33 +104,58 @@ class myCommands(threading.Thread):
         param    = server.path.split("/")
         response = {}
 
+# config, date, key, change_status, status
+
         if param[2] == "current":
            config_data         = self.config.read_cache(config="images")
            response["command"] = ["set/unset favorit", param[3], param[4]]
            if param[3] in config_data:
+
               config_data[param[3]]["favorit"] = param[4]
-              if int(param[4]) == 1: config_data[param[3]]["to_be_deleted"] = 0
-              self.config.write(config="images", config_data=config_data)
+              self.addToQueue( config="images", date="", key=param[3], change_status="favorit", status=param[4] )
+
+              if int(param[4]) == 1:
+                 config_data[param[3]]["to_be_deleted"] = 0
+                 self.addToQueue( config="images", date="", key=param[3], change_status="to_be_deleted", status=0 )
+                 
+#              self.config.write(config="images", config_data=config_data)
+
            else:
               response["error"] = "no image found with stamp "+str(param[3])
+
 
         elif param[2] == "backup":
            config_data         = self.config.read_cache(config="backup", date=param[3])
            response["command"] = ["set/unset favorit (backup)", param[5]]
            if param[4] in config_data["files"]:
+
               config_data["files"][param[4]]["favorit"] = param[5]
-              if int(param[5]) == 1: config_data["files"][param[4]]["to_be_deleted"] = 0
+              self.addToQueue( config="backup", date=param[3], key=param[4], change_status="favorit", status=param[5] )
+                           
+              if int(param[5]) == 1: 
+                 config_data["files"][param[4]]["to_be_deleted"] = 0
+                 self.addToQueue( config="backup", date=param[3], key=param[4], change_status="to_be_deleted", status=0)
+                 
               self.config.write(config="backup",config_data=config_data, date=param[3])
+
            else:
               response["error"] = "no image found with stamp "+str(param[4])
+
 
         elif param[2] == "videos":
            config_data         = self.config.read_cache(config="videos")
            response["command"] = ["set/unset favorit (videos)", param[3], param[4]]
            if param[3] in config_data:
+
               config_data[param[3]]["favorit"] = param[4]
-              if int(param[4]) == 1: config_data[param[3]]["to_be_deleted"] = 0
-              self.config.write(config="videos", config_data=config_data)
+              self.addToQueue( config="videos", date="", key=param[3], change_status="favorit", status=param[4] )
+
+              if int(param[4]) == 1:
+                 config_data[param[3]]["to_be_deleted"] = 0
+                 self.addToQueue( config="videos", date="", key=param[3], change_status="to_be_deleted", status=0 )
+                 
+#              self.config.write(config="videos", config_data=config_data)
+              
            else:
               response["error"] = "no video found with stamp "+str(param[3])
     
@@ -113,29 +174,49 @@ class myCommands(threading.Thread):
            config_data         = self.config.read_cache(config="images")
            response["command"] = ["mark/unmark for deletion", param[4]]
            if param[3] in config_data:
+
               config_data[param[3]]["to_be_deleted"] = param[4]
-              if int(param[4]) == 1: config_data[param[3]]["favorit"] = 0
-              self.config.write(config="images", config_data=config_data)
+              self.addToQueue( config="images", date="", key=param[3], change_status="to_be_deleted", status=param[4])
+              
+              if int(param[4]) == 1: 
+                 config_data[param[3]]["favorit"] = 0
+                 self.addToQueue( config="images", date="", key=param[3], change_status="favorit", status=0 )
+                 
+#              self.config.write(config="images", config_data=config_data)
            else:
               response["error"] = "no image found with stamp "+str(param[3])
+
 
         elif param[2] == "backup":
            config_data         = self.config.read_cache(config="backup", date=param[3])
            response["command"] = ["mark/unmark for deletion (backup)", param[5]]
            if param[4] in config_data["files"]:
+           
               config_data["files"][param[4]]["to_be_deleted"] = param[5]
-              if int(param[5]) == 1: config_data["files"][param[4]]["favorit"] = 0
+              self.addToQueue( config="backup", date=param[3], key=param[4], change_status="to_be_deleted", status=param[5] )
+              
+              if int(param[5]) == 1:
+                 config_data["files"][param[4]]["favorit"] = 0
+                 self.addToQueue( config="backup", date=param[3], key=param[4], change_status="favorit", status=0)
+                 
               self.config.write(config="backup",config_data=config_data, date=param[3])
            else:
               response["error"] = "no image found with stamp "+str(param[4])
+
 
         elif param[2] == "videos":
            config_data         = self.config.read_cache(config="videos")
            response["command"] = ["mark/unmark for deletion", param[4]]
            if param[3] in config_data:
+
               config_data[param[3]]["to_be_deleted"] = param[4]
-              if int(param[4]) == 1: config_data[param[3]]["favorit"] = 0
-              self.config.write(config="videos", config_data=config_data)
+              self.addToQueue( config="videos", date="", key=param[3], change_status="to_be_deleted", status=param[4])
+
+              if int(param[4]) == 1:
+                 config_data[param[3]]["favorit"] = 0
+                 self.addToQueue( config="videos", date="", key=param[3], change_status="favorit", status=0)
+                 
+#              self.config.write(config="videos", config_data=config_data)
            else:
               response["error"] = "no video found with stamp "+str(param[3])
            
