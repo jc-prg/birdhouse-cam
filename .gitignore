@@ -8,3 +8,9 @@ config.json
 videos/
 
 stream.log
+
+app/birdhouse/app-fw/
+
+app/app-fw/
+
+app/modules/
