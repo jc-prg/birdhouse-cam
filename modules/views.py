@@ -140,7 +140,7 @@ class myViews(threading.Thread):
         return html
 
 
-    def printLinksJSON(self, link_list, current="", cam=""):
+    def printLinksJSON(self, link_list, cam=""):
         '''
         create a list of links based on URLs and descriptions defined in preset.py -> for JSON API
         '''
@@ -157,15 +157,6 @@ class myViews(threading.Thread):
             json[link]["position"]    = count
             count += 1
             
-
-        if current != "" and len(self.active_cams) > 1:
-           selected   = self.active_cams.index(cam) + 1 
-           if selected >= len(self.active_cams): selected = 0
-           json["active_cam"] = {}
-           json["active_cam"]["link"]        = "/api" + myPages[current][2] + self.active_cams[selected]
-           json["active_cam"]["description"] = self.active_cams[selected].upper()
-           json["active_cam"]["position"]    = count
-
         return json
 
 
@@ -613,7 +604,7 @@ class myViews(threading.Thread):
 
            content["subtitle"]    = myPages["backup"][0] + " " + files_data["info"]["date"] + " (" + self.camera[which_cam].name + ", " + str(files_data["info"]["count"]) + " Bilder)"
            content["links"]       = self.printLinks(link_list=("live","today","backup","favorit"), current='backup', cam=which_cam)
-           content["links_json"]  = self.printLinksJSON(link_list=("live","today","backup","favorit"), current='backup', cam=which_cam)
+           content["links_json"]  = self.printLinksJSON(link_list=("live","today","backup","favorit"), cam=which_cam)
 
         elif os.path.isfile(self.config.file(config="images")):
            backup           = False
@@ -628,10 +619,10 @@ class myViews(threading.Thread):
            content["subtitle"]    = myPages["today"][0] + " (" + self.camera[which_cam].name + ")"
            if self.adminAllowed():
               content["links"]      = self.printLinks(link_list=("live","favorit","today_complete","videos","backup"), current='today', cam=which_cam)
-              content["links_json"] = self.printLinksJSON(link_list=("live","favorit","today_complete","videos","backup"), current='today', cam=which_cam)
+              content["links_json"] = self.printLinksJSON(link_list=("live","favorit","today_complete","videos","backup"), cam=which_cam)
            else:
               content["links"]      = self.printLinks(link_list=("live","favorit","videos","backup"), current='today', cam=which_cam)
-              content["links_json"] = self.printLinksJSON(link_list=("live","favorit","videos","backup"), current='today', cam=which_cam)
+              content["links_json"] = self.printLinksJSON(link_list=("live","favorit","videos","backup"), cam=which_cam)
 
         if files_all != {}:
 
@@ -845,10 +836,10 @@ class myViews(threading.Thread):
         content["subtitle"]   = myPages["backup"][0] + " (" + self.camera[which_cam].name + ")"
         if self.adminAllowed():
            content["links"]      = self.printLinks(link_list=("live","favorit","today","today_complete","videos"), current="backup", cam=which_cam)
-           content["links_json"] = self.printLinksJSON(link_list=("live","favorit","today","today_complete","videos"), current="backup", cam=which_cam)
+           content["links_json"] = self.printLinksJSON(link_list=("live","favorit","today","today_complete","videos"), cam=which_cam)
         else:
            content["links"]      = self.printLinks(link_list=("live","favorit","today","videos"), current="backup", cam=which_cam)
-           content["links_json"] = self.printLinksJSON(link_list=("live","favorit","today","videos"), current="backup", cam=which_cam)
+           content["links_json"] = self.printLinksJSON(link_list=("live","favorit","today","videos"), cam=which_cam)
 
         return template, content
 
@@ -915,7 +906,7 @@ class myViews(threading.Thread):
         content["file_list"]   = html
         content["subtitle"]    = myPages["today_complete"][0] + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Bilder)"
         content["links"]       = self.printLinks(link_list=("live","favorit","today","videos","backup"), current="today_complete", cam=which_cam)
-        content["links_json"]  = self.printLinksJSON(link_list=("live","favorit","today","videos","backup"), current="today_complete", cam=which_cam)
+        content["links_json"]  = self.printLinksJSON(link_list=("live","favorit","today","videos","backup"), cam=which_cam)
 
         return template, content
 
@@ -979,10 +970,10 @@ class myViews(threading.Thread):
         
         if self.adminAllowed():  
            content["links"]       = self.printLinks(link_list=("live","favorit","cam_info","today","backup"), current="today_complete", cam=which_cam)
-           content["links_json"]  = self.printLinksJSON(link_list=("live","favorit","cam_info","today","backup"), current="today_complete", cam=which_cam)
+           content["links_json"]  = self.printLinksJSON(link_list=("live","favorit","cam_info","today","backup"), cam=which_cam)
         else:                    
            content["links"]       = self.printLinks(link_list=("live","favorit","today","backup"), current="today_complete", cam=which_cam)
-           content["links_json"]  = self.printLinksJSON(link_list=("live","favorit","today","backup"), current="today_complete", cam=which_cam)
+           content["links_json"]  = self.printLinksJSON(link_list=("live","favorit","today","backup"), cam=which_cam)
 
         return template, content
 
