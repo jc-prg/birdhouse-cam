@@ -93,7 +93,7 @@ class myViews(threading.Thread):
               logging.warning("Unknown camera requested.")
               return path, ""
               
-        elif "/api" in path:
+        elif "/api" in path and not "/api/status" in path:
            param        = path.split("/")
            if len(param) > 3:
               which_cam = param[3]
