@@ -11,7 +11,8 @@ var color_code = {
 	"star"    : "lime",
 	"detect"  : "aqua",
 	"recycle" : "red",
-	"default" : "white"
+	"default" : "white",
+	"request" : "yellow"
 	}
 	
 var app_active_cam        = "";
@@ -30,9 +31,6 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 	if (camera != "" && date != "")	{ commands.push(camera); commands.push(date); }
 	else if (camera != "")			{ commands.push(camera); }
 	
-	console.log("birdhousePrint_load();");
-	console.log(commands);
-
 	mboxApp.requestAPI('GET',commands,"",birdhousePrint,"","appPrintStatus_load");
 	}
 	
@@ -323,8 +321,6 @@ function birdhouse_Camera(main, view, onclick, camera, stream_server) {
 	var html      = "";
 	var style_cam = view;
 	
-	console.log(camera);
-	
 	if (main) { var container = 'main'; }
 	else      { var container = '2nd'; }
 
@@ -574,17 +570,15 @@ function birdhouse_Links(link_list) {
 //-----------------------------------------
 
 function birdhouse_AnswerDelete(data) {
-	console.log(data);
+	//console.log(data);
 	appMsg.alert(lang("DELETE_DONE") + "<br/>(" + data["deleted_count"] + " " + lang("FILES")+")","");
-	// check how to reload the current view ...
 	}
 
 //-----------------------------------------
 
 function birdhouse_AnswerTrim(data) {
-	console.log(data);
+	//console.log(data);
 	appMsg.alert(lang("TRIM_DONE"));
-	// check how to reload the current view ...
 	}
 
 //-----------------------------------------
