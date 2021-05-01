@@ -507,10 +507,11 @@ if __name__ == "__main__":
 
 
     finally:
+        backup.stop()
         for cam in camera:
           if camera[cam].active:
              camera[cam].stop()
-        backup.stop()
+        commands.stop()
         views.stop()
 
         logging.info("Stopping WebServer ...")
