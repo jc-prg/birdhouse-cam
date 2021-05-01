@@ -59,13 +59,13 @@ class myViews(threading.Thread):
         '''
         Do nothing at the moment
         '''
-        return
+        logging.info("Starting HTML views and REST API for GET ...")
     
     def stop(self):
         '''
         Do nothing at the moment
         '''
-        return
+        logging.info("Stopping HTML views and REST API for GET ...")
     
     #-------------------------------------
     

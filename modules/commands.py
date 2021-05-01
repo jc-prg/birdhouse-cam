@@ -46,6 +46,7 @@ class myCommands(threading.Thread):
         '''
         Do nothing at the moment
         '''
+        logging.info("Starting REST API for POST ...")
         config_files = ["images","videos"]
         while self.processing:
            time.sleep(10)
@@ -75,7 +76,7 @@ class myCommands(threading.Thread):
         Do nothing at the moment
         '''
         self.processing = False
-        return
+        logging.info("Stopping REST API for POST ...")
     
     #-------------------------------------
 
