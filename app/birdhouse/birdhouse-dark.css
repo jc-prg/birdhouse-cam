@@ -1,0 +1,34 @@
+/* dark scheme */
+
+@media (prefers-color-scheme: dark) {
+
+  a         { color  : #dddd00; }
+  a:link    { color  : #dddd00; }
+  a:visited { color  : #aaaa00; }
+  a:hover   { color  : #dddd00; font-weight : bold; }
+
+  .frame_column      { 
+     background-color : #222222;
+     border           : #333333 1px solid;
+     color            : #dddddd;
+     }
+     
+  .frame_column img    { opacity: 0.9; }
+  
+  .overlay_content img { opacity: 1.0; }
+  
+  .livestream_main     { border : #dddddd 1px solid; }
+  .livestream_2nd      { border : #dddddd 1px solid; }
+  
+  .button-video-record {
+     background-color : #555555; 
+     border           : #999999 1px solid;
+     color            : #dddddd;
+     }
+  
+  .separator_group {
+     background-color : #444444;
+     color            : #eeeeee;
+     }
+
+}
