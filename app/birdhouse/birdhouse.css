@@ -48,16 +48,10 @@ h3 { margin : 4px; }
 }
 
 .thumbnail { 
-    width         : 102px;
+    width         : 137px;
     //height      : 138px;
     margin-bottom : 5px;
     border        : 1px solid white;
-}
-
-.thumbnail_big {
-    width  : 162px;
-    //height : 194px;
-    margin-bottom: 5px;
 }
 
 .thumbnail_container { 
@@ -78,7 +72,7 @@ h3 { margin : 4px; }
 
 .separator_group {
     float         : left;
-    width         : 98%;
+    width         : 280px;
     padding       : 4px;
     margin        : 2px;
     
