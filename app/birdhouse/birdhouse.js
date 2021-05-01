@@ -30,8 +30,9 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 	var commands = [view];
 	if (camera != "" && date != "")	{ commands.push(camera); commands.push(date); }
 	else if (camera != "")			{ commands.push(camera); }
-	
-	mboxApp.requestAPI('GET',commands,"",birdhousePrint,"","appPrintStatus_load");
+
+	console.debug("Request "+view+" / "+camera+" / "+date);	
+	mboxApp.requestAPI('GET',commands,"",birdhousePrint,"","birdhousePrint_load");
 	}
 	
 //-----------------------------------------
@@ -40,10 +41,14 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 
 function birdhousePrint(data, active_page="", camera="") {
 
+	console.debug("Request->Print ...");	
+
 	birdhouseSetMainVars(data);
 	birdhousePrintTitle(data, active_page, camera);	
 	birdhouseCameras = {};
 	
+	console.log("Request->Print "+app_active_page+" / "+data["DATA"]["active_cam"]+" / "+data["DATA"]["active_date"]);	
+
 	if (data["DATA"]["cameras"] != undefined)	{ birdhouseCameras = data["DATA"]["cameras"]; }
 	if (camera == "") 				{ camera = app_active_cam; }
 

@@ -42,19 +42,10 @@ function app_initialize(data) {
 // function to request status, update menu etc. (including initial load)
 //--------------------------------
 
-function app_status_last_load() {
-	var current_timestamp = Date.now();
-	var difference        = (current_timestamp - app_last_load) / 1000;
-	if (difference > 20)		{ setTextById("statusLED","<div id='red'></div>"); }
-	else if (difference > 10)	{ setTextById("statusLED","<div id='yellow'></div>"); }
-	else if (difference <= 10)	{ setTextById("statusLED","<div id='green'></div>"); }
-	}
-
 
 function app_status(data) {
 	if (reload) { 
 		birdhousePrint_load("INDEX","cam1");
-		setInterval(function(){ app_status_last_load(); }, 5 * 1000);
 		}
 	
 	app_last_load = Date.now();
