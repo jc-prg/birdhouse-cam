@@ -1,12 +1,12 @@
-rm -R modules/
-rm -R app-framework/
+rm -Rf modules/
+rm -Rf app-framework/
 
 git clone https://github.com/jc-prg/modules.git
 git clone https://github.com/jc-prg/app-framework.git
 
-rm -R ../app/modules
-rm -R ../app/app-fw
-rm -R ../app/img
+rm -Rf ../app/modules
+rm -Rf ../app/app-fw
+rm -Rf ../app/img
 
 cp -R modules ../app/modules
 cp -R app-framework/app-fw ../app/app-fw
