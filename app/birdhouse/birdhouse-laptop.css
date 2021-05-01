@@ -3,7 +3,7 @@
 
 @media (min-width: 720px) {
 
-    .livestream_main { max-width : 330px; }
+    .livestream_main { max-width : 95vh; }
     .separator_group { width : 98%; font-size : 10px; }
 }
 
