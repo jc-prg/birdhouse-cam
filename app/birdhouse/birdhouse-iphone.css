@@ -1,12 +1,26 @@
-/* iPhone 5 */
-@media screen and (device-aspect-ratio: 40/71) {}
+/* size of iphone XS */
 
+@media (min-width: 375px) {
+    .livestream_main { max-width : 330px; }
+    .separator_group { width  : 328px; font-size : 10px; }
+    .thumbnail       { width  : 104px; }
+    .image_container { height : 195px; }
+    }
+    
 /* iPhone XS: 2436x1125px at 458ppi */
 @media only screen 
     and (device-width : 375px) 
     and (device-height : 812px) 
     and (orientation : landscape)
-    and (-webkit-device-pixel-ratio : 3) { }
+    and (-webkit-device-pixel-ratio : 3) { 
+    
+        .thumbnail       { width   : 155px; }
+        .image_container { height  : 220px; }
+        .recycle         { width   : 30px;  height   : 30px;  top : 30px; }
+        .recycle_img     { width   : 30px;  height   : 30px; }
+        .star            { width   : 30px;  height   : 30px;  top : 25px; }
+        .star_img        { width   : 30px;  height   : 30px; }
+        }
 
 @media only screen 
     and (device-width : 375px) 
@@ -16,10 +30,4 @@
 
 /* ----------*/
 
-@media (min-width: 375px) {
 
-.livestream_main { max-width : 330px; }
-.separator_group { width : 325px; font-size : 10px; }
-.thumbnail       { width : 104px; }
-
-}
