@@ -6,8 +6,8 @@ const playbackIcons = document.querySelectorAll('.playback-icons use');
 const timeElapsed = document.getElementById('time-elapsed');
 const vDuration = document.getElementById('duration');
 const progressBar = document.getElementById('progress-bar');
-const seek = document.getElementById('seek');
-const seekTooltip = document.getElementById('seek-tooltip');
+//const seek = document.getElementById('seek');
+//const seekTooltip = document.getElementById('seek-tooltip');
 const volumeButton = document.getElementById('volume-button');
 const volumeIcons = document.querySelectorAll('.volume-button use');
 const volumeMute = document.querySelector('use[href="#volume-mute"]');
@@ -55,7 +55,7 @@ function updatePlayButton() {
 // minutes and seconds
 function formatTime(timeInSeconds) {
   const result       = new Date(timeInSeconds * 1000).toISOString().substr(11, 12);
-  const totalseconds = (Math.round(timeInSeconds * 1000)/1000)
+  const totalseconds = (Math.round(timeInSeconds * 10)/10)
   return {
     minutes: result.substr(3, 2),
     seconds: result.substr(6, 2),
@@ -68,8 +68,8 @@ function formatTime(timeInSeconds) {
 // progressBar
 function initializeVideo() {
   const videoDuration = Math.round(video.duration);
-  seek.setAttribute('max', videoDuration);
-  progressBar.setAttribute('max', videoDuration);
+//  seek.setAttribute('max', videoDuration);
+//  progressBar.setAttribute('max', videoDuration);
   const time = formatTime(videoDuration);
   vDuration.innerText = `${time.minutes}:${time.seconds}`;
   vDuration.setAttribute('datetime', `${time.minutes}m ${time.seconds}s`);
@@ -86,14 +86,15 @@ function updateTimeElapsed() {
 // updateProgress indicates how far through the video
 // the current playback is by updating the progress bar
 function updateProgress() {
-  seek.value = Math.floor(video.currentTime);
-  progressBar.value = Math.floor(video.currentTime);
+//  seek.value = Math.floor(video.currentTime);
+//  progressBar.value = Math.floor(video.currentTime);
 }
 
 // updateSeekTooltip uses the position of the mouse on the progress bar to
 // roughly work out what point in the video the user will skip to if
 // the progress bar is clicked at that point
 function updateSeekTooltip(event) {
+  return;
   const skipTo = Math.round(
     (event.offsetX / event.target.clientWidth) *
       parseInt(event.target.getAttribute('max'), 10)
@@ -286,6 +287,9 @@ function keyboardShortcuts(event) {
     case 'o':
       setTCout();
       break;
+    case 'Escape':
+      toggleVideoEdit(false);
+      //setTextById("videoplayer","");
   }
 }
 
@@ -303,8 +307,8 @@ video.addEventListener('mouseenter', showControls);
 video.addEventListener('mouseleave', hideControls);
 videoControls.addEventListener('mouseenter', showControls);
 videoControls.addEventListener('mouseleave', hideControls);
-seek.addEventListener('mousemove', updateSeekTooltip);
-seek.addEventListener('input', skipAhead);
+//seek.addEventListener('mousemove', updateSeekTooltip);
+//seek.addEventListener('input', skipAhead);
 volume.addEventListener('input', updateVolume);
 volumeButton.addEventListener('click', toggleMute);
 fullscreenButton.addEventListener('click', toggleFullScreen);

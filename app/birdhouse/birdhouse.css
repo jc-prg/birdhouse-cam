@@ -5,33 +5,46 @@ a:link    { color  : blue; }
 a:visited { color  : darkblue; }
 a:hover   { color  : darkblue; font-weight : bold; }
 
+h1 { margin : 4px; }
+h2 { margin : 4px; }
+h3 { margin : 4px; }
+
+.frame_column { color : black; }
+
+/* header functions */
+
+.headerRight {
+  position 		: fixed;
+  top			: 8px;
+  right		: 40px;
+  height		: 25px;
+  width		: 100px;
+  color		: white;
+  z-index		: 93;
+  text-align           : right;
+}
+
+.headerRight img {
+  height               : 23px;
+  width                : 23px;
+  cursor		: pointer;
+}
+
+
 /* configuration of image / thumbnail sizes */
 
 .image_container { 
     padding : 2px; 
     float   : left; 
     valign  : left;
-    height  : 180px;
-}
-
-.image_container_big { 
-    padding : 2px; 
-    float   : left; 
-    valign  : left;
-    height : 220px;
+    height  : 190px;
 }
 
 .thumbnail { 
-    width         : 103px;
+    width         : 137px;
     //height      : 138px;
     margin-bottom : 5px;
     border        : 1px solid white;
-}
-
-.thumbnail_big {
-    width  : 162px;
-    //height : 194px;
-    margin-bottom: 5px;
 }
 
 .thumbnail_container { 
@@ -52,7 +65,7 @@ a:hover   { color  : darkblue; font-weight : bold; }
 
 .separator_group {
     float         : left;
-    width         : 98%;
+    width         : 280px;
     padding       : 4px;
     margin        : 2px;
     
@@ -91,15 +104,46 @@ a:hover   { color  : darkblue; font-weight : bold; }
 }
 
 .camera_video_edit { 
+    position   : fixed;
+    top        : 0px;
+    left       : 0px;
+    height     : 100%;
+    width      : 100%;
+    text-align : center;
+    z-index    : 81;
+/*    
     float      : left;
     margin     : 5px;
     display    : none;
     width      : 100%;
     text-align : center;
     padding    : auto; 
+*/
 }
 
-/* configuration of delete, recycle and video play symbols (overlay on images) */
+.camera_video_edit_overlay { 
+    position   : fixed;
+    top        : 0px;
+    left       : 0px;
+    height     : 100%;
+    width      : 100%;
+    text-align : center;
+    opacity    : 50%;
+    z-index    : 80;
+    background-color: black;
+}
+
+.camera_video_trim {
+    width     : 800px;
+    max-width : 80vw;
+    background-color: darkgray;
+    border : solid 1px white;
+    border-radius : 4px;
+    padding : 4px;
+    margin : 4px;	
+}
+
+/* image overlay - configuration of delete, recycle and video play symbols (overlay on images) */
 
 .play_button {
     position    : absolute;
@@ -137,18 +181,8 @@ a:hover   { color  : darkblue; font-weight : bold; }
     cursor   : pointer;
 }
 .star_img { 
-    width : 20px;
-    height : 20px;
-}
-
-.star_big { 
-    position : relative;
-    top : 0px; 
-    left : -70px; 
-    width : 20px;
-    height : 20px;
-    z-index : 100;
-    cursor : pointer;
+    width    : 20px;
+    height   : 20px;
 }
 
 /* configuration of hires overlay - image and video */
@@ -163,16 +197,20 @@ a:hover   { color  : darkblue; font-weight : bold; }
     z-index  : 101;
     background-color : black;
     opacity          : 80%;
+    color            : white;
 }
 
 .overlay_content {
-    position : fixed;
-    display  : none;
-    top      : 0;
-    left     : 0;
-    height   : 100%;
-    width    : 100%;
-    z-index  : 102;
+    position    : fixed;
+    display     : none;
+    top         : 0;
+    left        : 0;
+    height      : 100%;
+    width       : 100%;
+    z-index     : 102;
+    color       : white;
+    font-family : sans-serif;
+    font-size   : 12px;
 }
 
 #overlay_close {
@@ -227,17 +265,19 @@ a:hover   { color  : darkblue; font-weight : bold; }
 }
 
 .button-video-edit {
-//    width            : 80px;
-    height           : 25px;
+    height           : 28px;
     background       : gray;
     border-radius    : 5px;
     color            : black;
+    border           : 1px solid white;
 }
 
 .button-video-record {
     width            : 100px;
-    height           : 25px;
+    height           : 28px;
     background       : gray;
     border-radius    : 5px;
     color            : black;
+    border           : 1px solid white;
 }
+

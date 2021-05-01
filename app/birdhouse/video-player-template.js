@@ -2,8 +2,9 @@
 // HTML Template for video player
 //----------------------------------
 
+var videoplayer_script = "birdhouse/video-player.js";
 var videoplayer_template = `
-  <script src="birdhouse/video-player.js"></script>
+
   <link rel="stylesheet" href="birdhouse/video-player.css" type="text/css">
   <div class="player-container">
     <div class="video-container" id="video-container">
@@ -19,12 +20,13 @@ var videoplayer_template = `
       </video>
 
       <div class="video-controls hidden" id="video-controls">
+      <!--
         <div class="video-progress">
           <progress id="progress-bar" value="0" min="0"></progress>
           <input class="seek" id="seek" value="0" min="0" type="range" step="1">
           <div class="seek-tooltip" id="seek-tooltip">00:00</div>
         </div>
-
+      -->
         <div class="bottom-controls">
           <div class="left-controls">
             <button data-title="Play (k)" id="play">
@@ -107,16 +109,18 @@ var videoplayer_template = `
       </symbol>
     </defs>
   </svg>
-
-  <script src="/html/video-player.js"></script>
   
-  <br/>
-  <input id="video-id" type="text" class="input-video-edit" disabled value="<!--VIDEOID-->" style="display:none;">
-  <input id="active-cam" type="text" class="input-video-edit" disabled value="<!--ACTIVE-->" style="display:none;">
-  
-  IN: &nbsp; <input id="tc-in" type="text" class="input-video-edit" disabled value="0"> &nbsp; &nbsp; 
-  OUT: &nbsp; <input id="tc-out" type="text" class="input-video-edit" disabled value="<!--LENGTH-->"> &nbsp; &nbsp; &nbsp; &nbsp; 
-  <button onclick="javascript:<!--JAVASCRIPT-->" class="button-video-edit">Erzeuge gekürzte Version</button>
+  <center>
+  <div class="camera_video_trim">
+    <input id="video-id" type="text" class="input-video-edit" disabled value="<!--VIDEOID-->" style="display:none;">
+    <input id="active-cam" type="text" class="input-video-edit" disabled value="<!--ACTIVE-->" style="display:none;">
+    IN: &nbsp; <input id="tc-in" type="text" class="input-video-edit" disabled value="0"> &nbsp; &nbsp; 
+    OUT: &nbsp; <input id="tc-out" type="text" class="input-video-edit" disabled value="<!--LENGTH-->"> &nbsp; &nbsp; &nbsp; &nbsp; 
+    <button onclick="javascript:<!--JAVASCRIPT-->" class="button-video-edit">&nbsp;Erzeuge gekürzte Version&nbsp;</button> &nbsp; 
+    <button onclick="javascript:toggleVideoEdit(false)" class="button-video-edit">&nbsp;Fertig&nbsp;</button>
+  </div>
+  </center>
+    
   <br/>
   <br/>
 `

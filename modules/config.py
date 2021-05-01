@@ -48,6 +48,7 @@ class myConfig(threading.Thread):
          
        self.param          = self.read("main")
        self.main_directory = self.param["path"]
+       self.processing     = True
        
 
 
@@ -55,7 +56,9 @@ class myConfig(threading.Thread):
        '''
        Core function (not clear what to do yet)
        '''
-       time.sleep(1)
+       while self.processing:
+          time.sleep(1)
+
        return       
           
    def reload(self):
@@ -171,6 +174,21 @@ class myConfig(threading.Thread):
           
        if date == "":  return self.config_cache[config]
        else:           return self.config_cache[config][date]
+
+
+   def lock(self, config, date=""):
+       '''
+       lock config file
+       '''
+       filename = os.path.join(self.main_directory, self.directories[config], date, self.files[config])
+       self.locked[filename] = True
+
+   def unlock(self, config, date=""):
+       '''
+       unlock config file
+       '''
+       filename = os.path.join(self.main_directory, self.directories[config], date, self.files[config])
+       self.locked[filename] = False
 
 
    def write(self, config, config_data, date=""):

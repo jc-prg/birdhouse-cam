@@ -4,27 +4,60 @@
 
 var app_frame_count   = 4;
 var app_setting_count = 4;
-var app_active_cam    = "cam2";
+var app_last_load     = 0;
 
-var app_menu = [
-	[lang("LIVESTREAM"),   "script", "birdhousePrint_load('INDEX','"+app_active_cam+"');"],
-	[lang("FAVORITS"),     "script", "birdhousePrint_load('FAVORITS','"+app_active_cam+"');"],
-	[lang("TODAY"),        "script", "birdhousePrint_load('TODAY','"+app_active_cam+"');"],
-	[lang("VIDEOS"),       "script", "birdhousePrint_load('VIDEOS','"+app_active_cam+"');"],
-	[lang("ARCHIVE"),      "script", "birdhousePrint_load('ARCHIVE','"+app_active_cam+"');"],
-	["LINE"],
-	[lang("CAMERAS"),       "script", "birdhousePrint_load('CAMERAS','"+app_active_cam+"');"],
-	[lang("TODAY_COMPLETE"),"script", "birdhousePrint_load('TODAY_COMPLETE','"+app_active_cam+"');"],
-	["LINE"],
-	[lang("SETTINGS"),      "script", "appMsg.alert('"+lang('NOT_IMPLEMENTED')+"');" ],
-	]
+//--------------------------------
+// create menu entries
+//--------------------------------
+
+function app_menu_entries() {
+	var app_menu = [
+		[lang("LIVESTREAM"),   "script", "birdhousePrint_load('INDEX','"+app_active_cam+"');"],
+		[lang("FAVORITS"),     "script", "birdhousePrint_load('FAVORITS','"+app_active_cam+"');"],
+		[lang("TODAY"),        "script", "birdhousePrint_load('TODAY','"+app_active_cam+"');"],
+		[lang("VIDEOS"),       "script", "birdhousePrint_load('VIDEOS','"+app_active_cam+"');"],
+		[lang("ARCHIVE"),      "script", "birdhousePrint_load('ARCHIVE','"+app_active_cam+"');"],
+		];
+	if (app_admin_allowed) {
+		app_menu = app_menu.concat([
+		["LINE"],
+		[lang("CAMERAS"),       "script", "birdhousePrint_load('CAMERAS','"+app_active_cam+"');"],
+		[lang("TODAY_COMPLETE"),"script", "birdhousePrint_load('TODAY_COMPLETE','"+app_active_cam+"');"],
+		["LINE"],
+		[lang("SETTINGS"),      "script", "appMsg.alert('"+lang('NOT_IMPLEMENTED')+"');" ],
+		]);
+		}
+	return app_menu;
+	}
 	
 //--------------------------------
 // function to request status, update menu etc. (including initial load)
 //--------------------------------
 
+function app_initialize(data) {
+	setTextById("headerRight", birdhouseHeaderFunctions() );
+	}
+
+//--------------------------------
+// function to request status, update menu etc. (including initial load)
+//--------------------------------
+
+function app_status_last_load() {
+	var current_timestamp = Date.now();
+	var difference        = (current_timestamp - app_last_load) / 1000;
+	if (difference > 20)		{ setTextById("statusLED","<div id='red'></div>"); }
+	else if (difference > 10)	{ setTextById("statusLED","<div id='yellow'></div>"); }
+	else if (difference <= 10)	{ setTextById("statusLED","<div id='green'></div>"); }
+	}
+
+
 function app_status(data) {
-	if (reload) { birdhousePrint(data=data, active_page=appActivePage, camera=app_active_cam); reload = false; }
+	if (reload) { 
+		birdhousePrint_load("INDEX","cam1");
+		setInterval(function(){ app_status_last_load(); }, 5 * 1000);
+		}
+	
+	app_last_load = Date.now();
 	}
 	
 //--------------------------------

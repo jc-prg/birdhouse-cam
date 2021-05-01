@@ -260,8 +260,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         file_ending     = self.path.split(".")
         file_ending     = "."+file_ending[len(file_ending)-1].lower()
         
-        logging.info(file_ending)
-
         config.html_replace["title"]      = config.param["title"]
         config.html_replace["active_cam"] = which_cam
 
@@ -507,10 +505,11 @@ if __name__ == "__main__":
 
 
     finally:
+        backup.stop()
         for cam in camera:
           if camera[cam].active:
              camera[cam].stop()
-        backup.stop()
+        commands.stop()
         views.stop()
 
         logging.info("Stopping WebServer ...")
