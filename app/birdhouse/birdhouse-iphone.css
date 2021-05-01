@@ -1,9 +1,24 @@
-/* DEFAULT (small) -> iPhone XS -> Laptop and wider */
-/* format for iphone XS */
+/* iPhone 5 */
+@media screen and (device-aspect-ratio: 40/71) {}
+
+/* iPhone XS: 2436x1125px at 458ppi */
+@media only screen 
+    and (device-width : 375px) 
+    and (device-height : 812px) 
+    and (orientation : landscape)
+    and (-webkit-device-pixel-ratio : 3) { }
+
+@media only screen 
+    and (device-width : 375px) 
+    and (device-height : 812px) 
+    and (orientation : portrait)
+    and (-webkit-device-pixel-ratio : 3) { }
+
+/* ----------*/
 
 @media (min-width: 370px) {
 
 .livestream_main { max-width : 330px; }
-.separator_group { font-size : 10px; }
+.separator_group { font-size : 10px; width : 97%; }
 
 }
