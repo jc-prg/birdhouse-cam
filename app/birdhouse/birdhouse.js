@@ -154,6 +154,7 @@ function birdhouse_INDEX(data, camera) {
 	if (cameras.length == 1 || other_cams.length == 0) {	
 		var onclick  = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
 		html += birdhouse_Camera(main=true, view="cam1", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed);
+		html += "<br/>&nbsp;<br/>";
 		}
 	else {
 		var onclick  = "birdhousePrint_load(view=\"INDEX\", camera=\""+other_cams[0]["name"]+"\");";
@@ -341,8 +342,6 @@ function birdhouse_Camera(main, view, onclick, camera, stream_server, admin_allo
 		html     += "  <div class='livestream_record "+view+"'>";
 		html     += "     <button onclick='"+command_record+"' class='button-video-record'>Record ("+camera["name"]+")</button> &nbsp;";
 		html     += "     <button onclick='"+command_stop+"' class='button-video-record'>Stop ("+camera["name"]+")</button>";
-//		html     += "     <br/>&nbsp;<br/>";
-//		html     += "     <br/>&nbsp;";
 		}
 	html     += "</div></center>";
 
