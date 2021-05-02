@@ -12,9 +12,3 @@ LANG                    = 'DE';
 
 if (rollout === "test")	{ test = true; }
 
-var setRESTurl        = "http://192.168.1.21:8000/";
-var setRESTurl_noport = "http://192.168.1.21";
-
-
-// add more dir data
-
