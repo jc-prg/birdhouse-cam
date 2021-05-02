@@ -458,7 +458,8 @@ function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 
 function birdhouse_ImageURL(URL) {
 	URL = URL.replace(/\/\//g,"/");
-	URL = URL.replace(/http:\//g,"http://");
+	URL = URL.replace("http:/","http://");
+	URL = URL.replace("https:/","https://");
 	return URL;
 	}
 
@@ -536,11 +537,6 @@ function birdhouse_Image(title, entry, header_open=true, admin=false) {
 		recycle     = "<div id='d_"+img_id+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='setRecycle(\""+img_id+"\",document.getElementById(\"d_"+img_id+"_value\").innerHTML,\""+img_name+"\");'/>";
 		}
 		
-/*
-<div class='star'><div id='s_/current/202010_value' style='display:none;'>1</div><img class='star_img' id='s_/current/202010' src='/html/star0.png' onclick='setFavorit("/current/202010",document.getElementById("s_/current/202010_value").innerHTML,"image_cam2_202010.jpg");'/></div>
-<div class='trash'><div id='d_/current/202010_value' style='display:none;'>1</div><img class='trash_img' id='d_/current/202010' src='/html/recycle0.png' onclick='setRecycle("/current/202010",document.getElementById("d_/current/202010_value").innerHTML,"image_cam2_202010.jpg");'/></div>
-*/
-
 	html += "<div class='image_container'>";
 	html += "  <div class='star'>"+star+"</div>";
 	html += "  <div class='recycle'>"+recycle+"</div>";
