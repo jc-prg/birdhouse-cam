@@ -39,7 +39,7 @@ APIdescription = {
       "version" : "v0.2"
       }
 APIstart       = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-APPframework   = "v0.7.1"
+APPframework   = "v0.8.0"
 
 #----------------------------------------------------
 
