@@ -21,6 +21,10 @@ from modules.presets import myPages
 
 #----------------------------------------------------
 
+dir_app_v1 = "/app-v1"
+
+#----------------------------------------------------
+
 def read_html(filename, content=""):
    '''
    read html file, replace placeholders and return for stream via webserver
@@ -135,7 +139,7 @@ class myViews(threading.Thread):
         if current != "" and len(self.active_cams) > 1:
            selected   = self.active_cams.index(cam) + 1 
            if selected >= len(self.active_cams): selected = 0
-           html  += " / <a href='"+myPages[current][1]+"?"+self.active_cams[selected]+"'>"+self.active_cams[selected].upper()+"</a>"
+           html  += " / <a href='"+dir_app_v1+"/"+myPages[current][1]+"?"+self.active_cams[selected]+"'>"+self.active_cams[selected].upper()+"</a>"
 
         return html
 
@@ -167,10 +171,10 @@ class myViews(threading.Thread):
         stamp = file.split("/")
         stamp = stamp[len(stamp)-1]
         if int(favorit) == 1:
-           star    = "/html/star1.png"
+           star    = dir_app_v1+"/star1.png"
            value   = "0"
         else:
-           star    = "/html/star0.png"
+           star    = dir_app_v1+"/star0.png"
            value   = "1"
            
         if "/videos/" in file: img_id = self.config.imageName(type="thumb",  timestamp=stamp, camera=cam)
@@ -194,10 +198,10 @@ class myViews(threading.Thread):
         stamp = file.split("/")
         stamp = stamp[len(stamp)-1]
         if int(recycle) == 1:
-           trash   = "/html/recycle1.png"
+           trash   = dir_app_v1+"/recycle1.png"
            value   = "0"
         else:
-           trash   = "/html/recycle0.png"
+           trash   = dir_app_v1+"/recycle0.png"
            value   = "1"
            
         if "/videos/" in file: img_id = self.config.imageName(type="thumb",  timestamp=stamp, camera=cam)
@@ -225,7 +229,7 @@ class myViews(threading.Thread):
         lowres_file = lowres.split("/")
         lowres_file = lowres_file[len(lowres_file)-1]
         
-        if ".mp4" in javascript: play = "<img src=\"/html/play.png\" class=\"play_button\" onclick='javascript:" + javascript + "'/>\n"
+        if ".mp4" in javascript: play = "<img src=\""+dir_app_v1++"/play.png\" class=\"play_button\" onclick='javascript:" + javascript + "'/>\n"
         else:                    play = ""
         
         html += "<div class='thumbnail_container'>\n"
@@ -401,12 +405,12 @@ class myViews(threading.Thread):
         content["view"]       = "index"
         
         if self.camera["cam1"].active and self.camera["cam2"].active:
-           if which_cam == "cam1":        template = "index_cam1+cam2.html"
-           elif which_cam == "cam2":      template = "index_cam2+cam1.html"
-           else:                          template = "index.html"
+           if which_cam == "cam1":        template = dir_app_v1+"/index_cam1+cam2.html"
+           elif which_cam == "cam2":      template = dir_app_v1+"/index_cam2+cam1.html"
+           else:                          template = dir_app_v1+"/index.html"
            
         else:
-           template = "index.html"
+           template = dir_app_v1+"/index.html"
            
         if self.adminAllowed():
            content["links"]       = self.printLinks(link_list=("favorit","today","backup","cam_info"), cam=which_cam)
@@ -652,7 +656,7 @@ class myViews(threading.Thread):
            elif not backup:
               files_today["999999"] = {
                        "lowres" : "stream.mjpg?"+which_cam,
-                       "hires"  : "/index.html?"+which_cam,
+                       "hires"  : "index.html?"+which_cam,
                        "camera" : which_cam,
                        "type"   : "addon",
                        "title"  : "Live-Stream"

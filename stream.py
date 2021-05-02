@@ -133,14 +133,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         '''
         Redirect to other file / URL
         '''
+        logging.debug("Redirect: "+file)
         self.send_response(301)
-        self.send_header('Location', '/index.html')
+        self.send_header('Location', file)
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.send_header("Pragma", "no-cache")
         self.send_header("Expires", "0")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.end_headers()	
 
 
@@ -261,14 +259,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         
         config.html_replace["title"]      = config.param["title"]
         config.html_replace["active_cam"] = which_cam
-
+        
         # index 
-        if self.path == '/':                self.redirect("/index.html")
-        elif self.path == '/v1/':           self.redirect("/index.html")
-        elif self.path == '/v1/index.html': self.redirect("/index.html")
-        elif self.path == '/v2/':           self.redirect("/app/index.html")
-        elif self.path == '/v2/index.html': self.redirect("/app/index.html")
-
+        if self.path == '/':                    self.redirect("/app-v1/index.html")
+        elif self.path == '/app':               self.redirect("/app/index.html")
+        elif self.path == '/app/':              self.redirect("/app/index.html")
+        elif self.path == '/app-v1':            self.redirect("/app-v1/index.html")
+        elif self.path == '/app-v1/':           self.redirect("/app-v1/index.html")
+        elif self.path == '/app-v2':            self.redirect("/app/index.html")
+        elif self.path == '/app-v2/':           self.redirect("/app/index.html")
+        elif self.path == '/app-v2/index.html': self.redirect("/app/index.html")
 
         # REST API call :  /api/<cmd>/<camera>/param1>/<param2>
         elif self.path.startswith("/api/"):
@@ -350,7 +350,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           elif '/video-info.html' in self.path:  template, content = views.detailViewVideo(server=self)
           elif '/cameras.html' in self.path:     template, content = views.createCameraList(server=self)
           
-          self.streamFile(ftype='text/html', content=read_html(directory='html', filename=template, content=content), no_cache=True)
+          self.streamFile(ftype='text/html', content=read_html(directory='', filename=template, content=content), no_cache=True)
 
 
         # extract and show single image
