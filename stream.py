@@ -421,6 +421,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # images, js, css, ...
         elif file_ending in myMIMEtypes:
         
+           if "/videos" in self.path and "/app-v1" in self.path: self.path = self.path.replace("/app-v1")
+           if "/images" in self.path and "/app-v1" in self.path: self.path = self.path.replace("/app-v1")
+        
            if "text" in myMIMEtypes[file_ending]:          self.streamFile(ftype=myMIMEtypes[file_ending], content=read_html( directory='', filename=self.path))
            elif "application" in myMIMEtypes[file_ending]: self.streamFile(ftype=myMIMEtypes[file_ending], content=read_html( directory='', filename=self.path))
            else:                                           self.streamFile(ftype=myMIMEtypes[file_ending], content=read_image(directory='', filename=self.path))
