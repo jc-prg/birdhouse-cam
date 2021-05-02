@@ -114,8 +114,8 @@ var videoplayer_template = `
   <div class="camera_video_trim">
     <input id="video-id" type="text" class="input-video-edit" disabled value="<!--VIDEOID-->" style="display:none;">
     <input id="active-cam" type="text" class="input-video-edit" disabled value="<!--ACTIVE-->" style="display:none;">
-    IN: &nbsp; <input id="tc-in" type="text" class="input-video-edit" disabled value="0"> &nbsp; &nbsp; 
-    OUT: &nbsp; <input id="tc-out" type="text" class="input-video-edit" disabled value="<!--LENGTH-->"> &nbsp; &nbsp; &nbsp; &nbsp; 
+    <button class="button-video-edit" onclick="setTCin();">&nbsp;&nbsp;IN&nbsp;&nbsp;</button>: &nbsp; <input id="tc-in" type="text" class="input-video-edit" value="0"> &nbsp; &nbsp; 
+    <button class="button-video-edit" onclick="setTCout();">&nbsp;OUT&nbsp;</button>: &nbsp; <input id="tc-out" type="text" class="input-video-edit" value="<!--LENGTH-->"> &nbsp; &nbsp; &nbsp; &nbsp; 
     <button onclick="javascript:<!--JAVASCRIPT-->" class="button-video-edit">&nbsp;Erzeuge gekürzte Version&nbsp;</button> &nbsp; 
     <button onclick="javascript:toggleVideoEdit(false)" class="button-video-edit">&nbsp;Fertig&nbsp;</button>
   </div>

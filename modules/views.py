@@ -615,7 +615,7 @@ class myViews(threading.Thread):
            time_now         = "000000"
            first_title      = ""
 
-           content["subtitle"]    = myPages["backup"][0] + " " + files_data["info"]["date"] + " (" + self.camera[which_cam].name + ", " + str(files_data["info"]["count"]) + " Bilder)"
+           content["subtitle"]    = myPages["backup"][0] + " " + files_data["info"]["date"]
            content["links"]       = self.printLinks(link_list=("live","today","backup","favorit"), current='backup', cam=which_cam)
            content["links_json"]  = self.printLinksJSON(link_list=("live","today","backup","favorit"), cam=which_cam)
 
@@ -629,7 +629,7 @@ class myViews(threading.Thread):
            subdirectory     = ""
            first_title      = "Heute &nbsp; "
 
-           content["subtitle"]    = myPages["today"][0] + " (" + self.camera[which_cam].name + ")"
+           content["subtitle"]    = myPages["today"][0]
            if self.adminAllowed():
               content["links"]      = self.printLinks(link_list=("live","favorit","today_complete","videos","backup"), current='today', cam=which_cam)
               content["links_json"] = self.printLinksJSON(link_list=("live","favorit","today_complete","videos","backup"), cam=which_cam)
@@ -727,6 +727,7 @@ class myViews(threading.Thread):
         else:
            html += "<div class='separator'>Keine Bilder vorhanden.</div>"
 
+        content["subtitle"]  += " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
         content["view_count"] = ["all","star","detect"]
         content["file_list"]  = html
         return template, content
@@ -876,6 +877,7 @@ class myViews(threading.Thread):
         if "app-v1" in param: del param[1]
         template              = "list.html"
         html                  = ""
+        count                 = 0
 
         category       = "/current/"
         path           = self.config.directory(config="images")
@@ -906,6 +908,8 @@ class myViews(threading.Thread):
                          files_part[stamp]["detect"]    = self.camera[which_cam].detectImage(file_info=files_part[stamp])
                          files_part[stamp]["category"]  = category+stamp
                          files_part[stamp]["directory"] = "/" + self.config.directories["images"]
+                         count += 1
+
 
             if len(files_part) > 0:
                html += self.printImageGroup(title="Bilder "+hour+":00", group_id=hour_min, image_group=files_part, category=category, header=True, header_open=False, cam=which_cam)
@@ -919,7 +923,7 @@ class myViews(threading.Thread):
 
         content["view_count"]  = ["all","star","detect","recycle"]
         content["file_list"]   = html
-        content["subtitle"]    = myPages["today_complete"][0] + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Bilder)"
+        content["subtitle"]    = myPages["today_complete"][0] + " (" + self.camera[which_cam].name +", " + str(count) + " Bilder)"
         content["links"]       = self.printLinks(link_list=("live","favorit","today","videos","backup"), current="today_complete", cam=which_cam)
         content["links_json"]  = self.printLinksJSON(link_list=("live","favorit","today","videos","backup"), cam=which_cam)
 
