@@ -757,17 +757,17 @@ class myViews(threading.Thread):
         dir_total_size  = 0
         files_total     = 0
 
-        imageTitle     = str(self.config.param["preview_backup"]) + str(self.camera[which_cam].param["image_save"]["seconds"][0])
-        imageToday     = self.config.imageName(type="lowres", timestamp=imageTitle, camera=which_cam)
-        image          = os.path.join(self.config.directory(config="images"), imageToday)
+#        imageTitle     = str(self.config.param["preview_backup"]) + str(self.camera[which_cam].param["image_save"]["seconds"][0])
+#        imageToday     = self.config.imageName(type="lowres", timestamp=imageTitle, camera=which_cam)
+#        image          = os.path.join(self.config.directory(config="images"), imageToday)
            
-        if os.path.isfile(image):
-           html        += self.printImageContainer(description=myPages["today"][0], lowres=imageToday, hires=myPages["today"][1]+"?"+which_cam, star='' ,window="self")
+#        if os.path.isfile(image):
+#           html        += self.printImageContainer(description=myPages["today"][0], lowres=imageToday, hires=myPages["today"][1]+"?"+which_cam, star='' ,window="self")
            
-        elif which_cam == "cam1":
-           imageToday  = "image_"+imageTitle+".jpg" # older archives
-           image       = os.path.join(self.config.directory(config="images"), imageToday)
-           html       += self.printImageContainer(description=myPages["today"][0], lowres=imageToday, hires=myPages["today"][1]+"?"+which_cam, star='' ,window="self")
+#        elif which_cam == "cam1":
+#           imageToday  = "image_"+imageTitle+".jpg" # older archives
+#           image       = os.path.join(self.config.directory(config="images"), imageToday)
+#           html       += self.printImageContainer(description=myPages["today"][0], lowres=imageToday, hires=myPages["today"][1]+"?"+which_cam, star='' ,window="self")
 
         for directory in dir_list:
         
