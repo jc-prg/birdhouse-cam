@@ -100,6 +100,9 @@ function birdhouseHeaderFunctions() {
 	var switch_cam  = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();'>";
 	var reload_view = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
 	html = reload_view + "&nbsp;&nbsp;&nbsp;" + switch_cam + "&nbsp;&nbsp;&nbsp;";
+	if (app_available_cameras.length > 1)	{ html = reload_view + "&nbsp;&nbsp;&nbsp;" + switch_cam + "&nbsp;&nbsp;&nbsp;"; }
+	else					{ html = reload_view + "&nbsp;&nbsp;&nbsp;"; }
+	
 	return html;
 	}
 	
