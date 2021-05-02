@@ -13,8 +13,7 @@
      color            : #dddddd;
      }
      
-  .frame_column img    { opacity: 0.9; }
-  
+  .frame_column img    { opacity: 1.0; }
   .overlay_content img { opacity: 1.0; }
   
   .livestream_main     { border : #dddddd 1px solid; }

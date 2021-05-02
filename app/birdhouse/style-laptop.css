@@ -5,6 +5,7 @@
 
     .livestream_main { max-width : 95vh; }
     .separator_group { width : 98%; font-size : 10px; }
+    .image_container { height : 215px; }
 }
 
 @media (min-width: 820px) {

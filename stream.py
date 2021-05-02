@@ -3,12 +3,11 @@
 # In Progress:
 # - ...
 # Backlog:
-# - use jc://app-framework/ as client
+# - check TRIM VIDEO (buggy?)
+# - correct header (e.g. count images -> or reduce and more information in javascript client)
 # - Optimize data handling
-#   -> Queue for writing into JSON (e.g. for status changes)
 #   -> using a CouchDB instead of JSON files
 # - password for external access (to enable admin from outside)
-# - Idea: set to_be_deleted when below threshold; don't show / backup those files
 # - (re)start backup manually
 
 
@@ -37,10 +36,10 @@ from modules.views    import myViews
 
 APIdescription = {
       "name"    : "BirdhouseCAM",
-      "version" : "v0.1"
+      "version" : "v0.2"
       }
 APIstart       = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-APPframework   = "v0.7.1"
+APPframework   = "v0.8.0"
 
 #----------------------------------------------------
 
@@ -134,14 +133,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         '''
         Redirect to other file / URL
         '''
+        logging.debug("Redirect: "+file)
         self.send_response(301)
-        self.send_header('Location', '/index.html')
+        self.send_header('Location', file)
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.send_header("Pragma", "no-cache")
         self.send_header("Expires", "0")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.end_headers()	
 
 
@@ -262,12 +259,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         
         config.html_replace["title"]      = config.param["title"]
         config.html_replace["active_cam"] = which_cam
-
-        # index with embedded live stream
-        if self.path == '/': 
-
-          self.redirect("/index.html")
-
+        
+        # index 
+        if self.path == '/':                    self.redirect("/app-v1/index.html")
+        elif self.path == '/app':               self.redirect("/app/index.html")
+        elif self.path == '/app/':              self.redirect("/app/index.html")
+        elif self.path == '/app-v1':            self.redirect("/app-v1/index.html")
+        elif self.path == '/app-v1/':           self.redirect("/app-v1/index.html")
+        elif self.path == '/app-v2':            self.redirect("/app/index.html")
+        elif self.path == '/app-v2/':           self.redirect("/app/index.html")
+        elif self.path == '/app-v2/index.html': self.redirect("/app/index.html")
 
         # REST API call :  /api/<cmd>/<camera>/param1>/<param2>
         elif self.path.startswith("/api/"):
@@ -335,8 +336,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
 
-
-        elif '.html' in self.path or "/api/" in self.path:
+        # app and API v1
+        elif ('.html' in self.path or "/api/" in self.path) and not "/app/" in self.path:
         
           content = {}
         
@@ -349,7 +350,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           elif '/video-info.html' in self.path:  template, content = views.detailViewVideo(server=self)
           elif '/cameras.html' in self.path:     template, content = views.createCameraList(server=self)
           
-          self.streamFile(ftype='text/html', content=read_html(directory='html', filename=template, content=content), no_cache=True)
+          self.streamFile(ftype='text/html', content=read_html(directory='', filename=template, content=content), no_cache=True)
 
 
         # extract and show single image

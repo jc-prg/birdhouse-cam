@@ -98,6 +98,7 @@ myMIMEtypes = {
   '.png'  : 'image/png',
   '.ico'  : 'image/ico',
   '.mp4'  : 'video/mp4',
+  '.gif'  : 'image/gif',
   '.jpg'  : 'image/jpg',
   '.jpeg' : 'image/jpg',
 }

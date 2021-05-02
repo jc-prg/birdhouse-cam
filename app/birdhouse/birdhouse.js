@@ -150,7 +150,7 @@ function birdhouse_INDEX(data, camera) {
 			}
 		}
 	if (active_cam == {}) { active_cam = other_cams[0]; other_cams.shift(); }
-	if (cameras.length == 1) {	
+	if (cameras.length == 1 || other_cams.length == 0) {	
 		var onclick  = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
 		html += birdhouse_Camera(main=true, view="cam1", onclick=onclick, camera=active_cam, stream_server=stream_server);
 		}
