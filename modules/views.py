@@ -145,7 +145,7 @@ class myViews(threading.Thread):
         if current != "" and len(self.active_cams) > 1:
            selected   = self.active_cams.index(cam) + 1 
            if selected >= len(self.active_cams): selected = 0
-           html  += " / <a href='"+dir_app_v1+"/"+myPages[current][1]+"?"+self.active_cams[selected]+"'>"+self.active_cams[selected].upper()+"</a>"
+           html  += " / <a href='"+dir_app_v1+myPages[current][1]+"?"+self.active_cams[selected]+"'>"+self.active_cams[selected].upper()+"</a>"
 
         return html
 
