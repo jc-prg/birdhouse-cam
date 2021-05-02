@@ -229,7 +229,7 @@ class myViews(threading.Thread):
         lowres_file = lowres.split("/")
         lowres_file = lowres_file[len(lowres_file)-1]
         
-        if ".mp4" in javascript: play = "<img src=\""+dir_app_v1++"/play.png\" class=\"play_button\" onclick='javascript:" + javascript + "'/>\n"
+        if ".mp4" in javascript: play = "<img src=\""+dir_app_v1+"/play.png\" class=\"play_button\" onclick='javascript:" + javascript + "'/>\n"
         else:                    play = ""
         
         html += "<div class='thumbnail_container'>\n"
