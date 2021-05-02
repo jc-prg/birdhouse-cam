@@ -128,7 +128,7 @@ function birdhouse_INDEX(data, camera) {
 	var html          = "";
 	var active_camera = camera;
 	var cameras       = data["DATA"]["cameras"];
-	var stream_server = RESTurl_noport + ":" + data["DATA"]["cameras"][active_camera]["server_port"]; // check if required ...
+	var stream_server = RESTurl;
 	var active_cam    = {};
 	var other_cams    = [];
 	
