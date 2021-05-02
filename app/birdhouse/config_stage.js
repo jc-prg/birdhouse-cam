@@ -5,7 +5,7 @@
 
 var test		= false;
 var rollout	 	= 'prod';
-var server_port 	= '8000';
+var server_port 	= '';
 var log_level          = 'info';
 
 LANG                    = 'DE';
