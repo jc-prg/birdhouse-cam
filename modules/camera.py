@@ -45,6 +45,7 @@ class myVideoRecording(threading.Thread):
        self.ffmpeg_cmd  += " {OUTPUT_FILENAME}"
        self.ffmpeg_trim  = "ffmpeg -y -i {INPUT_FILENAME} -c copy -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
        self.count_length = 8
+       self.running      = True
 
    #----------------------------------
    
@@ -62,9 +63,19 @@ class myVideoRecording(threading.Thread):
           self.max_length = self.param["video"]["max_length"]
           logging.debug("Set max video recording length for " + self.camera + " to " + str(self.max_length))
        else:
-          logging.debug("Use default max video recording length for " + self.camera + " = " + str(self.max_length))
-       return
+          logging.debug("Use default max video recording length for " + self.camera + " = " + str(self.max_length))       
+          
+       while self.running:
+          time.sleep(1)
 
+
+
+   def stop(self):
+       '''
+       ending functions (nothing at the moment)
+       '''
+       self.running = False
+       return
    
    def start_recording(self):
        '''
@@ -404,6 +415,8 @@ class myCamera(threading.Thread):
 
                  self.previous_image = image_compare
                  self.previous_stamp = stamp
+                 
+       logging.info("Stopped camera ("+self.type+").")
 
 
    def wait(self):
@@ -418,10 +431,6 @@ class myCamera(threading.Thread):
        '''
        Stop recording
        '''
-       logging.info("Stopping camera ("+self.type+") ...")
-       self.running = False
-       time.sleep(1)
-
        if not self.error and self.active:
          if self.type == "pi":
            self.camera.stop_recording()
@@ -430,8 +439,11 @@ class myCamera(threading.Thread):
          elif self.type == "usb":
            self.camera.stop()
            self.cameraFPS.stop()
+           
+         if self.video:
+           self.video.stop()
           
-       logging.info("OK.")
+       self.running = False
 
    #----------------------------------
 

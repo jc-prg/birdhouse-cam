@@ -29,10 +29,11 @@ class myCommands(threading.Thread):
         Initialize new thread and set inital parameters
         '''
         threading.Thread.__init__(self)
+        self.name           = "Commands"
         self.camera         = camera
         self.config         = config
         self.backup         = backup
-        self.processing     = True
+        self._running       = True
         self.which_cam      = ""
         self.status_queue           = {}
         self.status_queue["images"] = []
@@ -48,7 +49,7 @@ class myCommands(threading.Thread):
         '''
         logging.info("Starting REST API for POST ...")
         config_files = ["images","videos"]
-        while self.processing:
+        while self._running:
            time.sleep(10)
            
            for config_file in config_files:
@@ -69,14 +70,14 @@ class myCommands(threading.Thread):
              self.config.unlock(config_file)
              self.config.write(config_file, entries)   
                            
-        return
+        logging.info("Stopped REST API for POST.")
     
+
     def stop(self):
         '''
         Do nothing at the moment
         '''
-        self.processing = False
-        logging.info("Stopping REST API for POST ...")
+        self._running = False
     
     #-------------------------------------
 

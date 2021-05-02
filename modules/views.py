@@ -53,6 +53,8 @@ class myViews(threading.Thread):
         Initialize new thread and set inital parameters
         '''
         threading.Thread.__init__(self)
+        self._running  = True
+        self.name      = "Views"
         self.camera    = camera
         self.config    = config
         self.which_cam = ""
@@ -64,12 +66,16 @@ class myViews(threading.Thread):
         Do nothing at the moment
         '''
         logging.info("Starting HTML views and REST API for GET ...")
-    
+        while self._running:
+           time.sleep(1)
+        logging.info("Stopped HTML views and REST API for GET.")
+        
+            
     def stop(self):
         '''
         Do nothing at the moment
         '''
-        logging.info("Stopping HTML views and REST API for GET ...")
+        self._running = False
     
     #-------------------------------------
     

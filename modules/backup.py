@@ -23,7 +23,8 @@ class myBackupRestore(threading.Thread):
        threading.Thread.__init__(self)
        self.config       = config
        self.camera       = camera
-       self.running      = True
+       self.name         = "Backup"
+       self._running      = True
 
    #-----------------------------------
 
@@ -32,25 +33,27 @@ class myBackupRestore(threading.Thread):
        start backup in the background
        '''
        backup_started = False
-       while self.running:
+       while self._running:
          stamp   = datetime.now().strftime('%H%M%S')
          if stamp[0:4] == self.config.param["backup_time"] and not backup_started:
             logging.info("Starting daily backup ...")
             backup_started = True
             self.backup_files()
             logging.info("OK.")
-            time.sleep(30)
+            time.sleep(60)
          else:
             backup_started = False
             
-         time.sleep(30)
+         time.sleep(5)
+         
+       logging.info("Stopped backup process.")
+       
 
    def stop(self):
        '''
        stop running process
        '''
-       logging.info("Stopping backup process ...")
-       self.running=False
+       self._running=False
 
    #-----------------------------------
 
