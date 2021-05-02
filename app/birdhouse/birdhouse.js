@@ -302,9 +302,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var active_page       = app_active_page;
 	var groups            = data["DATA"]["groups"];
 	var admin             = data["STATUS"]["admin_allowed"];
-	var video_short       = false;
+	var video_short       = true;
 	
-	if (active_page == "VIDEOS")					{ entry_category = [ "video" ]; video_short = true;}
+	if (active_page == "VIDEOS")					{ entry_category = [ "video" ]; }
 	else if (active_page == "TODAY" && active_date == "")	{ entry_category = [ "today" ]; }
 	else if (active_page == "TODAY" && active_date != "")	{ entry_category = [ "backup", active_date ]; }
 	
