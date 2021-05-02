@@ -3,12 +3,11 @@
 # In Progress:
 # - ...
 # Backlog:
-# - use jc://app-framework/ as client
+# - check TRIM VIDEO (buggy?)
+# - correct header (e.g. count images -> or reduce and more information in javascript client)
 # - Optimize data handling
-#   -> Queue for writing into JSON (e.g. for status changes)
 #   -> using a CouchDB instead of JSON files
 # - password for external access (to enable admin from outside)
-# - Idea: set to_be_deleted when below threshold; don't show / backup those files
 # - (re)start backup manually
 
 
@@ -37,7 +36,7 @@ from modules.views    import myViews
 
 APIdescription = {
       "name"    : "BirdhouseCAM",
-      "version" : "v0.1"
+      "version" : "v0.2"
       }
 APIstart       = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 APPframework   = "v0.7.1"
@@ -263,10 +262,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         config.html_replace["title"]      = config.param["title"]
         config.html_replace["active_cam"] = which_cam
 
-        # index with embedded live stream
-        if self.path == '/': 
-
-          self.redirect("/index.html")
+        # index 
+        if self.path == '/':                self.redirect("/index.html")
+        elif self.path == '/v1/':           self.redirect("/index.html")
+        elif self.path == '/v1/index.html': self.redirect("/index.html")
+        elif self.path == '/v2/':           self.redirect("/app/index.html")
+        elif self.path == '/v2/index.html': self.redirect("/app/index.html")
 
 
         # REST API call :  /api/<cmd>/<camera>/param1>/<param2>
@@ -335,8 +336,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
 
 
-
-        elif '.html' in self.path or "/api/" in self.path:
+        # app and API v1
+        elif ('.html' in self.path or "/api/" in self.path) and not "/app/" in self.path:
         
           content = {}
         
