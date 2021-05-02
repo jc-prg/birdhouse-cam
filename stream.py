@@ -344,7 +344,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif ('.html' in self.path or "/api/" in self.path) and "/app-v1/" in self.path:
         
           content = {}
-          
+          if   "//" in self.path:                self.path = self.path.replace("//","/")
           if   '/index.html' in self.path:       template, content = views.createIndex(server=self)
           elif '/list_star.html' in self.path:   template, content = views.createFavorits(server=self)
           elif '/list_short.html' in self.path:  template, content = views.createList(server=self)
