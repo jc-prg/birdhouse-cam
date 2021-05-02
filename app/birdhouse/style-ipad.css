@@ -1,0 +1,38 @@
+/* iPad 3 & 4 – Landscape */
+@media only screen 
+    and (min-device-width : 768px) 
+    and (max-device-width : 1024px) 
+    and (orientation : landscape)
+    and (-webkit-min-device-pixel-ratio: 2) { 
+    
+	.frame_column.wide { width : 900px; }
+        .thumbnail       { width   : 155px; }
+        .image_container { height  : 240px; }
+        .recycle         { width   : 30px;  height   : 30px;  top : 30px; }
+        .recycle_img     { width   : 30px;  height   : 30px; }
+        .star            { width   : 30px;  height   : 30px;  top : 25px; }
+        .star_img        { width   : 30px;  height   : 30px; }
+    
+    }
+    
+/* iPad 3 & 4 – Portait */    
+@media only screen 
+    and (min-device-width : 768px) 
+    and (max-device-width : 1024px) 
+    and (orientation : portrait)
+    and (-webkit-min-device-pixel-ratio: 2) {
+    
+    	.frame_column.wide { width : 760px; }
+        .thumbnail       { width   : 155px; }
+        .image_container { height  : 240px; }
+        .recycle         { width   : 30px;  height   : 30px;  top : 30px; }
+        .recycle_img     { width   : 30px;  height   : 30px; }
+        .star            { width   : 30px;  height   : 30px;  top : 25px; }
+        .star_img        { width   : 30px;  height   : 30px; }
+    
+    }
+
+
+/* ----------*/
+
+

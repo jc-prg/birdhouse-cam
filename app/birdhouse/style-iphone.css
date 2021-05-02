@@ -15,11 +15,12 @@
     and (-webkit-device-pixel-ratio : 3) { 
     
         .thumbnail       { width   : 155px; }
-        .image_container { height  : 220px; }
+        .image_container { height  : 230px; }
         .recycle         { width   : 30px;  height   : 30px;  top : 30px; }
         .recycle_img     { width   : 30px;  height   : 30px; }
         .star            { width   : 30px;  height   : 30px;  top : 25px; }
         .star_img        { width   : 30px;  height   : 30px; }
+        
         }
 
 @media only screen 
