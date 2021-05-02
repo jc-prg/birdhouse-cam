@@ -298,6 +298,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  if param[3] != APPframework:
                     version["Code"] = "802"
                     version["Msg"]  = "Update required."
+             content["last_answer"] = ""
+             if len(config.async_answers) > 0:
+                content["last_answer"] = config.async_answers.pop()
           else:
              content = {}
              status  = "Error: command not found."

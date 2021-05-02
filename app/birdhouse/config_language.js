@@ -29,6 +29,7 @@ var language_app = {
 		"SHORT_VERSION"	: "Gek&uuml;rzte Version",
 		"TODAY_COMPLETE"	: "Alle von heute",
 		"TRIM_DONE"            : "Gek&uuml;rztes Video wurde erzeugt.",
+		"TRIM_STARTED"         : "Erzeugung des kurzen Videos wurde gestartet.",
 		"VIDEOS"               : "Videos",
 		},
 	"EN" : {
@@ -53,6 +54,7 @@ var language_app = {
 		"SHORT_VERSION"	: "Short version",
 		"TODAY_COMPLETE"	: "Today complete",
 		"TRIM_DONE"            : "Created short video.",
+		"TRIM_STARTED"         : "Started creation of short video.",
 		"VIDEOS"               : "Videos",
 		}
 	}
