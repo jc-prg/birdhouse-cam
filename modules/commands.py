@@ -39,7 +39,7 @@ class myCommands(threading.Thread):
         self.status_queue["images"] = []
         self.status_queue["videos"] = []
         self.status_queue["backup"] = []
-        
+        self.create_queue           = []       
 
     #-------------------------------------
     
@@ -52,6 +52,16 @@ class myCommands(threading.Thread):
         while self._running:
            time.sleep(10)
            
+           # create short videos
+           if len(self.create_queue) > 0:
+             [ which_cam, video_id, start, end ] = self.create_queue.pop()
+             logging.info("Start video creation ("+video_id+"): "+str(start)+" - "+str(end)+")")
+             response = self.camera[which_cam].trimVideo(video_id, start, end)
+             logging.info(str(response))
+             self.config.async_answers.append(["TRIM_DONE", video_id, response["result"]])
+             time.sleep(1)
+           
+           # status changes
            for config_file in config_files:
              entries = self.config.read_cache(config_file)
              self.config.lock(config_file)
@@ -308,7 +318,8 @@ class myCommands(threading.Thread):
               logging.warning("VideoID '"+str(param[2])+"' doesn't exist.")
               
            else:
-              response            = self.camera[which_cam].trimVideo(video_id=param[2], start=param[3], end=param[4])
+              self.create_queue.append([ which_cam, param[2], param[3], param[4] ])
+              #response            = self.camera[which_cam].trimVideo(video_id=param[2], start=param[3], end=param[4])
               response["command"] = ["Create short version of video"]
               response["video"]   = { "video_id" : param[2], "start" : param[3], "end" : param[4] }
     

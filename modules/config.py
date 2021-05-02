@@ -22,6 +22,7 @@ class myConfig(threading.Thread):
        threading.Thread.__init__(self)
        self.param_init     = param_init
        self.name           = "Config"
+       self.async_answers  = []
        self.locked         = {}
        self.config_cache   = {}
        self.html_replace   = {}

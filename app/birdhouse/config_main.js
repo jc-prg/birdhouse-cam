@@ -47,6 +47,11 @@ function app_status(data) {
 	if (reload) { 
 		birdhousePrint_load("INDEX","cam1");
 		}
+		
+	if (data["DATA"]["last_answer"] != "") {
+		var msg = data["DATA"]["last_answer"];
+		appMsg.alert(lang(msg[0]));
+		}
 	
 	app_last_load = Date.now();
 	}

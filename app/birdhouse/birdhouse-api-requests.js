@@ -99,7 +99,7 @@ function birdhouse_AnswerDelete(data) {
 
 function birdhouse_AnswerTrim(data) {
 	//console.log(data);
-	appMsg.alert(lang("TRIM_DONE"));
+	appMsg.alert(lang("TRIM_STARTED"));
 	birdhouseReloadView();
 	}
 
