@@ -341,8 +341,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         
           content = {}
           
-          self.path = self.path.replace("/app-v1","")
-        
           if   '/index.html' in self.path:       template, content = views.createIndex(server=self)
           elif '/list_star.html' in self.path:   template, content = views.createFavorits(server=self)
           elif '/list_short.html' in self.path:  template, content = views.createList(server=self)
@@ -351,7 +349,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           elif '/videos.html' in self.path:      template, content = views.createVideoList(server=self)
           elif '/video-info.html' in self.path:  template, content = views.detailViewVideo(server=self)
           elif '/cameras.html' in self.path:     template, content = views.createCameraList(server=self)
-          
+
           self.streamFile(ftype='text/html', content=read_html(directory='app-v1', filename=template, content=content), no_cache=True)
 
 
