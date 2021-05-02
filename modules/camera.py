@@ -43,7 +43,8 @@ class myVideoRecording(threading.Thread):
 #       self.ffmpeg_cmd  += "-vcodec libx264 -preset fast -profile:v baseline -lossless 1 -vf \"scale=720:540,setsar=1,pad=720:540:0:0\" -acodec aac -ac 2 -ar 22050 -ab 48k"
        
        self.ffmpeg_cmd  += " {OUTPUT_FILENAME}"
-       self.ffmpeg_trim  = "ffmpeg -y -i {INPUT_FILENAME} -c copy -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
+       self.ffmpeg_trim  = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} -vcodec libx264 -crf 18 -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
+#       self.ffmpeg_trim  = "ffmpeg -y -i {INPUT_FILENAME} -c copy -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
        self.count_length = 8
        self.running      = True
 
@@ -220,7 +221,7 @@ class myVideoRecording(threading.Thread):
        return
 
 
-   def trim_video(self, input_file, output_file, start_timecode, end_timecode):
+   def trim_video(self, input_file, output_file, start_timecode, end_timecode, framerate):
        '''
        creates a shortend version of the video
        '''
@@ -232,6 +233,7 @@ class myVideoRecording(threading.Thread):
        cmd  = cmd.replace("{END_TIME}",        str(end_timecode))
        cmd  = cmd.replace("{INPUT_FILENAME}",  str(input_file))
        cmd  = cmd.replace("{OUTPUT_FILENAME}", str(output_file))
+       cmd  = cmd.replace("{FRAMERATE}",       str(framerate))
 
        logging.info(cmd)
        message = os.system(cmd)
@@ -738,7 +740,8 @@ class myCamera(threading.Thread):
        if video_id in config_file:
           input_file  = config_file[video_id]["video_file"]
           output_file = input_file.replace(".mp4","_short.mp4")
-          result      = self.video.trim_video(input_file=input_file, output_file=output_file, start_timecode=start, end_timecode=end)
+          framerate   = config_file[video_id]["framerate"]
+          result      = self.video.trim_video(input_file=input_file, output_file=output_file, start_timecode=start, end_timecode=end, framerate=framerate)
           if result == "OK":
              config_file[video_id]["video_file_short"] = output_file
              config_file[video_id]["video_file_short_start"]   = float(start)
