@@ -21,6 +21,7 @@ class myConfig(threading.Thread):
        '''
        threading.Thread.__init__(self)
        self.param_init     = param_init
+       self.name           = "Config"
        self.locked         = {}
        self.config_cache   = {}
        self.html_replace   = {}
@@ -48,16 +49,22 @@ class myConfig(threading.Thread):
          
        self.param          = self.read("main")
        self.main_directory = self.param["path"]
-       self.processing     = True
+       self._running       = True
        
-
-
    def run(self):
        '''
        Core function (not clear what to do yet)
        '''
-       while self.processing:
+       logging.info("Starting config handler ...")
+       while self._running:
           time.sleep(1)
+       logging.info("Stopped config handler.")
+       
+   def stop(self):
+       '''
+       Core function (not clear what to do yet)
+       '''
+       self._running = False
 
        return       
           

@@ -510,13 +510,15 @@ if __name__ == "__main__":
 
 
     finally:
+        config.stop()
         backup.stop()
         for cam in camera:
-          if camera[cam].active:
+          if camera[cam].active:         
              camera[cam].stop()
         commands.stop()
         views.stop()
 
-        logging.info("Stopping WebServer ...")
         server.server_close()
+        server.shutdown()
+        logging.info("Stopped WebServer.")
 
