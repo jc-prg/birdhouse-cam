@@ -262,6 +262,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         
         # index 
         if self.path == '/':                    self.redirect("/app-v1/index.html")
+        elif self.path == '/index.html':        self.redirect("/app-v1/index.html")
         elif self.path == '/app':               self.redirect("/app/index.html")
         elif self.path == '/app/':              self.redirect("/app/index.html")
         elif self.path == '/app-v1':            self.redirect("/app-v1/index.html")
