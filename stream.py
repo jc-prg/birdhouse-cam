@@ -350,7 +350,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           elif '/video-info.html' in self.path:  template, content = views.detailViewVideo(server=self)
           elif '/cameras.html' in self.path:     template, content = views.createCameraList(server=self)
 
-          self.streamFile(ftype='text/html', content=read_html(directory='app-v1', filename=template, content=content), no_cache=True)
+          self.streamFile(ftype='text/html', content=read_html(directory='', filename=template, content=content), no_cache=True)
 
 
         # extract and show single image
@@ -416,7 +416,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # favicon
         elif self.path.endswith('favicon.ico'):
-           self.streamFile(ftype='image/ico', content=read_image(directory='html', filename=self.path))
+           self.streamFile(ftype='image/ico', content=read_image(directory='app-v1', filename=self.path))
         
         # images, js, css, ...
         elif file_ending in myMIMEtypes:
