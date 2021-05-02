@@ -169,6 +169,7 @@ class myViews(threading.Thread):
         check if the image is marked as favorit and create html/javascript elements to show and change the favorit status
         '''
         stamp = file.split("/")
+        if "app-v1" in stamp: del stamp[1]
         stamp = stamp[len(stamp)-1]
         if int(favorit) == 1:
            star    = dir_app_v1+"/star1.png"
@@ -196,6 +197,7 @@ class myViews(threading.Thread):
         check if the image is marked as to be recycled and create html/javascript elements to show and change the favorit status
         '''
         stamp = file.split("/")
+        if "app-v1" in stamp: del stamp[1]
         stamp = stamp[len(stamp)-1]
         if int(recycle) == 1:
            trash   = dir_app_v1+"/recycle1.png"
@@ -229,7 +231,7 @@ class myViews(threading.Thread):
         lowres_file = lowres.split("/")
         lowres_file = lowres_file[len(lowres_file)-1]
         
-        if ".mp4" in javascript: play = "<img src=\""+dir_app_v1++"/play.png\" class=\"play_button\" onclick='javascript:" + javascript + "'/>\n"
+        if ".mp4" in javascript: play = "<img src=\""+dir_app_v1+"/play.png\" class=\"play_button\" onclick='javascript:" + javascript + "'/>\n"
         else:                    play = ""
         
         html += "<div class='thumbnail_container'>\n"
@@ -455,7 +457,7 @@ class myViews(threading.Thread):
                if "favorit" in files_all[file] and int(files_all[file]["favorit"]) == 1: 
                   if not date in files_videos: files_videos[date] = {}
                   files_videos[date][file] = files_all[file]
-                  
+          
         # today
         date_today = datetime.now().strftime("%Y%m%d")
         files      = self.config.read_cache(config="images")
@@ -570,6 +572,7 @@ class myViews(threading.Thread):
         '''
         self.server           = server
         param                 = server.path.split("/")
+        if "app-v1" in param: del param[1]
         path, which_cam       = self.selectedCamera()
 
         if param[1] != "api":
@@ -736,6 +739,7 @@ class myViews(threading.Thread):
            "entries"    : {}
            }
         param                 = server.path.split("/")
+        if "app-v1" in param: del param[1]
         template              = "list.html"
         html                  = ""
         files_all             = {}
@@ -863,6 +867,7 @@ class myViews(threading.Thread):
             }
             
         param                 = server.path.split("/")
+        if "app-v1" in param: del param[1]
         template              = "list.html"
         html                  = ""
 
@@ -926,6 +931,7 @@ class myViews(threading.Thread):
         content["active_cam"] = which_cam
         content["view"]       = "list_videos"
         param                 = server.path.split("/")
+        if "app-v1" in param: del param[1]
         template              = "list.html"
         html                  = ""
 
@@ -994,6 +1000,7 @@ class myViews(threading.Thread):
         content["view"]       = "list_cameras"
         content["entries"]    = {}
         param                 = server.path.split("/")
+        if "app-v1" in param: del param[1]
         template              = "list.html"
         html                  = ""
         count                 = 0
@@ -1057,6 +1064,7 @@ class myViews(threading.Thread):
         content["view"]       = "detail_video"
         content["entries"]    = {}
         param                 = server.path.split("/")
+        if "app-v1" in param: del param[1]
         template              = "list.html"
         html                  = ""
         count                 = 0

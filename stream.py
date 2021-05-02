@@ -337,10 +337,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
 
         # app and API v1
-        elif ('.html' in self.path or "/api/" in self.path) and not "/app/" in self.path:
+        elif ('.html' in self.path or "/api/" in self.path) and "/app-v1/" in self.path:
         
           content = {}
-        
+          
           if   '/index.html' in self.path:       template, content = views.createIndex(server=self)
           elif '/list_star.html' in self.path:   template, content = views.createFavorits(server=self)
           elif '/list_short.html' in self.path:  template, content = views.createList(server=self)
@@ -349,8 +349,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           elif '/videos.html' in self.path:      template, content = views.createVideoList(server=self)
           elif '/video-info.html' in self.path:  template, content = views.detailViewVideo(server=self)
           elif '/cameras.html' in self.path:     template, content = views.createCameraList(server=self)
-          
-          self.streamFile(ftype='text/html', content=read_html(directory='', filename=template, content=content), no_cache=True)
+
+          self.streamFile(ftype='text/html', content=read_html(directory='app-v1', filename=template, content=content), no_cache=True)
 
 
         # extract and show single image
@@ -420,6 +420,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         
         # images, js, css, ...
         elif file_ending in myMIMEtypes:
+        
+           if "/videos" in self.path and "/app-v1" in self.path:  self.path = self.path.replace("/app-v1","")
+           if "/images" in self.path and "/app-v1" in self.path:  self.path = self.path.replace("/app-v1","")
+           if not "/videos" in self.path and ".mp4" in self.path: self.path = "/videos"+self.path
         
            if "text" in myMIMEtypes[file_ending]:          self.streamFile(ftype=myMIMEtypes[file_ending], content=read_html( directory='', filename=self.path))
            elif "application" in myMIMEtypes[file_ending]: self.streamFile(ftype=myMIMEtypes[file_ending], content=read_html( directory='', filename=self.path))
