@@ -350,7 +350,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           elif '/video-info.html' in self.path:  template, content = views.detailViewVideo(server=self)
           elif '/cameras.html' in self.path:     template, content = views.createCameraList(server=self)
 
-          self.streamFile(ftype='text/html', content=read_html(directory='', filename=template, content=content), no_cache=True)
+          template = template.replace("/app-v1","")
+          self.streamFile(ftype='text/html', content=read_html(directory='app-v1', filename=template, content=content), no_cache=True)
 
 
         # extract and show single image

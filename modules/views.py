@@ -139,7 +139,7 @@ class myViews(threading.Thread):
         
         for link in link_list:
             count += 1
-            html  += "<a href='"+myPages[link][1]+cam_link+"'>"+myPages[link][0]+"</a>"
+            html  += "<a href='"+dir_app_v1+myPages[link][1]+cam_link+"'>"+myPages[link][0]+"</a>"
             if count < len(link_list): html += " / "
 
         if current != "" and len(self.active_cams) > 1:
