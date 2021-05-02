@@ -128,6 +128,7 @@ function birdhouse_INDEX(data, camera) {
 	var html          = "";
 	var active_camera = camera;
 	var cameras       = data["DATA"]["cameras"];
+	var admin_allowed = data["STATUS"]["admin_allowed"];
 	var stream_server = RESTurl;
 	var active_cam    = {};
 	var other_cams    = [];
@@ -565,22 +566,6 @@ function birdhouse_Links(link_list) {
 	return html;
 	}
 
-
-//-----------------------------------------
-// Answer
-//-----------------------------------------
-
-function birdhouse_AnswerDelete(data) {
-	//console.log(data);
-	appMsg.alert(lang("DELETE_DONE") + "<br/>(" + data["deleted_count"] + " " + lang("FILES")+")","");
-	}
-
-//-----------------------------------------
-
-function birdhouse_AnswerTrim(data) {
-	//console.log(data);
-	appMsg.alert(lang("TRIM_DONE"));
-	}
 
 //-----------------------------------------
 // load addition javascript

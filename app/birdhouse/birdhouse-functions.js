@@ -48,61 +48,7 @@ function overlayHide() {
 
 
 //----------------------------------------
-
-function requestAPI_answer(data) {
-	console.log(data);
-	appMsg.alert("OK!");
-	}
-
 //----------------------------------------
-
-function requestAPI(command, callback, index="", value="", lowres_file="") {
-
-    commands = command.split("/");
-    mboxApp.requestAPI('POST',commands,"",appPrintStatus,"","appPrintStatus_load"); 
-    }
-
-//----------------------------------------
-
-function removeFiles(command) {
-   if (confirm("Sollen die Dateien wirklich gelöscht werden?") == true) {
-      requestAPI(command, removeFilesAnswer);
-      }
-   }
-   
-function removeFilesAnswer() {
-	alert("Files removed");
-	location.reload();
-	}
-
-//----------------------------------------
-
-function createShortVideo() {
-        video_id = document.getElementById("video-id");
-        if (video_id != null) {
-                video_id_value = video_id.value;
-                tc_in          = document.getElementById("tc-in").value;
-                tc_out         = document.getElementById("tc-out").value;
-                cam            = document.getElementById("active-cam").value;
-                
-                //alert("/create-short-video/"+video_id_value+"/"+tc_in+"/"+tc_out+"/"+cam);
-//	        requestAPI("/create-short-video/"+video_id_value+"/"+tc_in+"/"+tc_out+"/"+cam+"/", callback=createShortVideoShow, index=video_id);
-	        
-	        commands = ["create-short-video",video_id_value,tc_in,tc_out,cam];
-	        mboxApp.requestAPI('POST', commands, '', birdhouse_AnswerTrim,'','createShortVideo');
-//	        #POST#,[#remove#"+command+"],##,birdhouse_AnswerDelete,##,#birdhouse_ImageGroup#)
-	        }
-	else {
-	        console.error("createShortVideo: Field 'video-id' is missing!");
-		}
-	}
-	
-	
-function createShortVideoShow(index) {
-	alert("Short video created: " + index);
-	location.reload();
-	}
-	
 	
 function toggleVideoEdit(status="") {
         video_edit1 = document.getElementById("camera_video_edit");
@@ -118,51 +64,6 @@ function toggleVideoEdit(status="") {
 	else {
 	        console.error("toggleVideoEdit: Video edit doesn't exist.");
 		}
-	}
-
-//----------------------------------------
-
-function setRecycle(index, status, lowres_file="") {
-        commands    = index.split("/");
-        commands[0] = "recycle";
-        commands.push(status);
-        
-        document.getElementById(lowres_file).style.borderColor = color_code["request"];
-        mboxApp.requestAPI('POST',commands,"",[setRecycleShow,[index,status,lowres_file]],"","setRecycle"); 
-	}
-
-function setRecycleShow(command, param) {
-	[ index, status, lowres_file ] = param
-        console.log("setRecycleShow: "+lowres_file+" | "+status+" | "+index)
-        if (status == 1) { setFavoritShow(command, [ index, 0, lowres_file ]); } // server-side: if favorit -> 1, trash -> 0
-        document.getElementById("d_"+index).src  = "birdhouse/img/recycle"+status+".png";       
-        if (status == 1) { status = 0; color = color_code["recycle"]; }
-        else             { status = 1; color = color_code["default"]; 
-        }
-        document.getElementById("d_"+index+"_value").innerHTML = status;
-        document.getElementById(lowres_file).style.borderColor = color;
-	}
-
-//----------------------------------------
-
-function setFavorit(index, status, lowres_file="") {
-        commands    = index.split("/");
-        commands[0] = "favorit";
-        commands.push(status);
-
-        document.getElementById(lowres_file).style.borderColor = color_code["request"];
-        mboxApp.requestAPI('POST',commands,"",[setFavoritShow,[index,status,lowres_file]],"","setFavorit"); 
-	}
-
-function setFavoritShow(command, param) {
-	[ index, status, lowres_file ] = param
-        console.log("setFavoritShow: "+lowres_file+" | "+status+" | "+index)
-        if (status == 1) { setRecycleShow(command, [ index, 0, lowres_file ]); } // server-side: if favorit -> 1, trash -> 0
-        document.getElementById("s_"+index).src          = "birdhouse/img/star"+status+".png";
-        if (status == 1) { status = 0; color = color_code["star"]; }
-        else             { status = 1; color = color_code["default"]; }
-        document.getElementById("s_"+index+"_value").innerHTML = status;
-        document.getElementById(lowres_file).style.borderColor = color;
 	}
 
 //----------------------------------------
