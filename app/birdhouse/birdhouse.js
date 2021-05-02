@@ -153,14 +153,14 @@ function birdhouse_INDEX(data, camera) {
 	if (active_cam == {}) { active_cam = other_cams[0]; other_cams.shift(); }
 	if (cameras.length == 1 || other_cams.length == 0) {	
 		var onclick  = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
-		html += birdhouse_Camera(main=true, view="cam1", onclick=onclick, camera=active_cam, stream_server=stream_server);
+		html += birdhouse_Camera(main=true, view="cam1", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed);
 		}
 	else {
 		var onclick  = "birdhousePrint_load(view=\"INDEX\", camera=\""+other_cams[0]["name"]+"\");";
-		html += birdhouse_Camera(main=false, view="cam1cam2", onclick=onclick, camera=other_cams[0], stream_server=stream_server);
+		html += birdhouse_Camera(main=false, view="cam1cam2", onclick=onclick, camera=other_cams[0], stream_server=stream_server, admin_allowed=admin_allowed);
 
 		onclick      = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
-		html += birdhouse_Camera(main=true, view="cam1cam2", onclick=onclick, camera=active_cam, stream_server=stream_server);
+		html += birdhouse_Camera(main=true, view="cam1cam2", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed);
 		}
 		
 	setTextById("frame2",html);
@@ -323,7 +323,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 // detail and elements for views
 //-----------------------------------------
 
-function birdhouse_Camera(main, view, onclick, camera, stream_server) {
+function birdhouse_Camera(main, view, onclick, camera, stream_server, admin_allowed=false) {
 	var html      = "";
 	var style_cam = view;
 	
@@ -337,7 +337,7 @@ function birdhouse_Camera(main, view, onclick, camera, stream_server) {
 	
 	html     += "<center><div class='livestream_"+container+"_container "+view+"'>";
 	html     += "  <a onclick='"+onclick+"' style='cursor:pointer;'>" + livestream + "</a>";
-	if (main) {
+	if (main && admin_allowed) {
 		html     += "  <div class='livestream_record "+view+"'>";
 		html     += "     <button onclick='"+command_record+"' class='button-video-record'>Record ("+camera["name"]+")</button> &nbsp;";
 		html     += "     <button onclick='"+command_stop+"' class='button-video-record'>Stop ("+camera["name"]+")</button>";
