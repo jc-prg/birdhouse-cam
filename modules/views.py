@@ -513,10 +513,6 @@ class myViews(threading.Thread):
         
         dir_list       = list(reversed(sorted(dir_list)))
 
-        logging.error("---")
-        logging.error(str(dir_list))
-        logging.error(str(video_list))
-                
         for directory in dir_list:
             category            = "/backup/"+directory+"/"
             favorits[directory] = {}
