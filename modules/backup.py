@@ -265,7 +265,7 @@ class myBackupRestore(threading.Thread):
              if file_type in files[key]: 
                if os.path.isfile(os.path.join(directory, files[key][file_type])):
                  os.remove(os.path.join(directory, files[key][file_type]))
-                 logging.info("Delete - " + str(key) + ": " + os.path.join(directory, files[key][file_type]))
+                 logging.debug("Delete - " + str(key) + ": " + os.path.join(directory, files[key][file_type]))
            del files[key]
              
          except Exception as e:
