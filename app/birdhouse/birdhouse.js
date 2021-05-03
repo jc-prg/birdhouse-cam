@@ -577,8 +577,8 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		if (parseInt(img_recycle) == 0)  { img_recycle_r = 1; } else { img_recycle_r = 0; }
 		var img_dir     = "birdhouse/img/";
 
-		star        = "<div id='s_"+img_id+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id+"' src='"+img_dir+"star"+img_star+".png'       onclick='birdhouse_birdhouse_birdhouse_setFavorit(\""+img_id+"\",document.getElementById(\"s_"+img_id+"_value\").innerHTML,\""+img_name+"\");'/>";
-		recycle     = "<div id='d_"+img_id+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='birdhouse_birdhouse_birdhouse_setRecycle(\""+img_id+"\",document.getElementById(\"d_"+img_id+"_value\").innerHTML,\""+img_name+"\");'/>";
+		star        = "<div id='s_"+img_id+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id+"' src='"+img_dir+"star"+img_star+".png'       onclick='birdhouse_birdhouse_setFavorit(\""+img_id+"\",document.getElementById(\"s_"+img_id+"_value\").innerHTML,\""+img_name+"\");'/>";
+		recycle     = "<div id='d_"+img_id+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='birdhouse_birdhouse_setRecycle(\""+img_id+"\",document.getElementById(\"d_"+img_id+"_value\").innerHTML,\""+img_name+"\");'/>";
 		}
 		
 	html += "<div class='image_container'>";
