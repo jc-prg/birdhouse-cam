@@ -4,10 +4,30 @@
 // additional functions 
 //--------------------------------------
 /* INDEX:
+function birdhouse_imageOverlay(filename, description="", favorit="", to_be_deleted="")
+function birdhouse_videoOverlay(filename, description="", favorit="", to_be_deleted="")
+function birdhouse_videoOverlayToggle(status="")
+function birdhouse_overlayHide()
+function birdhouse_groupToggle(id)
+function iOS()
+var loadJS = function(url, implementationCode, location)
+var yourCodeToBeCalled = function()
 */
+//----------------------------------------
+
+function birdhouse_imageOverlay(filename, description="", favorit="", to_be_deleted="") {
+        document.getElementById("overlay").style.display         = "block";
+        document.getElementById("overlay_content").style.display = "block";
+        description = description.replace(/\[br\/\]/g,"<br/>");
+        html  = "";
+        html += "<div id=\"overlay_close\" onclick='birdhouse_overlayHide();'>[X]</div>";
+        html += "<div id=\"overlay_image_container\"><img id='overlay_image' src='"+filename+"'><br/>&nbsp;<br/>"+description+"</div>";
+        document.getElementById("overlay_content").innerHTML = html;
+	}
+
 //--------------------------------------
 
-function videoOverlay(filename, description="", favorit="", to_be_deleted="") {
+function birdhouse_videoOverlay(filename, description="", favorit="", to_be_deleted="") {
         check_iOS = iOS();
         if (check_iOS == true) {
           window.location.href = filename;
@@ -17,7 +37,7 @@ function videoOverlay(filename, description="", favorit="", to_be_deleted="") {
           document.getElementById("overlay_content").style.display = "block";
           description = description.replace(/\[br\/\]/g,"<br/>");
           html  = "";
-          html += "<div id=\"overlay_close\" onclick='overlayHide();'>[X]</div>";
+          html += "<div id=\"overlay_close\" onclick='birdhouse_overlayHide();'>[X]</div>";
           html += "<div id=\"overlay_image_container\">";
           html += "<video id='overlay_video' src=\"" + filename + "\" controls>Video not supported</video>"
           html += "<br/>&nbsp;<br/>"+description+"</div>";
@@ -25,32 +45,9 @@ function videoOverlay(filename, description="", favorit="", to_be_deleted="") {
           }
 	}
 
-
-//----------------------------------------
-
-function imageOverlay(filename, description="", favorit="", to_be_deleted="") {
-        document.getElementById("overlay").style.display         = "block";
-        document.getElementById("overlay_content").style.display = "block";
-        description = description.replace(/\[br\/\]/g,"<br/>");
-        html  = "";
-        html += "<div id=\"overlay_close\" onclick='overlayHide();'>[X]</div>";
-        html += "<div id=\"overlay_image_container\"><img id='overlay_image' src='"+filename+"'><br/>&nbsp;<br/>"+description+"</div>";
-        document.getElementById("overlay_content").innerHTML = html;
-	}
-
-
-//----------------------------------------
-
-function overlayHide() {
-       document.getElementById("overlay").style.display = "none";
-       document.getElementById("overlay_content").style.display = "none";
-       }
-
-
-//----------------------------------------
 //----------------------------------------
 	
-function toggleVideoEdit(status="") {
+function birdhouse_videoOverlayToggle(status="") {
         video_edit1 = document.getElementById("camera_video_edit");
         video_edit2 = document.getElementById("camera_video_edit_overlay");
         if (video_edit1 != null) {
@@ -62,13 +59,21 @@ function toggleVideoEdit(status="") {
         	else if (status == true)  { video_edit1.style.display = "block"; video_edit2.style.display = "block"; }
         	}
 	else {
-	        console.error("toggleVideoEdit: Video edit doesn't exist.");
+	        console.error("birdhouse_videoOverlayToggle: Video edit doesn't exist.");
 		}
 	}
 
 //----------------------------------------
 
-function showHideGroup(id) {
+function birdhouse_overlayHide() {
+       document.getElementById("overlay").style.display = "none";
+       document.getElementById("overlay_content").style.display = "none";
+       }
+
+
+//----------------------------------------
+
+function birdhouse_groupToggle(id) {
         if (document.getElementById("group_"+id).style.display == "none") {
                 document.getElementById("group_"+id).style.display = "block"
         	if (document.getElementById("group_intro_"+id)) { document.getElementById("group_intro_"+id).style.display = "block"; }
@@ -104,3 +109,29 @@ function iOS() {
   // iPad on iOS 13 detection
   || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
 }
+
+//-----------------------------------------
+// load addition javascript
+//-----------------------------------------
+
+var loadJS = function(url, implementationCode, location){
+    //url is URL of external file, implementationCode is the code
+    //to be called from the file, location is the location to 
+    //insert the <script> element
+
+    //var scriptTag = document.createElement('script');
+    var scriptTag = document.getElementById('videoplayer-script');
+    scriptTag.src = url;
+
+    scriptTag.onload = implementationCode;
+    scriptTag.onreadystatechange = implementationCode;
+
+    location.appendChild(scriptTag);
+};
+
+var yourCodeToBeCalled = function(){
+//your code goes here
+}
+
+//-----------------------------------------
+// EOF
