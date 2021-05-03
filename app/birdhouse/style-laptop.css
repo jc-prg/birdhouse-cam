@@ -1,9 +1,10 @@
 /* DEFAULT (small) -> iPhone XS -> Laptop and wider */
 /* format for iPhone XS in landscape and bigger devices */
 
-@media (min-width: 720px) {
 
-    .livestream_main { max-width : 95vh; }
+@media (min-width: 705px) {
+
+    .livestream_main { max-width : 640px; }
     .separator_group { width : 98%; font-size : 10px; }
     .image_container { height : 215px; }
 }
@@ -11,5 +12,10 @@
 @media (min-width: 820px) {
 
     .thumbnail       { width : 125px; }
+}
+
+@media (min-width: 1250px) {
+
+    .livestream_main { max-width : 970px; }
 }
 

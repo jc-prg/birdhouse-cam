@@ -1,3 +1,11 @@
+/* ... */
+/* .frame_column
+ default (klein)	-> 290px
+ bis 375px		-> 342px
+ bis 705px		-> 660px (wide)
+ ab  1250px		-> 990px (wide)
+*/
+
 /* configuration of streaming HTML elements */ 
 
 .livestream_content { 
