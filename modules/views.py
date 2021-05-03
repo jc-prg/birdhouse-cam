@@ -100,15 +100,15 @@ class myViews(threading.Thread):
            path        = param[0]
            which_cam   = param[1]
            if not which_cam in self.camera:
-              logging.warning("Unknown camera requested.")
+              logging.warning("Unknown camera requested (%s).",path)
               return path, ""
               
-        elif "/api" in path and not "/api/status" in path:
+        elif "/api" in path and not "/api/status" in path and not "/api/version" in path:
            param        = path.split("/")
            if len(param) > 3:
               which_cam = param[3]
            if not which_cam in self.camera or len(param) <= 3:
-              logging.warning("Unknown camera requested.")
+              logging.warning("Unknown camera requested (%s).",path)
               return path, ""
         
         else:
@@ -269,7 +269,6 @@ class myViews(threading.Thread):
            
 ### <<<<>>>> Check, why those vars are not initialized before self.printImageContainer ~line 300
 # >>> compare config_videos.json!
-# >>> sth went wrong during recording (video and thumb doesn't exist any more, record with "autostop")
 
            if "_" in stamp: 
               stamp_date, stamp_time = stamp.split("_")
@@ -513,10 +512,6 @@ class myViews(threading.Thread):
         
         dir_list       = list(reversed(sorted(dir_list)))
 
-        logging.error("---")
-        logging.error(str(dir_list))
-        logging.error(str(video_list))
-                
         for directory in dir_list:
             category            = "/backup/"+directory+"/"
             favorits[directory] = {}

@@ -362,18 +362,18 @@ class myCamera(threading.Thread):
           
              if self.video.autostop():
                 self.video.stop_recording()
-                break
 
-             image     = self.getImage()
-             image     = self.convertImage2RawImage(image)
-             self.video.image_size = self.image_size
-             self.video.save_image(image=image)
+             else:
+               image     = self.getImage()
+               image     = self.convertImage2RawImage(image)
+               self.video.image_size = self.image_size
+               self.video.save_image(image=image)
 
-             if self.image_size == [0,0]: 
-                self.image_size = self.sizeRawImage(image)
-                self.video.image_size = self.image_size          
+               if self.image_size == [0,0]: 
+                  self.image_size = self.sizeRawImage(image)
+                  self.video.image_size = self.image_size          
 
-             logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(datetime.now().strftime("%H:%M:%S")))
+               logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(datetime.now().strftime("%H:%M:%S")))
 
           # Image Recording
           else:

@@ -4,18 +4,17 @@
 // additional functions 
 //--------------------------------------
 /* INDEX:
+function birdhouse_birdhouse_createShortVideo()
+function birdhouse_setRecycle(index, status, lowres_file="")
+function birdhouse_setRecycleShow(command, param)
+function birdhouse_setFavorit(index, status, lowres_file="")
+function birdhouse_setFavoritShow(command, param)
+function birdhouse_AnswerDelete(data)
+function birdhouse_AnswerTrim(data)
 */
 //--------------------------------------
 
-function requestAPI(command, callback, index="", value="", lowres_file="") {
-
-    commands = command.split("/");
-    mboxApp.requestAPI('POST',commands,"",appPrintStatus,"","appPrintStatus_load"); 
-    }
-
-//----------------------------------------
-
-function createShortVideo() {
+function birdhouse_birdhouse_createShortVideo() {
         video_id = document.getElementById("video-id");
         if (video_id != null) {
                 video_id_value = video_id.value;
@@ -24,10 +23,10 @@ function createShortVideo() {
                 cam            = document.getElementById("active-cam").value;
                 
 	        commands = ["create-short-video",video_id_value,tc_in,tc_out,cam];
-	        mboxApp.requestAPI('POST', commands, '', birdhouse_AnswerTrim,'','createShortVideo');
+	        appFW.requestAPI('POST', commands, '', birdhouse_AnswerTrim,'','birdhouse_birdhouse_createShortVideo');
 	        }
 	else {
-	        console.error("createShortVideo: Field 'video-id' is missing!");
+	        console.error("birdhouse_birdhouse_createShortVideo: Field 'video-id' is missing!");
 		}
 	}
 	
@@ -35,19 +34,19 @@ function createShortVideo() {
 // change favorit / recycle status
 //----------------------------------------
 
-function setRecycle(index, status, lowres_file="") {
+function birdhouse_setRecycle(index, status, lowres_file="") {
         commands    = index.split("/");
         commands[0] = "recycle";
         commands.push(status);
         
         document.getElementById(lowres_file).style.borderColor = color_code["request"];
-        mboxApp.requestAPI('POST',commands,"",[setRecycleShow,[index,status,lowres_file]],"","setRecycle"); 
+        appFW.requestAPI('POST',commands,"",[birdhouse_setRecycleShow,[index,status,lowres_file]],"","birdhouse_setRecycle"); 
 	}
 
-function setRecycleShow(command, param) {
+function birdhouse_setRecycleShow(command, param) {
 	[ index, status, lowres_file ] = param
-        console.log("setRecycleShow: "+lowres_file+" | "+status+" | "+index)
-        if (status == 1) { setFavoritShow(command, [ index, 0, lowres_file ]); } // server-side: if favorit -> 1, trash -> 0
+        console.log("birdhouse_setRecycleShow: "+lowres_file+" | "+status+" | "+index)
+        if (status == 1) { birdhouse_setFavoritShow(command, [ index, 0, lowres_file ]); } // server-side: if favorit -> 1, trash -> 0
         document.getElementById("d_"+index).src  = "birdhouse/img/recycle"+status+".png";       
         if (status == 1) { status = 0; color = color_code["recycle"]; }
         else             { status = 1; color = color_code["default"]; 
@@ -58,19 +57,19 @@ function setRecycleShow(command, param) {
 
 //----------------------------------------
 
-function setFavorit(index, status, lowres_file="") {
+function birdhouse_setFavorit(index, status, lowres_file="") {
         commands    = index.split("/");
         commands[0] = "favorit";
         commands.push(status);
 
         document.getElementById(lowres_file).style.borderColor = color_code["request"];
-        mboxApp.requestAPI('POST',commands,"",[setFavoritShow,[index,status,lowres_file]],"","setFavorit"); 
+        appFW.requestAPI('POST',commands,"",[birdhouse_setFavoritShow,[index,status,lowres_file]],"","birdhouse_setFavorit"); 
 	}
 
-function setFavoritShow(command, param) {
+function birdhouse_setFavoritShow(command, param) {
 	[ index, status, lowres_file ] = param
-        console.log("setFavoritShow: "+lowres_file+" | "+status+" | "+index)
-        if (status == 1) { setRecycleShow(command, [ index, 0, lowres_file ]); } // server-side: if favorit -> 1, trash -> 0
+        console.log("birdhouse_setFavoritShow: "+lowres_file+" | "+status+" | "+index)
+        if (status == 1) { birdhouse_setRecycleShow(command, [ index, 0, lowres_file ]); } // server-side: if favorit -> 1, trash -> 0
         document.getElementById("s_"+index).src          = "birdhouse/img/star"+status+".png";
         if (status == 1) { status = 0; color = color_code["star"]; }
         else             { status = 1; color = color_code["default"]; }
@@ -82,12 +81,6 @@ function setFavoritShow(command, param) {
 // Answers
 //-----------------------------------------
 
-function requestAPI_answer(data) {
-	console.log(data);
-	appMsg.alert("OK!");
-	}
-
-//-----------------------------------------
 
 function birdhouse_AnswerDelete(data) {
 	//console.log(data);
