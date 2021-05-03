@@ -4,7 +4,7 @@
 // additional functions 
 //--------------------------------------
 /* INDEX:
-function birdhouse_birdhouse_createShortVideo()
+function birdhouse_createShortVideo()
 function birdhouse_setRecycle(index, status, lowres_file="")
 function birdhouse_setRecycleShow(command, param)
 function birdhouse_setFavorit(index, status, lowres_file="")
@@ -14,7 +14,7 @@ function birdhouse_AnswerTrim(data)
 */
 //--------------------------------------
 
-function birdhouse_birdhouse_createShortVideo() {
+function birdhouse_createShortVideo() {
         video_id = document.getElementById("video-id");
         if (video_id != null) {
                 video_id_value = video_id.value;
@@ -23,10 +23,10 @@ function birdhouse_birdhouse_createShortVideo() {
                 cam            = document.getElementById("active-cam").value;
                 
 	        commands = ["create-short-video",video_id_value,tc_in,tc_out,cam];
-	        appFW.requestAPI('POST', commands, '', birdhouse_AnswerTrim,'','birdhouse_birdhouse_createShortVideo');
+	        appFW.requestAPI('POST', commands, '', birdhouse_AnswerTrim,'','birdhouse_createShortVideo');
 	        }
 	else {
-	        console.error("birdhouse_birdhouse_createShortVideo: Field 'video-id' is missing!");
+	        console.error("birdhouse_createShortVideo: Field 'video-id' is missing!");
 		}
 	}
 	
