@@ -46,8 +46,7 @@ def serve_ios(full_path):
 config   = myConfig(param_init={}, main_directory=os.path.dirname(os.path.abspath(__file__)))
 config.start()    
 
-MEDIA_PATH = '/projects/test/birdhouse-cam/videos'
-MEDIA_PATH = os.path.join(config.param["path"], "videos")
+MEDIA_PATH = os.path.join(config.param["path"], "data", "videos")
 
 
 @app.route('/<vid_name>')

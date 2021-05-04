@@ -29,9 +29,10 @@ class myConfig(threading.Thread):
        self.html_replace["start_date"] = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
        self.directories    = {
            "main"   : "",
-           "images" : "images/",
-           "backup" : "images/",
-           "videos" : "videos/",
+           "data"   : "data/",
+           "images" : "data/images/",
+           "backup" : "data/images/",
+           "videos" : "data/videos/",
            "html"   : "app-v1/"
            }
        self.files          = {
@@ -136,14 +137,14 @@ class myConfig(threading.Thread):
        '''
        return directory of config file
        '''
-       if not os.path.isdir(os.path.join(self.main_directory,self.directory(config))):
+       if not os.path.isdir(self.directory(config)):
           logging.info("Creating directory for " + config + " ...")
-          os.mkdir(os.path.join(self.main_directory,self.directory(config)))
+          os.mkdir(self.directory(config))
           logging.info("OK.")
        
-       if date != "" and not os.path.isdir(os.path.join(self.main_directory,self.directory(config),date)):
+       if date != "" and not os.path.isdir(os.path.join(self.directory(config),date)):
           logging.info("Creating directory for " + config + " ...")
-          os.mkdir(os.path.join(self.main_directory,self.directory(config), date))
+          os.mkdir(os.path.join(self.directory(config), date))
           logging.info("OK.")
        
 
@@ -151,14 +152,14 @@ class myConfig(threading.Thread):
        '''
        return complete path of config file
        '''
-       return os.path.join(self.main_directory, self.directories[config], date, self.files[config])
+       return os.path.join(self.directory(config), date, self.files[config])
 
 
    def read(self, config, date=""):
        '''
        read dict from json config file
        '''
-       config_file = os.path.join(self.main_directory, self.directories[config], date, self.files[config])
+       config_file = os.path.join(self.directory(config), date, self.files[config])
        config_data = self.read_json(config_file)
        logging.debug("Read JSON file "+config_file)
        return config_data
@@ -188,14 +189,14 @@ class myConfig(threading.Thread):
        '''
        lock config file
        '''
-       filename = os.path.join(self.main_directory, self.directories[config], date, self.files[config])
+       filename = os.path.join(self.directory(config), date, self.files[config])
        self.locked[filename] = True
 
    def unlock(self, config, date=""):
        '''
        unlock config file
        '''
-       filename = os.path.join(self.main_directory, self.directories[config], date, self.files[config])
+       filename = os.path.join(self.directory(config), date, self.files[config])
        self.locked[filename] = False
 
 
@@ -203,7 +204,7 @@ class myConfig(threading.Thread):
        '''
        write dict to json config file and update cache
        '''
-       config_file = os.path.join(self.main_directory, self.directories[config], date, self.files[config])
+       config_file = os.path.join(self.directory(config), date, self.files[config])
        self.write_json(config_file, config_data)
        
        if date == "":
@@ -219,7 +220,8 @@ class myConfig(threading.Thread):
        '''
        write dict for single file to json config file
        '''
-       config_file = os.path.join(self.main_directory, self.directories[config], date, self.files[config])
+       logging.info("Write image: "+config_file)
+       config_file = os.path.join(self.directory(config), date, self.files[config])
        config_data = self.read(config=config, date=date)
        config_data[time] = file_data
        self.write(config=config,config_data=config_data,date=date)
@@ -229,7 +231,7 @@ class myConfig(threading.Thread):
        '''
        check if config file exists
        '''
-       config_file = os.path.join(self.main_directory ,self.directories[config], date, self.files[config])
+       config_file = os.path.join(self.directory(config), date, self.files[config])
        return os.path.isfile(config_file)
 
 

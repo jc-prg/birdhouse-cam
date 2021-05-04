@@ -406,8 +406,8 @@ class myCamera(threading.Thread):
                           "size"        : self.image_size
                           }
 
-                 pathLowres = os.path.join(self.config.param["path"], self.param["image_save"]["path"], self.config.imageName("lowres", stamp, self.id))
-                 pathHires  = os.path.join(self.config.param["path"], self.param["image_save"]["path"], self.config.imageName("hires",  stamp, self.id))
+                 pathLowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
+                 pathHires  = os.path.join(self.config.directory("images"), self.config.imageName("hires",  stamp, self.id))
 
                  logging.debug("WRITE:" +pathLowres)
 
@@ -713,18 +713,23 @@ class myCamera(threading.Thread):
        '''
        Scale image and write to file
        '''
+       image_path = os.path.join(self.config.param["path"],filename)
+       logging.debug("Write image: "+image_path)
+       
        if scale_percent != 100:
           width  = int(image.shape[1] * scale_percent / 100)
           height = int(image.shape[0] * scale_percent / 100)
           image  = cv2.resize(image, (width,height))
 
-       return cv2.imwrite(os.path.join(self.config.param["path"],filename),image)
+       return cv2.imwrite(image_path,image)
 
 
    def writeImageInfo(self, time, data):
        '''
        Write image information to file
        '''
+       logging.debug("Write image info: "+self.config.file("images"))
+       
        if os.path.isfile(self.config.file("images")):
           files       = self.config.read_cache("images")
           files[time] = data
