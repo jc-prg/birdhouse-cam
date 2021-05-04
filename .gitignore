@@ -1,6 +1,8 @@
 
 modules/__pycache__/
 
+data/
+
 images/
 
 config.json
