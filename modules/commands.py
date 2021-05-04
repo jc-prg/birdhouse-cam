@@ -297,6 +297,30 @@ class myCommands(threading.Thread):
 
     #-------------------------------------
     
+    def createDayVideo(self, server):
+        '''
+        create a video of all existing images of the day
+        '''
+        param        = server.path.split("/")
+        response     = {}
+        logging.info(str(param))
+        
+        if len(param) < 3:
+           response["result"] = "Error: Parameters are missing (/create-short-video/video-id/start-timecode/end-timecode/which-cam/)"
+           logging.warning("Create video of daily images ... Parameters are missing.")
+           
+        else:
+           which_cam = param[2]
+           self.camera[which_cam].createDayVideo(filename="image_"+which_cam+"_big_")
+           
+           ### -> add date_time
+           ### -> copy to videofolder
+           ### -> add to video config file
+           ### -> process in the background (queue), as it may take some time for a whole day
+        
+
+    #-------------------------------------
+    
     def createShortVideo(self, server):
         '''
         create a short video and save in DB (not deleting the old video at the moment)

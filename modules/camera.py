@@ -736,6 +736,35 @@ class myCamera(threading.Thread):
           self.config.write("images",files)
 
    #----------------------------------
+   
+   def createDayVideo(self, filename):
+       '''
+       Create daily video
+       '''
+       cmd_rm   = "rm "+self.config.directory("videos_temp")+"*"
+       logging.info(cmd_rm)
+       message  = os.system(cmd_rm)
+
+       cmd_copy = "cp "+self.config.directory("images")+filename+"* "+self.config.directory("videos_temp")
+       logging.info(cmd_copy)
+       message  = os.system(cmd_copy)
+
+       cmd_rename = "i=0; for fi in "+self.config.directory("videos_temp")+"image_*; do mv \"$fi\" $(printf \""+self.config.directory("videos_temp")+"img_%05d.jpg\" $i); i=$((i+1)); done" #### doesn't work at the moment
+       logging.info(cmd_rename)
+       message  = os.system(cmd_rename)
+
+       cmd_create = self.video.ffmpeg_cmd
+       cmd_create = cmd_create.replace("{INPUT_FILENAMES}", os.path.join(self.config.directory("videos_temp"), "img_%05d.jpg"))
+       cmd_create = cmd_create.replace("{OUTPUT_FILENAME}", os.path.join(self.config.directory("videos_temp"), "video.mp4"))
+       cmd_create = cmd_create.replace("{FRAMERATE}", str(20))
+       logging.info(cmd_create)
+       message  = os.system(cmd_create)
+
+       cmd_rm2 = "rm "+self.config.directory("videos_temp")+"*.jpg"
+       logging.info(cmd_rm2)
+       message  = os.system(cmd_rm2)
+
+   #----------------------------------
 
    def trimVideo(self, video_id, start, end):
        '''

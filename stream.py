@@ -238,6 +238,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.startswith("/start/recording/"):    response = commands.startRecording(self)
         elif self.path.startswith("/stop/recording/"):     response = commands.stopRecording(self)
         elif self.path.startswith("/create-short-video/"): response = commands.createShortVideo(self)
+        elif self.path.startswith("/create-day-video/"):   response = commands.createDayVideo(self)
 
         else:
            self.sendError()
@@ -467,6 +468,7 @@ if __name__ == "__main__":
     config.directory_create("data")
     config.directory_create("images")
     config.directory_create("videos")
+    config.directory_create("videos_temp")
 
     # start cameras
     camera = {}
