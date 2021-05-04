@@ -340,7 +340,7 @@ class myViews(threading.Thread):
                 description = image_group[stamp]["date"].replace(" ","<br/>") + "<br/>" + image_group[stamp]["camera"].upper() + ": " + image_group[stamp]["camera_name"] + "*"
                 #description = "<a href=\"/"+stamp+"/video-info.html\">" + description + "</a>"
                 description = "<a href=/"+stamp+"/video-info.html>" + description + "</a>"
-                lowres      = "videos/" + image_group[stamp]["thumbnail"]
+                lowres      = url_dir + image_group[stamp]["thumbnail"]
                 hires       = ""
                 video_link  = self.camera[cam].param["video"]["streaming_server"] + image_group[stamp]["video_file_short"]
                 javascript  = "videoOverlay(\"" + video_link + "\",\"" + description + "\");"
@@ -350,7 +350,7 @@ class myViews(threading.Thread):
                 description = image_group[stamp]["date"].replace(" ","<br/>") + "<br/>" + image_group[stamp]["camera"].upper() + ": " + image_group[stamp]["camera_name"]
                 #description = "<a href=\"/"+stamp+"/video-info.html\">" + description + "</a>"
                 description = "<a href=/"+stamp+"/video-info.html>" + description + "</a>"
-                lowres      = "videos/" + image_group[stamp]["thumbnail"]
+                lowres      = url_dir + image_group[stamp]["thumbnail"]
                 hires       = ""
                 video_link  = self.camera[cam].param["video"]["streaming_server"] + image_group[stamp]["video_file"]
                 javascript  = "videoOverlay(\"" + video_link + "\",\"" + description + "\");"
@@ -941,7 +941,7 @@ class myViews(threading.Thread):
         html                  = ""
 
         directory       = self.config.directory(config="videos")
-        category        = "/videos/"
+        category        = "/videos/" # self.config.directories["videos"]
         
         files_all       = {}
         files_delete    = {}
@@ -952,7 +952,8 @@ class myViews(threading.Thread):
            for file in files_all:
                files_all[file]["directory"] = self.camera[which_cam].param["video"]["streaming_server"]
                files_all[file]["type"]      = "video"
-               files_all[file]["category"]  = category+file
+               files_all[file]["path"]      = self.config.directories["videos"]
+               files_all[file]["category"]  = "/videos/"+file
                if "to_be_deleted" in files_all[file] and int(files_all[file]["to_be_deleted"]) == 1: files_delete[file] = files_all[file]
                else:                                                                                 files_show[file]   = files_all[file]
                   

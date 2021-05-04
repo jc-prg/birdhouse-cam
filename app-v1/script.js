@@ -116,7 +116,7 @@ function setRecycle(index, status, lowres_file="") {
 function setRecycleShow(command, index, status, lowres_file="") {
         console.log("setRecycleShow: "+lowres_file+" | "+status+" | "+index)
         if (status == 1) { setFavoritShow(command, index, 0, lowres_file); } // server-side: if favorit -> 1, trash -> 0
-        document.getElementById("d_"+index).src  = "/html/recycle"+status+".png";
+        document.getElementById("d_"+index).src  = "/app-v1/recycle"+status+".png";
         if (status == 1) { status = 0; color = "red"; }
         else             { status = 1; color = "black"; }
         document.getElementById("d_"+index+"_value").innerHTML = status;
@@ -132,7 +132,7 @@ function setFavorit(index, status, lowres_file="") {
 function setFavoritShow(command, index, status, lowres_file="") {
         console.log("setFavoritShow: "+lowres_file+" | "+status+" | "+index)
         if (status == 1) { setRecycleShow(command, index, 0, lowres_file); } // server-side: if favorit -> 1, trash -> 0
-        document.getElementById("s_"+index).src          = "/html/star"+status+".png";
+        document.getElementById("s_"+index).src          = "/app-v1/star"+status+".png";
         if (status == 1) { status = 0; color = "lime"; }
         else             { status = 1; color = "black"; }
         document.getElementById("s_"+index+"_value").innerHTML = status;
