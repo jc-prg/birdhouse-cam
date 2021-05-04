@@ -539,7 +539,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 				video_file  = entry["video_file_short"];
 				note = "*"; 
 			}	}
-		var lowres      = birdhouse_ImageURL(RESTurl + "videos/" + entry["thumbnail"]);
+		var lowres      = birdhouse_ImageURL(RESTurl + entry["path"] + entry["thumbnail"]);
 		var hires       = birdhouse_ImageURL(birdhouseCameras[entry["camera"]]["streaming_server"] + video_file);
 		var description = "";
 		if (title.indexOf("_") > 0)	{ description = entry["date"] + "[br/]" + entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }
