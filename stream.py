@@ -262,7 +262,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         
         # index 
         if self.path == '/':                    self.redirect("/app-v1/index.html")
-        elif self.path == '/index.html':        self.redirect("/app-v1/index.html")
+        elif self.path == '/index.html':        self.redirect("/")
+        elif self.path == '/index.html?cam1':   self.redirect("/")
         elif self.path == '/app':               self.redirect("/app/index.html")
         elif self.path == '/app/':              self.redirect("/app/index.html")
         elif self.path == '/app-v1':            self.redirect("/app-v1/index.html")
@@ -428,11 +429,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         
            if "/videos" in self.path and "/app-v1" in self.path:  self.path = self.path.replace("/app-v1","")
            if "/images" in self.path and "/app-v1" in self.path:  self.path = self.path.replace("/app-v1","")
-           if not "/videos" in self.path and ".mp4" in self.path: self.path = "/videos"+self.path
         
-           if "text" in myMIMEtypes[file_ending]:          self.streamFile(ftype=myMIMEtypes[file_ending], content=read_html( directory='', filename=self.path))
-           elif "application" in myMIMEtypes[file_ending]: self.streamFile(ftype=myMIMEtypes[file_ending], content=read_html( directory='', filename=self.path))
-           else:                                           self.streamFile(ftype=myMIMEtypes[file_ending], content=read_image(directory='', filename=self.path))
+           if "text" in myMIMEtypes[file_ending]:                   self.streamFile(ftype=myMIMEtypes[file_ending], content=read_html( directory='', filename=self.path))
+           elif "application" in myMIMEtypes[file_ending]:          self.streamFile(ftype=myMIMEtypes[file_ending], content=read_html( directory='', filename=self.path))
+           else:                                                    self.streamFile(ftype=myMIMEtypes[file_ending], content=read_image(directory='', filename=self.path))
            
         # unknown
         else:
@@ -464,6 +464,7 @@ if __name__ == "__main__":
     # start config    
     config = myConfig(param_init=myParameters, main_directory=os.path.dirname(os.path.abspath(__file__)))
     config.start()    
+    config.directory_create("data")
     config.directory_create("images")
     config.directory_create("videos")
 
