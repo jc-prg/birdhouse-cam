@@ -303,6 +303,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
              content["last_answer"] = ""
              if len(config.async_answers) > 0:
                 content["last_answer"] = config.async_answers.pop()
+             content["background_process"] = config.async_running
           else:
              content = {}
              status  = "Error: command not found."
