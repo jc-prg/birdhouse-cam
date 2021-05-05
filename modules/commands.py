@@ -40,6 +40,7 @@ class myCommands(threading.Thread):
         self.status_queue["videos"] = []
         self.status_queue["backup"] = []
         self.create_queue           = []       
+        self.create_day_queue       = []       
 
     #-------------------------------------
     
@@ -51,6 +52,16 @@ class myCommands(threading.Thread):
         config_files = ["images","videos"]
         while self._running:
            time.sleep(10)
+           
+           # create short videos
+           if len(self.create_day_queue) > 0:
+             [ which_cam, filename, stamp, date ] = self.create_day_queue.pop()
+
+             response = self.camera[which_cam].createDayVideo(filename=filename, stamp=stamp, date=date)
+
+             if response["result"] == "OK":  self.config.async_answers.append(["CREATE_DAY_DONE", date, response["result"]])
+             else:                           self.config.async_answers.append(["CREATE_DAY_ERROR", date, response["result"]])
+             time.sleep(1)
            
            # create short videos
            if len(self.create_queue) > 0:
@@ -310,15 +321,18 @@ class myCommands(threading.Thread):
            logging.warning("Create video of daily images ... Parameters are missing.")
            
         else:
-           which_cam = param[2]
-           self.camera[which_cam].createDayVideo(filename="image_"+which_cam+"_big_")
+           which_cam   = param[2]
+           stamp       = datetime.now().strftime('%Y%m%d_%H%M%S')
+           date        = datetime.now().strftime('%d.%m.%Y')
+           filename    = "image_"+which_cam+"_big_"
            
-           ### -> add date_time
-           ### -> copy to videofolder
-           ### -> add to video config file
-           ### -> process in the background (queue), as it may take some time for a whole day
-        
+           self.create_day_queue.append([ which_cam, filename, stamp, date ])
 
+           response["command"] = ["Create video of the day"]
+           response["video"]   = { "camera" : which_cam, "date" : date }
+           
+           return response
+           
     #-------------------------------------
     
     def createShortVideo(self, server):
