@@ -191,8 +191,9 @@ function birdhouse_INDEX(data, camera) {
 //-----------------------------------------
 
 function birdhouse_CAMERAS( title, data ) {
-	var cameras           = data["DATA"]["entries"];
-	var html              = "";
+	var cameras	= data["DATA"]["entries"];
+	var admin 	= data["STATUS"]["admin_allowed"];
+	var html	= "";
 	
 	for (let camera in cameras) {
 	        info          = cameras[camera];
@@ -218,6 +219,10 @@ function birdhouse_CAMERAS( title, data ) {
 		html   += "<li>Streaming-Server: "+info["video"]["streaming_server"]+"</li>"
 		html   += "</ul>"
 		html   += "<br/>&nbsp;"
+		if (admin && cameras[camera]["active"]) {
+			var onclick = "birdhouse_createDayVideo('"+camera+"');";
+			html += "<button onclick=\""+onclick+"\" class=\"button-video-edit\">&nbsp;"+lang("CREATE_DAY")+"&nbsp;</button>";
+			}
 	        html  += "</div></div>";
 	        html  += "</div>";
 		}
