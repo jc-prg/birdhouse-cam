@@ -735,6 +735,118 @@ class myCamera(threading.Thread):
           files[time] = data
           self.config.write("images",files)
 
+   def writeVideoInfo(self, stamp, data):
+       '''
+       Write image information to file
+       '''
+       logging.debug("Write video info: "+self.config.file("images"))
+       
+       if os.path.isfile(self.config.file("videos")):
+          files       = self.config.read_cache("videos")
+          files[stamp] = data
+          self.config.write("videos",files)
+
+   #----------------------------------
+   
+   def createDayVideo(self, filename, stamp, date):
+       '''
+       Create daily video from all single images available
+       '''
+       camera        = self.id
+       cmd_videofile = "video_"+camera+"_"+stamp+".mp4"
+       cmd_thumbfile = "video_"+camera+"_"+stamp+"_thumb.jpeg"
+       cmd_tempfiles = "img_"+camera+"_"+stamp+"_"
+       framerate     = 20
+
+       cmd_rm   = "rm "+self.config.directory("videos_temp")+"*"
+       logging.info(cmd_rm)
+       message  = os.system(cmd_rm)
+
+       cmd_copy = "cp "+self.config.directory("images")+filename+"* "+self.config.directory("videos_temp")
+       logging.info(cmd_copy)
+       message  = os.system(cmd_copy)
+       if message != 0:
+          response = {
+             "result"  : "error",
+             "reason"  : "copy temp image files",
+             "message" : message
+             }
+          return response
+
+       cmd_filename  = self.config.directory("videos_temp")+cmd_tempfiles
+       cmd_rename = "i=0; for fi in "+self.config.directory("videos_temp")+"image_*; do mv \"$fi\" $(printf \""+cmd_filename+"%05d.jpg\" $i); i=$((i+1)); done"
+       logging.info(cmd_rename)
+       message  = os.system(cmd_rename)
+       if message != 0:
+          response = {
+             "result"  : "error",
+             "reason"  : "rename temp image files",
+             "message" : message
+             }
+          return response
+
+       amount = 0
+       for root, dirs, files in os.walk(self.config.directory("videos_temp")):
+         for filename in files:
+           if cmd_tempfiles in filename:
+              amount += 1
+                 
+       cmd_create = self.video.ffmpeg_cmd
+       cmd_create = cmd_create.replace("{INPUT_FILENAMES}", cmd_filename+"%05d.jpg")
+       cmd_create = cmd_create.replace("{OUTPUT_FILENAME}", os.path.join(self.config.directory("videos"), cmd_videofile))
+       cmd_create = cmd_create.replace("{FRAMERATE}", str(framerate))
+       logging.info(cmd_create)
+       message  = os.system(cmd_create)
+       if message != 0:
+          response = {
+             "result"  : "error",
+             "reason"  : "create video with ffmpeg",
+             "message" : message
+             }
+          return response
+       
+       cmd_thumb     = "cp "+cmd_filename+"00001.jpg "+self.config.directory("videos")+cmd_thumbfile 
+       logging.info(cmd_thumb)
+       message  = os.system(cmd_thumb)
+       if message != 0:
+          response = {
+             "result"  : "error",
+             "reason"  : "create thumbnail",
+             "message" : message
+             }
+          return response
+
+       cmd_rm2 = "rm "+self.config.directory("videos_temp")+"*.jpg"
+       logging.info(cmd_rm2)
+       message  = os.system(cmd_rm2)
+       if message != 0:
+          response = {
+             "result"  : "error",
+             "reason"  : "remove temp image files",
+             "message" : message
+             }
+          return response
+       
+       length = (amount / framerate)
+       video_data = {
+           "camera"      : self.id,
+           "camera_name" : self.name,
+           "date"        : date,
+           "date_start"  : stamp,
+           "framerate"   : framerate,
+           "image_count" : amount,
+           "image_size"  : self.image_size,
+           "length"      : length,
+           "time"        : "complete day",
+           "type"        : "video",
+           "thumbnail"   : cmd_thumbfile,
+           "video_file"  : cmd_videofile,
+           }
+           
+       self.writeVideoInfo(stamp=stamp, data=video_data)
+       
+       return { "result" : "OK" }
+
    #----------------------------------
 
    def trimVideo(self, video_id, start, end):

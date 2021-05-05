@@ -28,12 +28,13 @@ class myConfig(threading.Thread):
        self.html_replace   = {}
        self.html_replace["start_date"] = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
        self.directories    = {
-           "main"   : "",
-           "data"   : "data/",
-           "images" : "data/images/",
-           "backup" : "data/images/",
-           "videos" : "data/videos/",
-           "html"   : "app-v1/"
+           "main"        : "",
+           "data"        : "data/",
+           "images"      : "data/images/",
+           "backup"      : "data/images/",
+           "videos"      : "data/videos/",
+           "videos_temp" : "data/videos/images2video/",
+           "html"        : "app-v1/"
            }
        self.files          = {
            "backup" : "config_images.json",

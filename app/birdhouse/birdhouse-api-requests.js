@@ -31,6 +31,13 @@ function birdhouse_createShortVideo() {
 	}
 	
 //----------------------------------------
+
+function birdhouse_createDayVideo(camera) {
+	commands = ["create-day-video",camera];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerCreateDay,'','birdhouse_createDayVideo');
+	}
+	
+//----------------------------------------
 // change favorit / recycle status
 //----------------------------------------
 
@@ -93,6 +100,14 @@ function birdhouse_AnswerDelete(data) {
 function birdhouse_AnswerTrim(data) {
 	//console.log(data);
 	appMsg.alert(lang("TRIM_STARTED"));
+	birdhouseReloadView();
+	}
+
+//-----------------------------------------
+
+function birdhouse_AnswerCreateDay(data) {
+	//console.log(data);
+	appMsg.alert(lang("CREATE_DAY_STARTED"));
 	birdhouseReloadView();
 	}
 
