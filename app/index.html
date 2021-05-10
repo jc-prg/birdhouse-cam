@@ -71,13 +71,14 @@
 
 <!-- APP specific scripts and style sheets // END -->
 
+<script  type="text/javascript" src="birdhouse/pinch-zoom.umd.js"></script>
+<!--<script type="text/javascript" src="https://unpkg.com/pinch-zoom-js/dist/pinch-zoom.min.js"></script>-->
+
 </head>
 <body>
 
 <!-- APP specific html elements // START -->
 
-<div id="overlay"         class="overlay"         onclick="birdhouse_overlayHide();"></div>
-<div id="overlay_content" class="overlay_content" onclick="birdhouse_overlayHide();"><!--overlay--></div>
 
 <!-- APP specific  html elements // END -->
 
@@ -115,6 +116,16 @@
 <div id="ontop"        style="display:none"></div>
 <div id="theme_check"  style="display:none"></div>
 <div id="videoplayer"></div>
+
+<!-- APP specific html elements // START -->
+
+<div id="overlay" class="overlay" onclick="birdhouse_overlayHide();"></div>
+<div id="overlay_parent" class="overlay_parent">
+  <div id="overlay_content" class="overlay_content" onclick="birdhouse_overlayHide();"><!--overlay--></div>
+</div>
+
+<!-- APP specific  html elements // END -->
+
 
 <script src="app-fw/app-main.js"></script>
 <script id="videoplayer-script"></script>

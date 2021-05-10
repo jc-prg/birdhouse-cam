@@ -16,13 +16,30 @@ var yourCodeToBeCalled = function()
 //----------------------------------------
 
 function birdhouse_imageOverlay(filename, description="", favorit="", to_be_deleted="") {
+        var overlay = "<div id=\"overlay_content\" class=\"overlay_content\" onclick=\"birdhouse_overlayHide();\"><!--overlay--></div>";
+        setTextById("overlay_content",overlay);
         document.getElementById("overlay").style.display         = "block";
         document.getElementById("overlay_content").style.display = "block";
+        document.getElementById("overlay_parent").style.display  = "block";
+        
         description = description.replace(/\[br\/\]/g,"<br/>");
         html  = "";
         html += "<div id=\"overlay_close\" onclick='birdhouse_overlayHide();'>[X]</div>";
         html += "<div id=\"overlay_image_container\"><img id='overlay_image' src='"+filename+"'><br/>&nbsp;<br/>"+description+"</div>";
         document.getElementById("overlay_content").innerHTML = html;
+        
+        //myElement = document.querySelector('div.overlay_content');
+        myElement = document.getElementById("overlay_content");
+	new window.PinchZoom.default(myElement);
+        //pz.enable(); // Enables all gesture capturing (is enabled by default)
+        //pz.disable(); // Disables all gesture capturing
+
+/*        
+console.log("test1");        
+        var el = document.getElementById("overlay_content");
+        new PinchZoom.default(el,{});
+console.log("test2");        
+*/
 	}
 
 //--------------------------------------
@@ -68,6 +85,7 @@ function birdhouse_videoOverlayToggle(status="") {
 function birdhouse_overlayHide() {
        document.getElementById("overlay").style.display = "none";
        document.getElementById("overlay_content").style.display = "none";
+       document.getElementById("overlay_parent").style.display = "none";
        }
 
 
