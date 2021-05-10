@@ -400,11 +400,11 @@ function birdhouse_ImageGroup(title, entries, entry_count, entry_category, heade
 		for (i=0;i<entry_count.length;i++) 	{ count[entry_count[i]] = 0; }
 		if (count["all"] != undefined) 	{ count["all"] = Object.keys(entries).length; }
 		
-		for (let key in entries) {	
-			if (count["star"] != undefined    && parseInt(entries[key]["favorit"]) == 1)		{ count["star"]    += 1; }
-			if (count["recycle"] != undefined && parseInt(entries[key]["to_be_deleted"]) == 1)	{ count["recycle"] += 1; }
-			if (count["detect"] != undefined && parseInt(entries[key]["detect"]) == 1)		{ count["detect"]  += 1; }
-			if (header_open == false && entries[key]["lowres"] != undefined)			{ image_ids += " " + entries[key]["lowres"]; }
+		for (let key in entries) {
+			if (count["star"] != undefined    && parseInt(entries[key]["favorit"]) == 1)			{ count["star"]    += 1; }
+			else if (count["recycle"] != undefined && parseInt(entries[key]["to_be_deleted"]) == 1)	{ count["recycle"] += 1; }
+			else if (count["detect"] != undefined && parseInt(entries[key]["detect"]) == 1)		{ count["detect"]  += 1; }
+			if (header_open == false && entries[key]["lowres"] != undefined)				{ image_ids += " " + entries[key]["lowres"]; }
 			}
 		}
 	if (header_open == false) {

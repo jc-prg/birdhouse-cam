@@ -756,14 +756,6 @@ class myViews(threading.Thread):
         imageToday     = self.config.imageName(type="lowres", timestamp=imageTitle, camera=which_cam)
         image          = os.path.join(self.config.directory(config="images"), imageToday)
            
-#        if os.path.isfile(image):
-#           html        += self.printImageContainer(description=myPages["today"][0], lowres=imageToday, hires=myPages["today"][1]+"?"+which_cam, star='' ,window="self")
-           
-#        elif which_cam == "cam1":
-#           imageToday  = "image_"+imageTitle+".jpg" # older archives
-#           image       = os.path.join(self.config.directory(config="images"), imageToday)
-#           html       += self.printImageContainer(description=myPages["today"][0], lowres=imageToday, hires=myPages["today"][1]+"?"+which_cam, star='' ,window="self")
-
         for directory in dir_list:
         
           if os.path.isfile(self.config.file(config="backup", date=directory)):
@@ -775,9 +767,10 @@ class myViews(threading.Thread):
                
              else:
                date             = file_data["info"]["date"]
-               count            = file_data["info"]["count"]
+               count            = 0 #file_data["info"]["count"]
                first_img        = ""
                dir_size_cam     = 0
+               dir_size         = 0
                dir_count_cam    = 0
                dir_count_delete = 0
 
@@ -793,9 +786,11 @@ class myViews(threading.Thread):
 
                for file in file_data["files"]:
                   file_info    = file_data["files"][file]
-                  if ("camera" in file_info and file_info["camera"] == which_cam) or not "camera" in file_info:
-                    if ("datestamp" in file_info and file_info["datestamp"] == directory) or not "datestamp" in file_info:
-
+                  if ("datestamp" in file_info and file_info["datestamp"] == directory) or not "datestamp" in file_info:
+                    count += 1
+                    if "size" in file_info: dir_size  += file_info["size"]
+                    
+                    if ("camera" in file_info and file_info["camera"] == which_cam) or not "camera" in file_info:
                       if "size" in file_info: dir_size_cam  += file_info["size"]
                       else:
                         lowres_file = os.path.join(self.config.directory(config="backup"), directory, file_info["lowres"])
@@ -807,7 +802,7 @@ class myViews(threading.Thread):
                         dir_count_delete += 1
                       dir_count_cam += 1
 
-               dir_size        = round(file_data["info"]["size"]/1024/1024,1)
+               dir_size        = round(dir_size/1024/1024,1)
                dir_size_cam    = round(dir_size_cam/1024/1024,1)
                dir_total_size += dir_size
                files_total    += count
@@ -815,7 +810,7 @@ class myViews(threading.Thread):
                  
                if dir_count_delete > 0: delete_info = "<br/>(Recycle: " + str(dir_count_delete) + ")"
                else:                    delete_info = ""
-               if dir_count_cam > 0:    html  += self.printImageContainer(description="<b>"+date+"</b><br/>"+str(dir_count_cam)+" / "+str(dir_size_cam)+" MB" + delete_info, lowres=image, hires="/backup/"+directory+"/list_short.html?"+which_cam, window="self") + "\n"
+               if dir_count_cam > 0:    html  += self.printImageContainer(description="<b>"+date+"</b><br/>"+str(dir_count_cam)+" / "+str(dir_size_cam)+" MB" + delete_info, lowres=image, hires=dir_app_v1+"/backup/"+directory+"/list_short.html?"+which_cam, window="self") + "\n"
                #else:                    html  += self.printImageContainer(description="<b>"+date+"</b><br/>Leer für "+which_cam, lowres="EMPTY") + "\n"
 
                image_file = image.replace(directory+"/","")
@@ -826,7 +821,7 @@ class myViews(threading.Thread):
                   "camera"       : which_cam,
                   "date"         : file_data["info"]["date"],
                   "datestamp"    : directory,
-                  "count"        : file_data["info"]["count"],
+                  "count"        : count,
                   "count_delete" : dir_count_delete,
                   "count_cam"    : dir_count_cam,
                   "dir_size"     : dir_size,

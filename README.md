@@ -5,6 +5,7 @@ Hint: The descriptions in the web client are all in German at the moment.
 
 ## Features
 
+* Use as web-app on iPhones
 * Watch live stream via Raspberry Pi camera and USB web cam (e.g. RPi cam inside and USB web cam outside)
 * Record photos e.g. every 20 seconds (configurable)
 * Record and stream videos (mp4, works with iOS devices)
@@ -28,7 +29,7 @@ Hint: The descriptions in the web client are all in German at the moment.
 * Camera module for RPi / HD with IR sensor
 * USB camera
 * Python 3, PiCamera, CV2, imutils, JSON, Flask
-* HTML, CSS, JavaScript
+* HTML, CSS, JavaScript, Pinch-Zoom
 
 ## Installation
 
@@ -62,6 +63,7 @@ $ nano config.json
 Thanks for your inspiration and code snippets:
 
 * [https://github.com/Freshman-tech/custom-html5-video](https://github.com/Freshman-tech/custom-html5-video)
+* [https://github.com/manuelstofer/pinchzoom](https://github.com/manuelstofer/pinchzoom)
 
 ## Impressions
 ![Screenshot 01](info/screenshot_06.png)
