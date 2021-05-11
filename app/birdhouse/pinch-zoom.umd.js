@@ -653,19 +653,22 @@
              */
             setupMarkup: function setupMarkup() {
                 this.container = buildElement('<div class="pinch-zoom-container"></div>');
-                this.el.parentNode.insertBefore(this.container, this.el);
-                this.container.appendChild(this.el);
 
-                this.container.style.overflow = 'hidden';
-                this.container.style.position = 'relative';
+                if (this.el.parentNode.className != "pinch-zoom-container") {
+	                this.el.parentNode.insertBefore(this.container, this.el);
+	                this.container.appendChild(this.el);
 
-                this.el.style.webkitTransformOrigin = '0% 0%';
-                this.el.style.mozTransformOrigin = '0% 0%';
-                this.el.style.msTransformOrigin = '0% 0%';
-                this.el.style.oTransformOrigin = '0% 0%';
-                this.el.style.transformOrigin = '0% 0%';
+	                this.container.style.overflow = 'hidden';
+	                this.container.style.position = 'relative';
 
-                this.el.style.position = 'absolute';
+	                this.el.style.webkitTransformOrigin = '0% 0%';
+	                this.el.style.mozTransformOrigin = '0% 0%';
+	                this.el.style.msTransformOrigin = '0% 0%';
+	                this.el.style.oTransformOrigin = '0% 0%';
+	                this.el.style.transformOrigin = '0% 0%';
+
+	                this.el.style.position = 'absolute';
+	                }
             },
 
             end: function end() {

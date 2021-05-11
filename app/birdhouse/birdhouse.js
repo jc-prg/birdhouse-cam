@@ -38,6 +38,7 @@ var app_available_cameras = [];
 var app_active_page       = "";
 var app_active_date       = "";
 var app_admin_allowed     = false;
+var app_camera_source     = {};
 
 //-----------------------------------------
 // load content from API and call print
@@ -136,7 +137,22 @@ function birdhouseSwitchCam() {
 
 function birdhouseReloadView() {
 	console.log(app_active_page+"/"+app_active_cam+"/"+app_active_date);
-	birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
+	
+	if (app_active_page == "INDEX")
+		for (let key in app_camera_source) {
+			var image = document.getElementById("stream_"+key);
+			image.src = ""; "img/loading3.gif";
+			
+			app_camera_source[key] = app_camera_source[key].replace(/\/\//g,"/");
+			app_camera_source[key] = app_camera_source[key].replace(":/","://");
+			setTimeout(function(){
+				image.src = app_camera_source[key]+"?"+new Date().getTime();
+				//alert(image.src);
+				}, 10);
+			}
+	else {
+		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
+		}
 	}	
 
 
@@ -176,13 +192,16 @@ function birdhouse_INDEX(data, camera) {
 		var onclick  = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
 		html += birdhouse_Camera(main=true, view="cam1", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed);
 		html += "<br/>&nbsp;<br/>";
+		app_camera_source[active_cam["name"]] = stream_server + cameras[active_cam["name"]]["stream"];
 		}
 	else {
 		var onclick  = "birdhousePrint_load(view=\"INDEX\", camera=\""+other_cams[0]["name"]+"\");";
 		html += birdhouse_Camera(main=false, view="cam1cam2", onclick=onclick, camera=other_cams[0], stream_server=stream_server, admin_allowed=admin_allowed);
+		app_camera_source[other_cams[0]] = stream_server + cameras[other_cams[0]]["stream"];
 
 		onclick      = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
 		html += birdhouse_Camera(main=true, view="cam1cam2", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed);
+		app_camera_source[active_cam["name"]] = stream_server + cameras[active_cam["name"]]["stream"];
 		}
 		
 	setTextById("frame2",html);
@@ -333,13 +352,20 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	
 	// today complete, favorits
 	if (groups != undefined && groups != {}) {
+		var count_groups = 0;
 		for (let group in groups) {
-			group_entries = {};
+			var title = group;
+			var group_entries = {};
 			for (i=0;i<groups[group].length;i++) {
 				key                = groups[group][i];
 				group_entries[key] = entries[key];
-				}		
-			html += birdhouse_ImageGroup(group, group_entries, entry_count, entry_category, header_open, admin, video_short);
+				}
+			if (active_page == "ARCHIVE") { 
+				title = lang("ARCHIVE") + " &nbsp;(" + group + ")";
+				//if (count_groups > 0) { header_open = false; }
+				}
+			html += birdhouse_ImageGroup(title, group_entries, entry_count, entry_category, header_open, admin, video_short);
+			count_groups += 1;
 			}
 		}
 	// today, backup, video
@@ -369,7 +395,10 @@ function birdhouse_Camera(main, view, onclick, camera, stream_server, admin_allo
 	if (main) { var container = 'main'; }
 	else      { var container = '2nd'; }
 
-	var stream_link    = stream_server + camera["stream"];
+	var stream_link    = stream_server + camera["stream"] + "?" + new Date().getTime();;
+	stream_link = stream_link.replace(/\/\//g,"/");
+	stream_link = stream_link.replace(":/","://");
+	
 	var livestream     = "<img src='"+stream_link+"' id='stream_"+camera["name"]+"' class='livestream_"+container+"'/>";
 	var command_record = "appFW.requestAPI(\"POST\",[\"start\",\"recording\",\""+camera["name"]+"\"],\"\",\"\",\"\",\"birdhouse_INDEX\");"; //requestAPI(\"/start/recording/cam2\");
 	var command_stop   = "appFW.requestAPI(\"POST\",[\"stop\", \"recording\",\""+camera["name"]+"\"],\"\",\"\",\"\",\"birdhouse_INDEX\");";; //requestAPI(\"/stop/recording/cam2\");
@@ -379,7 +408,8 @@ function birdhouse_Camera(main, view, onclick, camera, stream_server, admin_allo
 	if (main && admin_allowed) {
 		html     += "  <div class='livestream_record "+view+"'>";
 		html     += "     <button onclick='"+command_record+"' class='button-video-record'>Record ("+camera["name"]+")</button> &nbsp;";
-		html     += "     <button onclick='"+command_stop+"' class='button-video-record'>Stop ("+camera["name"]+")</button>";
+		html     += "     <button onclick='"+command_stop+"'   class='button-video-record'>Stop ("+camera["name"]+")</button>";
+		html     += "  </div>";
 		}
 	html     += "</div></center>";
 
@@ -531,10 +561,10 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		var description = lang("LIVESTREAM");
 		}		
 	else if (entry["type"] == "camera") {
+		var description = title;
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["lowres"]);
 		var hires       = birdhouse_ImageURL(RESTurl + entry["hires"]);
 		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
-		var description = title;
 		}		
 	else if (entry["type"] == "video") {
 		var note        = "";

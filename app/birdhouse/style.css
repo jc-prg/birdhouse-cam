@@ -11,6 +11,16 @@ h3 { margin : 4px; }
 
 .frame_column { color : black; }
 
+/* Layer - z-index */
+
+/*
+   - 6x -> Thumbnails
+   - 7x -> Overlays (e.g. images)
+   - 8x -> Menu (app-framework)
+   - 9x -> Header (app-framework)
+
+*/
+
 /* header functions */
 
 .headerRight {
@@ -51,7 +61,7 @@ h3 { margin : 4px; }
     position      : relative; 
     top           : -40px; 
     left          : 0px;
-    z-index       : 90;
+    z-index       : 60;
 }
 
 /* configuration of separator and group headers */
@@ -111,7 +121,7 @@ h3 { margin : 4px; }
     height     : 100%;
     width      : 100%;
     text-align : center;
-    z-index    : 81;
+    z-index    : 61;
 /*    
     float      : left;
     margin     : 5px;
@@ -130,7 +140,7 @@ h3 { margin : 4px; }
     width      : 100%;
     text-align : center;
     opacity    : 50%;
-    z-index    : 80;
+    z-index    : 60;
     background-color: black;
 }
 
@@ -164,7 +174,7 @@ h3 { margin : 4px; }
     left     : 5px; 
     width    : 20px;
     height   : 20px;
-    z-index  : 100;
+    z-index  : 62;
     cursor   : pointer;
 }
 
@@ -178,7 +188,7 @@ h3 { margin : 4px; }
     left     : 5px; 
     width    : 20px;
     height   : 20px;
-    z-index  : 100;
+    z-index  : 62;
     cursor   : pointer;
 }
 .star_img { 
@@ -195,7 +205,7 @@ h3 { margin : 4px; }
     left     : 0;
     height   : 100%;
     width    : 100%;
-    z-index  : 101;
+    z-index  : 71;
     background-color : black;
     opacity          : 80%;
     color            : white;
@@ -209,7 +219,7 @@ h3 { margin : 4px; }
     left        : 0;
     height      : 100vh;
     width       : 100vw;
-    z-index     : 102;
+    z-index     : 72;
 }
 
 .pinch-zoom-container {
@@ -221,7 +231,7 @@ h3 { margin : 4px; }
     left        : 0;
     height      : 100vh;
     width       : 100vw;
-    z-index     : 102;
+    z-index     : 72;
     }
 
 
@@ -232,17 +242,17 @@ h3 { margin : 4px; }
     left        : 0;
     height      : 100%;
     width       : 100%;
-    z-index     : 102;
+    z-index     : 72;
     color       : white;
     font-family : sans-serif;
     font-size   : 12px;
 }
 
 #overlay_close {
-    position : fixed;
-    top      : 20px;
-    right    : 20px;
-    z-index  : 103;
+    position : relative;
+    top      : 30px;
+    right    : -45%;
+    z-index  : 74;
     cursor   : pointer;
 }
 
@@ -256,7 +266,7 @@ h3 { margin : 4px; }
     -ms-transform    : translate(-50%,-50%);
     transform        : translate(-50%,-50%);
     text-align       : center;
-    z-index          : 103;
+    z-index          : 73;
   }
   
 #overlay_image {
@@ -266,7 +276,7 @@ h3 { margin : 4px; }
     margin           : auto;
     background-color : white;
     border           : 5px solid white;
-    z-index          : 103;
+    z-index          : 73;
   }
   
 #overlay_video {
@@ -276,7 +286,7 @@ h3 { margin : 4px; }
     margin           : auto;
     background-color : white;
     border           : 5px solid white;
-    z-index          : 103;
+    z-index          : 73;
   }
   
 /* input video edit, edit & record buttons  */
