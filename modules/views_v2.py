@@ -443,7 +443,8 @@ class myViews_v2(threading.Thread):
         content               = {
            "active_cam" : which_cam,
            "view"       : "backup",
-           "entries"    : {}
+           "entries"    : {},
+           "groups"     : {}
            }
         param                 = server.path.split("/")
         if "app-v1" in param: del param[1]
@@ -459,10 +460,16 @@ class myViews_v2(threading.Thread):
         imageToday     = self.config.imageName(type="lowres", timestamp=imageTitle, camera=which_cam)
         image          = os.path.join(self.config.directory(config="images"), imageToday)
            
-        for directory in dir_list:
+        for directory in dir_list:        
         
+          group_name  = directory[0:4] + "-" + directory[4:6] 
+          if not "groups" in content:             content["groups"]             = {}
+          if not group_name in content["groups"]: content["groups"][group_name] = []
+
           if os.path.isfile(self.config.file(config="backup", date=directory)):
+          
              file_data = self.config.read_cache(config="backup", date=directory)
+             content["groups"][group_name].append(directory)
              
              if not "info" in file_data or not "files" in file_data:
                content["entries"][directory]["error"] = True
@@ -705,7 +712,6 @@ class myViews_v2(threading.Thread):
             description                  = ""
             
             if self.adminAllowed():
-
                files = {}
                files["VIDEOFILE"]  = self.camera[which_cam].param["video"]["streaming_server"] + data["video_file"]
                files["THUMBNAIL"]  = data["thumbnail"]
