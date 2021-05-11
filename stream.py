@@ -31,6 +31,7 @@ from modules.presets  import myParameters
 from modules.presets  import myPages
 from modules.presets  import myMIMEtypes
 from modules.views    import myViews
+from modules.views_v2 import myViews_v2
 
 #----------------------------------------------------
 
@@ -284,16 +285,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           if len(param) > 3: 
              which_cam = param[3]
              
-          if   command == "INDEX":          template, content = views.createIndex(server=self)
-          elif command == "FAVORITS":       template, content = views.createFavorits(server=self)
-          elif command == "TODAY":          template, content = views.createList(server=self)
-          elif command == "TODAY_COMPLETE": template, content = views.createCompleteListToday(server=self)
-          elif command == "ARCHIVE":        template, content = views.createBackupList(server=self)
-          elif command == "VIDEOS":         template, content = views.createVideoList(server=self)
-          elif command == "VIDEO_DETAIL":   template, content = views.detailViewVideo(server=self)
-          elif command == "CAMERAS":        template, content = views.createCameraList(server=self)
+          if   command == "INDEX":          content = views_v2.createIndex(server=self)
+          elif command == "FAVORITS":       content = views_v2.createFavorits(server=self)
+          elif command == "TODAY":          content = views_v2.createList(server=self)
+          elif command == "TODAY_COMPLETE": content = views_v2.createCompleteListToday(server=self)
+          elif command == "ARCHIVE":        content = views_v2.createBackupList(server=self)
+          elif command == "VIDEOS":         content = views_v2.createVideoList(server=self)
+          elif command == "VIDEO_DETAIL":   content = views_v2.detailViewVideo(server=self)
+          elif command == "CAMERAS":        content = views_v2.createCameraList(server=self)
           elif command == "status" or command == "version":
-             template, content = views.createIndex(server=self)
+             content = views_v2.createIndex(server=self)
              if len(param) > 3 and param[2] == "version":
                  version["Code"] = "800"
                  version["Msg"]  = "Version OK."
@@ -489,6 +490,8 @@ if __name__ == "__main__":
     # start views and commands
     views = myViews(config=config, camera=camera)
     views.start()
+    views_v2 = myViews_v2(config=config, camera=camera)
+    views_v2.start()
 
     commands = myCommands(config=config, camera=camera, backup=backup)
     commands.start()
@@ -526,6 +529,7 @@ if __name__ == "__main__":
              camera[cam].stop()
         commands.stop()
         views.stop()
+        views_v2.stop()
 
         server.server_close()
         server.shutdown()
