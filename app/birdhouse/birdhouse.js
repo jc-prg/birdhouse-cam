@@ -379,7 +379,8 @@ function birdhouse_Camera(main, view, onclick, camera, stream_server, admin_allo
 	if (main && admin_allowed) {
 		html     += "  <div class='livestream_record "+view+"'>";
 		html     += "     <button onclick='"+command_record+"' class='button-video-record'>Record ("+camera["name"]+")</button> &nbsp;";
-		html     += "     <button onclick='"+command_stop+"' class='button-video-record'>Stop ("+camera["name"]+")</button>";
+		html     += "     <button onclick='"+command_stop+"'   class='button-video-record'>Stop ("+camera["name"]+")</button>";
+		html     += "  </div>";
 		}
 	html     += "</div></center>";
 
