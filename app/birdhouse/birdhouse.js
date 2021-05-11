@@ -531,10 +531,10 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		var description = lang("LIVESTREAM");
 		}		
 	else if (entry["type"] == "camera") {
+		var description = title;
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["lowres"]);
 		var hires       = birdhouse_ImageURL(RESTurl + entry["hires"]);
 		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
-		var description = title;
 		}		
 	else if (entry["type"] == "video") {
 		var note        = "";
