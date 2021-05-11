@@ -30,18 +30,8 @@ function birdhouse_imageOverlay(filename, description="", favorit="", to_be_dele
         html += "<br/>&nbsp;<br/>"+description+"</div>";
         document.getElementById("overlay_content").innerHTML = html;
         
-        //myElement = document.querySelector('div.overlay_content');
         myElement = document.getElementById("overlay_content");
 	new window.PinchZoom.default(myElement);
-        //pz.enable(); // Enables all gesture capturing (is enabled by default)
-        //pz.disable(); // Disables all gesture capturing
-
-/*        
-console.log("test1");        
-        var el = document.getElementById("overlay_content");
-        new PinchZoom.default(el,{});
-console.log("test2");        
-*/
 	}
 
 //--------------------------------------
