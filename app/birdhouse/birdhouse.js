@@ -141,14 +141,11 @@ function birdhouseReloadView() {
 	if (app_active_page == "INDEX")
 		for (let key in app_camera_source) {
 			var image = document.getElementById("stream_"+key);
-			image.src = ""; "img/loading3.gif";
+			image.src = "";
 			
 			app_camera_source[key] = app_camera_source[key].replace(/\/\//g,"/");
 			app_camera_source[key] = app_camera_source[key].replace(":/","://");
-			setTimeout(function(){
-				image.src = app_camera_source[key]+"?"+new Date().getTime();
-				//alert(image.src);
-				}, 10);
+			image.src = app_camera_source[key]+"?"+new Date().getTime();
 			}
 	else {
 		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
