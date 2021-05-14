@@ -5,12 +5,14 @@
 //--------------------------------------
 /* INDEX:
 function birdhouse_createShortVideo()
+function birdhouse_createDayVideo(camera)
 function birdhouse_setRecycle(index, status, lowres_file="")
 function birdhouse_setRecycleShow(command, param)
 function birdhouse_setFavorit(index, status, lowres_file="")
 function birdhouse_setFavoritShow(command, param)
 function birdhouse_AnswerDelete(data)
 function birdhouse_AnswerTrim(data)
+function birdhouse_AnswerCreateDay(data)
 */
 //--------------------------------------
 
