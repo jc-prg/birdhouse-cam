@@ -3,8 +3,16 @@
 //--------------------------------
 
 var app_frame_count   = 4;
+var app_frame_style   = "frame_column wide";
 var app_setting_count = 4;
+var app_setting_style = "setting_bg";
 var app_last_load     = 0;
+var app_title         = "jc://birdhouse/";
+var app_version       = "v0.8.4"; 
+var app_api_dir       = "api/";
+var app_api_status    = "status";
+var app_loading_image = "birdhouse/img/bird.gif"; //https://gifer.com/en/ZHug
+
 
 //--------------------------------
 // create menu entries
@@ -75,3 +83,20 @@ function app_check_status() {
 
 function app_click_menu() {
 	}
+	
+//--------------------------------
+// add code when forced a reload
+//--------------------------------
+
+function app_force_reload(data) {
+	birdhouseReloadView();
+	}
+	
+//--------------------------------
+// add code when theme changed
+//--------------------------------
+
+function app_theme_changed(theme) {
+	}
+	
+
