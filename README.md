@@ -30,6 +30,7 @@ Hint: The descriptions in the web client are all in German at the moment.
 * USB camera
 * Python 3, PiCamera, CV2, imutils, JSON, Flask
 * HTML, CSS, JavaScript, Pinch-Zoom
+* jc://modules/, jc://app-framework/
 
 ## Installation
 
