@@ -132,11 +132,12 @@ function birdhouseSwitchCam() {
 	var next_cam = current_cam + 1;
 	if (next_cam > app_available_cameras.length-1) { next_cam = 0; }
 	
+	console.log("birdhouseSwitchCam: "+app_active_cam+"->"+app_available_cameras[next_cam]);
 	birdhousePrint_load(view=app_active_page, camera=app_available_cameras[next_cam], date=app_active_date);
 	}	
 
 function birdhouseReloadView() {
-	console.log(app_active_page+"/"+app_active_cam+"/"+app_active_date);
+	console.log("birdhouseReloadView: "+app_active_page+"/"+app_active_cam+"/"+app_active_date);
 	
 	if (app_active_page == "INDEX")
 		for (let key in app_camera_source) {
