@@ -11,18 +11,6 @@ videos/
 
 stream.log
 
-app/birdhouse/app-fw/
-
-app/app-fw/
-
-app/modules/
-
-info/app-framework/
-
-info/modules/
-
-app/img/
-
 app/00-index-js.txt
 
 app/cache.manifest
