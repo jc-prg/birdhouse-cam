@@ -60,13 +60,9 @@ function app_status(data) {
 		var msg = data["DATA"]["last_answer"];
 		appMsg.alert(lang(msg[0]));
 		}
-	if (data["DATA"]["background_process"] == true) {
-		setTextById("statusLED","<div id='blue'></div>");
-		}
-	else {
-		setTextById("statusLED","<div id='green'></div>");
-		}
-	
+	if (data["DATA"]["background_process"] == true)	{ setTextById("statusLED","<div id='blue'></div>"); }
+	else 							{ setTextById("statusLED","<div id='green'></div>"); }
+
 	app_last_load = Date.now();
 	}
 	
