@@ -40,7 +40,7 @@ APIdescription = {
       "version" : "v0.3"
       }
 APIstart       = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-APPframework   = "v0.8.0"
+APPframework   = "v0.8.3"
 
 #----------------------------------------------------
 
@@ -333,7 +333,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                      "current_time"  : datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
                      "admin_allowed" : self.adminAllowed(),
                      "check-version" : version,
-                     "api-call"      : status
+                     "api-call"      : status,
+                     "reload"        : False
                      }
           response["API"]                 = APIdescription
           response["DATA"]                = content
