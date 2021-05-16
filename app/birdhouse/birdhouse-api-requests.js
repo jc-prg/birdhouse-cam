@@ -90,7 +90,6 @@ function birdhouse_setRecycleRange(index, status) {
 function birdhouse_setRecycleRangeShow(command, param) {
 	[ index, status, lowres_file ] = param
         console.log("birdhouse_setRecycleRangeShow: "+lowres_file+" | "+status+" | "+index)
-        setTimeout(function(){ birdhouseReloadView(); }, reloadInterval*1000/2);
         setTimeout(function(){ birdhouseReloadView(); }, reloadInterval*1000);
 	}
 	
