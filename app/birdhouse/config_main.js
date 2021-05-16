@@ -19,20 +19,21 @@ var app_loading_image = "birdhouse/img/bird.gif"; //https://gifer.com/en/ZHug
 //--------------------------------
 
 function app_menu_entries() {
+	var hideSettings = "birdhouse_settingsToggle(true);";
 	var app_menu = [
-		[lang("LIVESTREAM"),   "script", "birdhousePrint_load('INDEX','"+app_active_cam+"');"],
-		[lang("FAVORITS"),     "script", "birdhousePrint_load('FAVORITS','"+app_active_cam+"');"],
-		[lang("TODAY"),        "script", "birdhousePrint_load('TODAY','"+app_active_cam+"');"],
-		[lang("VIDEOS"),       "script", "birdhousePrint_load('VIDEOS','"+app_active_cam+"');"],
-		[lang("ARCHIVE"),      "script", "birdhousePrint_load('ARCHIVE','"+app_active_cam+"');"],
+		[lang("LIVESTREAM"),   "script", hideSettings+"birdhousePrint_load('INDEX','"+app_active_cam+"');"],
+		[lang("FAVORITS"),     "script", hideSettings+"birdhousePrint_load('FAVORITS','"+app_active_cam+"');"],
+		[lang("TODAY"),        "script", hideSettings+"birdhousePrint_load('TODAY','"+app_active_cam+"');"],
+		[lang("VIDEOS"),       "script", hideSettings+"birdhousePrint_load('VIDEOS','"+app_active_cam+"');"],
+		[lang("ARCHIVE"),      "script", hideSettings+"birdhousePrint_load('ARCHIVE','"+app_active_cam+"');"],
 		];
 	if (app_admin_allowed) {
 		app_menu = app_menu.concat([
 		["LINE"],
-		[lang("CAMERAS"),       "script", "birdhousePrint_load('CAMERAS','"+app_active_cam+"');"],
-		[lang("TODAY_COMPLETE"),"script", "birdhousePrint_load('TODAY_COMPLETE','"+app_active_cam+"');"],
+		[lang("CAMERAS"),       "script", hideSettings+"birdhousePrint_load('CAMERAS','"+app_active_cam+"');"],
+		[lang("TODAY_COMPLETE"),"script", hideSettings+"birdhousePrint_load('TODAY_COMPLETE','"+app_active_cam+"');"],
 		["LINE"],
-		[lang("SETTINGS"),      "script", "appMsg.alert('"+lang('NOT_IMPLEMENTED')+"');" ],
+		[lang("SETTINGS"),      "script", "birdhouse_settings();" ],
 		]);
 		}
 	return app_menu;
