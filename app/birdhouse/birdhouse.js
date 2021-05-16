@@ -20,7 +20,7 @@ function birdhouse_ImageGroup(title, entries, entry_count, entry_category, heade
 function birdhouse_OtherGroupHeader( key, title, header_open )
 function birdhouse_ImageGroupHeader( key, title, header_open, count={} )
 function birdhouse_ImageURL(URL)
-function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false)
+function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false, group_id="")
 function birdhouse_Links(link_list)
 */
 //--------------------------------------
@@ -39,6 +39,7 @@ var app_active_page       = "";
 var app_active_date       = "";
 var app_admin_allowed     = false;
 var app_camera_source     = {};
+var app_recycle_range     = {};
 
 //-----------------------------------------
 // load content from API and call print
@@ -132,11 +133,14 @@ function birdhouseSwitchCam() {
 	var next_cam = current_cam + 1;
 	if (next_cam > app_available_cameras.length-1) { next_cam = 0; }
 	
+	console.log("birdhouseSwitchCam: "+app_active_cam+"->"+app_available_cameras[next_cam]);
 	birdhousePrint_load(view=app_active_page, camera=app_available_cameras[next_cam], date=app_active_date);
 	}	
 
 function birdhouseReloadView() {
-	console.log(app_active_page+"/"+app_active_cam+"/"+app_active_date);
+	console.log("birdhouseReloadView: "+app_active_page+"/"+app_active_cam+"/"+app_active_date);
+	app_recycle_range = {};
+	birdhouse_overlayHide();
 	
 	if (app_active_page == "INDEX")
 		for (let key in app_camera_source) {
@@ -454,6 +458,11 @@ function birdhouse_ImageGroup(title, entries, entry_count, entry_category, heade
 			html    += "<br/>&nbsp;</center></div>";
 			}
 		}
+	else if (admin) {
+		html    += "<div id='recycle_range_"+group_id+"' class='separator' style='display: none;'><center><i><br/>";
+		html    += "<text id='recycle_range_"+group_id+"_info'>...</text>";
+		html    += "<br/>&nbsp;</i></center></div>";
+		}
 	//html += "<div class='separator'>&nbsp;</div>";
 
 	entry_keys = Object.keys(entries).sort().reverse();
@@ -461,7 +470,7 @@ function birdhouse_ImageGroup(title, entries, entry_count, entry_category, heade
 		key   = entry_keys[i];
 		var title = key;
 		//if (entry_keys[key]["type"] == "video") {  title = entry_keys[key]["date"]; }
-		html += birdhouse_Image(title, entries[key], header_open, admin, video_short)
+		html += birdhouse_Image(title=title, entry=entries[key], header_open=header_open, admin=admin, video_short=video_short, group_id=group_id);
 		}
 		
 	html += "</div>";
@@ -532,7 +541,7 @@ function birdhouse_ImageURL(URL) {
 
 //-----------------------------------------
 
-function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false) {
+function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false, group_id="") {
 	var html        = "";
 	var play_button = "";
 	var dont_load   = "";
@@ -609,8 +618,12 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		if (parseInt(img_recycle) == 0)  { img_recycle_r = 1; } else { img_recycle_r = 0; }
 		var img_dir     = "birdhouse/img/";
 
-		star        = "<div id='s_"+img_id+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id+"' src='"+img_dir+"star"+img_star+".png'       onclick='birdhouse_setFavorit(\""+img_id+"\",document.getElementById(\"s_"+img_id+"_value\").innerHTML,\""+img_name+"\");'/>";
-		recycle     = "<div id='d_"+img_id+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='birdhouse_setRecycle(\""+img_id+"\",document.getElementById(\"d_"+img_id+"_value\").innerHTML,\""+img_name+"\");'/>";
+		var onclick_star    = "birdhouse_setFavorit(index=\""+img_id+"\",status=document.getElementById(\"s_"+img_id+"_value\").innerHTML,lowres_file=\""+img_name+"\");";
+		var onclick_recycle = "birdhouse_setRecycle(index=\""+img_id+"\",status=document.getElementById(\"d_"+img_id+"_value\").innerHTML,lowres_file=\""+img_name+"\");";
+		onclick_recycle    += "birdhouse_recycleRange(group_id=\""+group_id+"\", index=\""+img_id+"\", status=document.getElementById(\"d_"+img_id+"_value\").innerHTML, lowres_file=\""+img_name+"\")"; 
+		
+		star        = "<div id='s_"+img_id+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id+"' src='"+img_dir+"star"+img_star+".png'       onclick='"+onclick_star+"'/>";
+		recycle     = "<div id='d_"+img_id+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
 		}
 		
 	html += "<div class='image_container'>";

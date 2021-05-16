@@ -40,7 +40,7 @@ APIdescription = {
       "version" : "v0.3"
       }
 APIstart       = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-APPframework   = "v0.8.0"
+APPframework   = "v0.8.4"
 
 #----------------------------------------------------
 
@@ -233,8 +233,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         if self.path.startswith("/api"):                   self.path = self.path.replace("/api","")
         
-        if self.path.startswith("/favorit/"):              response = commands.setStatusFavorit(self)
-        elif self.path.startswith("/recycle/"):            response = commands.setStatusRecycle(self)
+        if self.path.startswith("/favorit/"):              response = commands.setStatusFavoritNew(self)
+        elif self.path.startswith("/recycle/"):            response = commands.setStatusRecycleNew(self)
+        elif self.path.startswith("/recycle-range/"):      response = commands.setStatusRecycleRange(self)
         elif self.path.startswith('/remove/'):             response = commands.deleteMarkedFiles(self)
         elif self.path.startswith("/start/recording/"):    response = commands.startRecording(self)
         elif self.path.startswith("/stop/recording/"):     response = commands.stopRecording(self)
@@ -333,7 +334,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                      "current_time"  : datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
                      "admin_allowed" : self.adminAllowed(),
                      "check-version" : version,
-                     "api-call"      : status
+                     "api-call"      : status,
+                     "reload"        : False
                      }
           response["API"]                 = APIdescription
           response["DATA"]                = content

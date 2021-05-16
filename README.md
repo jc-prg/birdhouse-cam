@@ -14,6 +14,7 @@ Hint: The descriptions in the web client are all in German at the moment.
 * Mark videos as favorits or to be deleted
 * List favorit photos and videos in a list
 * Hide / delete marked photos
+* Recylce range of photos between two marked photos
 * Archive photos with movement and favorit photos once a day
 * Trim videos
 * Deny recording and admin functionality for specific IP adresses (e.g. router or proxy, to deny for access from the internet)
@@ -30,6 +31,7 @@ Hint: The descriptions in the web client are all in German at the moment.
 * USB camera
 * Python 3, PiCamera, CV2, imutils, JSON, Flask
 * HTML, CSS, JavaScript, Pinch-Zoom
+* jc://modules/, jc://app-framework/
 
 ## Installation
 
@@ -60,10 +62,11 @@ $ nano config.json
 
 ## Sources
 
-Thanks for your inspiration and code snippets:
+Thanks for your inspiration, code snippets, images:
 
 * [https://github.com/Freshman-tech/custom-html5-video](https://github.com/Freshman-tech/custom-html5-video)
 * [https://github.com/manuelstofer/pinchzoom](https://github.com/manuelstofer/pinchzoom)
+* [https://gifer.com/en/ZHug](https://gifer.com/en/ZHug)
 
 ## Impressions
 ![Screenshot 01](info/screenshot_06.png)

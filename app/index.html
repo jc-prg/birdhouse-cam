@@ -17,7 +17,7 @@
 <script src="modules/jc-app/jc-app-1.4.1.js"></script>
 <script src="modules/jc-functions/jc-functions-0.1.2.js"></script>
 <script src="modules/jc-cookie/jc-cookie.js"></script>
-<script src="modules/jc-msg/jc-msg-1.1.5.js"></script>		<link href="modules/jc-msg/jc-msg-1.1.5.css" rel="stylesheet">
+<script src="modules/jc-msg/jc-msg-1.1.6.js"></script>		<link href="modules/jc-msg/jc-msg-1.1.6.css" rel="stylesheet">
 <script src="modules/jc-player/jc-player-0.1.6.js"></script>		<link href="modules/jc-player/jc-player-0.1.6.css" rel="stylesheet">
 <script src="modules/jc-player/jc-volume-slider-0.1.1.js"></script>	<link href="modules/jc-player/jc-volume-slider-0.1.1.css" rel="stylesheet" >
 <script src="modules/jc-upload/upload.js"></script> 			<link href="modules/jc-upload/upload.css" rel="stylesheet">
@@ -25,39 +25,38 @@
 
 <!-- jcAppFramework START -->
 
-<script src="app-fw/app-functions.js"></script>
-<script src="app-fw/app-html-elements.js"></script>
-<script src="app-fw/app-language.js"></script>
+<script src="framework/app-fw/app-functions.js"></script>
+<script src="framework/app-fw/app-html-elements.js"></script>
+<script src="framework/app-fw/app-language.js"></script>
 
 <script src="birdhouse/config_stage.js"></script>
 <script src="birdhouse/config_language.js"></script>
 <script src="birdhouse/config_main.js"></script>
 
-<script src="app-fw/app-conf.js"></script>
-<script src="app-fw/app-menu.js"></script>
+<script src="framework/app-fw/app-conf.js"></script>
+<script src="framework/app-fw/app-menu.js"></script>
 
-<link rel="stylesheet" href="app-fw/style-main.css">
-<link rel="stylesheet" href="app-fw/style-menu.css">
-<link rel="stylesheet" href="app-fw/style-frame.css">
-<link rel="stylesheet" href="app-fw/style-status.css">
+<link rel="stylesheet" href="framework/app-fw/style-main.css">
+<link rel="stylesheet" href="framework/app-fw/style-menu.css">
+<link rel="stylesheet" href="framework/app-fw/style-frame.css">
+<link rel="stylesheet" href="framework/app-fw/style-status.css">
 
-<link rel="stylesheet" href="app-fw/style-main-iphone.css">
-<link rel="stylesheet" href="app-fw/style-main-laptop.css">
-<link rel="stylesheet" href="app-fw/style-frame-iphone.css">
-<link rel="stylesheet" href="app-fw/style-frame-laptop.css">
+<link rel="stylesheet" href="framework/app-fw/style-main-iphone.css">
+<link rel="stylesheet" href="framework/app-fw/style-main-laptop.css">
+<link rel="stylesheet" href="framework/app-fw/style-frame-iphone.css">
+<link rel="stylesheet" href="framework/app-fw/style-frame-laptop.css">
 
-<link rel="stylesheet" href="app-fw/style-main-dark.css">
-<link rel="stylesheet" href="app-fw/style-menu-dark.css">
+<link rel="stylesheet" href="framework/app-fw/style-main-dark.css">
+<link rel="stylesheet" href="framework/app-fw/style-menu-dark.css">
 
 <!-- APP specific scripts and style sheets // START -->
 
 <script src="birdhouse/birdhouse.js"></script>
 <script src="birdhouse/birdhouse-functions.js"></script>
+<script src="birdhouse/birdhouse-settings.js"></script>
 <script src="birdhouse/birdhouse-api-requests.js"></script>
 <script src="birdhouse/video-player-template.js"></script>
-<!--
-<script src="birdhouse/video-player.js"></script>
--->
+<script src="birdhouse/pinch-zoom.umd.js"></script>
 
 <link rel="stylesheet" href="birdhouse/style.css" />
 <link rel="stylesheet" href="birdhouse/style-streams.css" />
@@ -71,8 +70,6 @@
 
 <!-- APP specific scripts and style sheets // END -->
 
-<script  type="text/javascript" src="birdhouse/pinch-zoom.umd.js"></script>
-<!--<script type="text/javascript" src="https://unpkg.com/pinch-zoom-js/dist/pinch-zoom.min.js"></script>-->
 
 </head>
 <body>
@@ -86,7 +83,7 @@
 <nav-logo id="rest_status"></nav-logo>
 <nav-title id="navTitle">...</nav-title>
 <ul>
-  <li id="navi"><div onClick="javascript:appClickMenu();"  id="navi-click"><img src="img/button.png" /></div>
+  <li id="navi"><div onClick="javascript:appClickMenu();"  id="navi-click"><img src="framework/img/button.png" /></div>
     <ul id='menuItems' style="visibility:hidden;"><!-- drop down menu - filled by script --></ul>
   </li>
 </ul>
@@ -94,10 +91,11 @@
 
 <div id="statusLED"><div id="red"></div></div>
 <div id="headerRight" class="headerRight"></div>
-<div id="statusLEDload"><img src="img/loading3.gif"></div>
+<div id="statusLEDload"><img src="framework/img/loading3.gif"></div>
 <div id="app_background" class="app_background" style="width:100%;">
 
 <div style="height:45px;"></div>
+<div id='reload_info'  style="width:100%;display:none;"></div>
 <div id='remote_block' style="width:100%">
   <div class='frame_block'>
     <div class='remote_nav' id='remote_nav'><nav-b>
@@ -123,12 +121,11 @@
 <div id="overlay_parent" class="overlay_parent">
   <div id="overlay_content" class="overlay_content" onclick="birdhouse_overlayHide();"><!--overlay--></div>
 </div>
+<script id="videoplayer-script"></script>
 
 <!-- APP specific  html elements // END -->
 
-
-<script src="app-fw/app-main.js"></script>
-<script id="videoplayer-script"></script>
+<script src="framework/app-fw/app-main.js"></script>
 
 &nbsp;<br/>
 &nbsp;<br/>

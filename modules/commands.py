@@ -38,7 +38,7 @@ class myCommands(threading.Thread):
         self.status_queue           = {}
         self.status_queue["images"] = []
         self.status_queue["videos"] = []
-        self.status_queue["backup"] = []
+        self.status_queue["backup"] = {}
         self.create_queue           = []       
         self.create_day_queue       = []       
 
@@ -49,7 +49,7 @@ class myCommands(threading.Thread):
         Do nothing at the moment
         '''
         logging.info("Starting REST API for POST ...")
-        config_files = ["images","videos"]
+        config_files = ["images","videos","backup"]
         while self._running:
            time.sleep(10)
            
@@ -76,22 +76,40 @@ class myCommands(threading.Thread):
            
            # status changes
            for config_file in config_files:
-             entries = self.config.read_cache(config_file)
-             self.config.lock(config_file)
+           
+             if config_file != "backup": 
+                entries = self.config.read_cache(config_file)
+                self.config.lock(config_file)
              
-             while len(self.status_queue[config_file]) > 0:
-                [ date, key, change_status, status ] = self.status_queue[config_file].pop()
-
-                if key in entries: 
-                   test = "yes"
-                   entries[key][change_status] = status
-                else:
-                   test="no"
+                while len(self.status_queue[config_file]) > 0:
+                   [ date, key, change_status, status ] = self.status_queue[config_file].pop()
+                   if key in entries: 
+                      test = "yes"
+                      entries[key][change_status] = status
+                   else:
+                      test="no"
+                   logging.debug("QUEUE: "+config_file+" // "+key+" - "+change_status+"="+str(status)+" ... "+test)
                    
-                logging.info("QUEUE: "+config_file+" // "+key+" - "+change_status+"="+str(status)+" ... "+test)
-             
-             self.config.unlock(config_file)
-             self.config.write(config_file, entries)   
+                self.config.unlock(config_file)
+                self.config.write(config_file, entries)   
+                
+             else:
+                for date in self.status_queue[config_file]:
+                   entry_data = self.config.read_cache(config_file,date)
+                   entries    = entry_data["files"]
+                   self.config.lock(config_file,date)
+                   while len(self.status_queue[config_file][date]) > 0:
+                      [ date, key, change_status, status ] = self.status_queue[config_file][date].pop()
+                      if key in entries: 
+                         test = "yes"
+                         entries[key][change_status] = status
+                      else:
+                         test="no"
+                      logging.debug("QUEUE: "+config_file+"/"+date+" // "+key+" - "+change_status+"="+str(status)+" ... "+test)
+                   
+                   entry_data["files"] = entries
+                   self.config.unlock(config_file, date)
+                   self.config.write(config_file, entry_data, date)   
                            
         logging.info("Stopped REST API for POST.")
     
@@ -108,7 +126,11 @@ class myCommands(threading.Thread):
         '''
         add entry to queue
         '''
-        self.status_queue[config].append( [ date, key, change_status, status ] )
+        if config != "backup": 
+           self.status_queue[config].append( [ date, key, change_status, status ] )
+        elif config == "backup":
+           if not date in self.status_queue[config]: self.status_queue[config][date] = []
+           self.status_queue[config][date].append( [ date, key, change_status, status ] )
     
     #-------------------------------------
     
@@ -122,130 +144,131 @@ class myCommands(threading.Thread):
 
     #-------------------------------------
     
-    def setStatusFavorit(self, server):
+    def setStatusFavoritNew(self, server):
         '''
-        set / unset favorit
+        set / unset favorit -> redesigned
         '''        
         param    = server.path.split("/")
         response = {}
+        category = param[2]
+        
+        if category == "current": 
+           entry_id    = param[3]
+           entry_value = param[4]
+           entry_date  = ""
+           category    = "images"
+        elif category == "videos": 
+           entry_id    = param[3]
+           entry_value = param[4]
+           entry_date  = ""
+        else:
+           entry_date  = param[3]
+           entry_id    = param[4]
+           entry_value = param[5]
+           
+        if category == "images":   config_data = self.config.read_cache(config="images")
+        elif category == "backup": config_data = self.config.read_cache(config="backup", date=entry_date)["files"]
+        elif category == "videos": config_data = self.config.read_cache(config="videos")
+        
+        response["command"] = ["mark/unmark as favorit", entry_id]
+        if entry_id in config_data:
+           self.addToQueue( config=category, date=entry_date, key=entry_id, change_status="favorit", status=entry_value)
+           if entry_value == 1:
+              self.addToQueue( config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=1)
+        else:
+           response["error"]   = "no entry found with stamp "+entry_id
 
-# config, date, key, change_status, status
+        return response        
 
-        if param[2] == "current":
-           config_data         = self.config.read_cache(config="images")
-           response["command"] = ["set/unset favorit", param[3], param[4]]
-           if param[3] in config_data:
-
-              config_data[param[3]]["favorit"] = param[4]
-              self.addToQueue( config="images", date="", key=param[3], change_status="favorit", status=param[4] )
-
-              if int(param[4]) == 1:
-                 config_data[param[3]]["to_be_deleted"] = 0
-                 self.addToQueue( config="images", date="", key=param[3], change_status="to_be_deleted", status=0 )
-                 
-#              self.config.write(config="images", config_data=config_data)
-
-           else:
-              response["error"] = "no image found with stamp "+str(param[3])
-
-
-        elif param[2] == "backup":
-           config_data         = self.config.read_cache(config="backup", date=param[3])
-           response["command"] = ["set/unset favorit (backup)", param[5]]
-           if param[4] in config_data["files"]:
-
-              config_data["files"][param[4]]["favorit"] = param[5]
-              self.addToQueue( config="backup", date=param[3], key=param[4], change_status="favorit", status=param[5] )
-                           
-              if int(param[5]) == 1: 
-                 config_data["files"][param[4]]["to_be_deleted"] = 0
-                 self.addToQueue( config="backup", date=param[3], key=param[4], change_status="to_be_deleted", status=0)
-                 
-              self.config.write(config="backup",config_data=config_data, date=param[3])
-
-           else:
-              response["error"] = "no image found with stamp "+str(param[4])
-
-
-        elif param[2] == "videos":
-           config_data         = self.config.read_cache(config="videos")
-           response["command"] = ["set/unset favorit (videos)", param[3], param[4]]
-           if param[3] in config_data:
-
-              config_data[param[3]]["favorit"] = param[4]
-              self.addToQueue( config="videos", date="", key=param[3], change_status="favorit", status=param[4] )
-
-              if int(param[4]) == 1:
-                 config_data[param[3]]["to_be_deleted"] = 0
-                 self.addToQueue( config="videos", date="", key=param[3], change_status="to_be_deleted", status=0 )
-                 
-#              self.config.write(config="videos", config_data=config_data)
-              
-           else:
-              response["error"] = "no video found with stamp "+str(param[3])
-    
-        return response
 
     #-------------------------------------
     
-    def setStatusRecycle(self, server):
+    def setStatusRecycleNew(self, server):
         '''
-        set / unset recycling
+        set / unset recycling -> redesigned
         '''        
         param    = server.path.split("/")
         response = {}
-
-        if param[2] == "current":
-           config_data         = self.config.read_cache(config="images")
-           response["command"] = ["mark/unmark for deletion", param[4]]
-           if param[3] in config_data:
-
-              config_data[param[3]]["to_be_deleted"] = param[4]
-              self.addToQueue( config="images", date="", key=param[3], change_status="to_be_deleted", status=param[4])
-              
-              if int(param[4]) == 1: 
-                 config_data[param[3]]["favorit"] = 0
-                 self.addToQueue( config="images", date="", key=param[3], change_status="favorit", status=0 )
-                 
-#              self.config.write(config="images", config_data=config_data)
-           else:
-              response["error"] = "no image found with stamp "+str(param[3])
-
-
-        elif param[2] == "backup":
-           config_data         = self.config.read_cache(config="backup", date=param[3])
-           response["command"] = ["mark/unmark for deletion (backup)", param[5]]
-           if param[4] in config_data["files"]:
+        category = param[2]
+        
+        if category == "current": 
+           entry_id    = param[3]
+           entry_value = param[4]
+           entry_date  = ""
+           category    = "images"
+        elif category == "videos": 
+           entry_id    = param[3]
+           entry_value = param[4]
+           entry_date  = ""
+        else:
+           entry_date  = param[3]
+           entry_id    = param[4]
+           entry_value = param[5]
            
-              config_data["files"][param[4]]["to_be_deleted"] = param[5]
-              self.addToQueue( config="backup", date=param[3], key=param[4], change_status="to_be_deleted", status=param[5] )
-              
-              if int(param[5]) == 1:
-                 config_data["files"][param[4]]["favorit"] = 0
-                 self.addToQueue( config="backup", date=param[3], key=param[4], change_status="favorit", status=0)
-                 
-              self.config.write(config="backup",config_data=config_data, date=param[3])
-           else:
-              response["error"] = "no image found with stamp "+str(param[4])
+        if category == "images":   config_data = self.config.read_cache(config="images")
+        elif category == "backup": config_data = self.config.read_cache(config="backup", date=entry_date)["files"]
+        elif category == "videos": config_data = self.config.read_cache(config="videos")
+        
+        logging.info("test:"+entry_date)
+        
+        response["command"] = ["mark/unmark for deletion", entry_id]
+        if entry_id in config_data:
+           logging.info("OK")
+           self.addToQueue( config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=entry_value)
+           if entry_value == 1:
+              self.addToQueue( config=category, date=entry_date, key=entry_id, change_status="favorit", status=1)
+        else:
+           response["error"]   = "no entry found with stamp "+entry_id
+
+        return response        
 
 
-        elif param[2] == "videos":
-           config_data         = self.config.read_cache(config="videos")
-           response["command"] = ["mark/unmark for deletion", param[4]]
-           if param[3] in config_data:
-
-              config_data[param[3]]["to_be_deleted"] = param[4]
-              self.addToQueue( config="videos", date="", key=param[3], change_status="to_be_deleted", status=param[4])
-
-              if int(param[4]) == 1:
-                 config_data[param[3]]["favorit"] = 0
-                 self.addToQueue( config="videos", date="", key=param[3], change_status="favorit", status=0)
-                 
-#              self.config.write(config="videos", config_data=config_data)
-           else:
-              response["error"] = "no video found with stamp "+str(param[3])
+    #-------------------------------------
+    
+    def setStatusRecycleRange(self, server):
+        '''
+        set / unset recycling -> range from-to
+        '''        
+        param    = server.path.split("/")
+        response = {}
+        category = param[2]
+        
+        if category == "current": 
+           entry_from  = param[3]
+           entry_to    = param[4]
+           entry_value = param[5]
+           entry_date  = ""
+           category    = "images"
+        elif category == "videos": 
+           entry_from  = param[3]
+           entry_to    = param[4]
+           entry_value = param[5]
+           entry_date  = ""
+        else:
+           entry_date  = param[3]
+           entry_from  = param[4]
+           entry_to    = param[5]
+           entry_value = param[6]
            
-        return response
+        if category == "images":   config_data = self.config.read_cache(config="images")
+        elif category == "backup": config_data = self.config.read_cache(config="backup", date=entry_date)["files"]
+        elif category == "videos": config_data = self.config.read_cache(config="videos")
+        
+        response["command"] = ["mark/unmark for deletion", entry_from, entry_to]
+        if entry_from in config_data and entry_to in config_data:
+           relevant = False
+           stamps   = list(reversed(sorted(config_data.keys())))
+           for entry_id in stamps:
+               if entry_id == entry_from: relevant = True
+               if relevant:
+                  self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=1)
+                  self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=0)
+               if entry_id == entry_to:   relevant = False
+        else:
+           response["error"]   = "no entry found with stamp "+entry_from+"/"+entry_to
+
+        return response        
+
 
     #-------------------------------------
     
