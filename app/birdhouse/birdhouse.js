@@ -66,12 +66,14 @@ function birdhousePrint(data) {
 	birdhouseCameras  = data["DATA"]["cameras"];
 	var date          = data["DATA"]["active_date"];
 	var camera        = data["DATA"]["active_cam"];
-	if (camera == "") { camera = app_active_cam; }
+	if (camera == "") 	{ camera = app_active_cam; }
+	else			{ app_active_cam = camera; }
 	
 	console.log("Request->Print "+app_active_page+" / "+camera+" / "+date);	
 
 	birdhouseSetMainVars(data);
 	birdhousePrintTitle(data, app_active_page, camera);	
+	setTextById("headerRight", birdhouseHeaderFunctions() );
 
 	// check if admin allowed! -> create respective menu
 	
@@ -121,6 +123,8 @@ function birdhouseHeaderFunctions() {
 	var switch_cam  = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();'>";
 	var reload_view = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
 	html = reload_view + "&nbsp;&nbsp;&nbsp;" + switch_cam + "&nbsp;&nbsp;&nbsp;";
+	html = app_active_cam.toUpperCase() + "&nbsp;&nbsp;&nbsp;" + html;
+	
 	//if (app_available_cameras.length > 1)	{ html = reload_view + "&nbsp;&nbsp;&nbsp;" + switch_cam + "&nbsp;&nbsp;&nbsp;"; }
 	//else					{ html = reload_view + "&nbsp;&nbsp;&nbsp;"; }	
 	return html;
@@ -142,6 +146,7 @@ function birdhouseReloadView() {
 	console.log("birdhouseReloadView: "+app_active_page+"/"+app_active_cam+"/"+app_active_date);
 	app_recycle_range = {};
 	birdhouse_overlayHide();
+	setTextById("headerRight", birdhouseHeaderFunctions() );
 	
 	if (app_active_page == "INDEX")
 		for (let key in app_camera_source) {
@@ -367,6 +372,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 				title = lang("ARCHIVE") + " &nbsp;(" + group + ")";
 				//if (count_groups > 0) { header_open = false; }
 				}
+			delete group_entries["999999"];
 			html += birdhouse_ImageGroup(title, group_entries, entry_count, entry_category, header_open, admin, video_short);
 			count_groups += 1;
 			}
