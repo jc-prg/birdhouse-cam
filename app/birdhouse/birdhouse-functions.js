@@ -91,12 +91,13 @@ function birdhouse_groupToggle(id) {
                 images     = document.getElementById("group_ids_"+id).innerHTML;
                 image_list = images.split(" ");
                 for (let i=0; i<image_list.length; i++) {
+                  if (image_list[i] != "") {
 			 img      = document.getElementById(image_list[i]);
 			 if (img != undefined) {
 	                        img_file = img.getAttribute('data-src');
 	                        img.src  = img_file;
 	                        }
-			}
+		   }	}
 		}
 	else {
         	document.getElementById("group_"+id).style.display = "none";
