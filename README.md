@@ -61,10 +61,11 @@ $ nano config.json
 
 ## Sources
 
-Thanks for your inspiration and code snippets:
+Thanks for your inspiration, code snippets, images:
 
 * [https://github.com/Freshman-tech/custom-html5-video](https://github.com/Freshman-tech/custom-html5-video)
 * [https://github.com/manuelstofer/pinchzoom](https://github.com/manuelstofer/pinchzoom)
+* [https://gifer.com/en/ZHug](https://gifer.com/en/ZHug)
 
 ## Impressions
 ![Screenshot 01](info/screenshot_06.png)
