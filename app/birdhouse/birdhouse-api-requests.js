@@ -43,6 +43,55 @@ function birdhouse_createDayVideo(camera) {
 // change favorit / recycle status
 //----------------------------------------
 
+function birdhouse_recycleRange(group_id, index, status, lowres_file) {
+	console.log(group_id+"/"+index+"/"+lowres_file);
+	
+	if (group_id in app_recycle_range) 			{}
+	else 							{ app_recycle_range[group_id]        = {}; }
+	if (status == 1) 					{ app_recycle_range[group_id][index] = 1; }
+	else if (index in app_recycle_range[group_id])	{ delete app_recycle_range[group_id][index]; }
+
+	console.log(app_recycle_range);
+	
+	info      = document.getElementById("recycle_range_"+group_id);
+	info_text = document.getElementById("recycle_range_"+group_id+"_info");	
+	info_keys = Object.keys(app_recycle_range[group_id]);
+	info_keys.sort();
+	
+	if (info_keys.length == 1) {
+		info.style.display  = "block";
+		info_text.innerHTML = lang("RANGE_ADD_ENTRY"); // + " ("+info_keys[0]+")";
+		}
+	else if (info_keys.length == 2) {
+		info.style.display = "block";
+		info_text.innerHTML = lang("RANGE_SELECTED"); // + " ("+info_keys[1]+"|"+info_keys[0]+")";
+		
+		var vars     = info_keys[0].split("/")
+		var newindex = info_keys[1] + "/" + vars[(vars.length-1)];
+		
+		var onclick  = "birdhouse_setRecycleRange(\""+newindex+"\", 1)";
+		info_text.innerHTML += "&nbsp; <button onclick='"+onclick+"' class='button-video-edit'>&nbsp;"+lang("RANGE_DELETE")+"&nbsp;</button>";
+		}
+	else {
+		info.style.display = "none";
+		}
+	}
+
+function birdhouse_setRecycleRange(index, status) {
+        commands    = index.split("/");
+        commands[0] = "recycle-range";
+        commands.push(status);
+        appFW.requestAPI('POST',commands,"",[birdhouse_setRecycleRangeShow,[index,status,lowres_file]],"","birdhouse_setRecycleRange"); 
+	}
+
+function birdhouse_setRecycleRangeShow(command, param) {
+	[ index, status, lowres_file ] = param
+        console.log("birdhouse_setRecycleRangeShow: "+lowres_file+" | "+status+" | "+index)
+        setTimeout(function(){ birdhouseReloadView(); }, 2000);
+	}
+	
+//----------------------------------------
+
 function birdhouse_setRecycle(index, status, lowres_file="") {
         commands    = index.split("/");
         commands[0] = "recycle";
