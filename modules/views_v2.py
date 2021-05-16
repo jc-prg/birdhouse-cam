@@ -95,28 +95,20 @@ class myViews_v2(threading.Thread):
         if check_path == "": path = self.server.path
         else:                path = check_path
         
-        if "?" in path:
-           param       = path.split("?")
-           path        = param[0]
-           which_cam   = param[1]
-           if not which_cam in self.camera:
-              logging.warning("Unknown camera requested (%s).",path)
-              return path, ""
-              
-        elif "/api" in path and not "/api/status" in path and not "/api/version" in path:
+        if "/api" in path and not "/api/status" in path and not "/api/version" in path:
            param        = path.split("/")
            if len(param) > 3:
-              which_cam = param[3]
+              which_cam = param[len(param)-1]
            if not which_cam in self.camera or len(param) <= 3:
               logging.warning("Unknown camera requested (%s).",path)
-              return path, ""
-        
+              which_cam = "cam1"
         else:
            which_cam = "cam1"
                
         self.active_cams = []
         for key in self.camera:
           if self.camera[key].active: self.active_cams.append(key)
+          
         if self.camera[which_cam].active == False:
           which_cam = self.active_cams[0]
         
@@ -300,7 +292,6 @@ class myViews_v2(threading.Thread):
         '''
         self.server           = server
         param                 = server.path.split("/")
-        if "app-v1" in param: del param[1]
         path, which_cam       = self.selectedCamera()
 
         if param[1] != "api":
@@ -364,6 +355,10 @@ class myViews_v2(threading.Thread):
              if not "date" in files_all[stamp]:      files_all[stamp]["date"]      = date_backup[6:8]+"."+date_backup[4:6]+"."+date_backup[0:4]
              
              if ((int(stamp) < int(time_now) or time_now == "000000") and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
+             
+               logging.info("- stamp: "+stamp)
+               logging.info("- which-cam: "+which_cam)
+               
                if not "camera" in files_all[stamp] or self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
                  if files_all[stamp]["datestamp"] == date_today or backup:
                     files_today[stamp]              = files_all[stamp]
