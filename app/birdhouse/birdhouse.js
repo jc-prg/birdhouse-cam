@@ -59,18 +59,19 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 // print views based on active page
 //-----------------------------------------
 
-function birdhousePrint(data, active_page="", camera="") {
+function birdhousePrint(data) {
 
 	console.debug("Request->Print ...");	
 
-	birdhouseSetMainVars(data);
-	birdhousePrintTitle(data, active_page, camera);	
-	birdhouseCameras = {};
+	birdhouseCameras  = data["DATA"]["cameras"];
+	var date          = data["DATA"]["active_date"];
+	var camera        = data["DATA"]["active_cam"];
+	if (camera == "") { camera = app_active_cam; }
 	
-	console.log("Request->Print "+app_active_page+" / "+data["DATA"]["active_cam"]+" / "+data["DATA"]["active_date"]);	
+	console.log("Request->Print "+app_active_page+" / "+camera+" / "+date);	
 
-	if (data["DATA"]["cameras"] != undefined)	{ birdhouseCameras = data["DATA"]["cameras"]; }
-	if (camera == "") 				{ camera = app_active_cam; }
+	birdhouseSetMainVars(data);
+	birdhousePrintTitle(data, app_active_page, camera);	
 
 	// check if admin allowed! -> create respective menu
 	
@@ -188,6 +189,7 @@ function birdhouse_INDEX(data, camera) {
 			other_cams.push(other_cam);
 			}
 		}
+		
 	if (active_cam == {}) { active_cam = other_cams[0]; other_cams.shift(); }
 	if (cameras.length == 1 || other_cams.length == 0) {	
 		var onclick  = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
