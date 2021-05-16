@@ -98,9 +98,7 @@ class myViews_v2(threading.Thread):
         if "/api" in path and not "/api/status" in path and not "/api/version" in path:
            param        = path.split("/")
            if len(param) > 3:
-              which_cam = param[len(param)-1]
-              if which_cam == "":
-                which_cam = param[len(param)-2]
+              which_cam = param[3]
                 
            if not which_cam in self.camera or len(param) <= 3:
               logging.warning("Unknown camera requested (%s).",path)
