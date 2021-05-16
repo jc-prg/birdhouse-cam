@@ -261,9 +261,8 @@ class myCommands(threading.Thread):
            for entry_id in stamps:
                if entry_id == entry_from: relevant = True
                if relevant:
-                  self.addToQueue( config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=entry_value)
-                  if entry_value == 1:
-                     self.addToQueue( config=category, date=entry_date, key=entry_id, change_status="favorit", status=1)
+                  self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=1)
+                  self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=0)
                if entry_id == entry_to:   relevant = False
         else:
            response["error"]   = "no entry found with stamp "+entry_from+"/"+entry_to
