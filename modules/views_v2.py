@@ -98,9 +98,7 @@ class myViews_v2(threading.Thread):
         if "/api" in path and not "/api/status" in path and not "/api/version" in path:
            param        = path.split("/")
            if len(param) > 3:
-              which_cam = param[len(param)-1]
-              if which_cam == "":
-                which_cam = param[len(param)-2]
+              which_cam = param[3]
                 
            if not which_cam in self.camera or len(param) <= 3:
               logging.warning("Unknown camera requested (%s).",path)
@@ -358,10 +356,6 @@ class myViews_v2(threading.Thread):
              if not "date" in files_all[stamp]:      files_all[stamp]["date"]      = date_backup[6:8]+"."+date_backup[4:6]+"."+date_backup[0:4]
              
              if ((int(stamp) < int(time_now) or time_now == "000000") and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
-             
-               logging.info("- stamp: "+stamp)
-               logging.info("- which-cam: "+which_cam)
-               
                if not "camera" in files_all[stamp] or self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
                  if files_all[stamp]["datestamp"] == date_today or backup:
                     files_today[stamp]              = files_all[stamp]
