@@ -233,8 +233,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         if self.path.startswith("/api"):                   self.path = self.path.replace("/api","")
         
-        if self.path.startswith("/favorit/"):              response = commands.setStatusFavorit(self)
-        elif self.path.startswith("/recycle/"):            response = commands.setStatusRecycle(self)
+        if self.path.startswith("/favorit/"):              response = commands.setStatusFavoritNew(self)
+        elif self.path.startswith("/recycle/"):            response = commands.setStatusRecycleNew(self)
+        elif self.path.startswith("/recycle-range/"):      response = commands.setStatusRecycleRange(self)
         elif self.path.startswith('/remove/'):             response = commands.deleteMarkedFiles(self)
         elif self.path.startswith("/start/recording/"):    response = commands.startRecording(self)
         elif self.path.startswith("/stop/recording/"):     response = commands.stopRecording(self)
