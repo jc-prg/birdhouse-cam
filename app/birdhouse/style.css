@@ -28,10 +28,13 @@ h3 { margin : 4px; }
   top			: 8px;
   right		: 40px;
   height		: 25px;
-  width		: 100px;
-  color		: white;
+  width		: 150px;
+  color		: gray;
   z-index		: 93;
   text-align           : right;
+  font-family          : sans-serif;
+  font-size            : 10px;
+  vertical-align       : middle;
 }
 
 .headerRight img {
