@@ -14,6 +14,7 @@ Hint: The descriptions in the web client are all in German at the moment.
 * Mark videos as favorits or to be deleted
 * List favorit photos and videos in a list
 * Hide / delete marked photos
+* Recylce range of photos between two marked photos
 * Archive photos with movement and favorit photos once a day
 * Trim videos
 * Deny recording and admin functionality for specific IP adresses (e.g. router or proxy, to deny for access from the internet)
