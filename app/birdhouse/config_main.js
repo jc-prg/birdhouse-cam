@@ -2,16 +2,17 @@
 // config menu and main functions
 //--------------------------------
 
-var app_frame_count   = 4;
-var app_frame_style   = "frame_column wide";
-var app_setting_count = 4;
-var app_setting_style = "setting_bg";
-var app_last_load     = 0;
-var app_title         = "jc://birdhouse/";
-var app_version       = "v0.8.4"; 
-var app_api_dir       = "api/";
-var app_api_status    = "status";
-var app_loading_image = "birdhouse/img/bird.gif"; //https://gifer.com/en/ZHug
+var app_frame_count     = 4;
+var app_frame_style     = "frame_column wide";
+var app_setting_count   = 4;
+var app_setting_style   = "setting_bg";
+var app_last_load       = 0;
+var app_title           = "jc://birdhouse/";
+var app_version         = "v0.8.4"; 
+var app_api_dir         = "api/";
+var app_api_status      = "status";
+var app_loading_image   = "birdhouse/img/bird.gif"; //https://gifer.com/en/ZHug
+var app_reload_interval = 10;
 
 
 //--------------------------------
