@@ -20,7 +20,7 @@ function birdhouse_ImageGroup(title, entries, entry_count, entry_category, heade
 function birdhouse_OtherGroupHeader( key, title, header_open )
 function birdhouse_ImageGroupHeader( key, title, header_open, count={} )
 function birdhouse_ImageURL(URL)
-function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false)
+function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false, group_id="")
 function birdhouse_Links(link_list)
 */
 //--------------------------------------

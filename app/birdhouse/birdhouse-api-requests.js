@@ -6,6 +6,9 @@
 /* INDEX:
 function birdhouse_createShortVideo()
 function birdhouse_createDayVideo(camera)
+function birdhouse_recycleRange(group_id, index, status, lowres_file)
+function birdhouse_setRecycleRange(index, status)
+function birdhouse_setRecycleRangeShow(command, param)
 function birdhouse_setRecycle(index, status, lowres_file="")
 function birdhouse_setRecycleShow(command, param)
 function birdhouse_setFavorit(index, status, lowres_file="")
