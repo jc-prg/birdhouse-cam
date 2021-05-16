@@ -33,7 +33,7 @@ var color_code = {
 	"request" : "yellow"
 	}
 	
-var app_active_cam        = "";
+var app_active_cam        = "cam1";
 var app_available_cameras = [];
 var app_active_page       = "";
 var app_active_date       = "";
@@ -50,6 +50,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 	var commands = [view];
 	if (camera != "" && date != "")	{ commands.push(camera); commands.push(date); }
 	else if (camera != "")			{ commands.push(camera); }
+	else					{ commands.push(app_active_cam); }
 
 	console.debug("Request "+view+" / "+camera+" / "+date);	
 	appFW.requestAPI('GET',commands,"",birdhousePrint,"","birdhousePrint_load");
@@ -126,7 +127,7 @@ function birdhouseHeaderFunctions() {
 	html = app_active_cam.toUpperCase() + "&nbsp;&nbsp;&nbsp;" + html;
 	
 	//if (app_available_cameras.length > 1)	{ html = reload_view + "&nbsp;&nbsp;&nbsp;" + switch_cam + "&nbsp;&nbsp;&nbsp;"; }
-	//else					{ html = reload_view + "&nbsp;&nbsp;&nbsp;"; }	
+	//else						{ html = reload_view + "&nbsp;&nbsp;&nbsp;"; }	
 	return html;
 	}
 	
