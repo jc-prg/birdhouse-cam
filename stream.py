@@ -224,7 +224,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         REST API for javascript commands e.g. to change values in runtime
         '''
         global config, camera, backup
-        
+
+        logging.info("POST API request with '" + self.path + "'.")      
         response = {}
 
         if not self.adminAllowed():
@@ -255,7 +256,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         '''
         check path and send requested content
         '''
-        logging.debug("GET request with '" + self.path + "'.")
         path, which_cam = views.selectedCamera(self.path)
         file_ending     = self.path.split(".")
         file_ending     = "."+file_ending[len(file_ending)-1].lower()
@@ -278,6 +278,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # REST API call :  /api/<cmd>/<camera>/param1>/<param2>
         elif self.path.startswith("/api/"):
          
+          logging.info("GET API request with '" + self.path + "'.")
           param   = self.path.split("/") 
           command = param[2]
           status  = "Success"
