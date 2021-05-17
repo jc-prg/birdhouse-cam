@@ -12,8 +12,8 @@ var app_version           = "v0.8.4";
 var app_api_dir           = "api/";
 var app_api_status        = "status";
 var app_reload_interval   = 5;
-var app_loading_image     = "birdhouse/img/bird.gif"; //https://gifer.com/en/ZHug
-var app_unique_stream_url = false;
+var app_loading_image     = "birdhouse/img/bird.gif"; // source: https://gifer.com/en/ZHug
+var app_unique_stream_url = false;			// doesn't work for chrome (assumption: mjpeg-streams are not closed correctly)
 
 
 //--------------------------------
