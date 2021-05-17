@@ -15,6 +15,27 @@ var yourCodeToBeCalled = function()
 */
 //----------------------------------------
 
+// Tooltips
+//----------------------------------------
+
+function birdhouse_initTooltip() {
+	tooltip_mode     = "other";
+	tooltip_width    = "160px";
+	tooltip_height   = "100px";
+	tooltip_distance = 47;
+
+	button_tooltip = new jcTooltip("button_tooltip") ;
+	button_tooltip.settings( tooltip_mode, tooltip_width, tooltip_height, tooltip_distance );	
+	}
+	
+function birdhouse_tooltip( tooltip_element, tooltip_content, number ) {
+	return button_tooltip.create( tooltip_element, tooltip_content, number );
+	}
+
+birdhouse_initTooltip();
+
+//----------------------------------------
+
 function birdhouse_imageOverlay(filename, description="", favorit="", to_be_deleted="") {
         var overlay = "<div id=\"overlay_content\" class=\"overlay_content\" onclick=\"birdhouse_overlayHide();\"><!--overlay--></div>";
         setTextById("overlay_content",overlay);

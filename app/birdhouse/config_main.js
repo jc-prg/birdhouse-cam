@@ -11,10 +11,9 @@ var app_title             = "jc://birdhouse/";
 var app_version           = "v0.8.4"; 
 var app_api_dir           = "api/";
 var app_api_status        = "status";
-var app_reload_interval   = 10;
+var app_reload_interval   = 5;
 var app_loading_image     = "birdhouse/img/bird.gif"; //https://gifer.com/en/ZHug
 var app_unique_stream_url = false;
-
 
 
 //--------------------------------
@@ -63,6 +62,8 @@ function app_status(data) {
 	if (data["DATA"]["last_answer"] != "") {
 		var msg = data["DATA"]["last_answer"];
 		appMsg.alert(lang(msg[0]));
+		if (msg[0] == "RANGE_DONE") { button_tooltip.hide("info"); }
+		birdhouseReloadView();
 		}
 	if (data["DATA"]["background_process"] == true)	{ setTextById("statusLED","<div id='blue'></div>"); }
 	else 							{ setTextById("statusLED","<div id='green'></div>"); }

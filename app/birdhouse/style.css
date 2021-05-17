@@ -304,10 +304,19 @@ h3 { margin : 4px; }
 
 .button-video-edit {
     height           : 28px;
-    background       : gray;
+    background       : #888888;
     border-radius    : 5px;
     color            : black;
     border           : 1px solid white;
+}
+
+.button-video-edit:disabled {
+    height           : 28px;
+    background       : #666666;
+    border-radius    : 5px;
+    color            : white;
+    border           : 1px solid red;
+    font-style       : italic;
 }
 
 .button-video-record {

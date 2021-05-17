@@ -123,8 +123,10 @@ function birdhouseHeaderFunctions() {
 	var html = "";
 	var switch_cam  = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();'>";
 	var reload_view = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
+	
+	var info = birdhouse_tooltip( "&nbsp", "<div id='command_dropdown' style='width:90%;margin:auto;'>empty</div>", "info" ) + "&nbsp; &nbsp;";
 	html = reload_view + "&nbsp;&nbsp;&nbsp;" + switch_cam + "&nbsp;&nbsp;&nbsp;";
-	html = app_active_cam.toUpperCase() + "&nbsp;&nbsp;&nbsp;" + html;
+	html = info + app_active_cam.toUpperCase() + "&nbsp;&nbsp;&nbsp;" + html;
 	
 	//if (app_available_cameras.length > 1)	{ html = reload_view + "&nbsp;&nbsp;&nbsp;" + switch_cam + "&nbsp;&nbsp;&nbsp;"; }
 	//else						{ html = reload_view + "&nbsp;&nbsp;&nbsp;"; }	

@@ -29,5 +29,14 @@
      background-color : #444444;
      color            : #eeeeee;
      }
+     
+  .jc_tooltip .jc_tooltiptext{
+     opacity          : 0.9;
+     background-color : #ffcc99;
+     }
+  .jc_tooltip .jc_triangle1 {
+     opacity          : 0.9;
+     border-bottom    : 10px solid #ffcc99;
+     }
 
 }
