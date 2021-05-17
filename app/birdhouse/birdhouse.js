@@ -127,7 +127,7 @@ function birdhouseHeaderFunctions() {
 	var info        = "&nbsp;";	
 	var info = birdhouse_tooltip( info, "<div id='command_dropdown' style='width:90%;margin:auto;'>empty</div>", "info", "" );
 	
-	if (app_available_cameras.length > 0)	{ html = info + reload_view + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;"; }
+	if (app_available_cameras.length > 1)	{ html = reload_view + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info; }
 	else					{ html = reload_view + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
 	
 	//if (app_available_cameras.length > 1)	{ html = reload_view + "&nbsp;&nbsp;&nbsp;" + switch_cam + "&nbsp;&nbsp;&nbsp;"; }
