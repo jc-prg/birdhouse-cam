@@ -40,6 +40,7 @@ var app_active_date       = "";
 var app_admin_allowed     = false;
 var app_camera_source     = {};
 var app_recycle_range     = {};
+var app_unique_stream_url = false;
 
 //-----------------------------------------
 // load content from API and call print
@@ -156,7 +157,8 @@ function birdhouseReloadView() {
 			
 			app_camera_source[key] = app_camera_source[key].replace(/\/\//g,"/");
 			app_camera_source[key] = app_camera_source[key].replace(":/","://");
-			image.src = app_camera_source[key]+"?"+new Date().getTime();
+			if (app_unique_stream_url)	{ image.src = app_camera_source[key]+"?"+new Date().getTime(); }
+			else				{ image.src = app_camera_source[key]; }
 			}
 	else {
 		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
@@ -405,7 +407,8 @@ function birdhouse_Camera(main, view, onclick, camera, stream_server, admin_allo
 	if (main) { var container = 'main'; }
 	else      { var container = '2nd'; }
 
-	var stream_link    = stream_server + camera["stream"] + "?" + new Date().getTime();;
+	if (app_unique_stream_url)	{ var stream_link    = stream_server + camera["stream"] + "?" + new Date().getTime(); }
+	else 				{ var stream_link    = stream_server + camera["stream"]; }
 	stream_link = stream_link.replace(/\/\//g,"/");
 	stream_link = stream_link.replace(":/","://");
 	
