@@ -129,8 +129,9 @@ function birdhouseHeaderFunctions() {
 	
 	html = reload_view + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info;
 	
-	//if (app_available_cameras.length > 1)	{ html = reload_view + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info; }
-	//else 					{ html = reload_view + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
+	else (app_available_cameras == undefined)	{ html = reload_view + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
+	else if (app_available_cameras.length > 1)	{ html = reload_view + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info; }
+	else						{ html = reload_view + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
 	
 	return html;
 	}
