@@ -33,14 +33,13 @@ var color_code = {
 	"request" : "yellow"
 	}
 	
-var app_active_cam        = "cam1";
 var app_available_cameras = [];
 var app_active_page       = "";
 var app_active_date       = "";
-var app_admin_allowed     = false;
 var app_camera_source     = {};
 var app_recycle_range     = {};
-var app_unique_stream_url = false;
+var app_active_cam        = "cam1";
+var app_admin_allowed     = false;
 
 //-----------------------------------------
 // load content from API and call print
