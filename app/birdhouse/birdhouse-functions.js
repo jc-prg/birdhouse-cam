@@ -28,8 +28,8 @@ function birdhouse_initTooltip() {
 	button_tooltip.settings( tooltip_mode, tooltip_width, tooltip_height, tooltip_distance );	
 	}
 	
-function birdhouse_tooltip( tooltip_element, tooltip_content, number ) {
-	return button_tooltip.create( tooltip_element, tooltip_content, number );
+function birdhouse_tooltip( tooltip_element, tooltip_content, name, left="" ) {
+	return button_tooltip.create( tooltip_element, tooltip_content, name, left );
 	}
 
 birdhouse_initTooltip();

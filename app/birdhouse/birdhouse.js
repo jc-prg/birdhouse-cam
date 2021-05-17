@@ -121,12 +121,14 @@ function birdhouseSetMainVars(data) {
 	
 function birdhouseHeaderFunctions() {
 	var html = "";
-	var switch_cam  = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();'>";
+	var switch_cam  = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();' style='position:relative;top:-4px;'>";
 	var reload_view = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
+	var active_cam  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_cam.toUpperCase()+"</text>";	
+	var info        = "&nbsp;";	
+	var info = birdhouse_tooltip( info, "<div id='command_dropdown' style='width:90%;margin:auto;'>empty</div>", "info", "" );
 	
-	var info = birdhouse_tooltip( "&nbsp", "<div id='command_dropdown' style='width:90%;margin:auto;'>empty</div>", "info" ) + "&nbsp; &nbsp;";
-	html = reload_view + "&nbsp;&nbsp;&nbsp;" + switch_cam + "&nbsp;&nbsp;&nbsp;";
-	html = info + app_active_cam.toUpperCase() + "&nbsp;&nbsp;&nbsp;" + html;
+	if (app_available_cameras.length > 0)	{ html = info + reload_view + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;"; }
+	else					{ html = reload_view + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
 	
 	//if (app_available_cameras.length > 1)	{ html = reload_view + "&nbsp;&nbsp;&nbsp;" + switch_cam + "&nbsp;&nbsp;&nbsp;"; }
 	//else						{ html = reload_view + "&nbsp;&nbsp;&nbsp;"; }	
