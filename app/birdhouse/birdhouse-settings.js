@@ -16,7 +16,7 @@ function birdhouse_settings() {
 	settings.toggle(app_settings_active);
 	
 	if (app_settings_active) {
-		html  = "<h1>"+lang("SETTINGS")+"</h1>";
+		html  = "<center><h2>"+lang("SETTINGS")+"</h2></center><hr/>";
 
 		html += settings.tab_start();	
 		html += settings.tab_row("App:",			app_title);
