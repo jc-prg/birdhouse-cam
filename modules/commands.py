@@ -77,22 +77,28 @@ class myCommands(threading.Thread):
            # status changes
            for config_file in config_files:
            
+             # today, video (without date)                
              if config_file != "backup": 
                 entries = self.config.read_cache(config_file)
                 self.config.lock(config_file)
              
                 while len(self.status_queue[config_file]) > 0:
                    [ date, key, change_status, status ] = self.status_queue[config_file].pop()
-                   if key in entries: 
-                      test = "yes"
-                      entries[key][change_status] = status
+                   
+                   if change_status == "RANGE_END":
+                     self.config.async_answers.append(["RANGE_DONE"])  
                    else:
-                      test="no"
-                   logging.debug("QUEUE: "+config_file+" // "+key+" - "+change_status+"="+str(status)+" ... "+test)
+                     if key in entries: 
+                       test = "yes"
+                       entries[key][change_status] = status
+                     else:
+                       test="no"
+                     logging.debug("QUEUE: "+config_file+" // "+key+" - "+change_status+"="+str(status)+" ... "+test)
                    
                 self.config.unlock(config_file)
                 self.config.write(config_file, entries)   
-                
+
+             # backup (with date)                
              else:
                 for date in self.status_queue[config_file]:
                    entry_data = self.config.read_cache(config_file,date)
@@ -100,12 +106,16 @@ class myCommands(threading.Thread):
                    self.config.lock(config_file,date)
                    while len(self.status_queue[config_file][date]) > 0:
                       [ date, key, change_status, status ] = self.status_queue[config_file][date].pop()
-                      if key in entries: 
-                         test = "yes"
-                         entries[key][change_status] = status
+                      
+                      if change_status == "RANGE_END":
+                        self.config.async_answers.append(["RANGE_DONE"])
                       else:
-                         test="no"
-                      logging.debug("QUEUE: "+config_file+"/"+date+" // "+key+" - "+change_status+"="+str(status)+" ... "+test)
+                        if key in entries: 
+                          test = "yes"
+                          entries[key][change_status] = status
+                        else:
+                          test="no"
+                        logging.debug("QUEUE: "+config_file+"/"+date+" // "+key+" - "+change_status+"="+str(status)+" ... "+test)
                    
                    entry_data["files"] = entries
                    self.config.unlock(config_file, date)
@@ -258,15 +268,17 @@ class myCommands(threading.Thread):
         if entry_from in config_data and entry_to in config_data:
            relevant = False
            stamps   = list(reversed(sorted(config_data.keys())))
+           camera   = config_data[entry_from]["camera"]
            for entry_id in stamps:
                if entry_id == entry_from: relevant = True
-               if relevant:
-                  self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=1)
-                  self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=0)
+               if relevant and config_data[entry_id]["camera"] == camera:
+                   self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=1)
+                   self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=0)
                if entry_id == entry_to:   relevant = False
         else:
            response["error"]   = "no entry found with stamp "+entry_from+"/"+entry_to
 
+        self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="RANGE_END", status=0)
         return response        
 
 

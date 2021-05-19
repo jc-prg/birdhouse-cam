@@ -33,13 +33,13 @@ var color_code = {
 	"request" : "yellow"
 	}
 	
-var app_active_cam        = "cam1";
 var app_available_cameras = [];
 var app_active_page       = "";
 var app_active_date       = "";
-var app_admin_allowed     = false;
 var app_camera_source     = {};
 var app_recycle_range     = {};
+var app_active_cam        = "cam1";
+var app_admin_allowed     = false;
 
 //-----------------------------------------
 // load content from API and call print
@@ -121,13 +121,18 @@ function birdhouseSetMainVars(data) {
 	
 function birdhouseHeaderFunctions() {
 	var html = "";
-	var switch_cam  = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();'>";
+	var switch_cam  = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();' style='position:relative;top:-4px;'>";
 	var reload_view = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
-	html = reload_view + "&nbsp;&nbsp;&nbsp;" + switch_cam + "&nbsp;&nbsp;&nbsp;";
-	html = app_active_cam.toUpperCase() + "&nbsp;&nbsp;&nbsp;" + html;
+	var active_cam  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_cam.toUpperCase()+"</text>";	
+	var info        = "&nbsp;";	
+	var info = birdhouse_tooltip( info, "<div id='command_dropdown' style='width:90%;margin:auto;'>empty</div>", "info", "" );
 	
-	//if (app_available_cameras.length > 1)	{ html = reload_view + "&nbsp;&nbsp;&nbsp;" + switch_cam + "&nbsp;&nbsp;&nbsp;"; }
-	//else						{ html = reload_view + "&nbsp;&nbsp;&nbsp;"; }	
+	html = reload_view + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info;
+	
+	if (app_available_cameras == undefined)	{ html = reload_view + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
+	else if (app_available_cameras.length > 1)	{ html = reload_view + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info; }
+	else						{ html = reload_view + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
+	
 	return html;
 	}
 	
@@ -156,7 +161,8 @@ function birdhouseReloadView() {
 			
 			app_camera_source[key] = app_camera_source[key].replace(/\/\//g,"/");
 			app_camera_source[key] = app_camera_source[key].replace(":/","://");
-			image.src = app_camera_source[key]+"?"+new Date().getTime();
+			if (app_unique_stream_url)	{ image.src = app_camera_source[key]+"?"+app_unique_stream_id; }
+			else				{ image.src = app_camera_source[key]; }
 			}
 	else {
 		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
@@ -405,7 +411,8 @@ function birdhouse_Camera(main, view, onclick, camera, stream_server, admin_allo
 	if (main) { var container = 'main'; }
 	else      { var container = '2nd'; }
 
-	var stream_link    = stream_server + camera["stream"] + "?" + new Date().getTime();;
+	if (app_unique_stream_url)	{ var stream_link    = stream_server + camera["stream"] + "?" + app_unique_stream_id; }
+	else 				{ var stream_link    = stream_server + camera["stream"]; }
 	stream_link = stream_link.replace(/\/\//g,"/");
 	stream_link = stream_link.replace(":/","://");
 	
@@ -590,6 +597,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 				note = "*"; 
 			}	}
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["path"] + entry["thumbnail"]);
+		if (app_unique_stream_url) { lowres += "?" + app_unique_stream_id; }
 		var hires       = birdhouse_ImageURL(birdhouseCameras[entry["camera"]]["streaming_server"] + video_file);
 		var description = "";
 		if (title.indexOf("_") > 0)	{ description = entry["date"] + "[br/]" + entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }
