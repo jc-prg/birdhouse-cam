@@ -47,6 +47,10 @@ function birdhouse_settings() {
 	}
 	
 	
+function birdhouse_settingsToggle() {
+	var settings = new birdhouseSettings(); 
+	settings.toggle(app_settings_active);
+	}	
 	
 	
 function birdhouseSettings (name="Settings") {
