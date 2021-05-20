@@ -8,55 +8,48 @@
 */
 //--------------------------------------
 
-app_settings_active = false;
+var app_settings_active = false;
+var birdhouse_settings  = new birdhouse_app_settings();
 
-function birdhouse_settings() {
+function birdhouse_app_settings (name="Settings") {
 
-	var settings = new birdhouseSettings(); 
-	settings.toggle(app_settings_active);
-	
-	if (app_settings_active) {
-		html  = "<center><h2>"+lang("SETTINGS")+"</h2></center><hr/>";
+	this.create	= function () {
 
-		html += settings.tab_start();	
-		html += settings.tab_row("App:",			app_title);
-		html += settings.tab_row("Versions:",
+		html  = "<center><h2>"+lang("SETTINGS")+"</h2></center>";	
+		setTextById("setting1", html);
+
+		html  = this.tab_start();	
+		html += this.tab_row("App:",			app_title);
+		html += this.tab_row("Versions:",
 						"App: " 		+ app_version + "<br/>" +
 						//"API: " 		+ this.data["API"]["version"] + " / " + this.data["API"]["rollout"] + "<br/>" +
 						"jcMsg: " 		+ appMsg.appVersion + "<br/>" + 
 						"jcApp: "		+ appFW.appVersion);
-		html += settings.tab_row("Reload Interval:",		app_reload_interval + "s");
+		html += this.tab_row("Reload Interval:",		app_reload_interval + "s");
 
-		html += settings.tab_row("&nbsp;","");
-		html += settings.tab_row("Active Camera:&nbsp;",	app_active_cam);
-		html += settings.tab_row("Available Cameras:&nbsp;",	app_available_cameras.length);
-		html += settings.tab_row("Active Page:&nbsp;",	app_active_page);
-		html += settings.tab_row("Active Date:&nbsp;",	app_active_date);
+		html += this.tab_row("&nbsp;","");
+		html += this.tab_row("Active Camera:&nbsp;",	app_active_cam);
+		html += this.tab_row("Available Cameras:&nbsp;",	app_available_cameras.length);
+		html += this.tab_row("Active Page:&nbsp;",	app_active_page);
+		html += this.tab_row("Active Date:&nbsp;",	app_active_date);
 		
-		html += settings.tab_row("&nbsp;","");
-		html += settings.tab_row("Unique stream URL:&nbsp;",	app_unique_stream_url);
-		html += settings.tab_row("Unique stream ID:&nbsp;",	app_unique_stream_id);
+		html += this.tab_row("&nbsp;","");
+		html += this.tab_row("Unique stream URL:&nbsp;",	app_unique_stream_url);
+		html += this.tab_row("Unique stream ID:&nbsp;",	app_unique_stream_id);
 
-		html += settings.tab_row("&nbsp;","");
-		html += settings.tab_row("Window:", 			document.body.clientWidth + "x" + document.body.clientHeight );
-		html += settings.tab_row("Position:",			"<div id='scrollPosition'>0 px</div>" );
-		html += settings.tab_end();
-
-		setTextById("setting1", html);
+		html += this.tab_row("&nbsp;","");
+		html += this.tab_row("Window:", 			document.body.clientWidth + "x" + document.body.clientHeight );
+		html += this.tab_row("Position:",			"<div id='scrollPosition'>0 px</div>" );
+		html += this.tab_end();
+	
+		setTextById("setting2", html);
+		
+		this.toggle();
 		}
-	}
-	
-	
-function birdhouse_settingsToggle() {
-	var settings = new birdhouseSettings(); 
-	settings.toggle(app_settings_active);
-	}	
-	
-	
-function birdhouseSettings (name="Settings") {
 
 
 	this.toggle	= function (active=false) {
+	
 		if (active)	{ view_frame = "block"; view_settings = "none";  app_settings_active = false; }
 		else		{ view_frame = "none";  view_settings = "block"; app_settings_active = true;  }
 
