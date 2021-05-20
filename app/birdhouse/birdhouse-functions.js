@@ -19,13 +19,14 @@ var yourCodeToBeCalled = function()
 //----------------------------------------
 
 function birdhouse_initTooltip() {
-	tooltip_mode     = "other";
-	tooltip_width    = "160px";
-	tooltip_height   = "100px";
-	tooltip_distance = 47;
+	tooltip_mode     	= "other";
+	tooltip_width    	= 160;
+	tooltip_height   	= 100;
+	tooltip_offset_height	= 42;
+	tooltip_offset_width	= -153;
 
 	button_tooltip = new jcTooltip("button_tooltip") ;
-	button_tooltip.settings( tooltip_mode, tooltip_width, tooltip_height, tooltip_distance );	
+	button_tooltip.settings( tooltip_mode, tooltip_width, tooltip_height, tooltip_offset_height, tooltip_offset_width );	
 	}
 	
 function birdhouse_tooltip( tooltip_element, tooltip_content, name, left="" ) {
