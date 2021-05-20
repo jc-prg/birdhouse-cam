@@ -37,7 +37,7 @@ from modules.views_v2 import myViews_v2
 
 APIdescription = {
       "name"    : "BirdhouseCAM",
-      "version" : "v0.3"
+      "version" : "v0.4"
       }
 APIstart       = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 APPframework   = "v0.9.0"
