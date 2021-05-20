@@ -9,6 +9,7 @@ var app_setting_style     = "setting_bg";
 var app_last_load         = 0;
 var app_title             = "jc://birdhouse/";
 var app_version           = "v0.9.0"; 
+var app_api_version       = "N/A";
 var app_api_dir           = "api/";
 var app_api_status        = "status";
 var app_reload_interval   = 5;
@@ -48,6 +49,7 @@ function app_menu_entries() {
 
 function app_initialize(data) {
 	setTextById("headerRight", birdhouseHeaderFunctions() );
+	app_api_version = data["API"]["version"];
 	}
 
 //--------------------------------

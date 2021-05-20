@@ -22,7 +22,7 @@ function birdhouse_app_settings (name="Settings") {
 		html += this.tab_row("App:",			app_title);
 		html += this.tab_row("Versions:",
 						"App: " 		+ app_version + "<br/>" +
-						//"API: " 		+ this.data["API"]["version"] + " / " + this.data["API"]["rollout"] + "<br/>" +
+						"API: " 		+ app_api_version + "<br/>" +
 						"jcMsg: " 		+ appMsg.appVersion + "<br/>" + 
 						"jcApp: "		+ appFW.appVersion);
 		html += this.tab_row("Reload Interval:",		app_reload_interval + "s");
