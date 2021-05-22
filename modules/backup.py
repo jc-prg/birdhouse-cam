@@ -115,9 +115,9 @@ class myBackupRestore(threading.Thread):
                 "lowres":      fname[0]+"_thumb.jpeg",
                 "thumbnail":   fname[0]+"_thumb.jpeg",
                 "type":        "video",
-                "video_file":        file,
-                "video_file_short":  file_short,
-                "video_file_length": file_short_length,
+                "video_file":              file,
+                "video_file_short":        file_short,
+                "video_file_short_length": file_short_length,
                  }
 
        self.config.write(config="videos",config_data=files)
