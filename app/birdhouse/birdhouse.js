@@ -587,6 +587,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["lowres"]);
 		var hires       = birdhouse_ImageURL(RESTurl + entry["hires"]);
 		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
+		//if (app_unique_stream_url) { hires += "?" + app_unique_stream_id; }
 		}		
 	else if (entry["type"] == "video") {
 		var note        = "";
@@ -597,7 +598,6 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 				note = "*"; 
 			}	}
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["path"] + entry["thumbnail"]);
-		if (app_unique_stream_url) { lowres += "?" + app_unique_stream_id; }
 		var hires       = birdhouse_ImageURL(birdhouseCameras[entry["camera"]]["streaming_server"] + video_file);
 		var description = "";
 		if (title.indexOf("_") > 0)	{ description = entry["date"] + "[br/]" + entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }

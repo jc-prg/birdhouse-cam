@@ -66,12 +66,15 @@ function birdhouse_videoOverlay(filename, description="", favorit="", to_be_dele
         else {
           document.getElementById("overlay").style.display = "block";
           document.getElementById("overlay_content").style.display = "block";
+          document.getElementById("overlay_parent").style.display  = "block";
+          
           description = description.replace(/\[br\/\]/g,"<br/>");
           html  = "";
           html += "<div id=\"overlay_close\" onclick='birdhouse_overlayHide();'>[X]</div>";
           html += "<div id=\"overlay_image_container\">";
           html += "<video id='overlay_video' src=\"" + filename + "\" controls>Video not supported</video>"
           html += "<br/>&nbsp;<br/>"+description+"</div>";
+
           document.getElementById("overlay_content").innerHTML = html;
           }
 	}
