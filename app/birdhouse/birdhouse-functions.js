@@ -146,6 +146,26 @@ function iOS() {
   || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
 }
 
+//----------------------------------------
+
+function toggleVideoEdit() {
+        video_edit1 = document.getElementById("camera_video_edit");
+        video_edit2 = document.getElementById("camera_video_edit_overlay");
+        if (video_edit1 != null) {
+        	if (video_edit1.style.display == "none")	{ 
+        		video_edit1.style.display = "block"; 
+        		video_edit2.style.display = "block"; 
+        		}
+        	else						{ 
+        		video_edit1.style.display = "none"; 
+        		video_edit2.style.display = "none"; 
+        		}
+        	}
+	else {
+	        console.error("toggleVideoEdit: Video edit doesn't exist.");
+		}
+	}
+
 //-----------------------------------------
 // load addition javascript
 //-----------------------------------------
