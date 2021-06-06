@@ -69,9 +69,14 @@ Thanks for your inspiration, code snippets, images:
 * [https://gifer.com/en/ZHug](https://gifer.com/en/ZHug)
 
 ## Impressions
-![Screenshot 01](info/screenshot_06.png)
-![Screenshot 02](info/screenshot_07.png)
-![Screenshot 03](info/screenshot_08.png)
-![Screenshot 04](info/screenshot_09.png)
-![Screenshot 05](info/screenshot_10.png)
+![Screenshot 01](info/birdcam_01.PNG)
+![Screenshot 02](info/birdcam_02.PNG)
+![Screenshot 03](info/birdcam_03.PNG)
+![Screenshot 04](info/birdcam_04.PNG)
+![Screenshot 05](info/birdcam_05.PNG)
+![Screenshot 06](info/birdcam_06.PNG)
+![Screenshot 07](info/birdcam_07.PNG)
+![Screenshot 08](info/birdcam_08.PNG)
+![Screenshot 09](info/birdcam_09.PNG)
+![Screenshot 10](info/birdcam_10.PNG)
 
