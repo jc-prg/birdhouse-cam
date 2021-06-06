@@ -735,6 +735,7 @@ class myCamera(threading.Thread):
           files[time] = data
           self.config.write("images",files)
 
+
    def writeVideoInfo(self, stamp, data):
        '''
        Write image information to file

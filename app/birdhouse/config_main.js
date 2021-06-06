@@ -8,7 +8,8 @@ var app_setting_count     = 4;
 var app_setting_style     = "setting_bg";
 var app_last_load         = 0;
 var app_title             = "jc://birdhouse/";
-var app_version           = "v0.8.4"; 
+var app_version           = "v0.9.1"; 
+var app_api_version       = "N/A";
 var app_api_dir           = "api/";
 var app_api_status        = "status";
 var app_reload_interval   = 5;
@@ -22,7 +23,7 @@ var app_unique_stream_id  = new Date().getTime();     // new ID per App-Start
 //--------------------------------
 
 function app_menu_entries() {
-	var hideSettings = "birdhouse_settingsToggle(true);";
+	var hideSettings = "birdhouse_settings.toggle(true);";
 	var app_menu = [
 		[lang("LIVESTREAM"),   "script", hideSettings+"birdhousePrint_load('INDEX',   '"+app_active_cam+"');"],
 		[lang("FAVORITS"),     "script", hideSettings+"birdhousePrint_load('FAVORITS','"+app_active_cam+"');"],
@@ -36,7 +37,7 @@ function app_menu_entries() {
 		[lang("CAMERAS"),       "script", hideSettings+"birdhousePrint_load('CAMERAS','"+app_active_cam+"');"],
 		[lang("TODAY_COMPLETE"),"script", hideSettings+"birdhousePrint_load('TODAY_COMPLETE','"+app_active_cam+"');"],
 		["LINE"],
-		[lang("SETTINGS"),      "script", "birdhouse_settings();" ],
+		[lang("SETTINGS"),      "script", "birdhouse_settings.create();" ],
 		]);
 		}
 	return app_menu;
@@ -48,6 +49,7 @@ function app_menu_entries() {
 
 function app_initialize(data) {
 	setTextById("headerRight", birdhouseHeaderFunctions() );
+	app_api_version = data["API"]["version"];
 	}
 
 //--------------------------------

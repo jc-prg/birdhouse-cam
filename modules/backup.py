@@ -56,6 +56,73 @@ class myBackupRestore(threading.Thread):
        self._running=False
 
    #-----------------------------------
+   
+   def create_video_config(self):
+       '''
+       recreate video config file, if not exists
+       '''
+   
+       path = self.config.directory(config="videos")
+       file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and ".mp4" in f and not "short" in f]
+       file_list.sort(reverse=True)
+       files     = {}
+       for file in file_list:
+
+           logging.info(file)          
+           fname      = file.split(".")
+           param      = fname[0].split("_")   # video_cam2_20210428_175551*
+           fid        = param[2]+"_"+param[3]
+           date       = param[2][6:8] + "." + param[2][4:6] + "." + param[2][0:4] + " " + param[3][0:2] + ":" + param[3][2:4]+ ":" + param[3][4:6]
+           file_short = ""
+           file_short_length = 0
+           
+           # Get Infos from video file
+           # https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-get
+           #-------------------------
+           
+           cap    = cv2.VideoCapture(os.path.join(path,file))
+           frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+           fps    = cap.get(cv2.CAP_PROP_FPS)
+           length = float(frames) / fps
+           width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+           height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+           
+           fname_short = param[0]+"_"+param[1]+"_"+param[2]+"_"+param[3]+"_short.mp4"
+           if os.path.isfile(os.path.join(path,fname_short)): 
+              file_short        = fname_short
+              cap               = cv2.VideoCapture(os.path.join(path,file_short))
+              file_short_length = cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS)
+           
+           files[fid] = {
+                "date_end":    fid,
+                "stamp_end":   0,
+                "stamp_start": 0,
+                "start":       0,
+                "start_stamp": 0,
+
+                "camera":      param[1],
+                "camera_name": self.camera[param[1]].name,
+                "category":    "/videos/" + param[2] + "_" + param[3],
+                "date":        date,
+                "date_start":  param[2]+"_"+param[3],
+                "directory":   self.camera[param[1]].param["video"]["streaming_server"],
+                "image_size":  [width,height],
+                "image_count": frames,
+                "framerate":   fps,
+                "length":      length,
+                "path":        self.config.directories["videos"],
+                "status":      "finished",
+                "lowres":      fname[0]+"_thumb.jpeg",
+                "thumbnail":   fname[0]+"_thumb.jpeg",
+                "type":        "video",
+                "video_file":              file,
+                "video_file_short":        file_short,
+                "video_file_short_length": file_short_length,
+                 }
+
+       self.config.write(config="videos",config_data=files)
+                        
+   #-----------------------------------
 
    def compare_files_init(self, date=""):
        '''

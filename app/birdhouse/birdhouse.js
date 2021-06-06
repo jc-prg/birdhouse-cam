@@ -302,7 +302,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 		html += "<h3>"+video_name+"</h3>";
 		html += "&nbsp;<br/>";
 		html += lang("CAMERA")     + ": " + video[key]["camera"].toUpperCase() + " - " + video[key]["camera_name"] + "<br/>";
-		html += lang("LENGTH")     + ": " + video[key]["length"]      + " s<br/>";
+		html += lang("LENGTH")     + ": " + Math.round(video[key]["length"]*10)/10 + " s<br/>";
 		html += lang("FRAMERATE")  + ": " + video[key]["framerate"]   + " fps<br/>";
 		html += lang("FRAMECOUNT") + ": " + video[key]["image_count"] + "<br/>";
 		html += lang("IMAGESIZE")  + ": " + video[key]["image_size"]  + "<br/>";
@@ -587,6 +587,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["lowres"]);
 		var hires       = birdhouse_ImageURL(RESTurl + entry["hires"]);
 		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
+		//if (app_unique_stream_url) { hires += "?" + app_unique_stream_id; }
 		}		
 	else if (entry["type"] == "video") {
 		var note        = "";
@@ -597,7 +598,6 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 				note = "*"; 
 			}	}
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["path"] + entry["thumbnail"]);
-		if (app_unique_stream_url) { lowres += "?" + app_unique_stream_id; }
 		var hires       = birdhouse_ImageURL(birdhouseCameras[entry["camera"]]["streaming_server"] + video_file);
 		var description = "";
 		if (title.indexOf("_") > 0)	{ description = entry["date"] + "[br/]" + entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }

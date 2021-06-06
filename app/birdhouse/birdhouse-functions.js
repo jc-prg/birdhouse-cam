@@ -19,13 +19,14 @@ var yourCodeToBeCalled = function()
 //----------------------------------------
 
 function birdhouse_initTooltip() {
-	tooltip_mode     = "other";
-	tooltip_width    = "160px";
-	tooltip_height   = "100px";
-	tooltip_distance = 47;
+	tooltip_mode     	= "other";
+	tooltip_width    	= 160;
+	tooltip_height   	= 100;
+	tooltip_offset_height	= 42;
+	tooltip_offset_width	= -180;
 
 	button_tooltip = new jcTooltip("button_tooltip") ;
-	button_tooltip.settings( tooltip_mode, tooltip_width, tooltip_height, tooltip_distance );	
+	button_tooltip.settings( tooltip_mode, tooltip_width, tooltip_height, tooltip_offset_height, tooltip_offset_width );	
 	}
 	
 function birdhouse_tooltip( tooltip_element, tooltip_content, name, left="" ) {
@@ -65,12 +66,15 @@ function birdhouse_videoOverlay(filename, description="", favorit="", to_be_dele
         else {
           document.getElementById("overlay").style.display = "block";
           document.getElementById("overlay_content").style.display = "block";
+          document.getElementById("overlay_parent").style.display  = "block";
+          
           description = description.replace(/\[br\/\]/g,"<br/>");
           html  = "";
           html += "<div id=\"overlay_close\" onclick='birdhouse_overlayHide();'>[X]</div>";
           html += "<div id=\"overlay_image_container\">";
           html += "<video id='overlay_video' src=\"" + filename + "\" controls>Video not supported</video>"
           html += "<br/>&nbsp;<br/>"+description+"</div>";
+
           document.getElementById("overlay_content").innerHTML = html;
           }
 	}
@@ -141,6 +145,26 @@ function iOS() {
   // iPad on iOS 13 detection
   || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
 }
+
+//----------------------------------------
+
+function toggleVideoEdit() {
+        video_edit1 = document.getElementById("camera_video_edit");
+        video_edit2 = document.getElementById("camera_video_edit_overlay");
+        if (video_edit1 != null) {
+        	if (video_edit1.style.display == "none")	{ 
+        		video_edit1.style.display = "block"; 
+        		video_edit2.style.display = "block"; 
+        		}
+        	else						{ 
+        		video_edit1.style.display = "none"; 
+        		video_edit2.style.display = "none"; 
+        		}
+        	}
+	else {
+	        console.error("toggleVideoEdit: Video edit doesn't exist.");
+		}
+	}
 
 //-----------------------------------------
 // load addition javascript
