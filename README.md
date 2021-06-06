@@ -9,6 +9,7 @@ Hint: The descriptions in the web client are all in German at the moment.
 * Watch live stream via Raspberry Pi camera and USB web cam (e.g. RPi cam inside and USB web cam outside)
 * Record photos e.g. every 20 seconds (configurable)
 * Record and stream videos (mp4, works with iOS devices)
+* Create video from all pictures of the current day
 * Similarity detection, filter photos with movement in a defined area
 * Mark photos as favorits and to be deleted
 * Mark videos as favorits or to be deleted
