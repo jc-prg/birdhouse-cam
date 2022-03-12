@@ -464,6 +464,7 @@ class myViews_v2(threading.Thread):
              content["groups"][group_name].append(directory)
              
              if not "info" in file_data or not "files" in file_data:
+               if not directory in content["entries"]: content["entries"][directory] = {}
                content["entries"][directory]["error"] = True
                
              else:

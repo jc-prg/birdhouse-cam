@@ -61,8 +61,10 @@ class myBackupRestore(threading.Thread):
        '''
        recreate video config file, if not exists
        '''
-   
+
        path = self.config.directory(config="videos")
+       logging.info("Reading files from path: "+path)
+
        file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and ".mp4" in f and not "short" in f]
        file_list.sort(reverse=True)
        files     = {}

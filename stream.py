@@ -504,11 +504,23 @@ if __name__ == "__main__":
         logging.info("Create image list for main directory ...")
         backup.compare_files_init()
         logging.info("OK.")
+    else:
+        test_config = self.config.read(config="images")
+        if test_config == {}:
+           logging.info("Create image list for main directory ...")
+           backup.compare_files_init()
+           logging.info("OK.")
 
     if not os.path.isfile(config.file("videos")):
         logging.info("Create video list for video directory ...")
         backup.create_video_config()
         logging.info("OK.")
+    else:
+        test_config = self.config.read(config="videos")
+        if test_config == {}:
+           logging.info("Create video list for video directory ...")
+           backup.create_video_config()
+           logging.info("OK.")
 
 
 #----------------------------------------------------
