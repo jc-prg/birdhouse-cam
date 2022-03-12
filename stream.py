@@ -505,7 +505,7 @@ if __name__ == "__main__":
         backup.compare_files_init()
         logging.info("OK.")
     else:
-        test_config = self.config.read(config="images")
+        test_config = config.read(config="images")
         if test_config == {}:
            logging.info("Create image list for main directory ...")
            backup.compare_files_init()
@@ -516,7 +516,7 @@ if __name__ == "__main__":
         backup.create_video_config()
         logging.info("OK.")
     else:
-        test_config = self.config.read(config="videos")
+        test_config = config.read(config="videos")
         if test_config == {}:
            logging.info("Create video list for video directory ...")
            backup.create_video_config()
