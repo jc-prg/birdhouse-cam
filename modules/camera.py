@@ -489,9 +489,12 @@ class myCamera(threading.Thread):
        elif self.type == "usb":
            raw = self.camera.read()   ## potentially not the same RAW as fram PI
            raw = self.normalizeImage(raw)
-           r, buf = cv2.imencode(".jpg",raw)
-           size   = len(buf)
-           raw    = bytearray(buf)
+           try:
+             r, buf = cv2.imencode(".jpg",raw)
+             size   = len(buf)
+             raw    = bytearray(buf)
+           except Exception as e:
+             logging.error("Cant encode image from camera: "+str(e))
 
        else:
            logging.error("Camera type not supported ("+str(self.type)+").")
