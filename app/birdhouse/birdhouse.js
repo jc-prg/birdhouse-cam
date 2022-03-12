@@ -377,7 +377,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 				}
 			if (active_page == "ARCHIVE") { 
 				title = lang("ARCHIVE") + " &nbsp;(" + group + ")";
-				if count_groups > 0: header_open = false;
+				if count_groups > 0 { header_open = false; }
 				//if (count_groups > 0) { header_open = false; }
 				}
 			delete group_entries["999999"];
