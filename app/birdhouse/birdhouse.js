@@ -443,8 +443,7 @@ function birdhouse_ImageGroup(title, entries, entry_count, entry_category, heade
 	var image_ids = "";
 	var display   = "";
 	var group_id  = title;
-	var group_id2 = group_id.replace( /[ |  |\&nbsp;]/g, "_" );
-
+	var group_id2 = group_id.replace( /[ |\&nbsp;|\(|\)]/g, "_" );
 	
 	if (admin) {
 		for (i=0;i<entry_count.length;i++) 	{ count[entry_count[i]] = 0; }
@@ -646,7 +645,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		recycle     = "<div id='d_"+img_id+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
 		}
 		
-	var group_id2 = group_id.replace( /[ |  |\&nbsp;]/g, "_" );
+	var group_id2 = group_id.replace( /[ |\&nbsp;|\(|\)]/g, "_" );
 	
 	html += "<div class='image_container'>";
 	html += "  <div class='star'>"+star+"</div>";
