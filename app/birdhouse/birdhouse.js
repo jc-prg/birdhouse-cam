@@ -647,7 +647,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		recycle     = "<div id='d_"+img_id+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
 		}
 		
-	var img_id = entry["path"]+entry["lowres"];
+	var img_id = entry["directory"] + entry["lowres"];
 	img_id = img_id.replace( /\//g, "_");
 	
 	html += "<div class='image_container'>";
