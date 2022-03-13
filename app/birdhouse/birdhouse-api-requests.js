@@ -103,12 +103,12 @@ function birdhouse_setRecycleRangeShow(command, param) {
 	
 //----------------------------------------
 
-function birdhouse_setRecycle(index, status, lowres_file="") {
+function birdhouse_setRecycle(index, status, lowres_file="", img_id="") {
         commands    = index.split("/");
         commands[0] = "recycle";
         commands.push(status);
         
-        document.getElementById(lowres_file).style.borderColor = color_code["request"];
+        document.getElementById(img_id).style.borderColor = color_code["request"];
         appFW.requestAPI('POST',commands,"",[birdhouse_setRecycleShow,[index,status,lowres_file]],"","birdhouse_setRecycle"); 
 	}
 
@@ -126,12 +126,12 @@ function birdhouse_setRecycleShow(command, param) {
 
 //----------------------------------------
 
-function birdhouse_setFavorit(index, status, lowres_file="") {
+function birdhouse_setFavorit(index, status, lowres_file="", img_id="") {
         commands    = index.split("/");
         commands[0] = "favorit";
         commands.push(status);
 
-        document.getElementById(lowres_file).style.borderColor = color_code["request"];
+        document.getElementById(img_id).style.borderColor = color_code["request"];
         appFW.requestAPI('POST',commands,"",[birdhouse_setFavoritShow,[index,status,lowres_file]],"","birdhouse_setFavorit"); 
 	}
 
