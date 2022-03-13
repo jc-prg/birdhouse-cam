@@ -448,9 +448,6 @@ function birdhouse_ImageGroup(title, entries, entry_count, entry_category, heade
 		for (i=0;i<entry_count.length;i++) 	{ count[entry_count[i]] = 0; }
 		if (count["all"] != undefined) 	{ count["all"] = Object.keys(entries).length; }
 		
-		var img_id = entries[key]["path"] + entries[key]["lowres"];
-		img_id = img_id.replace( /\//g, "_");
-
 		for (let key in entries) {
 			var img_id2 = "";
 			img_id2 += entries[key]["directory"] + entries[key]["lowres"];
