@@ -47,7 +47,7 @@ function birdhouse_createDayVideo(camera) {
 //----------------------------------------
 
 function birdhouse_recycleRange(group_id, index, status, lowres_file) {
-	console.log(group_id+"/"+index+"/"+lowres_file);
+	console.log("birdhouse_recycleRange: "+group_id+"/"+index+"/"+lowres_file);
 	
 	if (group_id in app_recycle_range) 			{}
 	else 							{ app_recycle_range[group_id]        = {}; }
@@ -85,6 +85,8 @@ function birdhouse_recycleRange(group_id, index, status, lowres_file) {
 	}
 
 function birdhouse_setRecycleRange(index, status) {
+	console.log("birdhouse_setRecycleRange: /"+index+"/"+status);
+	
         commands    = index.split("/");
         commands[0] = "recycle-range";
         commands.push(status);
@@ -92,6 +94,8 @@ function birdhouse_setRecycleRange(index, status) {
 	}
 
 function birdhouse_setRecycleRangeShow(command, param) {
+	console.log("birdhouse_setRecycleRangeShow: /"+command+"/"+param);
+
 	[ index, status, lowres_file ] = param
         console.log("birdhouse_setRecycleRangeShow: "+lowres_file+" | "+status+" | "+index)
         //setTimeout(function(){ birdhouseReloadView(); }, reloadInterval*1000);
