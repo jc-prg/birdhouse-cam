@@ -443,17 +443,19 @@ function birdhouse_ImageGroup(title, entries, entry_count, entry_category, heade
 	var image_ids = "";
 	var display   = "";
 	var group_id  = title;
-	var group_id2 = group_id.replace( /[ |\&nbsp;|\(|\)]/g, "_" );
-	
+		
 	if (admin) {
 		for (i=0;i<entry_count.length;i++) 	{ count[entry_count[i]] = 0; }
 		if (count["all"] != undefined) 	{ count["all"] = Object.keys(entries).length; }
 		
+		var img_id = entries[key]["path"] + entries[key]["lowres"];
+		img_id = img_id.replace( /\//g, "_");
+
 		for (let key in entries) {
 			if (count["star"] != undefined    && parseInt(entries[key]["favorit"]) == 1)			{ count["star"]    += 1; }
 			else if (count["recycle"] != undefined && parseInt(entries[key]["to_be_deleted"]) == 1)	{ count["recycle"] += 1; }
 			else if (count["detect"] != undefined && parseInt(entries[key]["detect"]) == 1)		{ count["detect"]  += 1; }
-			if (header_open == false && entries[key]["lowres"] != undefined)				{ image_ids += " " + group_id2 + "_" + entries[key]["lowres"]; }
+			if (header_open == false && entries[key]["lowres"] != undefined)				{ image_ids += " " + img_id; }
 			}
 		}
 	if (header_open == false) {
@@ -645,14 +647,15 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		recycle     = "<div id='d_"+img_id+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
 		}
 		
-	var group_id2 = group_id.replace( /[ |\&nbsp;|\(|\)]/g, "_" );
+	var img_id = entry["path"]+entry["lowres"];
+	img_id = img_id.replace( /\//g, "_");
 	
 	html += "<div class='image_container'>";
 	html += "  <div class='star'>"+star+"</div>";
 	html += "  <div class='recycle'>"+recycle+"</div>";
 	html += "  <div class='thumbnail_container'>"
 //	html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+entry["lowres"]+"' class='thumbnail' style='"+style+"'/></a>";
-	html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+group_id2+"_"+entry["lowres"]+"' class='thumbnail' style='"+style+"'/></a>";
+	html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id+"' class='thumbnail' style='"+style+"'/></a>";
 	html +=      play_button;
 	html += "    <br/><center><small>"+description+"</small></center>";
 	html += "  </div>";
