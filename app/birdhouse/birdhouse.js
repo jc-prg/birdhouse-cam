@@ -452,10 +452,14 @@ function birdhouse_ImageGroup(title, entries, entry_count, entry_category, heade
 		img_id = img_id.replace( /\//g, "_");
 
 		for (let key in entries) {
+			var img_id2 = "";
+			img_id2 += entries[key]["directory"] + entries[key]["lowres"];
+			img_id2 = img_id2.replace( /\//g, "_");
+
 			if (count["star"] != undefined    && parseInt(entries[key]["favorit"]) == 1)			{ count["star"]    += 1; }
 			else if (count["recycle"] != undefined && parseInt(entries[key]["to_be_deleted"]) == 1)	{ count["recycle"] += 1; }
 			else if (count["detect"] != undefined && parseInt(entries[key]["detect"]) == 1)		{ count["detect"]  += 1; }
-			if (header_open == false && entries[key]["lowres"] != undefined)				{ image_ids += " " + img_id; }
+			if (header_open == false && entries[key]["lowres"] != undefined)				{ image_ids += " " + img_id2; }
 			}
 		}
 	if (header_open == false) {
@@ -647,15 +651,16 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		recycle     = "<div id='d_"+img_id+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
 		}
 		
-	var img_id = entry["directory"] + entry["lowres"];
-	img_id = img_id.replace( /\//g, "_");
+	var img_id2 = "";
+	img_id2 += entry["directory"] + entry["lowres"];
+	img_id2 = img_id2.replace( /\//g, "_");
 	
 	html += "<div class='image_container'>";
 	html += "  <div class='star'>"+star+"</div>";
 	html += "  <div class='recycle'>"+recycle+"</div>";
 	html += "  <div class='thumbnail_container'>"
 //	html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+entry["lowres"]+"' class='thumbnail' style='"+style+"'/></a>";
-	html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id+"' class='thumbnail' style='"+style+"'/></a>";
+	html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id2+"' class='thumbnail' style='"+style+"'/></a>";
 	html +=      play_button;
 	html += "    <br/><center><small>"+description+"</small></center>";
 	html += "  </div>";
