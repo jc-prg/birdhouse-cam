@@ -625,6 +625,10 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var star        = "";
 	var recycle     = "";
 	
+	var img_id2 = "";
+	img_id2 += entry["directory"] + entry["lowres"];
+	img_id2 = img_id2.replace( /\//g, "_");
+	
 	if (entry["detect"] == 1)						{ style = "border: 1px solid "+color_code["detect"]+";"; }
 	if (entry["to_be_deleted"] == 1 || entry["to_be_deleted"] == "1")	{ style = "border: 1px solid "+color_code["recycle"]+";"; }
 	if (entry["favorit"] == 1 || entry["favorit"] == "1")		{ style = "border: 1px solid "+color_code["star"]+";"; }
@@ -640,18 +644,14 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		if (parseInt(img_recycle) == 0)  { img_recycle_r = 1; } else { img_recycle_r = 0; }
 		var img_dir     = "birdhouse/img/";
 
-		var onclick_star    = "birdhouse_setFavorit(index=\""+img_id+"\",status=document.getElementById(\"s_"+img_id+"_value\").innerHTML,lowres_file=\""+img_name+"\");";
-		var onclick_recycle = "birdhouse_setRecycle(index=\""+img_id+"\",status=document.getElementById(\"d_"+img_id+"_value\").innerHTML,lowres_file=\""+img_name+"\");";
-		onclick_recycle    += "birdhouse_recycleRange(group_id=\""+group_id+"\", index=\""+img_id+"\", status=document.getElementById(\"d_"+img_id+"_value\").innerHTML, lowres_file=\""+img_name+"\")"; 
+		var onclick_star    = "birdhouse_setFavorit(index=\""+img_id2+"\",status=document.getElementById(\"s_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\");";
+		var onclick_recycle = "birdhouse_setRecycle(index=\""+img_id2+"\",status=document.getElementById(\"d_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\");";
+		onclick_recycle    += "birdhouse_recycleRange(group_id=\""+group_id+"\", index=\""+img_id2+"\", status=document.getElementById(\"d_"+img_id2+"_value\").innerHTML, lowres_file=\""+img_name+"\")"; 
 		
-		star        = "<div id='s_"+img_id+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id+"' src='"+img_dir+"star"+img_star+".png'       onclick='"+onclick_star+"'/>";
-		recycle     = "<div id='d_"+img_id+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
+		star        = "<div id='s_"+img_id2+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id2+"' src='"+img_dir+"star"+img_star+".png'       onclick='"+onclick_star+"'/>";
+		recycle     = "<div id='d_"+img_id2+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id2+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
 		}
 		
-	var img_id2 = "";
-	img_id2 += entry["directory"] + entry["lowres"];
-	img_id2 = img_id2.replace( /\//g, "_");
-	
 	html += "<div class='image_container'>";
 	html += "  <div class='star'>"+star+"</div>";
 	html += "  <div class='recycle'>"+recycle+"</div>";
