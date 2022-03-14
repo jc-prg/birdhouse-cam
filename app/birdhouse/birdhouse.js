@@ -365,6 +365,26 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	else if (active_page == "TODAY" && active_date == "")	{ entry_category = [ "today" ]; }
 	else if (active_page == "TODAY" && active_date != "")	{ entry_category = [ "backup", active_date ]; }
 	
+        if (active_page == "VIDEOS")                                    { entry_category = [ "video" ]; }
+        else if (active_page == "TODAY" && active_date == "")   { entry_category = [ "today" ]; }
+        else if (active_page == "TODAY" && active_date != "")   { entry_category = [ "backup", active_date ]; }
+
+	// group favorits per month
+        if (active_page == "FAVORITS") { 
+                var groups2 = {}
+                Object.entries(groups).forEach(([key, value]) => {
+                        if (key.indexOf(".") > 0) {
+                                [day,month,year] = key.split(".");
+                                if (!groups2[year+"-"+month]) { groups2[year+"-"+month] = value; }
+                                else {groups2[year+"-"+month] = groups2[year+"-"+month].concat(value);}
+                                }
+                        else {
+                                groups2[key] = value;
+                                }
+                        })
+                groups = groups2;
+                }
+	
 	// today complete, favorits
 	if (groups != undefined && groups != {}) {
 		var count_groups = 0;
