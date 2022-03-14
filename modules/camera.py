@@ -282,7 +282,10 @@ class myCamera(threading.Thread):
        self.running      = True
        self.error        = False
        self.image_size   = [0, 0]
+       
        self.CameraNA     = "data/camera_na.jpg"
+       self.ImageNAraw   = cv2.imread(self.CameraNA)
+       self.ImageNA      = self.convertRawImage2Image(self.ImageNAraw)
        
        logging.info("Starting camera ("+self.type+"/"+self.name+") ...")
 
@@ -496,7 +499,7 @@ class myCamera(threading.Thread):
              raw    = bytearray(buf)
            except Exception as e:
              logging.error("Cant encode image from camera: "+str(e))
-             return cv2.imread(self.CameraNA)
+             return self.ImageNA
 
        else:
            logging.error("Camera type not supported ("+str(self.type)+").")
@@ -632,6 +635,7 @@ class myCamera(threading.Thread):
 
        except Exception as e:
          logging.warning("Could not crop image: "+str(e))
+         return self.ImageNAraw
 
        return frame, (0,0,1,1)
 
