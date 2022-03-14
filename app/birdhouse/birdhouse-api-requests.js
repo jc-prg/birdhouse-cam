@@ -96,8 +96,8 @@ function birdhouse_setRecycleRange(index, status) {
 function birdhouse_setRecycleRangeShow(command, param) {
 	console.log("birdhouse_setRecycleRangeShow: /"+command+"/"+param);
 
-	[ index, status, lowres_file ] = param
-        console.log("birdhouse_setRecycleRangeShow: "+lowres_file+" | "+status+" | "+index)
+	[ index, status, lowres_file, img_id ] = param
+        console.log("birdhouse_setRecycleRangeShow: "+lowres_file+" | "+status+" | "+index+" | "+img_id)
         //setTimeout(function(){ birdhouseReloadView(); }, reloadInterval*1000);
 	}
 	
@@ -115,7 +115,7 @@ function birdhouse_setRecycle(index, status, lowres_file="", img_id="") {
 function birdhouse_setRecycleShow(command, param) {
 	[ index, status, lowres_file, img_id ] = param
         console.log("birdhouse_setRecycleShow: "+lowres_file+" | "+status+" | "+index)
-        if (status == 1) { birdhouse_setFavoritShow(command, [ index, 0, lowres_file ]); } // server-side: if favorit -> 1, trash -> 0
+        if (status == 1) { birdhouse_setFavoritShow(command, [ index, 0, lowres_file, img_id ]); } // server-side: if favorit -> 1, trash -> 0
         document.getElementById("d_"+img_id).src  = "birdhouse/img/recycle"+status+".png";       
         if (status == 1) { status = 0; color = color_code["recycle"]; }
         else             { status = 1; color = color_code["default"]; 
@@ -138,7 +138,7 @@ function birdhouse_setFavorit(index, status, lowres_file="", img_id="") {
 function birdhouse_setFavoritShow(command, param) {
 	[ index, status, lowres_file, img_id ] = param
         console.log("birdhouse_setFavoritShow: "+lowres_file+" | "+status+" | "+index)
-        if (status == 1) { birdhouse_setRecycleShow(command, [ index, 0, lowres_file ]); } // server-side: if favorit -> 1, trash -> 0
+        if (status == 1) { birdhouse_setRecycleShow(command, [ index, 0, lowres_file, img_id ]); } // server-side: if favorit -> 1, trash -> 0
         document.getElementById("s_"+img_id).src          = "birdhouse/img/star"+status+".png";
         if (status == 1) { status = 0; color = color_code["star"]; }
         else             { status = 1; color = color_code["default"]; }
