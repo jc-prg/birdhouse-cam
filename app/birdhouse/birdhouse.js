@@ -365,6 +365,26 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	else if (active_page == "TODAY" && active_date == "")	{ entry_category = [ "today" ]; }
 	else if (active_page == "TODAY" && active_date != "")	{ entry_category = [ "backup", active_date ]; }
 	
+        if (active_page == "VIDEOS")                                    { entry_category = [ "video" ]; }
+        else if (active_page == "TODAY" && active_date == "")   { entry_category = [ "today" ]; }
+        else if (active_page == "TODAY" && active_date != "")   { entry_category = [ "backup", active_date ]; }
+
+	// group favorits per month
+        if (active_page == "FAVORITS") { 
+                var groups2 = {}
+                Object.entries(groups).forEach(([key, value]) => {
+                        if (key.indexOf(".") > 0) {
+                                [day,month,year] = key.split(".");
+                                if (!groups2[year+"-"+month]) { groups2[year+"-"+month] = value; }
+                                else {groups2[year+"-"+month] = groups2[year+"-"+month].concat(value);}
+                                }
+                        else {
+                                groups2[key] = value;
+                                }
+                        })
+                groups = groups2;
+                }
+	
 	// today complete, favorits
 	if (groups != undefined && groups != {}) {
 		var count_groups = 0;
@@ -378,6 +398,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 			if (active_page == "ARCHIVE") { 
 				title = lang("ARCHIVE") + " &nbsp;(" + group + ")";
 				if (count_groups > 0) { header_open = false; }
+				//--> doesn't work if image names double across the different groups; image IDs have to be changed (e.g. group id to be added)
 				}
 			delete group_entries["999999"];
 			html += birdhouse_ImageGroup(title, group_entries, entry_count, entry_category, header_open, admin, video_short);
@@ -442,16 +463,20 @@ function birdhouse_ImageGroup(title, entries, entry_count, entry_category, heade
 	var image_ids = "";
 	var display   = "";
 	var group_id  = title;
-	
+		
 	if (admin) {
 		for (i=0;i<entry_count.length;i++) 	{ count[entry_count[i]] = 0; }
 		if (count["all"] != undefined) 	{ count["all"] = Object.keys(entries).length; }
 		
 		for (let key in entries) {
+			var img_id2 = "";
+			img_id2 += entries[key]["directory"] + entries[key]["lowres"];
+			img_id2 = img_id2.replace( /\//g, "_");
+
 			if (count["star"] != undefined    && parseInt(entries[key]["favorit"]) == 1)			{ count["star"]    += 1; }
 			else if (count["recycle"] != undefined && parseInt(entries[key]["to_be_deleted"]) == 1)	{ count["recycle"] += 1; }
 			else if (count["detect"] != undefined && parseInt(entries[key]["detect"]) == 1)		{ count["detect"]  += 1; }
-			if (header_open == false && entries[key]["lowres"] != undefined)				{ image_ids += " " + entries[key]["lowres"]; }
+			if (header_open == false && entries[key]["lowres"] != undefined)				{ image_ids += " " + img_id2; }
 			}
 		}
 	if (header_open == false) {
@@ -620,6 +645,10 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var star        = "";
 	var recycle     = "";
 	
+	var img_id2 = "";
+	img_id2 += entry["directory"] + entry["lowres"];
+	img_id2 = img_id2.replace( /\//g, "_");
+	
 	if (entry["detect"] == 1)						{ style = "border: 1px solid "+color_code["detect"]+";"; }
 	if (entry["to_be_deleted"] == 1 || entry["to_be_deleted"] == "1")	{ style = "border: 1px solid "+color_code["recycle"]+";"; }
 	if (entry["favorit"] == 1 || entry["favorit"] == "1")		{ style = "border: 1px solid "+color_code["star"]+";"; }
@@ -635,19 +664,20 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		if (parseInt(img_recycle) == 0)  { img_recycle_r = 1; } else { img_recycle_r = 0; }
 		var img_dir     = "birdhouse/img/";
 
-		var onclick_star    = "birdhouse_setFavorit(index=\""+img_id+"\",status=document.getElementById(\"s_"+img_id+"_value\").innerHTML,lowres_file=\""+img_name+"\");";
-		var onclick_recycle = "birdhouse_setRecycle(index=\""+img_id+"\",status=document.getElementById(\"d_"+img_id+"_value\").innerHTML,lowres_file=\""+img_name+"\");";
-		onclick_recycle    += "birdhouse_recycleRange(group_id=\""+group_id+"\", index=\""+img_id+"\", status=document.getElementById(\"d_"+img_id+"_value\").innerHTML, lowres_file=\""+img_name+"\")"; 
+		var onclick_star    = "birdhouse_setFavorit(index=\""+img_id+"\",status=document.getElementById(\"s_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\",img_id=\""+img_id2+"\");";
+		var onclick_recycle = "birdhouse_setRecycle(index=\""+img_id+"\",status=document.getElementById(\"d_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\",img_id=\""+img_id2+"\");";
+		onclick_recycle    += "birdhouse_recycleRange(group_id=\""+group_id+"\", index=\""+img_id+"\", status=document.getElementById(\"d_"+img_id2+"_value\").innerHTML, lowres_file=\""+img_name+"\")"; 
 		
-		star        = "<div id='s_"+img_id+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id+"' src='"+img_dir+"star"+img_star+".png'       onclick='"+onclick_star+"'/>";
-		recycle     = "<div id='d_"+img_id+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
+		star        = "<div id='s_"+img_id2+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id2+"' src='"+img_dir+"star"+img_star+".png'       onclick='"+onclick_star+"'/>";
+		recycle     = "<div id='d_"+img_id2+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id2+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
 		}
 		
 	html += "<div class='image_container'>";
 	html += "  <div class='star'>"+star+"</div>";
 	html += "  <div class='recycle'>"+recycle+"</div>";
 	html += "  <div class='thumbnail_container'>"
-	html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+entry["lowres"]+"' class='thumbnail' style='"+style+"'/></a>";
+//	html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+entry["lowres"]+"' class='thumbnail' style='"+style+"'/></a>";
+	html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id2+"' class='thumbnail' style='"+style+"'/></a>";
 	html +=      play_button;
 	html += "    <br/><center><small>"+description+"</small></center>";
 	html += "  </div>";
