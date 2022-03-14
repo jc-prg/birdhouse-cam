@@ -114,7 +114,7 @@ function birdhouse_setRecycle(index, status, lowres_file="", img_id="") {
 
 function birdhouse_setRecycleShow(command, param) {
 	[ index, status, lowres_file, img_id ] = param
-        console.log("birdhouse_setRecycleShow: "+lowres_file+" | "+status+" | "+index)
+        console.log("birdhouse_setRecycleShow: "+lowres_file+" | "+status+" | "+index+" | "+img_id);
         if (status == 1) { birdhouse_setFavoritShow(command, [ index, 0, lowres_file, img_id ]); } // server-side: if favorit -> 1, trash -> 0
         document.getElementById("d_"+img_id).src  = "birdhouse/img/recycle"+status+".png";       
         if (status == 1) { status = 0; color = color_code["recycle"]; }
