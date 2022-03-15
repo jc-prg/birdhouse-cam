@@ -381,19 +381,19 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         		data_data   += Math.round((100-entries[key]["similarity"])*10)/10+", ";
         		}
 
-		html += "<textarea style='height:200px;width:100%'>";        		
-        	html += "<div><canvas id=\"myChart\" style=\"height:300;width:100%;\"></canvas></div>";
-        	html += "<script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>";
+		html += "<textarea style='height:200px;width:90%'>\n";        		
+        	html += "<div><canvas id=\"myChart\" style=\"height:300;width:100%;\"></canvas></div>\n";
+        	html += "<script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>\n";
         		
-        	html += "<script>";
+        	html += "<script>\n";
         	html += "const labels = [ "+data_labels+" ];\n\n";
 		html += "const data = {\n labels: labels,\n datasets: [{\n label: '"+title+"',\n backgroundColor: 'rgb(255, 99, 132)',\n borderColor: 'rgb(255, 99, 132)',\n ";
         	html += " data : [ "+data_data+" ]\n";
         	html += " }]\n };\n\n";
         	html += "const config = {\n type: 'line',\n data: data,\n options: {}\n };\n";
-        	html += "</script>";
+        	html += "</script>\n";
         	
-        	html += "<script>\nconst myChart = new Chart(document.getElementById('myChart'),config );\n</script>";
+        	html += "<script>\nconst myChart = new Chart(document.getElementById('myChart'),config );\n</script>\n";
 		html += "</textarea>";        		
         	}
 
