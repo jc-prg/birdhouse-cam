@@ -380,7 +380,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         		data_labels += "'"+entries[key]["time"]+"', ";
         		data_data   += Math.round((100-entries[key]["similarity"])*10)/10+", ";
         		}
-        		
+
+		html += "<textarea style='height:200px;width:100%'>";        		
         	html += "<div><canvas id=\"myChart\" style=\"height:300;width:100%;\"></canvas></div>";
         	html += "<script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>";
         		
@@ -393,6 +394,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         	html += "</script>";
         	
         	html += "<script>\nconst myChart = new Chart(document.getElementById('myChart'),config );\n</script>";
+		html += "</textarea>";        		
         	}
 
 	// group favorits per month
