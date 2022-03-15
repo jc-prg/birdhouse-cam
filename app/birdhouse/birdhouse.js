@@ -372,10 +372,13 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         if (active_page == "TODAY_COMPLETE") {
         	var data_labels = "";
         	var data_data   = "";
-        	Object.entries(entries).forEach(([key, value]) => {
+        	var keys        = Object(keys.entries);
+        	keys            = keys.sort();
+        	for (var i=0;i<keys.length;i++) {
+        		key = keys[i];
         		data_labels += "'"+entries[key]["time"]+"', ";
         		data_data   += Math.round((100-entries[key]["similarity"])*10)/10+", ";
-        		})
+        		}
         	html += "[ "+data_labels+" ]";
         	html += "<hr>";
         	html += "[ "+data_data+" ]";
