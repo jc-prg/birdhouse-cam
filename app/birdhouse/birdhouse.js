@@ -374,7 +374,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         	var data_data   = "";
         	Object.entries(entries).forEach(([key, value]) => {
         		data_labels += "'"+entries[key]["time"]+"', ";
-        		data_data   += (100-entries[key]["similarity"])+", ";
+        		data_data   += Math.round((100-entries[key]["similarity"])*10)/10+", ";
         		})
         	html += "[ "+data_labels+" ]";
         	html += "<hr>";
