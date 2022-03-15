@@ -375,16 +375,24 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         	var data_keys   = Object.keys(entries);
         	data_keys       = data_keys.sort();
         	for (var i=0;i<data_keys.length;i++) {
+        		if (entries[key]["similarity"] == 0) { entries[key]["similarity"] = 100; }
         		key = data_keys[i];
         		data_labels += "'"+entries[key]["time"]+"', ";
         		data_data   += Math.round((100-entries[key]["similarity"])*10)/10+", ";
         		}
-        	html += "<textarea>";
-        	html += "const labels = [ "+data_labels+" ];\n";
-		html += "const data = {\n labels: labels,\n datasets: [{ label: '"+title+"', backgroundColor: 'rgb(255, 99, 132)', borderColor: 'rgb(255, 99, 132)', ";
-        	html += " data : [ "+data_data+" ]";
-        	html += " }] };";
-        	html += "</textarea>";
+        		
+        	html += "<div><canvas id=\"myChart\" style=\"height:300;width:100%;\"></canvas></div>";
+        	html += "<script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>";
+        		
+        	html += "<script>";
+        	html += "const labels = [ "+data_labels+" ];\n\n";
+		html += "const data = {\n labels: labels,\n datasets: [{\n label: '"+title+"',\n backgroundColor: 'rgb(255, 99, 132)',\n borderColor: 'rgb(255, 99, 132)',\n ";
+        	html += " data : [ "+data_data+" ]\n";
+        	html += " }]\n };\n\n";
+        	html += "const config = {\n type: 'line',\n data: data,\n options: {}\n };\n";
+        	html += "</script>";
+        	
+        	html += "<script>\nconst myChart = new Chart(document.getElementById('myChart'),config );\n</script>";
         	}
 
 	// group favorits per month
