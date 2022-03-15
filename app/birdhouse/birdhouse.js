@@ -599,7 +599,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		if (app_active_page == "FAVORITS") {
 			[day,month,year]  = entry["date"].split(".");
 			[hour,minute,sec] = entry["time"].split(":");
-			description       = day+"."+month+". "+hour+":"+minute;
+			description       = entry["date"]+" ("+hour+":"+minute+")";
 			}
 		
 		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
