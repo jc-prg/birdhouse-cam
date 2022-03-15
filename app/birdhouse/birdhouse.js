@@ -372,10 +372,10 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         if (active_page == "TODAY_COMPLETE") {
         	var data_labels = "";
         	var data_data   = "";
-        	var keys        = Object.keys(entries);
-        	keys            = keys.sort();
-        	for (var i=0;i<keys.length;i++) {
-        		key = keys[i];
+        	var data_keys   = Object.keys(entries);
+        	data_keys       = data_keys.sort();
+        	for (var i=0;i<data_keys.length;i++) {
+        		key = data_keys[i];
         		data_labels += "'"+entries[key]["time"]+"', ";
         		data_data   += Math.round((100-entries[key]["similarity"])*10)/10+", ";
         		}
