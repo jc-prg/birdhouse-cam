@@ -509,9 +509,9 @@ function birdhouse_ImageGroup(title, entries, entry_count, entry_category, heade
 	entry_keys = Object.keys(entries).sort().reverse();
 	for (var i=0;i<entry_keys.length;i++) {
 		key   = entry_keys[i];
-		var title = key;
+		var img_title = key;
 		//if (entry_keys[key]["type"] == "video") {  title = entry_keys[key]["date"]; }
-		html += birdhouse_Image(title=title, entry=entries[key], header_open=header_open, admin=admin, video_short=video_short, group_id=group_id);
+		html += birdhouse_Image(title=img_title, entry=entries[key], header_open=header_open, admin=admin, video_short=video_short, group_id=group_id);
 		}
 		
 	html += "</div>";
@@ -589,10 +589,19 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var edit        = false;
 	var category    = "";
 	
+	console.log(app_active_page);
+	
 	if (entry["type"] == "image") {	
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["directory"] + entry["lowres"]);
 		var hires       = birdhouse_ImageURL(RESTurl + entry["directory"] + entry["hires"]);
 		var description = entry["time"] + " (" + entry["similarity"] + "%)";
+
+		if (app_active_page == "FAVORITS") {
+			[day,month,year]  = entry["date"].split(".");
+			[hour,minute,sec] = entry["time"].split(":");
+			description       = entry["date"]+" ("+hour+":"+minute+")";
+			}
+		
 		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
 		description     = description.replace(/\[br\/\]/g,"<br/>");
 		edit            = true;
