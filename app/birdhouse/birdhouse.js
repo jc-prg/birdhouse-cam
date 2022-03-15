@@ -511,7 +511,6 @@ function birdhouse_ImageGroup(title, entries, entry_count, entry_category, heade
 		key   = entry_keys[i];
 		var img_title = key;
 		//if (entry_keys[key]["type"] == "video") {  title = entry_keys[key]["date"]; }
-		if (app_active_page == "FAVORIT") { title = "FAVORIT"; }
 		html += birdhouse_Image(title=img_title, entry=entries[key], header_open=header_open, admin=admin, video_short=video_short, group_id=group_id);
 		}
 		
@@ -590,12 +589,14 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var edit        = false;
 	var category    = "";
 	
+	console.log(app_active_page);
+	
 	if (entry["type"] == "image") {	
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["directory"] + entry["lowres"]);
 		var hires       = birdhouse_ImageURL(RESTurl + entry["directory"] + entry["hires"]);
 		var description = entry["time"] + " (" + entry["similarity"] + "%)";
 
-		if (title == "FAVORIT") {
+		if (app_active_page == "FAVORIT") {
 			[day,month,year]  = entry["date"].split(".");
 			[hour,minute,sec] = entry["time"].split(":");
 			description       = day+"."+month+". "+hour+":"+minute;
