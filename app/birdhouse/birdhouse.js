@@ -370,11 +370,15 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         else if (active_page == "TODAY" && active_date != "")	{ entry_category = [ "backup", active_date ]; }
         
         if (active_page == "TODAY_COMPLETE") {
-        	var data_points = "";
+        	var data_labels = "";
+        	var data_data   = "";
         	Object.entries(entries).forEach(([key, value]) => {
-        		data_points += entries[key]["time"] + " / " + entries[key]["similarity"];
+        		data_labels += "'"+entries[key]["time"]+"', ";
+        		data_data   += entries[key]["similarity"]+", ";
         		})
-        	html += data_points;
+        	html += "[ "+data_labels+" ]";
+        	html += "<hr>";
+        	html += "[ "+data_data+" ]";
         	}
 
 	// group favorits per month
