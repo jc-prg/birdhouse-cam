@@ -371,8 +371,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         
         if (active_page == "TODAY_COMPLETE") {
         	var data_points = "";
-        	for (let entry in entries) {
-        		data_points += entry["time"] + " / " + entry["similarity"];
+        	Object.entries(entries).forEach(([key, value]) => {
+        		data_points += entries[key]["time"] + " / " + entries[key]["similarity"];
         		}
         	html += data_points;
         	}
