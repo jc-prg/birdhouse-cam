@@ -372,7 +372,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         if (active_page == "TODAY_COMPLETE") {
         	var data_labels = "";
         	var data_data   = "";
-        	var keys        = Object(keys.entries);
+        	var keys        = Object.keys(entries);
         	keys            = keys.sort();
         	for (var i=0;i<keys.length;i++) {
         		key = keys[i];
