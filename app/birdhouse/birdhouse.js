@@ -379,9 +379,12 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         		data_labels += "'"+entries[key]["time"]+"', ";
         		data_data   += Math.round((100-entries[key]["similarity"])*10)/10+", ";
         		}
-        	html += "[ "+data_labels+" ]";
-        	html += "<hr>";
-        	html += "[ "+data_data+" ]";
+        	html += "<textarea>";
+        	html += "const labels = [ "+data_labels+" ];\n";
+		html += "const data = {\n labels: labels,\n datasets: [{ label: '"+title+"', backgroundColor: 'rgb(255, 99, 132)', borderColor: 'rgb(255, 99, 132)', ";
+        	html += " data : [ "+data_data+" ]";
+        	html += " }] };";
+        	html += "</textarea>";
         	}
 
 	// group favorits per month
