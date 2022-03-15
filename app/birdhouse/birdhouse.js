@@ -369,7 +369,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         else if (active_page == "TODAY" && active_date == "")	{ entry_category = [ "today" ]; }
         else if (active_page == "TODAY" && active_date != "")	{ entry_category = [ "backup", active_date ]; }
         
-        if (active_page == "TODAY") {
+        if (active_page == "TODAY_COMPLETE") {
         	var data_points = "";
         	for (let entry in entries) {
         		data_points += entry["time"] + " / " + entry["similarity"];
