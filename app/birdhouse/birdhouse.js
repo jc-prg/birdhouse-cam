@@ -375,8 +375,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         	var data_keys   = Object.keys(entries);
         	data_keys       = data_keys.sort();
         	for (var i=0;i<data_keys.length;i++) {
-        		if (entries[key]["similarity"] == 0) { entries[key]["similarity"] = 100; }
         		key = data_keys[i];
+        		if (entries[key]["similarity"] == 0) { entries[key]["similarity"] = 100; }
         		data_labels += "'"+entries[key]["time"]+"', ";
         		data_data   += Math.round((100-entries[key]["similarity"])*10)/10+", ";
         		}
