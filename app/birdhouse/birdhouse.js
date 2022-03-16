@@ -30,7 +30,8 @@ var color_code = {
 	"detect"  : "aqua",
 	"recycle" : "red",
 	"default" : "white",
-	"request" : "yellow"
+	"request" : "yellow",
+	"data"    : "lightblue"
 	}
 	
 var app_available_cameras = [];
@@ -495,7 +496,10 @@ function birdhouse_ImageGroup(title, entries, entry_count, entry_category, heade
 			else if (count["recycle"] != undefined && parseInt(entries[key]["to_be_deleted"]) == 1)	{ count["recycle"] += 1; }
 			else if (count["detect"] != undefined && parseInt(entries[key]["detect"]) == 1)		{ count["detect"]  += 1; }
 			if (header_open == false && entries[key]["lowres"] != undefined)				{ image_ids += " " + img_id2; }
+			if (count["all"] != undefined && count["data"] == undefined)					{ count["data"]     = 0; }
+			if (entries[key]["type"] == "data")								{ count["data"]    += 1; }
 			}
+		if (count["all"] != undefined) { count["all"] -= count["data"]; }
 		}
 	if (header_open == false) {
 		display = "style='display:none;'";
@@ -582,6 +586,12 @@ function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 	if (count["recycle"]  != undefined) { 
 		if (count["recycle"] > 0) { color = color_code["recycle"]; } else { color = "gray"; }
 		info += "recycle: <font color='"+color+"'>" + count["recycle"].toString().padStart(3,"0") + "</font>"; 
+		if (info_count < Object.keys(count).length) { info += " | "; } 
+		info_count += 1;
+		}
+	if (count["data"]  != undefined) { 
+		if (count["data"] > 0) { color = color_code["data"]; } else { color = "gray"; }
+		info += "data: <font color='"+color+"'>" + count["data"].toString().padStart(3,"0") + "</font>"; 
 		}
 	if (info != "") { html += "[" + info + "]"; }	
 
@@ -609,7 +619,10 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	
 	console.log(app_active_page);
 	
-	if (entry["type"] == "image") {	
+	if (entry["type"] == "data") {
+		return "";	
+		}
+	else if (entry["type"] == "image") {	
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["directory"] + entry["lowres"]);
 		var hires       = birdhouse_ImageURL(RESTurl + entry["directory"] + entry["hires"]);
 		var description = entry["time"] + " (" + entry["similarity"] + "%)";

@@ -79,7 +79,7 @@ function birdhouseChart_create (title, data, type="line", sort_keys=true) {
         		
 	load_chartJS();
 
-      	html += "<div><canvas id=\"birdhouseChart\" style=\"height:300;width:100%;\"></canvas></div>\n";
+      	html += "<div><canvas id=\"birdhouseChart\" style=\"height:200px;width:100%;\"></canvas></div>\n";
       	
       	const chart_labels = data_keys;
       	const chart_data   = {
