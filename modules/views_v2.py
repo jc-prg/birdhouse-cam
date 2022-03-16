@@ -201,7 +201,8 @@ class myViews_v2(threading.Thread):
                favorits[new]["source"]    = ("images","")
                favorits[new]["date"]      = "Aktuell"
                favorits[new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
-               favorits[new]["type"]      = "image"
+               if not "type" in favorits[new]:
+                 favorits[new]["type"]    = "image"
                favorits[new]["category"]  = category+stamp
                favorits[new]["directory"] = "/"+self.config.directories["images"]
 
@@ -256,7 +257,8 @@ class myViews_v2(threading.Thread):
                         favorits[directory][new]["date"]      = date
                         favorits[directory][new]["time"]      = stamp[0:2]+":"+stamp[2:4]+":"+stamp[4:6]
                         favorits[directory][new]["date2"]     = favorits[directory][new]["date"]
-                        favorits[directory][new]["type"]      = "image"
+                        if not "type" in favorits[directory][new]:
+                          favorits[directory][new]["type"]    = "image"
                         favorits[directory][new]["category"]  = category+stamp
                         favorits[directory][new]["directory"] = "/"+self.config.directories["backup"]+directory+"/"
 
@@ -359,7 +361,8 @@ class myViews_v2(threading.Thread):
                if not "camera" in files_all[stamp] or self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
                  if files_all[stamp]["datestamp"] == date_today or backup:
                     files_today[stamp]              = files_all[stamp]
-                    files_today[stamp]["type"]      = "image"
+                    if not "type" in files_today[stamp]:
+                      files_today[stamp]["type"]    = "image"
                     files_today[stamp]["category"]  = category+stamp
                     files_today[stamp]["detect"]    = self.camera[which_cam].detectImage(file_info=files_today[stamp])
                     files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
@@ -390,7 +393,8 @@ class myViews_v2(threading.Thread):
                if (int(stamp) >= int(time_now) and time_now != "000000") and "datestamp" in files_all[stamp] and files_all[stamp]["datestamp"] == date_yesterday:
                  if self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
                     files_yesterday[stamp]              = files_all[stamp]
-                    files_yesterday[stamp]["type"]      = "image"
+                    if not "type" in files_yesterday[stamp]:
+                      files_yesterday[stamp]["type"]    = "image"
                     files_yesterday[stamp]["category"]  = category+stamp
                     files_yesterday[stamp]["detect"]    = self.camera[which_cam].detectImage(file_info=files_yesterday[stamp])
                     files_yesterday[stamp]["directory"] = "/" + self.config.directories["images"]
@@ -407,7 +411,8 @@ class myViews_v2(threading.Thread):
                if "to_be_deleted" in files_all[stamp] and int(files_all[stamp]["to_be_deleted"]) == 1:
                  if files_all[stamp]["camera"] == which_cam:
                     files_recycle[stamp]              = files_all[stamp]
-                    files_recycle[stamp]["type"]      = "image"
+                    if not "type" in files_recycle[stamp]:
+                      files_recycle[stamp]["type"]    = "image"
                     files_recycle[stamp]["category"]  = category+stamp
                     files_recycle[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
                     count += 1
@@ -494,7 +499,7 @@ class myViews_v2(threading.Thread):
                     
                     if ("camera" in file_info and file_info["camera"] == which_cam) or not "camera" in file_info:
                       if "size" in file_info: dir_size_cam  += file_info["size"]
-                      else:
+                      elif "lowres" in file_info:
                         lowres_file = os.path.join(self.config.directory(config="backup"), directory, file_info["lowres"])
                         if os.path.isfile(lowres_file):    dir_size_cam  += os.path.getsize(lowres_file)
                         if "hires" in file_info:
@@ -583,7 +588,8 @@ class myViews_v2(threading.Thread):
                          threshold = self.camera[which_cam].param["similarity"]["threshold"]
                          if float(files_all[stamp]["similarity"]) < float(threshold) and float(files_all[stamp]["similarity"]) > 0: count_diff += 1
                          files_part[stamp]              = files_all[stamp]
-                         files_part[stamp]["type"]      = "image"
+                         if not "type" in files_part[stamp]:
+                           files_part[stamp]["type"]    = "image"
                          files_part[stamp]["detect"]    = self.camera[which_cam].detectImage(file_info=files_part[stamp])
                          files_part[stamp]["category"]  = category+stamp
                          files_part[stamp]["directory"] = "/" + self.config.directories["images"]

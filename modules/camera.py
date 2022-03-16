@@ -284,8 +284,10 @@ class myCamera(threading.Thread):
        self.image_size   = [0, 0]
        
        self.CameraNA     = "data/camera_na.jpg"
-       self.ImageNAraw   = cv2.imread(self.CameraNA)
-       self.ImageNA      = self.convertRawImage2Image(self.ImageNAraw)
+       #self.ImageNAraw   = cv2.imread(self.CameraNA)
+       #self.ImageNA      = self.convertRawImage2Image(self.ImageNAraw)
+       self.ImageNA      = cv2.imread(self.CameraNA)
+       self.ImageNAraw   = self.convertRawImage2Image(self.ImageNA)
        
        logging.info("Starting camera ("+self.type+"/"+self.name+") ...")
 

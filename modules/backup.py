@@ -231,8 +231,10 @@ class myBackupRestore(threading.Thread):
        
        directory = self.config.directory(config="images", date=backup_date)
 
+       # if the directory but no config file exists for backup directory create a new one
        if os.path.isdir(directory):
-         # if the directory but no config file exists for backup directory create a new one
+         logging.info("backup files: create a new config file, directory already exists")
+         
          if not os.path.isfile(self.config.file(config="backup", date=backup_date)):
             files                             = self.compare_files_init(date=backup_date)
             files_backup                      = { "files" : {}, "info" : {}}
@@ -247,6 +249,8 @@ class myBackupRestore(threading.Thread):
 
        # if no directory exists, create directory, copy files and create a new config file (copy existing information)
        else:
+         logging.info("backup files: copy files and create a new config file (copy existing information)")
+         
          self.config.directory_create(config="images", date=backup_date)
          files        = self.config.read_cache(config="images")
          files_backup = { "files" : {}, "info" : {}}
@@ -257,17 +261,20 @@ class myBackupRestore(threading.Thread):
 
          for cam in self.camera:
            count = 0
+           count_data = 0
            for stamp in stamps:
 
              if self.camera[cam].selectImage(timestamp=stamp, file_info=files[stamp]) and files[stamp]["datestamp"] == backup_date:
                 count      += 1
-                update_new  = files[stamp]
+                update_new  = files[stamp].copy()
                 file_lowres = self.config.imageName(type="lowres", timestamp=stamp, camera=cam)
                 file_hires  = self.config.imageName(type="hires",  timestamp=stamp, camera=cam)
 
                 if not "similarity" in update_new: update_new["similarity"] = 100
                 if not "hires"      in update_new: update_new["hires"]      = file_hires
-                if not "favorit"    in update_new: update_new["favorit"]    = 0
+                if not "favorit"    in update_new: update_new["favorit"]    = 0                
+                update_new["type"] = "image"
+                update_new["directory"] = os.path.join(self.config.directories["images"], backup_date) 
 
                 if os.path.isfile(os.path.join(dir_source,file_lowres)):
                    update_new["size"]           = (os.path.getsize(os.path.join(dir_source,file_lowres)) + os.path.getsize(os.path.join(dir_source,file_hires)))
@@ -276,8 +283,18 @@ class myBackupRestore(threading.Thread):
 
                    os.popen('cp ' + os.path.join(dir_source,file_lowres) + ' ' + os.path.join(directory,file_lowres))
                    os.popen('cp ' + os.path.join(dir_source,file_hires)  + ' ' + os.path.join(directory,file_hires))
+                   
+             elif files[stamp]["datestamp"] == backup_date:
+                count_data += 1
+                update_new  = files[stamp].copy()
+                if "hires" in update_new:     del update_new["hires"]
+                if "lowres" in update_new:    del update_new["lowres"]
+                if "directory" in update_new: del update_new["directory"]
+                update_new["type"] = "data"
+                files_backup["files"][stamp] = update_new
 
            logging.info(cam + ": " +str(count) + " Bilder gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
+#           logging.info(cam + ": " +str(count_data) + " Daten gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
 
          files_backup["info"]["date"]      = backup_date[6:8]+"."+backup_date[4:6]+"."+backup_date[0:4]
          files_backup["info"]["count"]     = count
