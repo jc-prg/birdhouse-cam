@@ -370,31 +370,21 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         else if (active_page == "TODAY" && active_date != "")	{ entry_category = [ "backup", active_date ]; }
         
         if (active_page == "TODAY_COMPLETE") {
-        	var data_labels = "";
-        	var data_data   = "";
-        	var data_keys   = Object.keys(entries);
-        	data_keys       = data_keys.sort();
-        	for (var i=0;i<data_keys.length;i++) {
-        		key = data_keys[i];
-        		if (entries[key]["similarity"] == 0) { entries[key]["similarity"] = 100; }
-        		data_labels += "'"+entries[key]["time"]+"', ";
-        		data_data   += Math.round((100-entries[key]["similarity"])*10)/10+", ";
-        		}
+        	var chart_data = {};
+        	var chart_keys = Object.keys(entries);
+        	for (var i=0;i<chart_keys.length;i++) {
+        		var key    = chart_keys[i];
 
-		html += "<textarea style='height:200px;width:90%'>\n";        		
-        	html += "<div><canvas id=\"myChart\" style=\"height:300;width:100%;\"></canvas></div>\n";
-        	html += "<script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>\n";
+        		if (key.indexOf(":") > 0) { key_print = key.substring(0,5); }
+        		else                      { key_print = key.substring(0,2) + ":" + key.substring(2,4); }
         		
-        	html += "<script>\n";
-        	html += "const labels = [ "+data_labels+" ];\n\n";
-		html += "const data = {\n labels: labels,\n datasets: [{\n label: '"+title+"',\n backgroundColor: 'rgb(255, 99, 132)',\n borderColor: 'rgb(255, 99, 132)',\n ";
-        	html += " data : [ "+data_data+" ]\n";
-        	html += " }]\n };\n\n";
-        	html += "const config = {\n type: 'line',\n data: data,\n options: {}\n };\n";
-        	html += "</script>\n";
-        	
-        	html += "<script>\nconst myChart = new Chart(document.getElementById('myChart'),config );\n</script>\n";
-		html += "</textarea>";        		
+        		var value1 = entries[key]["similarity"];
+        		if (value1 == 0) { value1 = 100; }
+        		value1     = 100 - value1;
+        		value1     = Math.round( value1*10) / 10;
+        		chart_data[key_print] = [ value1 ];
+        		}
+        	html += birdhouseChart_create(title=["Activity","Constant"], data=chart_data);
         	}
 
 	// group favorits per month
