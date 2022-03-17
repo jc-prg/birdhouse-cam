@@ -19,7 +19,7 @@ function birdhouse_app_settings (name="Settings") {
 		setTextById("setting1", html);
 
 		html  = this.tab_start();	
-		html += this.tab_row("App:",			app_title);
+		html += this.tab_row("App:",				app_title);
 		html += this.tab_row("Versions:",
 						"App: " 		+ app_version + "<br/>" +
 						"API: " 		+ app_api_version + "<br/>" +
@@ -28,14 +28,23 @@ function birdhouse_app_settings (name="Settings") {
 		html += this.tab_row("Reload Interval:",		app_reload_interval + "s");
 
 		html += this.tab_row("&nbsp;","");
-		html += this.tab_row("Active Camera:&nbsp;",	app_active_cam);
+		html += this.tab_row("Active Camera:&nbsp;",		app_active_cam);
 		html += this.tab_row("Available Cameras:&nbsp;",	app_available_cameras.length);
-		html += this.tab_row("Active Page:&nbsp;",	app_active_page);
-		html += this.tab_row("Active Date:&nbsp;",	app_active_date);
+		html += this.tab_row("Active Page:&nbsp;",		app_active_page);
+		html += this.tab_row("Active Date:&nbsp;",		app_active_date);
 		
 		html += this.tab_row("&nbsp;","");
 		html += this.tab_row("Unique stream URL:&nbsp;",	app_unique_stream_url);
 		html += this.tab_row("Unique stream ID:&nbsp;",	app_unique_stream_id);
+
+		html += this.tab_row("&nbsp;","");
+		for (let camera in birdhouseCameras) {
+			html += this.tab_row("<b>Status &quot;"+camera+"&quot;</b>","");
+			html += this.tab_row("- running",		birdhouseCameras[camera]["status"]["running"]);
+			html += this.tab_row("- error",		birdhouseCameras[camera]["status"]["error"]);
+			html += this.tab_row("- image error",		birdhouseCameras[camera]["status"]["img_error"]);
+			html += this.tab_row("- image error msg",	JSON.stringify(birdhouseCameras[camera]["status"]["img_msg"]));
+			}
 
 		html += this.tab_row("&nbsp;","");
 		html += this.tab_row("Window:", 			document.body.clientWidth + "x" + document.body.clientHeight );
