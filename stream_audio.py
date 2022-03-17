@@ -1,8 +1,44 @@
 #!/usr/bin/python3
 
-from flask import Flask, Response, render_template
-import pyaudio
 
+# get information
+# -----
+# arecord -l shows
+# aplay -l
+
+# error msg on raspberry pi
+# -----
+# LSA lib pcm_dmix.c:1108:(snd_pcm_dmix_open) unable to open slave
+# -> server works even with this error msg
+
+# add the following to ~/.asoundrc
+# -----
+# pcm.usb
+#{
+#    type hw
+#    card 1
+#}
+#pcm.internal
+#{
+#    type hw
+#    card 2
+#}
+
+
+import pyaudio
+pa = pyaudio.PyAudio()
+info = pa.get_host_api_info_by_index(0)
+numdevices = info.get('deviceCount')
+for i in range(0, numdevices):
+        if (pa.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
+            print("Input Device id ", i, " - ", pa.get_device_info_by_host_api_device_index(0, i).get('name'))
+
+# source of the following script
+# -----
+# https://gist.github.com/ryanbekabe/0a2c840134f9b7dfb635429e5e17c6ed
+# -----
+
+from flask import Flask, Response, render_template
 app = Flask(__name__)
 
 #audio1 = pyaudio.PyAudio()
@@ -85,7 +121,7 @@ def generateAudio():
 		#RECORD_SECONDS = 5
         FORMAT = pyaudio.paInt16 #pyaudio.paInt16 #pyaudio.paFloat32 #salah tunning jadi suara aneh
         CHUNK = 262144 #131072 #65536 #32768 #16384 #8192 #7168 #6144 #5120 #4096 #1024 mulai normal
-        CHANNELS = 1
+        CHANNELS = 2
         RATE = 44100 #48000
         RECORD_SECONDS = 5
         sampleRate = 44100
