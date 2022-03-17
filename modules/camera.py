@@ -280,8 +280,11 @@ class myCamera(threading.Thread):
        self.type         = type
        self.record       = record
        self.running      = True
-       self.error        = False
        self.image_size   = [0, 0]
+       
+       self.error           = False
+       self.error_image     = False
+       self.error_image_msg = []
 
        self.CameraNA     = os.path.join(self.config.main_directory,self.config.directories["data"], "camera_na.jpg")
        self.ImageNA      = cv2.imread(self.CameraNA)
@@ -486,6 +489,9 @@ class myCamera(threading.Thread):
        '''
        read image from device
        '''
+       if self.error_image:
+         return self.ImageNAraw      
+       
        if self.type == "pi":
          with self.output.condition:
            self.output.condition.wait()
@@ -498,14 +504,17 @@ class myCamera(threading.Thread):
              r, buf = cv2.imencode(".jpg",raw)
              size   = len(buf)
              raw    = bytearray(buf)
+             return raw
+
            except Exception as e:
-             logging.error("Cant encode image from camera: "+str(e))
-             return self.ImageNA
+             error_msg = "Cant encode image from camera: "+str(e)
+             logging.error(error_msg)
+             self.error_image_msg.push(error_msg)
+             self.error_image = True
 
        else:
            logging.error("Camera type not supported ("+str(self.type)+").")
 
-       return raw
 
 
    def normalizeImage(self, image, color="", compare=False):
@@ -529,35 +538,54 @@ class myCamera(threading.Thread):
        '''
        convert from raw image to image // untested
        '''
+       if self.error_image:
+         return self.ImageNA      
+
        try:
          r, buf = cv2.imencode(".jpg", raw)
          size   = len(buf)
          image  = bytearray(buf)
+         return image
 
        except Exception as e:
-         logging.error("Error convert RAW image -> image: "+str(e))
+         error_msg = "Error convert RAW image -> image: "+str(e)
+         logging.error(error_msg)
+         self.error_image_msg.push(error_msg)
+         self.error_image = True
 
-       return image
 
 
    def convertImage2RawImage(self, image):
        '''
        convert from device to raw image -> to be modifeid with CV2
        '''
+       if self.error_image:
+         return self.ImageNAraw      
+
        try:
          image = np.frombuffer(image, dtype=np.uint8)
          image = cv2.imdecode(image, 1)
          return image
 
        except Exception as e:
-         logging.error("Error convert image -> RAW image: "+str(e))
+         error_msg = "Error convert image -> RAW image: "+str(e)
+         logging.error(error_msg)
+         self.error_image_msg.push(error_msg)
+         self.error_image = True
 
 
    def convertRawImage2Gray(self, image):
        '''
        convert image from RGB to gray scale image (e.g. for analyzing similarity)
        '''
-       return cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+       try:
+          return cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+
+       except Exception as e:
+         error_msg = "Error convert image to gray scale: "+str(e)
+         logging.error(error_msg)
+         self.error_image_msg.push(error_msg)
+         self.error_image = True
 
    #----------------------------------
 
@@ -588,15 +616,21 @@ class myCamera(threading.Thread):
 
        logging.debug(self.id +": show detection area ... "+str(self.param["similarity"]["detection_area"]))
 
-       image     = cv2.line(image, (x_start,y_start), (x_start, y_end), color, thickness)
-       image     = cv2.line(image, (x_start,y_start), (x_end, y_start), color, thickness)
-       
-       image     = cv2.line(image, (x_end,y_end),     (x_start, y_end), color, thickness)
-       image     = cv2.line(image, (x_end,y_end),     (x_end, y_start), color, thickness)
-       
-       logging.debug("... top XY: "+str(x_start)+"/"+str(y_start)+" - bottom XY: "+str(x_end)+"/"+str(y_end))
+       try:
+         image     = cv2.line(image, (x_start,y_start), (x_start, y_end), color, thickness)
+         image     = cv2.line(image, (x_start,y_start), (x_end, y_start), color, thickness)       
+         image     = cv2.line(image, (x_end,y_end),     (x_start, y_end), color, thickness)
+         image     = cv2.line(image, (x_end,y_end),     (x_end, y_start), color, thickness)
+         logging.debug("... top XY: "+str(x_start)+"/"+str(y_start)+" - bottom XY: "+str(x_end)+"/"+str(y_end))
+         return image
+         
+       except Exception as e:
+         error_msg = "Error convert image to gray scale: "+str(e)
+         logging.error(error_msg)
+         self.error_image_msg.push(error_msg)
+         self.error_image = True
 
-       return image
+       
 
    #----------------------------------
    
@@ -639,7 +673,6 @@ class myCamera(threading.Thread):
 
        except Exception as e:
          logging.warning("Could not crop image: "+str(e))
-         return self.ImageNAraw
 
        return frame, (0,0,1,1)
 
