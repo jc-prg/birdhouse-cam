@@ -282,13 +282,12 @@ class myCamera(threading.Thread):
        self.running      = True
        self.error        = False
        self.image_size   = [0, 0]
-       
-       self.CameraNA     = "data/camera_na.jpg"
-       #self.ImageNAraw   = cv2.imread(self.CameraNA)
-       #self.ImageNA      = self.convertRawImage2Image(self.ImageNAraw)
+
+       self.CameraNA     = os.path.join(self.config.main_directory,self.config.directories["data"], "camera_na.jpg")
        self.ImageNA      = cv2.imread(self.CameraNA)
        self.ImageNAraw   = self.convertRawImage2Image(self.ImageNA)
-       
+
+       logging.info("Length "+self.CameraNA+" - File:"+str(len(self.ImageNA)) + "/Img:" + str(len(self.ImageNAraw)))
        logging.info("Starting camera ("+self.type+"/"+self.name+") ...")
 
        if self.type == "pi":
