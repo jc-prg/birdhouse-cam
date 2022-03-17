@@ -328,6 +328,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                    cameras[cam]["streaming_server"] = camera[cam].param["video"]["streaming_server"]
                    cameras[cam]["server_port"]      = config.param["port"]
                    cameras[cam]["similarity"]       = camera[cam].param["similarity"]
+                   
+                   cameras[cam]["status"]              = {}
+                   cameras[cam]["status"]["error"]     = camera[cam].error
+                   cameras[cam]["status"]["running"]   = camera[cam].running
+                   cameras[cam]["status"]["img_error"] = camera[cam].error_image
+                   cameras[cam]["status"]["img_msg"]   = camera[cam].error_image_msg
              
           response             = {}
           response["STATUS"]   = {
