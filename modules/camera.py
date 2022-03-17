@@ -588,10 +588,13 @@ class myCamera(threading.Thread):
 
        logging.debug(self.id +": show detection area ... "+str(self.param["similarity"]["detection_area"]))
 
-       image     = cv2.line(image, (x_start,y_start), (x_start, x_end), color, thickness)
+       image     = cv2.line(image, (x_start,y_start), (x_start, y_end), color, thickness)
        image     = cv2.line(image, (x_start,y_start), (x_end, y_start), color, thickness)
+       
        image     = cv2.line(image, (x_end,y_end),     (x_start, y_end), color, thickness)
        image     = cv2.line(image, (x_end,y_end),     (x_end, y_start), color, thickness)
+       
+       logging.debug("... top XY: "+str(x_start)+"/"+str(y_start)+" - bottom XY: "+str(x_end)+"/"+str(y_end))
 
        return image
 
