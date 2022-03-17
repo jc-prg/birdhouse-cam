@@ -1,4 +1,6 @@
-from flask import Flask, Response,render_template
+#!/usr/bin/python3
+
+from flask import Flask, Response, render_template
 import pyaudio
 
 app = Flask(__name__)
