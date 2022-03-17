@@ -276,6 +276,7 @@ class myCamera(threading.Thread):
        self.param        = param
        self.name         = param["name"]
        self.active       = param["active"]
+       self.source       = param["source"]
        self.config       = config
        self.type         = type
        self.record       = record
@@ -322,11 +323,9 @@ class myCamera(threading.Thread):
          try:
             #cap                    = cv2.VideoCapture(0) # check if camera is available
             #if cap is None or not cap.isOpened(): raise
-            self.camera            = WebcamVideoStream(src=0).start()
+            self.camera            = WebcamVideoStream(src=self.source).start()
             self.cameraFPS         = FPS().start()
-
-            #self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, cvsettings.CAMERA_WIDTH)
-
+            test                   = self.getImage()
             logging.info("OK.")
 
          except Exception as e:
