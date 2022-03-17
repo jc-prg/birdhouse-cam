@@ -411,9 +411,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                  frame = camera[which_cam].setText2Image(frame, "Processing", position=(20,y_position), color=(0,255,255), fontScale=1, thickness=2)
                  frame = camera[which_cam].setText2Image(frame, "("+length+"s/"+image_size+")", position=(200,y_position), color=(0,255,255), fontScale=0.5, thickness=1)
                      
-              if self.path.startswith("/detection/"):
-                 if not camera[which_cam].error_image:
-                    frame = camera[which_cam].drawImageDetectionArea(image=frame)
+              if self.path.startswith("/detection/") and not camera[which_cam].error_image:
+                 frame = camera[which_cam].drawImageDetectionArea(image=frame)
                      
               try:
                  camera[which_cam].wait()
