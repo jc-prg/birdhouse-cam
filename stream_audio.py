@@ -85,7 +85,7 @@ def generateAudio():
 		#RECORD_SECONDS = 5
         FORMAT = pyaudio.paInt16 #pyaudio.paInt16 #pyaudio.paFloat32 #salah tunning jadi suara aneh
         CHUNK = 262144 #131072 #65536 #32768 #16384 #8192 #7168 #6144 #5120 #4096 #1024 mulai normal
-        CHANNELS = 2
+        CHANNELS = 1
         RATE = 44100 #48000
         RECORD_SECONDS = 5
         sampleRate = 44100
@@ -97,7 +97,7 @@ def generateAudio():
                 	channels=CHANNELS,
                 	rate=RATE,
                 	input=True,
-					input_device_index=1,
+			input_device_index=1,
                 	output=True,
                 	frames_per_buffer=CHUNK)
 
