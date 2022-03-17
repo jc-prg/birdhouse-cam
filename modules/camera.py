@@ -509,7 +509,7 @@ class myCamera(threading.Thread):
            except Exception as e:
              error_msg = "Cant encode image from camera: "+str(e)
              logging.error(error_msg)
-             self.error_image_msg.push(error_msg)
+             self.error_image_msg.append(error_msg)
              self.error_image = True
 
        else:
@@ -550,7 +550,7 @@ class myCamera(threading.Thread):
        except Exception as e:
          error_msg = "Error convert RAW image -> image: "+str(e)
          logging.error(error_msg)
-         self.error_image_msg.push(error_msg)
+         self.error_image_msg.append(error_msg)
          self.error_image = True
 
 
@@ -570,7 +570,7 @@ class myCamera(threading.Thread):
        except Exception as e:
          error_msg = "Error convert image -> RAW image: "+str(e)
          logging.error(error_msg)
-         self.error_image_msg.push(error_msg)
+         self.error_image_msg.append(error_msg)
          self.error_image = True
 
 
@@ -584,7 +584,7 @@ class myCamera(threading.Thread):
        except Exception as e:
          error_msg = "Error convert image to gray scale: "+str(e)
          logging.error(error_msg)
-         self.error_image_msg.push(error_msg)
+         self.error_image_msg.append(error_msg)
          self.error_image = True
 
    #----------------------------------
@@ -627,7 +627,7 @@ class myCamera(threading.Thread):
        except Exception as e:
          error_msg = "Error convert image to gray scale: "+str(e)
          logging.error(error_msg)
-         self.error_image_msg.push(error_msg)
+         self.error_image_msg.append(error_msg)
          self.error_image = True
 
        
