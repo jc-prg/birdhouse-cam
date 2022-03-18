@@ -312,12 +312,12 @@ class myCamera(threading.Thread):
             self.camera.zoom       = param["image"]["crop"]
             self.camera.annotate_background = picamera.Color('black')
             self.camera.start_recording(self.output, format='mjpeg')
-            logging.info("OK.")
+            logging.info(self.id+": OK.")
 
          except Exception as e:
             self.error  = True
             self.active = False
-            logging.error("Starting PiCamera doesn't work!")
+            logging.error(self.id+": Starting PiCamera doesn't work!")
 
        elif type == "usb":
          try:
@@ -326,12 +326,12 @@ class myCamera(threading.Thread):
             self.camera            = WebcamVideoStream(src=self.source).start()
             self.cameraFPS         = FPS().start()
             test                   = self.getImage()
-            logging.info("OK.")
+            logging.info(self.id+": OK.")
 
          except Exception as e:
             self.error  = True
             self.active = False
-            logging.error("Starting USB camera doesn't work!\n" +str(e))
+            logging.error(self.id+": Starting USB camera doesn't work!\n" +str(e))
 
        else:
           self.error  = True
@@ -495,6 +495,7 @@ class myCamera(threading.Thread):
          with self.output.condition:
            self.output.condition.wait()
            raw = self.output.frame
+         return raw
 
        elif self.type == "usb":
            raw = self.camera.read()   ## potentially not the same RAW as fram PI
@@ -506,13 +507,13 @@ class myCamera(threading.Thread):
              return raw
 
            except Exception as e:
-             error_msg = "Cant encode image from camera: "+str(e)
+             error_msg = self.id+": Cant encode image from camera: "+str(e)
              logging.error(error_msg)
              self.error_image_msg.append(error_msg)
              self.error_image = True
 
        else:
-           logging.error("Camera type not supported ("+str(self.type)+").")
+           logging.error(self.id+": Camera type not supported ("+str(self.type)+").")
 
 
 
@@ -547,7 +548,7 @@ class myCamera(threading.Thread):
          return image
 
        except Exception as e:
-         error_msg = "Error convert RAW image -> image: "+str(e)
+         error_msg = self.id+": Error convert RAW image -> image: "+str(e)
          logging.error(error_msg)
          self.error_image_msg.append(error_msg)
          self.error_image = True
@@ -567,7 +568,7 @@ class myCamera(threading.Thread):
          return image
 
        except Exception as e:
-         error_msg = "Error convert image -> RAW image: "+str(e)
+         error_msg = self.id+": Error convert image -> RAW image: "+str(e)
          logging.error(error_msg)
          self.error_image_msg.append(error_msg)
          self.error_image = True
@@ -581,7 +582,7 @@ class myCamera(threading.Thread):
           return cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
 
        except Exception as e:
-         error_msg = "Error convert image to gray scale: "+str(e)
+         error_msg = self.id+": Error convert image to gray scale: "+str(e)
          logging.error(error_msg)
          self.error_image_msg.append(error_msg)
          self.error_image = True
@@ -624,7 +625,7 @@ class myCamera(threading.Thread):
          return image
          
        except Exception as e:
-         error_msg = "Error convert image to gray scale: "+str(e)
+         error_msg = self.id+": Error convert image to gray scale: "+str(e)
          logging.error(error_msg)
          self.error_image_msg.append(error_msg)
          self.error_image = True
@@ -643,7 +644,7 @@ class myCamera(threading.Thread):
          return [width, height]
         
        except Exception as e:
-         logging.warning("Could not analyze image: "+str(e))
+         logging.warning(self.id+": Could not analyze image: "+str(e))
          return [0, 0]        
 
    #----------------------------------
@@ -671,7 +672,7 @@ class myCamera(threading.Thread):
          return frame_cropped, crop_area
 
        except Exception as e:
-         logging.warning("Could not crop image: "+str(e))
+         logging.warning(self.id+": Could not crop image: "+str(e))
 
        return frame, (0,0,1,1)
 
@@ -693,7 +694,7 @@ class myCamera(threading.Thread):
        calculate structual similarity index (SSIM) of two images
        '''
        if len(imageA) == 0 or len(imageB) == 0:
-          logging.warning("At least one file has a zero length - A:" + str(len(imageA)) + "/ B:" + str(len(imageB)))
+          logging.warning(self.id+": At least one file has a zero length - A:" + str(len(imageA)) + "/ B:" + str(len(imageB)))
           score = 0
           
        else:
@@ -707,7 +708,7 @@ class myCamera(threading.Thread):
             (score, diff) = ssim(imageA, imageB, full=True)
 
          except Exception as e:
-            logging.warning("Error comparing images: " + str(e))
+            logging.warning(self.id+": Error comparing images: " + str(e))
             score = 0
 
        return round(score*100,1)
@@ -785,7 +786,7 @@ class myCamera(threading.Thread):
        '''
        Write image information to file
        '''
-       logging.debug("Write video info: "+self.config.file("images"))
+       logging.debug(self.id+": Write video info: "+self.config.file("images"))
        
        if os.path.isfile(self.config.file("videos")):
           files       = self.config.read_cache("videos")
