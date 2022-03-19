@@ -498,6 +498,8 @@ if __name__ == "__main__":
     for sen in config.param["sensors"]:
         settings    = config.param["sensors"][sen]
         sensor[sen] = mySensor(id=sen, param=settings, config=config)
+        if not sensor[sen].error:
+           sensor[sen].start()
 
     # start views and commands
     views = myViews(config=config, camera=camera)
