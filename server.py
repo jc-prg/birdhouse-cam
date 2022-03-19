@@ -331,7 +331,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                    cameras[cam]["status"]["running"]   = camera[cam].running
                    cameras[cam]["status"]["img_error"] = camera[cam].error_image
                    cameras[cam]["status"]["img_msg"]   = camera[cam].error_image_msg
-             
+   
+          sensor_data = {}
+          for sen in config.param["sensors"]:
+            if not sensor[sen]["error"] and sensor[sen]["running"]:
+              sensor_data[sen] = sensor.values
+                           
           response             = {}
           response["STATUS"]   = {
                      "start_time"    : APIstart,
@@ -344,6 +349,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           response["API"]                 = APIdescription
           response["DATA"]                = content
           response["DATA"]["cameras"]     = cameras
+          response["DATA"]["sensors"]     = sensor_data
           response["DATA"]["selected"]    = which_cam
           response["DATA"]["active_page"] = command
              
