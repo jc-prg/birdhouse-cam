@@ -266,12 +266,12 @@ function birdhouse_CAMERAS( title, data ) {
 	    html  += "</div>";
 	}
 	for (let sensor in sensors) {
-        html += birdhouse_OtherGroupHeader( sensor, sensor, true );
+        html += birdhouse_OtherGroupHeader( sensor, sensor.toUpperCase()+": "+sensors[sensor]["name"], true );
         html += "<div id='group_"+sensor+"'>";
         html += "<div class='camera_info'>";
         html += "<div class='camera_info_image'>&nbsp;</div>";
         html += "<div class='camera_info_text'><ul>";
-        for (let key in sensors[sensor]) {
+        for (let key in sensors[sensor]["values"]) {
             html += "<li>"+key+": "+sensors[sensor][key]+"</li>";
         }
         html += "</ul></div></div>";
