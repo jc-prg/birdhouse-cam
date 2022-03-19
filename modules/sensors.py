@@ -2,6 +2,7 @@ import RPi.GPIO as GPIO
 import modules.dht11 as dht11
 import time
 import threading
+import logging
 
 
 class mySensor(threading.Thread):
