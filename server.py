@@ -334,7 +334,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
    
           sensor_data = {}
           for sen in sensor:
-            if not sensor[sen]["error"] and sensor[sen]["running"]:
+            if not sensor[sen].error and sensor[sen].running:
               sensor_data[sen] = sensor[sen].values
                            
           response             = {}
