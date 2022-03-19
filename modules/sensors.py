@@ -36,6 +36,8 @@ class mySensor(threading.Thread):
            self.values["humidity"]    = indoor.humidity
            logging.debug("Temperature: " + str(indoor.temperature))
            logging.debug("Humidity:    " + str(indoor.humidity))
+         else:
+           logging.warning("Could not read data from sensor '"+self.id+"'")
            
          time.sleep(1)
        
