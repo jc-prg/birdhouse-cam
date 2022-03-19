@@ -63,8 +63,10 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 
 function birdhousePrint(data) {
 
-	console.debug("Request->Print ...");	
-	console.log("Sensor data: "+data["DATA"]["sensors"]["sensor1"]["temperature"] + "C / "+ data["DATA"]["sensors"]["sensor1"]["humidity"] + "%");
+	console.debug("Request->Print ...");
+	if (data["DATA"]["sensors"]["sensor1"]) {
+	    console.log("Sensor data: "+data["DATA"]["sensors"]["sensor1"]["temperature"] + "C / "+ data["DATA"]["sensors"]["sensor1"]["humidity"] + "%");
+	    }
 
 	birdhouseCameras  = data["DATA"]["cameras"];
 	var date          = data["DATA"]["active_date"];
@@ -80,15 +82,15 @@ function birdhousePrint(data) {
 
 	// check if admin allowed! -> create respective menu
 	
-	if (app_active_page == "INDEX")		{ birdhouse_INDEX(data, camera); }
-	else if (app_active_page == "CAMERAS")	{ birdhouse_CAMERAS(lang("CAMERAS"),     data, camera); }
-	else if (app_active_page == "FAVORITS")	{ birdhouse_LIST(lang("FAVORITS"),       data, camera); }
-	else if (app_active_page == "ARCHIVE")	{ birdhouse_LIST(lang("ARCHIVE"),        data, camera); }
-	else if (app_active_page == "TODAY")		{ birdhouse_LIST(lang("TODAY"),          data, camera); }
-	else if (app_active_page == "TODAY_COMPLETE")	{ birdhouse_LIST(lang("TODAY_COMPLETE"), data, camera, false); }
-	else if (app_active_page == "VIDEOS")		{ birdhouse_LIST(lang("VIDEOS"),         data, camera); }
+	if (app_active_page == "INDEX") { birdhouse_INDEX(data, camera); }
+	else if (app_active_page == "CAMERAS") { birdhouse_CAMERAS(lang("CAMERAS"), data, camera); }
+	else if (app_active_page == "FAVORITS")	{ birdhouse_LIST(lang("FAVORITS"),  data, camera); }
+	else if (app_active_page == "ARCHIVE") { birdhouse_LIST(lang("ARCHIVE"), data, camera); }
+	else if (app_active_page == "TODAY") { birdhouse_LIST(lang("TODAY"), data, camera); }
+	else if (app_active_page == "TODAY_COMPLETE") { birdhouse_LIST(lang("TODAY_COMPLETE"), data, camera, false); }
+	else if (app_active_page == "VIDEOS") { birdhouse_LIST(lang("VIDEOS"), data, camera); }
 	else if (app_active_page == "VIDEO_DETAIL")	{ birdhouse_VIDEO_DETAIL(lang("VIDEOS"), data, camera); }
-	else						{ setTextById("frame2",lang("ERROR") + ": "+app_active_page); }
+	else { setTextById("frame2",lang("ERROR") + ": "+app_active_page); }
 	
 	scroll(0,0);
 	}
@@ -228,20 +230,21 @@ function birdhouse_INDEX(data, camera) {
 
 function birdhouse_CAMERAS( title, data ) {
 	var cameras	= data["DATA"]["entries"];
+	var sensors = data["DATA"]["sensors"];
 	var admin 	= data["STATUS"]["admin_allowed"];
 	var html	= "";
 	
 	for (let camera in cameras) {
-	        info          = cameras[camera];
-	        camera_name   = camera.toUpperCase() + ": " + cameras[camera]["name"];
-	        camera_stream = birdhouse_Image(camera_name, cameras[camera]);
+	    info          = cameras[camera];
+	    camera_name   = camera.toUpperCase() + ": " + cameras[camera]["name"];
+	    camera_stream = birdhouse_Image(camera_name, cameras[camera]);
 	        
-		html  += birdhouse_OtherGroupHeader( camera, camera_name, true )
+		html += birdhouse_OtherGroupHeader( camera, camera_name, true )
 		html += "<div id='group_"+camera+"'>";
 		
-	        html  += "<div class='camera_info'>";
-	        if (cameras[camera]["active"])	{ html  += "<div class='camera_info_image'>"+camera_stream+"</div>"; }
-	        else					{ html  += "<div class='camera_info_image'>"+lang("CAMERA_INACTIVE")+"</div>"; }
+	    html  += "<div class='camera_info'>";
+	    if (cameras[camera]["active"])	{ html  += "<div class='camera_info_image'>"+camera_stream+"</div>"; }
+	    else					{ html  += "<div class='camera_info_image'>"+lang("CAMERA_INACTIVE")+"</div>"; }
 		html  += "<div class='camera_info_text'>";
 		html   += "<ul>"
 		html   += "<li>Type: "   + info["camera_type"] + "</li>"
@@ -259,11 +262,20 @@ function birdhouse_CAMERAS( title, data ) {
 			var onclick = "birdhouse_createDayVideo('"+camera+"');";
 			html += "<button onclick=\""+onclick+"\" class=\"button-video-edit\">&nbsp;"+lang("CREATE_DAY")+"&nbsp;</button>";
 			}
-	        html  += "</div></div>";
-	        html  += "</div>";
-		}
-	setTextById("frame2",html);
+	    html  += "</div></div>";
+	    html  += "</div>";
 	}
+	for (let sensor in sensors) {
+        html += birdhouse_OtherGroupHeader( sensor, sensor, true );
+        html += "<div class='group_"+sensor+"'>";
+        html += "<div class='camera_info'></div>";
+        html += "<div class='camera_info_text'>";
+        html += "Sensor data: " + sensors[sensor]["temperature"] + "C / " + sensors["sensor"]["humidity"] + "%"
+        html += "</div>";
+	    html += "</div>";
+	}
+	setTextById("frame2",html);
+}
 
 //-----------------------------------------
 
