@@ -3,7 +3,6 @@
 import os, time
 import logging
 import json, codecs
-
 import threading
 from threading       import Condition
 from datetime        import datetime
@@ -40,14 +39,14 @@ class myConfig(threading.Thread):
        self.files          = {
            "backup" : "config_images.json",
            "images" : "config_images.json",
-           "main"   : "config.json",
+           "main"   : "data/config.json",
            "videos" : "config_videos.json"
            }
 
        self.main_directory = main_directory
 
        if not self.exists("main"):
-         logging.info("Create main config file (" + os.path.join(self.main_directory, self.files["main"]) + ") ...")
+         logging.info("Create main config file (" + os.path.join(self.main_directory, self.main_directories["data"],self.files["main"]) + ") ...")
          self.write("main", self.param_init)
          logging.info("OK.")
          

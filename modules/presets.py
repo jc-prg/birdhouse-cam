@@ -12,7 +12,8 @@ myParameters = {
   "port"              : 8000,              # http-port
   "preview_backup"    : "0700",            # HHMM
   "ip4_admin_deny"    : ["192.168.1.31"],  # put in the IP address of your proxy or router if you don't want to allow edits from outside
-  "backup_time"       : "2100",            # HHMM
+  "ip4_address"       : "192.168.1.20",
+  "backup_time"       : "2000",            # HHMM
 
   "cameras"  : {
      "cam1"  : {
@@ -75,6 +76,28 @@ myParameters = {
           },
        "preview_scale" : 18
        }
+  },
+  "microphones" :{
+    	"mic1" : {
+            "active": True,
+            "name" : "Innen",
+            "type" : "usb",
+            "port" : 5002
+    	},
+    	"mic2" : {
+            "active": False,
+            "name" : "Außen",
+            "type" : "usb",
+            "port" : 5001
+    	}
+  },
+  "sensors" : {
+       "sensor1" : {
+           "active" : True,
+           "name" : "Innen-Thermometer",
+           "type" : "dht11",
+           "pin"  : 4
+    	}
   }
 }
 

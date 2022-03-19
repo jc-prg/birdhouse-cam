@@ -11,24 +11,21 @@
 # - (re)start backup manually
 
 
-import io, os, time
+import os, time
 import logging
-import json, codecs
-import numpy as np
+import json
 import signal, sys, string
 
-import threading
 import socketserver
-from threading        import Condition
 from http             import server
-from datetime         import datetime, timedelta
+from datetime         import datetime
 
 from modules.backup   import myBackupRestore
 from modules.camera   import myCamera
+from modules.sensors  import mySensor
 from modules.config   import myConfig
 from modules.commands import myCommands
 from modules.presets  import myParameters
-from modules.presets  import myPages
 from modules.presets  import myMIMEtypes
 from modules.views    import myViews
 from modules.views_v2 import myViews_v2
@@ -82,7 +79,7 @@ def read_html(directory, filename, content=""):
    read html file, replace placeholders and return for stream via webserver
    '''
    if filename.startswith("/"):  filename = filename[1:len(filename)]
-   if directory.startswith("/"): directory = directroy[1:len(directory)]
+   if directory.startswith("/"): directory = directory[1:len(directory)]
    file = os.path.join(config.param["path"], directory, filename)
 
    if not os.path.isfile(file):
@@ -107,7 +104,7 @@ def read_image(directory,filename):
    read image file and return for stream via webserver
    '''
    if filename.startswith("/"):  filename = filename[1:len(filename)]
-   if directory.startswith("/"): directory = directroy[1:len(directory)]
+   if directory.startswith("/"): directory = directory[1:len(directory)]
    file = os.path.join(config.param["path"], directory, filename)
    file = file.replace("backup/","")
 
@@ -230,7 +227,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         if not self.adminAllowed():
            response["error"] = "Administration not allowed for this IP-Address!"
-           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+           self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True)
 
         if self.path.startswith("/api"):                   self.path = self.path.replace("/api","")
         
@@ -247,7 +244,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            self.sendError()
            return
 
-        self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+        self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True)
            
 
     #-------------------------------------
@@ -350,7 +347,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
           response["DATA"]["selected"]    = which_cam
           response["DATA"]["active_page"] = command
              
-          self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True);
+          self.streamFile(ftype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True)
 
 
         # app and API v1
@@ -495,6 +492,12 @@ if __name__ == "__main__":
     time.sleep(1)
     backup = myBackupRestore(config, camera)
     backup.start()
+    
+    # start sensors
+    sensor = {}
+    for sen in config.param["sensors"]:
+        settings    = config.param["sensors"][sen]
+        sensor[sen] = mySensor(id=sen, param=settings, config=config)
 
     # start views and commands
     views = myViews(config=config, camera=camera)
