@@ -6,32 +6,32 @@ import json
 import signal, sys
 
 import socketserver
-from http             import server
-from datetime         import datetime
+from http import server
+from datetime import datetime
 
-from modules.backup   import myBackupRestore
-from modules.camera   import myCamera
-from modules.config   import myConfig
+from modules.backup import myBackupRestore
+from modules.camera import myCamera
+from modules.config import myConfig
 from modules.commands import myCommands
-from modules.presets  import myParameters
-from modules.presets  import myMIMEtypes
-from modules.views    import myViews
+from modules.presets import myParameters
+from modules.presets import myMIMEtypes
+from modules.views import myViews
 from modules.views_v2 import myViews_v2
 
 
 APIdescription = {
-      "name"    : "BirdhouseCAM",
-      "version" : "v0.9.0"
+      "name": "BirdhouseCAM",
+      "version": "v0.9.0"
       }
-APIstart       = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-APPframework   = "v0.9.1"
+APIstart = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+APPframework = "v0.9.1"
 
 
 def on_exit(signum, handler):
-    '''
+    """
     Clean exit on Strg+C
     All shutdown functions are defined in the "finally:" section in the end of this script
-    '''
+    """
     time.sleep(1)
     print ('\nSTRG+C pressed! (Signal: %s)' % (signum,))
     while True:
@@ -48,37 +48,40 @@ def on_exit(signum, handler):
 
 
 def on_kill(signum, handler):
-    '''
+    """
     Clean exit on kill command
     All shutdown functions are defined in the "finally:" section in the end of this script
-    '''
+    """
     print('\nKILL command detected! (Signal: %s)' % (signum,))
     sys.exit()
 
 
 def read_html(directory, filename, content=""):
-   '''
-   read html file, replace placeholders and return for stream via webserver
-   '''
-   if filename.startswith("/"):  filename = filename[1:len(filename)]
-   if directory.startswith("/"): directory = directory[1:len(directory)]
-   file = os.path.join(config.param["path"], directory, filename)
+    """
+    read html file, replace placeholders and return for stream via webserver
+    """
+    if filename.startswith("/"):
+        filename = filename[1:len(filename)]
+    if directory.startswith("/"):
+        directory = directory[1:len(directory)]
+    file = os.path.join(config.param["path"], directory, filename)
 
-   if not os.path.isfile(file):
-     logging.warning("File '"+file+"' does not exist!")
-     return ""
+    if not os.path.isfile(file):
+        logging.warning("File '"+file+"' does not exist!")
+        return ""
 
-   with open(file, "r") as page:
-     PAGE = page.read()
-     
-     for param in content:
-       if "<!--"+param+"-->" in PAGE: PAGE = PAGE.replace("<!--"+param+"-->",str(content[param]))
-       
-     for param in config.html_replace:
-       if "<!--"+param+"-->" in PAGE: PAGE = PAGE.replace("<!--"+param+"-->",str(config.html_replace[param]))
-       
-     PAGE = PAGE.encode('utf-8')
-   return PAGE
+    with open(file, "r") as page:
+        page = page.read()
+
+        for param in content:
+            if "<!--"+param+"-->" in page:
+                page = page.replace("<!--"+param+"-->", str(content[param]))
+        for param in config.html_replace:
+            if "<!--"+param+"-->" in page:
+                page = page.replace("<!--"+param+"-->", str(config.html_replace[param]))
+
+        page = page.encode('utf-8')
+    return page
 
 
 def read_image(directory,filename):
