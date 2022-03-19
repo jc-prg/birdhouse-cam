@@ -107,9 +107,9 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
 class StreamingHandler(server.BaseHTTPRequestHandler):
 
     def redirect(self, file):
-        '''
+        """
         Redirect to other file / URL
-        '''
+        """
         logging.debug("Redirect: "+file)
         self.send_response(301)
         self.send_header('Location', file)
@@ -118,10 +118,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_header("Expires", "0")
         self.end_headers()
 
-    def sendError(self):
-        '''
+    def error_404(self):
+        """
         Send file not found
-        '''
+        """
         self.send_error(404)
         self.end_headers()
 
@@ -142,7 +142,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(content)
         else:
-            self.sendError()
+            self.error_404()
 
     def stream_video_header(self):
         """
@@ -212,7 +212,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.startswith("/create-day-video/"):   response = commands.createDayVideo(self)
 
         else:
-           self.sendError()
+           self.error_404()
            return
 
         self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True)
@@ -222,10 +222,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         check path and send requested content
         """
         path, which_cam = views.selectedCamera(self.path)
-        file_ending     = self.path.split(".")
-        file_ending     = "."+file_ending[len(file_ending)-1].lower()
+        file_ending = self.path.split(".")
+        file_ending = "."+file_ending[len(file_ending)-1].lower()
         
-        config.html_replace["title"]      = config.param["title"]
+        config.html_replace["title"] = config.param["title"]
         config.html_replace["active_cam"] = which_cam
         
         # index 
@@ -244,9 +244,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.startswith("/api/"):
          
             logging.info("GET API request with '" + self.path + "'.")
-            param   = self.path.split("/")
+            param = self.path.split("/")
             command = param[2]
-            status  = "Success"
+            status = "Success"
             version = {}
 
             if len(param) > 3:
@@ -263,18 +263,18 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             elif command == "status" or command == "version":
                 content = views_v2.createIndex(server=self)
                 if len(param) > 3 and param[2] == "version":
-                 version["Code"] = "800"
-                 version["Msg"]  = "Version OK."
-                 if param[3] != APPframework:
-                     version["Code"] = "802"
-                     version["Msg"]  = "Update required."
+                    version["Code"] = "800"
+                    version["Msg"] = "Version OK."
+                    if param[3] != APPframework:
+                        version["Code"] = "802"
+                        version["Msg"] = "Update required."
                 content["last_answer"] = ""
                 if len(config.async_answers) > 0:
-                     content["last_answer"] = config.async_answers.pop()
-                     content["background_process"] = config.async_running
+                    content["last_answer"] = config.async_answers.pop()
+                    content["background_process"] = config.async_running
             else:
                 content = {}
-                status  = "Error: command not found."
+                status = "Error: command not found."
 
             if "links_json" in content: content["links"] = content["links_json"]
             if "links_json" in content: del content["links_json"]
@@ -293,7 +293,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         "streaming_server":  camera[key].param["video"]["streaming_server"],
                         "server_port":       config.param["port"],
                         "similarity":        camera[key].param["similarity"],
-                        "status":{
+                        "status": {
                             "error":         camera[key].error,
                             "running":       camera[key].running,
                             "img_error":     camera[key].error_image,
@@ -302,24 +302,24 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     }
 
             sensor_data = config.param["sensors"]
-            for key in sensor:
-                if not sensor[key].error and sensor[key].running:
+            for key in sensor_data:
+                if key in sensor and not sensor[key].error and sensor[key].running:
                     sensor_data[key]["values"] = sensor[key].values
 
             response = {}
-            response["STATUS"]   = {
-                "start_time"    : APIstart,
-                "current_time"  : datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
-                "admin_allowed" : self.admin_allowed(),
-                "check-version" : version,
-                "api-call"      : status,
-                "reload"        : False
+            response["STATUS"] = {
+                "start_time":       APIstart,
+                "current_time":     datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                "admin_allowed":    self.admin_allowed(),
+                "check-version":    version,
+                "api-call":         status,
+                "reload":           False
                 }
-            response["API"]                 = APIdescription
-            response["DATA"]                = content
-            response["DATA"]["cameras"]     = cameras
-            response["DATA"]["sensors"]     = sensor_data
-            response["DATA"]["selected"]    = which_cam
+            response["API"] = APIdescription
+            response["DATA"] = content
+            response["DATA"]["cameras"] = cameras
+            response["DATA"]["sensors"] = sensor_data
+            response["DATA"]["selected"] = which_cam
             response["DATA"]["active_page"] = command
 
             self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True)
@@ -346,13 +346,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             camera[which_cam].writeImage('image_'+which_cam+'.jpg',camera[which_cam].convertFrame2Image(camera[which_cam].getFrame()))
             self.stream_file(filetype='image/jpeg', content=read_image(directory="", filename='image_' + which_cam + '.jpg'))
 
-
         # show live stream
         elif '/stream.mjpg' in self.path:
             if camera[which_cam].type != "pi" and camera[which_cam].type != "usb":
                 logging.warning("Unknown type of camera ("+camera[which_cam].type+"/"+camera[which_cam].name+")")
                 stream = False
-                self.sendError()
+                self.error_404()
                 return
                
             self.stream_video_header()
@@ -426,7 +425,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
            
         # unknown
         else:
-            self.sendError()
+            self.error_404()
 
 
 if __name__ == "__main__":
