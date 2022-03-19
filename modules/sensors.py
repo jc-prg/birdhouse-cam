@@ -38,7 +38,7 @@ class mySensor(threading.Thread):
              logging.debug("Temperature: " + str(indoor.temperature))
              logging.debug("Humidity:    " + str(indoor.humidity))
            else:
-             logging.warning("Could not read data from sensor '"+self.id+"'")
+             logging.warning("Could not read data from sensor '"+self.id+"': "+str(indoor.error_code))
          except Exception as e:
            logging.warning("Error reading data from sensor '"+self.id+"'")
            
