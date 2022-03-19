@@ -272,7 +272,7 @@ function birdhouse_CAMERAS( title, data ) {
         html += "<div class='camera_info_image'>&nbsp;</div>";
         html += "<div class='camera_info_text'><ul>";
         for (let key in sensors[sensor]["values"]) {
-            html += "<li>"+key+": "+sensors[sensor][key]+"</li>";
+            html += "<li>"+key+": "+sensors[sensor]["values"][key]+"</li>";
         }
         html += "</ul></div></div>";
 	    html += "</div>";
