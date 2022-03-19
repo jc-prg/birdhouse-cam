@@ -52,7 +52,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 	if (camera != "" && date != "")	{ commands.push(camera); commands.push(date); }
 	else if (camera != "")			{ commands.push(camera); }
 	else					{ commands.push(app_active_cam); }
-
+	
 	console.debug("Request "+view+" / "+camera+" / "+date);	
 	appFW.requestAPI('GET',commands,"",birdhousePrint,"","birdhousePrint_load");
 	}
@@ -64,6 +64,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 function birdhousePrint(data) {
 
 	console.debug("Request->Print ...");	
+	console.log("Sensor data: "+data["DATA"]["sensors"]["sensor1"]["temperature"] + "C / "+ data["DATA"]["sensors"]["sensor1"]["humidity"] + "%");
 
 	birdhouseCameras  = data["DATA"]["cameras"];
 	var date          = data["DATA"]["active_date"];
