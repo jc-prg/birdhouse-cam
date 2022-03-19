@@ -30,14 +30,17 @@ class mySensor(threading.Thread):
        Start recording from sensors
        '''
        while (self.running and not self.error):
-         indoor = self.sensor.read()
-         if indoor.is_valid():
-           self.values["temperature"] = indoor.temperature
-           self.values["humidity"]    = indoor.humidity
-           logging.debug("Temperature: " + str(indoor.temperature))
-           logging.debug("Humidity:    " + str(indoor.humidity))
-         else:
-           logging.warning("Could not read data from sensor '"+self.id+"'")
+         try:
+           indoor = self.sensor.read()
+           if indoor.is_valid():
+             self.values["temperature"] = indoor.temperature
+             self.values["humidity"]    = indoor.humidity
+             logging.debug("Temperature: " + str(indoor.temperature))
+             logging.debug("Humidity:    " + str(indoor.humidity))
+           else:
+             logging.warning("Could not read data from sensor '"+self.id+"'")
+         except Exception as e:
+           logging.warning("Error reading data from sensor '"+self.id+"'")
            
          time.sleep(1)
        
