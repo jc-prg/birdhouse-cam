@@ -34,8 +34,8 @@ class mySensor(threading.Thread):
          if indoor.is_valid():
            self.values["temperature"] = indoor.temperature
            self.values["humidity"]    = indoor.humidity
-           logging.info("Temperatur: "  + str(indoor.temperature))
-           logging.info("Luftfeuchtigkeit: " + str(indoor.humidity))
+           logging.debug("Temperature: " + str(indoor.temperature))
+           logging.debug("Humidity:    " + str(indoor.humidity))
            
          time.sleep(1)
        
