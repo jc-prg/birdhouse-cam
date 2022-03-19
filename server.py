@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 
-import os, time
+import os
+import time
 import logging
 import json
-import signal, sys
+import signal
+import sys
 
 import socketserver
 from http import server
@@ -35,12 +37,12 @@ def on_exit(signum, handler):
     time.sleep(1)
     print ('\nSTRG+C pressed! (Signal: %s)' % (signum,))
     while True:
-        confirm = input('Enter "yes" to cancel programm now or "no" to keep running [yes/no]: ').strip().lower()
+        confirm = input('Enter "yes" to cancel program now or "no" to keep running [yes/no]: ').strip().lower()
         if confirm == 'yes':
             print ("Cancel!\n")
             sys.exit()
         elif confirm == 'no':
-            print ("Keep runnning!\n")
+            print ("Keep running!\n")
             break
         else:
             print ('Sorry, no valid answer...\n')
@@ -203,20 +205,28 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response["error"] = "Administration not allowed for this IP-Address!"
             self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True)
 
-        if self.path.startswith("/api"):                   self.path = self.path.replace("/api","")
+        if self.path.startswith("/api"):
+            self.path = self.path.replace("/api","")
         
-        if self.path.startswith("/favorit/"):              response = commands.setStatusFavoritNew(self)
-        elif self.path.startswith("/recycle/"):            response = commands.setStatusRecycleNew(self)
-        elif self.path.startswith("/recycle-range/"):      response = commands.setStatusRecycleRange(self)
-        elif self.path.startswith('/remove/'):             response = commands.deleteMarkedFiles(self)
-        elif self.path.startswith("/start/recording/"):    response = commands.startRecording(self)
-        elif self.path.startswith("/stop/recording/"):     response = commands.stopRecording(self)
-        elif self.path.startswith("/create-short-video/"): response = commands.createShortVideo(self)
-        elif self.path.startswith("/create-day-video/"):   response = commands.createDayVideo(self)
-
+        if self.path.startswith("/favorit/"):
+            response = commands.setStatusFavoritNew(self)
+        elif self.path.startswith("/recycle/"):
+            response = commands.setStatusRecycleNew(self)
+        elif self.path.startswith("/recycle-range/"):
+            response = commands.setStatusRecycleRange(self)
+        elif self.path.startswith('/remove/'):
+            response = commands.deleteMarkedFiles(self)
+        elif self.path.startswith("/start/recording/"):
+            response = commands.startRecording(self)
+        elif self.path.startswith("/stop/recording/"):
+            response = commands.stopRecording(self)
+        elif self.path.startswith("/create-short-video/"):
+            response = commands.createShortVideo(self)
+        elif self.path.startswith("/create-day-video/"):
+            response = commands.createDayVideo(self)
         else:
-           self.error_404()
-           return
+            self.error_404()
+            return
 
         self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True)
            
@@ -232,16 +242,26 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         config.html_replace["active_cam"] = which_cam
         
         # index 
-        if self.path == '/':                    self.redirect("/app/index.html")
-        elif self.path == '/index.html':        self.redirect("/")
-        elif self.path == '/index.html?cam1':   self.redirect("/")
-        elif self.path == '/app':               self.redirect("/app/index.html")
-        elif self.path == '/app/':              self.redirect("/app/index.html")
-        elif self.path == '/app-v1':            self.redirect("/app-v1/index.html")
-        elif self.path == '/app-v1/':           self.redirect("/app-v1/index.html")
-        elif self.path == '/app-v2':            self.redirect("/app/index.html")
-        elif self.path == '/app-v2/':           self.redirect("/app/index.html")
-        elif self.path == '/app-v2/index.html': self.redirect("/app/index.html")
+        if self.path == '/':
+            self.redirect("/app/index.html")
+        elif self.path == '/index.html':
+            self.redirect("/")
+        elif self.path == '/index.html?cam1':
+            self.redirect("/")
+        elif self.path == '/app':
+            self.redirect("/app/index.html")
+        elif self.path == '/app/':
+            self.redirect("/app/index.html")
+        elif self.path == '/app-v1':
+            self.redirect("/app-v1/index.html")
+        elif self.path == '/app-v1/':
+            self.redirect("/app-v1/index.html")
+        elif self.path == '/app-v2':
+            self.redirect("/app/index.html")
+        elif self.path == '/app-v2/':
+            self.redirect("/app/index.html")
+        elif self.path == '/app-v2/index.html':
+            self.redirect("/app/index.html")
 
         # REST API call :  /api/<cmd>/<camera>/param1>/<param2>
         elif self.path.startswith("/api/"):
@@ -255,14 +275,22 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if len(param) > 3:
                 which_cam = param[3]
 
-            if   command == "INDEX":          content = views_v2.createIndex(server=self)
-            elif command == "FAVORITS":       content = views_v2.createFavorits(server=self)
-            elif command == "TODAY":          content = views_v2.createList(server=self)
-            elif command == "TODAY_COMPLETE": content = views_v2.createCompleteListToday(server=self)
-            elif command == "ARCHIVE":        content = views_v2.createBackupList(server=self)
-            elif command == "VIDEOS":         content = views_v2.createVideoList(server=self)
-            elif command == "VIDEO_DETAIL":   content = views_v2.detailViewVideo(server=self)
-            elif command == "CAMERAS":        content = views_v2.createCameraList(server=self)
+            if command == "INDEX":
+                content = views_v2.createIndex(server=self)
+            elif command == "FAVORITS":
+                content = views_v2.createFavorits(server=self)
+            elif command == "TODAY":
+                content = views_v2.createList(server=self)
+            elif command == "TODAY_COMPLETE":
+                content = views_v2.createCompleteListToday(server=self)
+            elif command == "ARCHIVE":
+                content = views_v2.createBackupList(server=self)
+            elif command == "VIDEOS":
+                content = views_v2.createVideoList(server=self)
+            elif command == "VIDEO_DETAIL":
+                content = views_v2.detailViewVideo(server=self)
+            elif command == "CAMERAS":
+                content = views_v2.createCameraList(server=self)
             elif command == "status" or command == "version":
                 content = views_v2.createIndex(server=self)
                 if len(param) > 3 and param[2] == "version":
@@ -279,9 +307,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 content = {}
                 status = "Error: command not found."
 
-            if "links_json" in content: content["links"] = content["links_json"]
-            if "links_json" in content: del content["links_json"]
-            if "file_list"  in content: del content["file_list"]
+            if "links_json" in content:
+                content["links"] = content["links_json"]
+            if "links_json" in content:
+                del content["links_json"]
+            if "file_list"  in content:
+                del content["file_list"]
+
             content["title"] = config.param["title"]
 
             cameras = {}
@@ -330,15 +362,25 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # app and API v1
         elif ('.html' in self.path or "/api/" in self.path) and "/app-v1/" in self.path:
             content = {}
-            if   "//" in self.path:                self.path = self.path.replace("//","/")
-            if   '/index.html' in self.path:       template, content = views.createIndex(server=self)
-            elif '/list_star.html' in self.path:   template, content = views.createFavorits(server=self)
-            elif '/list_short.html' in self.path:  template, content = views.createList(server=self)
-            elif '/list_backup.html' in self.path: template, content = views.createBackupList(server=self)
-            elif '/list_new.html' in self.path:    template, content = views.createCompleteListToday(server=self)
-            elif '/videos.html' in self.path:      template, content = views.createVideoList(server=self)
-            elif '/video-info.html' in self.path:  template, content = views.detailViewVideo(server=self)
-            elif '/cameras.html' in self.path:     template, content = views.createCameraList(server=self)
+            template = ""
+            if "//" in self.path:
+                self.path = self.path.replace("//","/")
+            if '/index.html' in self.path:
+                template, content = views.createIndex(server=self)
+            elif '/list_star.html' in self.path:
+                template, content = views.createFavorits(server=self)
+            elif '/list_short.html' in self.path:
+                template, content = views.createList(server=self)
+            elif '/list_backup.html' in self.path:
+                template, content = views.createBackupList(server=self)
+            elif '/list_new.html' in self.path:
+                template, content = views.createCompleteListToday(server=self)
+            elif '/videos.html' in self.path:
+                template, content = views.createVideoList(server=self)
+            elif '/video-info.html' in self.path:
+                template, content = views.detailViewVideo(server=self)
+            elif '/cameras.html' in self.path:
+                template, content = views.createCameraList(server=self)
 
             template = template.replace("/app-v1","")
             self.stream_file(filetype='text/html', content=read_html(directory='app-v1', filename=template, content=content), no_cache=True)
@@ -346,7 +388,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # extract and show single image
         elif '/image.jpg' in self.path:
             camera[which_cam].setText = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-            camera[which_cam].writeImage('image_'+which_cam+'.jpg',camera[which_cam].convertFrame2Image(camera[which_cam].getFrame()))
+            camera[which_cam].writeImage('image_'+which_cam+'.jpg', camera[which_cam].convertFrame2Image(camera[which_cam].getFrame()))
             self.stream_file(filetype='image/jpeg', content=read_image(directory="", filename='image_' + which_cam + '.jpg'))
 
         # show live stream
@@ -436,15 +478,16 @@ if __name__ == "__main__":
     # set logging
     if len(sys.argv) > 0 and "--logfile" in sys.argv:
         logging.basicConfig(filename=os.path.join(os.path.dirname(__file__),"stream.log"),
-                           filemode='a',
-                           format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-                           datefmt='%d.%m.%y %H:%M:%S',
-                           level=logging.INFO)
+                            filemode='a',
+                            format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                            datefmt='%d.%m.%y %H:%M:%S',
+                            level=logging.INFO)
         logging.info('-------------------------------------------')
         logging.info('Started ...')
         logging.info('-------------------------------------------')
     else:
-        logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.INFO)
+        logging.basicConfig(format='%(levelname)s: %(message)s',
+                            level=logging.INFO)
         # logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.DEBUG)
        
     # set system signal handler
@@ -465,9 +508,9 @@ if __name__ == "__main__":
         settings = config.param["cameras"][cam]
         camera[cam] = myCamera(id=cam, type=settings["type"], record=settings["record"], param=settings, config=config)
         if not camera[cam].error:
-           camera[cam].start()
-           camera[cam].param["path"] = config.param["path"]
-           camera[cam].setText("Starting ...")
+            camera[cam].start()
+            camera[cam].param["path"] = config.param["path"]
+            camera[cam].setText("Starting ...")
 
     # start backups
     time.sleep(1)
