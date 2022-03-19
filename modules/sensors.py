@@ -1,5 +1,5 @@
 import RPi.GPIO as GPIO
-import modules.dht11
+import modules.dht11 as dht11
 import time
 import threading
 
