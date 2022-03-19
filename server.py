@@ -564,7 +564,7 @@ if __name__ == "__main__":
           if camera[cam].active:         
              camera[cam].stop()
         for sen in sensor:
-          if sensor[sen].active:         
+          if sensor[sen].running:         
              sensor[sen].stop()
         commands.stop()
         views.stop()
