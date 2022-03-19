@@ -270,9 +270,11 @@ function birdhouse_CAMERAS( title, data ) {
         html += "<div id='group_"+sensor+"'>";
         html += "<div class='camera_info'>";
         html += "<div class='camera_info_image'>&nbsp;</div>";
-        html += "<div class='camera_info_text'>";
-        html += "Sensor data: " + sensors[sensor]["temperature"] + "C / " + sensors[sensor]["humidity"] + "%"
-        html += "</div></div>";
+        html += "<div class='camera_info_text'><ul>";
+        for (let key in sensors[sensor]) {
+            html += "<li>"+key+": "+sensors[sensor][key]+"</li>";
+        }
+        html += "</ul></div></div>";
 	    html += "</div>";
 	}
 	setTextById("frame2",html);
