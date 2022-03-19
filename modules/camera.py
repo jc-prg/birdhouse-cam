@@ -494,17 +494,16 @@ class myCamera(threading.Thread):
        if self.type == "pi":
          with self.output.condition:
            self.output.condition.wait()
-           raw = self.output.frame
-         return raw
+           encoded = self.output.frame
+         return encoded
 
        elif self.type == "usb":
            raw = self.camera.read()   ## potentially not the same RAW as fram PI
-           raw = self.normalizeImage(raw)
+           raw = self.normalizeRawImage(raw)
            try:
              r, buf = cv2.imencode(".jpg",raw)
-             size   = len(buf)
-             raw    = bytearray(buf)
-             return raw
+             encoded = bytearray(buf)
+             return encoded
 
            except Exception as e:
              error_msg = self.id+": Cant encode image from camera: "+str(e)
@@ -515,9 +514,7 @@ class myCamera(threading.Thread):
        else:
            logging.error(self.id+": Camera type not supported ("+str(self.type)+").")
 
-
-
-   def normalizeImage(self, image, color="", compare=False):
+   def normalizeRawImage(self, image, color="", compare=False):
        '''
        apply presets per camera to image
        '''
@@ -532,7 +529,6 @@ class myCamera(threading.Thread):
           normalized = image
 
        return normalized
-
 
    def convertRawImage2Image(self, raw):
        '''
@@ -648,6 +644,13 @@ class myCamera(threading.Thread):
          return [0, 0]        
 
    #----------------------------------
+
+   def cropImage(self, frame, crop_area, type="relative"):
+       raw = self.convertImage2RawImage(frame)
+       raw = self.cropRawImage(raw, crop_area, type)
+       crop = self.convertRawImage2Image(raw)
+       return crop
+
 
    def cropRawImage(self, frame, crop_area, type="relative"):
        '''
