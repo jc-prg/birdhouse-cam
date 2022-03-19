@@ -1,0 +1,14 @@
+[Unit]
+Description=auto start stream
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/amixer -c 2 -q set 'Mic',0 100%
+ExecStart=/usr/bin/ffmpeg -ar 44100 -ac 1 -f alsa -i plughw:2,0 -f wav -listen 1 tcp://0.0.0.0:5002
+User=pi
+WorkingDirectory=/home/pi
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

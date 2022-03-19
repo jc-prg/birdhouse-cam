@@ -1,0 +1,22 @@
+# The following commands can be used, to check and identify cameras and 
+# audio devices on your Raspberry PI
+
+# identify microphones
+arecord -l
+
+# identify audio outputs
+aplay -l
+
+# identify cameras
+vcgencmd get_camera
+
+# try to create image using piCamera
+raspistill -o photo.jpg
+
+# install tool to get images from USB camera
+sudo apt-get install fswebcam
+
+# try to get image from USB camera(s)
+sudo fswebcam image.jpg
+sudo fswebcam -d /dev/video0 image0.jpg
+sudo fswebcam -d /dev/video1 image1.jpg
