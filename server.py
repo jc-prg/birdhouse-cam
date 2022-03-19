@@ -333,9 +333,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                    cameras[cam]["status"]["img_msg"]   = camera[cam].error_image_msg
    
           sensor_data = {}
-          for sen in config.param["sensors"]:
+          for sen in sensor:
             if not sensor[sen]["error"] and sensor[sen]["running"]:
-              sensor_data[sen] = sensor.values
+              sensor_data[sen] = sensor[sen].values
                            
           response             = {}
           response["STATUS"]   = {
@@ -563,6 +563,9 @@ if __name__ == "__main__":
         for cam in camera:
           if camera[cam].active:         
              camera[cam].stop()
+        for sen in sensor:
+          if sensor[sen].active:         
+             sensor[sen].stop()
         commands.stop()
         views.stop()
         views_v2.stop()
