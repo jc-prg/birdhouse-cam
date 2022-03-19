@@ -268,10 +268,11 @@ function birdhouse_CAMERAS( title, data ) {
 	for (let sensor in sensors) {
         html += birdhouse_OtherGroupHeader( sensor, sensor, true );
         html += "<div id='group_"+sensor+"'>";
-        html += "<div class='camera_info'>&nbsp;</div>";
+        html += "<div class='camera_info'>";
+        html += "<div class='camera_info_image'>&nbsp;</div>";
         html += "<div class='camera_info_text'>";
         html += "Sensor data: " + sensors[sensor]["temperature"] + "C / " + sensors[sensor]["humidity"] + "%"
-        html += "</div>";
+        html += "</div></div>";
 	    html += "</div>";
 	}
 	setTextById("frame2",html);
