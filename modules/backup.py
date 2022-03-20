@@ -1,66 +1,51 @@
-#!/usr/bin/python3
-
 import os, time
 import logging
-import codecs
-import string
 import cv2
 
 import threading
-from datetime        import datetime
-from modules.camera  import myCamera
-from modules.config  import myConfig
-
-#----------------------------------------------------
+from datetime import datetime
 
 
 class myBackupRestore(threading.Thread):
 
-   def __init__(self, config, camera):
-       '''
-       Initialize new thread and set inital parameters
-       '''
-       threading.Thread.__init__(self)
-       self.config       = config
-       self.camera       = camera
-       self.name         = "Backup"
-       self._running      = True
+    def __init__(self, config, camera):
+        """
+        Initialize new thread and set inital parameters
+        """
+        threading.Thread.__init__(self)
+        self.config = config
+        self.camera = camera
+        self.name = "Backup"
+        self._running = True
 
-   #-----------------------------------
+    def run(self):
+        """
+        start backup in the background
+        """
+        backup_started = False
+        while self._running:
+            stamp   = datetime.now().strftime('%H%M%S')
+            if stamp[0:4] == self.config.param["backup_time"] and not backup_started:
+                logging.info("Starting daily backup ...")
+                backup_started = True
+                self.backup_files()
+                logging.info("OK.")
+                time.sleep(60)
+            else:
+                backup_started = False
+        time.sleep(5)
+        logging.info("Stopped backup process.")
 
-   def run(self):
-       '''
-       start backup in the background
-       '''
-       backup_started = False
-       while self._running:
-         stamp   = datetime.now().strftime('%H%M%S')
-         if stamp[0:4] == self.config.param["backup_time"] and not backup_started:
-            logging.info("Starting daily backup ...")
-            backup_started = True
-            self.backup_files()
-            logging.info("OK.")
-            time.sleep(60)
-         else:
-            backup_started = False
-            
-         time.sleep(5)
-         
-       logging.info("Stopped backup process.")
-       
+    def stop(self):
+        """
+        stop running process
+        """
+        self._running=False
 
-   def stop(self):
-       '''
-       stop running process
-       '''
-       self._running=False
-
-   #-----------------------------------
-   
-   def create_video_config(self):
-       '''
+    def create_video_config(self):
+       """
        recreate video config file, if not exists
-       '''
+       """
 
        path = self.config.directory(config="videos")
        logging.info("Reading files from path: "+path)
@@ -70,31 +55,31 @@ class myBackupRestore(threading.Thread):
        files     = {}
        for file in file_list:
 
-           logging.info(file)          
+           logging.info(file)
            fname      = file.split(".")
            param      = fname[0].split("_")   # video_cam2_20210428_175551*
            fid        = param[2]+"_"+param[3]
            date       = param[2][6:8] + "." + param[2][4:6] + "." + param[2][0:4] + " " + param[3][0:2] + ":" + param[3][2:4]+ ":" + param[3][4:6]
            file_short = ""
            file_short_length = 0
-           
+
            # Get Infos from video file
            # https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-get
            #-------------------------
-           
+
            cap    = cv2.VideoCapture(os.path.join(path,file))
            frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
            fps    = cap.get(cv2.CAP_PROP_FPS)
            length = float(frames) / fps
            width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-           
+
            fname_short = param[0]+"_"+param[1]+"_"+param[2]+"_"+param[3]+"_short.mp4"
-           if os.path.isfile(os.path.join(path,fname_short)): 
+           if os.path.isfile(os.path.join(path,fname_short)):
               file_short        = fname_short
               cap               = cv2.VideoCapture(os.path.join(path,file_short))
               file_short_length = cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS)
-           
+
            files[fid] = {
                 "date_end":    fid,
                 "stamp_end":   0,
@@ -124,26 +109,26 @@ class myBackupRestore(threading.Thread):
 
        self.config.write(config="videos",config_data=files)
                         
-   #-----------------------------------
+    def compare_files_init(self, date=""):
+        """
+        Initial compare files (to create new config file)
+        """
+        if date == '':
+            path = self.config.directory(config="images")
+        else:
+            path = self.config.directory(config="backup",date=date)
 
-   def compare_files_init(self, date=""):
-       '''
-       Initial compare files (to create new config file)
-       '''
+        file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not "_big" in f]
+        file_list.sort(reverse=True)
+        files = self.compare_files(list=file_list, init=True, subdir=date)
 
-       if date == '': path = self.config.directory(config="images")
-       else:          path = self.config.directory(config="backup",date=date)
-
-       file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not "_big" in f]
-       file_list.sort(reverse=True)
-       files     = self.compare_files(list=file_list, init=True, subdir=date)
-       return files
+        return files
 
 
-   def compare_files(self, list, init=False, subdir=""):
-       '''
+    def compare_files(self, list, init=False, subdir=""):
+       """
        Compare image files and write to config file
-       '''
+       """
 
        if os.path.isfile(self.config.file("images")) and subdir == "": files = self.config.read_cache(config='images')
        else:                                                           files = {}
@@ -188,10 +173,10 @@ class myBackupRestore(threading.Thread):
        return files
 
 
-   def update_image_config(self, list, files, subdir=""):
-       '''
+    def update_image_config(self, list, files, subdir=""):
+       """
        get image date from file
-       '''
+       """
        for file in list:
          if ".jpg" in file:
 
@@ -220,21 +205,19 @@ class myBackupRestore(threading.Thread):
 
        return files
 
-   #-----------------------------------
-
-   def backup_files(self, other_date=""):
-       '''
+    def backup_files(self, other_date=""):
+       """
        Backup files with threshold to folder with date ./images/YYMMDD/
-       '''
+       """
        if other_date == "": backup_date   = datetime.now().strftime('%Y%m%d')
        else:                backup_date   = other_date
-       
+
        directory = self.config.directory(config="images", date=backup_date)
 
        # if the directory but no config file exists for backup directory create a new one
        if os.path.isdir(directory):
          logging.info("backup files: create a new config file, directory already exists")
-         
+
          if not os.path.isfile(self.config.file(config="backup", date=backup_date)):
             files                             = self.compare_files_init(date=backup_date)
             files_backup                      = { "files" : {}, "info" : {}}
@@ -250,7 +233,7 @@ class myBackupRestore(threading.Thread):
        # if no directory exists, create directory, copy files and create a new config file (copy existing information)
        else:
          logging.info("backup files: copy files and create a new config file (copy existing information)")
-         
+
          self.config.directory_create(config="images", date=backup_date)
          files        = self.config.read_cache(config="images")
          files_backup = { "files" : {}, "info" : {}}
@@ -272,9 +255,9 @@ class myBackupRestore(threading.Thread):
 
                 if not "similarity" in update_new: update_new["similarity"] = 100
                 if not "hires"      in update_new: update_new["hires"]      = file_hires
-                if not "favorit"    in update_new: update_new["favorit"]    = 0                
+                if not "favorit"    in update_new: update_new["favorit"]    = 0
                 update_new["type"] = "image"
-                update_new["directory"] = os.path.join(self.config.directories["images"], backup_date) 
+                update_new["directory"] = os.path.join(self.config.directories["images"], backup_date)
 
                 if os.path.isfile(os.path.join(dir_source,file_lowres)):
                    update_new["size"]           = (os.path.getsize(os.path.join(dir_source,file_lowres)) + os.path.getsize(os.path.join(dir_source,file_hires)))
@@ -283,7 +266,7 @@ class myBackupRestore(threading.Thread):
 
                    os.popen('cp ' + os.path.join(dir_source,file_lowres) + ' ' + os.path.join(directory,file_lowres))
                    os.popen('cp ' + os.path.join(dir_source,file_hires)  + ' ' + os.path.join(directory,file_hires))
-                   
+
              elif files[stamp]["datestamp"] == backup_date:
                 count_data += 1
                 update_new  = files[stamp].copy()
@@ -294,7 +277,7 @@ class myBackupRestore(threading.Thread):
                 files_backup["files"][stamp] = update_new
 
            logging.info(cam + ": " +str(count) + " Bilder gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
-#           logging.info(cam + ": " +str(count_data) + " Daten gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
+    #           logging.info(cam + ": " +str(count_data) + " Daten gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
 
          files_backup["info"]["date"]      = backup_date[6:8]+"."+backup_date[4:6]+"."+backup_date[0:4]
          files_backup["info"]["count"]     = count
@@ -306,16 +289,14 @@ class myBackupRestore(threading.Thread):
          self.config.write(config="backup", config_data=files_backup, date=directory)
 
 
-   #-----------------------------------
-   
-   def delete_marked_files(self, ftype="image", date="", delete_not_used=False):
-       '''
+    def delete_marked_files(self, ftype="image", date="", delete_not_used=False):
+       """
        delete files which are marked to be recycled for a specific date + database entry
-       '''       
+       """
        response = {}
 
        if ftype == "image":
-         if date == "":  
+         if date == "":
            files        = self.config.read_cache(config='images')
            directory    = self.config.directory(config='images')
          else:
@@ -327,33 +308,33 @@ class myBackupRestore(threading.Thread):
          directory    = self.config.directory(config='videos')
        else:
          response["error"] = "file type not supported"
-         
+
        file_types          = ["lowres","hires","video_file","thumbnail"]
        files_in_dir        = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and not ".json" in f]
        files_in_config     = []
        delete_keys         = []
-       
+
        count = 0
        for key in files:
-       
+
          if date != "": check_date = date[6:8]+"."+date[4:6]+"."+date[0:4]
          if date == "" or ("date" in files[key] and check_date in files[key]["date"]):
            for file_type in file_types:
              if file_type in files[key]: files_in_config.append(files[key][file_type])
-                        
+
          if "to_be_deleted" in files[key] and int(files[key]["to_be_deleted"]) == 1:
             count += 1
-            delete_keys.append(key)           
-           
+            delete_keys.append(key)
+
        for key in delete_keys:
          try:
            for file_type in file_types:
-             if file_type in files[key]: 
+             if file_type in files[key]:
                if os.path.isfile(os.path.join(directory, files[key][file_type])):
                  os.remove(os.path.join(directory, files[key][file_type]))
                  logging.debug("Delete - " + str(key) + ": " + os.path.join(directory, files[key][file_type]))
            del files[key]
-             
+
          except Exception as e:
            if not "error" in response: response["error"] = ""
            logging.error("Error while deleting file '" + key + "' ... " + str(e))
@@ -363,14 +344,14 @@ class myBackupRestore(threading.Thread):
          for file in files_in_dir:
            if file not in files_in_config:
              os.remove(os.path.join(directory, file))
-             
-       print(str(len(files_in_dir))+"/"+str(len(files_in_config)))           
-            
+
+       print(str(len(files_in_dir))+"/"+str(len(files_in_config)))
+
        response["deleted_count"]  = count
        response["deleted_keys"]   = delete_keys
        response["files_not_used"] = len(files_in_dir) - len(files_in_config)
        response["files_used"]     = len(files_in_config)
-       
+
        if ftype == "image":
          if date == "":
            self.config.write(config='images', config_data=files)
