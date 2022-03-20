@@ -251,16 +251,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.redirect("/app/index.html")
         elif self.path == '/app/':
             self.redirect("/app/index.html")
-        elif self.path == '/app-v1':
-            self.redirect("/app-v1/index.html")
-        elif self.path == '/app-v1/':
-            self.redirect("/app-v1/index.html")
-        elif self.path == '/app-v2':
-            self.redirect("/app/index.html")
-        elif self.path == '/app-v2/':
-            self.redirect("/app/index.html")
-        elif self.path == '/app-v2/index.html':
-            self.redirect("/app/index.html")
 
         # REST API call :  /api/<cmd>/<camera>/param1>/<param2>
         elif self.path.startswith("/api/"):
