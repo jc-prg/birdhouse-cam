@@ -333,8 +333,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 sensor_data[key]["values"] = {}
                 if key in sensor and not sensor[key].error and sensor[key].running:
                     sensor_data[key]["values"] = sensor[key].values
-                else:
+                elif key:
                     logging.info("Sensor not available: "+key+"/error:"+str(sensor[key].error)+"/run:"+str(sensor[key].running))
+                else:
+                    logging.info("Sensor not available: "+key)
 
             micro_data = config.param["microphones"]
 
