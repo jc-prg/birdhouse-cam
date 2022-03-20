@@ -44,9 +44,8 @@ class myBackupRestore(threading.Thread):
 
     def create_video_config(self):
         """
-       recreate video config file, if not exists
-       """
-
+        recreate video config file, if not exists
+        """
         path = self.config.directory(config="videos")
         logging.info("Reading files from path: " + path)
 
@@ -114,32 +113,30 @@ class myBackupRestore(threading.Thread):
 
     def compare_files_init(self, date=""):
         """
-        Initial compare files (to create new config file)
+        Initial compare files to create new config file
         """
-        if date == '':
+        if date == "":
             path = self.config.directory(config="images")
         else:
             path = self.config.directory(config="backup", date=date)
 
-        file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and not "_big" in f]
+        file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and "_big" not in f]
         file_list.sort(reverse=True)
-        files = self.compare_files(list=file_list, init=True, subdir=date)
-
+        files = self.compare_files(file_list=file_list, init=True, subdir=date)
         return files
 
-    def compare_files(self, list, init=False, subdir=""):
+    def compare_files(self, file_list, init=False, subdir=""):
         """
-       Compare image files and write to config file
-       """
+        Compare image files and write to config file
+        """
         if os.path.isfile(self.config.file("images")) and subdir == "":
-            file_list = self.config.read_cache(config='images')
+            files = self.config.read_cache(config='images')
         else:
-            file_list = {}
+            files = {}
 
-        files = file_list.copy()
-        list = self.update_image_config(list=list, files=file_list, subdir=subdir)
+        file_list = self.update_image_config(list=file_list, files=files, subdir=subdir)
         if subdir == '':
-            self.config.write(config="images", config_data=file_list)
+            self.config.write(config="images", config_data=files)
 
         count = 0
         for cam in self.config.param["cameras"]:
@@ -148,9 +145,9 @@ class myBackupRestore(threading.Thread):
             imageA = ""
             imageB = ""
 
-            for time in file_list:
+            for time in files:
                 if files[time]["camera"] == cam:
-                    filenameA = file_list[time]["lowres"]
+                    filenameA = files[time]["lowres"]
                     try:
                         filename = os.path.join(self.config.directory(config="images"), subdir, filenameA)
                         imageA = cv2.imread(filename)
@@ -181,13 +178,14 @@ class myBackupRestore(threading.Thread):
 
     def update_image_config(self, list, files, subdir=""):
         """
-       get image date from file
-       """
+        get image date from file
+        """
         for file in list:
             if ".jpg" in file:
 
                 analyze = self.config.imageName2Param(filename=file)
-                if "error" in analyze: continue
+                if "error" in analyze:
+                    continue
 
                 which_cam = analyze["cam"]
                 time = analyze["stamp"]
