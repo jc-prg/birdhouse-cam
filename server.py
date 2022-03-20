@@ -472,7 +472,7 @@ if __name__ == "__main__":
         from modules.sensors import mySensor
         for sen in config.param["sensors"]:
             settings = config.param["sensors"][sen]
-            sensor[sen] = mySensor(id=sen, param=settings, config=config)
+            sensor[sen] = mySensor(sensor_id=sen, param=settings, config=config)
             if not sensor[sen].error:
                 sensor[sen].start()
 
