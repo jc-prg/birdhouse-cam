@@ -410,7 +410,7 @@ class myCamera(threading.Thread):
                             "size": self.image_size
                         }
                         for key in self.sensor:
-                            image_info["sensor"][key] = self.sensor.values
+                            image_info["sensor"][key] = self.sensor[key].values
 
                         pathLowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
                         pathHires = os.path.join(self.config.directory("images"), self.config.imageName("hires", stamp, self.id))
