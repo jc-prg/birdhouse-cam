@@ -306,11 +306,11 @@ class myCamera(threading.Thread):
             try:
                 self.camera = picamera.PiCamera()
                 self.output = myCameraOutput()
-                self.camera.resolution = param["image"]["resolution"]
-                self.camera.framerate = param["image"]["framerate"]
-                self.camera.rotation = param["image"]["rotation"]
-                self.camera.saturation = param["image"]["saturation"]
-                self.camera.zoom = param["image"]["crop"]
+                self.camera.resolution = self.param["image"]["resolution"]
+                self.camera.framerate = self.param["image"]["framerate"]
+                self.camera.rotation = self.param["image"]["rotation"]
+                self.camera.saturation = self.param["image"]["saturation"]
+                self.camera.zoom = self.param["image"]["crop"]
                 self.camera.annotate_background = picamera.Color('black')
                 self.camera.start_recording(self.output, format='mjpeg')
                 logging.info(self.id + ": OK.")
