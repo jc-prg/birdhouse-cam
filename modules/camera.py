@@ -301,9 +301,7 @@ class myCamera(threading.Thread):
             try:
                 import picamera
             except ImportError:
-                self.error = True
-                self.active = False
-                logging.error("Python module for PiCamera isn't installed. Try 'pip3 install picamera'.")
+                self.camera_error(True, False, "Module for PiCamera isn't installed. Try 'pip3 install picamera'.")
 
             try:
                 self.camera = picamera.PiCamera()
@@ -317,9 +315,7 @@ class myCamera(threading.Thread):
                 self.camera.start_recording(self.output, format='mjpeg')
                 logging.info(self.id + ": OK.")
             except Exception as e:
-                self.error = True
-                self.active = False
-                logging.error(self.id + ": Starting PiCamera doesn't work!")
+                self.camera_error(True, False, "Starting PiCamera doesn't work!\n" + str(e))
 
         elif self.type == "usb":
             try:
@@ -330,14 +326,10 @@ class myCamera(threading.Thread):
                 test = self.getImage()
                 logging.info(self.id + ": OK.")
             except Exception as e:
-                self.error = True
-                self.active = False
-                logging.error(self.id + ": Starting USB camera doesn't work!\n" + str(e))
+                self.camera_error(True, False, "Starting USB camera doesn't work!\n" + str(e))
 
         else:
-            self.error = True
-            self.active = False
-            logging.error(self.id + ": Unknown type of camera!")
+            self.camera_error(True, False, "Unknown type of camera!")
 
         if not self.error:
             if self.param["video"]["allow_recording"]:
@@ -438,8 +430,18 @@ class myCamera(threading.Thread):
         """
         Wait with recording between two pictures
         """
-        if self.type == "pi":  self.camera.wait_recording(0.1)
-        if self.type == "usb": time.sleep(0.1)
+        if self.type == "pi":
+            self.camera.wait_recording(0.1)
+        if self.type == "usb":
+            time.sleep(0.1)
+
+    def camera_error(self, error, active, message):
+        """
+        Report Error, set variables of modules
+        """
+        self.error = error
+        self.active = active
+        logging.error(self.id + ": "+message)
 
     def stop(self):
         """
