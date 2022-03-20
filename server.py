@@ -19,13 +19,12 @@ from modules.presets import myParameters
 from modules.presets import myMIMEtypes
 from modules.views import myViews
 
-
-APIdescription = {
-      "name": "BirdhouseCAM",
-      "version": "v0.9.0"
-      }
-APIstart = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-APPframework = "v0.9.1"
+api_description = {
+    "name": "BirdhouseCAM",
+    "version": "v0.9.0"
+}
+api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+app_framework = "v0.9.1"
 
 
 def on_exit(signum, handler):
@@ -34,17 +33,17 @@ def on_exit(signum, handler):
     All shutdown functions are defined in the "finally:" section in the end of this script
     """
     time.sleep(1)
-    print ('\nSTRG+C pressed! (Signal: %s)' % (signum,))
+    print('\nSTRG+C pressed! (Signal: %s)' % (signum,))
     while True:
         confirm = input('Enter "yes" to cancel program now or "no" to keep running [yes/no]: ').strip().lower()
         if confirm == 'yes':
-            print ("Cancel!\n")
+            print("Cancel!\n")
             sys.exit()
         elif confirm == 'no':
-            print ("Keep running!\n")
+            print("Keep running!\n")
             break
         else:
-            print ('Sorry, no valid answer...\n')
+            print('Sorry, no valid answer...\n')
         pass
 
 
@@ -68,44 +67,44 @@ def read_html(directory, filename, content=""):
     file = os.path.join(config.param["path"], directory, filename)
 
     if not os.path.isfile(file):
-        logging.warning("File '"+file+"' does not exist!")
+        logging.warning("File '" + file + "' does not exist!")
         return ""
 
     with open(file, "r") as page:
         page = page.read()
 
         for param in content:
-            if "<!--"+param+"-->" in page:
-                page = page.replace("<!--"+param+"-->", str(content[param]))
+            if "<!--" + param + "-->" in page:
+                page = page.replace("<!--" + param + "-->", str(content[param]))
         for param in config.html_replace:
-            if "<!--"+param+"-->" in page:
-                page = page.replace("<!--"+param+"-->", str(config.html_replace[param]))
+            if "<!--" + param + "-->" in page:
+                page = page.replace("<!--" + param + "-->", str(config.html_replace[param]))
 
         page = page.encode('utf-8')
     return page
 
 
-def read_image(directory,filename):
+def read_image(directory, filename):
     """
     read image file and return for stream via webserver
     """
     if filename.startswith("/"):  filename = filename[1:len(filename)]
     if directory.startswith("/"): directory = directory[1:len(directory)]
     file = os.path.join(config.param["path"], directory, filename)
-    file = file.replace("backup/","")
+    file = file.replace("backup/", "")
 
     if not os.path.isfile(file):
-        logging.warning("Image '"+file+"' does not exist!")
+        logging.warning("Image '" + file + "' does not exist!")
         return ""
 
-    with open(file, "rb") as image: f = image.read()
+    with open(file, "rb") as image:
+        f = image.read()
     return f
 
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
-
     allow_reuse_address = True
-    daemon_threads      = True
+    daemon_threads = True
 
 
 class StreamingHandler(server.BaseHTTPRequestHandler):
@@ -114,7 +113,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         Redirect to other file / URL
         """
-        logging.debug("Redirect: "+file)
+        logging.debug("Redirect: " + file)
         self.send_response(301)
         self.send_header('Location', file)
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -136,7 +135,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if len(content) > 0:
             self.send_response(200)
             self.send_header('Access-Control-Allow-Credentials', 'true')
-            self.send_header('Access-Control-Allow-Origin',      '*')
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Content-type', filetype)
             self.send_header('Content-length', str(len(content)))
             if no_cache:
@@ -168,7 +167,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         self.wfile.write(b'--FRAME\r\n')
         self.send_header('Content-Type', 'image/jpeg')
-        self.send_header('Content-Length', len(frame))
+        self.send_header('Content-Length', len(str(frame)))
         self.end_headers()
         self.wfile.write(frame)
         self.wfile.write(b'\r\n')
@@ -177,7 +176,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         Check if administration is allowed based on the IP4 the request comes from
         """
-        logging.debug("Check if administration is allowed: "+self.address_string()+" / "+str(config.param["ip4_admin_deny"]))
+        logging.debug("Check if administration is allowed: " + self.address_string() + " / " + str(
+            config.param["ip4_admin_deny"]))
         if self.address_string() in config.param["ip4_admin_deny"]:
             return False
         else:
@@ -197,16 +197,17 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         global config, camera, backup
 
-        logging.info("POST API request with '" + self.path + "'.")      
+        logging.info("POST API request with '" + self.path + "'.")
         response = {}
 
         if not self.admin_allowed():
             response["error"] = "Administration not allowed for this IP-Address!"
-            self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True)
+            self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'),
+                             no_cache=True)
 
         if self.path.startswith("/api"):
-            self.path = self.path.replace("/api","")
-        
+            self.path = self.path.replace("/api", "")
+
         if self.path.startswith("/favorit/"):
             response = commands.setStatusFavoritNew(self)
         elif self.path.startswith("/recycle/"):
@@ -227,19 +228,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.error_404()
             return
 
-        self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True)
-           
+        self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'),
+                         no_cache=True)
+
     def do_GET(self):
         """
         check path and send requested content
         """
         path, which_cam = views.selectedCamera(self.path)
         file_ending = self.path.split(".")
-        file_ending = "."+file_ending[len(file_ending)-1].lower()
-        
+        file_ending = "." + file_ending[len(file_ending) - 1].lower()
+
         config.html_replace["title"] = config.param["title"]
         config.html_replace["active_cam"] = which_cam
-        
+
         # index 
         if self.path == '/':
             self.redirect("/app/index.html")
@@ -254,7 +256,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # REST API call :  /api/<cmd>/<camera>/param1>/<param2>
         elif self.path.startswith("/api/"):
-         
+
             logging.info("GET API request with '" + self.path + "'.")
             param = self.path.split("/")
             command = param[2]
@@ -285,7 +287,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if len(param) > 3 and param[2] == "version":
                     version["Code"] = "800"
                     version["Msg"] = "Version OK."
-                    if param[3] != APPframework:
+                    if param[3] != app_framework:
                         version["Code"] = "802"
                         version["Msg"] = "Update required."
                 content["last_answer"] = ""
@@ -300,75 +302,86 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 content["links"] = content["links_json"]
             if "links_json" in content:
                 del content["links_json"]
-            if "file_list"  in content:
+            if "file_list" in content:
                 del content["file_list"]
 
             content["title"] = config.param["title"]
+            content["ip4_address"] = config.param["ip4_address"]
 
             cameras = {}
             for key in camera:
                 if camera[key].active:
                     cameras[key] = {
-                        "name":              camera[key].name,
-                        "camera_type":       camera[key].type,
-                        "record":            camera[key].record,
-                        "image":             camera[key].image_size,
-                        "stream":            "/stream.mjpg?"+key,
-                        "streaming_server":  camera[key].param["video"]["streaming_server"],
-                        "server_port":       config.param["port"],
-                        "similarity":        camera[key].param["similarity"],
+                        "name": camera[key].name,
+                        "camera_type": camera[key].type,
+                        "record": camera[key].record,
+                        "image": camera[key].image_size,
+                        "stream": "/stream.mjpg?" + key,
+                        "streaming_server": camera[key].param["video"]["streaming_server"],
+                        "server_port": config.param["port"],
+                        "similarity": camera[key].param["similarity"],
                         "status": {
-                            "error":         camera[key].error,
-                            "running":       camera[key].running,
-                            "img_error":     camera[key].error_image,
-                            "img_msg":       camera[key].error_image_msg
+                            "error": camera[key].error,
+                            "running": camera[key].running,
+                            "img_error": camera[key].error_image,
+                            "img_msg": camera[key].error_image_msg
                         }
                     }
 
             sensor_data = config.param["sensors"]
             for key in sensor_data:
+                sensor_data[key]["values"] = {}
                 if key in sensor and not sensor[key].error and sensor[key].running:
                     sensor_data[key]["values"] = sensor[key].values
+                else:
+                    logging.info("Sensor not available: "+key+"/error:"+str(sensor[key].error)+"/run:"+str(sensor[key].running))
+
+            micro_data = config.param["microphones"]
 
             api_response = {
                 "STATUS": {
-                    "start_time": APIstart,
+                    "start_time": api_start,
                     "current_time": datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
                     "admin_allowed": self.admin_allowed(),
                     "check-version": version,
                     "api-call": status,
                     "reload": False
                 },
-                "API": APIdescription,
+                "API": api_description,
                 "DATA": content
             }
             api_response["DATA"]["cameras"] = cameras
             api_response["DATA"]["sensors"] = sensor_data
+            api_response["DATA"]["microphones"] = micro_data
             api_response["DATA"]["selected"] = which_cam
             api_response["DATA"]["active_page"] = command
 
-            self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'), no_cache=True)
+            self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'),
+                             no_cache=True)
 
         # extract and show single image
         elif '/image.jpg' in self.path:
             camera[which_cam].setText = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-            camera[which_cam].writeImage('image_'+which_cam+'.jpg', camera[which_cam].convertFrame2Image(camera[which_cam].getFrame()))
-            self.stream_file(filetype='image/jpeg', content=read_image(directory="", filename='image_' + which_cam + '.jpg'))
+            camera[which_cam].writeImage('image_' + which_cam + '.jpg',
+                                         camera[which_cam].convertFrame2Image(camera[which_cam].getFrame()))
+            self.stream_file(filetype='image/jpeg',
+                             content=read_image(directory="", filename='image_' + which_cam + '.jpg'))
 
         # show live stream
         elif '/stream.mjpg' in self.path:
             if camera[which_cam].type != "pi" and camera[which_cam].type != "usb":
-                logging.warning("Unknown type of camera ("+camera[which_cam].type+"/"+camera[which_cam].name+")")
+                logging.warning(
+                    "Unknown type of camera (" + camera[which_cam].type + "/" + camera[which_cam].name + ")")
                 stream = False
                 self.error_404()
                 return
-               
+
             self.stream_video_header()
             stream = True
-            
+
             while stream:
                 if camera[which_cam].type == "pi":
-                 camera[which_cam].setText(datetime.now().strftime('%d.%m.%Y %H:%M:%S'))
+                    camera[which_cam].setText(datetime.now().strftime('%d.%m.%Y %H:%M:%S'))
 
                 frame = camera[which_cam].getImage()
 
@@ -380,18 +393,24 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 else:
                     # frame = camera[which_cam].cropImage(frame=frame, crop_area=camera[which_cam].param["image"]["crop"], type="relative")
                     if camera[which_cam].video.recording:
-                        length     = str(round(camera[which_cam].video.info_recording()["length"]))
-                        framerate  = str(round(camera[which_cam].video.info_recording()["framerate"]))
+                        length = str(round(camera[which_cam].video.info_recording()["length"]))
+                        framerate = str(round(camera[which_cam].video.info_recording()["framerate"]))
                         y_position = camera[which_cam].image_size[1] - 40
-                        frame = camera[which_cam].setText2Image(frame, "Recording", position=(20, y_position), color=(0, 0, 255), fontScale=1, thickness=2)
-                        frame = camera[which_cam].setText2Image(frame, "("+length+"s/"+framerate+"fps)", position=(200, y_position), color=(0,0,255), fontScale=0.5, thickness=1)
+                        frame = camera[which_cam].setText2Image(frame, "Recording", position=(20, y_position),
+                                                                color=(0, 0, 255), fontScale=1, thickness=2)
+                        frame = camera[which_cam].setText2Image(frame, "(" + length + "s/" + framerate + "fps)",
+                                                                position=(200, y_position), color=(0, 0, 255),
+                                                                fontScale=0.5, thickness=1)
 
                     if camera[which_cam].video.processing:
-                        length     = str(round(camera[which_cam].video.info_recording()["length"]))
+                        length = str(round(camera[which_cam].video.info_recording()["length"]))
                         image_size = str(camera[which_cam].video.info_recording()["image_size"])
                         y_position = camera[which_cam].image_size[1] - 40
-                        frame = camera[which_cam].setText2Image(frame, "Processing", position=(20, y_position), color=(0, 255, 255), fontScale=1, thickness=2)
-                        frame = camera[which_cam].setText2Image(frame, "("+length+"s/"+image_size+")", position=(200, y_position), color=(0, 255, 255), fontScale=0.5, thickness=1)
+                        frame = camera[which_cam].setText2Image(frame, "Processing", position=(20, y_position),
+                                                                color=(0, 255, 255), fontScale=1, thickness=2)
+                        frame = camera[which_cam].setText2Image(frame, "(" + length + "s/" + image_size + ")",
+                                                                position=(200, y_position), color=(0, 255, 255),
+                                                                fontScale=0.5, thickness=1)
 
                 try:
                     camera[which_cam].wait()
@@ -416,22 +435,23 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # favicon
         elif self.path.endswith('favicon.ico'):
             self.stream_file(filetype='image/ico', content=read_image(directory='app-v1', filename=self.path))
-        
+
         # images, js, css, ...
         elif file_ending in myMIMEtypes:
-        
+
             if "/videos" in self.path and "/app-v1" in self.path:
-                self.path = self.path.replace("/app-v1","")
+                self.path = self.path.replace("/app-v1", "")
             if "/images" in self.path and "/app-v1" in self.path:
-                self.path = self.path.replace("/app-v1","")
+                self.path = self.path.replace("/app-v1", "")
 
             if "text" in myMIMEtypes[file_ending]:
                 self.stream_file(filetype=myMIMEtypes[file_ending], content=read_html(directory='', filename=self.path))
             elif "application" in myMIMEtypes[file_ending]:
                 self.stream_file(filetype=myMIMEtypes[file_ending], content=read_html(directory='', filename=self.path))
             else:
-                self.stream_file(filetype=myMIMEtypes[file_ending], content=read_image(directory='', filename=self.path))
-           
+                self.stream_file(filetype=myMIMEtypes[file_ending],
+                                 content=read_image(directory='', filename=self.path))
+
         # request unknown
         else:
             self.error_404()
@@ -441,7 +461,7 @@ if __name__ == "__main__":
 
     # set logging
     if len(sys.argv) > 0 and "--logfile" in sys.argv:
-        logging.basicConfig(filename=os.path.join(os.path.dirname(__file__),"stream.log"),
+        logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), "stream.log"),
                             filemode='a',
                             format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                             datefmt='%d.%m.%y %H:%M:%S',
@@ -452,15 +472,14 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(format='%(levelname)s: %(message)s',
                             level=logging.INFO)
-        # logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.DEBUG)
-       
+
     # set system signal handler
     signal.signal(signal.SIGINT, on_exit)
     signal.signal(signal.SIGTERM, on_kill)
 
     # start config    
     config = myConfig(param_init=myParameters, main_directory=os.path.dirname(os.path.abspath(__file__)))
-    config.start()    
+    config.start()
     config.directory_create("data")
     config.directory_create("images")
     config.directory_create("videos")
@@ -470,6 +489,7 @@ if __name__ == "__main__":
     sensor = {}
     if "rpi_active" in config.param and config.param["rpi_active"]:
         from modules.sensors import mySensor
+
         for sen in config.param["sensors"]:
             settings = config.param["sensors"][sen]
             sensor[sen] = mySensor(sensor_id=sen, param=settings, config=config)
@@ -496,7 +516,7 @@ if __name__ == "__main__":
     time.sleep(1)
     backup = myBackupRestore(config, camera)
     backup.start()
-    
+
     commands = myCommands(config=config, camera=camera, backup=backup)
     commands.start()
 
@@ -526,7 +546,7 @@ if __name__ == "__main__":
     # Start Webserver
     try:
         address = ('', config.param["port"])
-        server  = StreamingServer(address, StreamingHandler)
+        server = StreamingServer(address, StreamingHandler)
         logging.info("Starting WebServer ...")
         server.serve_forever()
         logging.info("OK.")
