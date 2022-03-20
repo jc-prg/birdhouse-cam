@@ -38,6 +38,7 @@ class myViews_v2(threading.Thread):
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
+        self.active_cams = None
         self._running = True
         self.name = "Views"
         self.camera = camera
@@ -73,6 +74,7 @@ class myViews_v2(threading.Thread):
         """
         Check path, which cam has been selected
         """
+        which_cam = "cam1"
         if check_path == "":
             path = self.server.path
         else:
@@ -82,20 +84,18 @@ class myViews_v2(threading.Thread):
             param = path.split("/")
             if len(param) > 3:
                 which_cam = param[3]
-                
             if which_cam not in self.camera or len(param) <= 3:
-                logging.warning("Unknown camera requested (%s).",path)
+                logging.warning("Unknown camera requested (%s).", path)
                 which_cam = "cam1"
-        else:
-            which_cam = "cam1"
-               
+
         self.active_cams = []
         for key in self.camera:
-            if self.camera[key].active: self.active_cams.append(key)
-          
-        if self.camera[which_cam].active == False:
+            if self.camera[key].active:
+                self.active_cams.append(key)
+
+        if not self.camera[which_cam].active and self.active_cams:
             which_cam = self.active_cams[0]
-        
+
         if check_path == "":
             logging.debug("Selected CAM = " + which_cam + " (" + self.server.path + ")")
         else:
