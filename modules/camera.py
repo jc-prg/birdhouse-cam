@@ -277,7 +277,7 @@ class myCamera(threading.Thread):
         self.id = id
         self.config = config
         self.sensor = sensor
-        self.param = self.config.param["cameras"][id]
+        self.param = self.config.param["cameras"][self.id]
         self.name = self.param["name"]
         self.active = self.param["active"]
         self.source = self.param["source"]
@@ -294,8 +294,8 @@ class myCamera(threading.Thread):
         self.image_NA = cv2.imread(self.camera_NA)
         self.image_NA_raw = self.convertRawImage2Image(self.image_NA)
 
-        logging.info("Length " + self.camera_NA + " - File:" + str(len(self.image_NA)) + "/Img:" + str(len(self.image_NA_raw)))
-        logging.info("Starting camera (" + self.type + "/" + self.name + ") ...")
+        logging.debug("Length " + self.camera_NA + " - File:" + str(len(self.image_NA)) + "/Img:" + str(len(self.image_NA_raw)))
+        logging.info("Starting camera (" + self.id + "/" + self.type + "/" + self.name + ") ...")
 
         if self.type == "pi":
             try:
@@ -324,7 +324,7 @@ class myCamera(threading.Thread):
                 self.camera = WebcamVideoStream(src=self.source).start()
                 self.cameraFPS = FPS().start()
                 test = self.getImage()
-                logging.info(self.id + ": OK.")
+                logging.info(self.id + ": OK (Source="+self.source+")")
             except Exception as e:
                 self.camera_error(True, False, "Starting USB camera doesn't work!\n" + str(e))
 
@@ -336,7 +336,7 @@ class myCamera(threading.Thread):
                 test = self.getImage()
                 self.video = myVideoRecording(camera=self.id, param=self.param,
                                               directory=self.config.directory("videos"))
-                self.video.config = config
+                self.video.config = self.config
                 self.video.start()
                 self.video.image_size = self.image_size
 
@@ -424,7 +424,7 @@ class myCamera(threading.Thread):
                         self.previous_image = image_compare
                         self.previous_stamp = stamp
 
-        logging.info("Stopped camera (" + self.type + ").")
+        logging.info("Stopped camera (" + self.id + "/" + self.type + ").")
 
     def wait(self):
         """
