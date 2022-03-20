@@ -136,9 +136,10 @@ class myBackupRestore(threading.Thread):
         else:
             file_list = {}
 
-        file_list = file_list.copy()
+        files = file_list.copy()
         list = self.update_image_config(list=list, files=file_list, subdir=subdir)
-        if subdir == '': self.config.write(config="images", config_data=file_list)
+        if subdir == '':
+            self.config.write(config="images", config_data=file_list)
 
         count = 0
         for cam in self.config.param["cameras"]:
@@ -148,8 +149,7 @@ class myBackupRestore(threading.Thread):
             imageB = ""
 
             for time in file_list:
-                if file_list[time]["camera"] == cam:
-
+                if files[time]["camera"] == cam:
                     filenameA = file_list[time]["lowres"]
                     try:
                         filename = os.path.join(self.config.directory(config="images"), subdir, filenameA)
@@ -161,22 +161,23 @@ class myBackupRestore(threading.Thread):
 
                     if len(filenameB) > 0:
                         score = self.camera[cam].compareRawImages(imageA, imageB)
-                        file_list[time]["compare"] = (filenameA, filenameB)
-                        file_list[time]["similarity"] = score
+                        files[time]["compare"] = (filenameA, filenameB)
+                        files[time]["similarity"] = score
                         count += 1
                     else:
-                        file_list[time]["compare"] = (filenameA)
-                        file_list[time]["similarity"] = 0
+                        files[time]["compare"] = (filenameA)
+                        files[time]["similarity"] = 0
 
-                    if init: logging.info(
-                        cam + ": " + filenameA + "  " + str(count) + "/" + str(len(file_list)) + " - " + str(
-                            file_list[time]["similarity"]) + "%")
+                    if init:
+                        logging.info(cam + ": " + filenameA + "  " + str(count) + "/" + str(len(files)) + " - " + str(
+                            files[time]["similarity"]) + "%")
 
                     filenameB = filenameA
                     imageB = imageA
 
-        if subdir == '': self.config.write("images", file_list)
-        return file_list
+        if subdir == '':
+            self.config.write("images", files)
+        return files
 
     def update_image_config(self, list, files, subdir=""):
         """
