@@ -423,6 +423,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         		    }
         		}
         	}
+        	console.log(chart_data);
         	html += birdhouseChart_create(title=["Activity","Constant"], data=chart_data);
         }
 
