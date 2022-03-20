@@ -17,7 +17,7 @@ from modules.config import myConfig
 from modules.commands import myCommands
 from modules.presets import myParameters
 from modules.presets import myMIMEtypes
-from modules.views_v2 import myViews_v2
+from modules.views import myViews
 
 
 APIdescription = {
@@ -233,7 +233,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         check path and send requested content
         """
-        path, which_cam = views_v2.selectedCamera(self.path)
+        path, which_cam = views.selectedCamera(self.path)
         file_ending = self.path.split(".")
         file_ending = "."+file_ending[len(file_ending)-1].lower()
         
@@ -275,23 +275,23 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 which_cam = param[3]
 
             if command == "INDEX":
-                content = views_v2.createIndex(server=self)
+                content = views.createIndex(server=self)
             elif command == "FAVORITS":
-                content = views_v2.createFavorits(server=self)
+                content = views.createFavorits(server=self)
             elif command == "TODAY":
-                content = views_v2.createList(server=self)
+                content = views.createList(server=self)
             elif command == "TODAY_COMPLETE":
-                content = views_v2.createCompleteListToday(server=self)
+                content = views.createCompleteListToday(server=self)
             elif command == "ARCHIVE":
-                content = views_v2.createBackupList(server=self)
+                content = views.createBackupList(server=self)
             elif command == "VIDEOS":
-                content = views_v2.createVideoList(server=self)
+                content = views.createVideoList(server=self)
             elif command == "VIDEO_DETAIL":
-                content = views_v2.detailViewVideo(server=self)
+                content = views.detailViewVideo(server=self)
             elif command == "CAMERAS":
-                content = views_v2.createCameraList(server=self)
+                content = views.createCameraList(server=self)
             elif command == "status" or command == "version":
-                content = views_v2.createIndex(server=self)
+                content = views.createIndex(server=self)
                 if len(param) > 3 and param[2] == "version":
                     version["Code"] = "800"
                     version["Msg"] = "Version OK."
@@ -383,7 +383,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 frame = camera[which_cam].getImage()
 
                 if self.path.startswith("/detection/"):
-                    # frame = camera[which_cam].drawImageDetectionArea(image=frame)
+                    frame = camera[which_cam].drawImageDetectionArea(image=frame)
                     # camera[which_cam].cropRawImage(frame=image, crop_area=camera[which_cam].param["image"]["crop"], type="relative")
                     logging.debug("do nothing")
 
@@ -497,8 +497,8 @@ if __name__ == "__main__":
             camera[cam].setText("Starting ...")
 
     # start views and commands
-    views_v2 = myViews_v2(config=config, camera=camera)
-    views_v2.start()
+    views = myViews(config=config, camera=camera)
+    views.start()
 
     # start backups
     time.sleep(1)
@@ -550,7 +550,7 @@ if __name__ == "__main__":
             if sensor[sen].running:
                 sensor[sen].stop()
         commands.stop()
-        views_v2.stop()
+        views.stop()
 
         server.server_close()
         server.shutdown()
