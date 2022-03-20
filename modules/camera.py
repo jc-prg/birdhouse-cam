@@ -1,254 +1,258 @@
-#!/usr/bin/python3
-
 import io, os, time
 import logging
 import numpy as np
-import string
 
-import imutils, cv2
+import cv2
 from imutils.video import WebcamVideoStream
 from imutils.video import FPS
 from skimage.metrics import structural_similarity as ssim
 
 import threading
-from threading       import Condition
-from datetime        import datetime
-
-
-#----------------------------------------------------
+from threading import Condition
+from datetime import datetime
 
 
 class myVideoRecording(threading.Thread):
+    """
+    Record videos: start and stop; from all pictures of the day
+    """
 
-   def __init__(self, camera, param, directory):
-       '''
-       Initialize new thread and set inital parameters
-       '''
-       threading.Thread.__init__(self)
-       self.camera       = camera
-       self.name         = param["name"]
-       self.param        = param
-       self.recording    = False
-       self.processing   = False
-       self.directory    = directory
-       self.max_length   = 0.25*60
-       self.info         = {}
-       self.ffmpeg_cmd   = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} "
-       self.ffmpeg_cmd  += "-vcodec libx264 -crf 18"
-       
-# Other working options:
-#       self.ffmpeg_cmd  += "-b 1000k -strict -2 -vcodec libx264 -profile:v main -level 3.1 -preset medium -x264-params ref=4 -movflags +faststart -crf 18"
-#       self.ffmpeg_cmd  += "-c:v libx264 -pix_fmt yuv420p"
-#       self.ffmpeg_cmd  += "-profile:v baseline -level 3.0 -crf 18"
-#       self.ffmpeg_cmd  += "-vcodec libx264 -preset fast -profile:v baseline -lossless 1 -vf \"scale=720:540,setsar=1,pad=720:540:0:0\" -acodec aac -ac 2 -ar 22050 -ab 48k"
-       
-       self.ffmpeg_cmd  += " {OUTPUT_FILENAME}"
-       self.ffmpeg_trim  = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} -vcodec libx264 -crf 18 -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
-#       self.ffmpeg_trim  = "ffmpeg -y -i {INPUT_FILENAME} -c copy -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
-       self.count_length = 8
-       self.running      = True
+    def __init__(self, camera, param, directory):
+        """
+        Initialize new thread and set inital parameters
+        """
+        threading.Thread.__init__(self)
+        self.camera = camera
+        self.name = param["name"]
+        self.param = param
+        self.recording = False
+        self.processing = False
+        self.directory = directory
+        self.max_length = 0.25 * 60
+        self.info = {}
+        self.ffmpeg_cmd = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} "
+        self.ffmpeg_cmd += "-vcodec libx264 -crf 18"
 
-   #----------------------------------
-   
-   def run(self):
-       '''
-       Initialize, set inital values
-       '''
-       logging.info("Initialize video recording ...")
-       self.info = {
-         "start"       : 0,
-         "start_stamp" : 0,
-         "status"      : "ready"
-         }
-       if "video" in self.param and "max_length" in self.param["video"]:
-          self.max_length = self.param["video"]["max_length"]
-          logging.debug("Set max video recording length for " + self.camera + " to " + str(self.max_length))
-       else:
-          logging.debug("Use default max video recording length for " + self.camera + " = " + str(self.max_length))       
-          
-       while self.running:
-          time.sleep(1)
+        # Other working options:
+        #       self.ffmpeg_cmd  += "-b 1000k -strict -2 -vcodec libx264 -profile:v main -level 3.1 -preset medium -x264-params ref=4 -movflags +faststart -crf 18"
+        #       self.ffmpeg_cmd  += "-c:v libx264 -pix_fmt yuv420p"
+        #       self.ffmpeg_cmd  += "-profile:v baseline -level 3.0 -crf 18"
+        #       self.ffmpeg_cmd  += "-vcodec libx264 -preset fast -profile:v baseline -lossless 1 -vf \"scale=720:540,setsar=1,pad=720:540:0:0\" -acodec aac -ac 2 -ar 22050 -ab 48k"
 
+        self.ffmpeg_cmd += " {OUTPUT_FILENAME}"
+        self.ffmpeg_trim = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} -vcodec libx264 -crf 18 -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
+        #       self.ffmpeg_trim  = "ffmpeg -y -i {INPUT_FILENAME} -c copy -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
+        self.count_length = 8
+        self.running = True
 
+    # ----------------------------------
 
-   def stop(self):
-       '''
-       ending functions (nothing at the moment)
-       '''
-       self.running = False
-       return
-   
-   def start_recording(self):
-       '''
-       Start recording
-       '''
-       logging.info("Starting video recording ...")
-       self.recording            = True
-       self.info["date"]         = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-       self.info["date_start"]   = datetime.now().strftime('%Y%m%d_%H%M%S')
-       self.info["stamp_start"]  = datetime.now().timestamp()
-       self.info["status"]       = "recording"
-       self.info["camera"]       = self.camera
-       self.info["camera_name"]  = self.name
-       self.info["directory"]    = self.directory
-       self.info["image_count"]  = 0
-       return
+    def run(self):
+        """
+        Initialize, set inital values
+        """
+        logging.info("Initialize video recording ...")
+        self.info = {
+            "start": 0,
+            "start_stamp": 0,
+            "status": "ready"
+        }
+        if "video" in self.param and "max_length" in self.param["video"]:
+            self.max_length = self.param["video"]["max_length"]
+            logging.debug("Set max video recording length for " + self.camera + " to " + str(self.max_length))
+        else:
+            logging.debug("Use default max video recording length for " + self.camera + " = " + str(self.max_length))
 
-       
-   def stop_recording(self):
-       '''
-       Stop recording and trigger video creation
-       '''
-       logging.info("Stopping video recording ...")
-       self.recording         = False
-       self.info["date_end"]  = datetime.now().strftime('%Y%m%d_%H%M%S')
-       self.info["stamp_end"] = datetime.now().timestamp()
-       self.info["status"]    = "processing"
-       self.info["length"]    = round(self.info["stamp_end"] - self.info["stamp_start"],1)
-       if float(self.info["length"]) > 1:
-          self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
-       else:
-          self.info["framerate"] = 0
-       
-       self.create_video()
+        while self.running:
+            time.sleep(1)
 
-       self.info["status"]    = "finished"
+    def stop(self):
+        """
+        ending functions (nothing at the moment)
+        """
+        self.running = False
+        return
 
-       if not self.config.exists("videos"):  config_file = {}
-       else:                                 config_file = self.config.read_cache("videos")
-       config_file[self.info["date_start"]] = self.info
-       self.config.write("videos",config_file)           
-       
-       time.sleep(1)
-       self.info = {}
-       return
-       
-      
-   def info_recording(self):
-       '''
-       Get info of recording
-       '''
-       if self.recording:    self.info["length"] = round(datetime.now().timestamp() - self.info["stamp_start"],1)
-       elif self.processing: self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"],1)
-       
-       self.info["image_size"]   = self.image_size
+    def start_recording(self):
+        """
+        Start recording
+        """
+        logging.info("Starting video recording ...")
+        self.recording = True
+        self.info["date"] = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+        self.info["date_start"] = datetime.now().strftime('%Y%m%d_%H%M%S')
+        self.info["stamp_start"] = datetime.now().timestamp()
+        self.info["status"] = "recording"
+        self.info["camera"] = self.camera
+        self.info["camera_name"] = self.name
+        self.info["directory"] = self.directory
+        self.info["image_count"] = 0
+        return
 
-       if float(self.info["length"]) > 1: self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
-       else:                              self.info["framerate"] = 0
-       
-       return self.info
+    def stop_recording(self):
+        """
+        Stop recording and trigger video creation
+        """
+        logging.info("Stopping video recording ...")
+        self.recording = False
+        self.info["date_end"] = datetime.now().strftime('%Y%m%d_%H%M%S')
+        self.info["stamp_end"] = datetime.now().timestamp()
+        self.info["status"] = "processing"
+        self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 1)
 
+        if float(self.info["length"]) > 1:
+            self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+        else:
+            self.info["framerate"] = 0
 
-   def autostop(self):
-       '''
-       Check if maximum length is achieved
-       '''
-       if self.info["status"] == "recording":
-          max_time = float(self.info["stamp_start"] + self.max_length) 
-          if max_time < float(datetime.now().timestamp()):
-             logging.info("Maximum recording time achieved ...")
-             logging.info(str(max_time) + " < " + str(datetime.now().timestamp()))
-             return True
-       return False
+        self.create_video()
 
+        self.info["status"] = "finished"
+        if not self.config.exists("videos"):
+            config_file = {}
+        else:
+            config_file = self.config.read_cache("videos")
+        config_file[self.info["date_start"]] = self.info
+        self.config.write("videos", config_file)
 
-   def status(self):
-       '''
-       Return recording status
-       '''
-       return self.record_video_info
+        time.sleep(1)
+        self.info = {}
+        return
 
+    def info_recording(self):
+        """
+        Get info of recording
+        """
+        if self.recording:
+            self.info["length"] = round(datetime.now().timestamp() - self.info["stamp_start"], 1)
+        elif self.processing:
+            self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 1)
 
-   def save_image(self, image):
-       '''
+        self.info["image_size"] = self.image_size
+
+        if float(self.info["length"]) > 1:
+            self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+        else:
+            self.info["framerate"] = 0
+
+        return self.info
+
+    def auto_stop(self):
+        """
+        Check if maximum length is achieved
+        """
+        if self.info["status"] == "recording":
+            max_time = float(self.info["stamp_start"] + self.max_length)
+            if max_time < float(datetime.now().timestamp()):
+                logging.info("Maximum recording time achieved ...")
+                logging.info(str(max_time) + " < " + str(datetime.now().timestamp()))
+                return True
+        return False
+
+    def status(self):
+        """
+        Return recording status
+        """
+        return self.record_video_info
+
+    def save_image(self, image):
+        """
        Save image
-       '''
-       self.info["image_count"] += 1
-       self.info["image_files"] = self.filename("vimages")
-       self.info["video_file"]  = self.filename("video")
-       filename = self.info["image_files"] + str(self.info["image_count"]).zfill(self.count_length) + ".jpg"
-       path     = os.path.join(self.directory, filename)
-       logging.debug("Save image as: " + path)
+       """
+        self.info["image_count"] += 1
+        self.info["image_files"] = self.filename("vimages")
+        self.info["video_file"] = self.filename("video")
+        filename = self.info["image_files"] + str(self.info["image_count"]).zfill(self.count_length) + ".jpg"
+        path = os.path.join(self.directory, filename)
+        logging.debug("Save image as: " + path)
 
-       return cv2.imwrite(path, image)
+        return cv2.imwrite(path, image)
 
-       
-   def filename(self, ftype="image"):
-       '''
-       generate filename for images
-       '''
-       
-       if ftype == "video":     return self.config.imageName(type="video",   timestamp=self.info["date_start"], camera=self.camera)
-       elif ftype == "thumb":   return self.config.imageName(type="thumb",   timestamp=self.info["date_start"], camera=self.camera)
-       elif ftype == "vimages": return self.config.imageName(type="vimages", timestamp=self.info["date_start"], camera=self.camera)
-       else:                    return
-       
-#       if ftype == "image":   return "video-" + self.camera + "_" + self.info["date_start"] + "_"
-#       elif ftype == "video": return "video-" +  self.camera + "_" + self.info["date_start"] + ".mp4"
-#       else:                  return
+    def filename(self, ftype="image"):
+        """
+        generate filename for images
+        """
 
+        if ftype == "video":
+            return self.config.imageName(type="video", timestamp=self.info["date_start"], camera=self.camera)
+        elif ftype == "thumb":
+            return self.config.imageName(type="thumb", timestamp=self.info["date_start"], camera=self.camera)
+        elif ftype == "vimages":
+            return self.config.imageName(type="vimages", timestamp=self.info["date_start"], camera=self.camera)
+        else:
+            return
 
-   def create_video(self):
-       '''
-       Create video from images
-       '''
-       self.processing = True
-       cmd_create = self.ffmpeg_cmd
-       cmd_create = cmd_create.replace("{INPUT_FILENAMES}", os.path.join(self.config.directory("videos"), self.filename("vimages") + "%" + str(self.count_length).zfill(2) + "d.jpg"))
-       cmd_create = cmd_create.replace("{OUTPUT_FILENAME}", os.path.join(self.config.directory("videos"), self.filename("video")))
-       cmd_create = cmd_create.replace("{FRAMERATE}", str(round(self.info["framerate"])))
+    #       if ftype == "image":   return "video-" + self.camera + "_" + self.info["date_start"] + "_"
+    #       elif ftype == "video": return "video-" +  self.camera + "_" + self.info["date_start"] + ".mp4"
+    #       else:                  return
 
-       self.info["thumbnail"] = self.filename("thumb")
-       cmd_thumb  = "cp " + os.path.join(self.config.directory("videos"), self.filename("vimages") + str(1).zfill(self.count_length) + ".jpg ") + os.path.join(self.config.directory("videos"), self.filename("thumb"))
-       cmd_delete = "rm " + os.path.join(self.config.directory("videos"), self.filename("vimages") + "*.jpg")
-       logging.info("start video creation with ffmpeg ...")
-       
-       logging.info(cmd_create)       
-       message  = os.system(cmd_create)
-       logging.debug(message)       
+    def create_video(self):
+        """
+        Create video from images
+        """
+        self.processing = True
+        cmd_create = self.ffmpeg_cmd
+        cmd_create = cmd_create.replace("{INPUT_FILENAMES}", os.path.join(self.config.directory("videos"),
+                                                                          self.filename("vimages") + "%" + str(
+                                                                              self.count_length).zfill(2) + "d.jpg"))
+        cmd_create = cmd_create.replace("{OUTPUT_FILENAME}",
+                                        os.path.join(self.config.directory("videos"), self.filename("video")))
+        cmd_create = cmd_create.replace("{FRAMERATE}", str(round(self.info["framerate"])))
 
+        self.info["thumbnail"] = self.filename("thumb")
+        cmd_thumb = "cp " + os.path.join(self.config.directory("videos"), self.filename("vimages") + str(1).zfill(
+            self.count_length) + ".jpg ") + os.path.join(self.config.directory("videos"), self.filename("thumb"))
+        cmd_delete = "rm " + os.path.join(self.config.directory("videos"), self.filename("vimages") + "*.jpg")
+        logging.info("start video creation with ffmpeg ...")
 
-       logging.info(cmd_thumb)       
-       message = os.system(cmd_thumb)
-       logging.debug(message)       
+        logging.info(cmd_create)
+        message = os.system(cmd_create)
+        logging.debug(message)
 
-       logging.info(cmd_delete)       
-       message = os.system(cmd_delete)
-       logging.debug(message)       
+        logging.info(cmd_thumb)
+        message = os.system(cmd_thumb)
+        logging.debug(message)
 
-       self.processing = False
-       logging.info("OK.")
-       return
+        logging.info(cmd_delete)
+        message = os.system(cmd_delete)
+        logging.debug(message)
 
+        self.processing = False
+        logging.info("OK.")
+        return
 
-   def trim_video(self, input_file, output_file, start_timecode, end_timecode, framerate):
-       '''
-       creates a shortend version of the video
-       '''
-       input_file  = os.path.join(self.config.directory("videos"), input_file)
-       output_file = os.path.join(self.config.directory("videos"), output_file)
-       
-       cmd  = self.ffmpeg_trim
-       cmd  = cmd.replace("{START_TIME}",      str(start_timecode))
-       cmd  = cmd.replace("{END_TIME}",        str(end_timecode))
-       cmd  = cmd.replace("{INPUT_FILENAME}",  str(input_file))
-       cmd  = cmd.replace("{OUTPUT_FILENAME}", str(output_file))
-       cmd  = cmd.replace("{FRAMERATE}",       str(framerate))
+    def trim_video(self, input_file, output_file, start_timecode, end_timecode, framerate):
+        """
+        creates a shortend version of the video
+        """
+        input_file = os.path.join(self.config.directory("videos"), input_file)
+        output_file = os.path.join(self.config.directory("videos"), output_file)
 
-       logging.info(cmd)
-       message = os.system(cmd)
-       logging.debug(message)
-       
-       if os.path.isfile(output_file):  return "OK"
-       else:                            return "Error"
+        cmd = self.ffmpeg_trim
+        cmd = cmd.replace("{START_TIME}", str(start_timecode))
+        cmd = cmd.replace("{END_TIME}", str(end_timecode))
+        cmd = cmd.replace("{INPUT_FILENAME}", str(input_file))
+        cmd = cmd.replace("{OUTPUT_FILENAME}", str(output_file))
+        cmd = cmd.replace("{FRAMERATE}", str(framerate))
 
-#----------------------------------------------------
+        logging.info(cmd)
+        message = os.system(cmd)
+        logging.debug(message)
+
+        if os.path.isfile(output_file):
+            return "OK"
+        else:
+            return "Error"
+
 
 class myCameraOutput(object):
+    """
+    Create camera output
+    """
 
     def __init__(self):
-        self.frame     = None
-        self.buffer    = io.BytesIO()
+        self.frame = None
+        self.buffer = io.BytesIO()
         self.condition = Condition()
 
     def write(self, buf):
@@ -262,666 +266,653 @@ class myCameraOutput(object):
             self.buffer.seek(0)
         return self.buffer.write(buf)
 
-#----------------------------------------------------
-
 
 class myCamera(threading.Thread):
 
-   def __init__(self, id, type, record, param, config):
-       '''
-       Initialize new thread and set inital parameters
-       '''
-       threading.Thread.__init__(self)
-       self.id           = id
-       self.param        = param
-       self.name         = param["name"]
-       self.active       = param["active"]
-       self.source       = param["source"]
-       self.config       = config
-       self.type         = type
-       self.record       = record
-       self.running      = True
-       self.image_size   = [0, 0]
-       
-       self.error           = False
-       self.error_image     = False
-       self.error_image_msg = []
+    def __init__(self, id, config, sensor):
+        """
+        Initialize new thread and set inital parameters
+        """
+        threading.Thread.__init__(self)
+        self.id = id
+        self.config = config
+        self.sensor = sensor
+        self.param = self.config.param["cameras"][id]
+        self.name = self.param["name"]
+        self.active = self.param["active"]
+        self.source = self.param["source"]
+        self.type = self.param["type"]
+        self.record = self.param["record"]
+        self.running = True
+        self.image_size = [0, 0]
 
-       self.CameraNA     = os.path.join(self.config.main_directory,self.config.directories["data"], "camera_na.jpg")
-       self.ImageNA      = cv2.imread(self.CameraNA)
-       self.ImageNAraw   = self.convertRawImage2Image(self.ImageNA)
+        self.error = False
+        self.error_image = False
+        self.error_image_msg = []
 
-       logging.info("Length "+self.CameraNA+" - File:"+str(len(self.ImageNA)) + "/Img:" + str(len(self.ImageNAraw)))
-       logging.info("Starting camera ("+self.type+"/"+self.name+") ...")
+        self.camera_NA = os.path.join(self.config.main_directory, self.config.directories["data"], "camera_na.jpg")
+        self.image_NA = cv2.imread(self.camera_NA)
+        self.image_NA_raw = self.convertRawImage2Image(self.image_NA)
 
-       if self.type == "pi":
-         try:
-            import picamera
-         except ImportError:
-            self.error  = True
+        logging.info("Length " + self.camera_NA + " - File:" + str(len(self.image_NA)) + "/Img:" + str(len(self.image_NA_raw)))
+        logging.info("Starting camera (" + self.type + "/" + self.name + ") ...")
+
+        if self.type == "pi":
+            try:
+                import picamera
+            except ImportError:
+                self.error = True
+                self.active = False
+                logging.error("Python module for PiCamera isn't installed. Try 'pip3 install picamera'.")
+
+            try:
+                self.camera = picamera.PiCamera()
+                self.output = myCameraOutput()
+                self.camera.resolution = param["image"]["resolution"]
+                self.camera.framerate = param["image"]["framerate"]
+                self.camera.rotation = param["image"]["rotation"]
+                self.camera.saturation = param["image"]["saturation"]
+                self.camera.zoom = param["image"]["crop"]
+                self.camera.annotate_background = picamera.Color('black')
+                self.camera.start_recording(self.output, format='mjpeg')
+                logging.info(self.id + ": OK.")
+            except Exception as e:
+                self.error = True
+                self.active = False
+                logging.error(self.id + ": Starting PiCamera doesn't work!")
+
+        elif self.type == "usb":
+            try:
+                # cap                    = cv2.VideoCapture(0) # check if camera is available
+                # if cap is None or not cap.isOpened(): raise
+                self.camera = WebcamVideoStream(src=self.source).start()
+                self.cameraFPS = FPS().start()
+                test = self.getImage()
+                logging.info(self.id + ": OK.")
+            except Exception as e:
+                self.error = True
+                self.active = False
+                logging.error(self.id + ": Starting USB camera doesn't work!\n" + str(e))
+
+        else:
+            self.error = True
             self.active = False
-            logging.error("Python module for PiCamera isn't installed. Try 'pip3 install picamera'.")
-         
-         try:
-            self.camera            = picamera.PiCamera()
-            self.output            = myCameraOutput()
-            self.camera.resolution = param["image"]["resolution"]
-            self.camera.framerate  = param["image"]["framerate"]
-            self.camera.rotation   = param["image"]["rotation"]
-            self.camera.saturation = param["image"]["saturation"]
-            self.camera.zoom       = param["image"]["crop"]
-            self.camera.annotate_background = picamera.Color('black')
-            self.camera.start_recording(self.output, format='mjpeg')
-            logging.info(self.id+": OK.")
+            logging.error(self.id + ": Unknown type of camera!")
 
-         except Exception as e:
-            self.error  = True
-            self.active = False
-            logging.error(self.id+": Starting PiCamera doesn't work!")
+        if not self.error:
+            if self.param["video"]["allow_recording"]:
+                test = self.getImage()
+                self.video = myVideoRecording(camera=self.id, param=self.param,
+                                              directory=self.config.directory("videos"))
+                self.video.config = config
+                self.video.start()
+                self.video.image_size = self.image_size
 
-       elif type == "usb":
-         try:
-            #cap                    = cv2.VideoCapture(0) # check if camera is available
-            #if cap is None or not cap.isOpened(): raise
-            self.camera            = WebcamVideoStream(src=self.source).start()
-            self.cameraFPS         = FPS().start()
-            test                   = self.getImage()
-            logging.info(self.id+": OK.")
+        self.previous_image = None
+        self.previous_stamp = "000000"
 
-         except Exception as e:
-            self.error  = True
-            self.active = False
-            logging.error(self.id+": Starting USB camera doesn't work!\n" +str(e))
+    def run(self):
+        """
+        Start recording for livestream and save images every x seconds
+        """
+        similarity = 0
+        logging.debug("HOURS:   " + str(self.param["image_save"]["hours"]))
+        logging.debug("SECONDS: " + str(self.param["image_save"]["seconds"]))
 
-       else:
-          self.error  = True
-          self.active = False
-          logging.error("Unknown type of camera!")
-          
-       if not self.error:
-        if self.param["video"]["allow_recording"]:
-          test = self.getImage()
-          self.video = myVideoRecording(camera=self.id, param=self.param, directory=self.config.directory("videos"))
-          self.video.config = config
-          self.video.start()
-          self.video.image_size = self.image_size
+        while self.running and not self.error:
+            seconds = datetime.now().strftime('%S')
+            hours = datetime.now().strftime('%H')
+            stamp = datetime.now().strftime('%H%M%S')
 
-       self.previous_image    = None
-       self.previous_stamp    = "000000"
+            # Video Recording
+            if self.video.recording:
 
-   #----------------------------------
+                if self.video.auto_stop():
+                    self.video.stop_recording()
 
-   def run(self):
-       '''
-       Start recording for livestream and save images every x seconds
-       '''
-       similarity = 0
-       logging.debug("HOURS:   "+str(self.param["image_save"]["hours"]))
-       logging.debug("SECONDS: "+str(self.param["image_save"]["seconds"]))
+                else:
+                    image = self.getImage()
+                    image = self.convertImage2RawImage(image)
+                    self.video.image_size = self.image_size
+                    self.video.save_image(image=image)
 
-       while (self.running and not self.error):
-          seconds = datetime.now().strftime('%S')
-          hours   = datetime.now().strftime('%H')
-          stamp   = datetime.now().strftime('%H%M%S')
-          
-          # Video Recording
-          if self.video.recording:
-          
-             if self.video.autostop():
-                self.video.stop_recording()
+                    if self.image_size == [0, 0]:
+                        self.image_size = self.sizeRawImage(image)
+                        self.video.image_size = self.image_size
 
-             else:
-               image     = self.getImage()
-               image     = self.convertImage2RawImage(image)
-               self.video.image_size = self.image_size
-               self.video.save_image(image=image)
+                    logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(
+                        datetime.now().strftime("%H:%M:%S")))
 
-               if self.image_size == [0,0]: 
-                  self.image_size = self.sizeRawImage(image)
-                  self.video.image_size = self.image_size          
+            # Image Recording
+            else:
+                time.sleep(1)
+                if self.record:
+                    if (seconds in self.param["image_save"]["seconds"]) and (
+                            hours in self.param["image_save"]["hours"]):
+                        text = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+                        self.setText(text)
 
-               logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(datetime.now().strftime("%H:%M:%S")))
+                        image = self.getImage()
+                        image = self.convertImage2RawImage(image)
+                        image_compare = self.convertRawImage2Gray(image)
 
-          # Image Recording
-          else:
-             time.sleep(1)
-             if self.record:
-               if (seconds in self.param["image_save"]["seconds"]) and (hours in self.param["image_save"]["hours"]):
-                 text  = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-                 self.setText(text)
+                        if self.image_size == [0, 0]:
+                            self.image_size = self.sizeRawImage(image)
+                            self.video.image_size = self.image_size
 
-                 image         = self.getImage()
-                 image         = self.convertImage2RawImage(image)
-                 image_compare = self.convertRawImage2Gray(image)
+                        if self.previous_image is not None:
+                            similarity = str(self.compareRawImages(imageA=image_compare, imageB=self.previous_image,
+                                                                   detection_area=self.param["similarity"][
+                                                                       "detection_area"]))
 
-                 if self.image_size == [0,0]: 
-                    self.image_size = self.sizeRawImage(image)
-                    self.video.image_size = self.image_size          
+                        image_info = {
+                            "camera": self.id,
+                            "hires": self.config.imageName("hires", stamp, self.id),
+                            "lowres": self.config.imageName("lowres", stamp, self.id),
+                            "compare": (stamp, self.previous_stamp),
+                            "datestamp": datetime.now().strftime("%Y%m%d"),
+                            "date": datetime.now().strftime("%d.%m.%Y"),
+                            "time": datetime.now().strftime("%H:%M:%S"),
+                            "similarity": similarity,
+                            "sensor" : {},
+                            "size": self.image_size
+                        }
+                        for key in self.sensor:
+                            image_info["sensor"][key] = self.sensor.values
 
-                 if self.previous_image is not None:
-                    similarity = str(self.compareRawImages(imageA=image_compare, imageB=self.previous_image, detection_area=self.param["similarity"]["detection_area"]))
+                        pathLowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
+                        pathHires = os.path.join(self.config.directory("images"), self.config.imageName("hires", stamp, self.id))
 
-                 image_info = {
-                          "camera"      : self.id,
-                          "hires"       : self.config.imageName("hires",  stamp, self.id),
-                          "lowres"      : self.config.imageName("lowres", stamp, self.id),
-                          "compare"     : (stamp,self.previous_stamp),
-                          "datestamp"   : datetime.now().strftime("%Y%m%d"),
-                          "date"        : datetime.now().strftime("%d.%m.%Y"),
-                          "time"        : datetime.now().strftime("%H:%M:%S"),
-                          "similarity"  : similarity,
-                          "size"        : self.image_size
-                          }
+                        logging.debug("WRITE:" + pathLowres)
 
-                 pathLowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
-                 pathHires  = os.path.join(self.config.directory("images"), self.config.imageName("hires",  stamp, self.id))
+                        self.writeImageInfo(time=stamp, data=image_info)
+                        self.writeImage(filename=pathHires, image=image)
+                        self.writeImage(filename=pathLowres, image=image, scale_percent=self.param["preview_scale"])
 
-                 logging.debug("WRITE:" +pathLowres)
+                        self.previous_image = image_compare
+                        self.previous_stamp = stamp
 
-                 self.writeImageInfo(time=stamp, data=image_info)
-                 self.writeImage(filename=pathHires,  image=image)
-                 self.writeImage(filename=pathLowres, image=image, scale_percent=self.param["preview_scale"])
+        logging.info("Stopped camera (" + self.type + ").")
 
-                 self.previous_image = image_compare
-                 self.previous_stamp = stamp
-                 
-       logging.info("Stopped camera ("+self.type+").")
+    def wait(self):
+        """
+        Wait with recording between two pictures
+        """
+        if self.type == "pi":  self.camera.wait_recording(0.1)
+        if self.type == "usb": time.sleep(0.1)
 
+    def stop(self):
+        """
+        Stop recording
+        """
+        if not self.error and self.active:
+            if self.type == "pi":
+                self.camera.stop_recording()
+                self.camera.close()
 
-   def wait(self):
-       '''
-       Wait with recording between two pictures
-       '''
-       if self.type == "pi":  self.camera.wait_recording(0.1)
-       if self.type == "usb": time.sleep(0.1)
+            elif self.type == "usb":
+                self.camera.stop()
+                self.cameraFPS.stop()
 
+            if self.video:
+                self.video.stop()
 
-   def stop(self):
-       '''
-       Stop recording
-       '''
-       if not self.error and self.active:
-         if self.type == "pi":
-           self.camera.stop_recording()
-           self.camera.close()
+        self.running = False
 
-         elif self.type == "usb":
-           self.camera.stop()
-           self.cameraFPS.stop()
-           
-         if self.video:
-           self.video.stop()
-          
-       self.running = False
+    # ----------------------------------
 
-   #----------------------------------
+    def setText(self, text):
+        """
+        Add / replace text on the image
+        """
+        if self.type == "pi":
+            self.camera.annotate_text = str(text)
 
-   def setText(self,text):
-       '''
-       Add / replace text on the image
-       '''
-       if self.type == "pi":
-          self.camera.annotate_text = str(text)
+    def setText2RawImage(self, image, text, position=(30, 40), font=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.8,
+                         color=(255, 255, 255), thickness=2):
+        """
+        Add text on image
+        """
+        image = cv2.putText(image, text, position, font, fontScale, color, thickness, cv2.LINE_AA)
+        return image
 
-
-   def setText2RawImage(self, image, text, position=(30,40), font=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.8, color=(255,255,255), thickness=2):
-       '''
+    def setText2Image(self, image, text, position=(30, 40), font=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.8,
+                      color=(255, 255, 255), thickness=2):
+        """
        Add text on image
-       '''
-       image     = cv2.putText(image, text, position, font, fontScale, color, thickness, cv2.LINE_AA)
-       return image
+       """
+        image = self.convertImage2RawImage(image)
+        image = self.setText2RawImage(image, text, position=position, font=font, fontScale=fontScale, color=color,
+                                      thickness=thickness)
+        image = self.convertRawImage2Image(image)
+        return image
 
+    # ----------------------------------
 
-   def setText2Image(self, image, text, position=(30,40), font=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.8, color=(255,255,255), thickness=2):
-       '''
-       Add text on image
-       '''
-       image = self.convertImage2RawImage(image)
-       image = self.setText2RawImage(image, text, position=position, font=font, fontScale=fontScale, color=color, thickness=thickness)
-       image = self.convertRawImage2Image(image)
-       return image
+    def getImage(self):
+        """
+        read image from device
+        """
+        if self.error_image:
+            return self.image_NA_raw
 
+        if self.type == "pi":
+            with self.output.condition:
+                self.output.condition.wait()
+                encoded = self.output.frame
+            return encoded
 
-   #----------------------------------
+        elif self.type == "usb":
+            raw = self.camera.read()  ## potentially not the same RAW as fram PI
+            raw = self.normalizeRawImage(raw)
+            try:
+                r, buf = cv2.imencode(".jpg", raw)
+                encoded = bytearray(buf)
+                return encoded
 
-   def getImage(self):
-       '''
-       read image from device
-       '''
-       if self.error_image:
-         return self.ImageNAraw      
-       
-       if self.type == "pi":
-         with self.output.condition:
-           self.output.condition.wait()
-           encoded = self.output.frame
-         return encoded
+            except Exception as e:
+                error_msg = self.id + ": Cant encode image from camera: " + str(e)
+                logging.error(error_msg)
+                self.error_image_msg.append(error_msg)
+                self.error_image = True
 
-       elif self.type == "usb":
-           raw = self.camera.read()   ## potentially not the same RAW as fram PI
-           raw = self.normalizeRawImage(raw)
-           try:
-             r, buf = cv2.imencode(".jpg",raw)
-             encoded = bytearray(buf)
-             return encoded
+        else:
+            logging.error(self.id + ": Camera type not supported (" + str(self.type) + ").")
 
-           except Exception as e:
-             error_msg = self.id+": Cant encode image from camera: "+str(e)
-             logging.error(error_msg)
-             self.error_image_msg.append(error_msg)
-             self.error_image = True
+    def normalizeRawImage(self, image, color="", compare=False):
+        """
+        apply presets per camera to image
+        """
+        if self.type == "usb":
+            # crop image
+            if not "crop_area" in self.param["image"]:
+                normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop"], type="relative")
+            else:
+                normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop_area"], type="pixel")
+            # rotate     - not implemented yet
+            # resize     - not implemented yet
+            # saturation - not implemented yet
+        else:
+            normalized = image
 
-       else:
-           logging.error(self.id+": Camera type not supported ("+str(self.type)+").")
+        return normalized
 
-   def normalizeRawImage(self, image, color="", compare=False):
-       '''
-       apply presets per camera to image
-       '''
-       if self.type == "usb":
-          # crop image
-          if not "crop_area" in self.param["image"]:  normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop"],      type="relative")
-          else:                                       normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop_area"], type="pixel")
-          # rotate     - not implemented yet
-          # resize     - not implemented yet
-          # saturation - not implemented yet
-       else:
-          normalized = image
+    def convertRawImage2Image(self, raw):
+        """
+        convert from raw image to image // untested
+        """
+        if self.error_image:
+            return self.image_NA
 
-       return normalized
+        try:
+            r, buf = cv2.imencode(".jpg", raw)
+            size = len(buf)
+            image = bytearray(buf)
+            return image
 
-   def convertRawImage2Image(self, raw):
-       '''
-       convert from raw image to image // untested
-       '''
-       if self.error_image:
-         return self.ImageNA      
+        except Exception as e:
+            error_msg = self.id + ": Error convert RAW image -> image: " + str(e)
+            logging.error(error_msg)
+            self.error_image_msg.append(error_msg)
+            self.error_image = True
 
-       try:
-         r, buf = cv2.imencode(".jpg", raw)
-         size   = len(buf)
-         image  = bytearray(buf)
-         return image
+    def convertImage2RawImage(self, image):
+        """
+        convert from device to raw image -> to be modifeid with CV2
+        """
+        if self.error_image:
+            return self.image_NA_raw
 
-       except Exception as e:
-         error_msg = self.id+": Error convert RAW image -> image: "+str(e)
-         logging.error(error_msg)
-         self.error_image_msg.append(error_msg)
-         self.error_image = True
+        try:
+            image = np.frombuffer(image, dtype=np.uint8)
+            image = cv2.imdecode(image, 1)
+            return image
 
+        except Exception as e:
+            error_msg = self.id + ": Error convert image -> RAW image: " + str(e)
+            logging.error(error_msg)
+            self.error_image_msg.append(error_msg)
+            self.error_image = True
 
+    def convertRawImage2Gray(self, image):
+        """
+        convert image from RGB to gray scale image (e.g. for analyzing similarity)
+        """
+        try:
+            return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-   def convertImage2RawImage(self, image):
-       '''
-       convert from device to raw image -> to be modifeid with CV2
-       '''
-       if self.error_image:
-         return self.ImageNAraw      
+        except Exception as e:
+            error_msg = self.id + ": Error convert image to gray scale: " + str(e)
+            logging.error(error_msg)
+            self.error_image_msg.append(error_msg)
+            self.error_image = True
 
-       try:
-         image = np.frombuffer(image, dtype=np.uint8)
-         image = cv2.imdecode(image, 1)
-         return image
+    # ----------------------------------
 
-       except Exception as e:
-         error_msg = self.id+": Error convert image -> RAW image: "+str(e)
-         logging.error(error_msg)
-         self.error_image_msg.append(error_msg)
-         self.error_image = True
+    def drawImageDetectionArea(self, image):
+        """
+        Draw a red rectangle into the image to show detection area
+        """
+        image = self.convertImage2RawImage(image)
+        image = self.drawRawImageDetectionArea(image)
+        image = self.convertRawImage2Image(image)
+        return image
 
+    def drawRawImageDetectionArea(self, image):
+        """
+        Draw a red rectangle into the image to show detection area
+        """
+        color = (0, 0, 255)  # color in BGR
+        thickness = 5
+        height = image.shape[0]
+        width = image.shape[1]
 
-   def convertRawImage2Gray(self, image):
-       '''
-       convert image from RGB to gray scale image (e.g. for analyzing similarity)
-       '''
-       try:
-          return cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+        (w_start, h_start, w_end, h_end) = self.param["similarity"]["detection_area"]
+        x_start = int(round(width * w_start, 0))
+        y_start = int(round(height * h_start, 0))
+        x_end = int(round(width * w_end, 0))
+        y_end = int(round(height * h_end, 0))
 
-       except Exception as e:
-         error_msg = self.id+": Error convert image to gray scale: "+str(e)
-         logging.error(error_msg)
-         self.error_image_msg.append(error_msg)
-         self.error_image = True
+        logging.debug(self.id + ": show detection area ... " + str(self.param["similarity"]["detection_area"]))
 
-   #----------------------------------
+        try:
+            image = cv2.line(image, (x_start, y_start), (x_start, y_end), color, thickness)
+            image = cv2.line(image, (x_start, y_start), (x_end, y_start), color, thickness)
+            image = cv2.line(image, (x_end, y_end), (x_start, y_end), color, thickness)
+            image = cv2.line(image, (x_end, y_end), (x_end, y_start), color, thickness)
+            logging.debug(
+                "... top XY: " + str(x_start) + "/" + str(y_start) + " - bottom XY: " + str(x_end) + "/" + str(y_end))
+            return image
 
-   def drawImageDetectionArea(self, image):
-       '''
-       Draw a red rectangle into the image to show detection area
-       '''
-       image = self.convertImage2RawImage(image)
-       image = self.drawRawImageDetectionArea(image)
-       image = self.convertRawImage2Image(image)
-       return image
+        except Exception as e:
+            error_msg = self.id + ": Error convert image to gray scale: " + str(e)
+            logging.error(error_msg)
+            self.error_image_msg.append(error_msg)
+            self.error_image = True
 
+    # ----------------------------------
 
-   def drawRawImageDetectionArea(self, image):
-       '''
-       Draw a red rectangle into the image to show detection area
-       '''
-       color     = (0, 0, 255) # color in BGR
-       thickness = 5
-       height    = image.shape[0]
-       width     = image.shape[1]
+    def sizeRawImage(self, frame):
+        """
+        Return size of raw image
+        """
+        try:
+            height = frame.shape[0]
+            width = frame.shape[1]
+            return [width, height]
 
-       (w_start, h_start, w_end, h_end) = self.param["similarity"]["detection_area"]
-       x_start   = int(round(width  * w_start, 0))
-       y_start   = int(round(height * h_start, 0))
-       x_end     = int(round(width  * w_end,   0))
-       y_end     = int(round(height * h_end,   0))
+        except Exception as e:
+            logging.warning(self.id + ": Could not analyze image: " + str(e))
+            return [0, 0]
 
-       logging.debug(self.id +": show detection area ... "+str(self.param["similarity"]["detection_area"]))
+    def cropImage(self, frame, crop_area, type="relative"):
+        """
+        crop encoded image
+        """
+        raw = self.convertImage2RawImage(frame)
+        raw = self.cropRawImage(raw, crop_area, type)
+        crop = self.convertRawImage2Image(raw)
+        return crop
 
-       try:
-         image     = cv2.line(image, (x_start,y_start), (x_start, y_end), color, thickness)
-         image     = cv2.line(image, (x_start,y_start), (x_end, y_start), color, thickness)       
-         image     = cv2.line(image, (x_end,y_end),     (x_start, y_end), color, thickness)
-         image     = cv2.line(image, (x_end,y_end),     (x_end, y_start), color, thickness)
-         logging.debug("... top XY: "+str(x_start)+"/"+str(y_start)+" - bottom XY: "+str(x_end)+"/"+str(y_end))
-         return image
-         
-       except Exception as e:
-         error_msg = self.id+": Error convert image to gray scale: "+str(e)
-         logging.error(error_msg)
-         self.error_image_msg.append(error_msg)
-         self.error_image = True
+    def cropRawImage(self, frame, crop_area, type="relative"):
+        """
+        crop image using relative dimensions (0.0 ... 1.0)
+        """
+        try:
+            height = frame.shape[0]
+            width = frame.shape[1]
 
-       
+            if type == "relative":
+                (w_start, h_start, w_end, h_end) = crop_area
+                x_start = int(round(width * w_start, 0))
+                y_start = int(round(height * h_start, 0))
+                x_end = int(round(width * w_end, 0))
+                y_end = int(round(height * h_end, 0))
+                crop_area = (x_start, y_start, x_end, y_end)
+            else:
+                (x_start, y_start, x_end, y_end) = crop_area
 
-   #----------------------------------
-   
-   def sizeRawImage(self, frame):
-       '''
-       Return size of raw image
-       '''
-       try:
-         height = frame.shape[0]
-         width  = frame.shape[1]
-         return [width, height]
-        
-       except Exception as e:
-         logging.warning(self.id+": Could not analyze image: "+str(e))
-         return [0, 0]        
+            logging.debug("H: " + str(y_start) + "-" + str(y_end) + " / W: " + str(x_start) + "-" + str(x_end))
+            frame_cropped = frame[y_start:y_end, x_start:x_end]
+            return frame_cropped, crop_area
 
-   #----------------------------------
+        except Exception as e:
+            logging.warning(self.id + ": Could not crop image: " + str(e))
 
-   def cropImage(self, frame, crop_area, type="relative"):
-       raw = self.convertImage2RawImage(frame)
-       raw = self.cropRawImage(raw, crop_area, type)
-       crop = self.convertRawImage2Image(raw)
-       return crop
+        return frame, (0, 0, 1, 1)
 
+    def compareImages(self, imageA, imageB, detection_area=None):
+        """
+        calculate structual similarity index (SSIM) of two images
+        """
+        imageA = self.convertImage2RawImage(imageA)
+        imageB = self.convertImage2RawImage(imageB)
+        similarity = self.compareRawImages(imageA, imageB, detection_area)
+        return similarity
 
-   def cropRawImage(self, frame, crop_area, type="relative"):
-       '''
-       crop image using relative dimensions (0.0 ... 1.0)
-       '''
-       try:
-         height = frame.shape[0]
-         width  = frame.shape[1]
-
-         if type == "relative":
-           (w_start, h_start, w_end, h_end) = crop_area
-           x_start   = int(round(width  * w_start, 0))
-           y_start   = int(round(height * h_start, 0))
-           x_end     = int(round(width  * w_end,   0))
-           y_end     = int(round(height * h_end,   0))
-           crop_area = (x_start,y_start,x_end,y_end)
-         else:
-           (x_start,y_start,x_end,y_end) = crop_area
-
-         logging.debug("H: "+str(y_start)+"-"+str(y_end)+" / W: "+str(x_start)+"-"+str(x_end))
-         frame_cropped  = frame[y_start:y_end, x_start:x_end]
-         return frame_cropped, crop_area
-
-       except Exception as e:
-         logging.warning(self.id+": Could not crop image: "+str(e))
-
-       return frame, (0,0,1,1)
-
-
-   #----------------------------------
-
-   def compareImages(self, imageA, imageB, detection_area=None):
-       '''
-       calculate structual similarity index (SSIM) of two images
-       '''
-       imageA     = self.convertImage2RawImage(imageA)
-       imageB     = self.convertImage2RawImage(imageB)
-       similarity = self.compareRawImages(imageA, imageB, detection_area)
-       return similarity
-
-
-   def compareRawImages(self, imageA, imageB, detection_area=None):
-       '''
-       calculate structual similarity index (SSIM) of two images
-       '''
-       if len(imageA) == 0 or len(imageB) == 0:
-          logging.warning(self.id+": At least one file has a zero length - A:" + str(len(imageA)) + "/ B:" + str(len(imageB)))
-          score = 0
-          
-       else:
-         if detection_area != None:
-            logging.debug(self.id +"/compare 1: "+str(detection_area)+" / "+str(imageA.shape))
-            imageA, area = self.cropRawImage(frame=imageA, crop_area=detection_area, type="relative")
-            imageB, area = self.cropRawImage(frame=imageB, crop_area=detection_area, type="relative")
-            logging.debug(self.id +"/compare 2: "+str(area)+" / "+str(imageA.shape))
-
-         try:
-            (score, diff) = ssim(imageA, imageB, full=True)
-
-         except Exception as e:
-            logging.warning(self.id+": Error comparing images: " + str(e))
+    def compareRawImages(self, imageA, imageB, detection_area=None):
+        """
+        calculate structual similarity index (SSIM) of two images
+        """
+        if len(imageA) == 0 or len(imageB) == 0:
+            logging.warning(
+                self.id + ": At least one file has a zero length - A:" + str(len(imageA)) + "/ B:" + str(len(imageB)))
             score = 0
 
-       return round(score*100,1)
+        else:
+            if detection_area != None:
+                logging.debug(self.id + "/compare 1: " + str(detection_area) + " / " + str(imageA.shape))
+                imageA, area = self.cropRawImage(frame=imageA, crop_area=detection_area, type="relative")
+                imageB, area = self.cropRawImage(frame=imageB, crop_area=detection_area, type="relative")
+                logging.debug(self.id + "/compare 2: " + str(area) + " / " + str(imageA.shape))
 
+            try:
+                (score, diff) = ssim(imageA, imageB, full=True)
 
-   #----------------------------------
-   
-   def detectImage(self, file_info):
-       '''
+            except Exception as e:
+                logging.warning(self.id + ": Error comparing images: " + str(e))
+                score = 0
+
+        return round(score * 100, 1)
+
+    def detectImage(self, file_info):
+        """
        check if similarity is under threshold
-       '''
-       threshold  = float(self.param["similarity"]["threshold"])
-       similarity = float(file_info["similarity"])
-       if similarity != 0 and similarity < threshold: return 1
-       else:                                          return 0
+       """
+        threshold = float(self.param["similarity"]["threshold"])
+        similarity = float(file_info["similarity"])
+        if similarity != 0 and similarity < threshold:
+            return 1
+        else:
+            return 0
 
-   #----------------------------------
+    def selectImage(self, timestamp, file_info, check_similarity=True):
+        """
+        check image properties to decide if image is a selected one (for backup and view with selected images)
+        """
+        if not "similarity" in file_info:                                    return False
 
-   def selectImage(self, timestamp, file_info, check_similarity=True):
-       '''
-       check image properties to decide if image is a selected one (for backup and view with selected images)
-       '''
-       if not "similarity" in file_info:                                    return False
+        if ("camera" in file_info and file_info["camera"] == self.id) or (
+                not "camera" in file_info and self.id == "cam1"):
 
-       if ("camera" in file_info and file_info["camera"] == self.id) or (not "camera" in file_info and self.id == "cam1"):
+            if "to_be_deleted" in file_info:
+                delete = int(file_info["to_be_deleted"])
+                if delete == 1:                                                return False
 
-          if "to_be_deleted" in file_info:
-             delete    = int(file_info["to_be_deleted"])
-             if delete == 1:                                                return False
+            if "00" + str(self.param["image_save"]["seconds"][0]) in timestamp: return True
 
-          if "00"+str(self.param["image_save"]["seconds"][0]) in timestamp: return True
+            if "favorit" in file_info:
+                favorit = int(file_info["favorit"])
+                if favorit == 1:                                               return True
 
-          if "favorit" in file_info:
-             favorit    = int(file_info["favorit"])
-             if favorit == 1:                                               return True
+            if check_similarity:
+                threshold = float(self.param["similarity"]["threshold"])
+                similarity = float(file_info["similarity"])
+                if similarity != 0 and similarity < threshold:                 return True
+            else:
+                return True  ### to be checked !!!
 
-          if check_similarity:
-             threshold  = float(self.param["similarity"]["threshold"])
-             similarity = float(file_info["similarity"])
-             if similarity != 0 and similarity < threshold:                 return True
-          else:                                                             return True ### to be checked !!!
+        return False
 
-       return False
-
-   #----------------------------------
-
-   def writeImage(self,filename,image,scale_percent=100):
-       '''
+    def writeImage(self, filename, image, scale_percent=100):
+        """
        Scale image and write to file
-       '''
-       image_path = os.path.join(self.config.param["path"],filename)
-       logging.debug("Write image: "+image_path)
-       
-       if scale_percent != 100:
-          width  = int(image.shape[1] * scale_percent / 100)
-          height = int(image.shape[0] * scale_percent / 100)
-          image  = cv2.resize(image, (width,height))
+       """
+        image_path = os.path.join(self.config.param["path"], filename)
+        logging.debug("Write image: " + image_path)
 
-       return cv2.imwrite(image_path,image)
+        if scale_percent != 100:
+            width = int(image.shape[1] * scale_percent / 100)
+            height = int(image.shape[0] * scale_percent / 100)
+            image = cv2.resize(image, (width, height))
 
+        return cv2.imwrite(image_path, image)
 
-   def writeImageInfo(self, time, data):
-       '''
-       Write image information to file
-       '''
-       logging.debug("Write image info: "+self.config.file("images"))
-       
-       if os.path.isfile(self.config.file("images")):
-          files       = self.config.read_cache("images")
-          files[time] = data
-          self.config.write("images",files)
+    def writeImageInfo(self, time, data):
+        """
+        Write image information to file
+        """
+        logging.debug("Write image info: " + self.config.file("images"))
 
+        if os.path.isfile(self.config.file("images")):
+            files = self.config.read_cache("images")
+            files[time] = data
+            self.config.write("images", files)
 
-   def writeVideoInfo(self, stamp, data):
-       '''
-       Write image information to file
-       '''
-       logging.debug(self.id+": Write video info: "+self.config.file("images"))
-       
-       if os.path.isfile(self.config.file("videos")):
-          files       = self.config.read_cache("videos")
-          files[stamp] = data
-          self.config.write("videos",files)
+    def writeVideoInfo(self, stamp, data):
+        """
+        Write image information to file
+        """
+        logging.debug(self.id + ": Write video info: " + self.config.file("images"))
 
-   #----------------------------------
-   
-   def createDayVideo(self, filename, stamp, date):
-       '''
-       Create daily video from all single images available
-       '''
-       camera        = self.id
-       cmd_videofile = "video_"+camera+"_"+stamp+".mp4"
-       cmd_thumbfile = "video_"+camera+"_"+stamp+"_thumb.jpeg"
-       cmd_tempfiles = "img_"+camera+"_"+stamp+"_"
-       framerate     = 20
+        if os.path.isfile(self.config.file("videos")):
+            files = self.config.read_cache("videos")
+            files[stamp] = data
+            self.config.write("videos", files)
 
-       cmd_rm   = "rm "+self.config.directory("videos_temp")+"*"
-       logging.info(cmd_rm)
-       message  = os.system(cmd_rm)
+    def createDayVideo(self, filename, stamp, date):
+        """
+        Create daily video from all single images available
+        """
+        camera = self.id
+        cmd_videofile = "video_" + camera + "_" + stamp + ".mp4"
+        cmd_thumbfile = "video_" + camera + "_" + stamp + "_thumb.jpeg"
+        cmd_tempfiles = "img_" + camera + "_" + stamp + "_"
+        framerate = 20
 
-       cmd_copy = "cp "+self.config.directory("images")+filename+"* "+self.config.directory("videos_temp")
-       logging.info(cmd_copy)
-       message  = os.system(cmd_copy)
-       if message != 0:
-          response = {
-             "result"  : "error",
-             "reason"  : "copy temp image files",
-             "message" : message
-             }
-          return response
+        cmd_rm = "rm " + self.config.directory("videos_temp") + "*"
+        logging.info(cmd_rm)
+        message = os.system(cmd_rm)
 
-       cmd_filename  = self.config.directory("videos_temp")+cmd_tempfiles
-       cmd_rename = "i=0; for fi in "+self.config.directory("videos_temp")+"image_*; do mv \"$fi\" $(printf \""+cmd_filename+"%05d.jpg\" $i); i=$((i+1)); done"
-       logging.info(cmd_rename)
-       message  = os.system(cmd_rename)
-       if message != 0:
-          response = {
-             "result"  : "error",
-             "reason"  : "rename temp image files",
-             "message" : message
-             }
-          return response
+        cmd_copy = "cp " + self.config.directory("images") + filename + "* " + self.config.directory("videos_temp")
+        logging.info(cmd_copy)
+        message = os.system(cmd_copy)
+        if message != 0:
+            response = {
+                "result": "error",
+                "reason": "copy temp image files",
+                "message": message
+            }
+            return response
 
-       amount = 0
-       for root, dirs, files in os.walk(self.config.directory("videos_temp")):
-         for filename in files:
-           if cmd_tempfiles in filename:
-              amount += 1
-                 
-       cmd_create = self.video.ffmpeg_cmd
-       cmd_create = cmd_create.replace("{INPUT_FILENAMES}", cmd_filename+"%05d.jpg")
-       cmd_create = cmd_create.replace("{OUTPUT_FILENAME}", os.path.join(self.config.directory("videos"), cmd_videofile))
-       cmd_create = cmd_create.replace("{FRAMERATE}", str(framerate))
-       logging.info(cmd_create)
-       message  = os.system(cmd_create)
-       if message != 0:
-          response = {
-             "result"  : "error",
-             "reason"  : "create video with ffmpeg",
-             "message" : message
-             }
-          return response
-       
-       cmd_thumb     = "cp "+cmd_filename+"00001.jpg "+self.config.directory("videos")+cmd_thumbfile 
-       logging.info(cmd_thumb)
-       message  = os.system(cmd_thumb)
-       if message != 0:
-          response = {
-             "result"  : "error",
-             "reason"  : "create thumbnail",
-             "message" : message
-             }
-          return response
+        cmd_filename = self.config.directory("videos_temp") + cmd_tempfiles
+        cmd_rename = "i=0; for fi in " + self.config.directory(
+            "videos_temp") + "image_*; do mv \"$fi\" $(printf \"" + cmd_filename + "%05d.jpg\" $i); i=$((i+1)); done"
+        logging.info(cmd_rename)
+        message = os.system(cmd_rename)
+        if message != 0:
+            response = {
+                "result": "error",
+                "reason": "rename temp image files",
+                "message": message
+            }
+            return response
 
-       cmd_rm2 = "rm "+self.config.directory("videos_temp")+"*.jpg"
-       logging.info(cmd_rm2)
-       message  = os.system(cmd_rm2)
-       if message != 0:
-          response = {
-             "result"  : "error",
-             "reason"  : "remove temp image files",
-             "message" : message
-             }
-          return response
-       
-       length = (amount / framerate)
-       video_data = {
-           "camera"      : self.id,
-           "camera_name" : self.name,
-           "date"        : date,
-           "date_start"  : stamp,
-           "framerate"   : framerate,
-           "image_count" : amount,
-           "image_size"  : self.image_size,
-           "length"      : length,
-           "time"        : "complete day",
-           "type"        : "video",
-           "thumbnail"   : cmd_thumbfile,
-           "video_file"  : cmd_videofile,
-           }
-           
-       self.writeVideoInfo(stamp=stamp, data=video_data)
-       
-       return { "result" : "OK" }
+        amount = 0
+        for root, dirs, files in os.walk(self.config.directory("videos_temp")):
+            for filename in files:
+                if cmd_tempfiles in filename:
+                    amount += 1
 
-   #----------------------------------
+        cmd_create = self.video.ffmpeg_cmd
+        cmd_create = cmd_create.replace("{INPUT_FILENAMES}", cmd_filename + "%05d.jpg")
+        cmd_create = cmd_create.replace("{OUTPUT_FILENAME}",
+                                        os.path.join(self.config.directory("videos"), cmd_videofile))
+        cmd_create = cmd_create.replace("{FRAMERATE}", str(framerate))
+        logging.info(cmd_create)
+        message = os.system(cmd_create)
+        if message != 0:
+            response = {
+                "result": "error",
+                "reason": "create video with ffmpeg",
+                "message": message
+            }
+            return response
 
-   def trimVideo(self, video_id, start, end):
-       '''
-       create a shorter video based on date and time
-       '''
-       config_file = self.config.read_cache("videos")
-       if video_id in config_file:
-          input_file  = config_file[video_id]["video_file"]
-          output_file = input_file.replace(".mp4","_short.mp4")
-          framerate   = config_file[video_id]["framerate"]
-          result      = self.video.trim_video(input_file=input_file, output_file=output_file, start_timecode=start, end_timecode=end, framerate=framerate)
-          if result == "OK":
-             config_file[video_id]["video_file_short"] = output_file
-             config_file[video_id]["video_file_short_start"]   = float(start)
-             config_file[video_id]["video_file_short_end"]     = float(end)
-             config_file[video_id]["video_file_short_length"]  = float(end) - float(start)
-             
-             self.config.write("videos",config_file)           
-             return { "result" : "OK" }
-          else:
-             return { "result" : "Error while creating shorter video." }
+        cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.directory("videos") + cmd_thumbfile
+        logging.info(cmd_thumb)
+        message = os.system(cmd_thumb)
+        if message != 0:
+            response = {
+                "result": "error",
+                "reason": "create thumbnail",
+                "message": message
+            }
+            return response
 
-       else:
-          logging.warning("No video with the ID "+str(video_id)+" available.")
-          return { "result" : "No video with the ID "+str(video_id)+" available." }
-       
+        cmd_rm2 = "rm " + self.config.directory("videos_temp") + "*.jpg"
+        logging.info(cmd_rm2)
+        message = os.system(cmd_rm2)
+        if message != 0:
+            response = {
+                "result": "error",
+                "reason": "remove temp image files",
+                "message": message
+            }
+            return response
 
+        length = (amount / framerate)
+        video_data = {
+            "camera": self.id,
+            "camera_name": self.name,
+            "date": date,
+            "date_start": stamp,
+            "framerate": framerate,
+            "image_count": amount,
+            "image_size": self.image_size,
+            "length": length,
+            "time": "complete day",
+            "type": "video",
+            "thumbnail": cmd_thumbfile,
+            "video_file": cmd_videofile,
+        }
+
+        self.writeVideoInfo(stamp=stamp, data=video_data)
+
+        return {"result": "OK"}
+
+    def trimVideo(self, video_id, start, end):
+        """
+        create a shorter video based on date and time
+        """
+        config_file = self.config.read_cache("videos")
+        if video_id in config_file:
+            input_file = config_file[video_id]["video_file"]
+            output_file = input_file.replace(".mp4", "_short.mp4")
+            framerate = config_file[video_id]["framerate"]
+            result = self.video.trim_video(input_file=input_file, output_file=output_file, start_timecode=start,
+                                           end_timecode=end, framerate=framerate)
+            if result == "OK":
+                config_file[video_id]["video_file_short"] = output_file
+                config_file[video_id]["video_file_short_start"] = float(start)
+                config_file[video_id]["video_file_short_end"] = float(end)
+                config_file[video_id]["video_file_short_length"] = float(end) - float(start)
+
+                self.config.write("videos", config_file)
+                return {"result": "OK"}
+            else:
+                return {"result": "Error while creating shorter video."}
+
+        else:
+            logging.warning("No video with the ID " + str(video_id) + " available.")
+            return {"result": "No video with the ID " + str(video_id) + " available."}

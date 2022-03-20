@@ -17,7 +17,6 @@ from modules.config import myConfig
 from modules.commands import myCommands
 from modules.presets import myParameters
 from modules.presets import myMIMEtypes
-from modules.views import myViews
 from modules.views_v2 import myViews_v2
 
 
@@ -234,7 +233,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         check path and send requested content
         """
-        path, which_cam = views.selectedCamera(self.path)
+        path, which_cam = views_v2.selectedCamera(self.path)
         file_ending = self.path.split(".")
         file_ending = "."+file_ending[len(file_ending)-1].lower()
         
@@ -341,49 +340,24 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if key in sensor and not sensor[key].error and sensor[key].running:
                     sensor_data[key]["values"] = sensor[key].values
 
-            response = {}
-            response["STATUS"] = {
-                "start_time":       APIstart,
-                "current_time":     datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
-                "admin_allowed":    self.admin_allowed(),
-                "check-version":    version,
-                "api-call":         status,
-                "reload":           False
-                }
-            response["API"] = APIdescription
-            response["DATA"] = content
-            response["DATA"]["cameras"] = cameras
-            response["DATA"]["sensors"] = sensor_data
-            response["DATA"]["selected"] = which_cam
-            response["DATA"]["active_page"] = command
+            api_response = {
+                "STATUS": {
+                    "start_time": APIstart,
+                    "current_time": datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                    "admin_allowed": self.admin_allowed(),
+                    "check-version": version,
+                    "api-call": status,
+                    "reload": False
+                },
+                "API": APIdescription,
+                "DATA": content
+            }
+            api_response["DATA"]["cameras"] = cameras
+            api_response["DATA"]["sensors"] = sensor_data
+            api_response["DATA"]["selected"] = which_cam
+            api_response["DATA"]["active_page"] = command
 
-            self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True)
-
-        # app and API v1
-        elif ('.html' in self.path or "/api/" in self.path) and "/app-v1/" in self.path:
-            content = {}
-            template = ""
-            if "//" in self.path:
-                self.path = self.path.replace("//","/")
-            if '/index.html' in self.path:
-                template, content = views.createIndex(server=self)
-            elif '/list_star.html' in self.path:
-                template, content = views.createFavorits(server=self)
-            elif '/list_short.html' in self.path:
-                template, content = views.createList(server=self)
-            elif '/list_backup.html' in self.path:
-                template, content = views.createBackupList(server=self)
-            elif '/list_new.html' in self.path:
-                template, content = views.createCompleteListToday(server=self)
-            elif '/videos.html' in self.path:
-                template, content = views.createVideoList(server=self)
-            elif '/video-info.html' in self.path:
-                template, content = views.detailViewVideo(server=self)
-            elif '/cameras.html' in self.path:
-                template, content = views.createCameraList(server=self)
-
-            template = template.replace("/app-v1","")
-            self.stream_file(filetype='text/html', content=read_html(directory='app-v1', filename=template, content=content), no_cache=True)
+            self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'), no_cache=True)
 
         # extract and show single image
         elif '/image.jpg' in self.path:
@@ -468,7 +442,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                 self.stream_file(filetype=myMIMEtypes[file_ending], content=read_image(directory='', filename=self.path))
            
-        # unknown
+        # request unknown
         else:
             self.error_404()
 
@@ -502,21 +476,6 @@ if __name__ == "__main__":
     config.directory_create("videos")
     config.directory_create("videos_temp")
 
-    # start cameras
-    camera = {}
-    for cam in config.param["cameras"]:
-        settings = config.param["cameras"][cam]
-        camera[cam] = myCamera(id=cam, type=settings["type"], record=settings["record"], param=settings, config=config)
-        if not camera[cam].error:
-            camera[cam].start()
-            camera[cam].param["path"] = config.param["path"]
-            camera[cam].setText("Starting ...")
-
-    # start backups
-    time.sleep(1)
-    backup = myBackupRestore(config, camera)
-    backup.start()
-    
     # start sensors
     sensor = {}
     if "rpi_active" in config.param and config.param["rpi_active"]:
@@ -527,12 +486,25 @@ if __name__ == "__main__":
             if not sensor[sen].error:
                 sensor[sen].start()
 
+    # start cameras
+    camera = {}
+    for cam in config.param["cameras"]:
+        settings = config.param["cameras"][cam]
+        camera[cam] = myCamera(id=cam, config=config, sensor=sensor)
+        if not camera[cam].error:
+            camera[cam].start()
+            camera[cam].param["path"] = config.param["path"]
+            camera[cam].setText("Starting ...")
+
     # start views and commands
-    views = myViews(config=config, camera=camera)
-    views.start()
     views_v2 = myViews_v2(config=config, camera=camera)
     views_v2.start()
 
+    # start backups
+    time.sleep(1)
+    backup = myBackupRestore(config, camera)
+    backup.start()
+    
     commands = myCommands(config=config, camera=camera, backup=backup)
     commands.start()
 
@@ -578,7 +550,6 @@ if __name__ == "__main__":
             if sensor[sen].running:
                 sensor[sen].stop()
         commands.stop()
-        views.stop()
         views_v2.stop()
 
         server.server_close()
