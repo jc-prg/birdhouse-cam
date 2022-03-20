@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import RPi.GPIO as GPIO
-import modules.dht11 as dht11
+import dht11
 import time
 
 GPIO.setmode(GPIO.BCM)
