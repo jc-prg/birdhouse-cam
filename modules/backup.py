@@ -24,7 +24,7 @@ class myBackupRestore(threading.Thread):
         """
         backup_started = False
         while self._running:
-            stamp   = datetime.now().strftime('%H%M%S')
+            stamp = datetime.now().strftime('%H%M%S')
             if stamp[0:4] == self.config.param["backup_time"] and not backup_started:
                 logging.info("Starting daily backup ...")
                 backup_started = True
@@ -40,75 +40,78 @@ class myBackupRestore(threading.Thread):
         """
         stop running process
         """
-        self._running=False
+        self._running = False
 
     def create_video_config(self):
-       """
+        """
        recreate video config file, if not exists
        """
 
-       path = self.config.directory(config="videos")
-       logging.info("Reading files from path: "+path)
+        path = self.config.directory(config="videos")
+        logging.info("Reading files from path: " + path)
 
-       file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and ".mp4" in f and not "short" in f]
-       file_list.sort(reverse=True)
-       files     = {}
-       for file in file_list:
+        file_list = [f for f in os.listdir(path) if
+                     os.path.isfile(os.path.join(path, f)) and ".mp4" in f and not "short" in f]
+        file_list.sort(reverse=True)
+        files = {}
+        for file in file_list:
 
-           logging.info(file)
-           fname      = file.split(".")
-           param      = fname[0].split("_")   # video_cam2_20210428_175551*
-           fid        = param[2]+"_"+param[3]
-           date       = param[2][6:8] + "." + param[2][4:6] + "." + param[2][0:4] + " " + param[3][0:2] + ":" + param[3][2:4]+ ":" + param[3][4:6]
-           file_short = ""
-           file_short_length = 0
+            logging.info(file)
+            fname = file.split(".")
+            param = fname[0].split("_")  # video_cam2_20210428_175551*
+            fid = param[2] + "_" + param[3]
+            date = param[2][6:8] + "." + param[2][4:6] + "." + param[2][0:4] + " " + param[3][0:2] + ":" + param[3][
+                                                                                                           2:4] + ":" + \
+                   param[3][4:6]
+            file_short = ""
+            file_short_length = 0
 
-           # Get Infos from video file
-           # https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-get
-           #-------------------------
+            # Get Infos from video file
+            # https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-get
+            # -------------------------
 
-           cap    = cv2.VideoCapture(os.path.join(path,file))
-           frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-           fps    = cap.get(cv2.CAP_PROP_FPS)
-           length = float(frames) / fps
-           width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-           height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            cap = cv2.VideoCapture(os.path.join(path, file))
+            frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            length = float(frames) / fps
+            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-           fname_short = param[0]+"_"+param[1]+"_"+param[2]+"_"+param[3]+"_short.mp4"
-           if os.path.isfile(os.path.join(path,fname_short)):
-              file_short        = fname_short
-              cap               = cv2.VideoCapture(os.path.join(path,file_short))
-              file_short_length = cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS)
+            fname_short = param[0] + "_" + param[1] + "_" + param[2] + "_" + param[3] + "_short.mp4"
+            if os.path.isfile(os.path.join(path, fname_short)):
+                file_short = fname_short
+                cap = cv2.VideoCapture(os.path.join(path, file_short))
+                file_short_length = cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS)
 
-           files[fid] = {
-                "date_end":    fid,
-                "stamp_end":   0,
+            files[fid] = {
+                "date_end": fid,
+                "stamp_end": 0,
                 "stamp_start": 0,
-                "start":       0,
+                "start": 0,
                 "start_stamp": 0,
 
-                "camera":      param[1],
+                "camera": param[1],
                 "camera_name": self.camera[param[1]].name,
-                "category":    "/videos/" + param[2] + "_" + param[3],
-                "date":        date,
-                "date_start":  param[2]+"_"+param[3],
-                "directory":   self.camera[param[1]].param["video"]["streaming_server"],
-                "image_size":  [width,height],
+                "category": "/videos/" + param[2] + "_" + param[3],
+                "date": date,
+                "date_start": param[2] + "_" + param[3],
+                "directory": self.camera[param[1]].param["video"]["streaming_server"],
+                "image_size": [width, height],
                 "image_count": frames,
-                "framerate":   fps,
-                "length":      length,
-                "path":        self.config.directories["videos"],
-                "status":      "finished",
-                "lowres":      fname[0]+"_thumb.jpeg",
-                "thumbnail":   fname[0]+"_thumb.jpeg",
-                "type":        "video",
-                "video_file":              file,
-                "video_file_short":        file_short,
+                "framerate": fps,
+                "length": length,
+                "path": self.config.directories["videos"],
+                "status": "finished",
+                "lowres": fname[0] + "_thumb.jpeg",
+                "thumbnail": fname[0] + "_thumb.jpeg",
+                "type": "video",
+                "video_file": file,
+                "video_file_short": file_short,
                 "video_file_short_length": file_short_length,
-                 }
+            }
 
-       self.config.write(config="videos",config_data=files)
-                        
+        self.config.write(config="videos", config_data=files)
+
     def compare_files_init(self, date=""):
         """
         Initial compare files (to create new config file)
@@ -116,250 +119,263 @@ class myBackupRestore(threading.Thread):
         if date == '':
             path = self.config.directory(config="images")
         else:
-            path = self.config.directory(config="backup",date=date)
+            path = self.config.directory(config="backup", date=date)
 
-        file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not "_big" in f]
+        file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and not "_big" in f]
         file_list.sort(reverse=True)
         files = self.compare_files(list=file_list, init=True, subdir=date)
 
         return files
 
-
     def compare_files(self, list, init=False, subdir=""):
-       """
+        """
        Compare image files and write to config file
        """
+        if os.path.isfile(self.config.file("images")) and subdir == "":
+            file_list = self.config.read_cache(config='images')
+        else:
+            file_list = {}
 
-       if os.path.isfile(self.config.file("images")) and subdir == "": files = self.config.read_cache(config='images')
-       else:                                                           files = {}
+        file_list = file_list.copy()
+        list = self.update_image_config(list=list, files=file_list, subdir=subdir)
+        if subdir == '': self.config.write(config="images", config_data=file_list)
 
-       list = self.update_image_config(list=list, files=files, subdir=subdir)
-       if subdir == '': self.config.write(config="images",config_data=files)
+        count = 0
+        for cam in self.config.param["cameras"]:
+            filenameA = ""
+            filenameB = ""
+            imageA = ""
+            imageB = ""
 
-       count     = 0
-       for cam in self.config.param["cameras"]:
-         filenameA = ""
-         imageA    = ""
-         filenameB = ""
-         imageB    = ""
+            for time in file_list:
+                if file_list[time]["camera"] == cam:
 
-         for time in files:
-           if files[time]["camera"] == cam:
+                    filenameA = file_list[time]["lowres"]
+                    try:
+                        filename = os.path.join(self.config.directory(config="images"), subdir, filenameA)
+                        imageA = cv2.imread(filename)
+                        imageA = cv2.cvtColor(imageA, cv2.COLOR_BGR2GRAY)
+                    except Exception as e:
+                        logging.error("Could not load image: " + filename)
+                        logging.error(e)
 
-              filenameA  = files[time]["lowres"]
-              try:
-                 filename   = os.path.join(self.config.directory(config="images"), subdir, filenameA)
-                 imageA     = cv2.imread(filename)
-                 imageA     = cv2.cvtColor(imageA, cv2.COLOR_BGR2GRAY)
-              except Exception as e:
-                 logging.error("Could not load image: "+filename)
-                 logging.error(e)
+                    if len(filenameB) > 0:
+                        score = self.camera[cam].compareRawImages(imageA, imageB)
+                        file_list[time]["compare"] = (filenameA, filenameB)
+                        file_list[time]["similarity"] = score
+                        count += 1
+                    else:
+                        file_list[time]["compare"] = (filenameA)
+                        file_list[time]["similarity"] = 0
 
-              if len(filenameB) > 0:
-                 score = self.camera[cam].compareRawImages(imageA,imageB)
-                 files[time]["compare"]    = (filenameA,filenameB)
-                 files[time]["similarity"] = score
-                 count += 1
-              else:
-                 files[time]["compare"]    = (filenameA)
-                 files[time]["similarity"] = 0
+                    if init: logging.info(
+                        cam + ": " + filenameA + "  " + str(count) + "/" + str(len(file_list)) + " - " + str(
+                            file_list[time]["similarity"]) + "%")
 
-              if init: logging.info(cam + ": " + filenameA + "  " + str(count) + "/" + str(len(files)) + " - " + str(files[time]["similarity"]) + "%")
+                    filenameB = filenameA
+                    imageB = imageA
 
-              filenameB  = filenameA
-              imageB     = imageA
-
-       if subdir == '': self.config.write("images",files)
-       return files
-
+        if subdir == '': self.config.write("images", file_list)
+        return file_list
 
     def update_image_config(self, list, files, subdir=""):
-       """
+        """
        get image date from file
        """
-       for file in list:
-         if ".jpg" in file:
+        for file in list:
+            if ".jpg" in file:
 
-           analyze = self.config.imageName2Param(filename=file)
-           if "error" in analyze: continue
+                analyze = self.config.imageName2Param(filename=file)
+                if "error" in analyze: continue
 
-           which_cam                  = analyze["cam"]
-           time                       = analyze["stamp"]
-           files[time]                = {}
-           files[time]["camera"]      = which_cam
+                which_cam = analyze["cam"]
+                time = analyze["stamp"]
+                files[time] = {}
+                files[time]["camera"] = which_cam
 
-           if "cam" in file:
-              files[time]["lowres"]   = self.config.imageName(type="lowres", timestamp=time, camera=which_cam)
-              files[time]["hires"]    = self.config.imageName(type="hires",  timestamp=time, camera=which_cam)
-           else:
-              files[time]["lowres"]   = self.config.imageName(type="lowres", timestamp=time)
-              files[time]["hires"]    = self.config.imageName(type="hires",  timestamp=time)
+                if "cam" in file:
+                    files[time]["lowres"] = self.config.imageName(type="lowres", timestamp=time, camera=which_cam)
+                    files[time]["hires"] = self.config.imageName(type="hires", timestamp=time, camera=which_cam)
+                else:
+                    files[time]["lowres"] = self.config.imageName(type="lowres", timestamp=time)
+                    files[time]["hires"] = self.config.imageName(type="hires", timestamp=time)
 
-           if subdir == "":
-              file_dir = os.path.join(self.config.directory(config='images'),file)
-              timestamp = datetime.fromtimestamp(os.path.getmtime(file_dir))
+                if subdir == "":
+                    file_dir = os.path.join(self.config.directory(config='images'), file)
+                    timestamp = datetime.fromtimestamp(os.path.getmtime(file_dir))
 
-              files[time]["datestamp"] = timestamp.strftime("%Y%m%d")
-              files[time]["date"]      = timestamp.strftime("%d.%m.%Y")
-              files[time]["time"]      = timestamp.strftime("%H:%M:%S")
+                    files[time]["datestamp"] = timestamp.strftime("%Y%m%d")
+                    files[time]["date"] = timestamp.strftime("%d.%m.%Y")
+                    files[time]["time"] = timestamp.strftime("%H:%M:%S")
 
-       return files
+        return files
 
     def backup_files(self, other_date=""):
-       """
+        """
        Backup files with threshold to folder with date ./images/YYMMDD/
        """
-       if other_date == "": backup_date   = datetime.now().strftime('%Y%m%d')
-       else:                backup_date   = other_date
+        if other_date == "":
+            backup_date = datetime.now().strftime('%Y%m%d')
+        else:
+            backup_date = other_date
 
-       directory = self.config.directory(config="images", date=backup_date)
+        directory = self.config.directory(config="images", date=backup_date)
 
-       # if the directory but no config file exists for backup directory create a new one
-       if os.path.isdir(directory):
-         logging.info("backup files: create a new config file, directory already exists")
+        # if the directory but no config file exists for backup directory create a new one
+        if os.path.isdir(directory):
+            logging.info("backup files: create a new config file, directory already exists")
 
-         if not os.path.isfile(self.config.file(config="backup", date=backup_date)):
-            files                             = self.compare_files_init(date=backup_date)
-            files_backup                      = { "files" : {}, "info" : {}}
-            files_backup["files"]             = files
-            files_backup["info"]["count"]     = len(files)
+            if not os.path.isfile(self.config.file(config="backup", date=backup_date)):
+                files = self.compare_files_init(date=backup_date)
+                files_backup = {"files": {}, "info": {}}
+                files_backup["files"] = files
+                files_backup["info"]["count"] = len(files)
+                files_backup["info"]["threshold"] = {}
+                for cam in self.camera:
+                    files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
+                files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
+                files_backup["info"]["size"] = sum(
+                    os.path.getsize(os.path.join(directory, f)) for f in os.listdir(directory) if
+                    os.path.isfile(os.path.join(directory, f)))
+                self.config.write(config="backup", config_data=files_backup, date=backup_date)
+
+        # if no directory exists, create directory, copy files and create a new config file (copy existing information)
+        else:
+            logging.info("backup files: copy files and create a new config file (copy existing information)")
+
+            self.config.directory_create(config="images", date=backup_date)
+            files = self.config.read_cache(config="images")
+            files_backup = {"files": {}, "info": {}}
+            stamps = list(reversed(sorted(files.keys())))
+            dir_source = self.config.directory(config="images")
+            count = 0
+            backup_size = 0
+
+            for cam in self.camera:
+                count = 0
+                count_data = 0
+                for stamp in stamps:
+
+                    if self.camera[cam].selectImage(timestamp=stamp, file_info=files[stamp]) and files[stamp][
+                        "datestamp"] == backup_date:
+                        count += 1
+                        update_new = files[stamp].copy()
+                        file_lowres = self.config.imageName(type="lowres", timestamp=stamp, camera=cam)
+                        file_hires = self.config.imageName(type="hires", timestamp=stamp, camera=cam)
+
+                        if not "similarity" in update_new: update_new["similarity"] = 100
+                        if not "hires" in update_new: update_new["hires"] = file_hires
+                        if not "favorit" in update_new: update_new["favorit"] = 0
+                        update_new["type"] = "image"
+                        update_new["directory"] = os.path.join(self.config.directories["images"], backup_date)
+
+                        if os.path.isfile(os.path.join(dir_source, file_lowres)):
+                            update_new["size"] = (
+                                        os.path.getsize(os.path.join(dir_source, file_lowres)) + os.path.getsize(
+                                    os.path.join(dir_source, file_hires)))
+                            backup_size += update_new["size"]
+                            files_backup["files"][stamp] = update_new
+
+                            os.popen('cp ' + os.path.join(dir_source, file_lowres) + ' ' + os.path.join(directory,
+                                                                                                        file_lowres))
+                            os.popen('cp ' + os.path.join(dir_source, file_hires) + ' ' + os.path.join(directory,
+                                                                                                       file_hires))
+
+                    elif files[stamp]["datestamp"] == backup_date:
+                        count_data += 1
+                        update_new = files[stamp].copy()
+                        if "hires" in update_new:     del update_new["hires"]
+                        if "lowres" in update_new:    del update_new["lowres"]
+                        if "directory" in update_new: del update_new["directory"]
+                        update_new["type"] = "data"
+                        files_backup["files"][stamp] = update_new
+
+                logging.info(cam + ": " + str(count) + " Bilder gesichert (" + str(
+                    self.camera[cam].param["similarity"]["threshold"]) + ")")
+            #           logging.info(cam + ": " +str(count_data) + " Daten gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
+
+            files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
+            files_backup["info"]["count"] = count
+            files_backup["info"]["size"] = backup_size
             files_backup["info"]["threshold"] = {}
             for cam in self.camera:
-              files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
-            files_backup["info"]["date"]      = backup_date[6:8]+"."+backup_date[4:6]+"."+backup_date[0:4]
-            files_backup["info"]["size"]      = sum(os.path.getsize(os.path.join(directory,f)) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory,f)))
-            self.config.write(config="backup", config_data=files_backup, date=backup_date)
+                files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
 
-       # if no directory exists, create directory, copy files and create a new config file (copy existing information)
-       else:
-         logging.info("backup files: copy files and create a new config file (copy existing information)")
-
-         self.config.directory_create(config="images", date=backup_date)
-         files        = self.config.read_cache(config="images")
-         files_backup = { "files" : {}, "info" : {}}
-         stamps       = list(reversed(sorted(files.keys())))
-         dir_source   = self.config.directory(config="images")
-         count        = 0
-         backup_size  = 0
-
-         for cam in self.camera:
-           count = 0
-           count_data = 0
-           for stamp in stamps:
-
-             if self.camera[cam].selectImage(timestamp=stamp, file_info=files[stamp]) and files[stamp]["datestamp"] == backup_date:
-                count      += 1
-                update_new  = files[stamp].copy()
-                file_lowres = self.config.imageName(type="lowres", timestamp=stamp, camera=cam)
-                file_hires  = self.config.imageName(type="hires",  timestamp=stamp, camera=cam)
-
-                if not "similarity" in update_new: update_new["similarity"] = 100
-                if not "hires"      in update_new: update_new["hires"]      = file_hires
-                if not "favorit"    in update_new: update_new["favorit"]    = 0
-                update_new["type"] = "image"
-                update_new["directory"] = os.path.join(self.config.directories["images"], backup_date)
-
-                if os.path.isfile(os.path.join(dir_source,file_lowres)):
-                   update_new["size"]           = (os.path.getsize(os.path.join(dir_source,file_lowres)) + os.path.getsize(os.path.join(dir_source,file_hires)))
-                   backup_size                 += update_new["size"]
-                   files_backup["files"][stamp] = update_new
-
-                   os.popen('cp ' + os.path.join(dir_source,file_lowres) + ' ' + os.path.join(directory,file_lowres))
-                   os.popen('cp ' + os.path.join(dir_source,file_hires)  + ' ' + os.path.join(directory,file_hires))
-
-             elif files[stamp]["datestamp"] == backup_date:
-                count_data += 1
-                update_new  = files[stamp].copy()
-                if "hires" in update_new:     del update_new["hires"]
-                if "lowres" in update_new:    del update_new["lowres"]
-                if "directory" in update_new: del update_new["directory"]
-                update_new["type"] = "data"
-                files_backup["files"][stamp] = update_new
-
-           logging.info(cam + ": " +str(count) + " Bilder gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
-    #           logging.info(cam + ": " +str(count_data) + " Daten gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
-
-         files_backup["info"]["date"]      = backup_date[6:8]+"."+backup_date[4:6]+"."+backup_date[0:4]
-         files_backup["info"]["count"]     = count
-         files_backup["info"]["size"]      = backup_size
-         files_backup["info"]["threshold"] = {}
-         for cam in self.camera:
-           files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
-
-         self.config.write(config="backup", config_data=files_backup, date=directory)
-
+            self.config.write(config="backup", config_data=files_backup, date=directory)
 
     def delete_marked_files(self, ftype="image", date="", delete_not_used=False):
-       """
+        """
        delete files which are marked to be recycled for a specific date + database entry
        """
-       response = {}
+        response = {}
 
-       if ftype == "image":
-         if date == "":
-           files        = self.config.read_cache(config='images')
-           directory    = self.config.directory(config='images')
-         else:
-           config_file  = self.config.read_cache(config='backup', date=date)
-           directory    = self.config.directory(config='backup', date=date)
-           files        = config_file["files"]
-       elif ftype == "video":
-         files        = self.config.read_cache(config='videos')
-         directory    = self.config.directory(config='videos')
-       else:
-         response["error"] = "file type not supported"
+        if ftype == "image":
+            if date == "":
+                files = self.config.read_cache(config='images')
+                directory = self.config.directory(config='images')
+            else:
+                config_file = self.config.read_cache(config='backup', date=date)
+                directory = self.config.directory(config='backup', date=date)
+                files = config_file["files"]
+        elif ftype == "video":
+            files = self.config.read_cache(config='videos')
+            directory = self.config.directory(config='videos')
+        else:
+            response["error"] = "file type not supported"
 
-       file_types          = ["lowres","hires","video_file","thumbnail"]
-       files_in_dir        = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and not ".json" in f]
-       files_in_config     = []
-       delete_keys         = []
+        file_types = ["lowres", "hires", "video_file", "thumbnail"]
+        files_in_dir = [f for f in os.listdir(directory) if
+                        os.path.isfile(os.path.join(directory, f)) and not ".json" in f]
+        files_in_config = []
+        delete_keys = []
 
-       count = 0
-       for key in files:
+        count = 0
+        for key in files:
 
-         if date != "": check_date = date[6:8]+"."+date[4:6]+"."+date[0:4]
-         if date == "" or ("date" in files[key] and check_date in files[key]["date"]):
-           for file_type in file_types:
-             if file_type in files[key]: files_in_config.append(files[key][file_type])
+            if date != "": check_date = date[6:8] + "." + date[4:6] + "." + date[0:4]
+            if date == "" or ("date" in files[key] and check_date in files[key]["date"]):
+                for file_type in file_types:
+                    if file_type in files[key]: files_in_config.append(files[key][file_type])
 
-         if "to_be_deleted" in files[key] and int(files[key]["to_be_deleted"]) == 1:
-            count += 1
-            delete_keys.append(key)
+            if "to_be_deleted" in files[key] and int(files[key]["to_be_deleted"]) == 1:
+                count += 1
+                delete_keys.append(key)
 
-       for key in delete_keys:
-         try:
-           for file_type in file_types:
-             if file_type in files[key]:
-               if os.path.isfile(os.path.join(directory, files[key][file_type])):
-                 os.remove(os.path.join(directory, files[key][file_type]))
-                 logging.debug("Delete - " + str(key) + ": " + os.path.join(directory, files[key][file_type]))
-           del files[key]
+        for key in delete_keys:
+            try:
+                for file_type in file_types:
+                    if file_type in files[key]:
+                        if os.path.isfile(os.path.join(directory, files[key][file_type])):
+                            os.remove(os.path.join(directory, files[key][file_type]))
+                            logging.debug(
+                                "Delete - " + str(key) + ": " + os.path.join(directory, files[key][file_type]))
+                del files[key]
 
-         except Exception as e:
-           if not "error" in response: response["error"] = ""
-           logging.error("Error while deleting file '" + key + "' ... " + str(e))
-           response["error"] += "delete file '" + key + "': " + str(e) + "\n"
+            except Exception as e:
+                if not "error" in response: response["error"] = ""
+                logging.error("Error while deleting file '" + key + "' ... " + str(e))
+                response["error"] += "delete file '" + key + "': " + str(e) + "\n"
 
-       if delete_not_used:
-         for file in files_in_dir:
-           if file not in files_in_config:
-             os.remove(os.path.join(directory, file))
+        if delete_not_used:
+            for file in files_in_dir:
+                if file not in files_in_config:
+                    os.remove(os.path.join(directory, file))
 
-       print(str(len(files_in_dir))+"/"+str(len(files_in_config)))
+        print(str(len(files_in_dir)) + "/" + str(len(files_in_config)))
 
-       response["deleted_count"]  = count
-       response["deleted_keys"]   = delete_keys
-       response["files_not_used"] = len(files_in_dir) - len(files_in_config)
-       response["files_used"]     = len(files_in_config)
+        response["deleted_count"] = count
+        response["deleted_keys"] = delete_keys
+        response["files_not_used"] = len(files_in_dir) - len(files_in_config)
+        response["files_used"] = len(files_in_config)
 
-       if ftype == "image":
-         if date == "":
-           self.config.write(config='images', config_data=files)
-         else:
-           config_file["files"] = files
-           self.config.write(config='backup', config_data=config_file, date=date)
-       elif ftype == "video":
-         self.config.write(config='videos', config_data=files)
+        if ftype == "image":
+            if date == "":
+                self.config.write(config='images', config_data=files)
+            else:
+                config_file["files"] = files
+                self.config.write(config='backup', config_data=config_file, date=date)
+        elif ftype == "video":
+            self.config.write(config='videos', config_data=files)
 
-       logging.info("Deleted " + str(count) + " marked files in " + directory + ".")
-       return response
+        logging.info("Deleted " + str(count) + " marked files in " + directory + ".")
+        return response
