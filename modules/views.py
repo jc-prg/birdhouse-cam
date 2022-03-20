@@ -86,6 +86,9 @@ class myViews(threading.Thread):
             if which_cam not in self.camera or len(param) <= 3:
                 logging.warning("Unknown camera requested (%s).", path)
                 which_cam = "cam1"
+        elif "?" in path:
+            param = path.split("?")
+            which_cam = param[1]
 
         self.active_cams = []
         for key in self.camera:
