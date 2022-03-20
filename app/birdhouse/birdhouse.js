@@ -231,6 +231,7 @@ function birdhouse_INDEX(data, camera) {
 function birdhouse_CAMERAS( title, data ) {
 	var cameras	= data["DATA"]["entries"];
 	var sensors = data["DATA"]["sensors"];
+	var micros  = data["DATA"]["microphones"];
 	var admin 	= data["STATUS"]["admin_allowed"];
 	var html	= "";
 	
@@ -271,9 +272,22 @@ function birdhouse_CAMERAS( title, data ) {
         html += "<div class='camera_info'>";
         html += "<div class='camera_info_image'>&nbsp;</div>";
         html += "<div class='camera_info_text'><ul>";
+        html += "<li>Type: "+sensors[sensor]["type"]+" ("+sensors[sensor]["pin"]+")</li>";
         for (let key in sensors[sensor]["values"]) {
             html += "<li>"+key+": "+sensors[sensor]["values"][key]+"</li>";
         }
+        html += "</ul></div></div>";
+	    html += "</div>";
+	}
+	for (let micro in micros) {
+	    url = "http://"+data["DATA"]["ip4_address"]+":"+micros[micro]["port"]+"/";
+        html += birdhouse_OtherGroupHeader( micro, micro.toUpperCase()+": "+micros[micro]["name"], true );
+        html += "<div id='group_"+micro+"'>";
+        html += "<div class='camera_info'>";
+        html += "<div class='camera_info_image'>&nbsp;</div>";
+        html += "<div class='camera_info_text'><ul>";
+        html += "<li>Type: "+micros[micro]["type"]+"</li>";
+        html += "<li>URL: <a href='"+url+"' target='_blank'>"+url+"</a></li>";
         html += "</ul></div></div>";
 	    html += "</div>";
 	}
@@ -388,21 +402,29 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         
         if (active_page == "TODAY_COMPLETE") {
         	var chart_data = {};
+        	var chart_title = [];
         	var chart_keys = Object.keys(entries);
         	for (var i=0;i<chart_keys.length;i++) {
         		var key    = chart_keys[i];
-
         		if (key.indexOf(":") > 0) { key_print = key.substring(0,5); }
         		else                      { key_print = key.substring(0,2) + ":" + key.substring(2,4); }
-        		
         		var value1 = entries[key]["similarity"];
         		if (value1 == 0) { value1 = 100; }
         		value1     = 100 - value1;
         		value1     = Math.round( value1*10) / 10;
         		chart_data[key_print] = [ value1 ];
+
+        		if (entries[key]["sensors"]) {
+        		    for (key2 in entries[key]["sensors"]) {
+        		        sensor_data = entries[key]["sensors"][key2];
+        		        for (key3 in sensor_data) {
+        		            chart_data[key_print].push(sensor_data[key3]);
+        		        }
+        		    }
         		}
-        	html += birdhouseChart_create(title=["Activity","Constant"], data=chart_data);
         	}
+        	html += birdhouseChart_create(title=["Activity","Constant"], data=chart_data);
+        }
 
 	// group favorits per month
         if (active_page == "FAVORITS") { 
