@@ -475,6 +475,8 @@ if __name__ == "__main__":
             sensor[sen] = mySensor(sensor_id=sen, param=settings, config=config)
             if not sensor[sen].error:
                 sensor[sen].start()
+    if sensor == {}:
+        logging.info("No sensor added.")
 
     # start cameras
     camera = {}
