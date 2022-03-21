@@ -50,32 +50,32 @@ function birdhouseChart_create (title, data, type="line", sort_keys=true) {
       	// data = { "label1" : [1, 2, 3], "label2" : [1, 2, 3] };
 
 	var html 	= "";
-      	var data_keys	= Object.keys(data);
-      	if (sort_keys)	{ data_keys = data_keys.sort(); }
-      	var data_rows	= data[data_keys[0]].length;		// startet with only 1 line per chart!
+    var data_keys	= Object.keys(data);
+    if (sort_keys)	{ data_keys = data_keys.sort(); }
+    var data_rows	= data[data_keys[0]].length;		// startet with only 1 line per chart!
 
-      	var data_labels = "";
-      	var data_data   = "";
-      	var data_sets   = [];
-      	
-      	for (var x=0;x<data_rows;x++) {
-	      	var data_var = [];
-	      	for (var i=0;i<data_keys.length;i++) {
-        		var key       = data_keys[i];
-        		data_var.push(data[key][x]);
-        		}
-        	if (Array.isArray(title)) { myTitle = title[x]; }
-        	else                      { myTitle = title; }
-        	
-        	data_sets.push({
-        		label : (x+1)+": "+myTitle,
-      			backgroundColor : chartJS_defaultColors[x],
-      			borderColor : chartJS_defaultColors[x],
-      			borderWidth : 2,
-      			pointRadius : 0,
-      			data : data_var        		
-        		});
-        	}
+    var data_labels = "";
+    var data_data   = "";
+    var data_sets   = [];
+
+    for (var x=0;x<data_rows;x++) {
+        var data_var = [];
+        for (var i=0;i<data_keys.length;i++) {
+            var key       = data_keys[i];
+            data_var.push(data[key][x]);
+            }
+        if (Array.isArray(title)) { myTitle = title[x]; }
+        else                      { myTitle = title; }
+
+        data_sets.push({
+            label : (x+1)+": "+myTitle,
+            backgroundColor : chartJS_defaultColors[x],
+            borderColor : chartJS_defaultColors[x],
+            borderWidth : 2,
+            pointRadius : 0,
+            data : data_var
+            });
+        }
         		
 	load_chartJS();
 

@@ -443,11 +443,13 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
                     }
         	    }
         	}
+        	/*
             console.log(entries);
             console.log(chart_titles);
             console.log(chart_titles_sensor);
             console.log(chart_data);
             console.log(chart_data_sensor);
+            */
             html += birdhouseChart_create(title=chart_titles, data=chart_data);
         }
 
