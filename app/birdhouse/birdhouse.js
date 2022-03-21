@@ -424,9 +424,10 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
        		        sensor_data = entries[key]["sensor"];
         		    for (key_sensor in sensor_data) {
         		        for (key_value in sensor_data[key_sensor]) {
-        		            chart_keys_sensor[key_sensor+": "+key_value] = 1;
+        		            key_name = key_value.charAt(0).toUpperCase() + key_value.slice(1) + " ("+key_sensor+")";
+        		            chart_keys_sensor[key_name] = 1;
                             if (!chart_data_sensor[key_print]) { chart_data_sensor[key_print] = {}; }
-                            chart_data_sensor[key_print][key_sensor+": "+key_value] = sensor_data[key_sensor][key_value];
+                            chart_data_sensor[key_print][key_name] = sensor_data[key_sensor][key_value];
         		        }
         		    }
         		}
