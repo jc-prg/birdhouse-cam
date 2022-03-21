@@ -402,7 +402,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         
         if (active_page == "TODAY_COMPLETE") {
         	var chart_data = {};
-        	var chart_title = ["Activity"];
+        	var chart_titles = ["Activity"];
         	var chart_keys = Object.keys(entries);
         	for (var i=0;i<chart_keys.length;i++) {
         		var key    = chart_keys[i];
@@ -431,8 +431,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         		    }
         		}
         	}
-        	var chart_titles_sensor = Object.keys(chart_keys_sensor).sort();
-        	chart_title = chart_title.concat(chart_titles_sensor);
+        	var chart_titles_sensor = Object.keys(chart_keys_sensor);
+        	chart_titles_sensor.sort();
+        	chart_titles = chart_titles.concat(chart_titles_sensor);
         	for (var key in chart_data) {
         	    if (chart_data_sensor[key]){
                     for (var i=0;i<chart_titles_sensor.length;i++) {
@@ -442,6 +443,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         	    }
         	}
             console.log(entries);
+            console.log(chart_titles);
             console.log(chart_titles_sensor);
             console.log(chart_data);
             console.log(chart_data_sensor);
