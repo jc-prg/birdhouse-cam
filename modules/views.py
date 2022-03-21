@@ -589,7 +589,7 @@ class myViews(threading.Thread):
                     if "datestamp" in files_all[stamp] and files_all[stamp]["datestamp"] == date_today:
                         if "camera" in files_all[stamp] and files_all[stamp]["camera"] == which_cam:
                             threshold = self.camera[which_cam].param["similarity"]["threshold"]
-                            if float(files_all[stamp]["similarity"]) < float(threshold):
+                            if "similarity" in files_all[stamp] and float(files_all[stamp]["similarity"]) < float(threshold):
                                 if float(files_all[stamp]["similarity"]) > 0:
                                     count_diff += 1
                             files_part[stamp] = files_all[stamp]
