@@ -139,13 +139,15 @@ class myBackupRestore(threading.Thread):
             self.config.write(config="images", config_data=files)
 
         count = 0
+        files_new = files.copy()
+        files_keys = files.keys()
         for cam in self.config.param["cameras"]:
             filename_last = ""
             image_current = ""
             image_last = ""
 
-            for time in files:
-                if files[time]["camera"] == cam:
+            for time in files_keys:
+                if time in files and files[time]["camera"] == cam:
                     filename_current = files[time]["lowres"]
                     try:
                         filename = os.path.join(self.config.directory(config="images"), subdir, filename_current)
@@ -157,23 +159,23 @@ class myBackupRestore(threading.Thread):
 
                     if len(filename_last) > 0:
                         score = self.camera[cam].compareRawImages(image_current, image_last)
-                        files[time]["compare"] = (filename_current, filename_last)
-                        files[time]["similarity"] = score
+                        files_new[time]["compare"] = (filename_current, filename_last)
+                        files_new[time]["similarity"] = score
                         count += 1
                     else:
-                        files[time]["compare"] = (filename_current)
-                        files[time]["similarity"] = 0
+                        files_new[time]["compare"] = (filename_current)
+                        files_new[time]["similarity"] = 0
 
                     if init:
                         logging.info(cam + ": " + filename_current + "  " + str(count) + "/" + str(len(files)) + " - " + str(
-                            files[time]["similarity"]) + "%")
+                            files_new[time]["similarity"]) + "%")
 
                     filename_last = filename_current
                     image_last = image_current
 
         if subdir == '':
-            self.config.write("images", files)
-        return files
+            self.config.write("images", files_new)
+        return files_new
 
     def update_image_config(self, file_list, files, subdir=""):
         """
