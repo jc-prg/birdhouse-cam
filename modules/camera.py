@@ -410,7 +410,7 @@ class myCamera(threading.Thread):
                             "size": self.image_size
                         }
                         for key in self.sensor:
-                            if self.sensor[key].running and not self.sensor.error:
+                            if self.sensor[key].running and not self.sensor[key].error:
                                 image_info["sensor"][key] = self.sensor[key].get_values()
 
                         pathLowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
