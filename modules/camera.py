@@ -397,6 +397,10 @@ class myCamera(threading.Thread):
                                                                    detection_area=self.param["similarity"][
                                                                        "detection_area"]))
 
+                        sensor_values = {}
+                        for key in self.sensor:
+                            sensor_values[key] = self.sensor[key].values
+
                         image_info = {
                             "camera": self.id,
                             "hires": self.config.imageName("hires", stamp, self.id),
@@ -406,11 +410,9 @@ class myCamera(threading.Thread):
                             "date": datetime.now().strftime("%d.%m.%Y"),
                             "time": datetime.now().strftime("%H:%M:%S"),
                             "similarity": similarity,
-                            "sensor" : {},
+                            "sensor": sensor_values.copy(),
                             "size": self.image_size
                         }
-                        for key in self.sensor:
-                            image_info["sensor"][key] = self.sensor[key].values
 
                         pathLowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
                         pathHires = os.path.join(self.config.directory("images"), self.config.imageName("hires", stamp, self.id))
@@ -778,7 +780,7 @@ class myCamera(threading.Thread):
 
         if os.path.isfile(self.config.file("images")):
             files = self.config.read_cache("images")
-            files[time] = data
+            files[time] = data.copy()
             self.config.write("images", files)
 
     def writeVideoInfo(self, stamp, data):
