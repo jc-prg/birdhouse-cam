@@ -592,7 +592,6 @@ class myViews(threading.Thread):
                             if "similarity" in files_all[stamp] and float(files_all[stamp]["similarity"]) < float(threshold):
                                 if float(files_all[stamp]["similarity"]) > 0:
                                     count_diff += 1
-                            files_all[stamp]["similarity"] = 0
                             files_part[stamp] = files_all[stamp]
                             if not "type" in files_part[stamp]:
                                 files_part[stamp]["type"] = "image"

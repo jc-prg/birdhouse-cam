@@ -131,6 +131,7 @@ class myBackupRestore(threading.Thread):
         Compare image files and write to config file
         """
         if self.processing:
+            # this part potentially can be removed again
             logging.warning("Compare Files already processing ...")
             return
         self.processing = True
@@ -273,9 +274,13 @@ class myBackupRestore(threading.Thread):
                         file_lowres = self.config.imageName(image_type="lowres", timestamp=stamp, camera=cam)
                         file_hires = self.config.imageName(image_type="hires", timestamp=stamp, camera=cam)
 
-                        if not "similarity" in update_new: update_new["similarity"] = 100
-                        if not "hires" in update_new: update_new["hires"] = file_hires
-                        if not "favorit" in update_new: update_new["favorit"] = 0
+                        if not "similarity" in update_new:
+                            update_new["similarity"] = 100
+                        if not "hires" in update_new:
+                            update_new["hires"] = file_hires
+                        if not "favorit" in update_new:
+                            update_new["favorit"] = 0
+
                         update_new["type"] = "image"
                         update_new["directory"] = os.path.join(self.config.directories["images"], backup_date)
 
@@ -294,9 +299,13 @@ class myBackupRestore(threading.Thread):
                     elif files[stamp]["datestamp"] == backup_date:
                         count_data += 1
                         update_new = files[stamp].copy()
-                        if "hires" in update_new:     del update_new["hires"]
-                        if "lowres" in update_new:    del update_new["lowres"]
-                        if "directory" in update_new: del update_new["directory"]
+                        if "hires" in update_new:
+                            del update_new["hires"]
+                        if "lowres" in update_new:
+                            del update_new["lowres"]
+                        if "directory" in update_new:
+                            del update_new["directory"]
+
                         update_new["type"] = "data"
                         files_backup["files"][stamp] = update_new
 
