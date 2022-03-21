@@ -504,7 +504,7 @@ if __name__ == "__main__":
     camera = {}
     for cam in config.param["cameras"]:
         settings = config.param["cameras"][cam]
-        camera[cam] = myCamera(id=cam, config=config, sensor=sensor)
+        camera[cam] = myCamera(thread_id=cam, config=config, sensor=sensor)
         if not camera[cam].error:
             camera[cam].start()
             camera[cam].param["path"] = config.param["path"]

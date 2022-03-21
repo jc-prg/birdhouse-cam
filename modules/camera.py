@@ -1,4 +1,6 @@
-import io, os, time
+import io
+import os
+import time
 import logging
 import numpy as np
 
@@ -269,12 +271,12 @@ class myCameraOutput(object):
 
 class myCamera(threading.Thread):
 
-    def __init__(self, id, config, sensor):
+    def __init__(self, thread_id, config, sensor):
         """
-        Initialize new thread and set inital parameters
+        Initialize new thread and set initial parameters
         """
         threading.Thread.__init__(self)
-        self.id = id
+        self.id = thread_id
         self.config = config
         self.sensor = sensor
         self.param = self.config.param["cameras"][self.id]
