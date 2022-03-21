@@ -323,7 +323,8 @@ class myCamera(threading.Thread):
                 # if cap is None or not cap.isOpened(): raise
                 self.camera = WebcamVideoStream(src=self.source).start()
                 self.cameraFPS = FPS().start()
-                test = self.getImage()
+                if self.getImage() == "":
+                    raise Exception("Error during first image capturing.")
                 logging.info(self.id + ": OK (Source="+str(self.source)+")")
             except Exception as e:
                 self.camera_error(True, False, "Starting USB camera doesn't work!\n" + str(e))
@@ -518,6 +519,7 @@ class myCamera(threading.Thread):
                 logging.error(error_msg)
                 self.error_image_msg.append(error_msg)
                 self.error_image = True
+                return ""
 
         else:
             logging.error(self.id + ": Camera type not supported (" + str(self.type) + ").")
