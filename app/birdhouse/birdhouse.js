@@ -402,7 +402,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         
         if (active_page == "TODAY_COMPLETE") {
         	var chart_data = {};
-        	var chart_title = [];
+        	var chart_title = ["Activity"];
         	var chart_keys = Object.keys(entries);
         	for (var i=0;i<chart_keys.length;i++) {
         		var key    = chart_keys[i];
@@ -413,18 +413,39 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         		value1     = 100 - value1;
         		value1     = Math.round( value1*10) / 10;
         		chart_data[key_print] = [ value1 ];
-
-        		if (entries[key]["sensors"]) {
-        		    for (key2 in entries[key]["sensors"]) {
-        		        sensor_data = entries[key]["sensors"][key2];
-        		        for (key3 in sensor_data) {
-        		            chart_data[key_print].push(sensor_data[key3]);
+        	}
+            var chart_data_sensor = {}
+            var chart_keys_sensor = {}
+            for (var i=0;i<chart_keys.length;i++) {
+                var key    = chart_keys[i];
+        		if (key.indexOf(":") > 0) { key_print = key.substring(0,5); }
+        		else                      { key_print = key.substring(0,2) + ":" + key.substring(2,4); }
+            	if (entries[key]["sensors"]) {
+       		        sensor_data = entries[key]["sensors"];
+        		    for (key_sensor in sensor_data) {
+        		        for (key_value in sensor_data[key_sensor]) {
+        		            chart_keys_sensor[key_sensor+": "+key_value] = 1;
+                            if (!chart_data_sensor[key_print]) { chart_data_sensor[key_print] = {}; }
+                            chart_data_sensor[key_print][key_sensor+": "+key_value] = sensor_data[key_sensor][key_value];
         		        }
         		    }
         		}
         	}
-        	console.log(chart_data);
-        	html += birdhouseChart_create(title=["Activity","Constant"], data=chart_data);
+        	var chart_titles_sensor = Object.keys(chart_keys_sensor).sort();
+        	chart_title = chart_title.concat(chart_titles_sensor);
+        	for (var key in chart_data) {
+        	    if (chart_data_sensor[key]){
+                    for (var i=0;i<chart_titles_sensor.length;i++) {
+                        var sensor_key = chart_titles_sensor[i];
+                        chart_data[key].push(chart_data_sensor[sensor_key]);
+                    }
+        	    }
+        	}
+            console.log(entries);
+            console.log(chart_titles_sensor);
+            console.log(chart_data);
+            console.log(chart_data_sensor);
+            html += birdhouseChart_create(title=chart_title, data=chart_data);
         }
 
 	// group favorits per month
