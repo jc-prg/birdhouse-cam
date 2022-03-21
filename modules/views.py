@@ -447,7 +447,7 @@ class myViews(threading.Thread):
 
         imageTitle = str(self.config.param["preview_backup"]) + str(
             self.camera[which_cam].param["image_save"]["seconds"][0])
-        imageToday = self.config.imageName(type="lowres", timestamp=imageTitle, camera=which_cam)
+        imageToday = self.config.imageName(image_type="lowres", timestamp=imageTitle, camera=which_cam)
         image = os.path.join(self.config.directory(config="images"), imageToday)
 
         for directory in dir_list:

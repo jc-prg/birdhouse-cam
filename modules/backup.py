@@ -193,11 +193,11 @@ class myBackupRestore(threading.Thread):
                 files[time]["camera"] = which_cam
 
                 if "cam" in file:
-                    files[time]["lowres"] = self.config.imageName(type="lowres", timestamp=time, camera=which_cam)
-                    files[time]["hires"] = self.config.imageName(type="hires", timestamp=time, camera=which_cam)
+                    files[time]["lowres"] = self.config.imageName(image_type="lowres", timestamp=time, camera=which_cam)
+                    files[time]["hires"] = self.config.imageName(image_type="hires", timestamp=time, camera=which_cam)
                 else:
-                    files[time]["lowres"] = self.config.imageName(type="lowres", timestamp=time)
-                    files[time]["hires"] = self.config.imageName(type="hires", timestamp=time)
+                    files[time]["lowres"] = self.config.imageName(image_type="lowres", timestamp=time)
+                    files[time]["hires"] = self.config.imageName(image_type="hires", timestamp=time)
 
                 if subdir == "":
                     file_dir = os.path.join(self.config.directory(config='images'), file)
@@ -259,8 +259,8 @@ class myBackupRestore(threading.Thread):
                         "datestamp"] == backup_date:
                         count += 1
                         update_new = files[stamp].copy()
-                        file_lowres = self.config.imageName(type="lowres", timestamp=stamp, camera=cam)
-                        file_hires = self.config.imageName(type="hires", timestamp=stamp, camera=cam)
+                        file_lowres = self.config.imageName(image_type="lowres", timestamp=stamp, camera=cam)
+                        file_hires = self.config.imageName(image_type="hires", timestamp=stamp, camera=cam)
 
                         if not "similarity" in update_new: update_new["similarity"] = 100
                         if not "hires" in update_new: update_new["hires"] = file_hires

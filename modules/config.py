@@ -16,9 +16,9 @@ from modules.presets import myPages
 class myConfig(threading.Thread):
 
     def __init__(self, param_init, main_directory):
-        '''
-       Initialize new thread and set inital parameters
-       '''
+        """
+        Initialize new thread and set inital parameters
+        """
         threading.Thread.__init__(self)
         self.param_init = param_init
         self.name = "Config"
@@ -26,8 +26,9 @@ class myConfig(threading.Thread):
         self.async_running = False
         self.locked = {}
         self.config_cache = {}
-        self.html_replace = {}
-        self.html_replace["start_date"] = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+        self.html_replace = {
+            "start_date": datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+        }
         self.directories = {
             "main": "",
             "data": "data/",
@@ -73,15 +74,29 @@ class myConfig(threading.Thread):
         return
 
     def reload(self):
-        '''
-       Reload main configuration
-       '''
+        """
+        Reload main configuration
+        """
         self.param = self.read("main")
 
+    def lock(self, config, date=""):
+        """
+        lock config file
+        """
+        filename = os.path.join(self.directory(config), date, self.files[config])
+        self.locked[filename] = True
+
+    def unlock(self, config, date=""):
+        """
+        unlock config file
+        """
+        filename = os.path.join(self.directory(config), date, self.files[config])
+        self.locked[filename] = False
+
     def check_locked(self, filename):
-        '''
-       wait, while a file is locked for writing
-       '''
+        """
+        wait, while a file is locked for writing
+        """
         count = 0
         if filename in self.locked and self.locked[filename]:
             while self.locked[filename]:
@@ -99,7 +114,6 @@ class myConfig(threading.Thread):
        read json file including check if locked
        '''
         try:
-            self.check_locked(filename)
             with open(filename) as json_file:
                 data = json.load(json_file)
             return data
@@ -111,8 +125,8 @@ class myConfig(threading.Thread):
 
     def write_json(self, filename, data):
         """
-       write json file including locking mechanism
-       """
+        write json file including locking mechanism
+        """
         try:
             self.check_locked(filename)
             self.locked[filename] = True
@@ -126,14 +140,14 @@ class myConfig(threading.Thread):
 
     def directory(self, config, date=""):
         """
-       return directory of config file
-       """
+        return directory of config file
+        """
         return os.path.join(self.main_directory, self.directories[config], date)
 
     def directory_create(self, config, date=""):
         """
-       return directory of config file
-       """
+        return directory of config file
+        """
         if not os.path.isdir(self.directory(config)):
             logging.info("Creating directory for " + config + " ...")
             os.mkdir(self.directory(config))
@@ -154,23 +168,21 @@ class myConfig(threading.Thread):
         """
         read dict from json config file
         """
-        config_file = os.path.join(self.directory(config), date, self.files[config])
+        config_file = self.file(config, date)
         config_data = self.read_json(config_file)
         logging.debug("Read JSON file " + config_file)
         return config_data
 
     def read_cache(self, config, date=""):
         """
-        return from cache, read file if not in cache already
+        return from cache, read file and fill cache if not in cache already
         """
-        if not config in self.config_cache and date == "":
+        if config not in self.config_cache and date == "":
             self.config_cache[config] = self.read(config=config, date="")
-
-        elif not config in self.config_cache and date != "":
+        elif config not in self.config_cache and date != "":
             self.config_cache[config] = {}
             self.config_cache[config][date] = self.read(config=config, date=date)
-
-        elif not date in self.config_cache[config] and date != "":
+        elif date not in self.config_cache[config] and date != "":
             self.config_cache[config][date] = self.read(config=config, date=date)
 
         if date == "":
@@ -178,25 +190,11 @@ class myConfig(threading.Thread):
         else:
             return self.config_cache[config][date]
 
-    def lock(self, config, date=""):
-        '''
-       lock config file
-       '''
-        filename = os.path.join(self.directory(config), date, self.files[config])
-        self.locked[filename] = True
-
-    def unlock(self, config, date=""):
-        '''
-       unlock config file
-       '''
-        filename = os.path.join(self.directory(config), date, self.files[config])
-        self.locked[filename] = False
-
     def write(self, config, config_data, date=""):
-        '''
-       write dict to json config file and update cache
-       '''
-        config_file = os.path.join(self.directory(config), date, self.files[config])
+        """
+        write dict to json config file and update cache
+        """
+        config_file = self.file(config, date)
         self.write_json(config_file, config_data)
 
         if date == "":
@@ -208,40 +206,37 @@ class myConfig(threading.Thread):
             self.config_cache[config][date] = config_data
 
     def write_image(self, config, file_data, date="", time=''):
-        '''
-       write dict for single file to json config file
-       '''
+        """
+        write dict for single file to json config file
+        """
         logging.info("Write image: " + config_file)
-        config_file = os.path.join(self.directory(config), date, self.files[config])
-        config_data = self.read(config=config, date=date)
+        config_data = self.read_cache(config=config, date=date)
         config_data[time] = file_data
         self.write(config=config, config_data=config_data, date=date)
 
     def exists(self, config, date=""):
-        '''
-       check if config file exists
-       '''
+        """
+        check if config file exists
+        """
         config_file = os.path.join(self.directory(config), date, self.files[config])
         return os.path.isfile(config_file)
 
-    # ------------------------------------
+    def imageName(self, image_type, timestamp, camera=""):
+        """
+        set image name
+        """
+        if camera != "":
+            camera += '_'
 
-    def imageName(self, type, timestamp, camera=""):
-        '''
-       set image name
-       '''
-        if camera != "": camera += '_'
-        # camera = "" #>>> im moment noch keine CAM im namen !!!
-
-        if type == "lowres":
+        if image_type == "lowres":
             return "image_" + camera + timestamp + ".jpg"
-        elif type == "hires":
+        elif image_type == "hires":
             return "image_" + camera + "big_" + timestamp + ".jpeg"
-        elif type == "thumb":
+        elif image_type == "thumb":
             return "video_" + camera + timestamp + "_thumb.jpeg"
-        elif type == "video":
+        elif image_type == "video":
             return "video_" + camera + timestamp + ".mp4"
-        elif type == "vimages":
+        elif image_type == "vimages":
             return "video_" + camera + timestamp + "_"
         else:
             return "image_" + camera + timestamp + ".jpg"

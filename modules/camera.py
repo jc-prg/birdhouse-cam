@@ -174,11 +174,11 @@ class myVideoRecording(threading.Thread):
         """
 
         if ftype == "video":
-            return self.config.imageName(type="video", timestamp=self.info["date_start"], camera=self.camera)
+            return self.config.imageName(image_type="video", timestamp=self.info["date_start"], camera=self.camera)
         elif ftype == "thumb":
-            return self.config.imageName(type="thumb", timestamp=self.info["date_start"], camera=self.camera)
+            return self.config.imageName(image_type="thumb", timestamp=self.info["date_start"], camera=self.camera)
         elif ftype == "vimages":
-            return self.config.imageName(type="vimages", timestamp=self.info["date_start"], camera=self.camera)
+            return self.config.imageName(image_type="vimages", timestamp=self.info["date_start"], camera=self.camera)
         else:
             return
 
