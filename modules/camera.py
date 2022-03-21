@@ -359,10 +359,9 @@ class myCamera(threading.Thread):
             stamp = datetime.now().strftime('%H%M%S')
 
             i = 0
-            while self.pause:
-                if round(i/10) == i/10:
-                    logging.info("Paused ...")
-                time.sleep(1)
+            while self.pause and self.running:
+                logging.debug("Paused ...")
+                time.sleep(0.1)
 
             # Video Recording
             if self.video.recording:
