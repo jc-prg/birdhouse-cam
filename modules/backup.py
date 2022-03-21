@@ -16,6 +16,7 @@ class myBackupRestore(threading.Thread):
         self.config = config
         self.camera = camera
         self.name = "Backup"
+        self.processing = False
         self._running = True
 
     def run(self):
@@ -129,6 +130,11 @@ class myBackupRestore(threading.Thread):
         """
         Compare image files and write to config file
         """
+        if self.processing:
+            logging.warning("Compare Files already processing ...")
+            return
+        self.processing = True
+
         if os.path.isfile(self.config.file("images")) and subdir == "":
             files = self.config.read_cache(config='images')
         else:
@@ -175,6 +181,7 @@ class myBackupRestore(threading.Thread):
 
         if subdir == '':
             self.config.write("images", files_new)
+        self.processing = False
         return files_new
 
     def update_image_config(self, file_list, files, subdir=""):
