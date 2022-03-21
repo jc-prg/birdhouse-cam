@@ -360,7 +360,7 @@ class myCamera(threading.Thread):
 
             i = 0
             while self.pause:
-                if round(i/10) = i/10:
+                if round(i/10) == i/10:
                     logging.info("Paused ...")
                 time.sleep(1)
 
