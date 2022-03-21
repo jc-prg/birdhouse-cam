@@ -1,6 +1,7 @@
 import os, time
 import logging
 import threading
+from sys import getsizeof
 
 from datetime import datetime, timedelta
 from modules.presets import myPages
@@ -613,7 +614,7 @@ class myViews(threading.Thread):
         content["links"] = self.printLinksJSON(link_list=("live", "favorit", "today", "videos", "backup"),
                                                cam=which_cam)
 
-        length = len(str(content))
+        length = getsizeof(content)
         logging.info("CompleteListeToday: End - "+datetime.now().strftime("%H:%M:%S")+" ("+str(length)+" bytes)")
         return content
 
