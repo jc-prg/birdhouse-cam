@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 import modules.dht11 as dht11
 import time
+import datetime
 import threading
 import logging
 
@@ -19,6 +20,7 @@ class mySensor(threading.Thread):
         self.error = False
         self.pin = 4
         self.values = {}
+        self.last_read = 0
 
         GPIO.setmode(GPIO.BCM)
         self.sensor = dht11.DHT11(pin=self.pin)
@@ -35,12 +37,13 @@ class mySensor(threading.Thread):
                 if indoor.is_valid():
                     self.values["temperature"] = indoor.temperature
                     self.values["humidity"] = indoor.humidity
+                    self.last_read = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
                     logging.debug("Temperature: " + str(indoor.temperature))
                     logging.debug("Humidity:    " + str(indoor.humidity))
                 else:
-                    logging.warning("Could not read data from sensor '" + self.id + "': " + str(indoor.error_code))
+                    raise Exception("Not valid ("+str(indoor.is_valid())+")")
             except Exception as e:
-                logging.warning("Error reading data from sensor '" + self.id + "'")
+                logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
 
             time.sleep(10)
 
