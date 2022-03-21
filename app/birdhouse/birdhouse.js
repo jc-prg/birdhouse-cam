@@ -442,6 +442,11 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
                         chart_data[key].push(chart_data_sensor[key][sensor_key]);
                     }
         	    }
+        	    else {
+                    for (var i=0;i<chart_titles_sensor.length;i++) {
+                        chart_data[key].push(undefined);
+                    }
+        	    }
         	}
         	/*
             console.log(entries);
