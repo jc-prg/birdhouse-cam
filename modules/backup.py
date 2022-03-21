@@ -215,6 +215,9 @@ class myBackupRestore(threading.Thread):
                     files[time]["date"] = timestamp.strftime("%d.%m.%Y")
                     files[time]["time"] = timestamp.strftime("%H:%M:%S")
 
+                if "sensor" not in file[time]:
+                    files[time]["sensor"] = {}
+
         return files
 
     def backup_files(self, other_date=""):
