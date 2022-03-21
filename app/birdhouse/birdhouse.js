@@ -438,7 +438,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         	    if (chart_data_sensor[key]){
                     for (var i=0;i<chart_titles_sensor.length;i++) {
                         var sensor_key = chart_titles_sensor[i];
-                        chart_data[key].push(chart_data_sensor[sensor_key]);
+                        chart_data[key].push(chart_data_sensor[key][sensor_key]);
                     }
         	    }
         	}
