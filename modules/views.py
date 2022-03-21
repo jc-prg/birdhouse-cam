@@ -612,7 +612,9 @@ class myViews(threading.Thread):
             count) + " Bilder)"
         content["links"] = self.printLinksJSON(link_list=("live", "favorit", "today", "videos", "backup"),
                                                cam=which_cam)
-        logging.info("CompleteListeToday: End - "+datetime.now().strftime("%H:%M:%S"))
+
+        length = len(str(content))
+        logging.info("CompleteListeToday: End - "+datetime.now().strftime("%H:%M:%S")+" ("+str(length)+" bytes)")
         return content
 
     def createVideoList(self, server):
