@@ -42,7 +42,7 @@ class mySensor(threading.Thread):
             except Exception as e:
                 logging.warning("Error reading data from sensor '" + self.id + "'")
 
-            time.sleep(1)
+            time.sleep(10)
 
         logging.info("Stopped sensors (" + self.id + ").")
 
