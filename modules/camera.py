@@ -324,6 +324,7 @@ class myCamera(threading.Thread):
                 self.camera = WebcamVideoStream(src=self.source).start()
                 self.cameraFPS = FPS().start()
                 test = self.getImage()
+                logging.info(self.id + ": Length - " + len(str(test)))
                 logging.info(self.id + ": OK (Source="+str(self.source)+")")
             except Exception as e:
                 self.camera_error(True, False, "Starting USB camera doesn't work!\n" + str(e))
