@@ -420,8 +420,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
                 var key    = chart_keys[i];
         		if (key.indexOf(":") > 0) { key_print = key.substring(0,5); }
         		else                      { key_print = key.substring(0,2) + ":" + key.substring(2,4); }
-            	if (entries[key]["sensors"]) {
-       		        sensor_data = entries[key]["sensors"];
+            	if (entries[key]["sensor"]) {
+       		        sensor_data = entries[key]["sensor"];
         		    for (key_sensor in sensor_data) {
         		        for (key_value in sensor_data[key_sensor]) {
         		            chart_keys_sensor[key_sensor+": "+key_value] = 1;
@@ -447,7 +447,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             console.log(chart_titles_sensor);
             console.log(chart_data);
             console.log(chart_data_sensor);
-            html += birdhouseChart_create(title=chart_title, data=chart_data);
+            html += birdhouseChart_create(title=chart_titles, data=chart_data);
         }
 
 	// group favorits per month
