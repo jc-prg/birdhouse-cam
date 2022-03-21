@@ -615,7 +615,7 @@ class myViews(threading.Thread):
                                                cam=which_cam)
 
         length = getsizeof(content)
-        logging.info("CompleteListeToday: End - "+datetime.now().strftime("%H:%M:%S")+" ("+str(length)+" bytes)")
+        logging.info("CompleteListeToday: End - "+datetime.now().strftime("%H:%M:%S")+" ("+str(length/1024)+" kB)")
         return content
 
     def createVideoList(self, server):
