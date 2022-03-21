@@ -52,3 +52,9 @@ class mySensor(threading.Thread):
         """
         GPIO.cleanup()
         self.running = False
+
+    def get_values(self):
+        """
+        get values from all sensors
+        """
+        return self.values

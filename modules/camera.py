@@ -397,10 +397,6 @@ class myCamera(threading.Thread):
                                                                    detection_area=self.param["similarity"][
                                                                        "detection_area"]))
 
-                        sensor_values = {}
-                        for key in self.sensor:
-                            sensor_values[key] = self.sensor[key].values
-
                         image_info = {
                             "camera": self.id,
                             "hires": self.config.imageName("hires", stamp, self.id),
@@ -410,9 +406,12 @@ class myCamera(threading.Thread):
                             "date": datetime.now().strftime("%d.%m.%Y"),
                             "time": datetime.now().strftime("%H:%M:%S"),
                             "similarity": similarity,
-                            "sensor": sensor_values.copy(),
+                            "sensor": {},
                             "size": self.image_size
                         }
+                        for key in self.sensor:
+                            if self.sensor[key].running and not self.sensor.error:
+                                image_info["sensor"][key] = self.sensor[key].get_values()
 
                         pathLowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
                         pathHires = os.path.join(self.config.directory("images"), self.config.imageName("hires", stamp, self.id))
@@ -734,25 +733,29 @@ class myCamera(threading.Thread):
         """
         check image properties to decide if image is a selected one (for backup and view with selected images)
         """
-        if not "similarity" in file_info:                                    return False
+        if not "similarity" in file_info:
+            return False
 
         if ("camera" in file_info and file_info["camera"] == self.id) or (
                 not "camera" in file_info and self.id == "cam1"):
 
             if "to_be_deleted" in file_info:
                 delete = int(file_info["to_be_deleted"])
-                if delete == 1:                                                return False
+                if delete == 1:
+                    return False
 
             if "00" + str(self.param["image_save"]["seconds"][0]) in timestamp: return True
 
             if "favorit" in file_info:
                 favorit = int(file_info["favorit"])
-                if favorit == 1:                                               return True
+                if favorit == 1:
+                    return True
 
             if check_similarity:
                 threshold = float(self.param["similarity"]["threshold"])
                 similarity = float(file_info["similarity"])
-                if similarity != 0 and similarity < threshold:                 return True
+                if similarity != 0 and similarity < threshold:
+                    return True
             else:
                 return True  ### to be checked !!!
 
