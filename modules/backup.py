@@ -146,15 +146,15 @@ class myBackupRestore(threading.Thread):
 
         count = 0
         files_new = files.copy()
-        files_keys = files.keys()
+        files_keys = files_new.keys()
         for cam in self.config.param["cameras"]:
             filename_last = ""
             image_current = ""
             image_last = ""
 
             for time in files_keys:
-                if time in files and files[time]["camera"] == cam:
-                    filename_current = files[time]["lowres"]
+                if time in files_new and files_new[time]["camera"] == cam:
+                    filename_current = files_new[time]["lowres"]
                     try:
                         filename = os.path.join(self.config.directory(config="images"), subdir, filename_current)
                         image_current = cv2.imread(filename)

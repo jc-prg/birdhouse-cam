@@ -284,6 +284,7 @@ class myCamera(threading.Thread):
         self.type = self.param["type"]
         self.record = self.param["record"]
         self.running = True
+        self.pause = False
         self.image_size = [0, 0]
 
         self.error = False
@@ -356,6 +357,12 @@ class myCamera(threading.Thread):
             seconds = datetime.now().strftime('%S')
             hours = datetime.now().strftime('%H')
             stamp = datetime.now().strftime('%H%M%S')
+
+            i = 0
+            while self.pause:
+                if round(i/10) = i/10:
+                    logging.info("Paused ...")
+                time.sleep(1)
 
             # Video Recording
             if self.video.recording:
