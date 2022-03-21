@@ -487,6 +487,29 @@ if __name__ == "__main__":
     config.directory_create("videos")
     config.directory_create("videos_temp")
 
+    # check if config files for main image directory exists and create if not exists
+    if not os.path.isfile(config.file("images")):
+        logging.info("Create image list for main directory ...")
+        backup.compare_files_init()
+        logging.info("OK.")
+    else:
+        test_config = config.read(config="images")
+        if test_config == {}:
+            logging.info("Create image list for main directory ...")
+            backup.compare_files_init()
+            logging.info("OK.")
+
+    if not os.path.isfile(config.file("videos")):
+        logging.info("Create video list for video directory ...")
+        backup.create_video_config()
+        logging.info("OK.")
+    else:
+        test_config = config.read(config="videos")
+        if test_config == {}:
+            logging.info("Create video list for video directory ...")
+            backup.create_video_config()
+            logging.info("OK.")
+
     # start sensors
     sensor = {}
     if "rpi_active" in config.param and config.param["rpi_active"]:
@@ -521,29 +544,6 @@ if __name__ == "__main__":
 
     commands = myCommands(config=config, camera=camera, backup=backup)
     commands.start()
-
-    # check if config files for main image directory exists and create if not exists
-    if not os.path.isfile(config.file("images")):
-        logging.info("Create image list for main directory ...")
-        backup.compare_files_init()
-        logging.info("OK.")
-    else:
-        test_config = config.read(config="images")
-        if test_config == {}:
-            logging.info("Create image list for main directory ...")
-            backup.compare_files_init()
-            logging.info("OK.")
-
-    if not os.path.isfile(config.file("videos")):
-        logging.info("Create video list for video directory ...")
-        backup.create_video_config()
-        logging.info("OK.")
-    else:
-        test_config = config.read(config="videos")
-        if test_config == {}:
-            logging.info("Create video list for video directory ...")
-            backup.create_video_config()
-            logging.info("OK.")
 
     # Start Webserver
     try:
