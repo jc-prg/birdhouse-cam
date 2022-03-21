@@ -133,54 +133,53 @@ class myBackupRestore(threading.Thread):
             files = self.config.read_cache(config='images')
         else:
             files = {}
+            files = self.update_image_config(file_list=file_list, files=files, subdir=subdir)
 
-        file_list = self.update_image_config(list=file_list, files=files, subdir=subdir)
         if subdir == '':
             self.config.write(config="images", config_data=files)
 
         count = 0
         for cam in self.config.param["cameras"]:
-            filenameA = ""
-            filenameB = ""
-            imageA = ""
-            imageB = ""
+            filename_last = ""
+            image_current = ""
+            image_last = ""
 
             for time in files:
                 if files[time]["camera"] == cam:
-                    filenameA = files[time]["lowres"]
+                    filename_current = files[time]["lowres"]
                     try:
-                        filename = os.path.join(self.config.directory(config="images"), subdir, filenameA)
-                        imageA = cv2.imread(filename)
-                        imageA = cv2.cvtColor(imageA, cv2.COLOR_BGR2GRAY)
+                        filename = os.path.join(self.config.directory(config="images"), subdir, filename_current)
+                        image_current = cv2.imread(filename)
+                        image_current = cv2.cvtColor(image_current, cv2.COLOR_BGR2GRAY)
                     except Exception as e:
                         logging.error("Could not load image: " + filename)
                         logging.error(e)
 
-                    if len(filenameB) > 0:
-                        score = self.camera[cam].compareRawImages(imageA, imageB)
-                        files[time]["compare"] = (filenameA, filenameB)
+                    if len(filename_last) > 0:
+                        score = self.camera[cam].compareRawImages(image_current, image_last)
+                        files[time]["compare"] = (filename_current, filename_last)
                         files[time]["similarity"] = score
                         count += 1
                     else:
-                        files[time]["compare"] = (filenameA)
+                        files[time]["compare"] = (filename_current)
                         files[time]["similarity"] = 0
 
                     if init:
-                        logging.info(cam + ": " + filenameA + "  " + str(count) + "/" + str(len(files)) + " - " + str(
+                        logging.info(cam + ": " + filename_current + "  " + str(count) + "/" + str(len(files)) + " - " + str(
                             files[time]["similarity"]) + "%")
 
-                    filenameB = filenameA
-                    imageB = imageA
+                    filename_last = filename_current
+                    image_last = image_current
 
         if subdir == '':
             self.config.write("images", files)
         return files
 
-    def update_image_config(self, list, files, subdir=""):
+    def update_image_config(self, file_list, files, subdir=""):
         """
         get image date from file
         """
-        for file in list:
+        for file in file_list:
             if ".jpg" in file:
 
                 analyze = self.config.imageName2Param(filename=file)

@@ -327,7 +327,7 @@ class myCamera(threading.Thread):
                     raise Exception("Error during first image capturing.")
                 logging.info(self.id + ": OK (Source="+str(self.source)+")")
             except Exception as e:
-                self.camera_error(True, False, "Starting USB camera doesn't work!\n" + str(e))
+                self.camera_error(True, False, "Starting USB camera doesn't work: " + str(e))
 
         else:
             self.camera_error(True, False, "Unknown type of camera!")
