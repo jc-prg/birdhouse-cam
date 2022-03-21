@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 import modules.dht11 as dht11
 import time
-import datetime
+from datetime import datetime
 import threading
 import logging
 
