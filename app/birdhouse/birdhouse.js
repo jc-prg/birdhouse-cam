@@ -41,6 +41,7 @@ var app_camera_source     = {};
 var app_recycle_range     = {};
 var app_active_cam        = "cam1";
 var app_admin_allowed     = false;
+var app_data              = {};
 
 //-----------------------------------------
 // load content from API and call print
@@ -62,13 +63,17 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 //-----------------------------------------
 
 function birdhousePrint(data) {
-
+    app_data = data;
 	console.debug("Request->Print ...");
 	if (data["DATA"]["sensors"]["sensor1"]) {
 	    console.log("Sensor data: "+data["DATA"]["sensors"]["sensor1"]["temperature"] + "C / "+ data["DATA"]["sensors"]["sensor1"]["humidity"] + "%");
 	    }
 
-	birdhouseCameras  = data["DATA"]["cameras"];
+	birdhouseCameras = data["DATA"]["cameras"];
+	birdhouseMicrophones = data["DATA"]["microphones"];
+	birdhouseStream_load(data["DATA"]["ip4_address"], birdhouseMicrophones);
+	//setTimeout(function(){  },2000);
+
 	var date          = data["DATA"]["active_date"];
 	var camera        = data["DATA"]["active_cam"];
 	if (camera == "") 	{ camera = app_active_cam; }
@@ -280,16 +285,22 @@ function birdhouse_CAMERAS( title, data ) {
 	    html += "</div>";
 	}
 	for (let micro in micros) {
-	    url = "http://"+data["DATA"]["ip4_address"]+":"+micros[micro]["port"]+"/";
-        html += birdhouse_OtherGroupHeader( micro, micro.toUpperCase()+": "+micros[micro]["name"], true );
-        html += "<div id='group_"+micro+"'>";
-        html += "<div class='camera_info'>";
-        html += "<div class='camera_info_image'>&nbsp;</div>";
-        html += "<div class='camera_info_text'><ul>";
-        html += "<li>Type: "+micros[micro]["type"]+"</li>";
-        html += "<li>URL: <a href='"+url+"' target='_blank'>"+url+"</a></li>";
-        html += "</ul></div></div>";
-	    html += "</div>";
+	    if (micros[micro]["active"]) {
+            url = "http://"+data["DATA"]["ip4_address"]+":"+micros[micro]["port"]+"/";
+            html += birdhouse_OtherGroupHeader( micro, micro.toUpperCase()+": "+micros[micro]["name"], true );
+            html += "<div id='group_"+micro+"'>";
+            html += "<div class='camera_info'>";
+            html += "<div class='camera_info_image'>";
+            html += birdhouseStream_toggle_image(micro);
+            html += "</div>";
+            html += "<div class='camera_info_text'><ul>";
+            html += "<li>Type: "+micros[micro]["type"]+"</li>";
+            html += "<li>URL: <a href='"+url+"' target='_blank'>"+url+"</a></li>";
+            html += "<li>Control: <a onclick='birdhouseStream_play(\""+micro+"\");'><u>PLAY</u></a> / ";
+            html += "<a onclick='birdhouseStream_stop(\""+micro+"\");'><u>STOP</u></a></li>";
+            html += "</ul></div></div>";
+            html += "</div>";
+	    }
 	}
 	setTextById("frame2",html);
 }
