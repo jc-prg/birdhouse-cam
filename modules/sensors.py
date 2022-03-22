@@ -18,7 +18,7 @@ class mySensor(threading.Thread):
         self.config = config
         self.running = True
         self.error = False
-        self.pin = 4
+        self.pin = self.param["pin"]
         self.values = {}
         self.last_read = 0
 
