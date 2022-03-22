@@ -437,8 +437,8 @@ class myViews(threading.Thread):
             "groups": {}
         }
         param = server.path.split("/")
-        if "app-v1" in param: del param[1]
-        files_all = {}
+        if "app-v1" in param:
+            del param[1]
 
         main_directory = self.config.directory(config="backup")
         dir_list = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
@@ -452,7 +452,6 @@ class myViews(threading.Thread):
         image = os.path.join(self.config.directory(config="images"), imageToday)
 
         for directory in dir_list:
-
             group_name = directory[0:4] + "-" + directory[4:6]
             if "groups" not in content:
                 content["groups"] = {}

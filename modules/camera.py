@@ -339,9 +339,8 @@ class myCamera(threading.Thread):
                         self.camera_start_pi()
                     elif self.type == "usb":
                         self.camera_start_usb()
-                else:
-                    logging.info(
-                        "Wait for restart: " + self.id + "/" + str(self.error_time) + "/" + str(time.time()))
+                    self.error_time = time.time()
+                    time.sleep(1)
 
             # Video Recording
             elif self.video.recording:
@@ -486,8 +485,6 @@ class myCamera(threading.Thread):
                 self.video.stop()
 
         self.running = False
-
-    # ----------------------------------
 
     def setText(self, text):
         """

@@ -307,6 +307,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             content["title"] = config.param["title"]
             content["ip4_address"] = config.param["ip4_address"]
+            content["backup_time"] = config.param["backup_time"]
+            content["preview_backup"] = config.param["preview_backup"]
+            content["rpi_active"] = config.param["rpi_active"]
 
             cameras = {}
             for key in camera:
