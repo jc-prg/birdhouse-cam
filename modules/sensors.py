@@ -60,4 +60,4 @@ class mySensor(threading.Thread):
         """
         get values from all sensors
         """
-        return self.values
+        return self.values.copy()
