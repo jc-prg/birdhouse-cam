@@ -505,10 +505,8 @@ if __name__ == "__main__":
     for cam in config.param["cameras"]:
         settings = config.param["cameras"][cam]
         camera[cam] = myCamera(thread_id=cam, config=config, sensor=sensor)
-        if not camera[cam].error:
-            camera[cam].start()
-            camera[cam].param["path"] = config.param["path"]
-            camera[cam].setText("Starting ...")
+        camera[cam].start()
+        camera[cam].param["path"] = config.param["path"]
 
     # start views and commands
     views = myViews(config=config, camera=camera)

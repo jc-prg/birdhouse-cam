@@ -330,15 +330,18 @@ class myCamera(threading.Thread):
                 logging.debug("Paused ...")
                 time.sleep(0.1)
 
-            # Error with camera - try to restart from time to time
-            if self.error:
-                retry_time = 60
-                if self.error_time + retry_time < time.time():
-                    logging.info("Try to restart camera ...")
-                    if self.type == "pi":
-                        self.camera_start_pi()
-                    elif self.type == "usb":
-                        self.camera_start_usb()
+                # Error with camera - try to restart from time to time
+                if self.error:
+                    retry_time = 60
+                    if self.error_time + retry_time < time.time():
+                        logging.info("Try to restart camera ...")
+                        if self.type == "pi":
+                            self.camera_start_pi()
+                        elif self.type == "usb":
+                            self.camera_start_usb()
+                    else:
+                        logging.info(
+                            "Wait for restart: " + self.id + "/" + str(self.error_time) + "/" + str(time.time()))
 
             # Video Recording
             elif self.video.recording:
