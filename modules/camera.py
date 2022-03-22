@@ -302,6 +302,15 @@ class myCamera(threading.Thread):
 
         logging.info("Starting camera (" + self.id + "/" + self.type + "/" + self.name + ") ...")
 
+        if self.type == "pi":
+            self.camera_start_pi()
+        elif self.type == "usb":
+            self.camera_start_usb()
+        else:
+            self.camera_error(True, False, "Unknown type of camera!")
+        if not self.error and self.param["video"]["allow_recording"]:
+            self.start_video_recording()
+
         logging.debug("Length " + self.camera_NA + " - File:" + str(len(self.image_NA)) + "/Img:" + str(len(self.image_NA_raw)))
         logging.debug("HOURS:   " + str(self.param["image_save"]["hours"]))
         logging.debug("SECONDS: " + str(self.param["image_save"]["seconds"]))
@@ -310,17 +319,6 @@ class myCamera(threading.Thread):
         """
         Start recording for livestream and save images every x seconds
         """
-        if self.type == "pi":
-            self.camera_start_pi()
-        elif self.type == "usb":
-            self.camera_start_usb()
-        else:
-            self.camera_error(True, False, "Unknown type of camera!")
-            return
-
-        if not self.error and self.param["video"]["allow_recording"]:
-            self.start_video_recording()
-
         similarity = 0
         while self.running:
             seconds = datetime.now().strftime('%S')
