@@ -287,75 +287,42 @@ class myCamera(threading.Thread):
         self.record = self.param["record"]
         self.running = True
         self.pause = False
-        self.image_size = [0, 0]
 
         self.error = False
+        self.error_time = 0
         self.error_image = False
         self.error_image_msg = []
 
+        self.image_size = [0, 0]
+        self.previous_image = None
+        self.previous_stamp = "000000"
         self.camera_NA = os.path.join(self.config.main_directory, self.config.directories["data"], "camera_na.jpg")
         self.image_NA = cv2.imread(self.camera_NA)
         self.image_NA_raw = self.convertRawImage2Image(self.image_NA)
 
-        logging.debug("Length " + self.camera_NA + " - File:" + str(len(self.image_NA)) + "/Img:" + str(len(self.image_NA_raw)))
         logging.info("Starting camera (" + self.id + "/" + self.type + "/" + self.name + ") ...")
 
-        if self.type == "pi":
-            try:
-                import picamera
-            except ImportError:
-                self.camera_error(True, False, "Module for PiCamera isn't installed. Try 'pip3 install picamera'.")
-
-            try:
-                self.camera = picamera.PiCamera()
-                self.output = myCameraOutput()
-                self.camera.resolution = self.param["image"]["resolution"]
-                self.camera.framerate = self.param["image"]["framerate"]
-                self.camera.rotation = self.param["image"]["rotation"]
-                self.camera.saturation = self.param["image"]["saturation"]
-                self.camera.zoom = self.param["image"]["crop"]
-                self.camera.annotate_background = picamera.Color('black')
-                self.camera.start_recording(self.output, format='mjpeg')
-                logging.info(self.id + ": OK.")
-            except Exception as e:
-                self.camera_error(True, False, "Starting PiCamera doesn't work!\n" + str(e))
-
-        elif self.type == "usb":
-            try:
-                # cap                    = cv2.VideoCapture(0) # check if camera is available
-                # if cap is None or not cap.isOpened(): raise
-                self.camera = WebcamVideoStream(src=self.source).start()
-                self.cameraFPS = FPS().start()
-                if self.getImage() == "":
-                    raise Exception("Error during first image capturing.")
-                logging.info(self.id + ": OK (Source="+str(self.source)+")")
-            except Exception as e:
-                self.camera_error(True, False, "Starting USB camera doesn't work: " + str(e))
-
-        else:
-            self.camera_error(True, False, "Unknown type of camera!")
-
-        if not self.error:
-            if self.param["video"]["allow_recording"]:
-                test = self.getImage()
-                self.video = myVideoRecording(camera=self.id, param=self.param,
-                                              directory=self.config.directory("videos"))
-                self.video.config = self.config
-                self.video.start()
-                self.video.image_size = self.image_size
-
-        self.previous_image = None
-        self.previous_stamp = "000000"
+        logging.debug("Length " + self.camera_NA + " - File:" + str(len(self.image_NA)) + "/Img:" + str(len(self.image_NA_raw)))
+        logging.debug("HOURS:   " + str(self.param["image_save"]["hours"]))
+        logging.debug("SECONDS: " + str(self.param["image_save"]["seconds"]))
 
     def run(self):
         """
         Start recording for livestream and save images every x seconds
         """
-        similarity = 0
-        logging.debug("HOURS:   " + str(self.param["image_save"]["hours"]))
-        logging.debug("SECONDS: " + str(self.param["image_save"]["seconds"]))
+        if self.type == "pi":
+            self.camera_start_pi()
+        elif self.type == "usb":
+            self.camera_start_usb()
+        else:
+            self.camera_error(True, False, "Unknown type of camera!")
+            return
 
-        while self.running and not self.error:
+        if not self.error and self.param["video"]["allow_recording"]:
+            self.start_video_recording()
+
+        similarity = 0
+        while self.running:
             seconds = datetime.now().strftime('%S')
             hours = datetime.now().strftime('%H')
             stamp = datetime.now().strftime('%H%M%S')
@@ -365,8 +332,18 @@ class myCamera(threading.Thread):
                 logging.debug("Paused ...")
                 time.sleep(0.1)
 
+            # Error with camera - try to restart from time to time
+            if self.error:
+                retry_time = 60
+                if self.error_time + retry_time < time.time():
+                    logging.info("Try to restart camera ...")
+                    if self.type == "pi":
+                        self.camera_start_pi()
+                    elif self.type == "usb":
+                        self.camera_start_usb()
+
             # Video Recording
-            if self.video.recording:
+            elif self.video.recording:
 
                 if self.video.auto_stop():
                     self.video.stop_recording()
@@ -384,7 +361,7 @@ class myCamera(threading.Thread):
                     logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(
                         datetime.now().strftime("%H:%M:%S")))
 
-            # Image Recording
+            # Image Recording (if not video recording)
             else:
                 time.sleep(1)
                 if self.record:
@@ -445,13 +422,51 @@ class myCamera(threading.Thread):
         if self.type == "usb":
             time.sleep(0.1)
 
+    def camera_start_pi(self):
+        try:
+            import picamera
+        except ImportError:
+            self.camera_error(True, False, "Module for PiCamera isn't installed. Try 'pip3 install picamera'.")
+        try:
+            self.camera = picamera.PiCamera()
+            self.output = myCameraOutput()
+            self.camera.resolution = self.param["image"]["resolution"]
+            self.camera.framerate = self.param["image"]["framerate"]
+            self.camera.rotation = self.param["image"]["rotation"]
+            self.camera.saturation = self.param["image"]["saturation"]
+            self.camera.zoom = self.param["image"]["crop"]
+            self.camera.annotate_background = picamera.Color('black')
+            self.camera.start_recording(self.output, format='mjpeg')
+            logging.info(self.id + ": OK.")
+        except Exception as e:
+            self.camera_error(True, False, "Starting PiCamera doesn't work!\n" + str(e))
+
+    def camera_start_usb(self):
+        try:
+            # cap                    = cv2.VideoCapture(0) # check if camera is available
+            # if cap is None or not cap.isOpened(): raise
+            self.camera = WebcamVideoStream(src=self.source).start()
+            self.cameraFPS = FPS().start()
+            if self.getImage() == "":
+                raise Exception("Error during first image capturing.")
+            logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
+        except Exception as e:
+            self.camera_error(True, False, "Starting USB camera doesn't work: " + str(e))
+
     def camera_error(self, error, active, message):
         """
         Report Error, set variables of modules
         """
         self.error = error
+        self.error_time = time.time()
         self.active = active
-        logging.error(self.id + ": "+message)
+        logging.error(self.id + ": "+message+" ("+str(self.error_time)+")")
+
+    def start_video_recording(self):
+        self.video = myVideoRecording(camera=self.id, param=self.param, directory=self.config.directory("videos"))
+        self.video.config = self.config
+        self.video.start()
+        self.video.image_size = self.image_size
 
     def stop(self):
         """
