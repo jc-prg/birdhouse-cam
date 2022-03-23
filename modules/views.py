@@ -339,21 +339,22 @@ class myViews(threading.Thread):
             stamps = list(reversed(sorted(files_all.keys())))
 
             for stamp in stamps:
-                if not "datestamp" in files_all[stamp]:
+                if "datestamp" not in files_all[stamp]:
                     files_all[stamp]["datestamp"] = date_backup
-                if not "date" in files_all[stamp]:
+                if "date" not in files_all[stamp]:
                     files_all[stamp]["date"] = date_backup[6:8] + "." + date_backup[4:6] + "." + date_backup[0:4]
 
-                if ((int(stamp) < int(time_now) or time_now == "000000")
-                        and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
-                    if "camera" not in files_all[stamp] or self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity):
+                # GROSSE BAUSTELLE
+
+                select_image = self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity)
+                if ((int(stamp) < int(time_now) or time_now == "000000") and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
+                    if "camera" not in files_all[stamp] or select_image or (backup and files_all[stamp]["camera"] == which_cam):
                         if files_all[stamp]["datestamp"] == date_today or backup:
-                            files_today[stamp] = files_all[stamp]
+                            files_today[stamp] = files_all[stamp].copy()
                             if "type" not in files_today[stamp]:
                                 files_today[stamp]["type"] = "image"
                             files_today[stamp]["category"] = category + stamp
-                            files_today[stamp]["detect"] = self.camera[which_cam].detectImage(
-                                file_info=files_today[stamp])
+                            files_today[stamp]["detect"] = self.camera[which_cam].detectImage(file_info=files_today[stamp])
                             files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
                             count += 1
 
@@ -463,7 +464,7 @@ class myViews(threading.Thread):
                 file_data = self.config.read_cache(config="backup", date=directory)
                 content["groups"][group_name].append(directory)
 
-                if "info" not in file_data or not "files" in file_data:
+                if "info" not in file_data or "files" not in file_data:
                     if directory not in content["entries"]:
                         content["entries"][directory] = {}
                     content["entries"][directory]["error"] = True
@@ -488,13 +489,12 @@ class myViews(threading.Thread):
 
                 for file in file_data["files"]:
                     file_info = file_data["files"][file]
-                    if ("datestamp" in file_info and file_info[
-                        "datestamp"] == directory) or not "datestamp" in file_info:
+                    if ("datestamp" in file_info and file_info["datestamp"] == directory) or "datestamp" not in file_info:
                         count += 1
                         if "size" in file_info and "float" in str(type(file_info["size"])):
                             dir_size += file_info["size"]
 
-                        if ("camera" in file_info and file_info["camera"] == which_cam) or not "camera" in file_info:
+                        if ("camera" in file_info and file_info["camera"] == which_cam) or "camera" not in file_info:
                             if "size" in file_info and "float" in str(type(file_info["size"])):
                                 dir_size_cam += file_info["size"]
                             elif "lowres" in file_info:
