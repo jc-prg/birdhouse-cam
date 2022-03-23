@@ -174,8 +174,9 @@ class myBackupRestore(threading.Thread):
                         files_new[time]["similarity"] = 0
 
                     if init:
-                        logging.info(cam + ": " + filename_current + "  " + str(count) + "/" + str(len(files)) + " - " + str(
-                            files_new[time]["similarity"]) + "%")
+                        logging.info(
+                            cam + ": " + filename_current + "  " + str(count) + "/" + str(len(files)) + " - " + str(
+                                files_new[time]["similarity"]) + "%")
 
                     filename_last = filename_current
                     image_last = image_current
@@ -267,8 +268,8 @@ class myBackupRestore(threading.Thread):
                 count_data = 0
                 for stamp in stamps:
 
-                    if self.camera[cam].selectImage(timestamp=stamp, file_info=files[stamp]) and files[stamp][
-                        "datestamp"] == backup_date:
+                    # if files are to be archived
+                    if self.camera[cam].selectImage(timestamp=stamp, file_info=files[stamp]) and files[stamp]["datestamp"] == backup_date:
                         count += 1
                         update_new = files[stamp].copy()
                         file_lowres = self.config.imageName(image_type="lowres", timestamp=stamp, camera=cam)
@@ -285,17 +286,14 @@ class myBackupRestore(threading.Thread):
                         update_new["directory"] = os.path.join(self.config.directories["images"], backup_date)
 
                         if os.path.isfile(os.path.join(dir_source, file_lowres)):
-                            update_new["size"] = (
-                                        os.path.getsize(os.path.join(dir_source, file_lowres)) + os.path.getsize(
-                                    os.path.join(dir_source, file_hires)))
+                            update_new["size"] = (os.path.getsize(os.path.join(dir_source, file_lowres)) + os.path.getsize(os.path.join(dir_source, file_hires)))
                             backup_size += update_new["size"]
-                            files_backup["files"][stamp] = update_new
+                            files_backup["files"][stamp] = update_new.copy()
 
-                            os.popen('cp ' + os.path.join(dir_source, file_lowres) + ' ' + os.path.join(directory,
-                                                                                                        file_lowres))
-                            os.popen('cp ' + os.path.join(dir_source, file_hires) + ' ' + os.path.join(directory,
-                                                                                                       file_hires))
+                            os.popen('cp ' + os.path.join(dir_source, file_lowres) + ' ' + os.path.join(directory, file_lowres))
+                            os.popen('cp ' + os.path.join(dir_source, file_hires) + ' ' + os.path.join(directory, file_hires))
 
+                    # if data are to be archived
                     elif files[stamp]["datestamp"] == backup_date:
                         count_data += 1
                         update_new = files[stamp].copy()
@@ -305,13 +303,14 @@ class myBackupRestore(threading.Thread):
                             del update_new["lowres"]
                         if "directory" in update_new:
                             del update_new["directory"]
+                        if "compare" in update_new:
+                            del update_new["compare"]
 
                         update_new["type"] = "data"
-                        files_backup["files"][stamp] = update_new
+                        files_backup["files"][stamp] = update_new.copy()
 
-                logging.info(cam + ": " + str(count) + " Bilder gesichert (" + str(
-                    self.camera[cam].param["similarity"]["threshold"]) + ")")
-            #           logging.info(cam + ": " +str(count_data) + " Daten gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
+                logging.info(cam + ": " + str(count) + " Bilder gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
+            # logging.info(cam + ": " +str(count_data) + " Daten gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
 
             files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
             files_backup["info"]["count"] = count
