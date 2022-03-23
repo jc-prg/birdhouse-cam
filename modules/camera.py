@@ -302,8 +302,8 @@ class myCamera(threading.Thread):
         self.previous_image = None
         self.previous_stamp = "000000"
         self.camera_NA = os.path.join(self.config.main_directory, self.config.directories["data"], "camera_na.jpg")
-        self.image_NA = cv2.imread(self.camera_NA)
-        self.image_NA_raw = self.convertRawImage2Image(self.image_NA)
+        self.image_NA_raw = cv2.imread(self.camera_NA)
+        self.image_NA = self.convertRawImage2Image(self.image_NA_raw)
 
         logging.info("Starting camera (" + self.id + "/" + self.type + "/" + self.name + ") ...")
 
@@ -580,18 +580,19 @@ class myCamera(threading.Thread):
         read image from device
         """
         if self.error_image:
-            return self.image_NA_raw
+            return self.image_NA
 
-        if self.type == "pi":
+        elif self.type == "pi":
             with self.output.condition:
                 self.output.condition.wait()
                 encoded = self.output.frame
-            return encoded
+            return encoded.copy()
 
         elif self.type == "usb":
             try:
                 raw = self.camera.read()  ## potentially not the same RAW as fram PI
-                return self.convertRawImage2Image(raw)
+                encoded = self.convertRawImage2Image(raw)
+                return encoded.copy()
 
             except Exception as e:
                 error_msg = "Can't encode image from camera: " + str(e)
@@ -601,22 +602,26 @@ class myCamera(threading.Thread):
         else:
             error_msg = "Camera type not supported (" + str(self.type) + ")."
             self.camera_error(True, False, error_msg, True)
+            return ""
 
     def getRawImage(self):
         """
         get image and convert to raw
         """
+        if self.error_image:
+            return self.image_NA_raw
+
         if self.type == "pi":
             with self.output.condition:
                 self.output.condition.wait()
                 encoded = self.output.frame
             raw = self.convertImage2RawImage(encoded)
-            return raw
+            return raw.copy()
 
         elif self.type == "usb":
             try:
                 raw = self.camera.read()  ## potentially not the same RAW as fram PI
-                return raw
+                return raw.copy()
 
             except Exception as e:
                 error_msg = "Cant encode image from camera: " + str(e)
@@ -625,11 +630,15 @@ class myCamera(threading.Thread):
         else:
             error_msg = "Camera type not supported (" + str(self.type) + ")."
             self.camera_error(True, False, error_msg, True)
+            return ""
 
     def normalizeRawImage(self, image, color="", compare=False):
         """
         apply presets per camera to image
         """
+        if self.error_image:
+            return self.image_NA_raw
+
         if self.type == "usb":
             # crop image
             if not "crop_area" in self.param["image"]:
