@@ -374,8 +374,8 @@ class myCamera(threading.Thread):
                     if (seconds in self.param["image_save"]["seconds"]) and (
                             hours in self.param["image_save"]["hours"]):
 
-                        image = self.getImage()
-                        image = self.convertImage2RawImage(image)
+                        image = self.getRawImage()
+                        image = self.normalizeRawImage(image)
                         image_compare = self.convertRawImage2Gray(image)
 
                         if self.param["image"]["date_time"]:
@@ -460,7 +460,7 @@ class myCamera(threading.Thread):
             self.camera.framerate = self.param["image"]["framerate"]
             self.camera.rotation = self.param["image"]["rotation"]
             self.camera.saturation = self.param["image"]["saturation"]
-            self.camera.zoom = self.param["image"]["crop"]
+            # self.camera.zoom = self.param["image"]["crop"]
             # self.camera.annotate_background = picamera.Color('black')
             self.camera.start_recording(self.output, format='mjpeg')
             logging.info(self.id + ": OK.")
@@ -479,13 +479,17 @@ class myCamera(threading.Thread):
         except Exception as e:
             self.camera_error(True, False, "Starting USB camera doesn't work: " + str(e))
 
-    def camera_error(self, error, active, message):
+    def camera_error(self, cam_error, active, message, image_error=False):
         """
         Report Error, set variables of modules
         """
-        self.error = error
+        self.error = cam_error
         self.error_time = time.time()
         self.active = active
+        if image_error:
+            self.error_image = True
+            self.error_image_msg.append(exception)
+
         logging.error(self.id + ": "+message+" ("+str(self.error_time)+")")
 
     def video_start_recording(self):
@@ -587,20 +591,40 @@ class myCamera(threading.Thread):
         elif self.type == "usb":
             try:
                 raw = self.camera.read()  ## potentially not the same RAW as fram PI
-                raw = self.normalizeRawImage(raw)
-                r, buf = cv2.imencode(".jpg", raw)
-                encoded = bytearray(buf)
-                return encoded
+                return self.convertRawImage2Image(raw)
 
             except Exception as e:
-                error_msg = self.id + ": Cant encode image from camera: " + str(e)
-                logging.error(error_msg)
-                self.error_image_msg.append(error_msg)
-                self.error_image = True
+                error_msg = "Can't encode image from camera: " + str(e)
+                self.camera_error(False, True, error_msg, True)
                 return ""
 
         else:
-            logging.error(self.id + ": Camera type not supported (" + str(self.type) + ").")
+            error_msg = "Camera type not supported (" + str(self.type) + ")."
+            self.camera_error(True, False, error_msg, True)
+
+    def getRawImage(self):
+        """
+        get image and convert to raw
+        """
+        if self.type == "pi":
+            with self.output.condition:
+                self.output.condition.wait()
+                encoded = self.output.frame
+            raw = self.convertImage2RawImage(encoded)
+            return raw
+
+        elif self.type == "usb":
+            try:
+                raw = self.camera.read()  ## potentially not the same RAW as fram PI
+                return raw
+
+            except Exception as e:
+                error_msg = "Cant encode image from camera: " + str(e)
+                self.camera_error(False, True, error_msg, True)
+                return ""
+        else:
+            error_msg = "Camera type not supported (" + str(self.type) + ")."
+            self.camera_error(True, False, error_msg, True)
 
     def normalizeRawImage(self, image, color="", compare=False):
         """

@@ -384,24 +384,23 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             stream = True
 
             while stream:
-                frame = camera[which_cam].getImage()
-                if camera[which_cam].param["image"]["date_time"]:
-                    frame = camera[which_cam].setDateTime2Image(frame)
+                frame = camera[which_cam].getRawImage()
+                frame = camera[which_cam].normalizeRawImage(frame)
 
                 if self.path.startswith("/detection/"):
-                    frame = camera[which_cam].drawImageDetectionArea(image=frame)
-                    # camera[which_cam].cropRawImage(frame=image, crop_area=camera[which_cam].param["image"]["crop"], type="relative")
-                    logging.debug("do nothing")
+                    frame = camera[which_cam].drawRawImageDetectionArea(image=frame)
+
+                if camera[which_cam].param["image"]["date_time"]:
+                    frame = camera[which_cam].setDateTime2RawImage(frame)
 
                 else:
-                    # frame = camera[which_cam].cropImage(frame=frame, crop_area=camera[which_cam].param["image"]["crop"], type="relative")
                     if camera[which_cam].video.recording:
                         length = str(round(camera[which_cam].video.info_recording()["length"]))
                         framerate = str(round(camera[which_cam].video.info_recording()["framerate"]))
                         y_position = camera[which_cam].image_size[1] - 40
-                        frame = camera[which_cam].setText2Image(frame, "Recording", position=(20, y_position),
+                        frame = camera[which_cam].setText2RawImage(frame, "Recording", position=(20, y_position),
                                                                 color=(0, 0, 255), fontScale=1, thickness=2)
-                        frame = camera[which_cam].setText2Image(frame, "(" + length + "s/" + framerate + "fps)",
+                        frame = camera[which_cam].setText2RawImage(frame, "(" + length + "s/" + framerate + "fps)",
                                                                 position=(200, y_position), color=(0, 0, 255),
                                                                 fontScale=0.5, thickness=1)
 
@@ -409,16 +408,17 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         length = str(round(camera[which_cam].video.info_recording()["length"]))
                         image_size = str(camera[which_cam].video.info_recording()["image_size"])
                         y_position = camera[which_cam].image_size[1] - 40
-                        frame = camera[which_cam].setText2Image(frame, "Processing", position=(20, y_position),
+                        frame = camera[which_cam].setText2RawImage(frame, "Processing", position=(20, y_position),
                                                                 color=(0, 255, 255), fontScale=1, thickness=2)
-                        frame = camera[which_cam].setText2Image(frame, "(" + length + "s/" + image_size + ")",
+                        frame = camera[which_cam].setText2RawImage(frame, "(" + length + "s/" + image_size + ")",
                                                                 position=(200, y_position), color=(0, 255, 255),
                                                                 fontScale=0.5, thickness=1)
+
+                frame = camera[which_cam].convertRawImage2Image(frame)
 
                 try:
                     camera[which_cam].wait()
                     self.stream_video_frame(frame)
-
                 except Exception as e:
                     stream = False
                     if "Errno 104" in str(e) or "Errno 32" in str(e):
