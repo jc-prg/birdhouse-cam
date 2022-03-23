@@ -257,13 +257,14 @@ function birdhouse_CAMERAS( title, data ) {
 		html   += "<li>Active: " + info["active"] + "</li>"
 		html   += "<li>Record: " + info["record"] + "</li>"
 		html   += "<li>Crop: "   + info["image"]["crop"] + "</li>"
-		html   += "<li>Detection (red rectangle): <ul>"
-		html     += "<li>Threshold: " + info["similarity"]["threshold"] + "%</li>"
-		html     += "<li>Area: "      + info["similarity"]["detection_area"] + "</li>"
-		html   += "</ul></li>"
-		html   += "<li>Streaming-Server: "+info["video"]["streaming_server"]+"</li>"
-		html   += "</ul>"
-		html   += "<br/>&nbsp;"
+		html   += "<li>Show Time: "   + info["image"]["date_time"] + "</li>";
+		html   += "<li>Detection (red rectangle): <ul>";
+		html     += "<li>Threshold: " + info["similarity"]["threshold"] + "%</li>";
+		html     += "<li>Area: "      + info["similarity"]["detection_area"] + "</li>";
+		html   += "</ul></li>";
+		html   += "<li>Streaming-Server: "+info["video"]["streaming_server"]+"</li>";
+		html   += "</ul>";
+		html   += "<br/>&nbsp;";
 		if (admin && cameras[camera]["active"]) {
 			var onclick = "birdhouse_createDayVideo('"+camera+"');";
 			html += "<button onclick=\""+onclick+"\" class=\"button-video-edit\">&nbsp;"+lang("CREATE_DAY")+"&nbsp;</button>";
