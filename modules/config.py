@@ -29,6 +29,7 @@ class myConfig(threading.Thread):
         }
         self.directories = {
             "main": "",
+            "sensor": "",
             "data": "data/",
             "images": "data/images/",
             "backup": "data/images/",
