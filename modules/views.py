@@ -491,11 +491,11 @@ class myViews(threading.Thread):
                     if ("datestamp" in file_info and file_info[
                         "datestamp"] == directory) or not "datestamp" in file_info:
                         count += 1
-                        if "size" in file_info and "int" in str(type(file_info["size"])):
+                        if "size" in file_info and "float" in str(type(file_info["size"])):
                             dir_size += file_info["size"]
 
                         if ("camera" in file_info and file_info["camera"] == which_cam) or not "camera" in file_info:
-                            if "size" in file_info:
+                            if "size" in file_info and "float" in str(type(file_info["size"])):
                                 dir_size_cam += file_info["size"]
                             elif "lowres" in file_info:
                                 lowres_file = os.path.join(self.config.directory(config="backup"), directory,
