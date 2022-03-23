@@ -42,6 +42,7 @@ class myConfig(threading.Thread):
             "backup": "config_images.json",
             "images": "config_images.json",
             "main": "data/config.json",
+            "sensor": "data/config_sensor.json",
             "videos": "config_videos.json"
         }
 

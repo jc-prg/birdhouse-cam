@@ -405,6 +405,7 @@ class myCamera(threading.Thread):
                         for key in self.sensor:
                             if self.sensor[key].running and not self.sensor[key].error:
                                 image_info["sensor"][key] = self.sensor[key].get_values()
+                                self.writeSensorInfo(time=stamp, data=self.sensor[key].get_values())
 
                         pathLowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
                         pathHires = os.path.join(self.config.directory("images"), self.config.imageName("hires", stamp, self.id))
@@ -669,8 +670,6 @@ class myCamera(threading.Thread):
             self.error_image_msg.append(error_msg)
             self.error_image = True
 
-    # ----------------------------------
-
     def drawImageDetectionArea(self, image):
         """
         Draw a red rectangle into the image to show detection area
@@ -711,8 +710,6 @@ class myCamera(threading.Thread):
             logging.error(error_msg)
             self.error_image_msg.append(error_msg)
             self.error_image = True
-
-    # ----------------------------------
 
     def sizeRawImage(self, frame):
         """
@@ -858,8 +855,7 @@ class myCamera(threading.Thread):
         """
         Write image information to file
         """
-        logging.debug("Write image info: " + self.config.file("images"))
-
+        logging.debug(self.id+": Write image info: " + self.config.file("images"))
         if os.path.isfile(self.config.file("images")):
             files = self.config.read_cache("images")
             files[time] = data.copy()
@@ -870,11 +866,23 @@ class myCamera(threading.Thread):
         Write image information to file
         """
         logging.debug(self.id + ": Write video info: " + self.config.file("images"))
-
         if os.path.isfile(self.config.file("videos")):
             files = self.config.read_cache("videos")
             files[stamp] = data
             self.config.write("videos", files)
+
+    def writeSensorInfo(self, stamp, data):
+        """
+        Write Sensor information to separate config file (for recovery purposes)
+        """
+        logging.debug(self.id + ": Write video info: " + self.config.file("images"))
+        if os.path.isfile(self.config.file("sensor")):
+            files = self.config.read_cache("sensor")
+        else:
+            files = {}
+        files[stamp] = data
+        self.config.write("sensor", files)
+
 
     def createDayVideo(self, filename, stamp, date):
         """
