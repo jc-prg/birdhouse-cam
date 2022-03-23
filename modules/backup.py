@@ -216,7 +216,7 @@ class myBackupRestore(threading.Thread):
                     files[time]["date"] = timestamp.strftime("%d.%m.%Y")
                     files[time]["time"] = timestamp.strftime("%H:%M:%S")
 
-                if "sensor" not in file[time]:
+                if "sensor" not in files[time]:
                     files[time]["sensor"] = {}
 
         return files
