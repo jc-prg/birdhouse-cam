@@ -11,8 +11,6 @@ from modules.presets import myParameters
 from modules.presets import myPages
 
 
-# ----------------------------------------------------
-
 class myConfig(threading.Thread):
 
     def __init__(self, param_init, main_directory):
@@ -111,9 +109,9 @@ class myConfig(threading.Thread):
         return "OK"
 
     def read_json(self, filename):
-        '''
-       read json file including check if locked
-       '''
+        """
+        read json file including check if locked
+        """
         try:
             with open(filename) as json_file:
                 data = json.load(json_file)
@@ -215,6 +213,11 @@ class myConfig(threading.Thread):
         config_data[time] = file_data
         self.write(config=config, config_data=config_data, date=date)
 
+    def create_copy(self, config, date="", add="copy"):
+        config_file = self.file(config, date)
+        content = self.read_json(config_file)
+        self.write_json(config_file+"."+add, content)
+
     def exists(self, config, date=""):
         """
         check if config file exists
@@ -268,5 +271,3 @@ class myConfig(threading.Thread):
             info["type"] = "hires"
             info["stamp"] = parts[3]
         return info
-
-# ----------------------------------------------------

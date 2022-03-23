@@ -314,7 +314,7 @@ class myCamera(threading.Thread):
         else:
             self.camera_error(True, False, "Unknown type of camera!")
         if not self.error and self.param["video"]["allow_recording"]:
-            self.start_video_recording()
+            self.video_start_recording()
 
         logging.debug("Length " + self.camera_NA + " - File:" + str(len(self.image_NA)) + "/Img:" + str(len(self.image_NA_raw)))
         logging.debug("HOURS:   " + str(self.param["image_save"]["hours"]))
@@ -405,14 +405,14 @@ class myCamera(threading.Thread):
                         for key in self.sensor:
                             if self.sensor[key].running and not self.sensor[key].error:
                                 image_info["sensor"][key] = self.sensor[key].get_values()
-                                self.writeSensorInfo(time=stamp, data=self.sensor[key].get_values())
+                                self.writeSensorInfo(stamp=stamp, data=self.sensor[key].get_values())
 
                         pathLowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
                         pathHires = os.path.join(self.config.directory("images"), self.config.imageName("hires", stamp, self.id))
 
                         logging.debug("WRITE:" + pathLowres)
 
-                        self.writeImageInfo(time=stamp, data=image_info)
+                        self.writeImageInfo(timestamp=stamp, data=image_info)
                         self.writeImage(filename=pathHires, image=image)
                         self.writeImage(filename=pathLowres, image=image, scale_percent=self.param["preview_scale"])
 
@@ -429,6 +429,24 @@ class myCamera(threading.Thread):
             self.camera.wait_recording(0.1)
         if self.type == "usb":
             time.sleep(0.1)
+
+    def stop(self):
+        """
+        Stop recording
+        """
+        if not self.error and self.active:
+            if self.type == "pi":
+                self.camera.stop_recording()
+                self.camera.close()
+
+            elif self.type == "usb":
+                self.camera.stop()
+                self.cameraFPS.stop()
+
+            if self.video:
+                self.video.stop()
+
+        self.running = False
 
     def camera_start_pi(self):
         try:
@@ -470,29 +488,11 @@ class myCamera(threading.Thread):
         self.active = active
         logging.error(self.id + ": "+message+" ("+str(self.error_time)+")")
 
-    def start_video_recording(self):
+    def video_start_recording(self):
         self.video = myVideoRecording(camera=self.id, param=self.param, directory=self.config.directory("videos"))
         self.video.config = self.config
         self.video.start()
         self.video.image_size = self.image_size
-
-    def stop(self):
-        """
-        Stop recording
-        """
-        if not self.error and self.active:
-            if self.type == "pi":
-                self.camera.stop_recording()
-                self.camera.close()
-
-            elif self.type == "usb":
-                self.camera.stop()
-                self.cameraFPS.stop()
-
-            if self.video:
-                self.video.stop()
-
-        self.running = False
 
     def setText(self, text):
         """
@@ -609,9 +609,9 @@ class myCamera(threading.Thread):
         if self.type == "usb":
             # crop image
             if not "crop_area" in self.param["image"]:
-                normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop"], type="relative")
+                normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop"], crop_type="relative")
             else:
-                normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop_area"], type="pixel")
+                normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop_area"], crop_type="pixel")
             # rotate     - not implemented yet
             # resize     - not implemented yet
             # saturation - not implemented yet
@@ -724,16 +724,16 @@ class myCamera(threading.Thread):
             logging.warning(self.id + ": Could not analyze image: " + str(e))
             return [0, 0]
 
-    def cropImage(self, frame, crop_area, type="relative"):
+    def cropImage(self, frame, crop_area, crop_type="relative"):
         """
         crop encoded image
         """
         raw = self.convertImage2RawImage(frame)
-        raw = self.cropRawImage(raw, crop_area, type)
+        raw = self.cropRawImage(raw, crop_area, crop_type)
         crop = self.convertRawImage2Image(raw)
         return crop
 
-    def cropRawImage(self, frame, crop_area, type="relative"):
+    def cropRawImage(self, frame, crop_area, crop_type="relative"):
         """
         crop image using relative dimensions (0.0 ... 1.0)
         """
@@ -741,7 +741,7 @@ class myCamera(threading.Thread):
             height = frame.shape[0]
             width = frame.shape[1]
 
-            if type == "relative":
+            if crop_type == "relative":
                 (w_start, h_start, w_end, h_end) = crop_area
                 x_start = int(round(width * w_start, 0))
                 y_start = int(round(height * h_start, 0))
@@ -781,8 +781,8 @@ class myCamera(threading.Thread):
         else:
             if detection_area != None:
                 logging.debug(self.id + "/compare 1: " + str(detection_area) + " / " + str(imageA.shape))
-                imageA, area = self.cropRawImage(frame=imageA, crop_area=detection_area, type="relative")
-                imageB, area = self.cropRawImage(frame=imageB, crop_area=detection_area, type="relative")
+                imageA, area = self.cropRawImage(frame=imageA, crop_area=detection_area, crop_type="relative")
+                imageB, area = self.cropRawImage(frame=imageB, crop_area=detection_area, crop_type="relative")
                 logging.debug(self.id + "/compare 2: " + str(area) + " / " + str(imageA.shape))
 
             try:
@@ -851,14 +851,14 @@ class myCamera(threading.Thread):
 
         return cv2.imwrite(image_path, image)
 
-    def writeImageInfo(self, time, data):
+    def writeImageInfo(self, timestamp, data):
         """
         Write image information to file
         """
         logging.debug(self.id+": Write image info: " + self.config.file("images"))
         if os.path.isfile(self.config.file("images")):
             files = self.config.read_cache("images")
-            files[time] = data.copy()
+            files[timestamp] = data.copy()
             self.config.write("images", files)
 
     def writeVideoInfo(self, stamp, data):
@@ -882,7 +882,6 @@ class myCamera(threading.Thread):
             files = {}
         files[stamp] = data
         self.config.write("sensor", files)
-
 
     def createDayVideo(self, filename, stamp, date):
         """
