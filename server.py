@@ -366,7 +366,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # extract and show single image
         elif '/image.jpg' in self.path:
-            camera[which_cam].setText = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+            # camera[which_cam].setText = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
             camera[which_cam].writeImage('image_' + which_cam + '.jpg',
                                          camera[which_cam].convertFrame2Image(camera[which_cam].getFrame()))
             self.stream_file(filetype='image/jpeg',

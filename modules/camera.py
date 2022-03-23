@@ -461,7 +461,7 @@ class myCamera(threading.Thread):
             self.camera.rotation = self.param["image"]["rotation"]
             self.camera.saturation = self.param["image"]["saturation"]
             self.camera.zoom = self.param["image"]["crop"]
-            self.camera.annotate_background = picamera.Color('black')
+            # self.camera.annotate_background = picamera.Color('black')
             self.camera.start_recording(self.output, format='mjpeg')
             logging.info(self.id + ": OK.")
         except Exception as e:
