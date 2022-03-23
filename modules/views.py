@@ -491,7 +491,7 @@ class myViews(threading.Thread):
                     if ("datestamp" in file_info and file_info[
                         "datestamp"] == directory) or not "datestamp" in file_info:
                         count += 1
-                        if "size" in file_info:
+                        if "size" in file_info and "int" in type(file_info["size"]):
                             dir_size += file_info["size"]
 
                         if ("camera" in file_info and file_info["camera"] == which_cam) or not "camera" in file_info:
