@@ -385,10 +385,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             stream = True
 
             while stream:
+                date_information = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
                 if camera[which_cam].type == "pi":
-                    camera[which_cam].setText(datetime.now().strftime('%d.%m.%Y %H:%M:%S'))
+                    camera[which_cam].setText(date_information)
 
                 frame = camera[which_cam].getImage()
+                if camera[which_cam].param["image"]["date_time"]:
+                    frame = camera[which_cam].setDateTime2Image(frame)
 
                 if self.path.startswith("/detection/"):
                     frame = camera[which_cam].drawImageDetectionArea(image=frame)

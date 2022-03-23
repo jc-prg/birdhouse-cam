@@ -40,11 +40,15 @@ myParameters = {
                 "detection_area":   (0.05,0.1,0.95,0.95)
             },
             "image": {
-                "crop":             (0.1,0.0,0.9,1.0),
-                "framerate":        24,
-                "resolution":       "900x1080",
-                "saturation":       -50,
-                "rotation":         180
+                "crop": (0.1, 0.0, 0.9, 1.0),
+                "framerate": 24,
+                "resolution": "900x1080",
+                "saturation": -50,
+                "rotation": 180,
+                "date_time": True,
+                "date_time_position": (10, 20),
+                "date_time_color": (255, 255, 255),
+                "date_time_size": 0.4
             },
             "image_save": {
                 "path":     "images",
@@ -74,8 +78,12 @@ myParameters = {
                 "resolution":   "not implemented (640x480)",
                 "framerate":    "not implemented",
                 "saturation":   "not implemented",
-                "rotation":     "not implemented"
-            },
+                "rotation":     "not implemented",
+                "date_time": True,
+                "date_time_position": (10, 20),
+                "date_time_color": (255, 255, 255),
+                "date_time_size": 0.4
+},
             "image_save": {
                 "path":     "images",
                 "color":    "ORIGINAL",

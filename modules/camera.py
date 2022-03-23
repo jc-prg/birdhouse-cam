@@ -293,6 +293,11 @@ class myCamera(threading.Thread):
         self.error_image = False
         self.error_image_msg = []
 
+        self.text_default_position = (30, 40)
+        self.text_default_scale = 0.8
+        self.text_default_font = cv2.FONT_HERSHEY_SIMPLEX
+        self.text_default_color = (255, 255, 255)
+        self.text_default_thickness = 2
         self.image_size = [0, 0]
         self.previous_image = None
         self.previous_stamp = "000000"
@@ -335,6 +340,7 @@ class myCamera(threading.Thread):
                 retry_time = 60
                 if self.error_time + retry_time < time.time():
                     logging.info("Try to restart camera ...")
+                    self.active = True
                     if self.type == "pi":
                         self.camera_start_pi()
                     elif self.type == "usb":
@@ -367,12 +373,13 @@ class myCamera(threading.Thread):
                 if self.record:
                     if (seconds in self.param["image_save"]["seconds"]) and (
                             hours in self.param["image_save"]["hours"]):
-                        text = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-                        self.setText(text)
 
                         image = self.getImage()
                         image = self.convertImage2RawImage(image)
                         image_compare = self.convertRawImage2Gray(image)
+
+                        if self.param["image"]["date_time"]:
+                            image = self.setDateTime2RawImage(image)
 
                         if self.image_size == [0, 0]:
                             self.image_size = self.sizeRawImage(image)
@@ -493,26 +500,75 @@ class myCamera(threading.Thread):
         if self.type == "pi":
             self.camera.annotate_text = str(text)
 
-    def setText2RawImage(self, image, text, position=(30, 40), font=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.8,
-                         color=(255, 255, 255), thickness=2):
+    def setText2RawImage(self, image, text, position="", font="", scale="", color="", thickness=0):
         """
         Add text on image
         """
-        image = cv2.putText(image, text, position, font, fontScale, color, thickness, cv2.LINE_AA)
+        if position == "":
+            position = self.text_default_position
+        if font == "":
+            font = self.text_default_font
+        if scale == "":
+            scale = self.text_default_scale
+        if color == "":
+            color = self.text_default_color
+        if thickness == 0:
+            thickness = self.text_default_thickness
+
+        image = cv2.putText(image, text, position, font, scale, color, thickness, cv2.LINE_AA)
         return image
 
-    def setText2Image(self, image, text, position=(30, 40), font=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.8,
-                      color=(255, 255, 255), thickness=2):
+    def setText2Image(self, image, text, position="", font="", scale="", color="", thickness=0):
         """
        Add text on image
        """
         image = self.convertImage2RawImage(image)
-        image = self.setText2RawImage(image, text, position=position, font=font, fontScale=fontScale, color=color,
+        image = self.setText2RawImage(image, text, position=position, font=font, scale=scale, color=color,
                                       thickness=thickness)
         image = self.convertRawImage2Image(image)
         return image
 
-    # ----------------------------------
+    def setDateTime2Image(self, image):
+        date_information = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+
+        font = self.text_default_font
+        thickness = 1
+        if self.param["image"]["date_time_color"]:
+            color = self.param["image"]["date_time_color"]
+        else:
+            color = ""
+        if self.param["image"]["date_time_position"]:
+            position = self.param["image"]["date_time_position"]
+        else:
+            position = ""
+        if self.param["image"]["date_time_size"]:
+            scale = self.param["image"]["date_time_size"]
+        else:
+            scale = ""
+
+        image = self.setText2Image(image, date_information, position, font, scale, color, thickness)
+        return image
+
+    def setDateTime2RawImage(self, image):
+        date_information = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+
+        font = self.text_default_font
+        thickness = 1
+        if self.param["image"]["date_time_color"]:
+            color = self.param["image"]["date_time_color"]
+        else:
+            color = ""
+        if self.param["image"]["date_time_position"]:
+            position = self.param["image"]["date_time_position"]
+        else:
+            position = ""
+        if self.param["image"]["date_time_size"]:
+            scale = self.param["image"]["date_time_size"]
+        else:
+            scale = ""
+
+        image = self.setText2RawImage(image, date_information, position, font, scale, color, thickness)
+        return image
 
     def getImage(self):
         """
