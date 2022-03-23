@@ -476,7 +476,7 @@ class myViews(threading.Thread):
                     dir_count_cam = 0
                     dir_count_delete = 0
 
-                    if imageTitle in file_data["files"]:
+                    if imageTitle in file_data["files"] and "lowres" in file_data["files"]:
                         image = os.path.join(directory, file_data["files"][imageTitle]["lowres"])
                     else:
                         for file in list(sorted(file_data["files"].keys())):
