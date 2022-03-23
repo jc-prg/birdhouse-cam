@@ -462,6 +462,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
 
+    # help
+    if len(sys.argv) > 0 and "--logfile" in sys.argv:
+        print("jc://birdhouse/\n\nArguments:")
+        print("--logfile    Write logging output to logfile 'stream.log'")
+        print("--backup     Start backup directly (current date, delete directory before)")
+
     # set logging
     if len(sys.argv) > 0 and "--logfile" in sys.argv:
         logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), "stream.log"),
@@ -517,6 +523,8 @@ if __name__ == "__main__":
     time.sleep(1)
     backup = myBackupRestore(config, camera)
     backup.start()
+    if len(sys.argv) > 0 and "--backup" in sys.argv:
+        backup.backup_files()
 
     commands = myCommands(config=config, camera=camera, backup=backup)
     commands.start()
