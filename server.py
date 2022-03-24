@@ -467,6 +467,7 @@ if __name__ == "__main__":
         print("jc://birdhouse/\n\nArguments:")
         print("--logfile    Write logging output to logfile 'stream.log'")
         print("--backup     Start backup directly (current date, delete directory before)")
+        exit()
 
     # set logging
     if len(sys.argv) > 0 and "--logfile" in sys.argv:
