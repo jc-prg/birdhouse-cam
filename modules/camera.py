@@ -842,29 +842,26 @@ class myCamera(threading.Thread):
         """
         check image properties to decide if image is a selected one (for backup and view with selected images)
         """
-        if not "similarity" in file_info:
+        if "similarity" not in file_info:
             return False
 
-        if ("camera" in file_info and file_info["camera"] == self.id) or (
-                not "camera" in file_info and self.id == "cam1"):
+        elif ("camera" in file_info and file_info["camera"] == self.id) or ("camera" not in file_info and self.id == "cam1"):
 
-            if "to_be_deleted" in file_info:
-                delete = int(file_info["to_be_deleted"])
-                if delete == 1:
-                    return False
+            if "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
+                return False
 
-            if "00" + str(self.param["image_save"]["seconds"][0]) in timestamp: return True
+            elif "favorit" in file_info and int(file_info["favorit"]) == 1:
+                return True
 
-            if "favorit" in file_info:
-                favorit = int(file_info["favorit"])
-                if favorit == 1:
-                    return True
+            elif "00" + str(self.param["image_save"]["seconds"][0]) in timestamp:
+                return True
 
-            if check_similarity:
+            elif check_similarity:
                 threshold = float(self.param["similarity"]["threshold"])
                 similarity = float(file_info["similarity"])
                 if similarity != 0 and similarity < threshold:
                     return True
+
             else:
                 return True  ### to be checked !!!
 

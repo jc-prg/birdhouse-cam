@@ -266,6 +266,7 @@ class myBackupRestore(threading.Thread):
             for cam in self.camera:
                 count = 0
                 count_data = 0
+                count_other_date = 0
                 for stamp in stamps:
 
                     ########### SELECT IMAGE scheint nicht richtig zu funktionieren
@@ -316,8 +317,12 @@ class myBackupRestore(threading.Thread):
 
                         files_backup["files"][stamp] = update_new.copy()
 
-                logging.info(cam + ": " + str(count) + " Bilder gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
-            # logging.info(cam + ": " +str(count_data) + " Daten gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
+                    else:
+                        count_other_date += 1
+
+                logging.info(cam + ": " + str(count) + " Image entries (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
+                logging.info(cam + ": " + str(count_data) + " Data entries")
+                logging.info(cam + ": " + str(count_other_date) + " not saved (other date)")
 
             files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
             files_backup["info"]["count"] = count
