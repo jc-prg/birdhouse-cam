@@ -13,19 +13,20 @@ console.log("!!!!");
     html = "<center>";
     html += "Temperature (";
     var count = 0;
+    var keys = Object.keys(sensors);
     for (let sensor in sensors) {
-        if sensors[sensor]["active"] {
+        if (sensors[sensor]["active"]) {
             html += sensor;
-            if (count < sensors.length) { html += "/"; }
+            if (count < keys.length) { html += "/"; }
             count += 1;
         }
     }
     html += "): ";
     var count = 0;
     for (let sensor in sensors) {
-        if sensors[sensor]["active"] {
+        if (sensors[sensor]["active"]) {
             html += "<font id='temp"+sensor+"'>"+sensors[sensor]["values"]["temperature"]+"</font>°C ";
-            if (count < sensors.length) { html += "/"; }
+            if (count < keys.length) { html += "/"; }
             count += 1;
         }
     }
