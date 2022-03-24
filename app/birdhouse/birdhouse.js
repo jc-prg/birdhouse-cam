@@ -43,6 +43,11 @@ var app_active_cam        = "cam1";
 var app_admin_allowed     = false;
 var app_data              = {};
 
+var app_frame_header = "frame1";
+var app_frame_content = "frame3";
+var app_frame_info = "frame2";
+var app_frame_index = "frame4";
+
 //-----------------------------------------
 // load content from API and call print
 //-----------------------------------------
@@ -95,7 +100,7 @@ function birdhousePrint(data) {
 	else if (app_active_page == "TODAY_COMPLETE") { birdhouse_LIST(lang("TODAY_COMPLETE"), data, camera, false); }
 	else if (app_active_page == "VIDEOS") { birdhouse_LIST(lang("VIDEOS"), data, camera); }
 	else if (app_active_page == "VIDEO_DETAIL")	{ birdhouse_VIDEO_DETAIL(lang("VIDEOS"), data, camera); }
-	else { setTextById("frame2",lang("ERROR") + ": "+app_active_page); }
+	else { setTextById(app_frame_content,lang("ERROR") + ": "+app_active_page); }
 
 	birdhouseStatus_print(data);
 
@@ -111,9 +116,9 @@ function birdhousePrintTitle(data, active_page="", camera="") {
 
 	var title = document.getElementById("navTitle");
 	if (title.innerHTML == "..." && data["DATA"]["title"] != undefined)	{ setNavTitle(data["DATA"]["title"]); setTextById("title",data["DATA"]["title"]); }
-	if (data["DATA"]["subtitle"] != undefined)		{ setTextById("frame1", "<center><h2>" + data["DATA"]["subtitle"] + "</h2></center>"); }
-	else							{ setTextById("frame1", "<center><h2>" + data["DATA"]["title"] + "</h2></center>"); }
-	if (data["DATA"]["links"] != undefined)		{ setTextById("frame4", "<center>" + birdhouse_Links(data["DATA"]["links"]) + "</center>"); }
+	if (data["DATA"]["subtitle"] != undefined)		{ setTextById(app_frame_header, "<center><h2>" + data["DATA"]["subtitle"] + "</h2></center>"); }
+	else							{ setTextById(app_frame_header, "<center><h2>" + data["DATA"]["title"] + "</h2></center>"); }
+	if (data["DATA"]["links"] != undefined)		{ setTextById(app_frame_index, "<center>" + birdhouse_Links(data["DATA"]["links"]) + "</center>"); }
 	if (data["STATUS"]["start_time"] != undefined)	{ setTextById("frame5", "<center><small>" + lang( "STARTTIME") + ": " + data["STATUS"]["start_time"] + "</small></center>"); }
 	else							{ setTextById("frame5", ""); }
 	}
@@ -230,7 +235,7 @@ function birdhouse_INDEX(data, camera) {
 		app_camera_source[active_cam["name"]] = stream_server + cameras[active_cam["name"]]["stream"];
 		}
 		
-	setTextById("frame2",html);
+	setTextById(app_frame_content,html);
 	}
 	
 //-----------------------------------------
@@ -305,7 +310,7 @@ function birdhouse_CAMERAS( title, data ) {
             html += "</div>";
 	    }
 	}
-	setTextById("frame2",html);
+	setTextById(app_frame_content,html);
 }
 
 //-----------------------------------------
@@ -386,7 +391,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 			}
 		}
 
-	setTextById("frame2",html);
+	setTextById(app_frame_content,html);
 	}
 
 //-----------------------------------------
@@ -521,7 +526,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 			html += "<center>"+lang("NO_ENTRIES")+"</center>";
 			}
 		}
-	setTextById("frame2", html);
+	setTextById(app_frame_content, html);
 	}
 	
 //-----------------------------------------

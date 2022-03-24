@@ -8,7 +8,7 @@
 //--------------------------------------
 
 function birdhouseStatus_print(data) {
-console.log("!!!!");
+
     var sensors = data["DATA"]["sensors"];
     html = "<center>";
     html += "Temperature (";
@@ -31,6 +31,6 @@ console.log("!!!!");
         }
     }
     html += "</center>";
-    setTextById("frame3", html);
+    setTextById(app_frame_info, html);
 }
 
