@@ -269,9 +269,8 @@ class myBackupRestore(threading.Thread):
                 count_other_date = 0
                 for stamp in stamps:
 
-                    ########### SELECT IMAGE scheint nicht richtig zu funktionieren
                     # if files are to be archived
-                    if files[stamp]["datestamp"] == backup_date:
+                    if files[stamp]["datestamp"] == backup_date and files[stamp]["camera"] == cam:
                         update_new = files[stamp].copy()
 
                         # if images are to archived
