@@ -115,9 +115,13 @@ myParameters = {
     "sensors": {
         "sensor1": {
             "active": True,
-            "name": "Innen-Thermometer",
+            "name": "Innen",
             "type": "dht11",
-            "pin": 4
+            "pin": 4,
+            "units": {
+                "temperature": "°C",
+                "humidity": "%"
+            }
         }
     }
 }
