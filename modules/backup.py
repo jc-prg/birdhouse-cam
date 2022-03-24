@@ -235,7 +235,7 @@ class myBackupRestore(threading.Thread):
 
         # if the directory but no config file exists for backup directory create a new one
         if os.path.isdir(directory):
-            logging.info("backup files: create a new config file, directory already exists")
+            logging.info("Backup files: create a new config file, directory already exists")
 
             if not os.path.isfile(self.config.file(config="backup", date=backup_date)):
                 files = self.compare_files_init(date=backup_date)
@@ -253,7 +253,7 @@ class myBackupRestore(threading.Thread):
 
         # if no directory exists, create directory, copy files and create a new config file (copy existing information)
         else:
-            logging.info("backup files: copy files and create a new config file (copy existing information)")
+            logging.info("Backup files: copy files and create a new config file (copy existing information)")
 
             self.config.directory_create(config="images", date=backup_date)
             files = self.config.read_cache(config="images")
@@ -268,45 +268,52 @@ class myBackupRestore(threading.Thread):
                 count_data = 0
                 for stamp in stamps:
 
+                    ########### SELECT IMAGE scheint nicht richtig zu funktionieren
                     # if files are to be archived
-                    if self.camera[cam].selectImage(timestamp=stamp, file_info=files[stamp]) and files[stamp]["datestamp"] == backup_date:
-                        count += 1
+                    if files[stamp]["datestamp"] == backup_date:
                         update_new = files[stamp].copy()
-                        file_lowres = self.config.imageName(image_type="lowres", timestamp=stamp, camera=cam)
-                        file_hires = self.config.imageName(image_type="hires", timestamp=stamp, camera=cam)
 
-                        if not "similarity" in update_new:
-                            update_new["similarity"] = 100
-                        if not "hires" in update_new:
-                            update_new["hires"] = file_hires
-                        if not "favorit" in update_new:
-                            update_new["favorit"] = 0
+                        # if images are to archived
+                        if self.camera[cam].selectImage(timestamp=stamp, file_info=files[stamp]):
+                            count += 1
+                            file_lowres = self.config.imageName(image_type="lowres", timestamp=stamp, camera=cam)
+                            file_hires = self.config.imageName(image_type="hires", timestamp=stamp, camera=cam)
 
-                        update_new["type"] = "image"
-                        update_new["directory"] = os.path.join(self.config.directories["images"], backup_date)
+                            if not "similarity" in update_new:
+                                update_new["similarity"] = 100
+                            if not "hires" in update_new:
+                                update_new["hires"] = file_hires
+                            if not "favorit" in update_new:
+                                update_new["favorit"] = 0
 
-                        if os.path.isfile(os.path.join(dir_source, file_lowres)):
-                            update_new["size"] = (os.path.getsize(os.path.join(dir_source, file_lowres)) + os.path.getsize(os.path.join(dir_source, file_hires)))
-                            backup_size += update_new["size"]
-                            files_backup["files"][stamp] = update_new.copy()
+                            update_new["type"] = "image"
+                            update_new["directory"] = os.path.join(self.config.directories["images"], backup_date)
 
-                            os.popen('cp ' + os.path.join(dir_source, file_lowres) + ' ' + os.path.join(directory, file_lowres))
-                            os.popen('cp ' + os.path.join(dir_source, file_hires) + ' ' + os.path.join(directory, file_hires))
+                            if os.path.isfile(os.path.join(dir_source, file_lowres)):
+                                update_new["size"] = (os.path.getsize(os.path.join(dir_source, file_lowres)) + os.path.getsize(os.path.join(dir_source, file_hires)))
+                                backup_size += update_new["size"]
+                                os.popen('cp ' + os.path.join(dir_source, file_lowres) + ' ' + os.path.join(directory, file_lowres))
+                                os.popen('cp ' + os.path.join(dir_source, file_hires) + ' ' + os.path.join(directory, file_hires))
 
-                    # if data are to be archived
-                    elif files[stamp]["datestamp"] == backup_date:
-                        count_data += 1
-                        update_new = files[stamp].copy()
-                        if "hires" in update_new:
-                            del update_new["hires"]
-                        if "lowres" in update_new:
-                            del update_new["lowres"]
-                        if "directory" in update_new:
-                            del update_new["directory"]
-                        if "compare" in update_new:
-                            del update_new["compare"]
+                        # if data are to be archived
+                        else:
+                            count_data += 1
+                            update_new = files[stamp].copy()
+                            update_new["type"] = "data"
 
-                        update_new["type"] = "data"
+                            if "hires" in update_new:
+                                del update_new["hires"]
+                            if "lowres" in update_new:
+                                del update_new["lowres"]
+                            if "directory" in update_new:
+                                del update_new["directory"]
+                            if "compare" in update_new:
+                                del update_new["compare"]
+                            if "favorit" in update_new:
+                                del update_new["favorit"]
+                            if "delete" in update_new:
+                                del update_new["delete"]
+
                         files_backup["files"][stamp] = update_new.copy()
 
                 logging.info(cam + ": " + str(count) + " Bilder gesichert (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
