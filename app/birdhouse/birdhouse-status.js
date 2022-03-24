@@ -17,8 +17,8 @@ console.log("!!!!");
     for (let sensor in sensors) {
         if (sensors[sensor]["active"]) {
             html += sensor;
-            if (count < keys.length) { html += "/"; }
             count += 1;
+            if (count < keys.length) { html += "/"; }
         }
     }
     html += "): ";
@@ -26,8 +26,8 @@ console.log("!!!!");
     for (let sensor in sensors) {
         if (sensors[sensor]["active"]) {
             html += "<font id='temp"+sensor+"'>"+sensors[sensor]["values"]["temperature"]+"</font>°C ";
-            if (count < keys.length) { html += "/"; }
             count += 1;
+            if (count < keys.length) { html += "/"; }
         }
     }
     html += "</center>";
