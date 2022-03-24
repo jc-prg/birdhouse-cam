@@ -299,7 +299,6 @@ class myBackupRestore(threading.Thread):
                         # if data are to be archived
                         else:
                             count_data += 1
-                            update_new = files[stamp].copy()
                             update_new["type"] = "data"
 
                             if "hires" in update_new:
