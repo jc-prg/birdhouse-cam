@@ -162,7 +162,7 @@ function birdhouseSwitchCam() {
 	
 	console.log("birdhouseSwitchCam: "+app_active_cam+"->"+app_available_cameras[next_cam]);
 	birdhousePrint_load(view=app_active_page, camera=app_available_cameras[next_cam], date=app_active_date);
-	}	
+}
 
 function birdhouseReloadView() {
 	console.log("birdhouseReloadView: "+app_active_page+"/"+app_active_cam+"/"+app_active_date);
@@ -287,7 +287,7 @@ function birdhouse_CAMERAS( title, data ) {
         html += "<div class='camera_info_text'><ul>";
         html += "<li>Type: "+sensors[sensor]["type"]+" ("+sensors[sensor]["pin"]+")</li>";
         for (let key in sensors[sensor]["values"]) {
-            html += "<li>"+key+": "+sensors[sensor]["values"][key]+"</li>";
+            html += "<li>"+key+": "+sensors[sensor]["values"][key]+" "+sensors[sensor]["units"][key]+"</li>";
         }
         html += "</ul></div></div>";
 	    html += "</div>";
