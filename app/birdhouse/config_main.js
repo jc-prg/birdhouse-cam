@@ -2,7 +2,7 @@
 // config menu and main functions
 //--------------------------------
 
-var app_frame_count       = 4;
+var app_frame_count       = 5;
 var app_frame_style       = "frame_column wide";
 var app_setting_count     = 4;
 var app_setting_style     = "setting_bg";
