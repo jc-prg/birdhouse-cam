@@ -476,6 +476,7 @@ class myViews(threading.Thread):
                     dir_size = 0
                     dir_count_cam = 0
                     dir_count_delete = 0
+                    dir_count_data = 0
 
                     if imageTitle in file_data["files"] and "lowres" in file_data["files"]:
                         image = os.path.join(directory, file_data["files"][imageTitle]["lowres"])
@@ -490,7 +491,11 @@ class myViews(threading.Thread):
                 for file in file_data["files"]:
                     file_info = file_data["files"][file]
                     if ("datestamp" in file_info and file_info["datestamp"] == directory) or "datestamp" not in file_info:
-                        count += 1
+                        if file_info["type"] == "image":
+                            count += 1
+                        else:
+                            dir_count_data += 1
+
                         if "size" in file_info and "float" in str(type(file_info["size"])):
                             dir_size += file_info["size"]
 
@@ -507,7 +512,9 @@ class myViews(threading.Thread):
                                     if os.path.isfile(hires_file): dir_size_cam += os.path.getsize(hires_file)
                             if "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
                                 dir_count_delete += 1
-                            dir_count_cam += 1
+
+                            if file_info["type"] == "image":
+                                dir_count_cam += 1
 
                 dir_size = round(dir_size / 1024 / 1024, 1)
                 dir_size_cam = round(dir_size_cam / 1024 / 1024, 1)
@@ -527,6 +534,7 @@ class myViews(threading.Thread):
                     "count": count,
                     "count_delete": dir_count_delete,
                     "count_cam": dir_count_cam,
+                    "count_data": dir_count_data,
                     "dir_size": dir_size,
                     "dir_size_cam": dir_size_cam,
                     "lowres": image_file
