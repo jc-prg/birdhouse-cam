@@ -44,8 +44,8 @@ var app_admin_allowed     = false;
 var app_data              = {};
 
 var app_frame_header = "frame1";
-var app_frame_content = "frame3";
-var app_frame_info = "frame2";
+var app_frame_content = "frame2";
+var app_frame_info = "frame3";
 var app_frame_index = "frame4";
 
 //-----------------------------------------
