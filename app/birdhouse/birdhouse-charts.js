@@ -52,6 +52,11 @@ function birdhouseChart_create (title, data, type="line", sort_keys=true) {
 	var html 	= "";
     var data_keys	= Object.keys(data);
     if (sort_keys)	{ data_keys = data_keys.sort(); }
+
+	if (data == undefined || data == {} || data_keys.length == 0) {
+	    html += lang("NO_ENTRIES");
+	    return html;
+	}
     var data_rows	= data[data_keys[0]].length;		// startet with only 1 line per chart!
 
     var data_labels = "";
