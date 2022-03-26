@@ -4,6 +4,7 @@
 // show status functions
 //--------------------------------------
 /* INDEX:
+function birdhouseStatus_print(data)
 */
 //--------------------------------------
 

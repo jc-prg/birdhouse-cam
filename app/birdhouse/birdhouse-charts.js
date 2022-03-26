@@ -4,7 +4,8 @@
 // main charts and analysis
 //--------------------------------------
 /* INDEX:
-
+function load_chartJS()
+function birdhouseChart_create (title, data, type="line", sort_keys=true)
 */
 //--------------------------------------
 

@@ -4,12 +4,15 @@
 // additional functions 
 //--------------------------------------
 /* INDEX:
+function birdhouse_initTooltip()
+function birdhouse_tooltip( tooltip_element, tooltip_content, name, left="" )
 function birdhouse_imageOverlay(filename, description="", favorit="", to_be_deleted="")
 function birdhouse_videoOverlay(filename, description="", favorit="", to_be_deleted="")
 function birdhouse_videoOverlayToggle(status="")
 function birdhouse_overlayHide()
 function birdhouse_groupToggle(id)
 function iOS()
+function toggleVideoEdit()
 var loadJS = function(url, implementationCode, location)
 var yourCodeToBeCalled = function()
 */

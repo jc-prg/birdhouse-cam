@@ -4,7 +4,12 @@
 // settings
 //--------------------------------------
 /* INDEX:
-
+function birdhouse_app_settings (name="Settings")
+	this.create	= function (data)
+	this.toggle	= function (active=false)
+	this.tab_start	= function ()
+	this.tab_row	= function (td1,td2)
+	this.tab_end	= function ()
 */
 //--------------------------------------
 

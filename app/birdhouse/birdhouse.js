@@ -5,22 +5,12 @@
 //--------------------------------------
 /* INDEX:
 function birdhousePrint_load(view="INDEX", camera="", date="")
-function birdhousePrint(data, active_page="", camera="")
+function birdhousePrint(data)
 function birdhousePrintTitle(data, active_page="", camera="")
 function birdhouseSetMainVars(data)
 function birdhouseHeaderFunctions()
 function birdhouseSwitchCam()
 function birdhouseReloadView()
-function birdhouse_INDEX(data, camera)
-function birdhouse_CAMERAS( title, data )
-function birdhouse_VIDEO_DETAIL( title, data )
-function birdhouse_LIST(title, data, camera, header_open=true)
-function birdhouse_Camera(main, view, onclick, camera, stream_server, admin_allowed=false)
-function birdhouse_ImageGroup(title, entries, entry_count, entry_category, header_open, admin=false, video_short=false)
-function birdhouse_OtherGroupHeader( key, title, header_open )
-function birdhouse_ImageGroupHeader( key, title, header_open, count={} )
-function birdhouse_ImageURL(URL)
-function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false, group_id="")
 function birdhouse_Links(link_list)
 */
 //--------------------------------------
