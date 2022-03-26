@@ -2,11 +2,8 @@ import os, time
 import logging
 import threading
 from sys import getsizeof
-
 from datetime import datetime, timedelta
 from modules.presets import birdhouse_pages
-
-dir_app_v1 = "/app"
 
 
 def read_html(filename, content=""):
@@ -49,6 +46,32 @@ def print_links_json(link_list, cam=""):
         }
         count += 1
     return json
+
+
+def create_chart_data(data):
+    chart = {
+        "titles": ["Activity"],
+        "data": {}
+    }
+    for key in data:
+        print_key = key[0:2]+":"+key[2:4]
+        if "similarity" in data[key]:
+            chart["data"][print_key] = (float(data[key]["similarity"]))
+        if "sensor" in data[key]:
+            for sensor in data[key]["sensor"]:
+                for sensor_key in data[key]["sensor"][sensor]:
+                    sensor_title = sensor + ":" + sensor_key
+                    if sensor_title not in chart["titles"]:
+                        chart["titles"].append(sensor_title)
+
+    for key in data:
+        print_key = key[0:2] + ":" + key[2:4]
+        for sensor_title in chart["titles"]:
+            if sensor_title != "Activity":
+                sensor = sensor_title.split(":")
+                chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
+
+    return chart
 
 
 class BirdhouseViews(threading.Thread):
@@ -159,7 +182,7 @@ class BirdhouseViews(threading.Thread):
             "entries": {},
             "groups": {}
         }
-        favorits = {}
+        favorites = {}
 
         # videos
         files_videos = {}
@@ -180,31 +203,31 @@ class BirdhouseViews(threading.Thread):
             if date_today == files[stamp]["datestamp"] and "favorit" in files[stamp] and int(
                     files[stamp]["favorit"]) == 1:
                 new = datetime.now().strftime("%Y%m%d") + "_" + stamp
-                favorits[new] = files[stamp]
-                favorits[new]["source"] = ("images", "")
-                favorits[new]["date"] = "Aktuell"
-                favorits[new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
-                if "type" not in favorits[new]:
-                    favorits[new]["type"] = "image"
-                favorits[new]["category"] = category + stamp
-                favorits[new]["directory"] = "/" + self.config.directories["images"]
+                favorites[new] = files[stamp]
+                favorites[new]["source"] = ("images", "")
+                favorites[new]["date"] = "Aktuell"
+                favorites[new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
+                if "type" not in favorites[new]:
+                    favorites[new]["type"] = "image"
+                favorites[new]["category"] = category + stamp
+                favorites[new]["directory"] = "/" + self.config.directories["images"]
 
         if date_today in files_videos:
             for stamp in files_videos[date_today]:
                 new = stamp
-                favorits[new] = files_videos[date_today][stamp]
-                favorits[new]["source"] = ("videos", "")
-                favorits[new]["date"] = "Aktuell"
-                favorits[new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
-                favorits[new]["type"] = "video"
-                favorits[new]["category"] = category + stamp
-                favorits[new]["directory"] = "/" + self.config.directories["videos"]
+                favorites[new] = files_videos[date_today][stamp]
+                favorites[new]["source"] = ("videos", "")
+                favorites[new]["date"] = "Aktuell"
+                favorites[new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
+                favorites[new]["type"] = "video"
+                favorites[new]["category"] = category + stamp
+                favorites[new]["directory"] = "/" + self.config.directories["videos"]
 
-        if len(favorits) > 0:
+        if len(favorites) > 0:
             content["view_count"] = ["star"]
             content["groups"]["today"] = []
-            for entry in favorits:
-                content["entries"][entry] = favorits[entry]
+            for entry in favorites:
+                content["entries"][entry] = favorites[entry]
                 content["groups"]["today"].append(entry)
 
         # other days
@@ -222,7 +245,7 @@ class BirdhouseViews(threading.Thread):
 
         for directory in dir_list:
             category = "/backup/" + directory + "/"
-            favorits[directory] = {}
+            favorites[directory] = {}
 
             if self.config.exists(config="backup", date=directory):
                 files_data = self.config.read_cache(config="backup", date=directory)
@@ -235,33 +258,33 @@ class BirdhouseViews(threading.Thread):
                             if "datestamp" in files[stamp] and files[stamp]["datestamp"] == directory:
                                 if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
                                     new = directory + "_" + stamp
-                                    favorits[directory][new] = files[stamp]
-                                    favorits[directory][new]["source"] = ("backup", directory)
-                                    favorits[directory][new]["date"] = date
-                                    favorits[directory][new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
-                                    favorits[directory][new]["date2"] = favorits[directory][new]["date"]
-                                    if "type" not in favorits[directory][new]:
-                                        favorits[directory][new]["type"] = "image"
-                                    favorits[directory][new]["category"] = category + stamp
-                                    favorits[directory][new]["directory"] = "/" + self.config.directories[
+                                    favorites[directory][new] = files[stamp]
+                                    favorites[directory][new]["source"] = ("backup", directory)
+                                    favorites[directory][new]["date"] = date
+                                    favorites[directory][new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
+                                    favorites[directory][new]["date2"] = favorites[directory][new]["date"]
+                                    if "type" not in favorites[directory][new]:
+                                        favorites[directory][new]["type"] = "image"
+                                    favorites[directory][new]["category"] = category + stamp
+                                    favorites[directory][new]["directory"] = "/" + self.config.directories[
                                         "backup"] + directory + "/"
 
             if directory in files_videos:
                 for stamp in files_videos[directory]:
                     new = stamp
                     date = directory[6:8] + "." + directory[4:6] + "." + directory[0:4]
-                    favorits[directory][new] = files_videos[directory][stamp]
-                    favorits[directory][new]["source"] = ("videos", "")
-                    favorits[directory][new]["date"] = date  # ?????
-                    favorits[directory][new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
-                    favorits[directory][new]["type"] = "video"
-                    favorits[directory][new]["category"] = "/videos/" + stamp
-                    favorits[directory][new]["directory"] = "/" + self.config.directories["videos"]
+                    favorites[directory][new] = files_videos[directory][stamp]
+                    favorites[directory][new]["source"] = ("videos", "")
+                    favorites[directory][new]["date"] = date  # ?????
+                    favorites[directory][new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
+                    favorites[directory][new]["type"] = "video"
+                    favorites[directory][new]["category"] = "/videos/" + stamp
+                    favorites[directory][new]["directory"] = "/" + self.config.directories["videos"]
 
-            if len(favorits[directory]) > 0:
+            if len(favorites[directory]) > 0:
                 content["groups"][date] = []
-                for entry in favorits[directory]:
-                    content["entries"][entry] = favorits[directory][entry]
+                for entry in favorites[directory]:
+                    content["entries"][entry] = favorites[directory][entry]
                     content["groups"][date].append(entry)
 
         content["view_count"] = ["star"]
@@ -424,7 +447,7 @@ class BirdhouseViews(threading.Thread):
 
         content["subtitle"] += " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
         content["view_count"] = ["all", "star", "detect"]
-
+        content["chart_data"] = create_chart_data(content["entries"].copy())
         return content
 
     def archive_list(self, camera):
@@ -530,7 +553,7 @@ class BirdhouseViews(threading.Thread):
                     dir_total_size += dir_size
                     files_total += count
 
-                    logging.info("directory: "+str(dir_size)+" / cam: "+str(dir_size_cam)+" / "+str(dir_total_size)+" ("+directory+"/"+cam+")")
+                    logging.info("- directory: "+str(dir_size)+" / cam: "+str(dir_size_cam)+" / "+str(dir_total_size)+" ("+directory+"/"+cam+")")
 
                     image = os.path.join(self.config.directories["backup"], image)
                     image_file = image.replace(directory + "/", "")
@@ -557,6 +580,7 @@ class BirdhouseViews(threading.Thread):
 
             content["view_count"] = []
             content["subtitle"] = birdhouse_pages["backup"][0] + " (" + self.camera[cam].name + ")"
+            content["chart_data"] = create_chart_data(content["entries"].copy())
             self.archive_views[cam] = content
 
     def complete_list_today(self, server):
@@ -620,10 +644,9 @@ class BirdhouseViews(threading.Thread):
                     content["groups"][hour + ":00"].append(entry)
 
         content["view_count"] = ["all", "star", "detect", "recycle"]
-        content["subtitle"] = birdhouse_pages["today_complete"][0] + " (" + self.camera[which_cam].name + ", " + str(
-            count) + " Bilder)"
-        content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"),
-                                                 cam=which_cam)
+        content["subtitle"] = birdhouse_pages["today_complete"][0] + " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
+        content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"), cam=which_cam)
+        content["chart_data"] = create_chart_data(content["entries"].copy())
 
         length = getsizeof(content)/1024
         logging.info("CompleteListeToday: End - "+datetime.now().strftime("%H:%M:%S")+" ("+str(length)+" kB)")
