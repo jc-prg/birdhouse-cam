@@ -4,11 +4,7 @@ import os, time
 import logging
 import json, codecs
 import threading
-from threading import Condition
 from datetime import datetime
-
-from modules.presets import birdhouse_preset
-from modules.presets import birdhouse_pages
 
 
 class BirdhouseConfig(threading.Thread):
@@ -28,7 +24,7 @@ class BirdhouseConfig(threading.Thread):
             "start_date": datetime.now().strftime("%d.%m.%Y %H:%M:%S")
         }
         self.directories = {
-            "main": "",
+            "main": "../",
             "sensor": "",
             "data": "data/",
             "images": "data/images/",

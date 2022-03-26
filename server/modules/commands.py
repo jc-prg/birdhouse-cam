@@ -1,28 +1,12 @@
 #!/usr/bin/python3
 
-import io, os, time
+import time
 import logging
-import json, codecs
-import numpy as np
-import signal, sys, string
-
 import threading
-import socketserver
-from threading       import Condition
-from http            import server
-from datetime        import datetime, timedelta
-
-from modules.backup  import BirdhouseArchive
-from modules.camera  import BirdhouseCamera
-from modules.config  import BirdhouseConfig
-from modules.presets import birdhouse_preset
-from modules.presets import birdhouse_pages
-from modules.views   import BirdhouseViews
-
-#----------------------------------------------------
+from datetime import datetime
 
 
-class myCommands(threading.Thread):
+class BirdhouseCommands(threading.Thread):
 
     def __init__(self, camera, config, backup):
         '''

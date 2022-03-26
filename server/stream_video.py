@@ -2,15 +2,15 @@
 
 import os
 import re
-from modules.config import BirdhouseConfig
-from flask import Flask, send_file, make_response, redirect
+from modules import BirdhouseConfig
+from flask import Flask
 from flask import Response, request
 app = Flask(__name__)
 
 
 config = BirdhouseConfig(param_init={}, main_directory=os.path.dirname(os.path.abspath(__file__)))
 config.start()
-media_path = os.path.join(config.param["path"], "data", "videos")
+media_path = os.path.join(config.param["path"], "../data", "videos")
 
 
 def serve_ios(full_path):

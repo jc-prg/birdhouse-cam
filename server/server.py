@@ -14,7 +14,7 @@ from datetime import datetime
 from modules.backup import BirdhouseArchive
 from modules.camera import BirdhouseCamera
 from modules.config import BirdhouseConfig
-from modules.commands import myCommands
+from modules.commands import BirdhouseCommands
 from modules.presets import birdhouse_preset
 from modules.presets import file_types
 from modules.views import BirdhouseViews
@@ -499,7 +499,7 @@ if __name__ == "__main__":
     # start sensors
     sensor = {}
     if "rpi_active" in config.param and config.param["rpi_active"]:
-        from modules.sensors import BirdhouseSensor
+        from server.modules.sensors import BirdhouseSensor
 
         for sen in config.param["sensors"]:
             settings = config.param["sensors"][sen]
@@ -529,7 +529,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 0 and "--backup" in sys.argv:
         backup.backup_files()
 
-    commands = myCommands(config=config, camera=camera, backup=backup)
+    commands = BirdhouseCommands(config=config, camera=camera, backup=backup)
     commands.start()
 
     # check if config files for main image directory exists and create if not exists
