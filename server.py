@@ -11,13 +11,13 @@ import socketserver
 from http import server
 from datetime import datetime
 
-from modules.backup import myBackupRestore
-from modules.camera import myCamera
-from modules.config import myConfig
+from modules.backup import BirdhouseArchive
+from modules.camera import BirdhouseCamera
+from modules.config import BirdhouseConfig
 from modules.commands import myCommands
-from modules.presets import myParameters
-from modules.presets import myMIMEtypes
-from modules.views import myViews
+from modules.presets import birdhouse_preset
+from modules.presets import file_types
+from modules.views import BirdhouseViews
 
 api_description = {
     "name": "BirdhouseCAM",
@@ -393,26 +393,27 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if camera[which_cam].param["image"]["date_time"]:
                     frame = camera[which_cam].setDateTime2RawImage(frame)
 
-                else:
-                    if camera[which_cam].video.recording:
-                        length = str(round(camera[which_cam].video.info_recording()["length"]))
-                        framerate = str(round(camera[which_cam].video.info_recording()["framerate"]))
-                        y_position = camera[which_cam].image_size[1] - 40
-                        frame = camera[which_cam].setText2RawImage(frame, "Recording", position=(20, y_position),
-                                                                color=(0, 0, 255), fontScale=1, thickness=2)
-                        frame = camera[which_cam].setText2RawImage(frame, "(" + length + "s/" + framerate + "fps)",
-                                                                position=(200, y_position), color=(0, 0, 255),
-                                                                fontScale=0.5, thickness=1)
+                if camera[which_cam].video.recording:
+                    logging.debug("VIDEO RECORDING")
+                    length = str(round(camera[which_cam].video.info_recording()["length"]))
+                    framerate = str(round(camera[which_cam].video.info_recording()["framerate"]))
+                    y_position = camera[which_cam].image_size[1] - 40
+                    frame = camera[which_cam].setText2RawImage(frame, "Recording", position=(20, y_position),
+                                                            color=(0, 0, 255), scale=1, thickness=2)
+                    frame = camera[which_cam].setText2RawImage(frame, "(" + length + "s/" + framerate + "fps)",
+                                                            position=(200, y_position), color=(0, 0, 255),
+                                                            scale=0.5, thickness=1)
 
-                    if camera[which_cam].video.processing:
-                        length = str(round(camera[which_cam].video.info_recording()["length"]))
-                        image_size = str(camera[which_cam].video.info_recording()["image_size"])
-                        y_position = camera[which_cam].image_size[1] - 40
-                        frame = camera[which_cam].setText2RawImage(frame, "Processing", position=(20, y_position),
-                                                                color=(0, 255, 255), fontScale=1, thickness=2)
-                        frame = camera[which_cam].setText2RawImage(frame, "(" + length + "s/" + image_size + ")",
-                                                                position=(200, y_position), color=(0, 255, 255),
-                                                                fontScale=0.5, thickness=1)
+                if camera[which_cam].video.processing:
+                    logging.debug("VIDEO PROCESSING")
+                    length = str(round(camera[which_cam].video.info_recording()["length"]))
+                    image_size = str(camera[which_cam].video.info_recording()["image_size"])
+                    y_position = camera[which_cam].image_size[1] - 40
+                    frame = camera[which_cam].setText2RawImage(frame, "Processing", position=(20, y_position),
+                                                            color=(0, 255, 255), scale=1, thickness=2)
+                    frame = camera[which_cam].setText2RawImage(frame, "(" + length + "s/" + image_size + ")",
+                                                            position=(200, y_position), color=(0, 255, 255),
+                                                            scale=0.5, thickness=1)
 
                 frame = camera[which_cam].convertRawImage2Image(frame)
 
@@ -440,19 +441,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.stream_file(filetype='image/ico', content=read_image(directory='app-v1', filename=self.path))
 
         # images, js, css, ...
-        elif file_ending in myMIMEtypes:
+        elif file_ending in file_types:
 
             if "/videos" in self.path and "/app-v1" in self.path:
                 self.path = self.path.replace("/app-v1", "")
             if "/images" in self.path and "/app-v1" in self.path:
                 self.path = self.path.replace("/app-v1", "")
 
-            if "text" in myMIMEtypes[file_ending]:
-                self.stream_file(filetype=myMIMEtypes[file_ending], content=read_html(directory='', filename=self.path))
-            elif "application" in myMIMEtypes[file_ending]:
-                self.stream_file(filetype=myMIMEtypes[file_ending], content=read_html(directory='', filename=self.path))
+            if "text" in file_types[file_ending]:
+                self.stream_file(filetype=file_types[file_ending], content=read_html(directory='', filename=self.path))
+            elif "application" in file_types[file_ending]:
+                self.stream_file(filetype=file_types[file_ending], content=read_html(directory='', filename=self.path))
             else:
-                self.stream_file(filetype=myMIMEtypes[file_ending],
+                self.stream_file(filetype=file_types[file_ending],
                                  content=read_image(directory='', filename=self.path))
 
         # request unknown
@@ -488,7 +489,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, on_kill)
 
     # start config    
-    config = myConfig(param_init=myParameters, main_directory=os.path.dirname(os.path.abspath(__file__)))
+    config = BirdhouseConfig(param_init=birdhouse_preset, main_directory=os.path.dirname(os.path.abspath(__file__)))
     config.start()
     config.directory_create("data")
     config.directory_create("images")
@@ -498,11 +499,11 @@ if __name__ == "__main__":
     # start sensors
     sensor = {}
     if "rpi_active" in config.param and config.param["rpi_active"]:
-        from modules.sensors import mySensor
+        from modules.sensors import BirdhouseSensor
 
         for sen in config.param["sensors"]:
             settings = config.param["sensors"][sen]
-            sensor[sen] = mySensor(sensor_id=sen, param=settings, config=config)
+            sensor[sen] = BirdhouseSensor(sensor_id=sen, param=settings, config=config)
             if not sensor[sen].error:
                 sensor[sen].start()
     if sensor == {}:
@@ -512,18 +513,18 @@ if __name__ == "__main__":
     camera = {}
     for cam in config.param["cameras"]:
         settings = config.param["cameras"][cam]
-        camera[cam] = myCamera(thread_id=cam, config=config, sensor=sensor)
+        camera[cam] = BirdhouseCamera(thread_id=cam, config=config, sensor=sensor)
         camera[cam].start()
         camera[cam].param["path"] = config.param["path"]
 
     # start views and commands
-    views = myViews(config=config, camera=camera)
+    views = BirdhouseViews(config=config, camera=camera)
     views.start()
     views.create_archive_list()
 
     # start backups
     time.sleep(1)
-    backup = myBackupRestore(config, camera)
+    backup = BirdhouseArchive(config, camera)
     backup.start()
     if len(sys.argv) > 0 and "--backup" in sys.argv:
         backup.backup_files()

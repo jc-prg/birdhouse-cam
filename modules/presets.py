@@ -7,7 +7,7 @@ import os
 initial_path = os.path.dirname(os.path.abspath(__file__)).replace("/modules", "")
 
 
-myPages = {
+birdhouse_pages = {
     "live":             ("Live-Stream", "/index.html",       "INDEX"),
     "backup":           ("Archiv",      "/list_backup.html", "ARCHIVE"),
     "today":            ("Heute",       "/list_short.html",  "TODAY"),
@@ -18,7 +18,7 @@ myPages = {
     "videos":           ("Videos",      "/videos.html",      "VIDEOS"),
     "save":             ("Speichern",   "/image.jpg",        "")
 }
-myParameters = {
+birdhouse_preset = {
     "title":            "Unser Nistkasten :-)",
     "path":             initial_path,      # initially start from the working dir
     "port":             8000,              # http-port
@@ -126,7 +126,7 @@ myParameters = {
     }
 }
 
-myMIMEtypes = {
+file_types = {
     '.css': 'text/css',
     '.html': 'text/html',
     '.js': 'application/javascript',

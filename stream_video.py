@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import os, re
-from modules.config  import myConfig
+from modules.config  import BirdhouseConfig
 
 from flask import Flask, send_file, make_response, redirect
 from flask import Response, request
@@ -43,7 +43,7 @@ def serve_ios(full_path):
     
 #-----------------------------------
 
-config   = myConfig(param_init={}, main_directory=os.path.dirname(os.path.abspath(__file__)))
+config   = BirdhouseConfig(param_init={}, main_directory=os.path.dirname(os.path.abspath(__file__)))
 config.start()    
 
 MEDIA_PATH = os.path.join(config.param["path"], "data", "videos")

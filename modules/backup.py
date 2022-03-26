@@ -6,7 +6,7 @@ import threading
 from datetime import datetime
 
 
-class myBackupRestore(threading.Thread):
+class BirdhouseArchive(threading.Thread):
 
     def __init__(self, config, camera):
         """

@@ -14,12 +14,12 @@ from threading import Condition
 from datetime import datetime
 
 
-class myVideoRecording(threading.Thread):
+class BirdhouseVideoProcessing(threading.Thread):
     """
     Record videos: start and stop; from all pictures of the day
     """
 
-    def __init__(self, camera, param, directory):
+    def __init__(self, camera, config, param, directory):
         """
         Initialize new thread and set inital parameters
         """
@@ -27,27 +27,29 @@ class myVideoRecording(threading.Thread):
         self.camera = camera
         self.name = param["name"]
         self.param = param
+        self.config = config
+        self.directory = directory
+
         self.recording = False
         self.processing = False
-        self.directory = directory
         self.max_length = 0.25 * 60
         self.info = {}
         self.ffmpeg_cmd = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} "
         self.ffmpeg_cmd += "-vcodec libx264 -crf 18"
 
         # Other working options:
-        #       self.ffmpeg_cmd  += "-b 1000k -strict -2 -vcodec libx264 -profile:v main -level 3.1 -preset medium -x264-params ref=4 -movflags +faststart -crf 18"
-        #       self.ffmpeg_cmd  += "-c:v libx264 -pix_fmt yuv420p"
-        #       self.ffmpeg_cmd  += "-profile:v baseline -level 3.0 -crf 18"
-        #       self.ffmpeg_cmd  += "-vcodec libx264 -preset fast -profile:v baseline -lossless 1 -vf \"scale=720:540,setsar=1,pad=720:540:0:0\" -acodec aac -ac 2 -ar 22050 -ab 48k"
+        # self.ffmpeg_cmd  += "-b 1000k -strict -2 -vcodec libx264 -profile:v main -level 3.1 -preset medium - \
+        #                      x264-params ref=4 -movflags +faststart -crf 18"
+        # self.ffmpeg_cmd  += "-c:v libx264 -pix_fmt yuv420p"
+        # self.ffmpeg_cmd  += "-profile:v baseline -level 3.0 -crf 18"
+        # self.ffmpeg_cmd  += "-vcodec libx264 -preset fast -profile:v baseline -lossless 1 -vf \
+        #                     \"scale=720:540,setsar=1,pad=720:540:0:0\" -acodec aac -ac 2 -ar 22050 -ab 48k"
 
         self.ffmpeg_cmd += " {OUTPUT_FILENAME}"
         self.ffmpeg_trim = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} -vcodec libx264 -crf 18 -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
         #       self.ffmpeg_trim  = "ffmpeg -y -i {INPUT_FILENAME} -c copy -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
         self.count_length = 8
         self.running = True
-
-    # ----------------------------------
 
     def run(self):
         """
@@ -174,7 +176,6 @@ class myVideoRecording(threading.Thread):
         """
         generate filename for images
         """
-
         if ftype == "video":
             return self.config.imageName(image_type="video", timestamp=self.info["date_start"], camera=self.camera)
         elif ftype == "thumb":
@@ -183,10 +184,6 @@ class myVideoRecording(threading.Thread):
             return self.config.imageName(image_type="vimages", timestamp=self.info["date_start"], camera=self.camera)
         else:
             return
-
-    #       if ftype == "image":   return "video-" + self.camera + "_" + self.info["date_start"] + "_"
-    #       elif ftype == "video": return "video-" +  self.camera + "_" + self.info["date_start"] + ".mp4"
-    #       else:                  return
 
     def create_video(self):
         """
@@ -247,7 +244,18 @@ class myVideoRecording(threading.Thread):
             return "Error"
 
 
-class myCameraOutput(object):
+class BirdhouseImageProcessing(object):
+    """
+    modify encoded and raw images
+    """
+    def __init__(self, camera, config, param):
+        self.frame = None
+        self.camera = camera
+        self.config = config
+        self.param = param
+
+
+class BirdhouseCameraOutput(object):
     """
     Create camera output
     """
@@ -269,7 +277,7 @@ class myCameraOutput(object):
         return self.buffer.write(buf)
 
 
-class myCamera(threading.Thread):
+class BirdhouseCamera(threading.Thread):
 
     def __init__(self, thread_id, config, sensor):
         """
@@ -279,15 +287,19 @@ class myCamera(threading.Thread):
         self.id = thread_id
         self.config = config
         self.sensor = sensor
+
         self.param = self.config.param["cameras"][self.id]
         self.name = self.param["name"]
         self.active = self.param["active"]
         self.source = self.param["source"]
         self.type = self.param["type"]
         self.record = self.param["record"]
+
+        self.video = BirdhouseVideoProcessing(camera=self.id, config=self.config, param=self.param, directory=self.config.directory("videos"))
+        self.image = BirdhouseImageProcessing(camera=self.id, config=self.config, param=self.param)
+
         self.running = True
         self.pause = False
-
         self.error = False
         self.error_time = 0
         self.error_image = False
@@ -407,14 +419,14 @@ class myCamera(threading.Thread):
                                 image_info["sensor"][key] = self.sensor[key].get_values()
                                 self.writeSensorInfo(stamp=stamp, data=self.sensor[key].get_values())
 
-                        pathLowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
-                        pathHires = os.path.join(self.config.directory("images"), self.config.imageName("hires", stamp, self.id))
+                        path_lowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
+                        path_hires = os.path.join(self.config.directory("images"), self.config.imageName("hires", stamp, self.id))
 
-                        logging.debug("WRITE:" + pathLowres)
+                        logging.debug("WRITE:" + path_lowres)
 
                         self.writeImageInfo(timestamp=stamp, data=image_info)
-                        self.writeImage(filename=pathHires, image=image)
-                        self.writeImage(filename=pathLowres, image=image, scale_percent=self.param["preview_scale"])
+                        self.writeImage(filename=path_hires, image=image)
+                        self.writeImage(filename=path_lowres, image=image, scale_percent=self.param["preview_scale"])
 
                         self.previous_image = image_compare
                         self.previous_stamp = stamp
@@ -455,7 +467,7 @@ class myCamera(threading.Thread):
             self.camera_error(True, False, "Module for PiCamera isn't installed. Try 'pip3 install picamera'.")
         try:
             self.camera = picamera.PiCamera()
-            self.output = myCameraOutput()
+            self.output = BirdhouseCameraOutput()
             self.camera.resolution = self.param["image"]["resolution"]
             self.camera.framerate = self.param["image"]["framerate"]
             self.camera.rotation = self.param["image"]["rotation"]
@@ -493,8 +505,6 @@ class myCamera(threading.Thread):
         logging.error(self.id + ": "+message+" ("+str(self.error_time)+")")
 
     def video_start_recording(self):
-        self.video = myVideoRecording(camera=self.id, param=self.param, directory=self.config.directory("videos"))
-        self.video.config = self.config
         self.video.start()
         self.video.image_size = self.image_size
 

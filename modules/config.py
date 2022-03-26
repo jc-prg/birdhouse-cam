@@ -7,11 +7,11 @@ import threading
 from threading import Condition
 from datetime import datetime
 
-from modules.presets import myParameters
-from modules.presets import myPages
+from modules.presets import birdhouse_preset
+from modules.presets import birdhouse_pages
 
 
-class myConfig(threading.Thread):
+class BirdhouseConfig(threading.Thread):
 
     def __init__(self, param_init, main_directory):
         """

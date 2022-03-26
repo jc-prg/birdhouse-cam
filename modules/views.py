@@ -4,7 +4,7 @@ import threading
 from sys import getsizeof
 
 from datetime import datetime, timedelta
-from modules.presets import myPages
+from modules.presets import birdhouse_pages
 
 dir_app_v1 = "/app"
 
@@ -42,16 +42,16 @@ def print_links_json(link_list, cam=""):
 
     for link in link_list:
         json[link] = {
-            "link": myPages[link][2],
+            "link": birdhouse_pages[link][2],
             "camera": cam_link,
-            "description": myPages[link][0],
+            "description": birdhouse_pages[link][0],
             "position": count
         }
         count += 1
     return json
 
 
-class myViews(threading.Thread):
+class BirdhouseViews(threading.Thread):
 
     def __init__(self, camera, config):
         """
@@ -265,7 +265,7 @@ class myViews(threading.Thread):
                     content["groups"][date].append(entry)
 
         content["view_count"] = ["star"]
-        content["subtitle"] = myPages["favorit"][0]
+        content["subtitle"] = birdhouse_pages["favorit"][0]
         content["links"] = print_links_json(link_list=("live", "today", "videos", "backup"), cam=which_cam)
 
         return content
@@ -315,7 +315,7 @@ class myViews(threading.Thread):
             time_now = "000000"
             first_title = ""
 
-            content["subtitle"] = myPages["backup"][0] + " " + files_data["info"]["date"]
+            content["subtitle"] = birdhouse_pages["backup"][0] + " " + files_data["info"]["date"]
             content["links"] = print_links_json(link_list=("live", "today", "backup", "favorit"), cam=which_cam)
 
         elif os.path.isfile(self.config.file(config="images")):
@@ -327,7 +327,7 @@ class myViews(threading.Thread):
             subdirectory = ""
             first_title = "Heute &nbsp; "
 
-            content["subtitle"] = myPages["today"][0]
+            content["subtitle"] = birdhouse_pages["today"][0]
             if self.admin_allowed():
                 content["links"] = print_links_json(
                     link_list=("live", "favorit", "today_complete", "videos", "backup"), cam=which_cam)
@@ -556,7 +556,7 @@ class myViews(threading.Thread):
                     # self.sendError()
 
             content["view_count"] = []
-            content["subtitle"] = myPages["backup"][0] + " (" + self.camera[cam].name + ")"
+            content["subtitle"] = birdhouse_pages["backup"][0] + " (" + self.camera[cam].name + ")"
             self.archive_views[cam] = content
 
     def complete_list_today(self, server):
@@ -620,7 +620,7 @@ class myViews(threading.Thread):
                     content["groups"][hour + ":00"].append(entry)
 
         content["view_count"] = ["all", "star", "detect", "recycle"]
-        content["subtitle"] = myPages["today_complete"][0] + " (" + self.camera[which_cam].name + ", " + str(
+        content["subtitle"] = birdhouse_pages["today_complete"][0] + " (" + self.camera[which_cam].name + ", " + str(
             count) + " Bilder)"
         content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"),
                                                  cam=which_cam)
@@ -665,7 +665,7 @@ class myViews(threading.Thread):
             if len(files_delete) > 0 and self.admin_allowed(): content["entries_delete"] = files_delete
 
         content["view_count"] = ["all", "star", "detect", "recycle"]
-        content["subtitle"] = myPages["videos"][
+        content["subtitle"] = birdhouse_pages["videos"][
             0]  # + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
 
         if self.admin_allowed():
@@ -699,7 +699,7 @@ class myViews(threading.Thread):
             content["entries"][cam]["active"] = self.camera[cam].active
 
         content["view_count"] = []
-        content["subtitle"] = myPages["cam_info"][0]
+        content["subtitle"] = birdhouse_pages["cam_info"][0]
         content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"),
                                                  cam=which_cam)
 
@@ -742,7 +742,7 @@ class myViews(threading.Thread):
                 }
 
         content["view_count"] = []
-        content["subtitle"] = myPages["video_info"][0]
+        content["subtitle"] = birdhouse_pages["video_info"][0]
         content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"))
 
         return content

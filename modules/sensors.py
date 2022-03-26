@@ -6,7 +6,7 @@ import threading
 import logging
 
 
-class mySensor(threading.Thread):
+class BirdhouseSensor(threading.Thread):
 
     def __init__(self, sensor_id, param, config):
         """

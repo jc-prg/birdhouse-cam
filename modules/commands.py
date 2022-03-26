@@ -12,12 +12,12 @@ from threading       import Condition
 from http            import server
 from datetime        import datetime, timedelta
 
-from modules.backup  import myBackupRestore
-from modules.camera  import myCamera
-from modules.config  import myConfig
-from modules.presets import myParameters
-from modules.presets import myPages
-from modules.views   import myViews
+from modules.backup  import BirdhouseArchive
+from modules.camera  import BirdhouseCamera
+from modules.config  import BirdhouseConfig
+from modules.presets import birdhouse_preset
+from modules.presets import birdhouse_pages
+from modules.views   import BirdhouseViews
 
 #----------------------------------------------------
 
