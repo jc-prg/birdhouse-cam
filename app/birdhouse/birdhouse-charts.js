@@ -80,8 +80,8 @@ function birdhouseChart_create (title, data, type="line", sort_keys=true) {
             label : (x+1)+": "+myTitle,
             backgroundColor : colors[x],
             borderColor : colors[x],
-            borderWidth : 2,
-            pointRadius : 1,
+            borderWidth : 1,
+            pointRadius : 0.5,
             data : data_var
             });
         }
