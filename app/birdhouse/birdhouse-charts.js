@@ -12,13 +12,12 @@ var chartJS_loaded = false;
 var chartJS_URL    = 'https://cdn.jsdelivr.net/npm/chart.js';
 var chartJS_config = {};
 var chartJS_chart  = undefined;
-var chartJS_defaultColors = [	"coral","cornflowblue", "cadetblue", 
+var chartJS_defaultColors = ["coral","cornflowblue", "cadetblue",
 				"crimson", "darkblue", "darkgoldenrod", "darkgreen", "darkmagenta",
 				"darkorange", "darksalmon", "darkviolet", "dodgerblue", "firebrick",
 				"forestgreen", "goldenrod", "greenyellow", "hotpink", "indigo"
 				];
-var chartJS_darkColors = [
-				"aquamarine", "chartreuse","coral","cornflowblue", "cadetblue", 
+var chartJS_darkColors = ["red","aquamarine","chartreuse","coral","cornflowblue", "cadetblue",
 				"crimson", "darkblue", "darkgoldenrod", "darkgreen", "darkmagenta",
 				"darkorange", "darksalmon", "darkviolet", "dodgerblue", "firebrick",
 				"forestgreen", "goldenrod", "greenyellow", "hotpink", "indigo"
@@ -62,6 +61,10 @@ function birdhouseChart_create (title, data, type="line", sort_keys=true) {
     var data_labels = "";
     var data_data   = "";
     var data_sets   = [];
+	var colors  = [];
+
+	if (appTheme == "dark") { colors = chartJS_darkColors; }
+	else { colors = chartJS_defaultColors; }
 
     for (var x=0;x<data_rows;x++) {
         var data_var = [];
@@ -74,10 +77,10 @@ function birdhouseChart_create (title, data, type="line", sort_keys=true) {
 
         data_sets.push({
             label : (x+1)+": "+myTitle,
-            backgroundColor : chartJS_defaultColors[x],
-            borderColor : chartJS_defaultColors[x],
+            backgroundColor : colors[x],
+            borderColor : colors[x],
             borderWidth : 2,
-            pointRadius : 0,
+            pointRadius : 1,
             data : data_var
             });
         }
