@@ -32,15 +32,12 @@ function birdhouse_app_settings (name="Settings") {
 						"API: " 		+ app_api_version + "<br/>" +
 						"jcMsg: " 		+ appMsg.appVersion + "<br/>" + 
 						"jcApp: "		+ appFW.appVersion);
-		html += this.tab_row("Reload Interval:", app_reload_interval + "s");
-		html += this.tab_end();
 
-        html += "<hr/>";
-		html += "<button onclick='window.open(\"" + RESTurl + "api/list/\",\"_blank\");' style='background-color:lightgray;color:black;width:100px;';>REST API</button>";
-        html += "<hr/>";
-
-		html += this.tab_start();
+		html += this.tab_row("Source:","<a href='https://github.com/jc-prg/birdhouse-cam/' target='_blank'>https://github.com/jc-prg/birdhouse-cam/</a>");
 		html += this.tab_row("&nbsp;","");
+		html += this.tab_row("API Call","<button onclick='window.open(\"" + RESTurl + "api/list/\",\"_blank\");' style='background-color:lightgray;color:black;width:100px;';>REST API</button>");
+		html += this.tab_row("&nbsp;","");
+		html += this.tab_row("Reload Interval:", app_reload_interval + "s");
 		html += this.tab_row("Active Camera:&nbsp;", app_active_cam);
 		html += this.tab_row("Available Cameras:&nbsp;", app_available_cameras.length);
 		html += this.tab_row("Active Page:&nbsp;", app_active_page);
