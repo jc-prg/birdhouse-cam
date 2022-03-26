@@ -521,7 +521,8 @@ class BirdhouseViews(threading.Thread):
                             image = os.path.join(directory, file_data["files"][image_title]["lowres"])
                         else:
                             for file in list(sorted(file_data["files"].keys())):
-                                if "camera" in file_data["files"][file] and file_data["files"][file]["camera"] == cam and file_data["files"][file]["type"] == "image":
+                                if "camera" in file_data["files"][file] and file_data["files"][file]["camera"] == cam \
+                                        and file_data["files"][file]["type"] == "image":
                                     first_img = file
                                     break
                             if first_img != "" and "lowres" in file_data["files"][first_img]:
