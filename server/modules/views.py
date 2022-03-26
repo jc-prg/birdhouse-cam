@@ -56,7 +56,7 @@ def create_chart_data(data):
     for key in data:
         print_key = key[0:2]+":"+key[2:4]
         if "similarity" in data[key]:
-            chart["data"][print_key] = (float(data[key]["similarity"]))
+            chart["data"][print_key] = [float(data[key]["similarity"])]
         if "sensor" in data[key]:
             for sensor in data[key]["sensor"]:
                 for sensor_key in data[key]["sensor"][sensor]:
