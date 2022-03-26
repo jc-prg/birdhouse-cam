@@ -38,6 +38,7 @@ function birdhouse_app_settings (name="Settings") {
 		html += this.tab_row("API Call","<button onclick='window.open(\"" + RESTurl + "api/list/\",\"_blank\");' style='background-color:lightgray;color:black;width:100px;';>REST API</button>");
 		html += this.tab_row("&nbsp;","");
 		html += this.tab_row("Reload Interval:", app_reload_interval + "s");
+		html += this.tab_row("&nbsp;","");
 		html += this.tab_row("Active Camera:&nbsp;", app_active_cam);
 		html += this.tab_row("Available Cameras:&nbsp;", app_available_cameras.length);
 		html += this.tab_row("Active Page:&nbsp;", app_active_page);
