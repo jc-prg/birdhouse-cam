@@ -1,0 +1,48 @@
+#--------------------------------------------
+# Birdhouse Server and Database
+#----------------------------------------
+
+version: "3"
+
+services:
+
+  birdhouse_db:
+    image: apache/couchdb:latest
+    # image: matthiasg/rpi-couchdb:latest
+    container_name: birdhouse_db
+    ports:
+      - "5100:5984"
+    volumes:
+      - ./data/couchdb:/opt/couchdb/data
+      - ./config/couchdb/default.ini:/opt/couchdb/etc/default.ini
+    environment:
+      - 'COUCHDB_USER=birdhouse'
+      - 'COUCHDB_PASSWORD=birdhouse'
+    networks:
+      mynet:
+        ipv4_address: 192.168.201.4
+
+  birdhouse_server:
+    build: ./config/container/
+    container_name: birdhouse_server
+    privileged: true
+    volumes:
+      - ./:/usr/src/app/
+      - ./log:/log
+      - /projects/test/birdhouse-cam/:/projects/test/birdhouse-cam/
+    ports:
+      - "8000:8000"
+    depends_on:
+      - birdhouse_db
+    networks:
+      mynet:
+        ipv4_address: 192.168.201.5
+
+networks:
+  mynet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.201.0/24
+       
+
