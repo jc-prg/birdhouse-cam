@@ -13,14 +13,14 @@ var chartJS_loaded = false;
 var chartJS_URL    = 'https://cdn.jsdelivr.net/npm/chart.js';
 var chartJS_config = {};
 var chartJS_chart  = undefined;
-var chartJS_defaultColors = ["coral","cornflowblue", "cadetblue",
+var chartJS_defaultColors = ["coral","cornflowerblue", "cadetblue",
 				"crimson", "darkblue", "darkgoldenrod", "darkgreen", "darkmagenta",
 				"darkorange", "darksalmon", "darkviolet", "dodgerblue", "firebrick",
 				"forestgreen", "goldenrod", "greenyellow", "hotpink", "indigo"
 				];
-var chartJS_darkColors = ["red","aquamarine","chartreuse","coral","cornflowblue", "cadetblue",
-				"crimson", "darkblue", "darkgoldenrod", "darkgreen", "darkmagenta",
-				"darkorange", "darksalmon", "darkviolet", "dodgerblue", "firebrick",
+var chartJS_darkColors = ["red","aquamarine","chartreuse","coral", "cadetblue",
+				"crimson", "darkblue", "goldenrod", "green", "magenta",
+				"orange", "salmon", "violet", "dodgerblue", "firebrick",
 				"forestgreen", "goldenrod", "greenyellow", "hotpink", "indigo"
 				];
 
