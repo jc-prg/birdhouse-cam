@@ -78,7 +78,7 @@ def create_chart_data(data):
             for sensor_title in chart["titles"]:
                 if sensor_title != "Activity":
                     sensor = sensor_title.split(":")
-                    if sensor[0] in data[key]["sensor"] and sensor[1] in data[key]["sensor"][sensor[0]]:
+                    if "sensor" in data[key] and sensor[0] in data[key]["sensor"] and sensor[1] in data[key]["sensor"][sensor[0]]:
                         chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
 
     return chart
