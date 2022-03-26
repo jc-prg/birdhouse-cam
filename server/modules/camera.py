@@ -726,26 +726,57 @@ class BirdhouseCamera(threading.Thread):
         """
         Draw a red rectangle into the image to show detection area
         """
-        color = (0, 0, 255)  # color in BGR
-        thickness = 5
+        # draw yellow rectangle for crop area
+        color = (0, 255, 255)  # color in BGR
+        thickness = 4
         height = image.shape[0]
         width = image.shape[1]
 
-        (w_start, h_start, w_end, h_end) = self.param["similarity"]["detection_area"]
+        (w_start, h_start, w_end, h_end) = self.param["image"]["crop"]
         x_start = int(round(width * w_start, 0))
         y_start = int(round(height * h_start, 0))
         x_end = int(round(width * w_end, 0))
         y_end = int(round(height * h_end, 0))
 
-        logging.debug(self.id + ": show detection area ... " + str(self.param["similarity"]["detection_area"]))
-
+        logging.debug(self.id + ": show crop area ... " + str(self.param["image"]["crop"]))
         try:
             image = cv2.line(image, (x_start, y_start), (x_start, y_end), color, thickness)
             image = cv2.line(image, (x_start, y_start), (x_end, y_start), color, thickness)
             image = cv2.line(image, (x_end, y_end), (x_start, y_end), color, thickness)
             image = cv2.line(image, (x_end, y_end), (x_end, y_start), color, thickness)
-            logging.debug(
-                "... top XY: " + str(x_start) + "/" + str(y_start) + " - bottom XY: " + str(x_end) + "/" + str(y_end))
+            logging.debug("... top XY: " + str(x_start) + "/" + str(y_start) + " - bottom XY: " + str(x_end) + "/" + str(y_end))
+
+        except Exception as e:
+            error_msg = self.id + ": Error convert image to gray scale: " + str(e)
+            logging.error(error_msg)
+            self.error_image_msg.append(error_msg)
+            self.error_image = True
+            return ""
+
+        # draw red rectangle for detection area
+        color = (0, 0, 255)  # color in BGR
+        thickness = 4
+        d_height = x_end - x_start
+        d_width = y_end - y_start
+        y_offset = round((height - d_height)/2)
+        x_offset = round((width - d_width)/2)
+
+        logging.debug(self.id+": calculate image ... h/w: "+str(height)+"/"+str(width)+" dh/dw: "+str(d_height)+"/"+str(d_width))
+        logging.debug(self.id+": calculate image ... w/h_offset: "+str(y_offset)+"/"+str(y_offset))
+
+        (w_start, h_start, w_end, h_end) = self.param["similarity"]["detection_area"]
+        x_start = int(round(d_width * w_start, 0)) + x_offset
+        y_start = int(round(d_height * h_start, 0)) + y_offset
+        x_end = int(round(d_width * w_end, 0)) + x_offset
+        y_end = int(round(d_height * h_end, 0)) + y_offset
+
+        logging.debug(self.id + ": show detection area ... " + str(self.param["similarity"]["detection_area"]))
+        try:
+            image = cv2.line(image, (x_start, y_start), (x_start, y_end), color, thickness)
+            image = cv2.line(image, (x_start, y_start), (x_end, y_start), color, thickness)
+            image = cv2.line(image, (x_end, y_end), (x_start, y_end), color, thickness)
+            image = cv2.line(image, (x_end, y_end), (x_end, y_start), color, thickness)
+            logging.debug("... top XY: " + str(x_start) + "/" + str(y_start) + " - bottom XY: " + str(x_end) + "/" + str(y_end))
             return image
 
         except Exception as e:

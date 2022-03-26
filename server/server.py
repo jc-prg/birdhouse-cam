@@ -385,37 +385,40 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             while stream:
                 frame = camera[which_cam].getRawImage()
-                frame = camera[which_cam].normalizeRawImage(frame)
+                frame_raw = frame.copy()
 
                 if self.path.startswith("/detection/"):
-                    frame = camera[which_cam].drawRawImageDetectionArea(image=frame)
+                    frame_raw = camera[which_cam].drawRawImageDetectionArea(image=frame_raw)
+                    frame = camera[which_cam].convertRawImage2Image(frame_raw)
 
-                if camera[which_cam].param["image"]["date_time"]:
-                    frame = camera[which_cam].setDateTime2RawImage(frame)
+                else:
+                    frame = camera[which_cam].normalizeRawImage(frame)
+                    if camera[which_cam].param["image"]["date_time"]:
+                        frame = camera[which_cam].setDateTime2RawImage(frame)
 
-                if camera[which_cam].video.recording:
-                    logging.debug("VIDEO RECORDING")
-                    length = str(round(camera[which_cam].video.info_recording()["length"]))
-                    framerate = str(round(camera[which_cam].video.info_recording()["framerate"]))
-                    y_position = camera[which_cam].image_size[1] - 40
-                    frame = camera[which_cam].setText2RawImage(frame, "Recording", position=(20, y_position),
-                                                            color=(0, 0, 255), scale=1, thickness=2)
-                    frame = camera[which_cam].setText2RawImage(frame, "(" + length + "s/" + framerate + "fps)",
-                                                            position=(200, y_position), color=(0, 0, 255),
-                                                            scale=0.5, thickness=1)
+                    if camera[which_cam].video.recording:
+                        logging.debug("VIDEO RECORDING")
+                        length = str(round(camera[which_cam].video.info_recording()["length"]))
+                        framerate = str(round(camera[which_cam].video.info_recording()["framerate"]))
+                        y_position = camera[which_cam].image_size[1] - 40
+                        frame = camera[which_cam].setText2RawImage(frame, "Recording", position=(20, y_position),
+                                                                color=(0, 0, 255), scale=1, thickness=2)
+                        frame = camera[which_cam].setText2RawImage(frame, "(" + length + "s/" + framerate + "fps)",
+                                                                position=(200, y_position), color=(0, 0, 255),
+                                                                scale=0.5, thickness=1)
 
-                if camera[which_cam].video.processing:
-                    logging.debug("VIDEO PROCESSING")
-                    length = str(round(camera[which_cam].video.info_recording()["length"]))
-                    image_size = str(camera[which_cam].video.info_recording()["image_size"])
-                    y_position = camera[which_cam].image_size[1] - 40
-                    frame = camera[which_cam].setText2RawImage(frame, "Processing", position=(20, y_position),
-                                                            color=(0, 255, 255), scale=1, thickness=2)
-                    frame = camera[which_cam].setText2RawImage(frame, "(" + length + "s/" + image_size + ")",
-                                                            position=(200, y_position), color=(0, 255, 255),
-                                                            scale=0.5, thickness=1)
+                    if camera[which_cam].video.processing:
+                        logging.debug("VIDEO PROCESSING")
+                        length = str(round(camera[which_cam].video.info_recording()["length"]))
+                        image_size = str(camera[which_cam].video.info_recording()["image_size"])
+                        y_position = camera[which_cam].image_size[1] - 40
+                        frame = camera[which_cam].setText2RawImage(frame, "Processing", position=(20, y_position),
+                                                                color=(0, 255, 255), scale=1, thickness=2)
+                        frame = camera[which_cam].setText2RawImage(frame, "(" + length + "s/" + image_size + ")",
+                                                                position=(200, y_position), color=(0, 255, 255),
+                                                                scale=0.5, thickness=1)
 
-                frame = camera[which_cam].convertRawImage2Image(frame)
+                    frame = camera[which_cam].convertRawImage2Image(frame)
 
                 try:
                     camera[which_cam].wait()
