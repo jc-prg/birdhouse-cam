@@ -226,6 +226,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var active_page       = app_active_page;
 	var groups            = data["DATA"]["groups"];
 	var admin             = data["STATUS"]["admin_allowed"];
+	var sensors           = data["DATA"]["sensors"];
 	var video_short       = true;
 
 	if (active_page == "VIDEOS")					{ entry_category = [ "video" ]; }
@@ -242,7 +243,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             var chart_titles = ["Activity"];
             for (var x=1;x<chart_data["titles"].length;x++) {
                 var sensor = chart_data["titles"][x].split(":");
-                chart_titles.push(sensor[1]+" ("+sensor[0]+")");
+                chart_titles.push(sensor[1].charAt(0).toUpperCase()+sensor[1].slice(1)+" ("+sensors[sensor[0]]["name"]+")");
             }
             var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
             html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, true );
