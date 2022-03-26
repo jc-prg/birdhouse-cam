@@ -293,7 +293,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             */
             console.log(chart_titles);
             console.log(chart_data);
-            html += birdhouseChart_create(title=chart_titles, data=chart_data);
+
+            //html += birdhouseChart_create(title=chart_titles, data=chart_data);
+            html += birdhouseChart_create(title=data["DATA"]["chart_data"]["titles"],data=data["DATA"]["chart_data"]["data"]);
         }
 
 	// group favorits per month
