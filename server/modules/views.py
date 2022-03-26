@@ -54,7 +54,7 @@ def create_chart_data(data):
         "data": {}
     }
     used_keys = {}
-    used_cameras = {}
+    used_cameras = []
 
     for key in data:
         print_key = key[0:2]+":"+key[2:4]
