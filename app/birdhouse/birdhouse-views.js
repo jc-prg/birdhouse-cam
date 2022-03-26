@@ -237,10 +237,10 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         else if (active_page == "TODAY" && active_date != "")	{ entry_category = [ "backup", active_date ]; }
 
         // create chart data
-//        if (active_page == "TODAY_COMPLETE") {
+        if (active_page == "TODAY_COMPLETE" || (active_page == "TODAY" && active_date != "")) {
             var chart = birdhouseChart_create(title=data["DATA"]["chart_data"]["titles"],data=data["DATA"]["chart_data"]["data"]);
             html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, true );
-//        }
+        }
 
 	// group favorits per month
         if (active_page == "FAVORITS") {
