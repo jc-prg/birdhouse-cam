@@ -44,7 +44,7 @@ var language_app = {
 		"VIDEOS"                : "Videos",
 		},
 	"EN" : {
-	    "ANALYTICS"             : "Analytics"
+	    "ANALYTICS"             : "Analytics",
 		"APP_TRANSLATION"       : "App specific Translations",
 		"ARCHIVE"               : "Archive",
 		"CAMERA"                : "Camera",
