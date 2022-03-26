@@ -1,7 +1,7 @@
-import os, time
+import os
+import time
 import logging
 import cv2
-
 import threading
 from datetime import datetime
 
