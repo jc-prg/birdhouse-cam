@@ -467,7 +467,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 if __name__ == "__main__":
 
     # help
-    if len(sys.argv) > 0 and "--logfile" in sys.argv:
+    if len(sys.argv) > 0 and "--help" in sys.argv:
         print("jc://birdhouse/\n\nArguments:")
         print("--logfile    Write logging output to logfile 'stream.log'")
         print("--backup     Start backup directly (current date, delete directory before)")
