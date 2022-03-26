@@ -296,7 +296,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
             //html += birdhouseChart_create(title=chart_titles, data=chart_data);
             var chart = birdhouseChart_create(title=data["DATA"]["chart_data"]["titles"],data=data["DATA"]["chart_data"]["data"]);
-            html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, header_open=true );
+            html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, true );
         }
 
 	// group favorits per month
