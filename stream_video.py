@@ -1,18 +1,21 @@
 #!/usr/bin/python3
 
-import os, re
-from modules.config  import BirdhouseConfig
-
+import os
+import re
+from modules.config import BirdhouseConfig
 from flask import Flask, send_file, make_response, redirect
 from flask import Response, request
 app = Flask(__name__)
 
-#-----------------------------------
+
+config = BirdhouseConfig(param_init={}, main_directory=os.path.dirname(os.path.abspath(__file__)))
+config.start()
+media_path = os.path.join(config.param["path"], "data", "videos")
+
 
 def serve_ios(full_path):
 
-    print (full_path)
-    
+    print(full_path)
     file_size = os.stat(full_path).st_size
     start = 0
     length = 10240  # can be any default length you want
@@ -40,20 +43,14 @@ def serve_ios(full_path):
     rv = Response(chunk, 206, mimetype='video/mp4', content_type='video/mp4', direct_passthrough=True)
     rv.headers.add('Content-Range', 'bytes {0}-{1}/{2}'.format(start, start + length - 1, file_size))
     return rv
-    
-#-----------------------------------
-
-config   = BirdhouseConfig(param_init={}, main_directory=os.path.dirname(os.path.abspath(__file__)))
-config.start()    
-
-MEDIA_PATH = os.path.join(config.param["path"], "data", "videos")
 
 
 @app.route('/<vid_name>')
 def serve(vid_name):
-    vid_path = os.path.join(MEDIA_PATH, vid_name)
+    vid_path = os.path.join(media_path, vid_name)
     return serve_ios(vid_path)
-    
+
+
 @app.after_request
 def after_request(response):
     response.headers.add('Accept-Ranges', 'bytes')
