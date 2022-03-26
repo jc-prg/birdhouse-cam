@@ -509,23 +509,28 @@ class myViews(threading.Thread):
                                 if "size" in file_info and "float" in str(type(file_info["size"])):
                                     dir_size_cam += file_info["size"]
                                 elif "lowres" in file_info:
-                                    lowres_file = os.path.join(self.config.directory(config="backup"), directory,
-                                                               file_info["lowres"])
-                                    if os.path.isfile(lowres_file):    dir_size_cam += os.path.getsize(lowres_file)
+                                    lowres_file = os.path.join(self.config.directory(config="backup"), directory, file_info["lowres"])
+                                    if os.path.isfile(lowres_file):
+                                        dir_size_cam += os.path.getsize(lowres_file)
+                                        logging.debug("lowres size: "+str(os.path.getsize(lowres_file)))
                                     if "hires" in file_info:
-                                        hires_file = os.path.join(self.config.directory(config="backup"), directory,
-                                                                  file_info["hires"])
-                                        if os.path.isfile(hires_file): dir_size_cam += os.path.getsize(hires_file)
+                                        hires_file = os.path.join(self.config.directory(config="backup"), directory, file_info["hires"])
+                                        if os.path.isfile(hires_file):
+                                            dir_size_cam += os.path.getsize(hires_file)
+                                            logging.debug("hires size: " + str(os.path.getsize(hires_file)))
                                 if "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
                                     dir_count_delete += 1
 
                                 if file_info["type"] == "image":
                                     dir_count_cam += 1
 
+                    dir_size += dir_size_cam
                     dir_size = round(dir_size / 1024 / 1024, 1)
                     dir_size_cam = round(dir_size_cam / 1024 / 1024, 1)
                     dir_total_size += dir_size
                     files_total += count
+
+                    logging.info("directory: "+str(dir_size)+" / cam: "+str(dir_size_cam)+" / "+str(dir_total_size)+" ("+directory+"/"+cam+")")
 
                     image = os.path.join(self.config.directories["backup"], image)
                     image_file = image.replace(directory + "/", "")
@@ -545,7 +550,6 @@ class myViews(threading.Thread):
                         "dir_size_cam": dir_size_cam,
                         "lowres": image_file
                     }
-
 
                 else:
                     logging.error("Archive: no config file available: /backup/" + directory)
