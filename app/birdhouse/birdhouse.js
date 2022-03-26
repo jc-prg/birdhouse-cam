@@ -93,7 +93,7 @@ function birdhousePrint(data) {
 	// check if admin allowed! -> create respective menu
 	
 	if (app_active_page == "INDEX") { birdhouse_INDEX(data, camera); }
-	else if (app_active_page == "CAMERAS") { birdhouse_CAMERAS(lang("CAMERAS"), data, camera); }
+	else if (app_active_page == "CAMERAS") { birdhouse_CAMERAS(lang("DEVICES"), data, camera); }
 	else if (app_active_page == "FAVORITS")	{ birdhouse_LIST(lang("FAVORITS"),  data, camera); }
 	else if (app_active_page == "ARCHIVE") { birdhouse_LIST(lang("ARCHIVE"), data, camera); }
 	else if (app_active_page == "TODAY") { birdhouse_LIST(lang("TODAY"), data, camera); }
@@ -260,14 +260,16 @@ function birdhouse_CAMERAS( title, data ) {
 	    else					{ html  += "<div class='camera_info_image'>"+lang("CAMERA_INACTIVE")+"</div>"; }
 		html  += "<div class='camera_info_text'>";
 		html   += "<ul>"
-		html   += "<li>Type: "   + info["camera_type"] + "</li>"
-		html   += "<li>Active: " + info["active"] + "</li>"
-		html   += "<li>Record: " + info["record"] + "</li>"
-		html   += "<li>Crop: "   + info["image"]["crop"] + "</li>"
-		html   += "<li>Show Time: "   + info["image"]["date_time"] + "</li>";
-		html   += "<li>Detection (red rectangle): <ul>";
+		html   += "<li>Type: "   + info["camera_type"] + "</li>";
+		html   += "<li>Active: " + info["active"] + "</li>";
+		html   += "<li>Record: " + info["record"] + "</li>";
+		html   += "<li>Image: <ul>";
+		html     += "<li>Crop: "   + info["image"]["crop"] + " (yellow rectangle)</li>";
+		html     += "<li>Show Time: "   + info["image"]["date_time"] + "</li>";
+		html   += "</ul></li>";
+		html   += "<li>Detection: <ul>";
 		html     += "<li>Threshold: " + info["similarity"]["threshold"] + "%</li>";
-		html     += "<li>Area: "      + info["similarity"]["detection_area"] + "</li>";
+		html     += "<li>Area: "      + info["similarity"]["detection_area"] + " (red rectangle)</li>";
 		html   += "</ul></li>";
 		html   += "<li>Streaming-Server: "+info["video"]["streaming_server"]+"</li>";
 		html   += "</ul>";
