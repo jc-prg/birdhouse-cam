@@ -468,7 +468,7 @@ class BirdhouseCamera(threading.Thread):
         try:
             self.camera = picamera.PiCamera()
             self.output = BirdhouseCameraOutput()
-            # self.camera.resolution = self.param["image"]["resolution"]
+            self.camera.resolution = self.param["image"]["resolution"]
             self.camera.framerate = self.param["image"]["framerate"]
             self.camera.rotation = self.param["image"]["rotation"]
             self.camera.saturation = self.param["image"]["saturation"]
@@ -649,7 +649,7 @@ class BirdhouseCamera(threading.Thread):
         if self.error_image:
             return self.image_NA_raw
 
-        if not "crop_area" in self.param["image"]:
+        if "crop_area" not in self.param["image"]:
             normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop"], crop_type="relative")
         else:
             normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop_area"], crop_type="pixel")
@@ -751,10 +751,10 @@ class BirdhouseCamera(threading.Thread):
         # draw red rectangle for detection area
         color = (0, 0, 255)  # color in BGR
         thickness = 4
-        d_height = x_end - x_start
-        d_width = y_end - y_start
-        y_offset = round((height - d_height)/2)
+        d_width = x_end - x_start
         x_offset = round((width - d_width)/2)
+        d_height = y_end - y_start
+        y_offset = round((height - d_height)/2)
 
         logging.debug(self.id+": calculate image ... h/w: "+str(height)+"/"+str(width)+" dh/dw: "+str(d_height)+"/"+str(d_width))
         logging.debug(self.id+": calculate image ... w/h_offset: "+str(y_offset)+"/"+str(y_offset))
