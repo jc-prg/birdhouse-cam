@@ -2,7 +2,7 @@
 
 import os
 import re
-from modules import BirdhouseConfig
+from modules.config import BirdhouseConfig
 from flask import Flask
 from flask import Response, request
 app = Flask(__name__)
