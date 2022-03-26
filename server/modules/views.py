@@ -53,8 +53,13 @@ def create_chart_data(data):
         "titles": ["Activity"],
         "data": {}
     }
+    used_keys = {}
+    used_cameras = {}
+
     for key in data:
         print_key = key[0:2]+":"+key[2:4]
+        if data[key]["camera"] not in used_cameras:
+            used_cameras.append(data[key]["camera"])
         if "similarity" in data[key]:
             chart["data"][print_key] = [float(data[key]["similarity"])]
         if "sensor" in data[key]:
@@ -66,11 +71,13 @@ def create_chart_data(data):
 
     for key in data:
         print_key = key[0:2] + ":" + key[2:4]
-        for sensor_title in chart["titles"]:
-            if sensor_title != "Activity":
-                sensor = sensor_title.split(":")
-                if sensor[0] in data[key]["sensor"] and sensor[1] in data[key]["sensor"][sensor[0]]:
-                    chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
+        if sensor_title != "Activity":
+            if key not in used_keys and data[key]["camera"] == used_cameras[0]:
+                used_keys[key] = 1
+                for sensor_title in chart["titles"]:
+                    sensor = sensor_title.split(":")
+                    if sensor[0] in data[key]["sensor"] and sensor[1] in data[key]["sensor"][sensor[0]]:
+                        chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
 
     return chart
 
