@@ -61,7 +61,7 @@ def create_chart_data(data):
         if data[key]["camera"] not in used_cameras:
             used_cameras.append(data[key]["camera"])
         if "similarity" in data[key]:
-            if round(data[key]["similarity"]) == 0:
+            if round(float(data[key]["similarity"])) == 0:
                 data[key]["similarity"] = 100
             chart["data"][print_key] = [100-float(data[key]["similarity"])]
         if "sensor" in data[key]:
