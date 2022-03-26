@@ -106,6 +106,18 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
 	return html;
 }
 
+function birdhouse_OtherGroup( key, title, content, header_open) {
+    var html = "";
+    var display = "";
+	if (header_open == false) { display = "style='display:none;'"; }
+
+    html += birdhouse_OtherGroupHeader( key, title, header_open );
+    html += "<div id='group_"+key+"'>";
+    html += content;
+    html += "</div>";
+    return html;
+}
+
 function birdhouse_OtherGroupHeader( key, title, header_open ) {
 	var status = "−";
 	if (header_open == false) { status = "+"; }

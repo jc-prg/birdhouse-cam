@@ -290,16 +290,13 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             console.log(chart_titles_sensor);
             console.log(chart_data);
             console.log(chart_data_sensor);
-            */
             console.log(chart_titles);
             console.log(chart_data);
+            */
 
             //html += birdhouseChart_create(title=chart_titles, data=chart_data);
-
-            html += birdhouse_OtherGroupHeader( "chart", lang("ANALYTICS"), header_open=true );
-            html += "<div id='group_chart'>";
-            html += birdhouseChart_create(title=data["DATA"]["chart_data"]["titles"],data=data["DATA"]["chart_data"]["data"]);
-            html += "</div>";
+            var chart = birdhouseChart_create(title=data["DATA"]["chart_data"]["titles"],data=data["DATA"]["chart_data"]["data"]);
+            html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, header_open=true );
         }
 
 	// group favorits per month
