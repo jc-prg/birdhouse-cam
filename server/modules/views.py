@@ -59,7 +59,7 @@ def create_chart_data(data):
     for key in data:
         print_key = key[0:2]+":"+key[2:4]
         if data[key]["camera"] not in used_cameras:
-            used_cameras.append(data[key]["camera"].copy())
+            used_cameras.append(data[key]["camera"])
         if "similarity" in data[key]:
             chart["data"][print_key] = [float(data[key]["similarity"])]
         if "sensor" in data[key]:
