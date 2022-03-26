@@ -816,7 +816,7 @@ class BirdhouseCamera(threading.Thread):
                 y_start = int(round(height * h_start, 0))
                 x_end = int(round(width * w_end, 0))
                 y_end = int(round(height * h_end, 0))
-                crop_area = (x_start, y_start, <x_end, y_end)
+                crop_area = (x_start, y_start, x_end, y_end)
             else:
                 (x_start, y_start, x_end, y_end) = crop_area
 
