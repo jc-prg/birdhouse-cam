@@ -8,6 +8,7 @@
 
 var language_app = {
 	"DE" : {
+	    "ANALYTICS"             : "Analyse",
 		"APP_TRANSLATION"       : "App spezifische Übersetzungen",
 		"ARCHIVE"               : "Archiv",
 		"CAMERA"                : "Kamera",
@@ -43,6 +44,7 @@ var language_app = {
 		"VIDEOS"                : "Videos",
 		},
 	"EN" : {
+	    "ANALYTICS"             : "Analytics"
 		"APP_TRANSLATION"       : "App specific Translations",
 		"ARCHIVE"               : "Archive",
 		"CAMERA"                : "Camera",
