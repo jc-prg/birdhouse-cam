@@ -468,7 +468,7 @@ class BirdhouseCamera(threading.Thread):
         try:
             self.camera = picamera.PiCamera()
             self.output = BirdhouseCameraOutput()
-            self.camera.resolution = self.param["image"]["resolution"]
+            # self.camera.resolution = self.param["image"]["resolution"]
             self.camera.framerate = self.param["image"]["framerate"]
             self.camera.rotation = self.param["image"]["rotation"]
             self.camera.saturation = self.param["image"]["saturation"]
@@ -649,18 +649,13 @@ class BirdhouseCamera(threading.Thread):
         if self.error_image:
             return self.image_NA_raw
 
-        if self.type == "usb":
-            # crop image
-            if not "crop_area" in self.param["image"]:
-                normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop"], crop_type="relative")
-            else:
-                normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop_area"], crop_type="pixel")
-            # rotate     - not implemented yet
-            # resize     - not implemented yet
-            # saturation - not implemented yet
+        if not "crop_area" in self.param["image"]:
+            normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop"], crop_type="relative")
         else:
-            normalized = image
-
+            normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop_area"], crop_type="pixel")
+        # rotate     - not implemented yet
+        # resize     - not implemented yet
+        # saturation - not implemented yet
         return normalized
 
     def convertRawImage2Image(self, raw):
@@ -821,7 +816,7 @@ class BirdhouseCamera(threading.Thread):
                 y_start = int(round(height * h_start, 0))
                 x_end = int(round(width * w_end, 0))
                 y_end = int(round(height * h_end, 0))
-                crop_area = (x_start, y_start, x_end, y_end)
+                crop_area = (x_start, y_start, <x_end, y_end)
             else:
                 (x_start, y_start, x_end, y_end) = crop_area
 
