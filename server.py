@@ -235,7 +235,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         check path and send requested content
         """
-        path, which_cam = views.selectedCamera(self.path)
+        path, which_cam = views.selected_camera(self.path)
         file_ending = self.path.split(".")
         file_ending = "." + file_ending[len(file_ending) - 1].lower()
 
@@ -267,23 +267,23 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 which_cam = param[3]
 
             if command == "INDEX":
-                content = views.createIndex(server=self)
+                content = views.index(server=self)
             elif command == "FAVORITS":
-                content = views.createFavorits(server=self)
+                content = views.favorites(server=self)
             elif command == "TODAY":
-                content = views.createList(server=self)
+                content = views.list(server=self)
             elif command == "TODAY_COMPLETE":
-                content = views.createCompleteListToday(server=self)
+                content = views.complete_list_today(server=self)
             elif command == "ARCHIVE":
-                content = views.createBackupList(server=self)
+                content = views.archive_list(camera=which_cam)
             elif command == "VIDEOS":
-                content = views.createVideoList(server=self)
+                content = views.video_list(server=self)
             elif command == "VIDEO_DETAIL":
-                content = views.detailViewVideo(server=self)
+                content = views.detail_view_video(server=self)
             elif command == "CAMERAS":
-                content = views.createCameraList(server=self)
+                content = views.camera_list(server=self)
             elif command == "status" or command == "version":
-                content = views.createIndex(server=self)
+                content = views.index(server=self)
                 if len(param) > 3 and param[2] == "version":
                     version["Code"] = "800"
                     version["Msg"] = "Version OK."
@@ -519,6 +519,7 @@ if __name__ == "__main__":
     # start views and commands
     views = myViews(config=config, camera=camera)
     views.start()
+    views.create_archive_list()
 
     # start backups
     time.sleep(1)

@@ -29,6 +29,28 @@ def read_html(filename, content=""):
     return PAGE
 
 
+def print_links_json(link_list, cam=""):
+    """
+    create a list of links based on URLs and descriptions defined in preset.py -> for JSON API
+    """
+    json = {}
+    count = 0
+    if cam != "":
+        cam_link = cam
+    else:
+        cam_link = ""
+
+    for link in link_list:
+        json[link] = {
+            "link": myPages[link][2],
+            "camera": cam_link,
+            "description": myPages[link][0],
+            "position": count
+        }
+        count += 1
+    return json
+
+
 class myViews(threading.Thread):
 
     def __init__(self, camera, config):
@@ -43,6 +65,7 @@ class myViews(threading.Thread):
         self.camera = camera
         self.config = config
         self.which_cam = ""
+        self.archive_views = {}
 
     def run(self):
         """
@@ -70,7 +93,7 @@ class myViews(threading.Thread):
         else:
             return True
 
-    def selectedCamera(self, check_path=""):
+    def selected_camera(self, check_path=""):
         """
         Check path, which cam has been selected
         """
@@ -107,50 +130,29 @@ class myViews(threading.Thread):
         self.which_cam = which_cam
         return path, which_cam
 
-    def printLinksJSON(self, link_list, cam=""):
-        """
-        create a list of links based on URLs and descriptions defined in preset.py -> for JSON API
-        """
-        json = {}
-        count = 0
-        if cam != "":
-            cam_link = cam
-        else:
-            cam_link = ""
-
-        for link in link_list:
-            json[link] = {
-                "link": myPages[link][2],
-                "camera": cam_link,
-                "description": myPages[link][0],
-                "position": count
-            }
-            count += 1
-        return json
-
-    def createIndex(self, server):
+    def index(self, server):
         """
         Index page with live streaming pictures
         """
         self.server = server
-        path, which_cam = self.selectedCamera()
+        path, which_cam = self.selected_camera()
         content = {
             "active_cam": which_cam,
             "view": "index"
         }
         if self.admin_allowed():
-            content["links"] = self.printLinksJSON(link_list=("favorit", "today", "backup", "cam_info"))
+            content["links"] = print_links_json(link_list=("favorit", "today", "backup", "cam_info"))
         else:
-            content["links"] = self.printLinksJSON(link_list=("favorit", "today", "backup"))
+            content["links"] = print_links_json(link_list=("favorit", "today", "backup"))
 
         return content
 
-    def createFavorits(self, server):
+    def favorites(self, server):
         """
         Page with pictures (and videos) marked as favorits and sorted by date
         """
         self.server = server
-        path, which_cam = self.selectedCamera()
+        path, which_cam = self.selected_camera()
         content = {
             "active_cam": which_cam,
             "view": "favorits",
@@ -264,17 +266,17 @@ class myViews(threading.Thread):
 
         content["view_count"] = ["star"]
         content["subtitle"] = myPages["favorit"][0]
-        content["links"] = self.printLinksJSON(link_list=("live", "today", "videos", "backup"), cam=which_cam)
+        content["links"] = print_links_json(link_list=("live", "today", "videos", "backup"), cam=which_cam)
 
         return content
 
-    def createList(self, server):
+    def list(self, server):
         """
         Page with pictures (and videos) of a single day
         """
         self.server = server
         param = server.path.split("/")
-        path, which_cam = self.selectedCamera()
+        path, which_cam = self.selected_camera()
         time_now = datetime.now().strftime('%H%M%S')
 
         if param[1] != "api":
@@ -314,7 +316,7 @@ class myViews(threading.Thread):
             first_title = ""
 
             content["subtitle"] = myPages["backup"][0] + " " + files_data["info"]["date"]
-            content["links"] = self.printLinksJSON(link_list=("live", "today", "backup", "favorit"), cam=which_cam)
+            content["links"] = print_links_json(link_list=("live", "today", "backup", "favorit"), cam=which_cam)
 
         elif os.path.isfile(self.config.file(config="images")):
             backup = False
@@ -327,10 +329,10 @@ class myViews(threading.Thread):
 
             content["subtitle"] = myPages["today"][0]
             if self.admin_allowed():
-                content["links"] = self.printLinksJSON(
+                content["links"] = print_links_json(
                     link_list=("live", "favorit", "today_complete", "videos", "backup"), cam=which_cam)
             else:
-                content["links"] = self.printLinksJSON(link_list=("live", "favorit", "videos", "backup"), cam=which_cam)
+                content["links"] = print_links_json(link_list=("live", "favorit", "videos", "backup"), cam=which_cam)
 
         if files_all != {}:
 
@@ -425,143 +427,141 @@ class myViews(threading.Thread):
 
         return content
 
-    def createBackupList(self, server):
-        '''
-        Page with backup/archive directory
-        '''
-        self.server = server
-        path, which_cam = self.selectedCamera()
-        content = {
-            "active_cam": which_cam,
-            "view": "backup",
-            "entries": {},
-            "groups": {}
-        }
-        param = server.path.split("/")
-        if "app-v1" in param:
-            del param[1]
-
-        main_directory = self.config.directory(config="backup")
-        dir_list = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
-        dir_list.sort(reverse=True)
-        dir_total_size = 0
-        files_total = 0
-
-        imageTitle = str(self.config.param["preview_backup"]) + str(
-            self.camera[which_cam].param["image_save"]["seconds"][0])
-        imageToday = self.config.imageName(image_type="lowres", timestamp=imageTitle, camera=which_cam)
-        image = os.path.join(self.config.directory(config="images"), imageToday)
-
-        for directory in dir_list:
-            group_name = directory[0:4] + "-" + directory[4:6]
-            if "groups" not in content:
-                content["groups"] = {}
-            if group_name not in content["groups"]:
-                content["groups"][group_name] = []
-
-            if os.path.isfile(self.config.file(config="backup", date=directory)):
-
-                file_data = self.config.read_cache(config="backup", date=directory)
-                content["groups"][group_name].append(directory)
-
-                if "info" not in file_data or "files" not in file_data:
-                    if directory not in content["entries"]:
-                        content["entries"][directory] = {}
-                    content["entries"][directory]["error"] = True
-
-                else:
-                    count = 0  # file_data["info"]["count"]
-                    first_img = ""
-                    dir_size_cam = 0
-                    dir_size = 0
-                    dir_count_cam = 0
-                    dir_count_delete = 0
-                    dir_count_data = 0
-
-                    if imageTitle in file_data["files"] and "lowres" in file_data["files"]:
-                        image = os.path.join(directory, file_data["files"][imageTitle]["lowres"])
-                    else:
-                        for file in list(sorted(file_data["files"].keys())):
-                            if "camera" in file_data["files"][file] and file_data["files"][file]["camera"] == which_cam:
-                                first_img = file
-                                break
-                        if first_img != "" and "lowres" in file_data["files"][first_img]:
-                            image = os.path.join(directory, file_data["files"][first_img]["lowres"])
-
-                for file in file_data["files"]:
-                    file_info = file_data["files"][file]
-                    if ("datestamp" in file_info and file_info["datestamp"] == directory) or "datestamp" not in file_info:
-                        if file_info["type"] == "image":
-                            count += 1
-                        else:
-                            dir_count_data += 1
-
-                        if "size" in file_info and "float" in str(type(file_info["size"])):
-                            dir_size += file_info["size"]
-
-                        if ("camera" in file_info and file_info["camera"] == which_cam) or "camera" not in file_info:
-                            if "size" in file_info and "float" in str(type(file_info["size"])):
-                                dir_size_cam += file_info["size"]
-                            elif "lowres" in file_info:
-                                lowres_file = os.path.join(self.config.directory(config="backup"), directory,
-                                                           file_info["lowres"])
-                                if os.path.isfile(lowres_file):    dir_size_cam += os.path.getsize(lowres_file)
-                                if "hires" in file_info:
-                                    hires_file = os.path.join(self.config.directory(config="backup"), directory,
-                                                              file_info["hires"])
-                                    if os.path.isfile(hires_file): dir_size_cam += os.path.getsize(hires_file)
-                            if "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
-                                dir_count_delete += 1
-
-                            if file_info["type"] == "image":
-                                dir_count_cam += 1
-
-                dir_size = round(dir_size / 1024 / 1024, 1)
-                dir_size_cam = round(dir_size_cam / 1024 / 1024, 1)
-                dir_total_size += dir_size
-                files_total += count
-
-                image = os.path.join(self.config.directories["backup"], image)
-                image_file = image.replace(directory + "/", "")
-                image_file = image_file.replace(self.config.directories["backup"], "")
-
-                content["entries"][directory] = {
-                    "directory": "/" + self.config.directories["backup"] + directory + "/",
-                    "type": "directory",
-                    "camera": which_cam,
-                    "date": file_data["info"]["date"],
-                    "datestamp": directory,
-                    "count": count,
-                    "count_delete": dir_count_delete,
-                    "count_cam": dir_count_cam,
-                    "count_data": dir_count_data,
-                    "dir_size": dir_size,
-                    "dir_size_cam": dir_size_cam,
-                    "lowres": image_file
-                }
-
-
-            else:
-                logging.error("Archive: no config file available: /backup/" + directory)
-                # self.sendError()
-
-        content["view_count"] = []
-        content["subtitle"] = myPages["backup"][0] + " (" + self.camera[which_cam].name + ")"
+    def archive_list(self, camera):
+        content = self.archive_views[camera]
         if self.admin_allowed():
-            content["links"] = self.printLinksJSON(link_list=("live", "favorit", "today", "today_complete", "videos"),
-                                                   cam=which_cam)
+            content["links"] = print_links_json(link_list=("live", "favorit", "today", "today_complete", "videos"), cam=camera)
         else:
-            content["links"] = self.printLinksJSON(link_list=("live", "favorit", "today", "videos"), cam=which_cam)
-
+            content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos"), cam=camera)
         return content
 
-    def createCompleteListToday(self, server):
+    def create_archive_list(self):
+        """
+        Page with backup/archive directory
+        """
+        logging.info("Create data for archive view ...")
+        for cam in self.camera:
+            content = {
+                "active_cam": cam,
+                "view": "backup",
+                "entries": {},
+                "groups": {}
+            }
+
+            main_directory = self.config.directory(config="backup")
+            dir_list = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
+            dir_list.sort(reverse=True)
+            dir_total_size = 0
+            files_total = 0
+
+            image_title = str(self.config.param["preview_backup"]) + str(self.camera[cam].param["image_save"]["seconds"][0])
+            image_today = self.config.imageName(image_type="lowres", timestamp=image_title, camera=cam)
+            image = os.path.join(self.config.directory(config="images"), image_today)
+
+            for directory in dir_list:
+                group_name = directory[0:4] + "-" + directory[4:6]
+                if "groups" not in content:
+                    content["groups"] = {}
+                if group_name not in content["groups"]:
+                    content["groups"][group_name] = []
+
+                if os.path.isfile(self.config.file(config="backup", date=directory)):
+
+                    file_data = self.config.read_cache(config="backup", date=directory)
+                    content["groups"][group_name].append(directory)
+
+                    if "info" not in file_data or "files" not in file_data:
+                        if directory not in content["entries"]:
+                            content["entries"][directory] = {}
+                        content["entries"][directory]["error"] = True
+
+                    else:
+                        count = 0  # file_data["info"]["count"]
+                        first_img = ""
+                        dir_size_cam = 0
+                        dir_size = 0
+                        dir_count_cam = 0
+                        dir_count_delete = 0
+                        dir_count_data = 0
+
+                        if image_title in file_data["files"] and "lowres" in file_data["files"]:
+                            image = os.path.join(directory, file_data["files"][image_title]["lowres"])
+                        else:
+                            for file in list(sorted(file_data["files"].keys())):
+                                if "camera" in file_data["files"][file] and file_data["files"][file]["camera"] == cam:
+                                    first_img = file
+                                    break
+                            if first_img != "" and "lowres" in file_data["files"][first_img]:
+                                image = os.path.join(directory, file_data["files"][first_img]["lowres"])
+
+                    for file in file_data["files"]:
+                        file_info = file_data["files"][file]
+                        if ("datestamp" in file_info and file_info["datestamp"] == directory) or "datestamp" not in file_info:
+                            if file_info["type"] == "image":
+                                count += 1
+                            else:
+                                dir_count_data += 1
+
+                            if "size" in file_info and "float" in str(type(file_info["size"])):
+                                dir_size += file_info["size"]
+
+                            if ("camera" in file_info and file_info["camera"] == cam) or "camera" not in file_info:
+                                if "size" in file_info and "float" in str(type(file_info["size"])):
+                                    dir_size_cam += file_info["size"]
+                                elif "lowres" in file_info:
+                                    lowres_file = os.path.join(self.config.directory(config="backup"), directory,
+                                                               file_info["lowres"])
+                                    if os.path.isfile(lowres_file):    dir_size_cam += os.path.getsize(lowres_file)
+                                    if "hires" in file_info:
+                                        hires_file = os.path.join(self.config.directory(config="backup"), directory,
+                                                                  file_info["hires"])
+                                        if os.path.isfile(hires_file): dir_size_cam += os.path.getsize(hires_file)
+                                if "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
+                                    dir_count_delete += 1
+
+                                if file_info["type"] == "image":
+                                    dir_count_cam += 1
+
+                    dir_size = round(dir_size / 1024 / 1024, 1)
+                    dir_size_cam = round(dir_size_cam / 1024 / 1024, 1)
+                    dir_total_size += dir_size
+                    files_total += count
+
+                    image = os.path.join(self.config.directories["backup"], image)
+                    image_file = image.replace(directory + "/", "")
+                    image_file = image_file.replace(self.config.directories["backup"], "")
+
+                    content["entries"][directory] = {
+                        "directory": "/" + self.config.directories["backup"] + directory + "/",
+                        "type": "directory",
+                        "camera": cam,
+                        "date": file_data["info"]["date"],
+                        "datestamp": directory,
+                        "count": count,
+                        "count_delete": dir_count_delete,
+                        "count_cam": dir_count_cam,
+                        "count_data": dir_count_data,
+                        "dir_size": dir_size,
+                        "dir_size_cam": dir_size_cam,
+                        "lowres": image_file
+                    }
+
+
+                else:
+                    logging.error("Archive: no config file available: /backup/" + directory)
+                    # self.sendError()
+
+            content["view_count"] = []
+            content["subtitle"] = myPages["backup"][0] + " (" + self.camera[cam].name + ")"
+            self.archive_views[cam] = content
+
+    def complete_list_today(self, server):
         """
         Page with all pictures of the current day
         """
         logging.info("CompleteListeToday: Start - "+datetime.now().strftime("%H:%M:%S"))
         self.server = server
-        path, which_cam = self.selectedCamera()
+        path, which_cam = self.selected_camera()
         content = {
             "active_cam": which_cam,
             "view": "list_complete",
@@ -618,19 +618,19 @@ class myViews(threading.Thread):
         content["view_count"] = ["all", "star", "detect", "recycle"]
         content["subtitle"] = myPages["today_complete"][0] + " (" + self.camera[which_cam].name + ", " + str(
             count) + " Bilder)"
-        content["links"] = self.printLinksJSON(link_list=("live", "favorit", "today", "videos", "backup"),
-                                               cam=which_cam)
+        content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"),
+                                                 cam=which_cam)
 
         length = getsizeof(content)/1024
         logging.info("CompleteListeToday: End - "+datetime.now().strftime("%H:%M:%S")+" ("+str(length)+" kB)")
         return content
 
-    def createVideoList(self, server):
+    def video_list(self, server):
         '''
         Page with all videos 
         '''
         self.server = server
-        path, which_cam = self.selectedCamera()
+        path, which_cam = self.selected_camera()
         content = {}
         content["active_cam"] = which_cam
         content["view"] = "list_videos"
@@ -665,18 +665,18 @@ class myViews(threading.Thread):
             0]  # + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
 
         if self.admin_allowed():
-            content["links"] = self.printLinksJSON(link_list=("live", "favorit", "cam_info", "today", "backup"))
+            content["links"] = print_links_json(link_list=("live", "favorit", "cam_info", "today", "backup"))
         else:
-            content["links"] = self.printLinksJSON(link_list=("live", "favorit", "today", "backup"))
+            content["links"] = print_links_json(link_list=("live", "favorit", "today", "backup"))
 
         return content
 
-    def createCameraList(self, server):
+    def camera_list(self, server):
         '''
         Page with all videos 
         '''
         self.server = server
-        path, which_cam = self.selectedCamera()
+        path, which_cam = self.selected_camera()
         content = {}
         content["active_cam"] = which_cam
         content["view"] = "list_cameras"
@@ -696,17 +696,17 @@ class myViews(threading.Thread):
 
         content["view_count"] = []
         content["subtitle"] = myPages["cam_info"][0]
-        content["links"] = self.printLinksJSON(link_list=("live", "favorit", "today", "videos", "backup"),
-                                               cam=which_cam)
+        content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"),
+                                                 cam=which_cam)
 
         return content
 
-    def detailViewVideo(self, server):
+    def detail_view_video(self, server):
         '''
         Show details and edit options for a video file
         '''
         self.server = server
-        path, which_cam = self.selectedCamera()
+        path, which_cam = self.selected_camera()
         content = {}
         content["active_cam"] = which_cam
         content["view"] = "detail_video"
@@ -739,6 +739,6 @@ class myViews(threading.Thread):
 
         content["view_count"] = []
         content["subtitle"] = myPages["video_info"][0]
-        content["links"] = self.printLinksJSON(link_list=("live", "favorit", "today", "videos", "backup"))
+        content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"))
 
         return content
