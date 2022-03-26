@@ -752,9 +752,9 @@ class BirdhouseCamera(threading.Thread):
         color = (0, 0, 255)  # color in BGR
         thickness = 4
         d_width = x_end - x_start
-        x_offset = round((width - d_width)/2)
+        x_offset = x_start
         d_height = y_end - y_start
-        y_offset = round((height - d_height)/2)
+        y_offset = y_start
 
         logging.debug(self.id+": calculate image ... h/w: "+str(height)+"/"+str(width)+" dh/dw: "+str(d_height)+"/"+str(d_width))
         logging.debug(self.id+": calculate image ... w/h_offset: "+str(y_offset)+"/"+str(y_offset))
