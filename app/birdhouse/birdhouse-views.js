@@ -241,8 +241,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             var chart_data = data["DATA"]["chart_data"];
             var chart_titles = ["Activity"];
             for (var x=1;x<chart_data["titles"].length;x++) {
-                var sensor, measure = chart_data["titles"][x].split(":");
-                chart_titles.push(measure+" ("+sensor+")");
+                var sensor = chart_data["titles"][x].split(":");
+                chart_titles.push(sensor[1]+" ("+sensor[0]+")");
             }
             var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
             html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, true );
