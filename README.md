@@ -81,24 +81,13 @@ Thanks for your inspiration, code snippets, images:
 
 ## Impressions
 
-<img src="info/images/birdcam_05.PNG" width="30%">
-<img src="info/images/birdcam_09.PNG" width="30%">
-<img src="info/images/birdcam_10.PNG" width="30%">
+<img src="info/images/birdcam_05.PNG" width="30%"><img src="info/images/birdcam_09.PNG" width="30%"><img src="info/images/birdcam_10.PNG" width="30%">
 <br/><br/>
-<img src="info/images/birdcam_17.PNG" width="30%">
-<img src="info/images/birdcam_18.PNG" width="30%">
-<img src="info/images/birdcam_19.PNG" width="30%">
+<img src="info/images/birdcam_17.PNG" width="30%"><img src="info/images/birdcam_18.PNG" width="30%"><img src="info/images/birdcam_19.PNG" width="30%">
 <br/><br/>
-<img src="info/images/birdcam_07.PNG" width="30%">
-<img src="info/images/birdcam_08.PNG" width="30%">
-<img src="info/images/birdcam_06.PNG" width="30%">
-<img src="info/images/birdcam_01.PNG" width="30%">
-<img src="info/images/birdcam_02.PNG" width="30%">
-<img src="info/images/birdcam_03.PNG" width="30%">
-<img src="info/images/birdcam_11.PNG" width="30%">
-<img src="info/images/birdcam_12.PNG" width="30%">
-<img src="info/images/birdcam_13.PNG" width="30%">
-<img src="info/images/birdcam_15.PNG" width="30%">
-<img src="info/images/birdcam_16.PNG" width="30%">
+<img src="info/images/birdcam_07.PNG" width="30%"><img src="info/images/birdcam_08.PNG" width="30%"><img src="info/images/birdcam_06.PNG" width="30%">
+<img src="info/images/birdcam_01.PNG" width="30%"><img src="info/images/birdcam_02.PNG" width="30%"><img src="info/images/birdcam_03.PNG" width="30%">
+<img src="info/images/birdcam_11.PNG" width="30%"><img src="info/images/birdcam_12.PNG" width="30%"><img src="info/images/birdcam_13.PNG" width="30%">
+<img src="info/images/birdcam_15.PNG" width="30%"><img src="info/images/birdcam_16.PNG" width="30%">
 <br/><br/>
 <img src="info/images/birdcam_14.PNG" width="90%">
