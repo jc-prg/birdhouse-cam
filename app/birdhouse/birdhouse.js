@@ -25,6 +25,9 @@ var color_code = {
 	}
 	
 var app_available_cameras = [];
+var app_available_sensors = [];
+var app_available_micros  = [];
+
 var app_active_page       = "";
 var app_active_date       = "";
 var app_camera_source     = {};
@@ -116,13 +119,25 @@ function birdhousePrintTitle(data, active_page="", camera="") {
 
 function birdhouseSetMainVars(data) {
 
-	if (data["DATA"]["cameras"] != undefined)                                        { app_available_cameras = Object.keys(data["DATA"]["cameras"]); }
+	if (data["DATA"]["devices"]["cameras"] != undefined) {
+	    for (let key in data["DATA"]["devices"]["cameras"]) { if (data["DATA"]["devices"]["cameras"][key]["active"]) { app_available_cameras.push(key) }}
+	    }
+	if (data["DATA"]["devices"]["sensors"] != undefined) {
+	    for (let key in data["DATA"]["devices"]["sensors"]) { if (data["DATA"]["devices"]["sensors"][key]["active"]) { app_available_sensors.push(key) }}
+	    }
+	if (data["DATA"]["devices"]["microphones"] != undefined) {
+	    for (let key in data["DATA"]["devices"]["microphones"]) { if (data["DATA"]["devices"]["microphones"][key]["active"]) { app_available_micros.push(key) }}
+	    }
+
 	if (data["DATA"]["active_cam"] != undefined && data["DATA"]["active_cam"] != "") { app_active_cam = data["DATA"]["active_cam"]; }
 	else                                                                             { app_active_cam = app_available_cameras[0]; }
+
 	if (data["DATA"]["active_page"] != "" && data["DATA"]["active_page"] != undefined && data["DATA"]["active_page"] != "status") { app_active_page = data["DATA"]["active_page"]; }
 	else if (data["DATA"]["active_page"] != "status")                                  { app_active_page = "INDEX"; }
+
 	if (data["DATA"]["active_date"] != "" && data["DATA"]["active_date"] != undefined) { app_active_date = data["DATA"]["active_date"]; }
 	else                                                                               { app_active_date = ""; }
+
 	if (data["STATUS"]["admin_allowed"] != undefined)                                  { app_admin_allowed = data["STATUS"]["admin_allowed"]; }
 	}
 	
@@ -130,16 +145,21 @@ function birdhouseHeaderFunctions() {
 	var html = "";
 	var switch_cam  = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();' style='position:relative;top:-4px;'>";
 	var reload_view = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
+	var audio_stream = "<img id='stream_toggle_header' class='header_icon_wide' src='birdhouse/img/icon_bird_mute.png' onclick='birdhouseStream_toggle();'>";
 	var active_cam  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_cam.toUpperCase()+"</text>";	
 	var info        = "&nbsp;";	
 	var info = birdhouse_tooltip( info, "<div id='command_dropdown' style='width:90%;margin:auto;'>empty</div>", "info", "" );
 	
-	html = reload_view + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info;
-	
-	if (app_available_cameras == undefined)	{ html = reload_view + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
-	else if (app_available_cameras.length > 1) { html = reload_view + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info; }
-	else						{ html = reload_view + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
-	
+	//html = reload_view + audio_stream + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info;
+	html = reload_view;
+	if (app_available_cameras != undefined && app_available_cameras.length > 1) { html += active_cam + switch_cam; }
+	if (app_available_cameras != undefined && app_available_micros.length > 1)  { html += "&nbsp;&nbsp;&nbsp;&nbsp;"+audio_stream; }
+/*
+	if (app_available_cameras == undefined)	{ html = reload_view + audio_stream + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
+	else if (app_available_cameras.length > 1) { html = reload_view + audio_stream + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info; }
+	else { html = reload_view + audio_stream + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
+*/
+	html += "&nbsp;&nbsp;&nbsp;" + info;
 	return html;
 	}
 	

@@ -70,17 +70,24 @@ function birdhouseStream_stop(mic) {
     birdhouse_stream_play[mic] = false;
 }
 
-function birdhouseStream_toggle(mic, add_id="") {
+function birdhouseStream_toggle(mic="", add_id="") {
+    for (let micro in birdhouseMicrophones) { if (mic == "" && birdhouseMicrophones[micro]["active"]) { mic = micro; }}
     var id = "stream_"+mic;
     var player = document.getElementById(id);
 
     if (birdhouse_stream_play[mic] == true) {
         birdhouseStream_stop(mic);
-        document.getElementById("toggle_stream_"+mic+"_"+add_id).innerHTML = birdhouseStream_image(false);
+        birdhouseStream_image_header(false);
+        if (document.getElementById("toggle_stream_"+mic+"_"+add_id)) {
+            document.getElementById("toggle_stream_"+mic+"_"+add_id).innerHTML = birdhouseStream_image(false);
+        }
     }
     else {
         birdhouseStream_play(mic);
-        document.getElementById("toggle_stream_"+mic+"_"+add_id).innerHTML = birdhouseStream_image(true);
+        birdhouseStream_image_header(true);
+        if (document.getElementById("toggle_stream_"+mic+"_"+add_id)) {
+            document.getElementById("toggle_stream_"+mic+"_"+add_id).innerHTML = birdhouseStream_image(true);
+        }
         try {
             var id = "stream_"+mic;
             console.log("Play Audio Streams: ID-"+id);
@@ -92,7 +99,10 @@ function birdhouseStream_toggle(mic, add_id="") {
         setTimeout(function(){
             if (document.getElementById("stream_"+mic).paused) {
                 birdhouseStream_stop(mic);
-                document.getElementById("toggle_stream_"+mic+"_"+add_id).innerHTML = birdhouseStream_image(false);
+                birdhouseStream_image_header(false);
+                if (document.getElementById("toggle_stream_"+mic+"_"+add_id)) {
+                    document.getElementById("toggle_stream_"+mic+"_"+add_id).innerHTML = birdhouseStream_image(false);
+                }
             }
         },1000);
     }
@@ -114,4 +124,13 @@ function birdhouseStream_image(on=true) {
 
     if (on) { return "<img src='"+img_on+"' style='"+size+"'>"; }
     else { return "<img src='"+img_off+"' style='"+size+"'>"; }
+}
+
+function birdhouseStream_image_header(on=true) {
+    var img_on = 'birdhouse/img/icon_bird_sing.png';
+    var img_off = 'birdhouse/img/icon_bird_mute.png';
+
+    //"<img id='stream_toggle_header' class='header_icon_wide' src='birdhouse/img/icon_bird_mute.png' onclick='birdhouseStream_toggle();'>"
+    if (on) { document.getElementById('stream_toggle_header').setAttribute("src",img_on); }
+    else    { document.getElementById('stream_toggle_header').setAttribute("src",img_off); }
 }

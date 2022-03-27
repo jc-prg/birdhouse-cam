@@ -37,12 +37,17 @@ h3 { margin : 4px; }
   vertical-align       : middle;
 }
 
-.headerRight img {
+.header_icon {
   height               : 23px;
   width                : 23px;
   cursor		: pointer;
 }
 
+.header_icon_wide {
+  height        : 23px;
+  width         : 30px;
+  cursor		: pointer;
+}
 
 /* configuration of image / thumbnail sizes */
 
