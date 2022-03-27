@@ -73,8 +73,8 @@ def create_chart_data(data):
 
     for key in data:
         print_key = key[0:2] + ":" + key[2:4]
-        if key not in used_keys and used_cameras[0] == data[key]["camera"]:
-            used_keys.append(key)
+        if print_key not in used_keys and used_cameras[0] == data[key]["camera"]:
+            used_keys.append(print_key)
             for sensor_title in chart["titles"]:
                 if sensor_title != "Activity":
                     sensor = sensor_title.split(":")
