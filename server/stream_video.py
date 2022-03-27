@@ -10,7 +10,7 @@ app = Flask(__name__)
 
 config = BirdhouseConfig(param_init={}, main_directory=os.path.dirname(os.path.abspath(__file__)))
 config.start()
-media_path = os.path.join(config.param["path"], "../data", "videos")
+media_path = os.path.join(config.param["path"], "data", "videos")
 
 
 def serve_ios(full_path):
