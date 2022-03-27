@@ -153,7 +153,7 @@ function birdhouseHeaderFunctions() {
 	//html = reload_view + audio_stream + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info;
 	html = reload_view;
 	if (app_available_cameras != undefined && app_available_cameras.length > 1) { html += active_cam + switch_cam; }
-	if (app_available_cameras != undefined && app_available_micros.length > 1)  { html += "&nbsp;&nbsp;&nbsp;&nbsp;"+audio_stream; }
+	if (app_available_cameras != undefined && app_available_micros.length > 1)  { html += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+audio_stream; }
 /*
 	if (app_available_cameras == undefined)	{ html = reload_view + audio_stream + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
 	else if (app_available_cameras.length > 1) { html = reload_view + audio_stream + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info; }

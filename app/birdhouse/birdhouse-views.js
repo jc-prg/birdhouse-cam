@@ -17,8 +17,8 @@ function birdhouse_INDEX(data, camera) {
 	var active_camera = camera;
 	var cameras       = data["DATA"]["devices"]["cameras"];
 	var admin_allowed = data["STATUS"]["admin_allowed"];
-	//var stream_server = RESTurl;
-	var stream_server = "http://"+data["DATA"]["server"]["ip4_stream_video"]+":"+data["DATA"]["server"]["port_video"]+"/";
+	var stream_server = RESTurl;
+	//var stream_server = "http://"+data["DATA"]["server"]["ip4_stream_video"]+":"+data["DATA"]["server"]["port_video"]+"/";
 	var active_cam    = {};
 	var other_cams    = [];
 
