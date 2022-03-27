@@ -9,8 +9,8 @@ function birdhouseStatus_print(data)
 //--------------------------------------
 
 function birdhouseStatus_print(data) {
-
-    var sensors = data["DATA"]["sensors"];
+    console.debug("Update Status ...");
+    var sensors = data["DATA"]["devices"]["sensors"];
     html = "<center><i><font color='gray'>";
     html += "Temperature - ";
     var count = 0;

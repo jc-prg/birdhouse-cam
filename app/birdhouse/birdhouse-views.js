@@ -15,28 +15,30 @@ function birdhouse_INDEX(data, camera) {
 
 	var html          = "";
 	var active_camera = camera;
-	var cameras       = data["DATA"]["cameras"];
+	var cameras       = data["DATA"]["devices"]["cameras"];
 	var admin_allowed = data["STATUS"]["admin_allowed"];
 	var stream_server = RESTurl;
 	var active_cam    = {};
 	var other_cams    = [];
 
 	for (let key in cameras) {
-		if (key == active_camera) {
-			active_cam  = {
-				"name"        : key,
-				"stream"      : cameras[key]["stream"],
-				"description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
-				}
-			}
-		else {
-			var other_cam  = {
-				"name"        : key,
-				"stream"      : cameras[key]["stream"],
-				"description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
-				}
-			other_cams.push(other_cam);
-			}
+	    if (cameras[key]["active"]) {
+            if (key == active_camera) {
+                active_cam  = {
+                    "name"        : key,
+                    "stream"      : cameras[key]["stream"],
+                    "description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
+                    }
+                }
+            else {
+                var other_cam  = {
+                    "name"        : key,
+                    "stream"      : cameras[key]["stream"],
+                    "description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
+                    }
+                other_cams.push(other_cam);
+                }
+            }
 		}
 
 	if (active_cam == {}) { active_cam = other_cams[0]; other_cams.shift(); }
@@ -60,9 +62,10 @@ function birdhouse_INDEX(data, camera) {
 	}
 
 function birdhouse_CAMERAS( title, data ) {
-	var cameras	= data["DATA"]["entries"];
-	var sensors = data["DATA"]["sensors"];
-	var micros  = data["DATA"]["microphones"];
+	//var cameras	= data["DATA"]["entries"];
+	var cameras	= data["DATA"]["devices"]["cameras"];
+	var sensors = data["DATA"]["devices"]["sensors"];
+	var micros  = data["DATA"]["devices"]["microphones"];
 	var admin 	= data["STATUS"]["admin_allowed"];
 	var html	= "";
 
@@ -90,7 +93,7 @@ function birdhouse_CAMERAS( title, data ) {
 		html     += "<li>Threshold: " + info["similarity"]["threshold"] + "%</li>";
 		html     += "<li>Area: "      + info["similarity"]["detection_area"] + " (red rectangle)</li>";
 		html   += "</ul></li>";
-		html   += "<li>Streaming-Server: "+info["video"]["streaming_server"]+"</li>";
+		//html   += "<li>Streaming-Server: "+info["video"]["streaming_server"]+"</li>";
 		html   += "</ul>";
 		html   += "<br/>&nbsp;";
 		if (admin && cameras[camera]["active"]) {
@@ -115,7 +118,7 @@ function birdhouse_CAMERAS( title, data ) {
 	}
 	for (let micro in micros) {
 	    if (micros[micro]["active"]) {
-            url = "http://"+data["DATA"]["ip4_address"]+":"+micros[micro]["port"]+"/";
+            url = "http://"+data["DATA"]["server"]["ip4_stream_audio"]+":"+micros[micro]["port"]+"/";
             html += birdhouse_OtherGroupHeader( micro, micro.toUpperCase()+": "+micros[micro]["name"], true );
             html += "<div id='group_"+micro+"'>";
             html += "<div class='camera_info'>";
@@ -125,8 +128,8 @@ function birdhouse_CAMERAS( title, data ) {
             html += "<div class='camera_info_text'><ul>";
             html += "<li>Type: "+micros[micro]["type"]+"</li>";
             html += "<li>URL: <a href='"+url+"' target='_blank'>"+url+"</a></li>";
-            html += "<li>Control: <a onclick='birdhouseStream_play(\""+micro+"\");'><u>PLAY</u></a> / ";
-            html += "<a onclick='birdhouseStream_stop(\""+micro+"\");'><u>STOP</u></a></li>";
+            html += "<li>Control: <a onclick='birdhouseStream_play(\""+micro+"\");' style='cursor:pointer;'><u>PLAY</u></a> / ";
+            html += "<a onclick='birdhouseStream_stop(\""+micro+"\");' style='cursor:pointer;'><u>STOP</u></a></li>";
             html += "</ul></div></div>";
             html += "</div>";
 	    }
@@ -226,16 +229,16 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var active_page       = app_active_page;
 	var groups            = data["DATA"]["groups"];
 	var admin             = data["STATUS"]["admin_allowed"];
-	var sensors           = data["DATA"]["sensors"];
+	var sensors           = data["DATA"]["devices"]["sensors"];
 	var video_short       = true;
 
-	if (active_page == "VIDEOS")					{ entry_category = [ "video" ]; }
-	else if (active_page == "TODAY" && active_date == "")	{ entry_category = [ "today" ]; }
-	else if (active_page == "TODAY" && active_date != "")	{ entry_category = [ "backup", active_date ]; }
+	if (active_page == "VIDEOS")                           { entry_category = [ "video" ]; }
+	else if (active_page == "TODAY" && active_date == "")  { entry_category = [ "today" ]; }
+	else if (active_page == "TODAY" && active_date != "")  { entry_category = [ "backup", active_date ]; }
 
-        if (active_page == "VIDEOS")					{ entry_category = [ "video" ]; }
-        else if (active_page == "TODAY" && active_date == "")	{ entry_category = [ "today" ]; }
-        else if (active_page == "TODAY" && active_date != "")	{ entry_category = [ "backup", active_date ]; }
+        if (active_page == "VIDEOS")                           { entry_category = [ "video" ]; }
+        else if (active_page == "TODAY" && active_date == "")  { entry_category = [ "today" ]; }
+        else if (active_page == "TODAY" && active_date != "")  { entry_category = [ "backup", active_date ]; }
 
         // create chart data
         if (active_page == "TODAY_COMPLETE" || (active_page == "TODAY" && active_date != "")) {

@@ -71,6 +71,7 @@ function app_status(data) {
 	if (data["DATA"]["background_process"] == true)	{ setTextById("statusLED","<div id='blue'></div>"); }
 	else 							{ setTextById("statusLED","<div id='green'></div>"); }
 
+    birdhouseStatus_print(data);
 	app_last_load = Date.now();
 	}
 	

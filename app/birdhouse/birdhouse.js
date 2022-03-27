@@ -60,13 +60,14 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 function birdhousePrint(data) {
     app_data = data;
 	console.debug("Request->Print ...");
-	if (data["DATA"]["sensors"]["sensor1"]) {
-	    console.log("Sensor data: "+data["DATA"]["sensors"]["sensor1"]["temperature"] + "C / "+ data["DATA"]["sensors"]["sensor1"]["humidity"] + "%");
+	var sensor_data = data["DATA"]["devices"]["sensors"];
+	if (sensor_data["sensor1"]) {
+	    console.log("Sensor data: "+sensor_data["sensor1"]["temperature"] + "C / "+ sensor_data["sensor1"]["humidity"] + "%");
 	    }
 
-	birdhouseCameras = data["DATA"]["cameras"];
-	birdhouseMicrophones = data["DATA"]["microphones"];
-	birdhouseStream_load(data["DATA"]["ip4_address"], birdhouseMicrophones);
+	birdhouseCameras = data["DATA"]["devices"]["cameras"];
+	birdhouseMicrophones = data["DATA"]["devices"]["microphones"];
+	birdhouseStream_load(data["DATA"]["server"]["ip4_address"], birdhouseMicrophones);
 	//setTimeout(function(){  },2000);
 
 	var date          = data["DATA"]["active_date"];
@@ -106,23 +107,23 @@ function birdhousePrintTitle(data, active_page="", camera="") {
 
 	var title = document.getElementById("navTitle");
 	if (title.innerHTML == "..." && data["DATA"]["title"] != undefined)	{ setNavTitle(data["DATA"]["title"]); setTextById("title",data["DATA"]["title"]); }
-	if (data["DATA"]["subtitle"] != undefined)		{ setTextById(app_frame_header, "<center><h2>" + data["DATA"]["subtitle"] + "</h2></center>"); }
-	else							{ setTextById(app_frame_header, "<center><h2>" + data["DATA"]["title"] + "</h2></center>"); }
-	if (data["DATA"]["links"] != undefined)		{ setTextById(app_frame_index, "<center>" + birdhouse_Links(data["DATA"]["links"]) + "</center>"); }
-	if (data["STATUS"]["start_time"] != undefined)	{ setTextById("frame5", "<center><small>" + lang( "STARTTIME") + ": " + data["STATUS"]["start_time"] + "</small></center>"); }
-	else							{ setTextById("frame5", ""); }
+	if (data["DATA"]["subtitle"] != undefined)   { setTextById(app_frame_header, "<center><h2>" + data["DATA"]["subtitle"] + "</h2></center>"); }
+	else                                         { setTextById(app_frame_header, "<center><h2>" + data["DATA"]["title"] + "</h2></center>"); }
+	if (data["DATA"]["links"] != undefined)      { setTextById(app_frame_index, "<center>" + birdhouse_Links(data["DATA"]["links"]) + "</center>"); }
+	if (data["STATUS"]["start_time"] != undefined) { setTextById("frame5", "<center><small>" + lang( "STARTTIME") + ": " + data["STATUS"]["start_time"] + "</small></center>"); }
+	else                                           { setTextById("frame5", ""); }
 	}
 
 function birdhouseSetMainVars(data) {
 
-	if (data["DATA"]["cameras"] != undefined)							{ app_available_cameras = Object.keys(data["DATA"]["cameras"]); }
-	if (data["DATA"]["active_cam"] != undefined && data["DATA"]["active_cam"] != "")		{ app_active_cam        = data["DATA"]["active_cam"]; }
-	else												{ app_active_cam        = app_available_cameras[0]; }
-	if (data["DATA"]["active_page"] != "" && data["DATA"]["active_page"] != undefined && data["DATA"]["active_page"] != "status")	{ app_active_page       = data["DATA"]["active_page"]; }
-	else if (data["DATA"]["active_page"] != "status")						{ app_active_page = "INDEX"; }
-	if (data["DATA"]["active_date"] != "" && data["DATA"]["active_date"] != undefined)		{ app_active_date = data["DATA"]["active_date"]; }
-	else 												{ app_active_date = ""; }
-	if (data["STATUS"]["admin_allowed"] != undefined)						{ app_admin_allowed = data["STATUS"]["admin_allowed"]; }
+	if (data["DATA"]["cameras"] != undefined)                                        { app_available_cameras = Object.keys(data["DATA"]["cameras"]); }
+	if (data["DATA"]["active_cam"] != undefined && data["DATA"]["active_cam"] != "") { app_active_cam = data["DATA"]["active_cam"]; }
+	else                                                                             { app_active_cam = app_available_cameras[0]; }
+	if (data["DATA"]["active_page"] != "" && data["DATA"]["active_page"] != undefined && data["DATA"]["active_page"] != "status") { app_active_page = data["DATA"]["active_page"]; }
+	else if (data["DATA"]["active_page"] != "status")                                  { app_active_page = "INDEX"; }
+	if (data["DATA"]["active_date"] != "" && data["DATA"]["active_date"] != undefined) { app_active_date = data["DATA"]["active_date"]; }
+	else                                                                               { app_active_date = ""; }
+	if (data["STATUS"]["admin_allowed"] != undefined)                                  { app_admin_allowed = data["STATUS"]["admin_allowed"]; }
 	}
 	
 function birdhouseHeaderFunctions() {
@@ -136,7 +137,7 @@ function birdhouseHeaderFunctions() {
 	html = reload_view + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info;
 	
 	if (app_available_cameras == undefined)	{ html = reload_view + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
-	else if (app_available_cameras.length > 1)	{ html = reload_view + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info; }
+	else if (app_available_cameras.length > 1) { html = reload_view + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info; }
 	else						{ html = reload_view + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
 	
 	return html;

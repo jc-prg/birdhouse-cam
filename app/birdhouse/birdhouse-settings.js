@@ -59,9 +59,9 @@ function birdhouse_app_settings (name="Settings") {
 
 		html += this.tab_start();
 		html += this.tab_row("Title:&nbsp;",app_data["DATA"]["title"]);
-		html += this.tab_row("Backup-Time:&nbsp;",app_data["DATA"]["backup_time"]);
-		html += this.tab_row("Backup-Preview:&nbsp;",app_data["DATA"]["preview_backup"]);
-		html += this.tab_row("RPi Active:&nbsp;",app_data["DATA"]["rpi_active"]);
+		html += this.tab_row("Backup-Time:&nbsp;",app_data["DATA"]["backup"]["time"]);
+		html += this.tab_row("Backup-Preview:&nbsp;",app_data["DATA"]["backup"]["preview"]);
+		html += this.tab_row("RPi Active:&nbsp;",app_data["DATA"]["server"]["rpi_active"]);
 
 		html += this.tab_row("&nbsp;","");
 		for (let camera in birdhouseCameras) {
@@ -75,13 +75,13 @@ function birdhouse_app_settings (name="Settings") {
 			html += "<br/>&nbsp;<br/>"
     		}
 
-		for (let mic in app_data["DATA"]["microphones"]) {
+		for (let mic in birdhouseMicrophones) {
 		    var host = location.host.split(":");
-		    var URL = "http://"+host[0]+":"+app_data["DATA"]["microphones"][mic]["port"]+"/";
+		    var URL = "http://"+host[0]+":"+birdhouseMicrophones[mic]["port"]+"/";
     		html += this.tab_start();
 			html += this.tab_row("<i>Status &quot;"+mic+"&quot;</i>","");
-			html += this.tab_row("&nbsp;-&nbsp;active:", app_data["DATA"]["microphones"][mic]["active"]);
-			html += this.tab_row("&nbsp;-&nbsp;type:", app_data["DATA"]["microphones"][mic]["type"]);
+			html += this.tab_row("&nbsp;-&nbsp;active:", birdhouseMicrophones[mic]["active"]);
+			html += this.tab_row("&nbsp;-&nbsp;type:", birdhouseMicrophones[mic]["type"]);
 			html += this.tab_row("&nbsp;-&nbsp;stream:", "<a href='"+URL+"' target='_blank'>" + URL + "</a>");
     		html += this.tab_row("&nbsp;","");
 			html += this.tab_end();
