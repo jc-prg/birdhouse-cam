@@ -1,11 +1,11 @@
 
 server/modules/__pycache__/
 
-images/
-
 config.json
 
-videos/
+data/images/
+
+data/videos/
 
 stream.log
 
