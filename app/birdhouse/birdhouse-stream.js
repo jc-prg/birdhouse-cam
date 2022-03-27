@@ -70,17 +70,17 @@ function birdhouseStream_stop(mic) {
     birdhouse_stream_play[mic] = false;
 }
 
-function birdhouseStream_toggle(mic) {
+function birdhouseStream_toggle(mic, add_id="") {
     var id = "stream_"+mic;
     var player = document.getElementById(id);
 
     if (birdhouse_stream_play[mic] == true) {
         birdhouseStream_stop(mic);
-        document.getElementById("toggle_stream_"+mic).innerHTML = birdhouseStream_image(false);
+        document.getElementById("toggle_stream_"+mic+"_"+add_id).innerHTML = birdhouseStream_image(false);
     }
     else {
         birdhouseStream_play(mic);
-        document.getElementById("toggle_stream_"+mic).innerHTML = birdhouseStream_image(true);
+        document.getElementById("toggle_stream_"+mic+"_"+add_id).innerHTML = birdhouseStream_image(true);
         try {
             var id = "stream_"+mic;
             console.log("Play Audio Streams: ID-"+id);
@@ -92,14 +92,19 @@ function birdhouseStream_toggle(mic) {
         setTimeout(function(){
             if (document.getElementById("stream_"+mic).paused) {
                 birdhouseStream_stop(mic);
-                document.getElementById("toggle_stream_"+mic).innerHTML = birdhouseStream_image(false);
+                document.getElementById("toggle_stream_"+mic+"_"+add_id).innerHTML = birdhouseStream_image(false);
             }
         },1000);
     }
 }
 
-function birdhouseStream_toggle_image(mic) {
-    return "<div id='toggle_stream_"+mic+"' onclick='birdhouseStream_toggle(\""+mic+"\");'>"+birdhouseStream_image(false)+"</div>"
+function birdhouseStream_toggle_image(mic, add_id="") {
+    var html = "";
+    html += "<div id='toggle_stream_"+mic+"_"+add_id+"_container' class='audiostream_bird_container'>";
+    html += "<div id='toggle_stream_"+mic+"_"+add_id+"' class='audiostream_bird_image' onclick='birdhouseStream_toggle(\""+mic+"\",\""+add_id+"\");'>"+birdhouseStream_image(false)+"</div>";
+    html += "<div class='audiostream_bird_info' onclick='birdhouseStream_toggle(\""+mic+"\",\""+add_id+"\");' >"+mic+"</div>";
+    html += "</div>";
+    return html;
 }
 
 function birdhouseStream_image(on=true) {
