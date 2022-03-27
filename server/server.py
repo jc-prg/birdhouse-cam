@@ -516,8 +516,10 @@ if __name__ == "__main__":
             sensor[sen] = BirdhouseSensor(sensor_id=sen, param=settings, config=config)
             if not sensor[sen].error:
                 sensor[sen].start()
-    if sensor == {}:
-        logging.info("No sensor added.")
+        if sensor == {}:
+            logging.info("No sensor added.")
+    else:
+        logging.info("No sensor available: requires Raspberry Pi / activate 'rpi_active' in config file.")
 
     # start cameras
     camera = {}
