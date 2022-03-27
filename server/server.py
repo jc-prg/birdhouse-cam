@@ -34,17 +34,7 @@ def on_exit(signum, handler):
     """
     time.sleep(1)
     print('\nSTRG+C pressed! (Signal: %s)' % (signum,))
-    while True:
-        confirm = input('Enter "yes" to cancel program now or "no" to keep running [yes/no]: ').strip().lower()
-        if confirm == 'yes':
-            print("Cancel!\n")
-            sys.exit()
-        elif confirm == 'no':
-            print("Keep running!\n")
-            break
-        else:
-            print('Sorry, no valid answer...\n')
-        pass
+    sys.exit()
 
 
 def on_kill(signum, handler):
