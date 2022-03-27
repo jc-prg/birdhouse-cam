@@ -34,6 +34,7 @@ def on_exit(signum, handler):
     """
     time.sleep(1)
     print('\nSTRG+C pressed! (Signal: %s)' % (signum,))
+    print("Shutting down ...")
     sys.exit()
 
 
