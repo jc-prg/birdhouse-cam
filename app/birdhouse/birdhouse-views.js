@@ -17,7 +17,8 @@ function birdhouse_INDEX(data, camera) {
 	var active_camera = camera;
 	var cameras       = data["DATA"]["devices"]["cameras"];
 	var admin_allowed = data["STATUS"]["admin_allowed"];
-	var stream_server = RESTurl;
+	//var stream_server = RESTurl;
+	var stream_server = "http://"+data["DATA"]["server"]["ip4_stream_video"]+":"+data["DATA"]["server"]["port_video"]+"/";
 	var active_cam    = {};
 	var other_cams    = [];
 
@@ -58,7 +59,7 @@ function birdhouse_INDEX(data, camera) {
 		html += birdhouse_Camera(main=false, view="cam1cam2", onclick=onclick, camera=other_cams[0], stream_server=stream_server, admin_allowed=admin_allowed);
 		app_camera_source[other_cams[0]["name"]] = stream_server + cameras[other_cams[0]["name"]]["stream"];
 
-		onclick      = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
+		onclick = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
 		html += birdhouse_Camera(main=true, view="cam1cam2", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed);
 		app_camera_source[active_cam["name"]] = stream_server + cameras[active_cam["name"]]["stream"];
 		for (let micro in birdhouseMicrophones) {
