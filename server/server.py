@@ -34,8 +34,17 @@ def on_exit(signum, handler):
     """
     time.sleep(1)
     print('\nSTRG+C pressed! (Signal: %s)' % (signum,))
-    print("Shutting down ...")
-    sys.exit()
+    while True:
+        confirm = input('Enter "yes" to cancel program now or "no" to keep running [yes/no]: ').strip().lower()
+        if confirm == 'yes':
+            print("Cancel!\n")
+            sys.exit()
+        elif confirm == 'no':
+            print("Keep running!\n")
+            break
+        else:
+            print('Sorry, no valid answer...\n')
+        pass
 
 
 def on_kill(signum, handler):
@@ -44,6 +53,8 @@ def on_kill(signum, handler):
     All shutdown functions are defined in the "finally:" section in the end of this script
     """
     print('\nKILL command detected! (Signal: %s)' % (signum,))
+    logging.warning('KILL command detected! (Signal: %s)' % (signum,))
+    logging.info("Starting shutdown ...")
     sys.exit()
 
 
@@ -566,11 +577,9 @@ if __name__ == "__main__":
         config.stop()
         backup.stop()
         for cam in camera:
-            if camera[cam].active:
-                camera[cam].stop()
+            camera[cam].stop()
         for sen in sensor:
-            if sensor[sen].running:
-                sensor[sen].stop()
+            sensor[sen].stop()
         commands.stop()
         views.stop()
 

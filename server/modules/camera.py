@@ -350,7 +350,7 @@ class BirdhouseCamera(threading.Thread):
             # Error with camera - try to restart from time to time
             if self.error:
                 retry_time = 60
-                if self.error_time + retry_time < time.time():
+                if self.error_time + retry_time < time.time() and self.running:
                     logging.info("Try to restart camera ...")
                     self.active = True
                     if self.type == "pi":
@@ -358,7 +358,7 @@ class BirdhouseCamera(threading.Thread):
                     elif self.type == "usb":
                         self.camera_start_usb()
                     self.error_time = time.time()
-                    time.sleep(1)
+                    time.sleep(0.1)
 
             # Video Recording
             elif self.video.recording:

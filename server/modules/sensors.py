@@ -21,6 +21,7 @@ class BirdhouseSensor(threading.Thread):
         self.pin = self.param["pin"]
         self.values = {}
         self.last_read = 0
+        self.interval = 10
 
         GPIO.setmode(GPIO.BCM)
         self.sensor = dht11.DHT11(pin=self.pin)
@@ -31,21 +32,25 @@ class BirdhouseSensor(threading.Thread):
         """
         Start recording from sensors
         """
+        count = 0
         while self.running and not self.error:
-            try:
-                indoor = self.sensor.read()
-                if indoor.is_valid():
-                    self.values["temperature"] = indoor.temperature
-                    self.values["humidity"] = indoor.humidity
-                    self.last_read = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-                    logging.debug("Temperature: " + str(indoor.temperature))
-                    logging.debug("Humidity:    " + str(indoor.humidity))
-                else:
-                    raise Exception("Not valid ("+str(indoor.is_valid())+")")
-            except Exception as e:
-                logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
-
-            time.sleep(10)
+            count += 1
+            if count == self.interval:
+                try:
+                    indoor = self.sensor.read()
+                    if indoor.is_valid():
+                        self.values["temperature"] = indoor.temperature
+                        self.values["humidity"] = indoor.humidity
+                        self.last_read = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+                        logging.debug("Temperature: " + str(indoor.temperature))
+                        logging.debug("Humidity:    " + str(indoor.humidity))
+                    else:
+                        raise Exception("Not valid ("+str(indoor.is_valid())+")")
+                except Exception as e:
+                    logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
+                count = 0
+            elif self.running:
+                time.sleep(0.5)
 
         logging.info("Stopped sensors (" + self.id + ").")
 

@@ -24,6 +24,7 @@ class BirdhouseArchive(threading.Thread):
         start backup in the background
         """
         backup_started = False
+        count = 0
         while self._running:
             stamp = datetime.now().strftime('%H%M%S')
             if stamp[0:4] == self.config.param["backup_time"] and not backup_started:
@@ -31,10 +32,13 @@ class BirdhouseArchive(threading.Thread):
                 backup_started = True
                 self.backup_files()
                 logging.info("OK.")
-                time.sleep(60)
+                count = 0
+                while self._running and count < 60:
+                    time.sleep(1)
+                    count += 1
             else:
                 backup_started = False
-        time.sleep(5)
+            time.sleep(0.5)
         logging.info("Stopped backup process.")
 
     def stop(self):
@@ -57,8 +61,8 @@ class BirdhouseArchive(threading.Thread):
         for file in file_list:
 
             logging.info(file)
-            fname = file.split(".")
-            param = fname[0].split("_")  # video_cam2_20210428_175551*
+            file_name = file.split(".")
+            param = file_name[0].split("_")  # video_cam2_20210428_175551*
             fid = param[2] + "_" + param[3]
             date = param[2][6:8] + "." + param[2][4:6] + "." + param[2][0:4] + " " + param[3][0:2] + ":" + param[3][
                                                                                                            2:4] + ":" + \
@@ -77,9 +81,9 @@ class BirdhouseArchive(threading.Thread):
             width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-            fname_short = param[0] + "_" + param[1] + "_" + param[2] + "_" + param[3] + "_short.mp4"
-            if os.path.isfile(os.path.join(path, fname_short)):
-                file_short = fname_short
+            file_name_short = param[0] + "_" + param[1] + "_" + param[2] + "_" + param[3] + "_short.mp4"
+            if os.path.isfile(os.path.join(path, file_name_short)):
+                file_short = file_name_short
                 cap = cv2.VideoCapture(os.path.join(path, file_short))
                 file_short_length = cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS)
 
@@ -102,8 +106,8 @@ class BirdhouseArchive(threading.Thread):
                 "length": length,
                 "path": self.config.directories["videos"],
                 "status": "finished",
-                "lowres": fname[0] + "_thumb.jpeg",
-                "thumbnail": fname[0] + "_thumb.jpeg",
+                "lowres": file_name[0] + "_thumb.jpeg",
+                "thumbnail": file_name[0] + "_thumb.jpeg",
                 "type": "video",
                 "video_file": file,
                 "video_file_short": file_short,
