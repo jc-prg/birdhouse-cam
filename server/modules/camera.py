@@ -288,7 +288,7 @@ class BirdhouseCamera(threading.Thread):
         self.config = config
         self.sensor = sensor
 
-        self.param = self.config.param["cameras"][self.id]
+        self.param = self.config.param["devices"]["cameras"][self.id]
         self.name = self.param["name"]
         self.active = self.param["active"]
         self.source = self.param["source"]
@@ -318,6 +318,7 @@ class BirdhouseCamera(threading.Thread):
         self.image_NA = self.convertRawImage2Image(self.image_NA_raw)
 
         logging.info("Starting camera (" + self.id + "/" + self.type + "/" + self.name + ") ...")
+        logging.info("Loading error image: "+self.camera_NA)
 
         if self.type == "pi":
             self.camera_start_pi()
