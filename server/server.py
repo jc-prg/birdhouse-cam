@@ -508,7 +508,7 @@ if __name__ == "__main__":
 
     # start sensors
     sensor = {}
-    if "rpi_active" in config.param and config.param["server"]["rpi_active"]:
+    if "rpi_active" in config.param["server"] and config.param["server"]["rpi_active"]:
         from modules.sensors import BirdhouseSensor
 
         for sen in config.param["devices"]["sensors"]:
