@@ -64,7 +64,10 @@ $ nano data/config.json
 ```bash 
 @reboot /usr/bin/python3 /<path_to_script>/server/server.py --logfile
 @reboot /usr/bin/python3 /<path_to_script>/server/stream_video.py
-@reboot /<path_to_script>/server/stream_audio.ffmpeg
+```
+* To start the audio streaming edit and link the file [stream.service](config/install/stream.service) to the folder /etc/systemd/systems and start as root (see instructions in the file):
+``` bash
+$ systemctl start stream.service
 ```
 
 ## Sources
