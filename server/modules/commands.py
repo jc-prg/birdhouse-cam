@@ -27,9 +27,9 @@ class BirdhouseCommands(threading.Thread):
         self.create_day_queue = []
 
     def run(self):
-        '''
+        """
         Do nothing at the moment
-        '''
+        """
         logging.info("Starting REST API for POST ...")
         config_files = ["images", "videos", "backup"]
         while self._running:
@@ -111,15 +111,15 @@ class BirdhouseCommands(threading.Thread):
         logging.info("Stopped REST API for POST.")
 
     def stop(self):
-        '''
+        """
         Do nothing at the moment
-        '''
+        """
         self._running = False
 
     def addToQueue(self, config, date, key, change_status, status):
-        '''
+        """
         add entry to queue
-        '''
+        """
         if config != "backup":
             self.status_queue[config].append([date, key, change_status, status])
         elif config == "backup":
@@ -127,9 +127,9 @@ class BirdhouseCommands(threading.Thread):
             self.status_queue[config][date].append([date, key, change_status, status])
 
     def adminAllowed(self):
-        '''
+        """
         Check if administration is allowed based on the IP4 the request comes from
-        '''
+        """
         logging.debug("Check if administration is allowed: " + self.address_string() + " / " + str(
             config.param["ip4_admin_deny"]))
         if self.address_string() in config.param["ip4_admin_deny"]:
@@ -138,9 +138,9 @@ class BirdhouseCommands(threading.Thread):
             return True
 
     def setStatusFavoritNew(self, server):
-        '''
+        """
         set / unset favorit -> redesigned
-        '''
+        """
         param = server.path.split("/")
         response = {}
         category = param[2]
@@ -177,9 +177,9 @@ class BirdhouseCommands(threading.Thread):
         return response
 
     def setStatusRecycleNew(self, server):
-        '''
+        """
         set / unset recycling -> redesigned
-        '''
+        """
         param = server.path.split("/")
         response = {}
         category = param[2]
@@ -257,12 +257,13 @@ class BirdhouseCommands(threading.Thread):
             stamps = list(reversed(sorted(config_data.keys())))
             camera = config_data[entry_from]["camera"]
             for entry_id in stamps:
-                if entry_id == entry_from: relevant = True
-                if relevant and config_data[entry_id]["camera"] == camera:
-                    self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted",
-                                    status=1)
+                if entry_id == entry_from:
+                    relevant = True
+                if relevant and config_data[entry_id]["camera"] == camera and config_data[entry_id]["type"] != "data":
+                    self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=1)
                     self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=0)
-                if entry_id == entry_to:   relevant = False
+                if entry_id == entry_to:
+                    relevant = False
         else:
             response["error"] = "no entry found with stamp " + entry_from + "/" + entry_to
 
@@ -270,9 +271,9 @@ class BirdhouseCommands(threading.Thread):
         return response
 
     def deleteMarkedFiles(self, server):
-        '''
+        """
         set / unset recycling
-        '''
+        """
         param = server.path.split("/")
         response = {}
 
@@ -281,11 +282,11 @@ class BirdhouseCommands(threading.Thread):
         else:
             delete_not_used = False
         if param[2] == "backup":
-            response = self.backup.delete_marked_files(ftype="image", date=param[3], delete_not_used=delete_not_used)
+            response = self.backup.delete_marked_files(file_type="image", date=param[3], delete_not_used=delete_not_used)
         elif param[2] == "today":
-            response = self.backup.delete_marked_files(ftype="image", date="", delete_not_used=delete_not_used)
+            response = self.backup.delete_marked_files(file_type="image", date="", delete_not_used=delete_not_used)
         elif param[2] == "video":
-            response = self.backup.delete_marked_files(ftype="video", date="", delete_not_used=delete_not_used)
+            response = self.backup.delete_marked_files(file_type="video", date="", delete_not_used=delete_not_used)
         else:
             response["error"] = "not clear, which files shall be deleted"
         response["command"] = ["delete files that are marked as 'to_be_deleted'", param]
@@ -293,9 +294,9 @@ class BirdhouseCommands(threading.Thread):
         return response
 
     def startRecording(self, server):
-        '''
+        """
         start video recoding
-        '''
+        """
         param = server.path.split("/")
         response = {}
 
@@ -314,9 +315,9 @@ class BirdhouseCommands(threading.Thread):
         return response
 
     def stopRecording(self, server):
-        '''
+        """
         stop video recoding
-        '''
+        """
         param = server.path.split("/")
         response = {}
 
@@ -335,9 +336,9 @@ class BirdhouseCommands(threading.Thread):
         return response
 
     def createDayVideo(self, server):
-        '''
+        """
         create a video of all existing images of the day
-        '''
+        """
         param = server.path.split("/")
         response = {}
         logging.info(str(param))
@@ -361,9 +362,9 @@ class BirdhouseCommands(threading.Thread):
             return response
 
     def createShortVideo(self, server):
-        '''
+        """
         create a short video and save in DB (not deleting the old video at the moment)
-        '''
+        """
         param = server.path.split("/")
         response = {}
 

@@ -152,7 +152,7 @@ class BirdhouseArchive(threading.Thread):
         count = 0
         files_new = files.copy()
         files_keys = files_new.keys()
-        for cam in self.config.param["cameras"]:
+        for cam in self.config.param["devices"]["cameras"]:
             filename_last = ""
             image_current = ""
             image_last = ""
@@ -335,13 +335,14 @@ class BirdhouseArchive(threading.Thread):
 
             self.config.write(config="backup", config_data=files_backup, date=directory)
 
-    def delete_marked_files(self, ftype="image", date="", delete_not_used=False):
+    def delete_marked_files(self, file_type="image", date="", delete_not_used=False):
         """
-       delete files which are marked to be recycled for a specific date + database entry
-       """
+        delete files which are marked to be recycled for a specific date + database entry
+        """
         response = {}
+        files = {}
 
-        if ftype == "image":
+        if file_type == "image":
             if date == "":
                 files = self.config.read_cache(config='images')
                 directory = self.config.directory(config='images')
@@ -349,7 +350,7 @@ class BirdhouseArchive(threading.Thread):
                 config_file = self.config.read_cache(config='backup', date=date)
                 directory = self.config.directory(config='backup', date=date)
                 files = config_file["files"]
-        elif ftype == "video":
+        elif file_type == "video":
             files = self.config.read_cache(config='videos')
             directory = self.config.directory(config='videos')
         else:
@@ -364,10 +365,12 @@ class BirdhouseArchive(threading.Thread):
         count = 0
         for key in files:
 
-            if date != "": check_date = date[6:8] + "." + date[4:6] + "." + date[0:4]
+            if date != "":
+                check_date = date[6:8] + "." + date[4:6] + "." + date[0:4]
             if date == "" or ("date" in files[key] and check_date in files[key]["date"]):
                 for file_type in file_types:
-                    if file_type in files[key]: files_in_config.append(files[key][file_type])
+                    if file_type in files[key]:
+                        files_in_config.append(files[key][file_type])
 
             if "to_be_deleted" in files[key] and int(files[key]["to_be_deleted"]) == 1:
                 count += 1
@@ -379,12 +382,16 @@ class BirdhouseArchive(threading.Thread):
                     if file_type in files[key]:
                         if os.path.isfile(os.path.join(directory, files[key][file_type])):
                             os.remove(os.path.join(directory, files[key][file_type]))
-                            logging.debug(
-                                "Delete - " + str(key) + ": " + os.path.join(directory, files[key][file_type]))
-                del files[key]
+                            logging.debug("Delete - " + str(key) + ": " + os.path.join(directory, files[key][file_type]))
+                # del files[key]
+                del files[key]["hires"]
+                del files[key]["lowres"]
+                del files[key]["size"]
+                files[key]["type"] = "data"
 
             except Exception as e:
-                if not "error" in response: response["error"] = ""
+                if "error" not in response:
+                    response["error"] = ""
                 logging.error("Error while deleting file '" + key + "' ... " + str(e))
                 response["error"] += "delete file '" + key + "': " + str(e) + "\n"
 
@@ -400,13 +407,13 @@ class BirdhouseArchive(threading.Thread):
         response["files_not_used"] = len(files_in_dir) - len(files_in_config)
         response["files_used"] = len(files_in_config)
 
-        if ftype == "image":
+        if file_type == "image":
             if date == "":
                 self.config.write(config='images', config_data=files)
             else:
                 config_file["files"] = files
                 self.config.write(config='backup', config_data=config_file, date=date)
-        elif ftype == "video":
+        elif file_type == "video":
             self.config.write(config='videos', config_data=files)
 
         logging.info("Deleted " + str(count) + " marked files in " + directory + ".")
