@@ -27,7 +27,7 @@ class BirdhouseArchive(threading.Thread):
         count = 0
         while self._running:
             stamp = datetime.now().strftime('%H%M%S')
-            if stamp[0:4] == self.config.param["backup_time"] and not backup_started:
+            if stamp[0:4] == self.config.param["backup"]["time"] and not backup_started:
                 logging.info("Starting daily backup ...")
                 backup_started = True
                 self.backup_files()

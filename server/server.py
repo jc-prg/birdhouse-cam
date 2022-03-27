@@ -179,8 +179,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         Check if administration is allowed based on the IP4 the request comes from
         """
         logging.debug("Check if administration is allowed: " + self.address_string() + " / " + str(
-            config.param["ip4_admin_deny"]))
-        if self.address_string() in config.param["ip4_admin_deny"]:
+            config.param["server"]["ip4_admin_deny"]))
+        if self.address_string() in config.param["server"]["ip4_admin_deny"]:
             return False
         else:
             return True
@@ -237,6 +237,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         check path and send requested content
         """
+        global camera
+
         path, which_cam = views.selected_camera(self.path)
         file_ending = self.path.split(".")
         file_ending = "." + file_ending[len(file_ending) - 1].lower()
@@ -308,32 +310,41 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 del content["file_list"]
 
             content["title"] = config.param["title"]
-            content["ip4_address"] = config.param["ip4_address"]
-            content["backup_time"] = config.param["backup_time"]
-            content["preview_backup"] = config.param["preview_backup"]
-            content["rpi_active"] = config.param["rpi_active"]
+            content["server"] = config.param["server"]
+            content["backup"] = config.param["backup"]
 
-            cameras = {}
-            for key in camera:
-                if camera[key].active:
-                    cameras[key] = {
-                        "name": camera[key].name,
-                        "camera_type": camera[key].type,
-                        "record": camera[key].record,
-                        "image": camera[key].image_size,
-                        "stream": "/stream.mjpg?" + key,
-                        "streaming_server": camera[key].param["video"]["streaming_server"],
-                        "server_port": config.param["port"],
-                        "similarity": camera[key].param["similarity"],
-                        "status": {
-                            "error": camera[key].error,
-                            "running": camera[key].running,
-                            "img_error": camera[key].error_image,
-                            "img_msg": camera[key].error_image_msg
-                        }
+            # content["ip4_address"] = config.param["ip4_address"]
+            # content["backup_time"] = config.param["backup_time"]
+            # content["preview_backup"] = config.param["preview_backup"]
+            # content["rpi_active"] = config.param["rpi_active"]
+
+            micro_data = config.param["devices"]["microphones"].copy()
+
+            camera_data = config.param["devices"]["cameras"].copy()
+            for key in camera_data:
+                camera_param = camera[key].param.copy()
+                if key in camera:
+                    camera_data[key]["stream"] = "/stream.mjpg?" + key
+                    camera_data[key]["streaming_server"] = config.param["server"]["ip4_stream_video"]
+                    camera_data[key]["streaming_server"] += ":"+str(config.param["server"]["port_video"])
+                    camera_data[key]["server_port"] = config.param["server"]["port"],
+                    camera_data[key]["record"] = camera[key].record
+                    camera_data[key]["status"] = {
+                        "error": camera[key].error,
+                        "running": camera[key].running,
+                        "img_error": camera[key].error_image,
+                        "img_msg": camera[key].error_image_msg
                     }
+#                if "image_save" in camera_data[key]:
+#                    del camera_data[key]["image_save"]
+#                if "preview_scale" in camera_data[key]:
+#                    del camera_data[key]["preview_scale"]
+#                if "path" in camera_data[key]:
+#                    del camera_data[key]["path"]
+#                if "video" in camera_data[key]:
+#                    del camera_data[key]["video"]
 
-            sensor_data = config.param["sensors"]
+            sensor_data = config.param["devices"]["sensors"].copy()
             for key in sensor_data:
                 sensor_data[key]["values"] = {}
                 if key in sensor and not sensor[key].error and sensor[key].running:
@@ -343,8 +354,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 else:
                     logging.info("Sensor not available: "+key)
 
-            micro_data = config.param["microphones"]
 
+            content["devices"] = {
+                "cameras": camera_data,
+                "sensors": sensor_data,
+                "microphones": micro_data
+            }
             api_response = {
                 "STATUS": {
                     "start_time": api_start,
@@ -357,15 +372,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "API": api_description,
                 "DATA": content
             }
-            api_response["DATA"]["cameras"] = cameras
-            api_response["DATA"]["sensors"] = sensor_data
-            api_response["DATA"]["microphones"] = micro_data
             api_response["DATA"]["selected"] = which_cam
             api_response["DATA"]["active_page"] = command
 
             self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'),
                              no_cache=True)
-
         # extract and show single image
         elif '/image.jpg' in self.path:
             # camera[which_cam].setText = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
@@ -443,23 +454,17 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # favicon
         elif self.path.endswith('favicon.ico'):
-            self.stream_file(filetype='image/ico', content=read_image(directory='app-v1', filename=self.path))
+            self.stream_file(filetype='image/ico', content=read_image(directory='app', filename=self.path))
 
         # images, js, css, ...
         elif file_ending in file_types:
-
-            if "/videos" in self.path and "/app-v1" in self.path:
-                self.path = self.path.replace("/app-v1", "")
-            if "/images" in self.path and "/app-v1" in self.path:
-                self.path = self.path.replace("/app-v1", "")
 
             if "text" in file_types[file_ending]:
                 self.stream_file(filetype=file_types[file_ending], content=read_html(directory='', filename=self.path))
             elif "application" in file_types[file_ending]:
                 self.stream_file(filetype=file_types[file_ending], content=read_html(directory='', filename=self.path))
             else:
-                self.stream_file(filetype=file_types[file_ending],
-                                 content=read_image(directory='', filename=self.path))
+                self.stream_file(filetype=file_types[file_ending], content=read_image(directory='', filename=self.path))
 
         # request unknown
         else:
@@ -503,11 +508,11 @@ if __name__ == "__main__":
 
     # start sensors
     sensor = {}
-    if "rpi_active" in config.param and config.param["rpi_active"]:
+    if "rpi_active" in config.param and config.param["server"]["rpi_active"]:
         from modules.sensors import BirdhouseSensor
 
-        for sen in config.param["sensors"]:
-            settings = config.param["sensors"][sen]
+        for sen in config.param["devices"]["sensors"]:
+            settings = config.param["devices"]["sensors"][sen]
             sensor[sen] = BirdhouseSensor(sensor_id=sen, param=settings, config=config)
             if not sensor[sen].error:
                 sensor[sen].start()
@@ -516,8 +521,8 @@ if __name__ == "__main__":
 
     # start cameras
     camera = {}
-    for cam in config.param["cameras"]:
-        settings = config.param["cameras"][cam]
+    for cam in config.param["devices"]["cameras"]:
+        settings = config.param["devices"]["cameras"][cam]
         camera[cam] = BirdhouseCamera(thread_id=cam, config=config, sensor=sensor)
         camera[cam].start()
         camera[cam].param["path"] = config.param["path"]
@@ -566,7 +571,7 @@ if __name__ == "__main__":
 
     # Start Webserver
     try:
-        address = ('', config.param["port"])
+        address = ('', config.param["server"]["port"])
         server = StreamingServer(address, StreamingHandler)
         logging.info("Starting WebServer ...")
         server.serve_forever()

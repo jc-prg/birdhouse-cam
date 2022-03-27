@@ -120,8 +120,8 @@ class BirdhouseViews(threading.Thread):
         Check if administration is allowed based on the IP4 the request comes from
         """
         logging.debug("Check if administration is allowed: " + self.server.address_string() + " / " + str(
-            self.config.param["ip4_admin_deny"]))
-        if self.server.address_string() in self.config.param["ip4_admin_deny"]:
+            self.config.param["server"]["ip4_admin_deny"]))
+        if self.server.address_string() in self.config.param["server"]["ip4_admin_deny"]:
             return False
         else:
             return True
@@ -487,7 +487,7 @@ class BirdhouseViews(threading.Thread):
             dir_total_size = 0
             files_total = 0
 
-            image_title = str(self.config.param["preview_backup"]) + str(self.camera[cam].param["image_save"]["seconds"][0])
+            image_title = str(self.config.param["backup"]["time"]) + str(self.camera[cam].param["image_save"]["seconds"][0])
             image_today = self.config.imageName(image_type="lowres", timestamp=image_title, camera=cam)
             image = os.path.join(self.config.directory(config="images"), image_today)
 
@@ -686,7 +686,9 @@ class BirdhouseViews(threading.Thread):
         if self.config.exists("videos"):
             files_all = self.config.read_cache(config="videos")
             for file in files_all:
-                files_all[file]["directory"] = self.camera[which_cam].param["video"]["streaming_server"]
+                #files_all[file]["directory"] = self.camera[which_cam].param["video"]["streaming_server"]
+                files_all[file]["directory"] = "http://"+self.config.param["server"]["ip4_stream_video"]
+                files_all[file]["directory"] += ":"+str(self.config.param["server"]["port_video"])+"/"
                 files_all[file]["type"] = "video"
                 files_all[file]["path"] = self.config.directories["videos"]
                 files_all[file]["category"] = "/videos/" + file
@@ -767,7 +769,8 @@ class BirdhouseViews(threading.Thread):
 
             if self.admin_allowed():
                 files = {
-                    "VIDEOFILE": self.camera[which_cam].param["video"]["streaming_server"] + data["video_file"],
+                    # "VIDEOFILE": self.camera[which_cam].param["video"]["streaming_server"] + data["video_file"],
+                    "VIDEOFILE": "http://"+self.config.param["server"]["stream_video"]+":"+self.camera[which_cam].param["video"]["stream_port"]+"/",
                     "THUMBNAIL": data["thumbnail"],
                     "LENGTH": str(data["length"]),
                     "VIDEOID": video_id,
