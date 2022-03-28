@@ -15,15 +15,14 @@ from modules.backup import BirdhouseArchive
 from modules.camera import BirdhouseCamera
 from modules.config import BirdhouseConfig
 from modules.commands import BirdhouseCommands
-from modules.presets import birdhouse_preset
-from modules.presets import file_types
+from modules.presets import birdhouse_preset, file_types
 from modules.views import BirdhouseViews
 
+api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 api_description = {
     "name": "BirdhouseCAM",
     "version": "v0.9.0"
 }
-api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 app_framework = "v0.9.1"
 
 
@@ -154,7 +153,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         send header for video stream
         """
         self.send_response(200)
-        self.send_header('Age', 0)
+        self.send_header('Age', '0')
         self.send_header('Cache-Control', 'no-cache, private')
         self.send_header('Pragma', 'no-cache')
         self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
@@ -169,7 +168,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         self.wfile.write(b'--FRAME\r\n')
         self.send_header('Content-Type', 'image/jpeg')
-        self.send_header('Content-Length', len(str(frame)))
+        self.send_header('Content-Length', str(len(str(frame))))
         self.end_headers()
         self.wfile.write(frame)
         self.wfile.write(b'\r\n')
@@ -197,8 +196,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         REST API for javascript commands e.g. to change values in runtime
         """
-        global config, camera, backup
-
         logging.info("POST API request with '" + self.path + "'.")
         response = {}
 
@@ -246,7 +243,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         config.html_replace["title"] = config.param["title"]
         config.html_replace["active_cam"] = which_cam
 
-        # index 
+        # index
         if self.path == '/':
             self.redirect("/app/index.html")
         elif self.path == '/index.html':
@@ -536,10 +533,11 @@ if __name__ == "__main__":
 
     # start backups
     time.sleep(1)
-    backup = BirdhouseArchive(config, camera)
+    backup = BirdhouseArchive(config, camera, views)
     backup.start()
     if len(sys.argv) > 0 and "--backup" in sys.argv:
         backup.backup_files()
+        views.create_archive_list()
 
     commands = BirdhouseCommands(config=config, camera=camera, backup=backup)
     commands.start()

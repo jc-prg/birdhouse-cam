@@ -1,4 +1,5 @@
-import os, time
+import os
+import time
 import logging
 import threading
 from sys import getsizeof

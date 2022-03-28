@@ -8,13 +8,14 @@ from datetime import datetime
 
 class BirdhouseArchive(threading.Thread):
 
-    def __init__(self, config, camera):
+    def __init__(self, config, camera, views):
         """
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
         self.config = config
         self.camera = camera
+        self.views = views
         self.name = "Backup"
         self.processing = False
         self._running = True
@@ -32,6 +33,7 @@ class BirdhouseArchive(threading.Thread):
                 backup_started = True
                 self.backup_files()
                 logging.info("OK.")
+                self.views.create_archive_list()
                 count = 0
                 while self._running and count < 60:
                     time.sleep(1)
