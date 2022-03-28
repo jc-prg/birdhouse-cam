@@ -30,6 +30,7 @@ var app_available_micros  = [];
 
 var app_active_page       = "";
 var app_active_date       = "";
+var app_active_mic        = "";
 var app_camera_source     = {};
 var app_recycle_range     = {};
 var app_active_cam        = "cam1";

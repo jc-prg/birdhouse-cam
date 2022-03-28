@@ -77,7 +77,6 @@ function birdhouse_INDEX(data, camera) {
 }
 
 function birdhouse_CAMERAS( title, data ) {
-	//var cameras	= data["DATA"]["entries"];
 	var cameras	= data["DATA"]["devices"]["cameras"];
 	var sensors = data["DATA"]["devices"]["sensors"];
 	var micros  = data["DATA"]["devices"]["microphones"];
@@ -266,7 +265,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             }
         }
         var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
-        html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, true );
+        html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, false );
     }
 
 	// group favorits per month
