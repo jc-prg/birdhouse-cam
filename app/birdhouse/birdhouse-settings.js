@@ -19,10 +19,7 @@ var birdhouse_settings  = new birdhouse_app_settings();
 function birdhouse_app_settings (name="Settings") {
 
 	this.create	= function (data) {
-		html  = "<center><h2>"+lang("SETTINGS")+"</h2></center>";
-		setTextById("setting1", html);
-
-        html = "<h3>System &amp; App</h3>";
+        html  = "<h2>"+lang("SETTINGS")+": System &amp; App</h2>";
 		html += "<hr style='border:1px solid gray;'>"
 
 		html += this.tab_start();
@@ -52,9 +49,9 @@ function birdhouse_app_settings (name="Settings") {
 		html += this.tab_row("Position:", "<div id='scrollPosition'>0 px</div>" );
 		html += this.tab_end();
 
-		setTextById("setting2", html);
+		setTextById("setting1", html);
 
-		html = "<h3>Devices &amp; Data</h3>";
+        html  = "<h2>"+lang("SETTINGS")+": Devices &amp; Data</h2>";
 		html += "<hr style='border:1px solid gray;'>"
 
 		html += this.tab_start();
@@ -87,7 +84,7 @@ function birdhouse_app_settings (name="Settings") {
 			html += this.tab_end();
     		}
 
-		setTextById("setting3", html);
+		setTextById("setting2", html);
 
 		this.toggle();
 		}

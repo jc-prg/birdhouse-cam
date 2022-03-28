@@ -5,7 +5,7 @@
 var app_frame_count       = 5;
 var app_frame_style       = "frame_column wide";
 var app_setting_count     = 4;
-var app_setting_style     = "setting_bg";
+var app_setting_style     = "frame_column";
 var app_last_load         = 0;
 var app_title             = "jc://birdhouse/";
 var app_version           = "v0.9.1"; 
