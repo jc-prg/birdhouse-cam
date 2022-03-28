@@ -44,8 +44,10 @@ h3 { margin : 4px; }
 }
 
 .header_icon_wide {
-  height        : 23px;
-  width         : 30px;
+  position      : relative;
+  top           : -6px;
+  height        : 20px;
+  width         : 32px;
   cursor		: pointer;
 }
 
