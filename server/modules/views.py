@@ -743,15 +743,12 @@ class BirdhouseViews(threading.Thread):
         return content
 
     def detail_view_video(self, server):
-        '''
+        """
         Show details and edit options for a video file
-        '''
+        """
         self.server = server
         path, which_cam = self.selected_camera()
-        content = {}
-        content["active_cam"] = which_cam
-        content["view"] = "detail_video"
-        content["entries"] = {}
+        content = {"active_cam": which_cam, "view": "detail_video", "entries": {}}
         param = server.path.split("/")
         if "app-v1" in param: del param[1]
         count = 0
@@ -771,7 +768,7 @@ class BirdhouseViews(threading.Thread):
             if self.admin_allowed():
                 files = {
                     # "VIDEOFILE": self.camera[which_cam].param["video"]["streaming_server"] + data["video_file"],
-                    "VIDEOFILE": "http://"+self.config.param["server"]["stream_video"]+":"+self.camera[which_cam].param["video"]["stream_port"]+"/",
+                    "VIDEOFILE": "http://"+self.config.param["server"]["ip4_stream_video"]+":"+str(self.config.param["server"]["port_video"])+"/",
                     "THUMBNAIL": data["thumbnail"],
                     "LENGTH": str(data["length"]),
                     "VIDEOID": video_id,

@@ -224,7 +224,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.startswith("/create-day-video/"):
             response = commands.createDayVideo(self)
         elif self.path.startswith("/edit_presets/"):
-            logging.info("Edit presets: Not implemented yet ...")
+            logging.info("Edit presets: Not implemented yet ... "+self.path)
+            param_string = self.path.replace("/edit_presets/", "")
+            param = param_string.split("/")
+            data = {}
+            for entry in param:
+                if "==" in entry:
+                    key, value = entry.split("==")
+                    data[key] = value
+            logging.info(str(data))
         else:
             self.error_404()
             return
