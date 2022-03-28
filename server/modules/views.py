@@ -382,7 +382,7 @@ class BirdhouseViews(threading.Thread):
 
                 # GROSSE BAUSTELLE
 
-                select_image = self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity)
+                select_image = self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity)
                 if ((int(stamp) < int(time_now) or time_now == "000000") and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
                     if "camera" not in files_all[stamp] or select_image or (backup and files_all[stamp]["camera"] == which_cam):
                         if files_all[stamp]["datestamp"] == date_today or backup:
@@ -390,7 +390,7 @@ class BirdhouseViews(threading.Thread):
                             if "type" not in files_today[stamp]:
                                 files_today[stamp]["type"] = "image"
                             files_today[stamp]["category"] = category + stamp
-                            files_today[stamp]["detect"] = self.camera[which_cam].detectImage(file_info=files_today[stamp])
+                            files_today[stamp]["detect"] = self.camera[which_cam].image_differs(file_info=files_today[stamp])
                             files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
                             count += 1
 
@@ -420,13 +420,13 @@ class BirdhouseViews(threading.Thread):
                 for stamp in stamps:
                     if (int(stamp) >= int(time_now) and time_now != "000000") and "datestamp" in files_all[stamp] and \
                             files_all[stamp]["datestamp"] == date_yesterday:
-                        if self.camera[which_cam].selectImage(timestamp=stamp, file_info=files_all[stamp],
-                                                              check_similarity=check_similarity):
+                        if self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp],
+                                                                  check_similarity=check_similarity):
                             files_yesterday[stamp] = files_all[stamp]
                             if not "type" in files_yesterday[stamp]:
                                 files_yesterday[stamp]["type"] = "image"
                             files_yesterday[stamp]["category"] = category + stamp
-                            files_yesterday[stamp]["detect"] = self.camera[which_cam].detectImage(
+                            files_yesterday[stamp]["detect"] = self.camera[which_cam].image_differs(
                                 file_info=files_yesterday[stamp])
                             files_yesterday[stamp]["directory"] = "/" + self.config.directories["images"]
                             count += 1
@@ -643,7 +643,7 @@ class BirdhouseViews(threading.Thread):
                             files_part[stamp] = files_all[stamp]
                             if not "type" in files_part[stamp]:
                                 files_part[stamp]["type"] = "image"
-                            files_part[stamp]["detect"] = self.camera[which_cam].detectImage(
+                            files_part[stamp]["detect"] = self.camera[which_cam].image_differs(
                                 file_info=files_part[stamp])
                             files_part[stamp]["category"] = category + stamp
                             files_part[stamp]["directory"] = "/" + self.config.directories["images"]

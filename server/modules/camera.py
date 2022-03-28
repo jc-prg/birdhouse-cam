@@ -24,12 +24,15 @@ class BirdhouseVideoProcessing(threading.Thread):
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
+        self.id = camera
         self.camera = camera
         self.name = param["name"]
         self.param = param
         self.config = config
         self.directory = directory
 
+        self.record_video_info = None
+        self.image_size = [0, 0]
         self.recording = False
         self.processing = False
         self.max_length = 0.25 * 60
@@ -157,7 +160,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         """
         Return recording status
         """
-        return self.record_video_info
+        return self.record_video_info.copy()
 
     def save_image(self, image):
         """
@@ -172,15 +175,15 @@ class BirdhouseVideoProcessing(threading.Thread):
 
         return cv2.imwrite(path, image)
 
-    def filename(self, ftype="image"):
+    def filename(self, file_type="image"):
         """
         generate filename for images
         """
-        if ftype == "video":
+        if file_type == "video":
             return self.config.imageName(image_type="video", timestamp=self.info["date_start"], camera=self.camera)
-        elif ftype == "thumb":
+        elif file_type == "thumb":
             return self.config.imageName(image_type="thumb", timestamp=self.info["date_start"], camera=self.camera)
-        elif ftype == "vimages":
+        elif file_type == "vimages":
             return self.config.imageName(image_type="vimages", timestamp=self.info["date_start"], camera=self.camera)
         else:
             return
@@ -220,9 +223,136 @@ class BirdhouseVideoProcessing(threading.Thread):
         logging.info("OK.")
         return
 
+    def create_video_day(self, filename, stamp, date):
+        """
+        Create daily video from all single images available
+        """
+        camera = self.id
+        cmd_videofile = "video_" + camera + "_" + stamp + ".mp4"
+        cmd_thumbfile = "video_" + camera + "_" + stamp + "_thumb.jpeg"
+        cmd_tempfiles = "img_" + camera + "_" + stamp + "_"
+        framerate = 20
+
+        cmd_rm = "rm " + self.config.directory("videos_temp") + "*"
+        logging.info(cmd_rm)
+        message = os.system(cmd_rm)
+
+        cmd_copy = "cp " + self.config.directory("images") + filename + "* " + self.config.directory("videos_temp")
+        logging.info(cmd_copy)
+        message = os.system(cmd_copy)
+        if message != 0:
+            response = {
+                "result": "error",
+                "reason": "copy temp image files",
+                "message": message
+            }
+            return response
+
+        cmd_filename = self.config.directory("videos_temp") + cmd_tempfiles
+        cmd_rename = "i=0; for fi in " + self.config.directory(
+            "videos_temp") + "image_*; do mv \"$fi\" $(printf \"" + cmd_filename + "%05d.jpg\" $i); i=$((i+1)); done"
+        logging.info(cmd_rename)
+        message = os.system(cmd_rename)
+        if message != 0:
+            response = {
+                "result": "error",
+                "reason": "rename temp image files",
+                "message": message
+            }
+            return response
+
+        amount = 0
+        for root, dirs, files in os.walk(self.config.directory("videos_temp")):
+            for filename in files:
+                if cmd_tempfiles in filename:
+                    amount += 1
+
+        cmd_create = self.ffmpeg_cmd
+        cmd_create = cmd_create.replace("{INPUT_FILENAMES}", cmd_filename + "%05d.jpg")
+        cmd_create = cmd_create.replace("{OUTPUT_FILENAME}",
+                                        os.path.join(self.config.directory("videos"), cmd_videofile))
+        cmd_create = cmd_create.replace("{FRAMERATE}", str(framerate))
+        logging.info(cmd_create)
+        message = os.system(cmd_create)
+        if message != 0:
+            response = {
+                "result": "error",
+                "reason": "create video with ffmpeg",
+                "message": message
+            }
+            return response
+
+        cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.directory("videos") + cmd_thumbfile
+        logging.info(cmd_thumb)
+        message = os.system(cmd_thumb)
+        if message != 0:
+            response = {
+                "result": "error",
+                "reason": "create thumbnail",
+                "message": message
+            }
+            return response
+
+        cmd_rm2 = "rm " + self.config.directory("videos_temp") + "*.jpg"
+        logging.info(cmd_rm2)
+        message = os.system(cmd_rm2)
+        if message != 0:
+            response = {
+                "result": "error",
+                "reason": "remove temp image files",
+                "message": message
+            }
+            return response
+
+        length = (amount / framerate)
+        video_data = {
+            "camera": self.id,
+            "camera_name": self.name,
+            "date": date,
+            "date_start": stamp,
+            "framerate": framerate,
+            "image_count": amount,
+            "image_size": self.image_size,
+            "length": length,
+            "time": "complete day",
+            "type": "video",
+            "thumbnail": cmd_thumbfile,
+            "video_file": cmd_videofile,
+        }
+        response = {
+            "result": "OK",
+            "data": video_data
+        }
+        return response
+
+    def create_trim_video(self, video_id, start, end):
+        """
+        create a shorter video based on date and time
+        """
+        config_file = self.config.read_cache("videos")
+        if video_id in config_file:
+            input_file = config_file[video_id]["video_file"]
+            output_file = input_file.replace(".mp4", "_short.mp4")
+            framerate = config_file[video_id]["framerate"]
+            result = self.trim_video(input_file=input_file, output_file=output_file, start_timecode=start, end_timecode=end, framerate=framerate)
+            if result == "OK":
+                config_file[video_id]["video_file_short"] = output_file
+                config_file[video_id]["video_file_short_start"] = float(start)
+                config_file[video_id]["video_file_short_end"] = float(end)
+                config_file[video_id]["video_file_short_length"] = float(end) - float(start)
+
+                self.config.write("videos", config_file)
+                return {"result": "OK"}
+            else:
+                return {"result": "Error while creating shorter video."}
+
+        else:
+            logging.warning("No video with the ID " + str(video_id) + " available.")
+            return {"result": "No video with the ID " + str(video_id) + " available."}
+
     def trim_video(self, input_file, output_file, start_timecode, end_timecode, framerate):
         """
-        creates a shortend version of the video
+        creates a shortened version of the video
         """
         input_file = os.path.join(self.config.directory("videos"), input_file)
         output_file = os.path.join(self.config.directory("videos"), output_file)
@@ -250,9 +380,296 @@ class BirdhouseImageProcessing(object):
     """
     def __init__(self, camera, config, param):
         self.frame = None
-        self.camera = camera
+        self.id = camera
         self.config = config
         self.param = param
+
+        self.text_default_position = (30, 40)
+        self.text_default_scale = 0.8
+        self.text_default_font = cv2.FONT_HERSHEY_SIMPLEX
+        self.text_default_color = (255, 255, 255)
+        self.text_default_thickness = 2
+
+        self.img_camera_error = "camera_na.jpg"
+
+    def _msg_error(self, message):
+        """
+        Report Error, set variables of modules
+        """
+        logging.error("Image Processing ("+self.id+"): "+message)
+
+    def _msg_warning(self, message):
+        """
+        Report Error, set variables of modules
+        """
+        logging.warning("Image Processing ("+self.id+"): "+message)
+
+    def compare(self, image_1st, image_2nd, detection_area=None):
+        """
+        calculate structural similarity index (SSIM) of two images
+        """
+        image_1st = self.convert_to_raw(image_1st)
+        image_2nd = self.convert_to_raw(image_2nd)
+        similarity = self.compare_raw(image_1st, image_2nd, detection_area)
+        return similarity
+
+    def compare_raw(self, image_1st, image_2nd, detection_area=None):
+        """
+        calculate structural similarity index (SSIM) of two images
+        """
+        if len(image_1st) == 0 or len(image_2nd) == 0:
+            self._msg_warning("At least one file has a zero length - A:" + str(len(image_1st)) + "/ B:" + str(len(image_2nd)))
+            score = 0
+
+        if detection_area is not None:
+            image_1st, area = self.crop_raw(raw=image_1st, crop_area=detection_area, crop_type="relative")
+            image_2nd, area = self.crop_raw(raw=image_2nd, crop_area=detection_area, crop_type="relative")
+
+            logging.debug(self.id + "/compare 1: " + str(detection_area) + " / " + str(image_1st.shape))
+            logging.debug(self.id + "/compare 2: " + str(area) + " / " + str(image_1st.shape))
+
+        try:
+            (score, diff) = ssim(image_1st, image_2nd, full=True)
+
+        except Exception as e:
+            self._msg_warning("Error comparing images ("+str(e)+")")
+            score = 0
+
+        return round(score * 100, 1)
+
+    def convert_from_raw(self, raw):
+        """
+        convert from raw image to image // untested
+        """
+        try:
+            r, buf = cv2.imencode(".jpg", raw)
+            size = len(buf)
+            image = bytearray(buf)
+            return image
+        except Exception as e:
+            self._msg_error("Error convert RAW image -> image (" + str(e) + ")")
+            return self.image_error()
+
+    def convert_to_raw(self, image):
+        """
+        convert from device to raw image -> to be modifeid with CV2
+        """
+        try:
+            image = np.frombuffer(image, dtype=np.uint8)
+            raw = cv2.imdecode(image, 1)
+            return raw
+        except Exception as e:
+            self._msg_error("Error convert image -> RAW image ("+str(e)+")")
+            return self.image_error_raw()
+
+    def convert_to_gray_raw(self, raw):
+        """
+        convert image from RGB to gray scale image (e.g. for analyzing similarity)
+        """
+        try:
+            return cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
+
+        except Exception as e:
+            self._msg_error("Could not convert image to gray scale " + str(e)+")")
+            return raw
+
+    def crop(self, image, crop_area, crop_type="relative"):
+        """
+        crop encoded image
+        """
+        raw = self.convert_to_raw(image)
+        raw = self.crop_raw(raw, crop_area, crop_type)
+        image = self.convert_from_raw(raw)
+        return image
+
+    def crop_raw(self, raw, crop_area, crop_type="relative"):
+        """
+        crop image using relative dimensions (0.0 ... 1.0)
+        """
+        try:
+            height = raw.shape[0]
+            width = raw.shape[1]
+
+            if crop_type == "relative":
+                (w_start, h_start, w_end, h_end) = crop_area
+                x_start = int(round(width * w_start, 0))
+                y_start = int(round(height * h_start, 0))
+                x_end = int(round(width * w_end, 0))
+                y_end = int(round(height * h_end, 0))
+                crop_area = (x_start, y_start, x_end, y_end)
+            else:
+                (x_start, y_start, x_end, y_end) = crop_area
+
+            logging.debug("H: " + str(y_start) + "-" + str(y_end) + " / W: " + str(x_start) + "-" + str(x_end))
+            frame_cropped = raw[y_start:y_end, x_start:x_end]
+            return frame_cropped, crop_area
+
+        except Exception as e:
+            self._msg_error("Could not crop image (" + str(e) + ")")
+
+        return raw, (0, 0, 1, 1)
+
+    def crop_area_pixel(self, raw, area):
+        """
+        calculate start & end pixel for relative area
+        """
+        height = raw.shape[0]
+        width = raw.shape[1]
+
+        (w_start, h_start, w_end, h_end) = area
+        x_start = int(round(width * w_start, 0))
+        y_start = int(round(height * h_start, 0))
+        x_end = int(round(width * w_end, 0))
+        y_end = int(round(height * h_end, 0))
+        x_width = x_end - x_start
+        y_height = y_end - y_start
+        pixel_area = (x_start, y_start, x_end, y_end, x_width, y_height)
+
+        return pixel_area
+
+    def draw_text(self, image, text, position="", font="", scale="", color="", thickness=0):
+        """
+        Add text on image
+        """
+        raw = self.convert_to_raw(image)
+        raw = self.draw_text_raw(raw, text, position=position, font=font, scale=scale, color=color, thickness=thickness)
+        image = self.convert_from_raw(raw)
+        return image
+
+    def draw_text_raw(self, raw, text, position="", font="", scale="", color="", thickness=0):
+        """
+        Add text on image
+        """
+        if position == "":
+            position = self.text_default_position
+        if font == "":
+            font = self.text_default_font
+        if scale == "":
+            scale = self.text_default_scale
+        if color == "":
+            color = self.text_default_color
+        if thickness == 0:
+            thickness = self.text_default_thickness
+
+        raw = cv2.putText(raw, text, position, font, scale, color, thickness, cv2.LINE_AA)
+        return raw
+
+    def draw_date(self, image):
+        date_information = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+
+        font = self.text_default_font
+        thickness = 1
+        if self.param["image"]["date_time_color"]:
+            color = self.param["image"]["date_time_color"]
+        else:
+            color = ""
+        if self.param["image"]["date_time_position"]:
+            position = self.param["image"]["date_time_position"]
+        else:
+            position = ""
+        if self.param["image"]["date_time_size"]:
+            scale = self.param["image"]["date_time_size"]
+        else:
+            scale = ""
+
+        image = self.draw_text(image, date_information, position, font, scale, color, thickness)
+        return image
+
+    def draw_date_raw(self, raw):
+        date_information = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+
+        font = self.text_default_font
+        thickness = 1
+        if self.param["image"]["date_time_color"]:
+            color = self.param["image"]["date_time_color"]
+        else:
+            color = ""
+        if self.param["image"]["date_time_position"]:
+            position = self.param["image"]["date_time_position"]
+        else:
+            position = ""
+        if self.param["image"]["date_time_size"]:
+            scale = self.param["image"]["date_time_size"]
+        else:
+            scale = ""
+
+        raw = self.draw_text_raw(raw, date_information, position, font, scale, color, thickness)
+        return raw
+
+    def draw_area_raw(self, raw, area=(0, 0, 1, 1), color=(0, 0, 255), thickness=2):
+        """
+        draw as colored rectangle
+        """
+        try:
+            height = raw.shape[0]
+            width = raw.shape[1]
+            (x_start, y_start, x_end, y_end, x_width, y_height) = self.crop_area_pixel(raw, area)
+            image = cv2.line(raw, (x_start, y_start), (x_start, y_end), color, thickness)
+            image = cv2.line(image, (x_start, y_start), (x_end, y_start), color, thickness)
+            image = cv2.line(image, (x_end, y_end), (x_start, y_end), color, thickness)
+            image = cv2.line(image, (x_end, y_end), (x_end, y_start), color, thickness)
+            return image
+
+        except Exception as e:
+            self._msg_warning("Could not draw area into the image ("+str(e)+")")
+            return raw
+
+    def image_error(self):
+        """
+        return image with error message
+        """
+        raw = self.error_image_raw()
+        image = self.convert_from_raw(raw)
+        return image
+
+    def image_error_raw(self):
+        """
+        return image with error message
+        """
+        filename = os.path.join(self.config.main_directory, self.config.directories["data"], self.img_camera_error)
+        raw = cv2.imread(filename)
+        return raw
+
+    def normalize_raw(self, raw):
+        """
+        apply presets per camera to image -> implemented = crop to given values
+        """
+        if "crop_area" not in self.param["image"]:
+            normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw, crop_area=self.param["image"]["crop"],
+                                                                         crop_type="relative")
+        else:
+            normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw,
+                                                                         crop_area=self.param["image"]["crop_area"],
+                                                                         crop_type="pixel")
+        # rotate     - not implemented yet
+        # resize     - not implemented yet
+        # saturation - not implemented yet
+        return normalized
+
+    def size(self, image):
+        """
+        Return size of raw image
+        """
+        frame = self.convert_to_raw(image)
+        try:
+            height = frame.shape[0]
+            width = frame.shape[1]
+            return [width, height]
+        except Exception as e:
+            self._msg_warning("Could not analyze image ("+str(e)+")")
+            return [0, 0]
+
+    def size_raw(self, raw):
+        """
+        Return size of raw image
+        """
+        try:
+            height = raw.shape[0]
+            width = raw.shape[1]
+            return [width, height]
+        except Exception as e:
+            self._msg_warning("Could not analyze image ("+str(e)+")")
+            return [0, 0]
 
 
 class BirdhouseCameraOutput(object):
@@ -305,17 +722,20 @@ class BirdhouseCamera(threading.Thread):
         self.error_image = False
         self.error_image_msg = []
 
-        self.text_default_position = (30, 40)
-        self.text_default_scale = 0.8
-        self.text_default_font = cv2.FONT_HERSHEY_SIMPLEX
-        self.text_default_color = (255, 255, 255)
-        self.text_default_thickness = 2
+        self.param = self.config.param["devices"]["cameras"][self.id]
+        self.name = self.param["name"]
+        self.active = self.param["active"]
+        self.source = self.param["source"]
+        self.type = self.param["type"]
+        self.record = self.param["record"]
+
         self.image_size = [0, 0]
         self.previous_image = None
         self.previous_stamp = "000000"
+
         self.camera_NA = os.path.join(self.config.main_directory, self.config.directories["data"], "camera_na.jpg")
         self.image_NA_raw = cv2.imread(self.camera_NA)
-        self.image_NA = self.convertRawImage2Image(self.image_NA_raw)
+        self.image_NA = self.image.convert_from_raw(self.image_NA_raw)
 
         logging.info("Starting camera (" + self.id + "/" + self.type + "/" + self.name + ") ...")
         logging.info("Loading error image: "+self.camera_NA)
@@ -327,7 +747,7 @@ class BirdhouseCamera(threading.Thread):
         else:
             self.camera_error(True, False, "Unknown type of camera!")
         if not self.error and self.param["video"]["allow_recording"]:
-            self.video_start_recording()
+            self.camera_start_recording()
 
         logging.debug("Length " + self.camera_NA + " - File:" + str(len(self.image_NA)) + "/Img:" + str(len(self.image_NA_raw)))
         logging.debug("HOURS:   " + str(self.param["image_save"]["hours"]))
@@ -368,13 +788,13 @@ class BirdhouseCamera(threading.Thread):
                     self.video.stop_recording()
 
                 else:
-                    image = self.getImage()
-                    image = self.convertImage2RawImage(image)
+                    image = self.get_image()
+                    image = self.image.convert_to_raw(image)
                     self.video.image_size = self.image_size
                     self.video.save_image(image=image)
 
                     if self.image_size == [0, 0]:
-                        self.image_size = self.sizeRawImage(image)
+                        self.image_size = self.image.size_raw(image)
                         self.video.image_size = self.image_size
 
                     logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(
@@ -387,21 +807,20 @@ class BirdhouseCamera(threading.Thread):
                     if (seconds in self.param["image_save"]["seconds"]) and (
                             hours in self.param["image_save"]["hours"]):
 
-                        image = self.getRawImage()
-                        image = self.normalizeRawImage(image)
-                        image_compare = self.convertRawImage2Gray(image)
+                        image = self.get_image_raw()
+                        image = self.image.normalize_raw(image)
+                        image_compare = self.image.convert_to_gray_raw(image)
 
                         if self.param["image"]["date_time"]:
-                            image = self.setDateTime2RawImage(image)
+                            image = self.image.draw_date_raw(image)
 
                         if self.image_size == [0, 0]:
-                            self.image_size = self.sizeRawImage(image)
+                            self.image_size = self.image.size_raw(image)
                             self.video.image_size = self.image_size
 
                         if self.previous_image is not None:
-                            similarity = str(self.compareRawImages(imageA=image_compare, imageB=self.previous_image,
-                                                                   detection_area=self.param["similarity"][
-                                                                       "detection_area"]))
+                            similarity = self.image.compare_raw(image_1st=image_compare, image_2nd=self.previous_image, detection_area=self.param["similarity"]["detection_area"])
+                            similarity = str(similarity)
 
                         image_info = {
                             "camera": self.id,
@@ -418,16 +837,16 @@ class BirdhouseCamera(threading.Thread):
                         for key in self.sensor:
                             if self.sensor[key].running and not self.sensor[key].error:
                                 image_info["sensor"][key] = self.sensor[key].get_values()
-                                self.writeSensorInfo(stamp=stamp, data=self.sensor[key].get_values())
+                                self.write_sensor_info(stamp=stamp, data=self.sensor[key].get_values())
 
                         path_lowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
                         path_hires = os.path.join(self.config.directory("images"), self.config.imageName("hires", stamp, self.id))
 
                         logging.debug("WRITE:" + path_lowres)
 
-                        self.writeImageInfo(timestamp=stamp, data=image_info)
-                        self.writeImage(filename=path_hires, image=image)
-                        self.writeImage(filename=path_lowres, image=image, scale_percent=self.param["preview_scale"])
+                        self.write_image_info(timestamp=stamp, data=image_info)
+                        self.write_image(filename=path_hires, image=image)
+                        self.write_image(filename=path_lowres, image=image, scale_percent=self.param["preview_scale"])
 
                         self.previous_image = image_compare
                         self.previous_stamp = stamp
@@ -486,7 +905,7 @@ class BirdhouseCamera(threading.Thread):
             # if cap is None or not cap.isOpened(): raise
             self.camera = WebcamVideoStream(src=self.source).start()
             self.cameraFPS = FPS().start()
-            if self.getImage() == "":
+            if self.get_image() == "":
                 raise Exception("Error during first image capturing.")
             logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
         except Exception as e:
@@ -501,92 +920,15 @@ class BirdhouseCamera(threading.Thread):
         self.active = active
         if image_error:
             self.error_image = True
-            self.error_image_msg.append(exception)
+            self.error_image_msg.append(message)
 
         logging.error(self.id + ": "+message+" ("+str(self.error_time)+")")
 
-    def video_start_recording(self):
+    def camera_start_recording(self):
         self.video.start()
         self.video.image_size = self.image_size
 
-    def setText(self, text):
-        """
-        Add / replace text on the image
-        """
-        if self.type == "pi":
-            self.camera.annotate_text = str(text)
-
-    def setText2RawImage(self, image, text, position="", font="", scale="", color="", thickness=0):
-        """
-        Add text on image
-        """
-        if position == "":
-            position = self.text_default_position
-        if font == "":
-            font = self.text_default_font
-        if scale == "":
-            scale = self.text_default_scale
-        if color == "":
-            color = self.text_default_color
-        if thickness == 0:
-            thickness = self.text_default_thickness
-
-        image = cv2.putText(image, text, position, font, scale, color, thickness, cv2.LINE_AA)
-        return image
-
-    def setText2Image(self, image, text, position="", font="", scale="", color="", thickness=0):
-        """
-       Add text on image
-       """
-        image = self.convertImage2RawImage(image)
-        image = self.setText2RawImage(image, text, position=position, font=font, scale=scale, color=color,
-                                      thickness=thickness)
-        image = self.convertRawImage2Image(image)
-        return image
-
-    def setDateTime2Image(self, image):
-        date_information = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-
-        font = self.text_default_font
-        thickness = 1
-        if self.param["image"]["date_time_color"]:
-            color = self.param["image"]["date_time_color"]
-        else:
-            color = ""
-        if self.param["image"]["date_time_position"]:
-            position = self.param["image"]["date_time_position"]
-        else:
-            position = ""
-        if self.param["image"]["date_time_size"]:
-            scale = self.param["image"]["date_time_size"]
-        else:
-            scale = ""
-
-        image = self.setText2Image(image, date_information, position, font, scale, color, thickness)
-        return image
-
-    def setDateTime2RawImage(self, image):
-        date_information = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-
-        font = self.text_default_font
-        thickness = 1
-        if self.param["image"]["date_time_color"]:
-            color = self.param["image"]["date_time_color"]
-        else:
-            color = ""
-        if self.param["image"]["date_time_position"]:
-            position = self.param["image"]["date_time_position"]
-        else:
-            position = ""
-        if self.param["image"]["date_time_size"]:
-            scale = self.param["image"]["date_time_size"]
-        else:
-            scale = ""
-
-        image = self.setText2RawImage(image, date_information, position, font, scale, color, thickness)
-        return image
-
-    def getImage(self):
+    def get_image(self):
         """
         read image from device
         """
@@ -602,7 +944,7 @@ class BirdhouseCamera(threading.Thread):
         elif self.type == "usb":
             try:
                 raw = self.camera.read()  ## potentially not the same RAW as fram PI
-                encoded = self.convertRawImage2Image(raw)
+                encoded = self.image.convert_from_raw(raw)
                 return encoded.copy()
 
             except Exception as e:
@@ -615,7 +957,7 @@ class BirdhouseCamera(threading.Thread):
             self.camera_error(True, False, error_msg, True)
             return ""
 
-    def getRawImage(self):
+    def get_image_raw(self):
         """
         get image and convert to raw
         """
@@ -626,7 +968,7 @@ class BirdhouseCamera(threading.Thread):
             with self.output.condition:
                 self.output.condition.wait()
                 encoded = self.output.frame
-            raw = self.convertImage2RawImage(encoded)
+            raw = self.image.convert_to_raw(encoded)
             return raw.copy()
 
         elif self.type == "usb":
@@ -643,231 +985,10 @@ class BirdhouseCamera(threading.Thread):
             self.camera_error(True, False, error_msg, True)
             return ""
 
-    def normalizeRawImage(self, image, color="", compare=False):
+    def image_differs(self, file_info):
         """
-        apply presets per camera to image
+        check if similarity is under threshold
         """
-        if self.error_image:
-            return self.image_NA_raw
-
-        if "crop_area" not in self.param["image"]:
-            normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop"], crop_type="relative")
-        else:
-            normalized, self.param["image"]["crop_area"] = self.cropRawImage(frame=image, crop_area=self.param["image"]["crop_area"], crop_type="pixel")
-        # rotate     - not implemented yet
-        # resize     - not implemented yet
-        # saturation - not implemented yet
-        return normalized
-
-    def convertRawImage2Image(self, raw):
-        """
-        convert from raw image to image // untested
-        """
-        if self.error_image:
-            return self.image_NA
-
-        try:
-            r, buf = cv2.imencode(".jpg", raw)
-            size = len(buf)
-            image = bytearray(buf)
-            return image
-
-        except Exception as e:
-            error_msg = self.id + ": Error convert RAW image -> image: " + str(e)
-            logging.error(error_msg)
-            self.error_image_msg.append(error_msg)
-            self.error_image = True
-
-    def convertImage2RawImage(self, image):
-        """
-        convert from device to raw image -> to be modifeid with CV2
-        """
-        if self.error_image:
-            return self.image_NA_raw
-
-        try:
-            image = np.frombuffer(image, dtype=np.uint8)
-            image = cv2.imdecode(image, 1)
-            return image
-
-        except Exception as e:
-            error_msg = self.id + ": Error convert image -> RAW image: " + str(e)
-            logging.error(error_msg)
-            self.error_image_msg.append(error_msg)
-            self.error_image = True
-
-    def convertRawImage2Gray(self, image):
-        """
-        convert image from RGB to gray scale image (e.g. for analyzing similarity)
-        """
-        try:
-            return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-        except Exception as e:
-            error_msg = self.id + ": Error convert image to gray scale: " + str(e)
-            logging.error(error_msg)
-            self.error_image_msg.append(error_msg)
-            self.error_image = True
-
-    def drawImageDetectionArea(self, image):
-        """
-        Draw a red rectangle into the image to show detection area
-        """
-        image = self.convertImage2RawImage(image)
-        image = self.drawRawImageDetectionArea(image)
-        image = self.convertRawImage2Image(image)
-        return image
-
-    def drawRawImageDetectionArea(self, image):
-        """
-        Draw a red rectangle into the image to show detection area
-        """
-        # draw yellow rectangle for crop area
-        color = (0, 255, 255)  # color in BGR
-        thickness = 4
-        height = image.shape[0]
-        width = image.shape[1]
-
-        (w_start, h_start, w_end, h_end) = self.param["image"]["crop"]
-        x_start = int(round(width * w_start, 0))
-        y_start = int(round(height * h_start, 0))
-        x_end = int(round(width * w_end, 0))
-        y_end = int(round(height * h_end, 0))
-
-        logging.debug(self.id + ": show crop area ... " + str(self.param["image"]["crop"]))
-        try:
-            image = cv2.line(image, (x_start, y_start), (x_start, y_end), color, thickness)
-            image = cv2.line(image, (x_start, y_start), (x_end, y_start), color, thickness)
-            image = cv2.line(image, (x_end, y_end), (x_start, y_end), color, thickness)
-            image = cv2.line(image, (x_end, y_end), (x_end, y_start), color, thickness)
-            logging.debug("... top XY: " + str(x_start) + "/" + str(y_start) + " - bottom XY: " + str(x_end) + "/" + str(y_end))
-
-        except Exception as e:
-            error_msg = self.id + ": Error convert image to gray scale: " + str(e)
-            logging.error(error_msg)
-            self.error_image_msg.append(error_msg)
-            self.error_image = True
-            return ""
-
-        # draw red rectangle for detection area
-        color = (0, 0, 255)  # color in BGR
-        thickness = 4
-        d_width = x_end - x_start
-        x_offset = x_start
-        d_height = y_end - y_start
-        y_offset = y_start
-
-        logging.debug(self.id+": calculate image ... h/w: "+str(height)+"/"+str(width)+" dh/dw: "+str(d_height)+"/"+str(d_width))
-        logging.debug(self.id+": calculate image ... w/h_offset: "+str(y_offset)+"/"+str(y_offset))
-
-        (w_start, h_start, w_end, h_end) = self.param["similarity"]["detection_area"]
-        x_start = int(round(d_width * w_start, 0)) + x_offset
-        y_start = int(round(d_height * h_start, 0)) + y_offset
-        x_end = int(round(d_width * w_end, 0)) + x_offset
-        y_end = int(round(d_height * h_end, 0)) + y_offset
-
-        logging.debug(self.id + ": show detection area ... " + str(self.param["similarity"]["detection_area"]))
-        try:
-            image = cv2.line(image, (x_start, y_start), (x_start, y_end), color, thickness)
-            image = cv2.line(image, (x_start, y_start), (x_end, y_start), color, thickness)
-            image = cv2.line(image, (x_end, y_end), (x_start, y_end), color, thickness)
-            image = cv2.line(image, (x_end, y_end), (x_end, y_start), color, thickness)
-            logging.debug("... top XY: " + str(x_start) + "/" + str(y_start) + " - bottom XY: " + str(x_end) + "/" + str(y_end))
-            return image
-
-        except Exception as e:
-            error_msg = self.id + ": Error convert image to gray scale: " + str(e)
-            logging.error(error_msg)
-            self.error_image_msg.append(error_msg)
-            self.error_image = True
-
-    def sizeRawImage(self, frame):
-        """
-        Return size of raw image
-        """
-        try:
-            height = frame.shape[0]
-            width = frame.shape[1]
-            return [width, height]
-
-        except Exception as e:
-            logging.warning(self.id + ": Could not analyze image: " + str(e))
-            return [0, 0]
-
-    def cropImage(self, frame, crop_area, crop_type="relative"):
-        """
-        crop encoded image
-        """
-        raw = self.convertImage2RawImage(frame)
-        raw = self.cropRawImage(raw, crop_area, crop_type)
-        crop = self.convertRawImage2Image(raw)
-        return crop
-
-    def cropRawImage(self, frame, crop_area, crop_type="relative"):
-        """
-        crop image using relative dimensions (0.0 ... 1.0)
-        """
-        try:
-            height = frame.shape[0]
-            width = frame.shape[1]
-
-            if crop_type == "relative":
-                (w_start, h_start, w_end, h_end) = crop_area
-                x_start = int(round(width * w_start, 0))
-                y_start = int(round(height * h_start, 0))
-                x_end = int(round(width * w_end, 0))
-                y_end = int(round(height * h_end, 0))
-                crop_area = (x_start, y_start, x_end, y_end)
-            else:
-                (x_start, y_start, x_end, y_end) = crop_area
-
-            logging.debug("H: " + str(y_start) + "-" + str(y_end) + " / W: " + str(x_start) + "-" + str(x_end))
-            frame_cropped = frame[y_start:y_end, x_start:x_end]
-            return frame_cropped, crop_area
-
-        except Exception as e:
-            logging.warning(self.id + ": Could not crop image: " + str(e))
-
-        return frame, (0, 0, 1, 1)
-
-    def compareImages(self, imageA, imageB, detection_area=None):
-        """
-        calculate structual similarity index (SSIM) of two images
-        """
-        imageA = self.convertImage2RawImage(imageA)
-        imageB = self.convertImage2RawImage(imageB)
-        similarity = self.compareRawImages(imageA, imageB, detection_area)
-        return similarity
-
-    def compareRawImages(self, imageA, imageB, detection_area=None):
-        """
-        calculate structual similarity index (SSIM) of two images
-        """
-        if len(imageA) == 0 or len(imageB) == 0:
-            logging.warning(
-                self.id + ": At least one file has a zero length - A:" + str(len(imageA)) + "/ B:" + str(len(imageB)))
-            score = 0
-
-        else:
-            if detection_area != None:
-                logging.debug(self.id + "/compare 1: " + str(detection_area) + " / " + str(imageA.shape))
-                imageA, area = self.cropRawImage(frame=imageA, crop_area=detection_area, crop_type="relative")
-                imageB, area = self.cropRawImage(frame=imageB, crop_area=detection_area, crop_type="relative")
-                logging.debug(self.id + "/compare 2: " + str(area) + " / " + str(imageA.shape))
-
-            try:
-                (score, diff) = ssim(imageA, imageB, full=True)
-
-            except Exception as e:
-                logging.warning(self.id + ": Error comparing images: " + str(e))
-                score = 0
-
-        return round(score * 100, 1)
-
-    def detectImage(self, file_info):
-        """
-       check if similarity is under threshold
-       """
         threshold = float(self.param["similarity"]["threshold"])
         similarity = float(file_info["similarity"])
         if similarity != 0 and similarity < threshold:
@@ -875,7 +996,7 @@ class BirdhouseCamera(threading.Thread):
         else:
             return 0
 
-    def selectImage(self, timestamp, file_info, check_similarity=True):
+    def image_to_select(self, timestamp, file_info, check_similarity=True):
         """
         check image properties to decide if image is a selected one (for backup and view with selected images)
         """
@@ -900,14 +1021,40 @@ class BirdhouseCamera(threading.Thread):
                     return True
 
             else:
-                return True  ### to be checked !!!
+                return True  # to be checked !!!
 
         return False
 
-    def writeImage(self, filename, image, scale_percent=100):
+    def show_areas(self, image):
         """
-       Scale image and write to file
-       """
+        Draw a red rectangle into the image to show detection area
+        """
+        image = self.image.convert_to_raw(image)
+        image = self.show_areas_raw(image)
+        image = self.image.convert_from_raw(image)
+        return image
+
+    def show_areas_raw(self, image):
+        """
+        Draw a red rectangle into the image to show detection area / and a yellow to show the crop area
+        """
+        outer_area = self.param["image"]["crop"]
+        inner_area = self.param["similarity"]["detection_area"]
+        image = self.image.draw_area_raw(raw=image, area=outer_area, color=(0, 255, 255), thickness=4)
+
+        w_start = outer_area[0] + ((outer_area[2]-outer_area[0]) * inner_area[0])
+        h_start = outer_area[1] + ((outer_area[3]-outer_area[1]) * inner_area[1])
+        w_end = outer_area[2] - ((outer_area[2]-outer_area[0]) * (1-inner_area[2]))
+        h_end = outer_area[3] - ((outer_area[3]-outer_area[1]) * (1-inner_area[3]))
+
+        inner_area = (w_start, h_start, w_end, h_end)
+        image = self.image.draw_area_raw(raw=image, area=inner_area, color=(0, 0, 255), thickness=4)
+        return image
+
+    def write_image(self, filename, image, scale_percent=100):
+        """
+        Scale image and write to file
+        """
         image_path = os.path.join(self.config.param["path"], filename)
         logging.debug("Write image: " + image_path)
 
@@ -918,17 +1065,17 @@ class BirdhouseCamera(threading.Thread):
 
         return cv2.imwrite(image_path, image)
 
-    def writeImageInfo(self, timestamp, data):
+    def write_image_info(self, timestamp, data):
         """
         Write image information to file
         """
-        logging.debug(self.id+": Write image info: " + self.config.file("images"))
+        logging.debug(self.id + ": Write image info: " + self.config.file("images"))
         if os.path.isfile(self.config.file("images")):
             files = self.config.read_cache("images")
             files[timestamp] = data.copy()
             self.config.write("images", files)
 
-    def writeVideoInfo(self, stamp, data):
+    def write_video_info(self, stamp, data):
         """
         Write image information to file
         """
@@ -938,7 +1085,7 @@ class BirdhouseCamera(threading.Thread):
             files[stamp] = data
             self.config.write("videos", files)
 
-    def writeSensorInfo(self, stamp, data):
+    def write_sensor_info(self, stamp, data):
         """
         Write Sensor information to separate config file (for recovery purposes)
         """
@@ -949,130 +1096,3 @@ class BirdhouseCamera(threading.Thread):
             files = {}
         files[stamp] = data
         self.config.write("sensor", files)
-
-    def createDayVideo(self, filename, stamp, date):
-        """
-        Create daily video from all single images available
-        """
-        camera = self.id
-        cmd_videofile = "video_" + camera + "_" + stamp + ".mp4"
-        cmd_thumbfile = "video_" + camera + "_" + stamp + "_thumb.jpeg"
-        cmd_tempfiles = "img_" + camera + "_" + stamp + "_"
-        framerate = 20
-
-        cmd_rm = "rm " + self.config.directory("videos_temp") + "*"
-        logging.info(cmd_rm)
-        message = os.system(cmd_rm)
-
-        cmd_copy = "cp " + self.config.directory("images") + filename + "* " + self.config.directory("videos_temp")
-        logging.info(cmd_copy)
-        message = os.system(cmd_copy)
-        if message != 0:
-            response = {
-                "result": "error",
-                "reason": "copy temp image files",
-                "message": message
-            }
-            return response
-
-        cmd_filename = self.config.directory("videos_temp") + cmd_tempfiles
-        cmd_rename = "i=0; for fi in " + self.config.directory(
-            "videos_temp") + "image_*; do mv \"$fi\" $(printf \"" + cmd_filename + "%05d.jpg\" $i); i=$((i+1)); done"
-        logging.info(cmd_rename)
-        message = os.system(cmd_rename)
-        if message != 0:
-            response = {
-                "result": "error",
-                "reason": "rename temp image files",
-                "message": message
-            }
-            return response
-
-        amount = 0
-        for root, dirs, files in os.walk(self.config.directory("videos_temp")):
-            for filename in files:
-                if cmd_tempfiles in filename:
-                    amount += 1
-
-        cmd_create = self.video.ffmpeg_cmd
-        cmd_create = cmd_create.replace("{INPUT_FILENAMES}", cmd_filename + "%05d.jpg")
-        cmd_create = cmd_create.replace("{OUTPUT_FILENAME}",
-                                        os.path.join(self.config.directory("videos"), cmd_videofile))
-        cmd_create = cmd_create.replace("{FRAMERATE}", str(framerate))
-        logging.info(cmd_create)
-        message = os.system(cmd_create)
-        if message != 0:
-            response = {
-                "result": "error",
-                "reason": "create video with ffmpeg",
-                "message": message
-            }
-            return response
-
-        cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.directory("videos") + cmd_thumbfile
-        logging.info(cmd_thumb)
-        message = os.system(cmd_thumb)
-        if message != 0:
-            response = {
-                "result": "error",
-                "reason": "create thumbnail",
-                "message": message
-            }
-            return response
-
-        cmd_rm2 = "rm " + self.config.directory("videos_temp") + "*.jpg"
-        logging.info(cmd_rm2)
-        message = os.system(cmd_rm2)
-        if message != 0:
-            response = {
-                "result": "error",
-                "reason": "remove temp image files",
-                "message": message
-            }
-            return response
-
-        length = (amount / framerate)
-        video_data = {
-            "camera": self.id,
-            "camera_name": self.name,
-            "date": date,
-            "date_start": stamp,
-            "framerate": framerate,
-            "image_count": amount,
-            "image_size": self.image_size,
-            "length": length,
-            "time": "complete day",
-            "type": "video",
-            "thumbnail": cmd_thumbfile,
-            "video_file": cmd_videofile,
-        }
-
-        self.writeVideoInfo(stamp=stamp, data=video_data)
-
-        return {"result": "OK"}
-
-    def trimVideo(self, video_id, start, end):
-        """
-        create a shorter video based on date and time
-        """
-        config_file = self.config.read_cache("videos")
-        if video_id in config_file:
-            input_file = config_file[video_id]["video_file"]
-            output_file = input_file.replace(".mp4", "_short.mp4")
-            framerate = config_file[video_id]["framerate"]
-            result = self.video.trim_video(input_file=input_file, output_file=output_file, start_timecode=start,
-                                           end_timecode=end, framerate=framerate)
-            if result == "OK":
-                config_file[video_id]["video_file_short"] = output_file
-                config_file[video_id]["video_file_short_start"] = float(start)
-                config_file[video_id]["video_file_short_end"] = float(end)
-                config_file[video_id]["video_file_short_length"] = float(end) - float(start)
-
-                self.config.write("videos", config_file)
-                return {"result": "OK"}
-            else:
-                return {"result": "Error while creating shorter video."}
-
-        else:
-            logging.warning("No video with the ID " + str(video_id) + " available.")
-            return {"result": "No video with the ID " + str(video_id) + " available."}

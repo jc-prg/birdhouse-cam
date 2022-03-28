@@ -223,6 +223,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = commands.createShortVideo(self)
         elif self.path.startswith("/create-day-video/"):
             response = commands.createDayVideo(self)
+        elif self.path.startswith("/edit_presets/"):
+            logging.info("Edit presets: Not implemented yet ...")
         else:
             self.error_404()
             return
@@ -310,13 +312,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content["server"] = config.param["server"]
             content["backup"] = config.param["backup"]
 
-            # content["ip4_address"] = config.param["ip4_address"]
-            # content["backup_time"] = config.param["backup_time"]
-            # content["preview_backup"] = config.param["preview_backup"]
-            # content["rpi_active"] = config.param["rpi_active"]
-
             micro_data = config.param["devices"]["microphones"].copy()
-
             camera_data = config.param["devices"]["cameras"].copy()
             for key in camera_data:
                 camera_param = camera[key].param.copy()
@@ -351,7 +347,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 else:
                     logging.info("Sensor not available: "+key)
 
-
             content["devices"] = {
                 "cameras": camera_data,
                 "sensors": sensor_data,
@@ -374,11 +369,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'),
                              no_cache=True)
+
         # extract and show single image
         elif '/image.jpg' in self.path:
             # camera[which_cam].setText = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-            camera[which_cam].writeImage('image_' + which_cam + '.jpg',
-                                         camera[which_cam].convertFrame2Image(camera[which_cam].getFrame()))
+            camera[which_cam].write_image('image_' + which_cam + '.jpg', camera[which_cam].get_image())
             self.stream_file(filetype='image/jpeg',
                              content=read_image(directory="", filename='image_' + which_cam + '.jpg'))
 
@@ -394,41 +389,41 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             stream = True
 
             while stream:
-                frame = camera[which_cam].getRawImage()
+                frame = camera[which_cam].get_image_raw()
                 frame_raw = frame.copy()
 
                 if self.path.startswith("/detection/"):
-                    frame_raw = camera[which_cam].drawRawImageDetectionArea(image=frame_raw)
-                    frame = camera[which_cam].convertRawImage2Image(frame_raw)
+                    frame_raw = camera[which_cam].show_areas_raw(image=frame_raw)
+                    frame = camera[which_cam].image.convert_from_raw(frame_raw)
 
                 else:
-                    frame = camera[which_cam].normalizeRawImage(frame)
+                    frame = camera[which_cam].image.normalize_raw(frame)
                     if camera[which_cam].param["image"]["date_time"]:
-                        frame = camera[which_cam].setDateTime2RawImage(frame)
+                        frame = camera[which_cam].image.draw_date_raw(frame)
 
                     if camera[which_cam].video.recording:
                         logging.debug("VIDEO RECORDING")
                         length = str(round(camera[which_cam].video.info_recording()["length"]))
                         framerate = str(round(camera[which_cam].video.info_recording()["framerate"]))
                         y_position = camera[which_cam].image_size[1] - 40
-                        frame = camera[which_cam].setText2RawImage(frame, "Recording", position=(20, y_position),
-                                                                color=(0, 0, 255), scale=1, thickness=2)
-                        frame = camera[which_cam].setText2RawImage(frame, "(" + length + "s/" + framerate + "fps)",
-                                                                position=(200, y_position), color=(0, 0, 255),
-                                                                scale=0.5, thickness=1)
+                        frame = camera[which_cam].image.draw_text_raw(frame, "Recording", position=(20, y_position),
+                                                                      color=(0, 0, 255), scale=1, thickness=2)
+                        frame = camera[which_cam].image.draw_text_raw(frame, "(" + length + "s/" + framerate + "fps)",
+                                                                      position=(200, y_position), color=(0, 0, 255),
+                                                                      scale=0.5, thickness=1)
 
                     if camera[which_cam].video.processing:
                         logging.debug("VIDEO PROCESSING")
                         length = str(round(camera[which_cam].video.info_recording()["length"]))
                         image_size = str(camera[which_cam].video.info_recording()["image_size"])
                         y_position = camera[which_cam].image_size[1] - 40
-                        frame = camera[which_cam].setText2RawImage(frame, "Processing", position=(20, y_position),
-                                                                color=(0, 255, 255), scale=1, thickness=2)
-                        frame = camera[which_cam].setText2RawImage(frame, "(" + length + "s/" + image_size + ")",
-                                                                position=(200, y_position), color=(0, 255, 255),
-                                                                scale=0.5, thickness=1)
+                        frame = camera[which_cam].image.draw_text_raw(frame, "Processing", position=(20, y_position),
+                                                                      color=(0, 255, 255), scale=1, thickness=2)
+                        frame = camera[which_cam].image.draw_text_raw(frame, "(" + length + "s/" + image_size + ")",
+                                                                      position=(200, y_position), color=(0, 255, 255),
+                                                                      scale=0.5, thickness=1)
 
-                    frame = camera[which_cam].convertRawImage2Image(frame)
+                    frame = camera[which_cam].image.convert_from_raw(frame)
 
                 try:
                     camera[which_cam].wait()

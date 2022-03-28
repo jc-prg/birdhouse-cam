@@ -25,7 +25,6 @@ class BirdhouseArchive(threading.Thread):
         start backup in the background
         """
         backup_started = False
-        count = 0
         while self._running:
             stamp = datetime.now().strftime('%H%M%S')
             if stamp[0:4] == self.config.param["backup"]["time"] and not backup_started:
@@ -171,7 +170,7 @@ class BirdhouseArchive(threading.Thread):
                         logging.error(e)
 
                     if len(filename_last) > 0:
-                        score = self.camera[cam].compareRawImages(image_current, image_last)
+                        score = self.camera[cam].image.compare_raw(image_current, image_last)
                         files_new[time]["compare"] = (filename_current, filename_last)
                         files_new[time]["similarity"] = score
                         count += 1
@@ -280,7 +279,7 @@ class BirdhouseArchive(threading.Thread):
                         update_new = files[stamp].copy()
 
                         # if images are to archived
-                        if self.camera[cam].selectImage(timestamp=stamp, file_info=files[stamp]):
+                        if self.camera[cam].image_to_select(timestamp=stamp, file_info=files[stamp]):
                             count += 1
                             file_lowres = self.config.imageName(image_type="lowres", timestamp=stamp, camera=cam)
                             file_hires = self.config.imageName(image_type="hires", timestamp=stamp, camera=cam)

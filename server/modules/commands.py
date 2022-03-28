@@ -39,8 +39,10 @@ class BirdhouseCommands(threading.Thread):
             if len(self.create_day_queue) > 0:
                 self.config.async_running = True
                 [which_cam, filename, stamp, date] = self.create_day_queue.pop()
-                response = self.camera[which_cam].createDayVideo(filename=filename, stamp=stamp, date=date)
+                response = self.camera[which_cam].video.create(filename=filename, stamp=stamp, date=date)
+
                 if response["result"] == "OK":
+                    self.camera[which_cam].write_video_info(stamp=stamp, data=response["data"])
                     self.config.async_answers.append(["CREATE_DAY_DONE", date, response["result"]])
                 else:
                     self.config.async_answers.append(["CREATE_DAY_ERROR", date, response["result"]])
@@ -52,7 +54,7 @@ class BirdhouseCommands(threading.Thread):
                 self.config.async_running = True
                 [which_cam, video_id, start, end] = self.create_queue.pop()
                 logging.info("Start video creation (" + video_id + "): " + str(start) + " - " + str(end) + ")")
-                response = self.camera[which_cam].trimVideo(video_id, start, end)
+                response = self.camera[which_cam].create_trim_video(video_id, start, end)
                 logging.info(str(response))
                 self.config.async_answers.append(["TRIM_DONE", video_id, response["result"]])
                 self.config.async_running = True
