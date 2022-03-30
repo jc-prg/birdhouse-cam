@@ -1,8 +1,3 @@
-import os
-
-
-initial_path = os.path.join(os.path.dirname(os.path.abspath(__file__)).replace("/modules", ""),"..")
-
 
 birdhouse_pages = {
     "live":             ("Live-Stream", "/index.html",       "INDEX"),
@@ -17,7 +12,6 @@ birdhouse_pages = {
 }
 birdhouse_preset = {
     "title":            "Unser Nistkasten :-)",
-    "path":             initial_path,      # initially start from the working dir
     "backup": {
         "preview":   "0700",               # HHMM
         "time":      "2000"

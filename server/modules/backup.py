@@ -13,6 +13,7 @@ class BirdhouseArchive(threading.Thread):
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
+        logging.info("Starting backup process ...")
         self.config = config
         self.camera = camera
         self.views = views

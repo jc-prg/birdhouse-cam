@@ -10,6 +10,7 @@ import sys
 import socketserver
 from http import server
 from datetime import datetime
+from urllib.parse import unquote
 
 from modules.backup import BirdhouseArchive
 from modules.camera import BirdhouseCamera
@@ -65,7 +66,7 @@ def read_html(directory, filename, content=""):
         filename = filename[1:len(filename)]
     if directory.startswith("/"):
         directory = directory[1:len(directory)]
-    file = os.path.join(config.param["path"], directory, filename)
+    file = os.path.join(config.main_directory, directory, filename)
 
     if not os.path.isfile(file):
         logging.warning("File '" + file + "' does not exist!")
@@ -91,7 +92,7 @@ def read_image(directory, filename):
     """
     if filename.startswith("/"):  filename = filename[1:len(filename)]
     if directory.startswith("/"): directory = directory[1:len(directory)]
-    file = os.path.join(config.param["path"], directory, filename)
+    file = os.path.join(config.main_directory, directory, filename)
     file = file.replace("backup/", "")
 
     if not os.path.isfile(file):
@@ -224,15 +225,21 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.startswith("/create-day-video/"):
             response = commands.createDayVideo(self)
         elif self.path.startswith("/edit_presets/"):
-            logging.info("Edit presets: Not implemented yet ... "+self.path)
             param_string = self.path.replace("/edit_presets/", "")
             param = param_string.split("/")
             data = {}
             for entry in param:
                 if "==" in entry:
                     key, value = entry.split("==")
-                    data[key] = value
-            logging.info(str(data))
+                    data[key] = unquote(value)
+                    data[key] = data[key].replace("%20", " ")
+                    data[key] = data[key].replace("%22", "\"")
+                    data[key] = data[key].replace("%5B", "[")
+                    data[key] = data[key].replace("%5D", "]")
+                    data[key] = data[key].replace("%7B", "{")
+                    data[key] = data[key].replace("%7C", "|")
+                    data[key] = data[key].replace("%7D", "}")
+            config.change_config("main", data)
         else:
             self.error_404()
             return
@@ -254,15 +261,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         config.html_replace["active_cam"] = which_cam
 
         # index
-        if self.path == '/':
+        if self.path == "/":
             self.redirect("/app/index.html")
-        elif self.path == '/index.html':
-            self.redirect("/")
-        elif self.path == '/index.html?cam1':
-            self.redirect("/")
-        elif self.path == '/app':
+        elif self.path == "/index.html":
             self.redirect("/app/index.html")
-        elif self.path == '/app/':
+        elif self.path == "/index.html?cam1":
+            self.redirect("/app/index.html")
+        elif self.path == "/app":
+            self.redirect("/app/index.html")
+        elif self.path == "/app/":
             self.redirect("/app/index.html")
 
         # REST API call :  /api/<cmd>/<camera>/param1>/<param2>
@@ -323,27 +330,18 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             micro_data = config.param["devices"]["microphones"].copy()
             camera_data = config.param["devices"]["cameras"].copy()
             for key in camera_data:
-                camera_param = camera[key].param.copy()
                 if key in camera:
-                    camera_data[key]["stream"] = "/stream.mjpg?" + key
-                    camera_data[key]["streaming_server"] = config.param["server"]["ip4_stream_video"]
-                    camera_data[key]["streaming_server"] += ":"+str(config.param["server"]["port_video"])
-                    camera_data[key]["server_port"] = config.param["server"]["port"],
-                    camera_data[key]["record"] = camera[key].record
+                    camera_data[key]["video"]["stream"] = "/stream.mjpg?" + cam
+                    camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + cam
+                    camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_stream_video"]
+                    camera_data[key]["video"]["stream_server"] += ":" + str(config.param["server"]["port_video"])
+                    camera_data[key]["device"] = "camera"
                     camera_data[key]["status"] = {
                         "error": camera[key].error,
                         "running": camera[key].running,
                         "img_error": camera[key].error_image,
                         "img_msg": camera[key].error_image_msg
                     }
-#                if "image_save" in camera_data[key]:
-#                    del camera_data[key]["image_save"]
-#                if "preview_scale" in camera_data[key]:
-#                    del camera_data[key]["preview_scale"]
-#                if "path" in camera_data[key]:
-#                    del camera_data[key]["path"]
-#                if "video" in camera_data[key]:
-#                    del camera_data[key]["video"]
 
             sensor_data = config.param["devices"]["sensors"].copy()
             for key in sensor_data:
@@ -398,7 +396,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             while stream:
                 frame = camera[which_cam].get_image_raw()
-                frame_raw = frame.copy()
+                frame_raw = frame
+
+                if config.update["camera_"+which_cam]:
+                    camera[which_cam].update_main_config()
 
                 if self.path.startswith("/detection/"):
                     frame_raw = camera[which_cam].show_areas_raw(image=frame_raw)
@@ -454,17 +455,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # favicon
         elif self.path.endswith('favicon.ico'):
-            self.stream_file(filetype='image/ico', content=read_image(directory='app', filename=self.path))
+            self.stream_file(filetype='image/ico', content=read_image(directory='../app', filename=self.path))
 
         # images, js, css, ...
         elif file_ending in file_types:
-
-            if "text" in file_types[file_ending]:
-                self.stream_file(filetype=file_types[file_ending], content=read_html(directory='', filename=self.path))
-            elif "application" in file_types[file_ending]:
-                self.stream_file(filetype=file_types[file_ending], content=read_html(directory='', filename=self.path))
+            if "/images/" in self.path or "/videos/" in self.path:
+                file_path = config.directories["data"]
             else:
-                self.stream_file(filetype=file_types[file_ending], content=read_image(directory='', filename=self.path))
+                file_path = "../"
+            if "text" in file_types[file_ending]:
+                self.stream_file(filetype=file_types[file_ending], content=read_html(directory=file_path, filename=self.path))
+            elif "application" in file_types[file_ending]:
+                self.stream_file(filetype=file_types[file_ending], content=read_html(directory=file_path, filename=self.path))
+            else:
+                self.stream_file(filetype=file_types[file_ending], content=read_image(directory=file_path, filename=self.path))
 
         # request unknown
         else:
@@ -527,7 +531,6 @@ if __name__ == "__main__":
         settings = config.param["devices"]["cameras"][cam]
         camera[cam] = BirdhouseCamera(thread_id=cam, config=config, sensor=sensor)
         camera[cam].start()
-        camera[cam].param["path"] = config.param["path"]
 
     # start views and commands
     views = BirdhouseViews(config=config, camera=camera)
@@ -574,11 +577,13 @@ if __name__ == "__main__":
 
     # Start Webserver
     try:
-        address = ('', config.param["server"]["port"])
+        address = ('0.0.0.0', config.param["server"]["port"])
         server = StreamingServer(address, StreamingHandler)
-        logging.info("Starting WebServer ...")
+        logging.info("Starting WebServer on port "+str(config.param["server"]["port"])+" ...")
         server.serve_forever()
-        logging.info("OK.")
+
+    except Exception as e:
+        logging.error("Could not start WebServer: "+str(e))
 
     # Stop all processes to stop
     finally:

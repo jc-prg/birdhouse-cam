@@ -24,6 +24,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
+        logging.info("Loading Video Processing for "+camera+"... ")
         self.id = camera
         self.camera = camera
         self.name = param["name"]
@@ -379,6 +380,7 @@ class BirdhouseImageProcessing(object):
     modify encoded and raw images
     """
     def __init__(self, camera, config, param):
+        logging.info("Loading Image Processing for "+camera+"... ")
         self.frame = None
         self.id = camera
         self.config = config
@@ -391,6 +393,7 @@ class BirdhouseImageProcessing(object):
         self.text_default_thickness = 2
 
         self.img_camera_error = "camera_na.jpg"
+
 
     def _msg_error(self, message):
         """
@@ -705,16 +708,17 @@ class BirdhouseCamera(threading.Thread):
         self.config = config
         self.sensor = sensor
 
+        self.config.update["camera_"+self.id] = False
         self.param = self.config.param["devices"]["cameras"][self.id]
+
         self.name = self.param["name"]
         self.active = self.param["active"]
         self.source = self.param["source"]
         self.type = self.param["type"]
         self.record = self.param["record"]
 
-        self.video = BirdhouseVideoProcessing(camera=self.id, config=self.config, param=self.param, directory=self.config.directory("videos"))
-        self.image = BirdhouseImageProcessing(camera=self.id, config=self.config, param=self.param)
-
+        self.video = None
+        self.image = None
         self.running = True
         self.pause = False
         self.error = False
@@ -733,12 +737,17 @@ class BirdhouseCamera(threading.Thread):
         self.previous_image = None
         self.previous_stamp = "000000"
 
-        self.camera_NA = os.path.join(self.config.main_directory, self.config.directories["data"], "camera_na.jpg")
-        self.image_NA_raw = cv2.imread(self.camera_NA)
-        self.image_NA = self.image.convert_from_raw(self.image_NA_raw)
+        self.image = BirdhouseImageProcessing(camera=self.id, config=self.config, param=self.param)
+        self.video = BirdhouseVideoProcessing(camera=self.id, config=self.config, param=self.param, directory=self.config.directory("videos"))
+        self.video.output = BirdhouseCameraOutput()
 
-        logging.info("Starting camera (" + self.id + "/" + self.type + "/" + self.name + ") ...")
-        logging.info("Loading error image: "+self.camera_NA)
+        # logging.info("Loading error image: "+self.camera_NA)
+        # self.camera_NA = os.path.join(self.config.main_directory, self.config.directories["data"], "camera_na.jpg")
+        # self.image_NA_raw = cv2.imread(self.camera_NA)
+        # self.image_NA = self.image.convert_from_raw(self.image_NA_raw)
+        # logging.debug("Length " + self.camera_NA + " - File:" + str(len(self.image_NA)) + "/Img:" + str(len(self.image_NA_raw)))
+
+        logging.info("Starting camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
 
         if self.type == "pi":
             self.camera_start_pi()
@@ -746,10 +755,10 @@ class BirdhouseCamera(threading.Thread):
             self.camera_start_usb()
         else:
             self.camera_error(True, False, "Unknown type of camera!")
+
         if not self.error and self.param["video"]["allow_recording"]:
             self.camera_start_recording()
 
-        logging.debug("Length " + self.camera_NA + " - File:" + str(len(self.image_NA)) + "/Img:" + str(len(self.image_NA_raw)))
         logging.debug("HOURS:   " + str(self.param["image_save"]["hours"]))
         logging.debug("SECONDS: " + str(self.param["image_save"]["seconds"]))
 
@@ -763,10 +772,12 @@ class BirdhouseCamera(threading.Thread):
             hours = datetime.now().strftime('%H')
             stamp = datetime.now().strftime('%H%M%S')
 
-            i = 0
             while self.pause and self.running:
-                logging.debug("Paused ...")
+                logging.info(self.id+" = paused ...")
                 time.sleep(0.1)
+
+            if self.config.update["camera_"+self.id]:
+                self.update_main_config(self)
 
             # Error with camera - try to restart from time to time
             if self.error:
@@ -886,18 +897,18 @@ class BirdhouseCamera(threading.Thread):
         except ImportError:
             self.camera_error(True, False, "Module for PiCamera isn't installed. Try 'pip3 install picamera'.")
         try:
-            self.camera = picamera.PiCamera()
-            self.output = BirdhouseCameraOutput()
-            self.camera.resolution = self.param["image"]["resolution"]
-            self.camera.framerate = self.param["image"]["framerate"]
-            self.camera.rotation = self.param["image"]["rotation"]
-            self.camera.saturation = self.param["image"]["saturation"]
-            # self.camera.zoom = self.param["image"]["crop"]
-            # self.camera.annotate_background = picamera.Color('black')
-            self.camera.start_recording(self.output, format='mjpeg')
-            logging.info(self.id + ": OK.")
+            if not self.error:
+                self.camera = picamera.PiCamera()
+                self.camera.resolution = self.param["image"]["resolution"]
+                self.camera.framerate = self.param["image"]["framerate"]
+                self.camera.rotation = self.param["image"]["rotation"]
+                self.camera.saturation = self.param["image"]["saturation"]
+                # self.camera.zoom = self.param["image"]["crop"]
+                # self.camera.annotate_background = picamera.Color('black')
+                self.camera.start_recording(self.output, format='mjpeg')
+                logging.info(self.id + ": OK.")
         except Exception as e:
-            self.camera_error(True, False, "Starting PiCamera doesn't work!\n" + str(e))
+            self.camera_error(True, False, "Starting PiCamera doesn't work: " + str(e))
 
     def camera_start_usb(self):
         try:
@@ -936,9 +947,9 @@ class BirdhouseCamera(threading.Thread):
             return self.image_NA
 
         elif self.type == "pi":
-            with self.output.condition:
-                self.output.condition.wait()
-                encoded = self.output.frame
+            with self.video.output.condition:
+                self.video.output.condition.wait()
+                encoded = self.video.output.frame
             return encoded.copy()
 
         elif self.type == "usb":
@@ -961,13 +972,10 @@ class BirdhouseCamera(threading.Thread):
         """
         get image and convert to raw
         """
-        if self.error_image:
-            return self.image_NA_raw
-
         if self.type == "pi":
-            with self.output.condition:
-                self.output.condition.wait()
-                encoded = self.output.frame
+            with self.video.output.condition:
+                self.video.output.condition.wait()
+                encoded = self.video.output.frame
             raw = self.image.convert_to_raw(encoded)
             return raw.copy()
 
@@ -1055,7 +1063,7 @@ class BirdhouseCamera(threading.Thread):
         """
         Scale image and write to file
         """
-        image_path = os.path.join(self.config.param["path"], filename)
+        image_path = self.config.main_directory
         logging.debug("Write image: " + image_path)
 
         if scale_percent != 100:
@@ -1096,3 +1104,12 @@ class BirdhouseCamera(threading.Thread):
             files = {}
         files[stamp] = data
         self.config.write("sensor", files)
+
+    def update_main_config(self):
+        logging.info("Update data from main configuration file for camera " + self.id)
+        temp_data = self.config.read("main")
+        self.param = temp_data["devices"]["cameras"][self.id]
+        self.video.param = self.param
+        self.image.param = self.param
+        self.config.update["camera_" + self.id] = False
+

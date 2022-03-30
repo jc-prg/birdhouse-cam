@@ -1,8 +1,11 @@
 #!/usr/bin/python3
 
-import os, time
+import os
+import sys
+import time
 import logging
-import json, codecs
+import json
+import codecs
 import threading
 from datetime import datetime
 
@@ -14,6 +17,7 @@ class BirdhouseConfig(threading.Thread):
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
+        self.update = {}
         self.param_init = param_init
         self.name = "Config"
         self.async_answers = []
@@ -24,32 +28,39 @@ class BirdhouseConfig(threading.Thread):
             "start_date": datetime.now().strftime("%d.%m.%Y %H:%M:%S")
         }
         self.directories = {
-            "main": "../",
+            "html": "../app/",
+            "data": "../data/",
+            "main": "",
             "sensor": "",
-            "data": "data/",
-            "images": "data/images/",
-            "backup": "data/images/",
-            "videos": "data/videos/",
-            "videos_temp": "data/videos/images2video/",
-            "html": "app-v1/"
+            "images": "images/",
+            "backup": "images/",
+            "videos": "videos/",
+            "videos_temp": "videos/images2video/"
         }
         self.files = {
+            "main": "config.json",
             "backup": "config_images.json",
             "images": "config_images.json",
-            "main": "data/config.json",
-            "sensor": "data/config_sensor.json",
+            "sensor": "config_sensor.json",
             "videos": "config_videos.json"
         }
 
         self.main_directory = main_directory
 
         if not self.exists("main"):
-            logging.info("Create main config file (" + os.path.join(self.main_directory, self.files["main"]) + ") ...")
+            directory = os.path.join(self.main_directory, self.directories["data"])
+            filename = os.path.join(directory, self.files["main"])
+            logging.info("Create main config file (" + filename + ") ...")
             self.write("main", self.param_init)
-            logging.info("OK.")
+            if not self.exists("main"):
+                logging.info("OK.")
+            else:
+                logging.error("Could not create main config file, check if directory '"+directory+"' is writable.")
+                sys.exit()
 
+        logging.info("Read configuration from '"+self.file("main")+"' ...")
         self.param = self.read("main")
-        self.main_directory = self.param["path"]
+        self.param["path"] = main_directory
         self._running = True
 
     def run(self):
@@ -105,40 +116,11 @@ class BirdhouseConfig(threading.Thread):
             logging.warning("File '" + filename + "' is not locked any more (" + str(count) + ")")
         return "OK"
 
-    def read_json(self, filename):
-        """
-        read json file including check if locked
-        """
-        try:
-            with open(filename) as json_file:
-                data = json.load(json_file)
-            return data
-
-        except Exception as e:
-            logging.error("Could not read JSON file: " + filename)
-            logging.error(str(e))
-            return {}
-
-    def write_json(self, filename, data):
-        """
-        write json file including locking mechanism
-        """
-        try:
-            self.check_locked(filename)
-            self.locked[filename] = True
-            with open(filename, 'wb') as json_file:
-                json.dump(data, codecs.getwriter('utf-8')(json_file), ensure_ascii=False, sort_keys=True, indent=4)
-            self.locked[filename] = False
-
-        except Exception as e:
-            logging.error("Could not write JSON file: " + filename)
-            logging.error(str(e))
-
     def directory(self, config, date=""):
         """
         return directory of config file
         """
-        return os.path.join(self.main_directory, self.directories[config], date)
+        return os.path.join(self.main_directory, self.directories["data"], self.directories[config], date)
 
     def directory_create(self, config, date=""):
         """
@@ -158,7 +140,7 @@ class BirdhouseConfig(threading.Thread):
         """
         return complete path of config file
         """
-        return os.path.join(self.directory(config), date, self.files[config])
+        return os.path.join(self.directory(config, date), self.files[config])
 
     def read(self, config, date=""):
         """
@@ -167,7 +149,21 @@ class BirdhouseConfig(threading.Thread):
         config_file = self.file(config, date)
         config_data = self.read_json(config_file)
         logging.debug("Read JSON file " + config_file)
-        return config_data
+        return config_data.copy()
+
+    def read_json(self, filename):
+        """
+        read json file including check if locked
+        """
+        try:
+            with open(filename) as json_file:
+                data = json.load(json_file)
+            return data
+
+        except Exception as e:
+            logging.error("Could not read JSON file: " + filename)
+            logging.error(str(e))
+            return {}
 
     def read_cache(self, config, date=""):
         """
@@ -182,9 +178,9 @@ class BirdhouseConfig(threading.Thread):
             self.config_cache[config][date] = self.read(config=config, date=date)
 
         if date == "":
-            return self.config_cache[config]
+            return self.config_cache[config].copy()
         else:
-            return self.config_cache[config][date]
+            return self.config_cache[config][date].copy()
 
     def write(self, config, config_data, date=""):
         """
@@ -200,6 +196,22 @@ class BirdhouseConfig(threading.Thread):
         else:
             self.config_cache[config] = {}
             self.config_cache[config][date] = config_data
+
+    def write_json(self, filename, data):
+        """
+        write json file including locking mechanism
+        """
+        try:
+            self.check_locked(filename)
+            self.locked[filename] = True
+            with open(filename, 'wb') as json_file:
+                json.dump(data, codecs.getwriter('utf-8')(json_file), ensure_ascii=False, sort_keys=True, indent=4)
+            self.locked[filename] = False
+            logging.debug("Write JSON file: "+filename)
+
+        except Exception as e:
+            logging.error("Could not write JSON file: " + filename)
+            logging.error(str(e))
 
     def write_image(self, config, file_data, date="", time=''):
         """
@@ -243,9 +255,9 @@ class BirdhouseConfig(threading.Thread):
             return "image_" + camera + timestamp + ".jpg"
 
     def imageName2Param(self, filename):
-        '''
-       Analyze image name ...
-       '''
+        """
+        Analyze image name ...
+        """
         if filename.endswith(".jpg"):
             filename = filename.replace(".jpg", "")
         elif filename.endswith(".jpeg"):
@@ -268,3 +280,53 @@ class BirdhouseConfig(threading.Thread):
             info["type"] = "hires"
             info["stamp"] = parts[3]
         return info
+
+    def change_config(self, config, config_data, date=""):
+        """
+        change configuration base on dict in form
+        dict["key1:ey2:key3"] = "value"
+        """
+        logging.info("Change configuration ... "+config+"/"+date+" ... "+str(config_data))
+        param = self.read(config, date)
+        data_type = ""
+        for key in config_data:
+            keys = key.split(":")
+            if "||" in config_data[key]:
+                value_type = config_data[key].split("||")
+                value = value_type[0]
+                data_type = value_type[1]
+            else:
+                value = config_data[key]
+
+            if data_type == "boolean" and value == "false":
+                value = False
+            elif data_type == "boolean" and value == "true":
+                value = True
+            elif data_type == "float":
+                value = float(value)
+            elif data_type == "integer":
+                value = int(value)
+            elif data_type == "json":
+                try:
+                    value = json.loads(value)
+                except Exception as e:
+                    logging.error("Could not load as JSON: "+str(e))
+
+            if ":" not in key:
+                param[key] = value
+            elif len(keys) == 2:
+                param[keys[0]][keys[1]] = value
+            elif len(keys) == 3:
+                param[keys[0]][keys[1]][keys[2]] = value
+            elif len(keys) == 4:
+                param[keys[0]][keys[1]][keys[2]][keys[3]] = value
+            elif len(keys) == 5:
+                param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]] = value
+            elif len(keys) == 6:
+                param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]][keys[5]] = value
+        self.write(config, param, date)
+
+        if config == "main":
+            self.param = self.read(config, date)
+            for key in self.update:
+                self.update[key] = True

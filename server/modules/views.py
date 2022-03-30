@@ -473,7 +473,7 @@ class BirdhouseViews(threading.Thread):
         """
         Page with backup/archive directory
         """
-        logging.info("Create data for archive view ...")
+        logging.info("Create data for archive view from '"+self.config.directory(config="backup")+"' ...")
         for cam in self.camera:
             content = {
                 "active_cam": cam,
@@ -729,18 +729,17 @@ class BirdhouseViews(threading.Thread):
         for cam in self.camera:
             info = self.camera[cam].param
             content["entries"][cam] = self.camera[cam].param
-            content["entries"][cam]["lowres"] = "/detection/stream.mjpg?" + cam
-            content["entries"][cam]["hires"] = "/detection/stream.mjpg?" + cam
-            content["entries"][cam]["type"] = "camera"
-            content["entries"][cam]["camera_type"] = self.camera[cam].type
+            content["entries"][cam]["video"]["stream"] = "/stream.mjpg?" + cam
+            content["entries"][cam]["video"]["stream_detect"] = "/detection/stream.mjpg?" + cam
+            content["entries"][cam]["device"] = "camera"
+            content["entries"][cam]["type"] = self.camera[cam].type
             content["entries"][cam]["active"] = self.camera[cam].active
 
         content["view_count"] = []
         content["subtitle"] = birdhouse_pages["cam_info"][0]
-        content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"),
-                                                 cam=which_cam)
+        content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"), cam=which_cam)
 
-        return content
+        return content.copy()
 
     def detail_view_video(self, server):
         """

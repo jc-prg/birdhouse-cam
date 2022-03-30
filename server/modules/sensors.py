@@ -1,5 +1,3 @@
-import RPi.GPIO as GPIO
-import modules.dht11 as dht11
 import time
 from datetime import datetime
 import threading
@@ -14,8 +12,9 @@ class BirdhouseSensor(threading.Thread):
         """
         threading.Thread.__init__(self)
         self.id = sensor_id
-        self.param = param
         self.config = config
+        self.config.update["sensor_"+self.id] = False
+        self.param = self.config.param["devices"]["sensors"][sensor_id]
         self.running = True
         self.error = False
         self.pin = self.param["pin"]
@@ -23,8 +22,23 @@ class BirdhouseSensor(threading.Thread):
         self.last_read = 0
         self.interval = 10
 
-        GPIO.setmode(GPIO.BCM)
-        self.sensor = dht11.DHT11(pin=self.pin)
+        try:
+            import RPi.GPIO as GPIO
+        except Exception as e:
+            logging.error("Sensors: Couldn't load module RPi.GPIO. Requires Raspberry and installation of this module.")
+            logging.error("To install module, try 'sudo apt-get -y install rpi.gpio'.")
+            self.error = True
+            self.running = False
+            return
+        try:
+            import modules.dht11 as dht11
+            GPIO.setmode(GPIO.BCM)
+            self.sensor = dht11.DHT11(pin=self.pin)
+        except Exception as e:
+            logging.error("Could not load DHT11 sensor module.")
+            self.error = True
+            self.running = False
+            return
 
         logging.info("Starting sensors (" + self.id + "/" + str(self.pin) + ") ...")
 
@@ -34,6 +48,11 @@ class BirdhouseSensor(threading.Thread):
         """
         count = 0
         while self.running and not self.error:
+
+            if self.config.update["sensor_"+self.id]:
+                self.param = self.config.param["devices"]["sensors"][self.id]
+                self.config.update["sensor_"+self.id] = False
+
             count += 1
             if count == self.interval:
                 try:
