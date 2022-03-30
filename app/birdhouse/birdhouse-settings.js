@@ -16,52 +16,6 @@ function birdhouse_app_settings (name="Settings")
 var app_settings_active = false;
 var birdhouse_settings  = new birdhouse_app_settings();
 
-function birdhouse_edit_field(id, field, type="input", options="") {
-    var fields = field.split(":");
-    var data   = "";
-    var html   = "";
-
-    if (fields.length == 1) { data = app_data["DATA"][fields[0]]; }
-    else if (fields.length == 2) { data = app_data["DATA"][fields[0]][fields[1]]; }
-    else if (fields.length == 3) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]]; }
-    else if (fields.length == 4) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]][fields[3]]; }
-
-    if (type == "input") { html += "<input id='"+id+"' value='"+data+"'>"; }
-    else if (type == "select") {
-        var values = options.split(",");
-        html += "<select id='"+id+"'>";
-        for (var i=0;i<values.length;i++) {
-            data_str = data.toString();
-            if (data_str == values[i])  { html += "<option selected='selected'>"+values[i]+"</option>"; }
-            else                        { html += "<option>"+values[i]+"</option>"; }
-        }
-        html += "</select>";
-    }
-    html += "<input id='"+id+"_data' style='display:none' value='"+field+"'>\n";
-    return html;
-}
-
-function birdhouse_edit_save(id, id_list, text="") {
-    var ids = id_list.split(":");
-    var html = "<button onclick='birdhouse_edit_send(\""+id_list+"\");' style='background:gray;width:100px;'>"+lang("SAVE")+"</button>";
-    return html;
-}
-
-function birdhouse_edit_send(id_list) {
-    var ids = id_list.split(":");
-    var info = "";
-    for (var i=0;i<ids.length;i++) {
-        info += document.getElementById(ids[i]+"_data").value + "==";
-        info += encodeURIComponent(document.getElementById(ids[i]).value);
-        info += "/";
-    }
-    appFW.requestAPI('POST',[ "edit_presets", info ],"",birdhouse_edit_done,"","");
-}
-
-function birdhouse_edit_done(data) {
-    alert("Done");
-}
-
 // ------------------------------------
 
 function birdhouse_app_settings (name="Settings") {
@@ -99,16 +53,25 @@ function birdhouse_app_settings (name="Settings") {
 
 		setTextById("setting1", html);
 
-        html  = "<h2>"+lang("SETTINGS")+": Devices &amp; Data</h2>";
+        html  = "<h2>"+lang("SETTINGS")+": Server</h2>";
 		html += "<hr style='border:1px solid gray;'>"
 
 		html += this.tab_start();
 		html += this.tab_row("Title:&nbsp;", birdhouse_edit_field(id="set_title", field="title", type="input") );
 		html += this.tab_row("Backup-Time:&nbsp;", birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
 		html += this.tab_row("Backup-Preview:&nbsp;", birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
-		html += this.tab_row("RPi Active:&nbsp;", birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false") );
-		html += this.tab_row("", "<br/>"+birdhouse_edit_save("set_main","set_backup:set_preview:set_rpi") );
+		html += this.tab_row("RPi Active:&nbsp;", birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false", data_type="boolean") );
+        html += this.tab_row("<hr>");
+		html += this.tab_row("HTTP Address:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
+		html += this.tab_row("HTTP Port:&nbsp;", birdhouse_edit_field(id="set_port", field="server:port", type="input", options="true,false", data_type="integer") );
+        html += this.tab_row("<hr>");
+		html += this.tab_row("", birdhouse_edit_save("set_main","set_title:set_backup:set_preview:set_rpi:set_ip4:set_port") );
+        html += this.tab_row("&nbsp;");
 
+		setTextById("setting2", html);
+
+        html  = "<h2>"+lang("SETTINGS")+": Devices</h2>";
+		html += "<hr style='border:1px solid gray;'>"
 		html += this.tab_row("&nbsp;","");
 		for (let camera in birdhouseCameras) {
     		html += this.tab_start();
@@ -133,7 +96,7 @@ function birdhouse_app_settings (name="Settings") {
 			html += this.tab_end();
     		}
 
-		setTextById("setting2", html);
+		setTextById("setting3", html);
 
 		this.toggle();
 		}
@@ -155,7 +118,10 @@ function birdhouse_app_settings (name="Settings") {
 		}
 
 	this.tab_start	= function ()		{ return "<table>"; }
-	this.tab_row	= function (td1,td2) 	{ return "<tr><td valign=\"top\">" + td1 + "</td><td>" + td2 + "</td></tr>"; }
+	this.tab_row	= function (td1,td2=false) {
+	    if (td2 != false) { return "<tr><td valign=\"top\">" + td1 + "</td><td>" + td2 + "</td></tr>"; }
+	    else              { return "<tr><td valign=\"top\" colspan=\"2\">" + td1 + "</td></tr>"; }
+	    }
 	this.tab_end	= function ()		{ return "</table>"; }
 	}
 

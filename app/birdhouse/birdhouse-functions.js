@@ -18,6 +18,114 @@ var yourCodeToBeCalled = function()
 */
 //----------------------------------------
 
+
+// Generic editing functions
+//----------------------------------------
+
+function birdhouse_edit_field(id, field, type="input", options="", data_type="string") {
+    var fields = field.split(":");
+    var data   = "";
+    var html   = "";
+
+    if (fields.length == 1) { data = app_data["DATA"][fields[0]]; }
+    else if (fields.length == 2) { data = app_data["DATA"][fields[0]][fields[1]]; }
+    else if (fields.length == 3) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]]; }
+    else if (fields.length == 4) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]][fields[3]]; }
+    else if (fields.length == 5) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]][fields[3]][fields[4]]; }
+    else if (fields.length == 6) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]][fields[3]][fields[4]][fields[5]]; }
+
+    if (data_type == "json") {
+        data = JSON.stringify(data);
+    }
+    if (type == "input") {
+        html += "<input id='"+id+"' value='"+data+"'>";
+    }
+    else if (type == "select") {
+        var values = options.split(",");
+        html += "<select id='"+id+"'>";
+        for (var i=0;i<values.length;i++) {
+            if (data == true || data == false) { data_str = data.toString(); }
+            else { data_str = data; }
+            if (data_str == values[i])  { html += "<option selected='selected'>"+values[i]+"</option>"; }
+            else                        { html += "<option>"+values[i]+"</option>"; }
+        }
+        html += "</select>";
+    }
+    html += "<input id='"+id+"_data' style='display:none' value='"+field+"'>\n";
+    html += "<input id='"+id+"_data_type' style='display:none' value='"+data_type+"'>\n";
+    return html;
+}
+
+function birdhouse_edit_save(id, id_list, text="") {
+    var ids = id_list.split(":");
+    var html = "<button onclick='birdhouse_edit_send(\""+id_list+"\");' style='background:gray;width:100px;'>"+lang("SAVE")+"</button>";
+    return html;
+}
+
+function birdhouse_edit_send(id_list) {
+    var ids = id_list.split(":");
+    var info = "";
+    var error = false;
+    var error_msg = "Error in the data fields:\n\n";
+    for (var i=0;i<ids.length;i++) {
+        if (document.getElementById(ids[i])) {
+            var data_type = document.getElementById(ids[i]+"_data_type").value;
+            var field_name = document.getElementById(ids[i]+"_data").value.split(":");
+            var field_data = document.getElementById(ids[i]).value;
+            field_name = field_name[(field_name.length-1)];
+            document.getElementById(ids[i]).style.backgroundColor = "white";
+
+        console.log("......."+field_name+"-"+data_type+"-"+field_data);
+            if (data_type == "json") {
+                try { var json_test = JSON.parse(field_data); }
+                catch(err) {
+                    error = true;
+                    error_msg += field_name.toUpperCase() + " isn't a correct JSON format.\n";
+                    document.getElementById(ids[i]).style.backgroundColor = "#ffaaaa";
+                }
+            }
+            if (data_type == "float") {
+                console.log(parseFloat(field_data));
+                if (isNaN(parseFloat(field_data))) {
+                    error = true;
+                    error_msg += field_name.toUpperCase() + " isn't a float number.\n";
+                    document.getElementById(ids[i]).style.backgroundColor = "#ffaaaa";
+                }
+                else {
+                    document.getElementById(ids[i]).value = parseFloat(field_data);
+                }
+            }
+            if (data_type == "integer") {
+                if (isNaN(parseInt(field_data)) || parseInt(field_data) != parseFloat(field_data)) {
+                    error = true;
+                    error_msg += field_name.toUpperCase() + " isn't an integer number.\n";
+                    document.getElementById(ids[i]).style.backgroundColor = "#ffaaaa";
+                }
+                else {
+                    document.getElementById(ids[i]).value = parseInt(field_data);
+                }
+            }
+
+        console.log(".-.-.-."+field_name+"-"+data_type+"-"+field_data);
+
+            info += document.getElementById(ids[i]+"_data").value + "==";
+            info += encodeURI(field_data) + "||";
+            info += document.getElementById(ids[i]+"_data_type").value;
+            info += "/";
+        }
+        else {
+            console.error("Could not find element: "+ids[i]);
+        }
+    }
+    if (error) { alert(error_msg); }
+    else { appFW.requestAPI('POST',[ "edit_presets", info ],"",birdhouse_edit_done,"",""); }
+}
+
+function birdhouse_edit_done(data) {
+    alert("Done");
+}
+
+
 // Tooltips
 //----------------------------------------
 
@@ -37,6 +145,38 @@ function birdhouse_tooltip( tooltip_element, tooltip_content, name, left="" ) {
 	}
 
 birdhouse_initTooltip();
+
+//----------------------------------------
+
+function birdhouse_table () {
+
+    this.style_table_string = "";
+    this.style_table = {
+        "width" : "100%",
+    };
+    this.style_rows_string = "";
+    this.style_rows = {}
+    this.style_cells_string = "";
+    this.style_cells = {
+        "vertical-align" : "middle",
+    };
+
+    for (let key in this.style_table) { this.style_table_string += key+":"+this.style_table[key]+";"; }
+    for (let key in this.style_rows)  { this.style_rows_string  += key+":"+this.style_rows[key]+";"; }
+    for (let key in this.style_cells) { this.style_cells_string += key+":"+this.style_cells[key]+";"; }
+
+	this.start	= function () {
+	    return "<table style='"+this.style_table_string+"'>";
+	}
+	this.row	= function (td1, td2=false) {
+	    if (td2 != false) { return "<tr style='"+this.style_rows_string+"'><td style='"+this.style_cells_string+"'>" + td1 + "</td><td>" + td2 + "</td></tr>"; }
+	    else              { return "<tr style='"+this.style_rows_string+"'><td style='"+this.style_cells_string+"' colspan=\"2\">" + td1 + "</td></tr>"; }
+	}
+	this.end	= function () {
+	    return "</table>";
+	}
+}
+
 
 //----------------------------------------
 

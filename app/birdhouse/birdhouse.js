@@ -88,7 +88,7 @@ function birdhousePrint(data) {
 	// check if admin allowed! -> create respective menu
 	
 	if (app_active_page == "INDEX") { birdhouse_INDEX(data, camera); }
-	else if (app_active_page == "CAMERAS") { birdhouse_CAMERAS(lang("DEVICES"), data, camera); }
+	else if (app_active_page == "CAMERAS") { birdhouseDevices(lang("DEVICES"), data, camera); }
 	else if (app_active_page == "FAVORITS")	{ birdhouse_LIST(lang("FAVORITS"),  data, camera); }
 	else if (app_active_page == "ARCHIVE") { birdhouse_LIST(lang("ARCHIVE"), data, camera); }
 	else if (app_active_page == "TODAY") { birdhouse_LIST(lang("TODAY"), data, camera); }

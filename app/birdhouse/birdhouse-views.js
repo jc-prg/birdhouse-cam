@@ -23,27 +23,26 @@ function birdhouse_INDEX(data, camera) {
 	var other_cams    = [];
 
 	for (let key in cameras) {
-	    if (cameras[key]["active"]) {
+	    if (cameras[key]["active"] && cameras[key]["status"]["error"] == false) {
             if (key == active_camera) {
                 active_cam  = {
                     "name"        : key,
-                    "stream"      : cameras[key]["stream"],
+                    "stream"      : cameras[key]["video"]["stream"],
                     "description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
                     }
                 }
             else {
                 var other_cam  = {
                     "name"        : key,
-                    "stream"      : cameras[key]["stream"],
+                    "stream"      : cameras[key]["video"]["stream"],
                     "description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
                     }
                 other_cams.push(other_cam);
                 }
             }
 		}
-
-	if (active_cam == {}) { active_cam = other_cams[0]; other_cams.shift(); }
-	if (cameras.length == 1 || other_cams.length == 0) {
+	if (active_cam == {} && other_cams != []) { active_cam = other_cams[0]; other_cams.shift(); }
+	if (Object.keys(cameras).length == 1 || other_cams.length == 0) {
 		var onclick  = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
 		html += birdhouse_Camera(main=true, view="cam1", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed);
 		html += "<br/>&nbsp;<br/>";
@@ -76,80 +75,6 @@ function birdhouse_INDEX(data, camera) {
 	setTextById(app_frame_content,html);
 }
 
-function birdhouse_CAMERAS( title, data ) {
-	var cameras	= data["DATA"]["devices"]["cameras"];
-	var sensors = data["DATA"]["devices"]["sensors"];
-	var micros  = data["DATA"]["devices"]["microphones"];
-	var admin 	= data["STATUS"]["admin_allowed"];
-	var html	= "";
-
-	for (let camera in cameras) {
-	    info          = cameras[camera];
-	    camera_name   = camera.toUpperCase() + ": " + cameras[camera]["name"];
-	    camera_stream = birdhouse_Image(camera_name, cameras[camera]);
-
-		html += birdhouse_OtherGroupHeader( camera, camera_name, true )
-		html += "<div id='group_"+camera+"'>";
-
-	    html  += "<div class='camera_info'>";
-	    if (cameras[camera]["active"])	{ html  += "<div class='camera_info_image'>"+camera_stream+"</div>"; }
-	    else					{ html  += "<div class='camera_info_image'>"+lang("CAMERA_INACTIVE")+"</div>"; }
-		html  += "<div class='camera_info_text'>";
-		html   += "<ul>"
-		html   += "<li>Type: "   + info["camera_type"] + "</li>";
-		html   += "<li>Active: " + info["active"] + "</li>";
-		html   += "<li>Record: " + info["record"] + "</li>";
-		html   += "<li>Image: <ul>";
-		html     += "<li>Crop: "   + info["image"]["crop"] + " (yellow rectangle)</li>";
-		html     += "<li>Show Time: "   + info["image"]["date_time"] + "</li>";
-		html   += "</ul></li>";
-		html   += "<li>Detection: <ul>";
-		html     += "<li>Threshold: " + info["similarity"]["threshold"] + "%</li>";
-		html     += "<li>Area: "      + info["similarity"]["detection_area"] + " (red rectangle)</li>";
-		html   += "</ul></li>";
-		//html   += "<li>Streaming-Server: "+info["video"]["streaming_server"]+"</li>";
-		html   += "</ul>";
-		html   += "<br/>&nbsp;";
-		if (admin && cameras[camera]["active"]) {
-			var onclick = "birdhouse_createDayVideo('"+camera+"');";
-			html += "<button onclick=\""+onclick+"\" class=\"button-video-edit\">&nbsp;"+lang("CREATE_DAY")+"&nbsp;</button>";
-			}
-	    html  += "</div></div>";
-	    html  += "</div>";
-	}
-	for (let sensor in sensors) {
-        html += birdhouse_OtherGroupHeader( sensor, sensor.toUpperCase()+": "+sensors[sensor]["name"], true );
-        html += "<div id='group_"+sensor+"'>";
-        html += "<div class='camera_info'>";
-        html += "<div class='camera_info_image'>&nbsp;</div>";
-        html += "<div class='camera_info_text'><ul>";
-        html += "<li>Type: "+sensors[sensor]["type"]+" ("+sensors[sensor]["pin"]+")</li>";
-        for (let key in sensors[sensor]["values"]) {
-            html += "<li>"+key+": "+sensors[sensor]["values"][key]+" "+sensors[sensor]["units"][key]+"</li>";
-        }
-        html += "</ul></div></div>";
-	    html += "</div>";
-	}
-	for (let micro in micros) {
-	    if (micros[micro]["active"]) {
-            url = "http://"+data["DATA"]["server"]["ip4_stream_audio"]+":"+micros[micro]["port"]+"/";
-            html += birdhouse_OtherGroupHeader( micro, micro.toUpperCase()+": "+micros[micro]["name"], true );
-            html += "<div id='group_"+micro+"'>";
-            html += "<div class='camera_info'>";
-            html += "<div class='camera_info_image'>";
-            html += birdhouseStream_toggle_image(micro);
-            html += "</div>";
-            html += "<div class='camera_info_text'><ul>";
-            html += "<li>Type: "+micros[micro]["type"]+"</li>";
-            html += "<li>URL: <a href='"+url+"' target='_blank'>"+url+"</a></li>";
-            html += "<li>Control: <a onclick='birdhouseStream_play(\""+micro+"\");' style='cursor:pointer;'><u>PLAY</u></a> / ";
-            html += "<a onclick='birdhouseStream_stop(\""+micro+"\");' style='cursor:pointer;'><u>STOP</u></a></li>";
-            html += "</ul></div></div>";
-            html += "</div>";
-	    }
-	}
-	setTextById(app_frame_content,html);
-}
 
 function birdhouse_VIDEO_DETAIL( title, data ) {
 	var html = "";
@@ -319,5 +244,3 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 		}
 	setTextById(app_frame_content, html);
 	}
-
-
