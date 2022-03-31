@@ -72,9 +72,8 @@ class BirdhouseSensor(threading.Thread):
                     logging.info("Retry starting sensor: "+self.id)
                     self.connect()
                     retry = 0
-            elif self.active and count >= self.interval and self.param["active"]:
+            elif count >= self.interval and self.param["active"]:
                 try:
-                    self.sensor = dht11.DHT11(pin=self.pin)
                     indoor = self.sensor.read()
                     if indoor.is_valid():
                         self.values["temperature"] = indoor.temperature
@@ -92,7 +91,7 @@ class BirdhouseSensor(threading.Thread):
                     logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
                 count = 0
             elif self.running:
-                time.sleep(0.5)
+                time.sleep(1)
 
         # GPIO.cleanup()
         logging.info("Stopped sensor (" + self.id + ").")
