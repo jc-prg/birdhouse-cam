@@ -918,16 +918,16 @@ class BirdhouseCamera(threading.Thread):
                                 sensor_data = self.sensor[key].get_values()
                                 sensor_data["date"] = datetime.now().strftime("%d.%m.%Y")
                                 image_info["sensor"][key] = self.sensor[key].get_values()
-                                # self.write_sensor_info(timestamp=stamp, data=self.sensor[key].get_values())
-                                self.write_cache(data_type="sensor", timestamp=stamp, data=sensor_data)
+                                self.write_sensor_info(timestamp=stamp, data=self.sensor[key].get_values())
+                                # self.write_cache(data_type="sensor", timestamp=stamp, data=sensor_data)
 
                         path_lowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
                         path_hires = os.path.join(self.config.directory("images"), self.config.imageName("hires", stamp, self.id))
 
                         logging.debug("WRITE:" + path_lowres)
 
-                        # self.write_image_info(timestamp=stamp, data=image_info)
-                        self.write_cache(data_type="images", timestamp=stamp, data=image_info)
+                        self.write_image_info(timestamp=stamp, data=image_info)
+                        # self.write_cache(data_type="images", timestamp=stamp, data=image_info)
                         self.write_image(filename=path_hires, image=image)
                         self.write_image(filename=path_lowres, image=image, scale_percent=self.param["image"]["preview_scale"])
 
