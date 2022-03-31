@@ -19,6 +19,8 @@ class BirdhouseSensor(threading.Thread):
         self.running = True
 
         self.GPIO = None
+        self.sensor = None
+
         self.error = False
         self.error_connect = False
         self.error_msg = ""
