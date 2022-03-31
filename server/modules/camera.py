@@ -925,8 +925,8 @@ class BirdhouseCamera(threading.Thread):
                                 sensor_data = self.sensor[key].get_values()
                                 sensor_data["date"] = datetime.now().strftime("%d.%m.%Y")
                                 image_info["sensor"][key] = self.sensor[key].get_values()
-                                self.write_sensor_info(timestamp=stamp, data=self.sensor[key].get_values())
-                                # self.write_cache(data_type="sensor", timestamp=stamp, data=sensor_data)
+                                # self.write_sensor_info(timestamp=stamp, data=self.sensor[key].get_values())
+                                self.write_cache(data_type="sensor", timestamp=stamp, data=sensor_data)
 
                         path_lowres = os.path.join(self.config.directory("images"),
                                                    self.config.imageName("lowres", stamp, self.id))
@@ -935,8 +935,8 @@ class BirdhouseCamera(threading.Thread):
 
                         logging.debug("WRITE:" + path_lowres)
 
-                        self.write_image_info(timestamp=stamp, data=image_info)
-                        # self.write_cache(data_type="images", timestamp=stamp, data=image_info)
+                        # self.write_image_info(timestamp=stamp, data=image_info)
+                        self.write_cache(data_type="images", timestamp=stamp, data=image_info)
                         self.write_image(filename=path_hires, image=image)
                         self.write_image(filename=path_lowres, image=image,
                                          scale_percent=self.param["image"]["preview_scale"])
@@ -1159,13 +1159,12 @@ class BirdhouseCamera(threading.Thread):
             if timestamp != "":
                 files[timestamp] = data.copy()
             self.config.write(data_type, files)
-            logging.debug(
-                "Wrote " + str(len(self.config_cache[data_type].keys())) + " entries from cache: " + data_type)
+            logging.debug("Wrote " + str(len(self.config_cache[data_type].keys())) + " entries from cache: " + data_type)
             self.config_cache[data_type] = {}
         else:
             if data_type not in self.config_cache:
                 self.config_cache[data_type] = {}
-            self.config_cache[timestamp] = data.copy()
+            self.config_cache[data_type][timestamp] = data.copy()
             logging.debug("Stored in cache: " + timestamp + "/" + data_type + " ... " + str(len(self.config_cache[data_type].keys())))
 
     def write_image(self, filename, image, scale_percent=100):

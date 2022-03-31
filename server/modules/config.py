@@ -157,7 +157,7 @@ class BirdhouseConfig(threading.Thread):
         read json file including check if locked
         """
         try:
-            # self.check_locked(filename)
+            self.check_locked(filename)
             with open(filename) as json_file:
                 data = json.load(json_file)
             return data
