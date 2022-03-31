@@ -217,15 +217,6 @@ class BirdhouseConfig(threading.Thread):
             logging.error("Could not write JSON file: " + filename)
             logging.error(str(e))
 
-    def write_image(self, config, file_data, date="", time=''):
-        """
-        write dict for single file to json config file
-        """
-        logging.info("Write image: " + config_file)
-        config_data = self.read_cache(config=config, date=date)
-        config_data[time] = file_data
-        self.write(config=config, config_data=config_data, date=date)
-
     def create_copy(self, config, date="", add="copy"):
         config_file = self.file(config, date)
         content = self.read_json(config_file)

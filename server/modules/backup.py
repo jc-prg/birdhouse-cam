@@ -148,9 +148,6 @@ class BirdhouseArchive(threading.Thread):
             files = {}
             files = self.update_image_config(file_list=file_list, files=files, subdir=subdir)
 
-        if subdir == '':
-            self.config.write(config="images", config_data=files)
-
         count = 0
         files_new = files.copy()
         files_keys = files_new.keys()

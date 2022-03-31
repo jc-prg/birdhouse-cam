@@ -67,7 +67,7 @@ class BirdhouseCommands(threading.Thread):
                 for config_file in config_files:
 
                     # today, video (without date)
-                    if config_file != "backup":
+                    if config_file != "backup" and len(self.status_queue[config_file]) > 0:
                         entries = self.config.read_cache(config_file)
                         self.config.lock(config_file)
 
@@ -82,8 +82,7 @@ class BirdhouseCommands(threading.Thread):
                                     entries[key][change_status] = status
                                 else:
                                     test = "no"
-                                logging.debug("QUEUE: " + config_file + " // " + key + " - " + change_status + "=" + str(
-                                    status) + " ... " + test)
+                                logging.debug("QUEUE: " + config_file + " // " + key + " - " + change_status + "=" + str(status) + " ... " + test)
 
                         self.config.unlock(config_file)
                         self.config.write(config_file, entries)
