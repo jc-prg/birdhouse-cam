@@ -494,8 +494,9 @@ class BirdhouseImageProcessing(object):
             image_1st, area = self.crop_raw(raw=image_1st, crop_area=detection_area, crop_type="relative")
             image_2nd, area = self.crop_raw(raw=image_2nd, crop_area=detection_area, crop_type="relative")
 
-            logging.debug(self.id + "/compare 1: " + str(detection_area) + " / " + str(image_1st.shape))
-            logging.debug(self.id + "/compare 2: " + str(area) + " / " + str(image_1st.shape))
+            if "str" not in type(image_1st):
+                logging.debug(self.id + "/compare 1: " + str(detection_area) + " / " + str(image_1st.shape))
+                logging.debug(self.id + "/compare 2: " + str(area) + " / " + str(image_1st.shape))
 
         try:
             (score, diff) = ssim(image_1st, image_2nd, full=True)
