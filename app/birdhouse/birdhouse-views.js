@@ -193,9 +193,10 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         for (var x=1;x<chart_data["titles"].length;x++) {
             if (chart_data["titles"][x].indexOf(":")>-1) {
                 var sensor = chart_data["titles"][x].split(":");
-                chart_titles.push(sensor[1].charAt(0).toUpperCase()+sensor[1].slice(1);
-                if (sensors[sensor[0]) { " ("+sensors[sensor[0]]["name"]+")"); }
+                var title_s = sensor[1].charAt(0).toUpperCase()+sensor[1].slice(1);
+                if (sensors[sensor[0]) { title_s += " ("+sensors[sensor[0]]["name"]+")"); }
                 else { console.log(sensor[0]); console.log(sensors); }
+                chart_titles.push(title_s);
             }
         }
         var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
