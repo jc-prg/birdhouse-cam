@@ -211,6 +211,7 @@ class BirdhouseConfig(threading.Thread):
             logging.debug("Write JSON file: "+filename)
 
         except Exception as e:
+            self.locked[filename] = False
             logging.error("Could not write JSON file: " + filename)
             logging.error(str(e))
 
