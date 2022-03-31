@@ -251,7 +251,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         check path and send requested content
         """
-        global camera
+        global camera, sensor, config
 
         path, which_cam = views.selected_camera(self.path)
         file_ending = self.path.split(".")
@@ -346,6 +346,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         "error_msg": camera[key].error_msg,
                         "image_error": camera[key].image.error,
                         "image_error_msg": camera[key].image.error_msg,
+                        "image_cache_size": camera[key].config_cache_size,
                         "video_error": camera[key].video.error,
                         "video_error_msg": camera[key].video.error_msg,
                         "running": camera[key].running,
@@ -359,12 +360,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             sensor_data = config.param["devices"]["sensors"].copy()
             for key in sensor_data:
                 sensor_data[key]["values"] = {}
+                sensor_data[key]["status"] = {"error": False}
+                if key in sensor and sensor[key].error:
+                    sensor_data[key]["status"] = {
+                        "error": sensor[key].error,
+                        "error_msg": sensor[key].error_msg,
+                    }
                 if key in sensor and not sensor[key].error and sensor[key].running:
                     sensor_data[key]["values"] = sensor[key].get_values()
-                elif key in sensor:
-                    logging.info("Sensor not available: "+key+"/error:"+str(sensor[key].error)+"/run:"+str(sensor[key].running))
                 else:
-                    logging.info("Sensor not available: "+key)
+                    logging.debug("Sensor not available: "+key)
+                    sensor_data[key]["status"] = {
+                        "error": True,
+                        "error_msg": "Sensor not available: "+key
+                    }
 
             content["devices"] = {
                 "cameras": camera_data,
@@ -378,7 +387,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "admin_allowed": self.admin_allowed(),
                     "check-version": version,
                     "api-call": status,
-                    "image_write_cache_size": camera[which_cam].config_cache_size,
                     "reload": False
                 },
                 "API": api_description,

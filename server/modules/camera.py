@@ -846,7 +846,7 @@ class BirdhouseCamera(threading.Thread):
                 time.sleep(0.1)
 
             if self.config.update["camera_"+self.id]:
-                self.update_main_config(self)
+                self.update_main_config()
 
             # Error with camera - try to restart from time to time
             if self.error:
@@ -1145,7 +1145,7 @@ class BirdhouseCamera(threading.Thread):
         store entries in a cache and write packages of entries to reduce file write access
         """
         if data_type in self.config_cache and len(self.config_cache[data_type].keys()) >= self.config_cache_size:
-            files = self.config.read(data_type)
+            files = self.config.read_cache(data_type)
             for key in self.config_cache[data_type]:
                 files[key] = self.config_cache[data_type][key].copy()
             if timestamp != "":
