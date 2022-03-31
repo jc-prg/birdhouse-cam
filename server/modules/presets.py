@@ -11,16 +11,16 @@ birdhouse_pages = {
     "save":             ("Speichern",   "/image.jpg",        "")
 }
 birdhouse_preset = {
-    "title":            "Unser Nistkasten :-)",
+    "title": "Unser Nistkasten :-)",
     "backup": {
         "preview":   "0700",               # HHMM
         "time":      "2000"
     },
     "server": {
         "ip4_admin_deny":   ["192.168.1.31"],  # put in the IP address of your proxy or router if you don't want to allow edits from outside
-        "ip4_stream_audio": "192.168.1.20",
-        "ip4_stream_video": "192.168.1.20",
         "ip4_address":      "192.168.1.20",
+        "ip4_stream_audio": "",
+        "ip4_stream_video": "",
         "rpi_active":       False,
         "port":             8000,              # http-port
         "port_video":       8008
@@ -43,6 +43,7 @@ birdhouse_preset = {
                     "resolution": "900x1080",
                     "saturation": -50,
                     "rotation": 180,
+                    "preview_scale": 18,
                     "date_time": True,
                     "date_time_position": (10, 20),
                     "date_time_color": (255, 255, 255),
@@ -59,16 +60,15 @@ birdhouse_preset = {
                     "max_length":       180,
                     "stream_port":      8008,
                     "streaming_server": "http://192.168.1.20:8008/"
-                },
-                "preview_scale": 18
-           },
-            "cam2"  : {
+                }
+            },
+            "cam2": {
                 "type":     "usb",
                 "name":     "Au&szlig;en",
-                "source":   1,
+                "source":   0,
                 "active":   True,
                 "record":   True,
-                "similarity" : {
+                "similarity": {
                     "threshold":        90,
                     "detection_area":   (0.1, 0.1, 0.8, 0.8)
                 },
@@ -78,11 +78,12 @@ birdhouse_preset = {
                     "framerate":    "not implemented",
                     "saturation":   "not implemented",
                     "rotation":     "not implemented",
+                    "preview_scale": 18,
                     "date_time": True,
                     "date_time_position": (10, 20),
                     "date_time_color": (255, 255, 255),
                     "date_time_size": 0.4
-    },
+                },
                 "image_save": {
                     "path":     "images",
                     "color":    "ORIGINAL",
@@ -94,8 +95,7 @@ birdhouse_preset = {
                     "max_length":           180,
                     "stream_port":          8008,
                     "streaming_server":     "http://192.168.1.20:8008/"
-                },
-                "preview_scale": 18
+                }
             }
         },
         "microphones": {

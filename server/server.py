@@ -328,20 +328,33 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content["backup"] = config.param["backup"]
 
             micro_data = config.param["devices"]["microphones"].copy()
+            for key in micro_data:
+                if config.param["server"]["ip4_stream_audio"] == "":
+                    micro_data[key]["stream_server"] = config.param["server"]["ip4_address"]
+                else:
+                    micro_data[key]["stream_server"] = config.param["server"]["ip4_stream_audio"]
+                micro_data[key]["stream_server"] += ":" + str(micro_data[key]["port"])
+
             camera_data = config.param["devices"]["cameras"].copy()
             for key in camera_data:
                 if key in camera:
                     camera_data[key]["video"]["stream"] = "/stream.mjpg?" + cam
                     camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + cam
-                    camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_stream_video"]
-                    camera_data[key]["video"]["stream_server"] += ":" + str(config.param["server"]["port_video"])
                     camera_data[key]["device"] = "camera"
                     camera_data[key]["status"] = {
                         "error": camera[key].error,
+                        "error_msg": camera[key].error_msg,
+                        "image_error": camera[key].image.error,
+                        "image_error_msg": camera[key].image.error_msg,
+                        "video_error": camera[key].video.error,
+                        "video_error_msg": camera[key].video.error_msg,
                         "running": camera[key].running,
-                        "img_error": camera[key].error_image,
-                        "img_msg": camera[key].error_image_msg
                     }
+                    if config.param["server"]["ip4_stream_video"] == "":
+                        camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_address"]
+                    else:
+                        camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_stream_video"]
+                    camera_data[key]["video"]["stream_server"] += ":" + str(config.param["server"]["port_video"])
 
             sensor_data = config.param["devices"]["sensors"].copy()
             for key in sensor_data:
