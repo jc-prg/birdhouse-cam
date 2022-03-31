@@ -99,16 +99,22 @@ class BirdhouseSensor(threading.Thread):
             GPIO.setmode(GPIO.BCM)
             time.sleep(1)
             self.sensor = dht11.DHT11(pin=self.pin)
+            indoor = self.sensor.read()
+            if indoor.is_valid():
+                self.values["temperature"] = indoor.temperature
+            else:
+                self.values["temperature"] = "error"
             self.error = False
             self.error_connect = False
             self.error_msg = ""
-            logging.info("Load Sensor:"+self.id)
         except Exception as e:
             logging.error("Could not load DHT11 sensor module: "+str(e))
             self.error = True
             self.error_connect = True
             self.error_msg = "Could not load DHT11 sensor module: "+str(e)
             self.running = False
+        logging.info("Loaded Sensor: "+self.id)
+        logging.info("... Initial temperature: "+str(self.values["temperature"]))
 
     def stop(self):
         """
