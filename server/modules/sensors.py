@@ -97,6 +97,7 @@ class BirdhouseSensor(threading.Thread):
         try:
             import modules.dht11 as dht11
             self.GPIO.setmode(GPIO.BCM)
+            time.sleep(1)
             self.sensor = dht11.DHT11(pin=self.pin)
             self.error = False
             self.error_connect = False
