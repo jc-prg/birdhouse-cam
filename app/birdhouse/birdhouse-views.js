@@ -41,7 +41,7 @@ function birdhouse_INDEX(data, camera) {
 		}
 	if (active_cam == {} && other_cams != []) { active_cam = other_cams[0]; other_cams.shift(); }
 
-	if (Object.keys(cameras).length == 0) {
+	if (Object.keys(cameras).length == 0 || active_cam == {}) {
 	    html += lang("NO_ENTRIES");
 	    console.log(cameras);
 	}
