@@ -1027,18 +1027,12 @@ class BirdhouseCamera(threading.Thread):
         """
         read image from device
         """
-        if self.error_image:
-            return self.image_NA
-
-        elif self.type == "pi":
+        if self.type == "pi":
             try:
                 with self.video.output.condition:
                     self.video.output.condition.wait()
                     encoded = self.video.output.frame
-                if encoded != NoneType:
-                    return encoded.copy()
-                else:
-                    raise Exception("Empty image")
+                return encoded
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
                 self.camera_error(False, True, error_msg, True)
@@ -1048,10 +1042,7 @@ class BirdhouseCamera(threading.Thread):
             try:
                 raw = self.camera.read()  ## potentially not the same RAW as fram PI
                 encoded = self.image.convert_from_raw(raw)
-                if encoded != type(None):
-                    return encoded.copy()
-                else:
-                    raise Exception("Empty image")
+                return encoded
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
                 self.camera_error(False, True, error_msg, True)
