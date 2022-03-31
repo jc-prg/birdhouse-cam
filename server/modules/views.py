@@ -599,7 +599,7 @@ class BirdhouseViews(threading.Thread):
         """
         Page with all pictures of the current day
         """
-        logging.info("CompleteListeToday: Start - "+datetime.now().strftime("%H:%M:%S"))
+        logging.debug("CompleteListToday: Start - "+datetime.now().strftime("%H:%M:%S"))
         self.server = server
         path, which_cam = self.selected_camera()
         content = {
@@ -661,7 +661,7 @@ class BirdhouseViews(threading.Thread):
         content["chart_data"] = create_chart_data(content["entries"].copy())
 
         length = getsizeof(content)/1024
-        logging.info("CompleteListeToday: End - "+datetime.now().strftime("%H:%M:%S")+" ("+str(length)+" kB)")
+        logging.debug("CompleteListToday: End - "+datetime.now().strftime("%H:%M:%S")+" ("+str(length)+" kB)")
         return content
 
     def video_list(self, server):

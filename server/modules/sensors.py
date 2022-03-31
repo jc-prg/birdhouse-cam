@@ -43,7 +43,7 @@ class BirdhouseSensor(threading.Thread):
                 self.active = self.param["active"]
 
             count += 1
-            if not self.error and self.active and count == self.interval and self.param["active"]:
+            if not self.error and self.active and count >= self.interval and self.param["active"]:
                 try:
                     indoor = self.sensor.read()
                     if indoor.is_valid():
