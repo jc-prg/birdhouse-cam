@@ -73,7 +73,8 @@ class BirdhouseSensor(threading.Thread):
             elif self.running:
                 time.sleep(0.5)
 
-        logging.info("Stopped sensors (" + self.id + ").")
+        GPIO.cleanup()
+        logging.info("Stopped sensor (" + self.id + ").")
 
     def connect(self):
         """
@@ -81,6 +82,7 @@ class BirdhouseSensor(threading.Thread):
         """
         try:
             import RPi.GPIO as GPIO
+            GPIO.setmode(GPIO.BCM)
             self.error = False
             self.error_connect = False
             self.error_msg = ""
@@ -96,14 +98,14 @@ class BirdhouseSensor(threading.Thread):
             return
         try:
             import modules.dht11 as dht11
-            GPIO.setmode(GPIO.BCM)
-            time.sleep(1)
             self.sensor = dht11.DHT11(pin=self.pin)
+
             indoor = self.sensor.read()
             if indoor.is_valid():
                 self.values["temperature"] = indoor.temperature
             else:
                 self.values["temperature"] = "error"
+
             self.error = False
             self.error_connect = False
             self.error_msg = ""
@@ -120,10 +122,7 @@ class BirdhouseSensor(threading.Thread):
         """
         Stop sensors
         """
-        if not self.error_connect:
-            GPIO.cleanup()
         self.running = False
-        logging.info("Stopped sensor ("+self.id+")")
 
     def get_values(self):
         """

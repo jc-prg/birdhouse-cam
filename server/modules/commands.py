@@ -32,67 +32,47 @@ class BirdhouseCommands(threading.Thread):
         """
         logging.info("Starting REST API for POST ...")
         config_files = ["images", "videos", "backup"]
+        count = 0
         while self._running:
-            time.sleep(10)
+            count += 1
+            if count >= 10:
+                count = 0
 
-            # create short videos
-            if len(self.create_day_queue) > 0:
-                self.config.async_running = True
-                [which_cam, filename, stamp, date] = self.create_day_queue.pop()
-                response = self.camera[which_cam].video.create(filename=filename, stamp=stamp, date=date)
+                # create short videos
+                if len(self.create_day_queue) > 0:
+                    self.config.async_running = True
+                    [which_cam, filename, stamp, date] = self.create_day_queue.pop()
+                    response = self.camera[which_cam].video.create(filename=filename, stamp=stamp, date=date)
 
-                if response["result"] == "OK":
-                    self.camera[which_cam].write_video_info(timestamp=stamp, data=response["data"])
-                    self.config.async_answers.append(["CREATE_DAY_DONE", date, response["result"]])
-                else:
-                    self.config.async_answers.append(["CREATE_DAY_ERROR", date, response["result"]])
-                self.config.async_running = False
-                time.sleep(1)
+                    if response["result"] == "OK":
+                        self.camera[which_cam].write_video_info(timestamp=stamp, data=response["data"])
+                        self.config.async_answers.append(["CREATE_DAY_DONE", date, response["result"]])
+                    else:
+                        self.config.async_answers.append(["CREATE_DAY_ERROR", date, response["result"]])
+                    self.config.async_running = False
+                    time.sleep(1)
 
-            # create short videos
-            if len(self.create_queue) > 0:
-                self.config.async_running = True
-                [which_cam, video_id, start, end] = self.create_queue.pop()
-                logging.info("Start video creation (" + video_id + "): " + str(start) + " - " + str(end) + ")")
-                response = self.camera[which_cam].create_trim_video(video_id, start, end)
-                logging.info(str(response))
-                self.config.async_answers.append(["TRIM_DONE", video_id, response["result"]])
-                self.config.async_running = True
-                time.sleep(1)
+                # create short videos
+                if len(self.create_queue) > 0:
+                    self.config.async_running = True
+                    [which_cam, video_id, start, end] = self.create_queue.pop()
+                    logging.info("Start video creation (" + video_id + "): " + str(start) + " - " + str(end) + ")")
+                    response = self.camera[which_cam].create_trim_video(video_id, start, end)
+                    logging.info(str(response))
+                    self.config.async_answers.append(["TRIM_DONE", video_id, response["result"]])
+                    self.config.async_running = True
+                    time.sleep(1)
 
-            # status changes
-            for config_file in config_files:
+                # status changes
+                for config_file in config_files:
 
-                # today, video (without date)
-                if config_file != "backup":
-                    entries = self.config.read_cache(config_file)
-                    self.config.lock(config_file)
+                    # today, video (without date)
+                    if config_file != "backup":
+                        entries = self.config.read_cache(config_file)
+                        self.config.lock(config_file)
 
-                    while len(self.status_queue[config_file]) > 0:
-                        [date, key, change_status, status] = self.status_queue[config_file].pop()
-
-                        if change_status == "RANGE_END":
-                            self.config.async_answers.append(["RANGE_DONE"])
-                        else:
-                            if key in entries:
-                                test = "yes"
-                                entries[key][change_status] = status
-                            else:
-                                test = "no"
-                            logging.debug("QUEUE: " + config_file + " // " + key + " - " + change_status + "=" + str(
-                                status) + " ... " + test)
-
-                    self.config.unlock(config_file)
-                    self.config.write(config_file, entries)
-
-                    # backup (with date)
-                else:
-                    for date in self.status_queue[config_file]:
-                        entry_data = self.config.read_cache(config_file, date)
-                        entries = entry_data["files"]
-                        self.config.lock(config_file, date)
-                        while len(self.status_queue[config_file][date]) > 0:
-                            [date, key, change_status, status] = self.status_queue[config_file][date].pop()
+                        while len(self.status_queue[config_file]) > 0:
+                            [date, key, change_status, status] = self.status_queue[config_file].pop()
 
                             if change_status == "RANGE_END":
                                 self.config.async_answers.append(["RANGE_DONE"])
@@ -102,13 +82,36 @@ class BirdhouseCommands(threading.Thread):
                                     entries[key][change_status] = status
                                 else:
                                     test = "no"
-                                logging.debug(
-                                    "QUEUE: " + config_file + "/" + date + " // " + key + " - " + change_status + "=" + str(
-                                        status) + " ... " + test)
+                                logging.debug("QUEUE: " + config_file + " // " + key + " - " + change_status + "=" + str(
+                                    status) + " ... " + test)
 
-                        entry_data["files"] = entries
-                        self.config.unlock(config_file, date)
-                        self.config.write(config_file, entry_data, date)
+                        self.config.unlock(config_file)
+                        self.config.write(config_file, entries)
+
+                        # backup (with date)
+                    else:
+                        for date in self.status_queue[config_file]:
+                            entry_data = self.config.read_cache(config_file, date)
+                            entries = entry_data["files"]
+                            self.config.lock(config_file, date)
+                            while len(self.status_queue[config_file][date]) > 0:
+                                [date, key, change_status, status] = self.status_queue[config_file][date].pop()
+
+                                if change_status == "RANGE_END":
+                                    self.config.async_answers.append(["RANGE_DONE"])
+                                else:
+                                    if key in entries:
+                                        test = "yes"
+                                        entries[key][change_status] = status
+                                    else:
+                                        test = "no"
+                                    logging.debug(
+                                        "QUEUE: " + config_file + "/" + date + " // " + key + " - " + change_status + "=" + str(
+                                            status) + " ... " + test)
+
+                            entry_data["files"] = entries
+                            self.config.unlock(config_file, date)
+                            self.config.write(config_file, entry_data, date)
 
         logging.info("Stopped REST API for POST.")
 
