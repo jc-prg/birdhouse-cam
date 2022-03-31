@@ -1156,6 +1156,7 @@ class BirdhouseCamera(threading.Thread):
         else:
             if data_type not in self.config_cache:
                 self.config_cache[data_type] = {}
+            self.config_cache[data_type] = data
             logging.debug("Stored in cache: "+timestamp+"/"+data_type+" ... "+str(len(self.config_cache[data_type].keys())))
 
     def write_image(self, filename, image, scale_percent=100):

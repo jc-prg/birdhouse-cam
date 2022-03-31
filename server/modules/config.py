@@ -105,7 +105,7 @@ class BirdhouseConfig(threading.Thread):
         wait, while a file is locked for writing
         """
         count = 0
-        logging.info("Start check locked: "+filename+" ...")
+        logging.debug("Start check locked: "+filename+" ...")
         if filename in self.locked and self.locked[filename]:
             while self.locked[filename]:
                 time.sleep(0.2)
