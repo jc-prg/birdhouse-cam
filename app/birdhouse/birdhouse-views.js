@@ -22,6 +22,7 @@ function birdhouse_INDEX(data, camera) {
 
 	for (let key in cameras) {
 	    if (cameras[key]["active"] && cameras[key]["status"]["error"] == false) {
+    	    if (active_camera == undefined) { active_camera = key; }
             if (key == active_camera) {
                 active_cam  = {
                     "name"        : key,
@@ -43,8 +44,8 @@ function birdhouse_INDEX(data, camera) {
 
 	if (Object.keys(cameras).length == 0 || active_cam == {}) {
 	    html += lang("NO_ENTRIES");
-	    console.log(cameras);
 	}
+	console.log(cameras);
 	if (Object.keys(cameras).length == 1 || other_cams.length == 0) {
 		var onclick  = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
 		html += birdhouse_Camera(main=true, view="cam1", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed);
