@@ -977,7 +977,7 @@ class BirdhouseCamera(threading.Thread):
                 self.camera.saturation = self.param["image"]["saturation"]
                 # self.camera.zoom = self.param["image"]["crop"]
                 # self.camera.annotate_background = picamera.Color('black')
-                self.camera.start_recording(self.output, format='mjpeg')
+                self.camera.start_recording(self.video.output, format='mjpeg')
                 logging.info(self.id + ": OK.")
         except Exception as e:
             self.camera_error(True, False, "Starting PiCamera doesn't work: " + str(e))
