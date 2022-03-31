@@ -2,6 +2,7 @@
 
 import os
 import re
+import logging
 from modules.config import BirdhouseConfig
 from flask import Flask
 from flask import Response, request
@@ -10,7 +11,8 @@ app = Flask(__name__)
 
 config = BirdhouseConfig(param_init={}, main_directory=os.path.dirname(os.path.abspath(__file__)))
 config.start()
-media_path = os.path.join(config.param["path"], "data", "videos")
+media_path = config.directory("videos")
+print("* Starting streaming for files in the directory '" + media_path + "' ...")
 
 
 def serve_ios(full_path):
@@ -58,5 +60,4 @@ def after_request(response):
     
 
 if __name__ == '__main__':
-
     app.run(host="0.0.0.0", port=8008)
