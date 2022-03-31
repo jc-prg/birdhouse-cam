@@ -24,9 +24,7 @@ class BirdhouseSensor(threading.Thread):
         self.values = {}
         self.last_read = 0
         self.interval = 10
-
         self.connect()
-        logging.info("Starting sensors (" + self.id + "/" + str(self.pin) + ") ...")
 
     def run(self):
         """
@@ -35,6 +33,7 @@ class BirdhouseSensor(threading.Thread):
         count = 0
         retry = 0
         retry_wait = 120
+        logging.info("Starting sensors (" + self.id + "/" + str(self.pin) + ") ...")
         while self.running:
 
             if self.config.update["sensor_"+self.id]:
@@ -64,6 +63,7 @@ class BirdhouseSensor(threading.Thread):
             elif self.error:
                 retry += 1
                 if retry > retry_wait:
+                    logging.info("Retry starting sensor: "+self.id)
                     self.connect()
                     retry = 0
             elif self.running:
@@ -80,6 +80,7 @@ class BirdhouseSensor(threading.Thread):
             self.error = False
             self.error_connect = False
             self.error_msg = ""
+            logging.info("Load GPIO for Sensor:"+self.id)
         except Exception as e:
             logging.error("Sensors: Couldn't load module RPi.GPIO. Requires Raspberry and installation of this module.")
             logging.error("To install module, try 'sudo apt-get -y install rpi.gpio'.")
@@ -96,6 +97,7 @@ class BirdhouseSensor(threading.Thread):
             self.error = False
             self.error_connect = False
             self.error_msg = ""
+            logging.info("Load Sensor:"+self.id)
         except Exception as e:
             logging.error("Could not load DHT11 sensor module: "+str(e))
             self.error = True
@@ -107,7 +109,7 @@ class BirdhouseSensor(threading.Thread):
         """
         Stop sensors
         """
-        if not self.error:
+        if not self.error and GPIO:
             GPIO.cleanup()
         self.running = False
 
