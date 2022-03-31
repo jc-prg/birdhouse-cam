@@ -24,7 +24,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
-        logging.info("Loading Video Processing for "+camera+"... ")
+        logging.info("Loading Video Processing for " + camera + "... ")
         self.id = camera
         self.camera = camera
         self.name = param["name"]
@@ -61,7 +61,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         """
         Report Error, set variables of modules
         """
-        logging.error("Video Processing ("+self.id+"): "+message)
+        logging.error("Video Processing (" + self.id + "): " + message)
         self.error = True
         self.error_msg.append(message)
 
@@ -69,7 +69,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         """
         Report Error, set variables of modules
         """
-        logging.warning("Video Processing ("+self.id+"): "+message)
+        logging.warning("Video Processing (" + self.id + "): " + message)
 
     def run(self):
         """
@@ -193,7 +193,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         try:
             return cv2.imwrite(path, image)
         except Exception as e:
-            self._msg_error("Could not save image '"+filename+"': "+str(e))
+            self._msg_error("Could not save image '" + filename + "': " + str(e))
 
     def filename(self, file_type="image"):
         """
@@ -241,7 +241,7 @@ class BirdhouseVideoProcessing(threading.Thread):
             logging.debug(message)
 
         except Exception as e:
-            self._msg_error("Error during video creation: "+str(e))
+            self._msg_error("Error during video creation: " + str(e))
 
         self.processing = False
         logging.info("OK.")
@@ -271,7 +271,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 self._msg_error("Error during day video creation: copy temp image files.")
                 return response
         except Exception as e:
-            self._msg_error("Error during day video creation: "+str(e))
+            self._msg_error("Error during day video creation: " + str(e))
 
         try:
             cmd_copy = "cp " + self.config.directory("images") + filename + "* " + self.config.directory("videos_temp")
@@ -286,7 +286,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 self._msg_error("Error during day video creation: copy temp image files.")
                 return response
         except Exception as e:
-            self._msg_error("Error during day video creation: "+str(e))
+            self._msg_error("Error during day video creation: " + str(e))
 
         cmd_filename = self.config.directory("videos_temp") + cmd_tempfiles
         cmd_rename = "i=0; for fi in " + self.config.directory(
@@ -304,7 +304,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 self._msg_error("Error during day video creation: rename temp image files.")
                 return response
         except Exception as e:
-            self._msg_error("Error during day video creation: "+str(e))
+            self._msg_error("Error during day video creation: " + str(e))
 
         amount = 0
         for root, dirs, files in os.walk(self.config.directory("videos_temp")):
@@ -330,7 +330,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 self._msg_error("Error during day video creation: create video with ffmpeg.")
                 return response
         except Exception as e:
-            self._msg_error("Error during day video creation: "+str(e))
+            self._msg_error("Error during day video creation: " + str(e))
 
         cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.directory("videos") + cmd_thumbfile
         logging.info(cmd_thumb)
@@ -356,7 +356,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 self._msg_error("Error during day video creation: remove temp image files.")
                 return response
         except Exception as e:
-            self._msg_error("Error during day video creation: "+str(e))
+            self._msg_error("Error during day video creation: " + str(e))
 
         length = (amount / framerate)
         video_data = {
@@ -388,7 +388,8 @@ class BirdhouseVideoProcessing(threading.Thread):
             input_file = config_file[video_id]["video_file"]
             output_file = input_file.replace(".mp4", "_short.mp4")
             framerate = config_file[video_id]["framerate"]
-            result = self.trim_video(input_file=input_file, output_file=output_file, start_timecode=start, end_timecode=end, framerate=framerate)
+            result = self.trim_video(input_file=input_file, output_file=output_file, start_timecode=start,
+                                     end_timecode=end, framerate=framerate)
             if result == "OK":
                 config_file[video_id]["video_file_short"] = output_file
                 config_file[video_id]["video_file_short_start"] = float(start)
@@ -423,7 +424,7 @@ class BirdhouseVideoProcessing(threading.Thread):
             message = os.system(cmd)
             logging.debug(message)
         except Exception as e:
-            self._msg_error("Error during video trimming: "+str(e))
+            self._msg_error("Error during video trimming: " + str(e))
 
         if os.path.isfile(output_file):
             return "OK"
@@ -435,8 +436,9 @@ class BirdhouseImageProcessing(object):
     """
     modify encoded and raw images
     """
+
     def __init__(self, camera, config, param):
-        logging.info("Loading Image Processing for "+camera+"... ")
+        logging.info("Loading Image Processing for " + camera + "... ")
         self.frame = None
         self.id = camera
         self.config = config
@@ -456,7 +458,7 @@ class BirdhouseImageProcessing(object):
         """
         Report Error, set variables of modules
         """
-        logging.error("Image Processing ("+self.id+"): "+message)
+        logging.error("Image Processing (" + self.id + "): " + message)
         self.error = True
         self.error_msg.append(message)
 
@@ -464,7 +466,7 @@ class BirdhouseImageProcessing(object):
         """
         Report Error, set variables of modules
         """
-        logging.warning("Image Processing ("+self.id+"): "+message)
+        logging.warning("Image Processing (" + self.id + "): " + message)
 
     def compare(self, image_1st, image_2nd, detection_area=None):
         """
@@ -481,7 +483,9 @@ class BirdhouseImageProcessing(object):
         """
         try:
             if len(image_1st) == 0 or len(image_2nd) == 0:
-                self._msg_warning("Compare: At least one file has a zero length - A:" + str(len(image_1st)) + "/ B:" + str(len(image_2nd)))
+                self._msg_warning(
+                    "Compare: At least one file has a zero length - A:" + str(len(image_1st)) + "/ B:" + str(
+                        len(image_2nd)))
                 score = 0
         except Exception as e:
             self._msg_warning("Compare: At least one file has a zero length.")
@@ -497,7 +501,7 @@ class BirdhouseImageProcessing(object):
             (score, diff) = ssim(image_1st, image_2nd, full=True)
 
         except Exception as e:
-            self._msg_warning("Error comparing images ("+str(e)+")")
+            self._msg_warning("Error comparing images (" + str(e) + ")")
             score = 0
 
         return round(score * 100, 1)
@@ -524,7 +528,7 @@ class BirdhouseImageProcessing(object):
             raw = cv2.imdecode(image, 1)
             return raw
         except Exception as e:
-            self._msg_error("Error convert image -> RAW image ("+str(e)+")")
+            self._msg_error("Error convert image -> RAW image (" + str(e) + ")")
             return self.image_error_raw()
 
     def convert_to_gray_raw(self, raw):
@@ -535,7 +539,7 @@ class BirdhouseImageProcessing(object):
             return cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
 
         except Exception as e:
-            self._msg_error("Could not convert image to gray scale " + str(e)+")")
+            self._msg_error("Could not convert image to gray scale " + str(e) + ")")
             return raw
 
     def crop(self, image, crop_area, crop_type="relative"):
@@ -680,7 +684,7 @@ class BirdhouseImageProcessing(object):
             return image
 
         except Exception as e:
-            self._msg_warning("Could not draw area into the image ("+str(e)+")")
+            self._msg_warning("Could not draw area into the image (" + str(e) + ")")
             return raw
 
     def image_error(self):
@@ -725,7 +729,7 @@ class BirdhouseImageProcessing(object):
             width = frame.shape[1]
             return [width, height]
         except Exception as e:
-            self._msg_warning("Could not analyze image ("+str(e)+")")
+            self._msg_warning("Could not analyze image (" + str(e) + ")")
             return [0, 0]
 
     def size_raw(self, raw):
@@ -737,7 +741,7 @@ class BirdhouseImageProcessing(object):
             width = raw.shape[1]
             return [width, height]
         except Exception as e:
-            self._msg_warning("Could not analyze image ("+str(e)+")")
+            self._msg_warning("Could not analyze image (" + str(e) + ")")
             return [0, 0]
 
 
@@ -774,7 +778,7 @@ class BirdhouseCamera(threading.Thread):
         self.config = config
         self.config_cache = {}
         self.config_cache_size = 5
-        self.config.update["camera_"+self.id] = False
+        self.config.update["camera_" + self.id] = False
 
         self.sensor = sensor
         self.param = self.config.param["devices"]["cameras"][self.id]
@@ -807,7 +811,8 @@ class BirdhouseCamera(threading.Thread):
         self.previous_stamp = "000000"
 
         self.image = BirdhouseImageProcessing(camera=self.id, config=self.config, param=self.param)
-        self.video = BirdhouseVideoProcessing(camera=self.id, config=self.config, param=self.param, directory=self.config.directory("videos"))
+        self.video = BirdhouseVideoProcessing(camera=self.id, config=self.config, param=self.param,
+                                              directory=self.config.directory("videos"))
         self.video.output = BirdhouseCameraOutput()
 
         # logging.info("Loading error image: "+self.camera_NA)
@@ -842,10 +847,10 @@ class BirdhouseCamera(threading.Thread):
             stamp = datetime.now().strftime('%H%M%S')
 
             while self.pause and self.running:
-                logging.info(self.id+" = paused ...")
+                logging.info(self.id + " = paused ...")
                 time.sleep(0.1)
 
-            if self.config.update["camera_"+self.id]:
+            if self.config.update["camera_" + self.id]:
                 self.update_main_config()
 
             # Error with camera - try to restart from time to time
@@ -884,7 +889,8 @@ class BirdhouseCamera(threading.Thread):
             else:
                 time.sleep(1)
                 if self.record:
-                    if (seconds in self.param["image_save"]["seconds"]) and (hours in self.param["image_save"]["hours"]):
+                    if (seconds in self.param["image_save"]["seconds"]) and (
+                            hours in self.param["image_save"]["hours"]):
 
                         image = self.get_image_raw()
                         image = self.image.normalize_raw(image)
@@ -898,7 +904,9 @@ class BirdhouseCamera(threading.Thread):
                             self.video.image_size = self.image_size
 
                         if self.previous_image is not None:
-                            similarity = self.image.compare_raw(image_1st=image_compare, image_2nd=self.previous_image, detection_area=self.param["similarity"]["detection_area"])
+                            similarity = self.image.compare_raw(image_1st=image_compare, image_2nd=self.previous_image,
+                                                                detection_area=self.param["similarity"][
+                                                                    "detection_area"])
                             similarity = str(similarity)
 
                         image_info = {
@@ -921,15 +929,18 @@ class BirdhouseCamera(threading.Thread):
                                 self.write_sensor_info(timestamp=stamp, data=self.sensor[key].get_values())
                                 # self.write_cache(data_type="sensor", timestamp=stamp, data=sensor_data)
 
-                        path_lowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
-                        path_hires = os.path.join(self.config.directory("images"), self.config.imageName("hires", stamp, self.id))
+                        path_lowres = os.path.join(self.config.directory("images"),
+                                                   self.config.imageName("lowres", stamp, self.id))
+                        path_hires = os.path.join(self.config.directory("images"),
+                                                  self.config.imageName("hires", stamp, self.id))
 
                         logging.debug("WRITE:" + path_lowres)
 
                         self.write_image_info(timestamp=stamp, data=image_info)
                         # self.write_cache(data_type="images", timestamp=stamp, data=image_info)
                         self.write_image(filename=path_hires, image=image)
-                        self.write_image(filename=path_lowres, image=image, scale_percent=self.param["image"]["preview_scale"])
+                        self.write_image(filename=path_lowres, image=image,
+                                         scale_percent=self.param["image"]["preview_scale"])
 
                         self.previous_image = image_compare
                         self.previous_stamp = stamp
@@ -1006,7 +1017,7 @@ class BirdhouseCamera(threading.Thread):
             self.error_image = True
             self.error_image_msg.append(message)
 
-        logging.error(self.id + ": "+message+" ("+str(self.error_time)+")")
+        logging.error(self.id + ": " + message + " (" + str(self.error_time) + ")")
 
     def camera_start_recording(self):
         self.video.start()
@@ -1029,7 +1040,7 @@ class BirdhouseCamera(threading.Thread):
                 else:
                     raise Exception("Empty image")
             except Exception as e:
-                error_msg = "Can't grab image from camera '"+self.id+"': " + str(e)
+                error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
                 self.camera_error(False, True, error_msg, True)
                 return ""
 
@@ -1037,12 +1048,12 @@ class BirdhouseCamera(threading.Thread):
             try:
                 raw = self.camera.read()  ## potentially not the same RAW as fram PI
                 encoded = self.image.convert_from_raw(raw)
-                if encoded != NoneType:
+                if encoded != type(None):
                     return encoded.copy()
                 else:
                     raise Exception("Empty image")
             except Exception as e:
-                error_msg = "Can't grab image from camera '"+self.id+"': " + str(e)
+                error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
                 self.camera_error(False, True, error_msg, True)
                 return ""
 
@@ -1098,7 +1109,8 @@ class BirdhouseCamera(threading.Thread):
         if "similarity" not in file_info:
             return False
 
-        elif ("camera" in file_info and file_info["camera"] == self.id) or ("camera" not in file_info and self.id == "cam1"):
+        elif ("camera" in file_info and file_info["camera"] == self.id) or (
+                "camera" not in file_info and self.id == "cam1"):
 
             if "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
                 return False
@@ -1137,10 +1149,10 @@ class BirdhouseCamera(threading.Thread):
         inner_area = self.param["similarity"]["detection_area"]
         image = self.image.draw_area_raw(raw=image, area=outer_area, color=(0, 255, 255), thickness=4)
 
-        w_start = outer_area[0] + ((outer_area[2]-outer_area[0]) * inner_area[0])
-        h_start = outer_area[1] + ((outer_area[3]-outer_area[1]) * inner_area[1])
-        w_end = outer_area[2] - ((outer_area[2]-outer_area[0]) * (1-inner_area[2]))
-        h_end = outer_area[3] - ((outer_area[3]-outer_area[1]) * (1-inner_area[3]))
+        w_start = outer_area[0] + ((outer_area[2] - outer_area[0]) * inner_area[0])
+        h_start = outer_area[1] + ((outer_area[3] - outer_area[1]) * inner_area[1])
+        w_end = outer_area[2] - ((outer_area[2] - outer_area[0]) * (1 - inner_area[2]))
+        h_end = outer_area[3] - ((outer_area[3] - outer_area[1]) * (1 - inner_area[3]))
 
         inner_area = (w_start, h_start, w_end, h_end)
         image = self.image.draw_area_raw(raw=image, area=inner_area, color=(0, 0, 255), thickness=4)
@@ -1157,13 +1169,15 @@ class BirdhouseCamera(threading.Thread):
             if timestamp != "":
                 files[timestamp] = data.copy()
             self.config.write(data_type, files)
-            logging.debug("Wrote "+str(len(self.config_cache[data_type].keys()))+" entries from cache: "+data_type)
+            logging.debug(
+                "Wrote " + str(len(self.config_cache[data_type].keys())) + " entries from cache: " + data_type)
             self.config_cache[data_type] = {}
         else:
             if data_type not in self.config_cache:
                 self.config_cache[data_type] = {}
             self.config_cache[data_type] = data.copy()
-            logging.debug("Stored in cache: "+timestamp+"/"+data_type+" ... "+str(len(self.config_cache[data_type].keys())))
+            logging.debug("Stored in cache: " + timestamp + "/" + data_type + " ... " + str(
+                len(self.config_cache[data_type].keys())))
 
     def write_image(self, filename, image, scale_percent=100):
         """
@@ -1180,7 +1194,7 @@ class BirdhouseCamera(threading.Thread):
             return cv2.imwrite(image_path, image)
 
         except Exception as e:
-            error_msg = "Can't save image and/or create thumbnail '"+image_path+"': " + str(e)
+            error_msg = "Can't save image and/or create thumbnail '" + image_path + "': " + str(e)
             self.camera_error(False, True, error_msg)
             return ""
 
@@ -1194,7 +1208,7 @@ class BirdhouseCamera(threading.Thread):
             files[timestamp] = data.copy()
             self.config.write("images", files)
         else:
-            logging.error("Could not find file: "+self.config.file("images"))
+            logging.error("Could not find file: " + self.config.file("images"))
 
     def write_video_info(self, timestamp, data):
         """
@@ -1225,4 +1239,3 @@ class BirdhouseCamera(threading.Thread):
         self.video.param = self.param
         self.image.param = self.param
         self.config.update["camera_" + self.id] = False
-
