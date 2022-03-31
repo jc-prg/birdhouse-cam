@@ -96,7 +96,7 @@ class BirdhouseSensor(threading.Thread):
             return
         try:
             import modules.dht11 as dht11
-            self.GPIO.setmode(GPIO.BCM)
+            GPIO.setmode(GPIO.BCM)
             time.sleep(1)
             self.sensor = dht11.DHT11(pin=self.pin)
             self.error = False
@@ -114,8 +114,8 @@ class BirdhouseSensor(threading.Thread):
         """
         Stop sensors
         """
-        if not self.error and self.GPIO:
-            self.GPIO.cleanup()
+        if not self.error_connect:
+            GPIO.cleanup()
         self.running = False
         logging.info("Stopped sensor ("+self.id+")")
 
