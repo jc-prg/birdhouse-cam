@@ -74,6 +74,7 @@ class BirdhouseSensor(threading.Thread):
                     retry = 0
             elif self.active and count >= self.interval and self.param["active"]:
                 try:
+                    self.sensor = dht11.DHT11(pin=self.pin)
                     indoor = self.sensor.read()
                     if indoor.is_valid():
                         self.values["temperature"] = indoor.temperature
@@ -104,13 +105,11 @@ class BirdhouseSensor(threading.Thread):
         try:
             import modules.dht11 as dht11
             self.sensor = dht11.DHT11(pin=self.pin)
-
             indoor = self.sensor.read()
             if indoor.is_valid():
                 temp = indoor.temperature
             else:
                 temp = "error"
-
             self.error = False
             self.error_connect = False
             self.error_msg = ""
