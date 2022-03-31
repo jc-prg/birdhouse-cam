@@ -42,7 +42,7 @@ class BirdhouseCommands(threading.Thread):
                 response = self.camera[which_cam].video.create(filename=filename, stamp=stamp, date=date)
 
                 if response["result"] == "OK":
-                    self.camera[which_cam].write_video_info(stamp=stamp, data=response["data"])
+                    self.camera[which_cam].write_video_info(timestamp=stamp, data=response["data"])
                     self.config.async_answers.append(["CREATE_DAY_DONE", date, response["result"]])
                 else:
                     self.config.async_answers.append(["CREATE_DAY_ERROR", date, response["result"]])

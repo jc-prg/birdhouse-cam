@@ -915,8 +915,11 @@ class BirdhouseCamera(threading.Thread):
                         }
                         for key in self.sensor:
                             if self.sensor[key].running and not self.sensor[key].error:
+                                sensor_data = self.sensor[key].get_values()
+                                sensor_data["date"] = datetime.now().strftime("%d.%m.%Y")
                                 image_info["sensor"][key] = self.sensor[key].get_values()
-                                self.write_sensor_info(timestamp=stamp, data=self.sensor[key].get_values())
+                                # self.write_sensor_info(timestamp=stamp, data=self.sensor[key].get_values())
+                                self.write_cache(data_type="sensor", timestamp=stamp, data=sensor_data)
 
                         path_lowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
                         path_hires = os.path.join(self.config.directory("images"), self.config.imageName("hires", stamp, self.id))
@@ -1141,7 +1144,7 @@ class BirdhouseCamera(threading.Thread):
         """
         store entries in a cache and write packages of entries to reduce file write access
         """
-        if data_type in self.config_cache and len(self.config_cache[data_type].keys()) >= self.config_cache_size or force_write:
+        if data_type in self.config_cache and len(self.config_cache[data_type].keys()) >= self.config_cache_size:
             files = self.config.read(data_type)
             for key in self.config_cache[data_type]:
                 files[key] = self.config_cache[data_type][key].copy()
@@ -1201,7 +1204,7 @@ class BirdhouseCamera(threading.Thread):
         """
         Write Sensor information to separate config file (for recovery purposes)
         """
-        logging.debug(self.id + ": Write video info: " + self.config.file("images"))
+        logging.debug(self.id + ": Write video info: " + self.config.file("sensor"))
         if os.path.isfile(self.config.file("sensor")):
             files = self.config.read_cache("sensor")
         else:

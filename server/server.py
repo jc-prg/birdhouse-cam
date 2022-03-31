@@ -378,6 +378,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "admin_allowed": self.admin_allowed(),
                     "check-version": version,
                     "api-call": status,
+                    "image_write_cache_size": camera[which_cam].config_cache_size,
                     "reload": False
                 },
                 "API": api_description,
@@ -603,7 +604,6 @@ if __name__ == "__main__":
         config.stop()
         backup.stop()
         for cam in camera:
-            camera[cam].write_cache(data_type="images", timestamp="", data="", force_write=True)
             camera[cam].stop()
         for sen in sensor:
             sensor[sen].stop()

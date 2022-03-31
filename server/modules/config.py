@@ -31,7 +31,7 @@ class BirdhouseConfig(threading.Thread):
             "html": "../app/",
             "data": "../data/",
             "main": "",
-            "sensor": "",
+            "sensor": "images/",
             "images": "images/",
             "backup": "images/",
             "videos": "videos/",
