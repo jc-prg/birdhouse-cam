@@ -107,7 +107,8 @@ class BirdhouseSensor(threading.Thread):
         """
         Stop sensors
         """
-        GPIO.cleanup()
+        if not self.error:
+            GPIO.cleanup()
         self.running = False
 
     def get_values(self):
