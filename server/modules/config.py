@@ -205,7 +205,7 @@ class BirdhouseConfig(threading.Thread):
         try:
             self.check_locked(filename)
             self.locked[filename] = True
-            with open(filename, 'w') as json_file:
+            with open(filename, 'wb') as json_file:
                 json.dump(data, codecs.getwriter('utf-8')(json_file), ensure_ascii=False, sort_keys=True, indent=4)
             self.locked[filename] = False
             logging.debug("Write JSON file: "+filename)
