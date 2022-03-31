@@ -338,8 +338,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             camera_data = config.param["devices"]["cameras"].copy()
             for key in camera_data:
                 if key in camera:
-                    camera_data[key]["video"]["stream"] = "/stream.mjpg?" + cam
-                    camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + cam
+                    camera_data[key]["video"]["stream"] = "/stream.mjpg?" + key
+                    camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
                     camera_data[key]["device"] = "camera"
                     camera_data[key]["status"] = {
                         "error": camera[key].error,
