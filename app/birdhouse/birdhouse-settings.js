@@ -7,9 +7,6 @@
 function birdhouse_app_settings (name="Settings")
 	this.create	= function (data)
 	this.toggle	= function (active=false)
-	this.tab_start	= function ()
-	this.tab_row	= function (td1,td2)
-	this.tab_end	= function ()
 */
 //--------------------------------------
 
@@ -21,82 +18,63 @@ var birdhouse_settings  = new birdhouse_app_settings();
 function birdhouse_app_settings (name="Settings") {
 
 	this.create	= function (data) {
-        html  = "<h2>"+lang("SETTINGS")+": System &amp; App</h2>";
+
+        var tab     = new birdhouse_table();
+        tab.style_rows["height"] = "27px";
+        tab.style_cells["width"] = "40%";
+
+        html  = "<h2>Information: System &amp; App</h2>";
 		html += "<hr style='border:1px solid gray;'>"
 
-		html += this.tab_start();
-		html += this.tab_row("App:",				app_title);
-		html += this.tab_row("Versions:",
+		html += tab.start();
+		html += tab.row("App:",				app_title);
+		html += tab.row("Versions:",
 						"App: " 		+ app_version + "<br/>" +
 						"API: " 		+ app_api_version + "<br/>" +
 						"jcMsg: " 		+ appMsg.appVersion + "<br/>" + 
 						"jcApp: "		+ appFW.appVersion);
 
-		html += this.tab_row("Source:","<a href='https://github.com/jc-prg/birdhouse-cam/' target='_blank'>https://github.com/jc-prg/birdhouse-cam/</a>");
-		html += this.tab_row("&nbsp;","");
-		html += this.tab_row("API Call","<button onclick='window.open(\"" + RESTurl + "api/list/\",\"_blank\");' style='background-color:lightgray;color:black;width:100px;';>REST API</button>");
-		html += this.tab_row("&nbsp;","");
-		html += this.tab_row("Reload Interval:", app_reload_interval + "s");
-		html += this.tab_row("&nbsp;","");
-		html += this.tab_row("Active Camera:&nbsp;", app_active_cam);
-		html += this.tab_row("Available Cameras:&nbsp;", app_available_cameras.length);
-		html += this.tab_row("Active Page:&nbsp;", app_active_page);
-		html += this.tab_row("Active Date:&nbsp;", app_active_date);
-		html += this.tab_row("&nbsp;","");
-		html += this.tab_row("Unique stream URL:&nbsp;", app_unique_stream_url);
-		html += this.tab_row("Unique stream ID:&nbsp;",	app_unique_stream_id);
+		html += tab.row("Source:","<a href='https://github.com/jc-prg/birdhouse-cam/' target='_blank'>https://github.com/jc-prg/birdhouse-cam/</a>");
+		html += tab.row("&nbsp;","");
+		html += tab.row("API Call","<button onclick='window.open(\"" + RESTurl + "api/list/\",\"_blank\");' style='background-color:lightgray;color:black;width:100px;';>REST API</button>");
+		html += tab.row("&nbsp;","");
+		html += tab.row("Reload Interval:", app_reload_interval + "s");
+		html += tab.row("&nbsp;","");
+		html += tab.row("Active Camera:&nbsp;", app_active_cam);
+		html += tab.row("Available Cameras:&nbsp;", app_available_cameras.length);
+		html += tab.row("Active Page:&nbsp;", app_active_page);
+		html += tab.row("Active Date:&nbsp;", app_active_date);
+		html += tab.row("&nbsp;","");
+		html += tab.row("Unique stream URL:&nbsp;", app_unique_stream_url);
+		html += tab.row("Unique stream ID:&nbsp;",	app_unique_stream_id);
 
-		html += this.tab_row("&nbsp;","");
-		html += this.tab_row("Window:", document.body.clientWidth + "x" + document.body.clientHeight );
-		html += this.tab_row("Position:", "<div id='scrollPosition'>0 px</div>" );
-		html += this.tab_end();
+		html += tab.row("&nbsp;","");
+		html += tab.row("Window:", document.body.clientWidth + "x" + document.body.clientHeight );
+		html += tab.row("Position:", "<div id='scrollPosition'>0 px</div>" );
+		html += tab.end();
 
 		setTextById("setting1", html);
 
         html  = "<h2>"+lang("SETTINGS")+": Server</h2>";
 		html += "<hr style='border:1px solid gray;'>"
 
-		html += this.tab_start();
-		html += this.tab_row("Title:&nbsp;", birdhouse_edit_field(id="set_title", field="title", type="input") );
-		html += this.tab_row("Backup-Time:&nbsp;", birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
-		html += this.tab_row("Backup-Preview:&nbsp;", birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
-		html += this.tab_row("RPi Active:&nbsp;", birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false", data_type="boolean") );
-        html += this.tab_row("<hr>");
-		html += this.tab_row("HTTP Address:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
-		html += this.tab_row("HTTP Port:&nbsp;", birdhouse_edit_field(id="set_port", field="server:port", type="input", options="true,false", data_type="integer") );
-        html += this.tab_row("<hr>");
-		html += this.tab_row("", birdhouse_edit_save("set_main","set_title:set_backup:set_preview:set_rpi:set_ip4:set_port") );
-        html += this.tab_row("&nbsp;");
+		html += tab.start();
+		html += tab.row("Title:&nbsp;", birdhouse_edit_field(id="set_title", field="title", type="input") );
+		html += tab.row("Backup-Time:&nbsp;", birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
+		html += tab.row("Backup-Preview:&nbsp;", birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
+		html += tab.row("RPi Active:&nbsp;", birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false", data_type="boolean") );
+        html += tab.row("<hr>");
+		html += tab.row("HTTP IP4 Address:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
+		html += tab.row("HTTP Port:&nbsp;", birdhouse_edit_field(id="set_port", field="server:port", type="input", options="true,false", data_type="integer") );
+		html += tab.row("Videostream IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_video", field="server:ip4_stream_video", type="input", options="true,false", data_type="string") );
+		html += tab.row("Audiostream IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_audio", field="server:ip4_stream_audio", type="input", options="true,false", data_type="string") );
+		html += tab.row("Deny admin from IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_deny", field="server:ip4_admin_deny", type="input", options="true,false", data_type="json") );
+        html += tab.row("<hr>");
+		html += tab.row("", birdhouse_edit_save("set_main","set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny") );
+        html += tab.row("&nbsp;");
 
 		setTextById("setting2", html);
-
-        html  = "<h2>"+lang("SETTINGS")+": Devices</h2>";
-		html += "<hr style='border:1px solid gray;'>"
-		html += this.tab_row("&nbsp;","");
-		for (let camera in birdhouseCameras) {
-    		html += this.tab_start();
-			html += this.tab_row("<i>Status &quot;"+camera+"&quot;</i>","");
-			html += this.tab_row("&nbsp;-&nbsp;running:", birdhouseCameras[camera]["status"]["running"]);
-			html += this.tab_row("&nbsp;-&nbsp;error/image:", birdhouseCameras[camera]["status"]["error"] + "/" + birdhouseCameras[camera]["status"]["img_error"]);
-    		html += this.tab_row("&nbsp;","");
-			html += this.tab_end();
-			html += "<textarea style='width:95%'>"+JSON.stringify(birdhouseCameras[camera]["status"]["img_msg"])+"</textarea>";
-			html += "<br/>&nbsp;<br/>"
-    		}
-
-		for (let mic in birdhouseMicrophones) {
-		    var host = location.host.split(":");
-		    var URL = "http://"+host[0]+":"+birdhouseMicrophones[mic]["port"]+"/";
-    		html += this.tab_start();
-			html += this.tab_row("<i>Status &quot;"+mic+"&quot;</i>","");
-			html += this.tab_row("&nbsp;-&nbsp;active:", birdhouseMicrophones[mic]["active"]);
-			html += this.tab_row("&nbsp;-&nbsp;type:", birdhouseMicrophones[mic]["type"]);
-			html += this.tab_row("&nbsp;-&nbsp;stream:", "<a href='"+URL+"' target='_blank'>" + URL + "</a>");
-    		html += this.tab_row("&nbsp;","");
-			html += this.tab_end();
-    		}
-
-		setTextById("setting3", html);
+        setTextById("setting3", "");
 
 		this.toggle();
 		}
@@ -116,13 +94,6 @@ function birdhouse_app_settings (name="Settings") {
 			element.style.display = view_settings;
 			}
 		}
-
-	this.tab_start	= function ()		{ return "<table>"; }
-	this.tab_row	= function (td1,td2=false) {
-	    if (td2 != false) { return "<tr><td valign=\"top\">" + td1 + "</td><td>" + td2 + "</td></tr>"; }
-	    else              { return "<tr><td valign=\"top\" colspan=\"2\">" + td1 + "</td></tr>"; }
-	    }
-	this.tab_end	= function ()		{ return "</table>"; }
 	}
 
 

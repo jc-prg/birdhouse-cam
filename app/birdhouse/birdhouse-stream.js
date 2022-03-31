@@ -7,9 +7,10 @@
 function birdhouseStream_load(server, microphones)
 function birdhouseStream_play(mic)
 function birdhouseStream_stop(mic)
-function birdhouseStream_toggle(mic)
-function birdhouseStream_toggle_image(mic)
+function birdhouseStream_toggle(mic="", add_id="")
+function birdhouseStream_toggle_image(mic, add_id="")
 function birdhouseStream_image(on=true)
+function birdhouseStream_image_header(on=true)
 */
 //--------------------------------------
 
@@ -31,7 +32,7 @@ function birdhouseStream_load(server, microphones) {
         console.log("Reload audio stream not implemented yet.")
     }
     for (let mic in microphones) {
-        var stream_url = "http://"+app_data["DATA"]["server"]["ip4_stream_audio"]+":"+microphones[mic]["port"]+"/";
+        var stream_url = "http://"+microphones[mic]["stream_server"]+"/";
         stream_url += mic+".mp3";
         if (!birdhouse_stream[mic]) {
             console.log("Load Audio Streams: "+stream_url);

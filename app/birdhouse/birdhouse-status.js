@@ -12,18 +12,26 @@ function birdhouseStatus_print(data) {
     console.debug("Update Status ...");
     var sensors = data["DATA"]["devices"]["sensors"];
     html = "<center><i><font color='gray'>";
-    html += "Temperature - ";
+    html_entry = "";
     var count = 0;
     var keys = Object.keys(sensors);
     for (let sensor in sensors) {
         if (sensors[sensor]["active"]) {
-            html += sensors[sensor]["name"] + ": ";
-            html += "<font id='temp"+sensor+"'>"+sensors[sensor]["values"]["temperature"]+"</font>";
-            html += sensors[sensor]["units"]["temperature"];
+            html_entry += sensors[sensor]["name"] + ": ";
+            html_entry += "<font id='temp"+sensor+"'>"+sensors[sensor]["values"]["temperature"]+"</font>";
+            html_entry += sensors[sensor]["units"]["temperature"];
             count += 1;
             if (count < keys.length) { html += " / "; }
         }
     }
+    if (count > 0 ) {
+        document.getElementById(app_frame_info).style.display = "block";
+        html_entry = "Temperature - " + html_entry;
+    }
+    else {
+        document.getElementById(app_frame_info).style.display = "none";
+    }
+    html += html_entry;
     html += "</font></i></center>";
     setTextById(app_frame_info, html);
 }

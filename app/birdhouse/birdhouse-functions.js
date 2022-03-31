@@ -4,8 +4,17 @@
 // additional functions 
 //--------------------------------------
 /* INDEX:
+function birdhouse_edit_field(id, field, type="input", options="", data_type="string")
+function birdhouse_edit_save(id, id_list, text="")
+function birdhouse_edit_send(id_list)
+function birdhouse_edit_done(data)
 function birdhouse_initTooltip()
 function birdhouse_tooltip( tooltip_element, tooltip_content, name, left="" )
+function birdhouse_table ()
+    this.update_settings = function ()
+	this.start	= function ()
+	this.row	= function (td1, td2=false)
+	this.end	= function ()
 function birdhouse_imageOverlay(filename, description="", favorit="", to_be_deleted="")
 function birdhouse_videoOverlay(filename, description="", favorit="", to_be_deleted="")
 function birdhouse_videoOverlayToggle(status="")
@@ -26,6 +35,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
     var fields = field.split(":");
     var data   = "";
     var html   = "";
+    var style  = "";
 
     if (fields.length == 1) { data = app_data["DATA"][fields[0]]; }
     else if (fields.length == 2) { data = app_data["DATA"][fields[0]][fields[1]]; }
@@ -34,11 +44,10 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
     else if (fields.length == 5) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]][fields[3]][fields[4]]; }
     else if (fields.length == 6) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]][fields[3]][fields[4]][fields[5]]; }
 
-    if (data_type == "json") {
-        data = JSON.stringify(data);
-    }
+    if (data_type == "json") { data = JSON.stringify(data); }
+    if (data_type == "integer" || data_type == "float") { style += "width:60px;" }
     if (type == "input") {
-        html += "<input id='"+id+"' value='"+data+"'>";
+        html += "<input id='"+id+"' value='"+data+"' style='"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");'>";
     }
     else if (type == "select") {
         var values = options.split(",");
@@ -62,6 +71,50 @@ function birdhouse_edit_save(id, id_list, text="") {
     return html;
 }
 
+function birdhouse_edit_check_values(id, data_type) {
+    if (!document.getElementById(id)) {
+        console.error("Element '"+id+"' doesn't exist!");
+        return [true, "Element '"+id+"' doesn't exist!"];
+        }
+    var input = document.getElementById(id);
+    var value = input.value;
+    var error = false;
+    var error_msg = "";
+
+    input.style.backgroundColor = "white";
+
+    if (data_type == "json") {
+        try { var json_test = JSON.parse(value); }
+        catch(err) {
+            error = true;
+            error_msg += id.toUpperCase() + " isn't a correct JSON format.\n";
+            input.style.backgroundColor = "#ffaaaa";
+        }
+    }
+    if (data_type == "float") {
+        console.log(parseFloat(value));
+        if (isNaN(parseFloat(value))) {
+            error = true;
+            error_msg += id.toUpperCase() + " isn't a float number.\n";
+            input.style.backgroundColor = "#ffaaaa";
+        }
+        else {
+            input.value = parseFloat(value);
+        }
+    }
+    if (data_type == "integer") {
+        if (isNaN(parseInt(value)) || parseInt(value) != parseFloat(value)) {
+            error = true;
+            error_msg += id.toUpperCase() + " isn't an integer number.\n";
+            input.style.backgroundColor = "#ffaaaa";
+        }
+        else {
+            input.value = parseInt(value);
+        }
+    }
+    return [error, error_msg ];
+}
+
 function birdhouse_edit_send(id_list) {
     var ids = id_list.split(":");
     var info = "";
@@ -73,40 +126,9 @@ function birdhouse_edit_send(id_list) {
             var field_name = document.getElementById(ids[i]+"_data").value.split(":");
             var field_data = document.getElementById(ids[i]).value;
             field_name = field_name[(field_name.length-1)];
-            document.getElementById(ids[i]).style.backgroundColor = "white";
 
-        console.log("......."+field_name+"-"+data_type+"-"+field_data);
-            if (data_type == "json") {
-                try { var json_test = JSON.parse(field_data); }
-                catch(err) {
-                    error = true;
-                    error_msg += field_name.toUpperCase() + " isn't a correct JSON format.\n";
-                    document.getElementById(ids[i]).style.backgroundColor = "#ffaaaa";
-                }
-            }
-            if (data_type == "float") {
-                console.log(parseFloat(field_data));
-                if (isNaN(parseFloat(field_data))) {
-                    error = true;
-                    error_msg += field_name.toUpperCase() + " isn't a float number.\n";
-                    document.getElementById(ids[i]).style.backgroundColor = "#ffaaaa";
-                }
-                else {
-                    document.getElementById(ids[i]).value = parseFloat(field_data);
-                }
-            }
-            if (data_type == "integer") {
-                if (isNaN(parseInt(field_data)) || parseInt(field_data) != parseFloat(field_data)) {
-                    error = true;
-                    error_msg += field_name.toUpperCase() + " isn't an integer number.\n";
-                    document.getElementById(ids[i]).style.backgroundColor = "#ffaaaa";
-                }
-                else {
-                    document.getElementById(ids[i]).value = parseInt(field_data);
-                }
-            }
-
-        console.log(".-.-.-."+field_name+"-"+data_type+"-"+field_data);
+            var field_error = birdhouse_edit_check_values(ids[i], data_type);
+            if (field_error[0]) { error = true; error_msg += field_error[1]; }
 
             info += document.getElementById(ids[i]+"_data").value + "==";
             info += encodeURI(field_data) + "||";
@@ -161,17 +183,23 @@ function birdhouse_table () {
         "vertical-align" : "middle",
     };
 
-    for (let key in this.style_table) { this.style_table_string += key+":"+this.style_table[key]+";"; }
-    for (let key in this.style_rows)  { this.style_rows_string  += key+":"+this.style_rows[key]+";"; }
-    for (let key in this.style_cells) { this.style_cells_string += key+":"+this.style_cells[key]+";"; }
+    this.update_settings = function () {
+        for (let key in this.style_table) { this.style_table_string += key+":"+this.style_table[key]+";"; }
+        for (let key in this.style_rows)  { this.style_rows_string  += key+":"+this.style_rows[key]+";"; }
+        for (let key in this.style_cells) { this.style_cells_string += key+":"+this.style_cells[key]+";"; }
+    }
 
 	this.start	= function () {
+	    this.update_settings();
 	    return "<table style='"+this.style_table_string+"'>";
 	}
+
 	this.row	= function (td1, td2=false) {
-	    if (td2 != false) { return "<tr style='"+this.style_rows_string+"'><td style='"+this.style_cells_string+"'>" + td1 + "</td><td>" + td2 + "</td></tr>"; }
+	    this.update_settings();
+	    if (td2 != false) { return "<tr style='"+this.style_rows_string+"'><td width='30%' style='"+this.style_cells_string+"'>" + td1 + "</td><td width='70%' style='"+this.style_cells_string+"'>" + td2 + "</td></tr>"; }
 	    else              { return "<tr style='"+this.style_rows_string+"'><td style='"+this.style_cells_string+"' colspan=\"2\">" + td1 + "</td></tr>"; }
 	}
+
 	this.end	= function () {
 	    return "</table>";
 	}
@@ -253,10 +281,17 @@ function birdhouse_overlayHide() {
 
 function birdhouse_groupToggle(id) {
         if (document.getElementById("group_"+id).style.display == "none") {
-                document.getElementById("group_"+id).style.display = "block"
-        	if (document.getElementById("group_intro_"+id)) { document.getElementById("group_intro_"+id).style.display = "block"; }
-                document.getElementById("group_link_"+id).innerHTML = "(&minus;)"
-                images     = document.getElementById("group_ids_"+id).innerHTML;
+                document.getElementById("group_"+id).style.display = "block";
+            	if (document.getElementById("group_intro_"+id)) {
+            	    document.getElementById("group_intro_"+id).style.display = "block";
+            	}
+            	if (document.getElementById("group_ids_"+id)) {
+                    images = document.getElementById("group_ids_"+id).innerHTML;
+                }
+                else {
+                    images = "";
+                }
+                document.getElementById("group_link_"+id).innerHTML = "(&minus;)";
                 image_list = images.split(" ");
                 for (let i=0; i<image_list.length; i++) {
                   if (image_list[i] != "") {

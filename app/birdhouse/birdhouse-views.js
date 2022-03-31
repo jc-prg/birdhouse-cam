@@ -5,7 +5,6 @@
 //--------------------------------------
 /* INDEX:
 function birdhouse_INDEX(data, camera)
-function birdhouse_CAMERAS( title, data )
 function birdhouse_VIDEO_DETAIL( title, data )
 function birdhouse_LIST(title, data, camera, header_open=true)
 */
@@ -18,7 +17,6 @@ function birdhouse_INDEX(data, camera) {
 	var cameras       = data["DATA"]["devices"]["cameras"];
 	var admin_allowed = data["STATUS"]["admin_allowed"];
 	var stream_server = RESTurl;
-	//var stream_server = "http://"+data["DATA"]["server"]["ip4_stream_video"]+":"+data["DATA"]["server"]["port_video"]+"/";
 	var active_cam    = {};
 	var other_cams    = [];
 
@@ -130,7 +128,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 			var player = "<div id='camera_video_edit_overlay' class='camera_video_edit_overlay' style='display:none'></div>";
 			player += "<div id='camera_video_edit' class='camera_video_edit' style='display:none'>";
 			player += "<div style='height:46px;width:100%'></div>";
-			var trim_command = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_birdhouse_createShortVideo();";
+			var trim_command = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_birdhouse_birdhouse_createShortVideo();";
 
 			loadJS(videoplayer_script, "", document.body);
 
@@ -190,7 +188,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             }
         }
         var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
-        html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, false );
+        html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, true );
     }
 
 	// group favorits per month
