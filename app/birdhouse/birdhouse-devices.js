@@ -97,6 +97,11 @@ function birdhouseDevices( title, data ) {
 		html_entry += tab.row("Type:", birdhouse_edit_field(id="set_type_"+sensor, field="devices:sensors:"+sensor+":type", type="select", options="dht11"));
 		html_entry += tab.row("Source:", birdhouse_edit_field(id="set_source_"+sensor, field="devices:sensors:"+sensor+":pin", type="input", options="", data_type="integer"));
 		html_entry += tab.row("Active:", birdhouse_edit_field(id="set_active_"+sensor, field="devices:sensors:"+sensor+":active", type="select", options="true,false", data_type="boolean"));
+        if (sensors[sensor]["status"] && sensors[sensor]["status"]["error"] == true) {
+    		html_entry += tab.row("<hr/>");
+            html_entry += tab.row("Error:", sensors[sensor]["status"]["error"]);
+            html_entry += tab.row("Error-Msg:", sensors[sensor]["status"]["error_msg"]);
+        }
 		html_entry += tab.row("<hr/>");
 		var id_list = "set_name_"+sensor+":set_type_"+sensor+":set_active_"+sensor+":set_source_"+sensor;
 		html_entry += tab.row("<center>"+birdhouse_edit_save(id="edit_"+sensor, id_list)+"</center>");
