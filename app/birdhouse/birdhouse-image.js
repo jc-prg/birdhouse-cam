@@ -238,7 +238,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 				video_file  = entry["video_file_short"];
 				note = "*";
         }	}
-        var streaming_url = "http://"+entry["video"]["stream_video"]+"/";
+        var streaming_url = "http://"+app_data["DATA"]["devices"]["cameras"][entry["camera"]]["video"]["stream_video"]+"/";
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["path"] + entry["thumbnail"]);
 		var hires       = birdhouse_ImageURL(streaming_url + video_file);
 		var description = "";
