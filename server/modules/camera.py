@@ -1147,7 +1147,7 @@ class BirdhouseCamera(threading.Thread):
         if data_type in self.config_cache and len(self.config_cache[data_type].keys()) >= self.config_cache_size:
             files = self.config.read(data_type)
             for key in self.config_cache[data_type]:
-                files[key] = self.config_cache[data_type][key].copy()
+                files[key] = self.config_cache[data_type][key]
             if timestamp != "":
                 files[timestamp] = data.copy()
             self.config.write(data_type, files)
@@ -1156,7 +1156,7 @@ class BirdhouseCamera(threading.Thread):
         else:
             if data_type not in self.config_cache:
                 self.config_cache[data_type] = {}
-            self.config_cache[data_type] = data
+            self.config_cache[data_type] = data.copy()
             logging.debug("Stored in cache: "+timestamp+"/"+data_type+" ... "+str(len(self.config_cache[data_type].keys())))
 
     def write_image(self, filename, image, scale_percent=100):
