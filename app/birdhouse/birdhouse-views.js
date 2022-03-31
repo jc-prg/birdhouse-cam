@@ -46,6 +46,7 @@ function birdhouse_INDEX(data, camera) {
 	    html += lang("NO_ENTRIES");
 	}
 	console.log(cameras);
+	console.log(active_cam);
 	console.log(active_camera);
 
 	if (Object.keys(cameras).length == 1 || other_cams.length == 0) {
@@ -67,7 +68,7 @@ function birdhouse_INDEX(data, camera) {
 		app_camera_source[other_cams[0]["name"]] = stream_server + cameras[other_cams[0]["name"]]["stream"];
 
 		onclick = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
-		html += birdhouse_Camera(main=true, view="cam1cam2", onclick=onclick, camera=active_camera, stream_server=stream_server, admin_allowed=admin_allowed);
+		html += birdhouse_Camera(main=true, view="cam1cam2", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed);
 		app_camera_source[active_cam["name"]] = stream_server + cameras[active_cam["name"]]["stream"];
 		/*
 		for (let micro in birdhouseMicrophones) {
