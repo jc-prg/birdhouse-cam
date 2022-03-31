@@ -366,7 +366,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         "error": sensor[key].error,
                         "error_msg": sensor[key].error_msg,
                     }
-                if key in sensor and not sensor[key].error and sensor[key].running:
+                if key in sensor and sensor[key].running:
                     sensor_data[key]["values"] = sensor[key].get_values()
                 else:
                     logging.debug("Sensor not available: "+key)
