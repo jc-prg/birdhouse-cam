@@ -105,6 +105,7 @@ class BirdhouseConfig(threading.Thread):
         wait, while a file is locked for writing
         """
         count = 0
+        logging.info("Start check locked ...")
         if filename in self.locked and self.locked[filename]:
             while self.locked[filename]:
                 time.sleep(0.2)
@@ -207,6 +208,7 @@ class BirdhouseConfig(threading.Thread):
             self.locked[filename] = True
             with open(filename, 'wb') as json_file:
                 json.dump(data, codecs.getwriter('utf-8')(json_file), ensure_ascii=False, sort_keys=True, indent=4)
+                json_file.close()
             self.locked[filename] = False
             logging.debug("Write JSON file: "+filename)
 
