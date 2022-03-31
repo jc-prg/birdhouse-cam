@@ -275,7 +275,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # REST API call :  /api/<cmd>/<camera>/param1>/<param2>
         elif self.path.startswith("/api/"):
 
-            logging.info("GET API request with '" + self.path + "'.")
+            logging.debug("GET API request with '" + self.path + "'.")
             param = self.path.split("/")
             command = param[2]
             status = "Success"
