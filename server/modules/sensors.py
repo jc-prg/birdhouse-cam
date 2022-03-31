@@ -6,7 +6,6 @@ import logging
 
 try:
     import RPi.GPIO as GPIO
-    GPIO.setmode(GPIO.BCM)
     error_module = False
     error_module_msg = ""
     logging.info("Load GPIO for Sensor:"+self.id)
@@ -46,6 +45,7 @@ class BirdhouseSensor(threading.Thread):
         if not error_module:
             self.connect()
         else:
+            GPIO.setmode(GPIO.BCM)
             self.error_connect = True
             self.error_msg = error_module_msg
             self.running = False
