@@ -603,6 +603,7 @@ if __name__ == "__main__":
         config.stop()
         backup.stop()
         for cam in camera:
+            camera[cam].write_cache(data_type="images", timestamp="", data="", force_write=True)
             camera[cam].stop()
         for sen in sensor:
             sensor[sen].stop()

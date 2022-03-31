@@ -772,9 +772,11 @@ class BirdhouseCamera(threading.Thread):
         threading.Thread.__init__(self)
         self.id = thread_id
         self.config = config
-        self.sensor = sensor
-
+        self.config_cache = {}
+        self.config_cache_size = 5
         self.config.update["camera_"+self.id] = False
+
+        self.sensor = sensor
         self.param = self.config.param["devices"]["cameras"][self.id]
 
         self.name = self.param["name"]
@@ -914,14 +916,15 @@ class BirdhouseCamera(threading.Thread):
                         for key in self.sensor:
                             if self.sensor[key].running and not self.sensor[key].error:
                                 image_info["sensor"][key] = self.sensor[key].get_values()
-                                self.write_sensor_info(stamp=stamp, data=self.sensor[key].get_values())
+                                self.write_sensor_info(timestamp=stamp, data=self.sensor[key].get_values())
 
                         path_lowres = os.path.join(self.config.directory("images"), self.config.imageName("lowres", stamp, self.id))
                         path_hires = os.path.join(self.config.directory("images"), self.config.imageName("hires", stamp, self.id))
 
                         logging.debug("WRITE:" + path_lowres)
 
-                        self.write_image_info(timestamp=stamp, data=image_info)
+                        # self.write_image_info(timestamp=stamp, data=image_info)
+                        self.write_cache(data_type="images", timestamp=stamp, data=image_info)
                         self.write_image(filename=path_hires, image=image)
                         self.write_image(filename=path_lowres, image=image, scale_percent=self.param["image"]["preview_scale"])
 
@@ -1134,6 +1137,25 @@ class BirdhouseCamera(threading.Thread):
         image = self.image.draw_area_raw(raw=image, area=inner_area, color=(0, 0, 255), thickness=4)
         return image
 
+    def write_cache(self, data_type, timestamp, data, force_write=False):
+        """
+        store entries in a cache and write packages of entries to reduce file write access
+        """
+        if data_type in self.config_cache and len(self.config_cache[data_type].keys()) >= self.config_cache_size or force_write:
+            files = self.config.read(data_type)
+            for key in self.config_cache[data_type]:
+                files[key] = self.config_cache[data_type][key].copy()
+            if timestamp != "":
+                files[timestamp] = data.copy()
+            self.config.write(data_type, files)
+            logging.debug("Wrote "+str(len(self.config_cache[data_type].keys()))+" entries from cache: "+data_type)
+            self.config_cache[data_type] = {}
+        else:
+            if data_type not in self.config_cache:
+                self.config_cache[data_type] = {}
+            self.config_cache[data_type][timestamp] = data
+            logging.debug("Stored in cache: "+timestamp+"/"+data_type+" ... "+str(len(self.config_cache[data_type].keys())))
+
     def write_image(self, filename, image, scale_percent=100):
         """
         Scale image and write to file
@@ -1153,7 +1175,6 @@ class BirdhouseCamera(threading.Thread):
             self.camera_error(False, True, error_msg)
             return ""
 
-
     def write_image_info(self, timestamp, data):
         """
         Write image information to file
@@ -1163,18 +1184,20 @@ class BirdhouseCamera(threading.Thread):
             files = self.config.read_cache("images")
             files[timestamp] = data.copy()
             self.config.write("images", files)
+        else:
+            logging.error("Could not find file: "+self.config.file("images"))
 
-    def write_video_info(self, stamp, data):
+    def write_video_info(self, timestamp, data):
         """
         Write image information to file
         """
         logging.debug(self.id + ": Write video info: " + self.config.file("images"))
         if os.path.isfile(self.config.file("videos")):
             files = self.config.read_cache("videos")
-            files[stamp] = data
+            files[timestamp] = data
             self.config.write("videos", files)
 
-    def write_sensor_info(self, stamp, data):
+    def write_sensor_info(self, timestamp, data):
         """
         Write Sensor information to separate config file (for recovery purposes)
         """
@@ -1183,7 +1206,7 @@ class BirdhouseCamera(threading.Thread):
             files = self.config.read_cache("sensor")
         else:
             files = {}
-        files[stamp] = data
+        files[timestamp] = data
         self.config.write("sensor", files)
 
     def update_main_config(self):
