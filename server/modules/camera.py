@@ -1153,7 +1153,7 @@ class BirdhouseCamera(threading.Thread):
         store entries in a cache and write packages of entries to reduce file write access
         """
         if data_type in self.config_cache and len(self.config_cache[data_type].keys()) >= self.config_cache_size:
-            files = self.config.read(data_type)
+            files = self.config.read_cache(data_type)
             for key in self.config_cache[data_type]:
                 files[key] = self.config_cache[data_type][key]
             if timestamp != "":
@@ -1165,9 +1165,8 @@ class BirdhouseCamera(threading.Thread):
         else:
             if data_type not in self.config_cache:
                 self.config_cache[data_type] = {}
-            self.config_cache[data_type] = data.copy()
-            logging.debug("Stored in cache: " + timestamp + "/" + data_type + " ... " + str(
-                len(self.config_cache[data_type].keys())))
+            self.config_cache[timestamp] = data.copy()
+            logging.debug("Stored in cache: " + timestamp + "/" + data_type + " ... " + str(len(self.config_cache[data_type].keys())))
 
     def write_image(self, filename, image, scale_percent=100):
         """

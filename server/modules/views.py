@@ -616,8 +616,8 @@ class BirdhouseViews(threading.Thread):
 
         category = "/current/"
         path = self.config.directory(config="images")
-        # files_all = self.config.read_cache(config="images")
-        files_all = self.config.read(config="images")
+        files_all = self.config.read_cache(config="images")
+        # files_all = self.config.read(config="images")
 
         time_now = datetime.now().strftime('%H%M%S')
         date_today = datetime.now().strftime("%Y%m%d")

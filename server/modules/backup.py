@@ -10,7 +10,7 @@ class BirdhouseArchive(threading.Thread):
 
     def __init__(self, config, camera, views):
         """
-        Initialize new thread and set inital parameters
+        Initialize new thread and set initial parameters
         """
         threading.Thread.__init__(self)
         logging.info("Starting backup process ...")
