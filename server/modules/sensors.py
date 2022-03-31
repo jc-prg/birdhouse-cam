@@ -17,6 +17,8 @@ class BirdhouseSensor(threading.Thread):
         self.param = self.config.param["devices"]["sensors"][sensor_id]
         self.active = self.param["active"]
         self.running = True
+
+        self.GPIO = None
         self.error = False
         self.error_connect = False
         self.error_msg = ""
@@ -60,7 +62,7 @@ class BirdhouseSensor(threading.Thread):
                     self.error_msg = "Error reading data from sensor: "+str(e)
                     logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
                 count = 0
-            elif self.error:
+            elif self.error_connect:
                 retry += 1
                 if retry > retry_wait:
                     logging.info("Retry starting sensor: "+self.id)
@@ -92,7 +94,7 @@ class BirdhouseSensor(threading.Thread):
             return
         try:
             import modules.dht11 as dht11
-            GPIO.setmode(GPIO.BCM)
+            self.GPIO.setmode(GPIO.BCM)
             self.sensor = dht11.DHT11(pin=self.pin)
             self.error = False
             self.error_connect = False
@@ -109,8 +111,8 @@ class BirdhouseSensor(threading.Thread):
         """
         Stop sensors
         """
-        if not self.error and GPIO:
-            GPIO.cleanup()
+        if not self.error and self.GPIO:
+            self.GPIO.cleanup()
         self.running = False
 
     def get_values(self):
