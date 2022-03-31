@@ -687,7 +687,7 @@ class BirdhouseImageProcessing(object):
         """
         return image with error message
         """
-        raw = self.error_image_raw()
+        raw = self.image_error_raw()
         image = self.convert_from_raw(raw)
         return image
 
