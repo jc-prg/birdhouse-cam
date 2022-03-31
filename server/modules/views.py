@@ -616,7 +616,8 @@ class BirdhouseViews(threading.Thread):
 
         category = "/current/"
         path = self.config.directory(config="images")
-        files_all = self.config.read_cache(config="images")
+        # files_all = self.config.read_cache(config="images")
+        files_all = self.config.read(config="images")
 
         time_now = datetime.now().strftime('%H%M%S')
         date_today = datetime.now().strftime("%Y%m%d")
@@ -633,7 +634,7 @@ class BirdhouseViews(threading.Thread):
             count_diff = 0
             stamps = list(reversed(sorted(files_all.keys())))
             for stamp in stamps:
-                if stamp != "time" and int(time_now) >= int(stamp) >= int(hour_min) and int(stamp) < int(hour_max):
+                if int(time_now) >= int(stamp) >= int(hour_min) and int(stamp) < int(hour_max):
                     if "datestamp" in files_all[stamp] and files_all[stamp]["datestamp"] == date_today:
                         if "camera" in files_all[stamp] and files_all[stamp]["camera"] == which_cam:
                             threshold = self.camera[which_cam].param["similarity"]["threshold"]
