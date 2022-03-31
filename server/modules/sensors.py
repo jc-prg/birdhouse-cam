@@ -116,6 +116,7 @@ class BirdhouseSensor(threading.Thread):
         if not self.error and self.GPIO:
             self.GPIO.cleanup()
         self.running = False
+        logging.info("Stopped sensor ("+self.id+")")
 
     def get_values(self):
         """
