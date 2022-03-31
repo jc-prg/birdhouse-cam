@@ -46,7 +46,13 @@ class BirdhouseSensor(threading.Thread):
                 self.active = self.param["active"]
 
             count += 1
-            if not self.error_connect and self.active and count >= self.interval and self.param["active"]:
+            if self.error_connect:
+                retry += 1
+                if retry > retry_wait:
+                    logging.info("Retry starting sensor: "+self.id)
+                    self.connect()
+                    retry = 0
+            elif self.active and count >= self.interval and self.param["active"]:
                 try:
                     indoor = self.sensor.read()
                     if indoor.is_valid():
@@ -64,12 +70,6 @@ class BirdhouseSensor(threading.Thread):
                     self.error_msg = "Error reading data from sensor: "+str(e)
                     logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
                 count = 0
-            elif self.error_connect:
-                retry += 1
-                if retry > retry_wait:
-                    logging.info("Retry starting sensor: "+self.id)
-                    self.connect()
-                    retry = 0
             elif self.running:
                 time.sleep(0.5)
 
@@ -95,15 +95,16 @@ class BirdhouseSensor(threading.Thread):
 #            self.error_connect = True
 #            self.error_msg = "Couldn't load module RPi.GPIO: "+str(e)
 #            self.running = False
+        temp = ""
         try:
             import modules.dht11 as dht11
             self.sensor = dht11.DHT11(pin=self.pin)
 
             indoor = self.sensor.read()
             if indoor.is_valid():
-                self.values["temperature"] = indoor.temperature
+                temp = indoor.temperature
             else:
-                self.values["temperature"] = "error"
+                temp = "error"
 
             self.error = False
             self.error_connect = False
@@ -115,7 +116,7 @@ class BirdhouseSensor(threading.Thread):
             self.error_msg = "Could not load DHT11 sensor module: "+str(e)
             self.running = False
         logging.info("Loaded Sensor: "+self.id)
-        logging.info("... Initial temperature: "+str(self.values["temperature"]))
+        logging.info("... Initial temperature: "+str(temp))
 
     def stop(self):
         """
