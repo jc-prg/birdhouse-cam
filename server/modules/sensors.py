@@ -73,29 +73,28 @@ class BirdhouseSensor(threading.Thread):
             elif self.running:
                 time.sleep(0.5)
 
-        GPIO.cleanup()
+        # GPIO.cleanup()
         logging.info("Stopped sensor (" + self.id + ").")
 
     def connect(self):
         """
         connect with sensor
         """
-        try:
-            import RPi.GPIO as GPIO
-            GPIO.setmode(GPIO.BCM)
-            self.error = False
-            self.error_connect = False
-            self.error_msg = ""
-            logging.info("Load GPIO for Sensor:"+self.id)
-        except Exception as e:
-            logging.error("Sensors: Couldn't load module RPi.GPIO. Requires Raspberry and installation of this module.")
-            logging.error("To install module, try 'sudo apt-get -y install rpi.gpio'.")
-            logging.error(str(e))
-            self.error = True
-            self.error_connect = True
-            self.error_msg = "Couldn't load module RPi.GPIO: "+str(e)
-            self.running = False
-            return
+#        try:
+#            import RPi.GPIO as GPIO
+#            GPIO.setmode(GPIO.BCM)
+#            self.error = False
+#            self.error_connect = False
+#            self.error_msg = ""
+#            logging.info("Load GPIO for Sensor:"+self.id)
+#        except Exception as e:
+#            logging.error("Sensors: Couldn't load module RPi.GPIO. Requires Raspberry and installation of this module.")
+#            logging.error("To install module, try 'sudo apt-get -y install rpi.gpio'.")
+#            logging.error(str(e))
+#            self.error = True
+#            self.error_connect = True
+#            self.error_msg = "Couldn't load module RPi.GPIO: "+str(e)
+#            self.running = False
         try:
             import modules.dht11 as dht11
             self.sensor = dht11.DHT11(pin=self.pin)

@@ -21,7 +21,7 @@ function birdhouseStatus_print(data) {
             html_entry += "<font id='temp"+sensor+"'>"+sensors[sensor]["values"]["temperature"]+"</font>";
             html_entry += sensors[sensor]["units"]["temperature"];
             count += 1;
-            if (count < keys.length) { html += " / "; }
+            if (count < keys.length) { html_entry += " / "; }
         }
     }
     if (count > 0 ) {
