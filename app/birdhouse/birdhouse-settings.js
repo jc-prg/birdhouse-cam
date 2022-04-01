@@ -17,11 +17,17 @@ var birdhouse_settings  = new birdhouse_app_settings();
 
 function birdhouse_app_settings (name="Settings") {
 
-	this.create	= function (data) {
+	this.create	= function () {
 
-        var tab     = new birdhouse_table();
+        var tab      = new birdhouse_table();
         tab.style_rows["height"] = "27px";
         tab.style_cells["width"] = "40%";
+
+        var cameras  = app_data["DATA"]["devices"]["cameras"];
+        var api_call = "<button onclick='window.open(\"" + RESTurl + "api/list/\",\"_blank\");' style='background-color:lightgray;color:black;width:60px;margin:2px;';>REST API</button>";
+	    for (let camera in cameras) {
+	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' style='background-color:lightgray;color:black;width:60px;margin:2px;';>API "+camera+"</button>";
+            }
 
         html  = "<h2>Information: System &amp; App</h2>";
 		html += "<hr style='border:1px solid gray;'>"
@@ -36,7 +42,7 @@ function birdhouse_app_settings (name="Settings") {
 
 		html += tab.row("Source:","<a href='https://github.com/jc-prg/birdhouse-cam/' target='_blank'>https://github.com/jc-prg/birdhouse-cam/</a>");
 		html += tab.row("&nbsp;","");
-		html += tab.row("API Call","<button onclick='window.open(\"" + RESTurl + "api/list/\",\"_blank\");' style='background-color:lightgray;color:black;width:100px;';>REST API</button>");
+		html += tab.row("API Call", api_call);
 		html += tab.row("&nbsp;","");
 		html += tab.row("Reload Interval:", app_reload_interval + "s");
 		html += tab.row("&nbsp;","");
