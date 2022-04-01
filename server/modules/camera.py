@@ -24,7 +24,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
-        logging.info("Loading Video Processing for " + camera + "... ")
+        logging.info("- Loading Video Processing for " + camera + "... ")
         self.id = camera
         self.camera = camera
         self.name = param["name"]
@@ -439,7 +439,7 @@ class BirdhouseImageProcessing(object):
     """
 
     def __init__(self, camera, config, param):
-        logging.info("Loading Image Processing for " + camera + "... ")
+        logging.info("- Loading Image Processing for " + camera + "... ")
         self.frame = None
         self.id = camera
         self.config = config
@@ -1002,6 +1002,9 @@ class BirdhouseCamera(threading.Thread):
             else:
                 self.cameraFPS = FPS().start()
                 logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
+            raw = self.get_image_raw()
+            if "NoneType" in type(raw):
+                self.camera_error(True, False, "Images are empty, cv2 doesn't work for source " + str(self.source) + ", try picamera.")
         except Exception as e:
             self.camera_error(True, False, "Starting USB camera doesn't work: " + str(e))
 
