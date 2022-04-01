@@ -57,6 +57,7 @@ def create_chart_data(data):
     used_keys = []
     used_cameras = []
 
+    # get categories / titles
     for key in data:
         print_key = key[0:2]+":"+key[2:4]
         if data[key]["camera"] not in used_cameras:
@@ -72,6 +73,7 @@ def create_chart_data(data):
                     if sensor_title not in chart["titles"]:
                         chart["titles"].append(sensor_title)
 
+    # get data
     for key in data:
         print_key = key[0:2] + ":" + key[2:4]
         if print_key not in used_keys and used_cameras[0] == data[key]["camera"]:
@@ -81,6 +83,8 @@ def create_chart_data(data):
                     sensor = sensor_title.split(":")
                     if "sensor" in data[key] and sensor[0] in data[key]["sensor"] and sensor[1] in data[key]["sensor"][sensor[0]]:
                         chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
+                    else:
+                        chart["data"][print_key].append(None)
 
     return chart
 

@@ -76,10 +76,8 @@ class BirdhouseSensor(threading.Thread):
                 try:
                     indoor = self.sensor.read()
                     if indoor.is_valid():
-                        if indoor.temperature:
-                            self.values["temperature"] = indoor.temperature
-                        if indoor.humidity:
-                            self.values["humidity"] = indoor.humidity
+                        self.values["temperature"] = indoor.temperature
+                        self.values["humidity"] = indoor.humidity
                         self.last_read = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
                         logging.debug("Temperature: " + str(indoor.temperature))
                         logging.debug("Humidity:    " + str(indoor.humidity))
