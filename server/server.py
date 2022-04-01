@@ -520,6 +520,7 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(format='%(levelname)s: %(message)s',
                             level=logging.INFO)
+        logging.info('Started ...')
 
     # set system signal handler
     signal.signal(signal.SIGINT, on_exit)
@@ -538,10 +539,7 @@ if __name__ == "__main__":
     for sen in config.param["devices"]["sensors"]:
         settings = config.param["devices"]["sensors"][sen]
         sensor[sen] = BirdhouseSensor(sensor_id=sen, param=settings, config=config)
-        if not sensor[sen].error:
-            sensor[sen].start()
-    if sensor == {}:
-        logging.info("No sensor added.")
+        sensor[sen].start()
 
     # start cameras
     camera = {}

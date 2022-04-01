@@ -1,7 +1,7 @@
 import time
-from datetime import datetime
 import threading
 import logging
+from datetime import datetime
 
 
 try:
