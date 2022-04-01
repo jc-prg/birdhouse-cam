@@ -102,7 +102,7 @@ class BirdhouseSensor(threading.Thread):
         connect with sensor
         """
         temp = ""
-        if "rpi_active" in config.param["server"] and config.param["server"]["rpi_active"]:
+        if "rpi_active" in self.param["server"] and self.param["server"]["rpi_active"]:
             try:
                 import modules.dht11 as dht11
                 self.sensor = dht11.DHT11(pin=self.pin)
