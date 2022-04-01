@@ -1000,11 +1000,13 @@ class BirdhouseCamera(threading.Thread):
             if self.camera.stream is None or not self.camera.stream.isOpened():
                 self.camera_error(True, False, "Can't connect to camera, check if source is "+str(self.source)+".")
             else:
-                self.cameraFPS = FPS().start()
-                logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
-            raw = self.get_image_raw()
-            if "NoneType" in type(raw):
-                self.camera_error(True, False, "Images are empty, cv2 doesn't work for source " + str(self.source) + ", try picamera.")
+                raw = self.get_image_raw()
+                check = type(raw)
+                if "NoneType" in check:
+                    self.camera_error(True, False, "Images are empty, cv2 doesn't work for source " + str(self.source) + ", try picamera.")
+                else:
+                    self.cameraFPS = FPS().start()
+                    logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
         except Exception as e:
             self.camera_error(True, False, "Starting USB camera doesn't work: " + str(e))
 
