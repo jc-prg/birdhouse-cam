@@ -48,7 +48,6 @@ function birdhouseDevices( title, data ) {
 		html_entry += tab.row("<hr/>");
 		html_entry += tab.row("<b>Image/Video:<br/>&nbsp;</b>");
 		html_entry += tab.row("- Crop:", birdhouse_edit_field(id="set_crop_"+camera, field="devices:cameras:"+camera+":image:crop", type="input", options="", data_type="json"));
-		html_entry += tab.row("- Record:", birdhouse_edit_field(id="set_record_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
 		html_entry += tab.row("- Show Time:", birdhouse_edit_field(id="set_time_"+camera, field="devices:cameras:"+camera+":image:date_time", type="select", options="true,false", data_type="boolean"));
 		html_entry += tab.row("- Preview Scale:", birdhouse_edit_field(id="set_scale_"+camera, field="devices:cameras:"+camera+":image:preview_scale", type="input", options="", data_type="integer") + " %");
 		html_entry += tab.row("- Streaming:", cameras[camera]["video"]["streaming_server"]);
@@ -59,6 +58,11 @@ function birdhouseDevices( title, data ) {
 		html_entry += tab.row("<b>Detection:<br/>&nbsp;</b>");
 		html_entry += tab.row("- Area:", birdhouse_edit_field(id="set_area_"+camera, field="devices:cameras:"+camera+":similarity:detection_area", type="input", options="", data_type="json"));
 		html_entry += tab.row("- Threshold:", birdhouse_edit_field(id="set_threshold_"+camera, field="devices:cameras:"+camera+":similarity:threshold", type="input", options="", data_type="float") + " %");
+		html_entry += tab.row("<hr/>");
+		html_entry += tab.row("<b>Record Images:<br/>&nbsp;</b>");
+		html_entry += tab.row("- Record:", birdhouse_edit_field(id="set_record_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
+		html_entry += tab.row("- Hours:", JSON.stringify(cameras[camera]["image_save"]["hours"]));
+		html_entry += tab.row("- Seconds:", JSON.stringify(cameras[camera]["image_save"]["seconds"]));
 		html_entry += tab.row("<hr/>");
 		if (cameras[camera]["status"]["error"] || cameras[camera]["status"]["image_error"] || cameras[camera]["status"]["video_error"]) {
 		    html_entry += tab.row("Error:", cameras[camera]["status"]["error"]);
