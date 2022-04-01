@@ -61,8 +61,8 @@ function birdhouseDevices( title, data ) {
 		html_entry += tab.row("<hr/>");
 		html_entry += tab.row("<b>Record Images:<br/>&nbsp;</b>");
 		html_entry += tab.row("- Record:", birdhouse_edit_field(id="set_record_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
-		html_entry += tab.row("- Hours:", JSON.stringify(cameras[camera]["image_save"]["hours"]));
-		html_entry += tab.row("- Seconds:", JSON.stringify(cameras[camera]["image_save"]["seconds"]));
+		html_entry += tab.row("- Hours:", JSON.stringify(cameras[camera]["image_save"]["hours"]).replace(",",", "));
+		html_entry += tab.row("- Seconds:", JSON.stringify(cameras[camera]["image_save"]["seconds"]).replace(",",", "));
 		html_entry += tab.row("<hr/>");
 		if (cameras[camera]["status"]["error"] || cameras[camera]["status"]["image_error"] || cameras[camera]["status"]["video_error"]) {
 		    html_entry += tab.row("Error:", cameras[camera]["status"]["error"]);
