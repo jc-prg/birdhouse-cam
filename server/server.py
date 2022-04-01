@@ -518,9 +518,9 @@ if __name__ == "__main__":
         logging.info('Started ...')
         logging.info('-------------------------------------------')
     else:
-        logging.basicConfig(format='%(levelname)s: %(message)s',
-                            level=logging.INFO)
+        logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
         logging.info('Started ...')
+        print("TEST")
 
     # set system signal handler
     signal.signal(signal.SIGINT, on_exit)

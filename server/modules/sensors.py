@@ -9,11 +9,7 @@ try:
     GPIO.setmode(GPIO.BCM)
     error_module = False
     error_module_msg = ""
-    logging.info("Load GPIO for Sensor.")
 except Exception as e:
-    logging.error("Sensors: Couldn't load module RPi.GPIO. Requires Raspberry and installation of this module.")
-    logging.error("To install module, try 'sudo apt-get -y install rpi.gpio'.")
-    logging.error(str(e))
     error_module = True
     error_module_msg = "Couldn't load module RPi.GPIO: "+str(e)
 
@@ -46,6 +42,9 @@ class BirdhouseSensor(threading.Thread):
         if not error_module:
             self.connect()
         else:
+            logging.error(error_module_msg)
+            logging.error("- Requires Raspberry and installation of this module.")
+            logging.error("- To install module, try 'sudo apt-get -y install rpi.gpio'.")
             self.error_connect = True
             self.error_msg = error_module_msg
             self.running = False
