@@ -1001,7 +1001,7 @@ class BirdhouseCamera(threading.Thread):
                 self.camera_error(True, False, "Can't connect to camera, check if source is "+str(self.source)+".")
             else:
                 raw = self.get_image_raw()
-                check = type(raw)
+                check = str(type(raw))
                 if "NoneType" in check:
                     self.camera_error(True, False, "Images are empty, cv2 doesn't work for source " + str(self.source) + ", try picamera.")
                 else:
