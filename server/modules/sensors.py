@@ -59,6 +59,7 @@ class BirdhouseSensor(threading.Thread):
         retry_wait = 120
         logging.info("Starting sensors (" + self.id + "/" + str(self.pin) + ") ...")
         while self.running:
+            time.sleep(1)
 
             if self.config.update["sensor_"+self.id]:
                 self.param = self.config.param["devices"]["sensors"][self.id]
@@ -66,7 +67,7 @@ class BirdhouseSensor(threading.Thread):
                 self.active = self.param["active"]
 
             count += 1
-            if self.error_connect:
+            if self.error_connect and self.param["active"]:
                 retry += 1
                 if retry > retry_wait:
                     logging.info("Retry starting sensor: "+self.id)
@@ -92,8 +93,6 @@ class BirdhouseSensor(threading.Thread):
                     self.error_msg = "Error reading data from sensor: "+str(e)
                     logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
                 count = 0
-            elif self.running:
-                time.sleep(1)
 
         # GPIO.cleanup()
         logging.info("Stopped sensor (" + self.id + ").")
@@ -103,25 +102,31 @@ class BirdhouseSensor(threading.Thread):
         connect with sensor
         """
         temp = ""
-        try:
-            import modules.dht11 as dht11
-            self.sensor = dht11.DHT11(pin=self.pin)
-            indoor = self.sensor.read()
-            if indoor.is_valid():
-                temp = indoor.temperature
-            else:
-                temp = "error"
-            self.error = False
-            self.error_connect = False
-            self.error_msg = ""
-        except Exception as e:
-            logging.error("Could not load DHT11 sensor module: "+str(e))
+        if "rpi_active" in config.param["server"] and config.param["server"]["rpi_active"]:
+            try:
+                import modules.dht11 as dht11
+                self.sensor = dht11.DHT11(pin=self.pin)
+                indoor = self.sensor.read()
+                if indoor.is_valid():
+                    temp = indoor.temperature
+                else:
+                    temp = "error"
+                self.error = False
+                self.error_connect = False
+                self.error_msg = ""
+            except Exception as e:
+                self.error = True
+                self.error_connect = True
+                self.error_msg = "Could not load DHT11 sensor module: "+str(e)
+                logging.error(self.error_msg)
+            if not self.error:
+                logging.info("Loaded Sensor: "+self.id)
+                logging.info("- Initial temperature: "+str(temp))
+        else:
             self.error = True
             self.error_connect = True
-            self.error_msg = "Could not load DHT11 sensor module: "+str(e)
-            self.running = False
-        logging.info("Loaded Sensor: "+self.id)
-        logging.info("... Initial temperature: "+str(temp))
+            self.error_msg = "No sensor available: requires Raspberry Pi / activate 'rpi_active' in config file."
+            logging.info(self.error_msg)
 
     def stop(self):
         """

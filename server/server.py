@@ -18,6 +18,7 @@ from modules.config import BirdhouseConfig
 from modules.commands import BirdhouseCommands
 from modules.presets import birdhouse_preset, file_types
 from modules.views import BirdhouseViews
+from modules.sensors import BirdhouseSensor
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 api_description = {
@@ -534,18 +535,13 @@ if __name__ == "__main__":
 
     # start sensors
     sensor = {}
-    if "rpi_active" in config.param["server"] and config.param["server"]["rpi_active"]:
-        from modules.sensors import BirdhouseSensor
-
-        for sen in config.param["devices"]["sensors"]:
-            settings = config.param["devices"]["sensors"][sen]
-            sensor[sen] = BirdhouseSensor(sensor_id=sen, param=settings, config=config)
-            if not sensor[sen].error:
-                sensor[sen].start()
-        if sensor == {}:
-            logging.info("No sensor added.")
-    else:
-        logging.info("No sensor available: requires Raspberry Pi / activate 'rpi_active' in config file.")
+    for sen in config.param["devices"]["sensors"]:
+        settings = config.param["devices"]["sensors"][sen]
+        sensor[sen] = BirdhouseSensor(sensor_id=sen, param=settings, config=config)
+        if not sensor[sen].error:
+            sensor[sen].start()
+    if sensor == {}:
+        logging.info("No sensor added.")
 
     # start cameras
     camera = {}
