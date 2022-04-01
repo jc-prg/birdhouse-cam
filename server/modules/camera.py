@@ -1038,14 +1038,9 @@ class BirdhouseCamera(threading.Thread):
                 return ""
 
         elif self.type == "usb":
-            try:
-                raw = self.camera.read()
-                encoded = self.image.convert_from_raw(raw)
-                return encoded
-            except Exception as e:
-                error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
-                self.camera_error(False, True, error_msg, True)
-                return ""
+            raw = self.get_image_raw()
+            encoded = self.image.convert_from_raw(raw)
+            return encoded
 
         else:
             error_msg = "Camera type not supported (" + str(self.type) + ")."
@@ -1070,8 +1065,13 @@ class BirdhouseCamera(threading.Thread):
 
         elif self.type == "usb":
             try:
-                raw = self.camera.read()  ## potentially not the same RAW as fram PI
-                return raw
+                raw = self.camera.read()
+                check = str(type(raw))
+                if "NoneType" in check:
+                    self.camera_error(True, False, "Get Image led to empty image (source=" + str(self.source) + ")")
+                    return ""
+                else:
+                    return raw.copy()
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
                 self.camera_error(False, True, error_msg, True)
