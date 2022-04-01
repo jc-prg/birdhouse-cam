@@ -38,6 +38,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.processing = False
         self.max_length = 0.25 * 60
         self.info = {}
+        self.output = None
         self.ffmpeg_cmd = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} "
         self.ffmpeg_cmd += "-vcodec libx264 -crf 18"
 
@@ -810,9 +811,10 @@ class BirdhouseCamera(threading.Thread):
         self.previous_stamp = "000000"
 
         self.image = BirdhouseImageProcessing(camera=self.id, config=self.config, param=self.param)
-        self.video = BirdhouseVideoProcessing(camera=self.id, config=self.config, param=self.param,
-                                              directory=self.config.directory("videos"))
+        self.video = BirdhouseVideoProcessing(camera=self.id, config=self.config, param=self.param, directory=self.config.directory("videos"))
         self.video.output = BirdhouseCameraOutput()
+        self.camera = None
+        self.cameraFPS = None
 
         # logging.info("Loading error image: "+self.camera_NA)
         # self.camera_NA = os.path.join(self.config.main_directory, self.config.directories["data"], "camera_na.jpg")
@@ -994,13 +996,12 @@ class BirdhouseCamera(threading.Thread):
 
     def camera_start_usb(self):
         try:
-            # cap                    = cv2.VideoCapture(0) # check if camera is available
-            # if cap is None or not cap.isOpened(): raise
             self.camera = WebcamVideoStream(src=self.source).start()
-            self.cameraFPS = FPS().start()
-            if self.get_image() == "":
-                raise Exception("Error during first image capturing.")
-            logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
+            if self.camera.stream is None or not self.camera.stream.isOpened():
+                self.camera_error(True, False, "Can't connect to camera, check if source is "+str(self.source)+".")
+            else:
+                self.cameraFPS = FPS().start()
+                logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
         except Exception as e:
             self.camera_error(True, False, "Starting USB camera doesn't work: " + str(e))
 
@@ -1039,7 +1040,7 @@ class BirdhouseCamera(threading.Thread):
 
         elif self.type == "usb":
             try:
-                raw = self.camera.read()  ## potentially not the same RAW as fram PI
+                raw = self.camera.read()
                 encoded = self.image.convert_from_raw(raw)
                 return encoded
             except Exception as e:
@@ -1062,7 +1063,7 @@ class BirdhouseCamera(threading.Thread):
                     self.video.output.condition.wait()
                     encoded = self.video.output.frame
                 raw = self.image.convert_to_raw(encoded)
-                return raw.copy()
+                return raw
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
                 self.camera_error(False, True, error_msg, True)
@@ -1071,7 +1072,7 @@ class BirdhouseCamera(threading.Thread):
         elif self.type == "usb":
             try:
                 raw = self.camera.read()  ## potentially not the same RAW as fram PI
-                return raw.copy()
+                return raw
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
                 self.camera_error(False, True, error_msg, True)
