@@ -917,7 +917,7 @@ class BirdhouseCamera(threading.Thread):
                             "size": self.image_size
                         }
                         for key in self.sensor:
-                            if self.sensor[key].running and not self.sensor[key].error:
+                            if self.sensor[key].running:
                                 sensor_data = self.sensor[key].get_values()
                                 sensor_data["date"] = datetime.now().strftime("%d.%m.%Y")
                                 image_info["sensor"][key] = self.sensor[key].get_values()
