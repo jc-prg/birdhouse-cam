@@ -810,19 +810,13 @@ class BirdhouseCamera(threading.Thread):
         self.previous_image = None
         self.previous_stamp = "000000"
 
+        logging.info("Starting camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
+
         self.image = BirdhouseImageProcessing(camera=self.id, config=self.config, param=self.param)
         self.video = BirdhouseVideoProcessing(camera=self.id, config=self.config, param=self.param, directory=self.config.directory("videos"))
         self.video.output = BirdhouseCameraOutput()
         self.camera = None
         self.cameraFPS = None
-
-        # logging.info("Loading error image: "+self.camera_NA)
-        # self.camera_NA = os.path.join(self.config.main_directory, self.config.directories["data"], "camera_na.jpg")
-        # self.image_NA_raw = cv2.imread(self.camera_NA)
-        # self.image_NA = self.image.convert_from_raw(self.image_NA_raw)
-        # logging.debug("Length " + self.camera_NA + " - File:" + str(len(self.image_NA)) + "/Img:" + str(len(self.image_NA_raw)))
-
-        logging.info("Starting camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
 
         if self.type == "pi":
             self.camera_start_pi()
