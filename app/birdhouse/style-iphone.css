@@ -9,19 +9,19 @@
     
 /* iPhone XS: 2436x1125px at 458ppi */
 @media only screen 
-    and (device-width : 375px) 
-    and (device-height : 812px) 
-    and (orientation : landscape)
-    and (-webkit-device-pixel-ratio : 3) { 
-    
-        .thumbnail       { width   : 155px; }
+  and (device-width : 375px) and (device-height : 812px) and (orientation : landscape)
+  {
+        .thumbnail       { width   : 155px; max-height : 210px; }
         .image_container { height  : 230px; }
         .recycle         { width   : 30px;  height   : 30px;  top : 30px; }
         .recycle_img     { width   : 30px;  height   : 30px; }
         .star            { width   : 30px;  height   : 30px;  top : 25px; }
         .star_img        { width   : 30px;  height   : 30px; }
-        
-        }
+
+        .frame_column.wide { width : 695px; font-size: 8px; }
+        h2 { font-size: 18px; }
+
+  }
 
 @media only screen 
     and (device-width : 375px) 
@@ -29,6 +29,7 @@
     and (orientation : portrait)
     and (-webkit-device-pixel-ratio : 3) { }
 
+h2 { font8px; }
 /* ----------*/
 
 

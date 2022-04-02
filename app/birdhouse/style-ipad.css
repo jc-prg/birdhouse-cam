@@ -5,7 +5,7 @@
     and (orientation : landscape)
     and (-webkit-min-device-pixel-ratio: 2) { 
     
-	.frame_column.wide { width : 900px; }
+	    .frame_column.wide { width : 900px; }
         .thumbnail       { width   : 155px; }
         .image_container { height  : 240px; }
         .recycle         { width   : 30px;  height   : 30px;  top : 30px; }
