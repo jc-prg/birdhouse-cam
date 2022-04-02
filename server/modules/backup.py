@@ -173,7 +173,7 @@ class BirdhouseArchive(threading.Thread):
                         files_new[time]["similarity"] = score
                         count += 1
                     else:
-                        files_new[time]["compare"] = (filename_current)
+                        files_new[time]["compare"] = filename_current
                         files_new[time]["similarity"] = 0
 
                     if init:
@@ -242,8 +242,7 @@ class BirdhouseArchive(threading.Thread):
 
             if not os.path.isfile(self.config.file(config="backup", date=backup_date)):
                 files = self.compare_files_init(date=backup_date)
-                files_backup = {"files": {}, "info": {}}
-                files_backup["files"] = files
+                files_backup = {"files": files, "info": {}}
                 files_backup["info"]["count"] = len(files)
                 files_backup["info"]["threshold"] = {}
                 for cam in self.camera:
@@ -282,21 +281,25 @@ class BirdhouseArchive(threading.Thread):
                             file_lowres = self.config.imageName(image_type="lowres", timestamp=stamp, camera=cam)
                             file_hires = self.config.imageName(image_type="hires", timestamp=stamp, camera=cam)
 
-                            if not "similarity" in update_new:
+                            if "similarity" not in update_new:
                                 update_new["similarity"] = 100
-                            if not "hires" in update_new:
+                            if "hires" not in update_new:
                                 update_new["hires"] = file_hires
-                            if not "favorit" in update_new:
+                            if "favorit" not in update_new:
                                 update_new["favorit"] = 0
 
                             update_new["type"] = "image"
                             update_new["directory"] = os.path.join(self.config.directories["images"], backup_date)
 
                             if os.path.isfile(os.path.join(dir_source, file_lowres)):
-                                update_new["size"] = (os.path.getsize(os.path.join(dir_source, file_lowres)) + os.path.getsize(os.path.join(dir_source, file_hires)))
+                                update_new["size"] = (
+                                        os.path.getsize(os.path.join(dir_source, file_lowres)) + os.path.getsize(
+                                    os.path.join(dir_source, file_hires)))
                                 backup_size += update_new["size"]
-                                os.popen('cp ' + os.path.join(dir_source, file_lowres) + ' ' + os.path.join(directory, file_lowres))
-                                os.popen('cp ' + os.path.join(dir_source, file_hires) + ' ' + os.path.join(directory, file_hires))
+                                os.popen('cp ' + os.path.join(dir_source, file_lowres) + ' ' + os.path.join(directory,
+                                                                                                            file_lowres))
+                                os.popen('cp ' + os.path.join(dir_source, file_hires) + ' ' + os.path.join(directory,
+                                                                                                           file_hires))
 
                         # if data are to be archived
                         else:
@@ -321,7 +324,8 @@ class BirdhouseArchive(threading.Thread):
                     else:
                         count_other_date += 1
 
-                logging.info(cam + ": " + str(count) + " Image entries (" + str(self.camera[cam].param["similarity"]["threshold"]) + ")")
+                logging.info(cam + ": " + str(count) + " Image entries (" + str(
+                    self.camera[cam].param["similarity"]["threshold"]) + ")")
                 logging.info(cam + ": " + str(count_data) + " Data entries")
                 logging.info(cam + ": " + str(count_other_date) + " not saved (other date)")
 
@@ -381,11 +385,14 @@ class BirdhouseArchive(threading.Thread):
                     if file_type in files[key]:
                         if os.path.isfile(os.path.join(directory, files[key][file_type])):
                             os.remove(os.path.join(directory, files[key][file_type]))
-                            logging.debug("Delete - " + str(key) + ": " + os.path.join(directory, files[key][file_type]))
+                            logging.debug(
+                                "Delete - " + str(key) + ": " + os.path.join(directory, files[key][file_type]))
                 # del files[key]
                 del files[key]["hires"]
                 del files[key]["lowres"]
                 del files[key]["size"]
+                del files[key]["to_be_deleted"]
+                del files[key]["favorit"]
                 files[key]["type"] = "data"
 
             except Exception as e:
