@@ -210,21 +210,21 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.path = self.path.replace("/api", "")
 
         if self.path.startswith("/favorit/"):
-            response = commands.setStatusFavoritNew(self)
+            response = commands.set_status_favorite(self)
         elif self.path.startswith("/recycle/"):
-            response = commands.setStatusRecycleNew(self)
+            response = commands.set_status_recycle(self)
         elif self.path.startswith("/recycle-range/"):
-            response = commands.setStatusRecycleRange(self)
+            response = commands.set_status_recycle_range(self)
         elif self.path.startswith('/remove/'):
-            response = commands.deleteMarkedFiles(self)
+            response = commands.delete_marked_files(self)
         elif self.path.startswith("/start/recording/"):
-            response = commands.startRecording(self)
+            response = commands.start_recording(self)
         elif self.path.startswith("/stop/recording/"):
-            response = commands.stopRecording(self)
+            response = commands.stop_recording(self)
         elif self.path.startswith("/create-short-video/"):
-            response = commands.createShortVideo(self)
+            response = commands.create_short_video(self)
         elif self.path.startswith("/create-day-video/"):
-            response = commands.createDayVideo(self)
+            response = commands.create_day_video(self)
         elif self.path.startswith("/edit_presets/"):
             param_string = self.path.replace("/edit_presets/", "")
             param = param_string.split("/")
