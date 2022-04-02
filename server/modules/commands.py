@@ -9,9 +9,9 @@ from datetime import datetime
 class BirdhouseCommands(threading.Thread):
 
     def __init__(self, camera, config, backup):
-        '''
+        """
         Initialize new thread and set inital parameters
-        '''
+        """
         threading.Thread.__init__(self)
         self.name = "Commands"
         self.camera = camera
@@ -19,16 +19,13 @@ class BirdhouseCommands(threading.Thread):
         self.backup = backup
         self._running = True
         self.which_cam = ""
-        self.status_queue = {}
-        self.status_queue["images"] = []
-        self.status_queue["videos"] = []
-        self.status_queue["backup"] = {}
+        self.status_queue = {"images": [], "videos": [], "backup": {}}
         self.create_queue = []
         self.create_day_queue = []
 
     def run(self):
         """
-        Do nothing at the moment
+        create videos and process queue
         """
         logging.info("Starting REST API for POST ...")
         config_files = ["images", "videos", "backup"]
@@ -120,28 +117,18 @@ class BirdhouseCommands(threading.Thread):
         """
         self._running = False
 
-    def addToQueue(self, config, date, key, change_status, status):
+    def add_to_queue(self, config, date, key, change_status, status):
         """
         add entry to queue
         """
         if config != "backup":
             self.status_queue[config].append([date, key, change_status, status])
         elif config == "backup":
-            if not date in self.status_queue[config]: self.status_queue[config][date] = []
+            if date not in self.status_queue[config]:
+                self.status_queue[config][date] = []
             self.status_queue[config][date].append([date, key, change_status, status])
 
-    def adminAllowed(self):
-        """
-        Check if administration is allowed based on the IP4 the request comes from
-        """
-        logging.debug("Check if administration is allowed: " + self.address_string() + " / " + str(
-            config.param["ip4_admin_deny"]))
-        if self.address_string() in config.param["ip4_admin_deny"]:
-            return False
-        else:
-            return True
-
-    def setStatusFavoritNew(self, server):
+    def set_status_favorite(self, server):
         """
         set / unset favorit -> redesigned
         """
@@ -172,15 +159,15 @@ class BirdhouseCommands(threading.Thread):
 
         response["command"] = ["mark/unmark as favorit", entry_id]
         if entry_id in config_data:
-            self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=entry_value)
+            self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=entry_value)
             if entry_value == 1:
-                self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=1)
+                self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=1)
         else:
             response["error"] = "no entry found with stamp " + entry_id
 
         return response
 
-    def setStatusRecycleNew(self, server):
+    def set_status_recycle(self, server):
         """
         set / unset recycling -> redesigned
         """
@@ -214,19 +201,19 @@ class BirdhouseCommands(threading.Thread):
         response["command"] = ["mark/unmark for deletion", entry_id]
         if entry_id in config_data:
             logging.info("OK")
-            self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted",
-                            status=entry_value)
+            self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted",
+                              status=entry_value)
             if entry_value == 1:
-                self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=1)
+                self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=1)
         else:
             response["error"] = "no entry found with stamp " + entry_id
 
         return response
 
-    def setStatusRecycleRange(self, server):
-        '''
+    def set_status_recycle_range(self, server):
+        """
         set / unset recycling -> range from-to
-        '''
+        """
         param = server.path.split("/")
         response = {}
         category = param[2]
@@ -264,17 +251,17 @@ class BirdhouseCommands(threading.Thread):
                 if entry_id == entry_from:
                     relevant = True
                 if relevant and config_data[entry_id]["camera"] == camera and config_data[entry_id]["type"] != "data":
-                    self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=1)
-                    self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=0)
+                    self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=1)
+                    self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=0)
                 if entry_id == entry_to:
                     relevant = False
         else:
             response["error"] = "no entry found with stamp " + entry_from + "/" + entry_to
 
-        self.addToQueue(config=category, date=entry_date, key=entry_id, change_status="RANGE_END", status=0)
+        self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="RANGE_END", status=0)
         return response
 
-    def deleteMarkedFiles(self, server):
+    def delete_marked_files(self, server):
         """
         set / unset recycling
         """
@@ -297,7 +284,7 @@ class BirdhouseCommands(threading.Thread):
 
         return response
 
-    def startRecording(self, server):
+    def start_recording(self, server):
         """
         start video recoding
         """
@@ -318,7 +305,7 @@ class BirdhouseCommands(threading.Thread):
 
         return response
 
-    def stopRecording(self, server):
+    def stop_recording(self, server):
         """
         stop video recoding
         """
@@ -339,7 +326,7 @@ class BirdhouseCommands(threading.Thread):
 
         return response
 
-    def createDayVideo(self, server):
+    def create_day_video(self, server):
         """
         create a video of all existing images of the day
         """
@@ -348,8 +335,8 @@ class BirdhouseCommands(threading.Thread):
         logging.info(str(param))
 
         if len(param) < 3:
-            response[
-                "result"] = "Error: Parameters are missing (/create-short-video/video-id/start-timecode/end-timecode/which-cam/)"
+            response["result"] = "Error: Parameters are missing "
+            response["result"] += "(/create-short-video/video-id/start-timecode/end-timecode/which-cam/)"
             logging.warning("Create video of daily images ... Parameters are missing.")
 
         else:
@@ -365,7 +352,7 @@ class BirdhouseCommands(threading.Thread):
 
             return response
 
-    def createShortVideo(self, server):
+    def create_short_video(self, server):
         """
         create a short video and save in DB (not deleting the old video at the moment)
         """
