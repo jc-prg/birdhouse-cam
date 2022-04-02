@@ -796,8 +796,7 @@ class BirdhouseCamera(threading.Thread):
         self.error = False
         self.error_msg = ""
         self.error_time = 0
-        self.error_image = False
-        self.error_image_msg = []
+        self.error_no_reconnect = False
 
         self.param = self.config.param["devices"]["cameras"][self.id]
         self.name = self.param["name"]
@@ -851,7 +850,7 @@ class BirdhouseCamera(threading.Thread):
             # Error with camera - try to restart from time to time
             if self.error:
                 retry_time = 60
-                if self.error_time + retry_time < time.time() and self.running:
+                if not self.error_no_reconnect and self.error_time + retry_time < time.time() and self.running:
                     logging.info("Try to restart camera ...")
                     self.active = True
                     if self.type == "pi":
@@ -974,6 +973,7 @@ class BirdhouseCamera(threading.Thread):
             import picamera
         except ImportError:
             self.camera_error(True, False, "Module for PiCamera isn't installed. Try 'pip3 install picamera'.")
+            self.error_no_reconnect = True
         try:
             if not self.error:
                 self.camera = picamera.PiCamera()
@@ -1004,7 +1004,7 @@ class BirdhouseCamera(threading.Thread):
         except Exception as e:
             self.camera_error(True, False, "Starting USB camera doesn't work: " + str(e))
 
-    def camera_error(self, cam_error, active, message, image_error=False):
+    def camera_error(self, cam_error, active, message):
         """
         Report Error, set variables of modules
         """
@@ -1012,10 +1012,6 @@ class BirdhouseCamera(threading.Thread):
         self.error_msg = message
         self.error_time = time.time()
         self.active = active
-        if image_error:
-            self.error_image = True
-            self.error_image_msg.append(message)
-
         logging.error(self.id + ": " + message + " (" + str(self.error_time) + ")")
 
     def camera_start_recording(self):
@@ -1034,7 +1030,7 @@ class BirdhouseCamera(threading.Thread):
                 return encoded
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
-                self.camera_error(False, True, error_msg, True)
+                self.camera_error(False, True, error_msg)
                 return ""
 
         elif self.type == "usb":
@@ -1060,7 +1056,7 @@ class BirdhouseCamera(threading.Thread):
                 return raw
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
-                self.camera_error(False, True, error_msg, True)
+                self.camera_error(False, True, error_msg)
                 return ""
 
         elif self.type == "usb":
@@ -1074,11 +1070,11 @@ class BirdhouseCamera(threading.Thread):
                     return raw.copy()
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
-                self.camera_error(False, True, error_msg, True)
+                self.camera_error(False, True, error_msg)
                 return ""
         else:
             error_msg = "Camera type not supported (" + str(self.type) + ")."
-            self.camera_error(True, False, error_msg, True)
+            self.camera_error(True, False, error_msg)
             return ""
 
     def image_differs(self, file_info):
