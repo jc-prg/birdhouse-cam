@@ -719,6 +719,26 @@ class BirdhouseImageProcessing(object):
         # saturation - not implemented yet
         return normalized
 
+    def rotate_raw(self, raw, degree):
+        """
+        rotate image
+        """
+        logging.info("Rotate image "+str(degree)+" ...")
+        rotate_degree = "don't rotate"
+        if int(degree) == 90:
+            rotate_degree = cv2.ROTATE_90_CLOCKWISE
+        elif int(degree) == 180:
+            rotate_degree = cv2.ROTATE_180
+        elif int(degree) == 270:
+            rotate_degree = cv2.ROTATE_90_COUNTERCLOCKWISE
+        try:
+            if rotate_degree != "don't rotate":
+                logging.info("... Test: "+str(rotate_degree))
+                raw = cv2.rotate(raw, rotate_degree)
+            return raw
+        except Exception as e:
+            self._msg_error("Could not rotate image (" + str(e) + ")")
+
     def size(self, image):
         """
         Return size of raw image
@@ -999,6 +1019,11 @@ class BirdhouseCamera(threading.Thread):
                 if "NoneType" in check:
                     self.camera_error(True, False, "Images are empty, cv2 doesn't work for source " + str(self.source) + ", try picamera.")
                 else:
+                    if "x" in self.param["image"]["resolution"]:
+                        resolution = self.param["image"]["resolution"].split("x")
+                        logging.info(str(resolution))
+                        self.camera.stream.set(3, int(resolution[0]))
+                        self.camera.stream.set(4, int(resolution[1]))
                     self.cameraFPS = FPS().start()
                     logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
         except Exception as e:
@@ -1067,6 +1092,8 @@ class BirdhouseCamera(threading.Thread):
                     self.camera_error(True, False, "Get Image led to empty image (source=" + str(self.source) + ")")
                     return ""
                 else:
+                    if self.param["image"]["rotation"] != 0:
+                        raw = self.image.rotate_raw(raw, self.param["image"]["rotation"])
                     return raw.copy()
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
