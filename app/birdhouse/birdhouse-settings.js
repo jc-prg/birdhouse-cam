@@ -42,23 +42,29 @@ function birdhouse_app_settings (name="Settings") {
 						"jcApp: "		+ appFW.appVersion);
 
 		html += tab.row("Source:","<a href='https://github.com/jc-prg/birdhouse-cam/' target='_blank'>https://github.com/jc-prg/birdhouse-cam/</a>");
-		html += tab.row("&nbsp;","");
-		html += tab.row("API Call", api_call);
-		html += tab.row("&nbsp;","");
-		html += tab.row("Reload Interval:", app_reload_interval + "s");
-		html += tab.row("&nbsp;","");
-		html += tab.row("Active Camera:&nbsp;", app_active_cam);
-		html += tab.row("Available Cameras:&nbsp;", app_available_cameras.length);
-		html += tab.row("Active Page:&nbsp;", app_active_page);
-		html += tab.row("Active Date:&nbsp;", app_active_date);
-		html += tab.row("&nbsp;","");
-		html += tab.row("Unique stream URL:&nbsp;", app_unique_stream_url);
-		html += tab.row("Unique stream ID:&nbsp;",	app_unique_stream_id);
-
-		html += tab.row("&nbsp;","");
-		html += tab.row("Window:", document.body.clientWidth + "x" + document.body.clientHeight );
-		html += tab.row("Position:", "<div id='scrollPosition'>0 px</div>" );
+		html += tab.row("&nbsp;");
 		html += tab.end();
+
+        html += birdhouse_OtherGroup( "api_calls", "API Calls", api_call, false );
+
+        html_entry = tab.start();
+		html_entry += tab.row("Reload Interval:", app_reload_interval + "s");
+		html_entry += tab.row("Active Camera:&nbsp;", app_active_cam);
+		html_entry += tab.row("Available Cameras:&nbsp;", app_available_cameras.length);
+		html_entry += tab.row("Active Page:&nbsp;", app_active_page);
+		html_entry += tab.row("Active Date:&nbsp;", app_active_date);
+		html_entry += tab.row("Unique stream URL:&nbsp;", app_unique_stream_url);
+		html_entry += tab.row("Unique stream ID:&nbsp;",	app_unique_stream_id);
+        html_entry = tab.end();
+
+        html += birdhouse_OtherGroup( "app_info", "App Information (Cookie, Reload)", html_entry, false );
+
+		html_entry = tab.start();
+		html_entry += tab.row("Window:", document.body.clientWidth + "x" + document.body.clientHeight );
+		html_entry += tab.row("Position:", "<div id='scrollPosition'>0 px</div>" );
+		html_entry += tab.end();
+
+        html += birdhouse_OtherGroup( "display_info", "Display information", html_entry, false );
 
 		setTextById("setting1", html);
 
@@ -71,11 +77,11 @@ function birdhouse_app_settings (name="Settings") {
 		html += tab.row("Backup-Preview:&nbsp;", birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
 		html += tab.row("RPi Active:&nbsp;", birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false", data_type="boolean") );
         html += tab.row("<hr>");
-		html += tab.row("HTTP IP4 Address:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
+		html += tab.row("HTTP Server:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
 		html += tab.row("HTTP Port:&nbsp;", birdhouse_edit_field(id="set_port", field="server:port", type="input", options="true,false", data_type="integer") );
-		html += tab.row("Videostream IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_video", field="server:ip4_stream_video", type="input", options="true,false", data_type="string") );
+		html += tab.row("Videostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_video", field="server:ip4_stream_video", type="input", options="true,false", data_type="string") );
 		html += tab.row("Videostream Port:&nbsp;", birdhouse_edit_field(id="set_ip4_video_port", field="server:port_video", type="input", data_type="integer") );
-		html += tab.row("Audiostream IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_audio", field="server:ip4_stream_audio", type="input", options="true,false", data_type="string") );
+		html += tab.row("Audiostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_audio", field="server:ip4_stream_audio", type="input", options="true,false", data_type="string") );
 		html += tab.row("Deny admin from IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_deny", field="server:ip4_admin_deny", type="input", options="true,false", data_type="json") );
         html += tab.row("<hr>");
 		html += tab.row("", birdhouse_edit_save("set_main","set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port") );
