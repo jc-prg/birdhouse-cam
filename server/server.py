@@ -241,12 +241,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     data[key] = data[key].replace("%7C", "|")
                     data[key] = data[key].replace("%7D", "}")
             config.change_config("main", data)
+        elif self.path.startswith("/check-timeout/"):
+            time.sleep(30)
+            response = {"check": "timeout"}
         else:
             self.error_404()
             return
 
-        self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'),
-                         no_cache=True)
+        self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True)
 
     def do_GET(self):
         """
