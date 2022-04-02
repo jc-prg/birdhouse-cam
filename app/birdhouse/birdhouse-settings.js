@@ -28,6 +28,7 @@ function birdhouse_app_settings (name="Settings") {
 	    for (let camera in cameras) {
 	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' style='background-color:lightgray;color:black;width:60px;margin:2px;';>API "+camera+"</button>";
             }
+        api_call += "<button onclick='appFW.requestAPI(\"POST\",[\"check-timeout\"],\"\",\"\",\"\");' style='background-color:lightgray;color:black;width:60px;margin:2px;';>Timeout</button>";
 
         html  = "<h2>Information: System &amp; App</h2>";
 		html += "<hr style='border:1px solid gray;'>"
