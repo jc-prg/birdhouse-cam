@@ -24,15 +24,18 @@ function birdhouse_app_settings (name="Settings") {
         tab.style_cells["width"] = "40%";
 
         var cameras  = app_data["DATA"]["devices"]["cameras"];
-        var api_call = "<button onclick='window.open(\"" + RESTurl + "api/list/\",\"_blank\");' style='background-color:lightgray;color:black;width:60px;margin:2px;';>REST API</button>";
+        var button_style = "background-color:lightgray;color:black;width:90px;margin:3px;";
+        var api_call = "<button onclick='window.open(\"" + RESTurl + "api/list/\",\"_blank\");' style='"+button_style+"';>REST API</button>";
+        api_call    += "<button onclick='window.open(\"" + RESTurl + "api/INDEX/\",\"_blank\");' style='"+button_style+"';>REST API</button>";
 	    for (let camera in cameras) {
-	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' style='background-color:lightgray;color:black;width:60px;margin:2px;';>API "+camera+"</button>";
+	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/TODAY/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Today "+camera.toUpperCase()+"</button>";
+	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Compl. "+camera.toUpperCase()+"</button>";
+	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/ARCHIVE/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Archive "+camera.toUpperCase()+"</button>";
             }
-        api_call += "<button onclick='appFW.requestAPI(\"POST\",[\"check-timeout\"],\"\",\"\",\"\");' style='background-color:lightgray;color:black;width:60px;margin:2px;';>Timeout</button>";
+        api_call += "<button onclick='appFW.requestAPI(\"POST\",[\"check-timeout\"],\"\",\"\",\"\");' style='"+button_style+"';>Timeout</button>";
 
         html  = "<h2>Information: System &amp; App</h2>";
 		html += "<hr style='border:1px solid gray;'>"
-
 		html += tab.start();
 		html += tab.row("App:",				app_title);
 		html += tab.row("Versions:",
@@ -45,6 +48,7 @@ function birdhouse_app_settings (name="Settings") {
 		html += tab.row("&nbsp;");
 		html += tab.end();
 
+        api_call = "&nbsp;<br/><center>"+api_call+"</center><br/>&nbsp;";
         html += birdhouse_OtherGroup( "api_calls", "API Calls", api_call, false );
 
         html_entry = tab.start();
@@ -55,7 +59,7 @@ function birdhouse_app_settings (name="Settings") {
 		html_entry += tab.row("Active Date:&nbsp;", app_active_date);
 		html_entry += tab.row("Unique stream URL:&nbsp;", app_unique_stream_url);
 		html_entry += tab.row("Unique stream ID:&nbsp;",	app_unique_stream_id);
-        html_entry = tab.end();
+        html_entry += tab.end();
 
         html += birdhouse_OtherGroup( "app_info", "App Information (Cookie, Reload)", html_entry, false );
 
