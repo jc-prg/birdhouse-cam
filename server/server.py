@@ -198,7 +198,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         REST API for javascript commands e.g. to change values in runtime
         """
-        logging.info("POST API request with '" + self.path + "'.")
+        logging.debug("POST API request with '" + self.path + "'.")
         response = {}
 
         if not self.admin_allowed():
