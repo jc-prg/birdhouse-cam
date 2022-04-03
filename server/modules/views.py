@@ -392,13 +392,14 @@ class BirdhouseViews(threading.Thread):
                 if ((int(stamp) < int(time_now) or time_now == "000000") and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
                     if "camera" not in files_all[stamp] or select_image or (backup and files_all[stamp]["camera"] == which_cam):
                         if files_all[stamp]["datestamp"] == date_today or backup:
-                            files_today[stamp] = files_all[stamp].copy()
-                            if "type" not in files_today[stamp]:
-                                files_today[stamp]["type"] = "image"
-                            files_today[stamp]["category"] = category + stamp
-                            files_today[stamp]["detect"] = self.camera[which_cam].image_differs(file_info=files_today[stamp])
-                            files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
-                            count += 1
+                            if "to_be_deleted" not in files_all[stamp] or int(files_all[stamp]["to_be_deleted"]) != 1:
+                                files_today[stamp] = files_all[stamp].copy()
+                                if "type" not in files_today[stamp]:
+                                    files_today[stamp]["type"] = "image"
+                                files_today[stamp]["category"] = category + stamp
+                                files_today[stamp]["detect"] = self.camera[which_cam].image_differs(file_info=files_today[stamp])
+                                files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
+                                count += 1
 
             if first_title == "":
                 first_title = files_all[stamp]["date"]

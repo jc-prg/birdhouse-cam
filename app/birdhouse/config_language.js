@@ -36,7 +36,7 @@ var language_app = {
 		"RANGE_DELETE"          : "recycle",
 		"RANGE_DONE"            : "Recycling der ausgew&auml;hlten Bilder erledigt.",
 		"RECYCLE"               : "Recycle",
-		"RECYCLE_DELETE"        : "Alle f&uuml;rs Recycling gel&ouml;schten Dateien l&ouml;schen.",
+		"RECYCLE_DELETE"        : "Alle f&uuml;rs Recycling markierten Dateien l&ouml;schen.",
 		"SAVE"                  : "Speichern",
 		"SHORTEN_VIDEO"         : "Video k&uuml;rzen",
 		"SHORT_VERSION"         : "Gek&uuml;rzte Version",
