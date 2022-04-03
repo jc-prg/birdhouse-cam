@@ -456,6 +456,9 @@ class BirdhouseImageProcessing(object):
         self.img_camera_error = "camera_na.jpg"
         self.error = False
         self.error_msg = []
+        self.error_camera = False
+        self.error_image = None
+        self.error_image_raw = None
 
     def _msg_error(self, message):
         """
@@ -695,17 +698,25 @@ class BirdhouseImageProcessing(object):
         """
         return image with error message
         """
-        raw = self.image_error_raw()
-        image = self.convert_from_raw(raw)
-        return image
+        if self.error_image is None:
+            raw = self.image_error_raw()
+            image = self.convert_from_raw(raw)
+            self.error_image = image
+            return image
+        else:
+            return self.error_image
 
     def image_error_raw(self):
         """
         return image with error message
         """
-        filename = os.path.join(self.config.main_directory, self.config.directories["data"], self.img_camera_error)
-        raw = cv2.imread(filename)
-        return raw
+        if self.error_image_raw is None:
+            filename = os.path.join(self.config.main_directory, self.config.directories["data"], self.img_camera_error)
+            raw = cv2.imread(filename)
+            self.error_image_raw = raw
+            return raw
+        else:
+            return self.error_image_raw
 
     def normalize_raw(self, raw):
         """
@@ -820,6 +831,7 @@ class BirdhouseCamera(threading.Thread):
         self.error_msg = ""
         self.error_time = 0
         self.error_image = False
+        self.error_image_count = 0
         self.error_no_reconnect = False
 
         self.param = self.config.param["devices"]["cameras"][self.id]
@@ -1028,8 +1040,11 @@ class BirdhouseCamera(threading.Thread):
         self.error_image = False
         try:
             self.camera = WebcamVideoStream(src=self.source).start()
-            if self.camera.stream is None or not self.camera.stream.isOpened():
-                self.camera_error(True, "Can't connect to camera, check if source is "+str(self.source)+".")
+            if not self.camera.stream.isOpened():
+                self.camera_error(True, "Can't connect to camera, check if source is "+str(self.source)+" ("+str(self.camera.stream.isOpened())+").")
+                self.camera.stream.release()
+            elif self.camera.stream is None:
+                self.camera_error(True, "Can't connect to camera, check if source is " + str(self.source) + ".)")
             else:
                 raw = self.get_image_raw()
                 check = str(type(raw))
@@ -1052,8 +1067,13 @@ class BirdhouseCamera(threading.Thread):
         """
         if cam_error:
             self.error = True
+        elif self.error_image_count > 20:
+            self.error = True
+            self.error_image_count = 0
+            message = "Too much image errors, connection to camera seems to be lost."
         else:
             self.error_image = True
+            self.error_image_count += 1
         self.error_msg = message
         self.error_time = time.time()
         logging.error(self.id + ": " + message + " (" + str(self.error_time) + ")")
@@ -1066,6 +1086,9 @@ class BirdhouseCamera(threading.Thread):
         """
         read image from device
         """
+        if self.error:
+            return self.image.image_error()
+
         if self.type == "pi":
             try:
                 with self.video.output.condition:
@@ -1091,6 +1114,9 @@ class BirdhouseCamera(threading.Thread):
         """
         get image and convert to raw
         """
+        if self.error:
+            return self.image.image_error_raw()
+
         if self.type == "pi":
             try:
                 with self.video.output.condition:
@@ -1118,6 +1144,7 @@ class BirdhouseCamera(threading.Thread):
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
                 self.camera_error(False, error_msg)
                 return ""
+
         else:
             error_msg = "Camera type not supported (" + str(self.type) + ")."
             self.camera_error(True, error_msg)

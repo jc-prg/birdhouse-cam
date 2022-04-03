@@ -427,37 +427,41 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if config.update["camera_"+which_cam]:
                     camera[which_cam].update_main_config()
 
-                if self.path.startswith("/detection/"):
-                    frame_raw = camera[which_cam].show_areas_raw(image=frame_raw)
-                    frame = camera[which_cam].image.convert_from_raw(frame_raw)
+                if not camera[which_cam].error and not camera[which_cam].error_image:
 
+                    if self.path.startswith("/detection/"):
+                        frame_raw = camera[which_cam].show_areas_raw(image=frame_raw)
+                        frame = camera[which_cam].image.convert_from_raw(frame_raw)
+
+                    else:
+                        frame = camera[which_cam].image.normalize_raw(frame)
+                        if camera[which_cam].param["image"]["date_time"]:
+                            frame = camera[which_cam].image.draw_date_raw(frame)
+
+                        if camera[which_cam].video.recording:
+                            logging.debug("VIDEO RECORDING")
+                            length = str(round(camera[which_cam].video.info_recording()["length"]))
+                            framerate = str(round(camera[which_cam].video.info_recording()["framerate"]))
+                            y_position = camera[which_cam].image_size[1] - 40
+                            frame = camera[which_cam].image.draw_text_raw(frame, "Recording", position=(20, y_position),
+                                                                          color=(0, 0, 255), scale=1, thickness=2)
+                            frame = camera[which_cam].image.draw_text_raw(frame, "(" + length + "s/" + framerate + "fps)",
+                                                                          position=(200, y_position), color=(0, 0, 255),
+                                                                          scale=0.5, thickness=1)
+
+                        if camera[which_cam].video.processing:
+                            logging.debug("VIDEO PROCESSING")
+                            length = str(round(camera[which_cam].video.info_recording()["length"]))
+                            image_size = str(camera[which_cam].video.info_recording()["image_size"])
+                            y_position = camera[which_cam].image_size[1] - 40
+                            frame = camera[which_cam].image.draw_text_raw(frame, "Processing", position=(20, y_position),
+                                                                          color=(0, 255, 255), scale=1, thickness=2)
+                            frame = camera[which_cam].image.draw_text_raw(frame, "(" + length + "s/" + image_size + ")",
+                                                                          position=(200, y_position), color=(0, 255, 255),
+                                                                          scale=0.5, thickness=1)
+
+                        frame = camera[which_cam].image.convert_from_raw(frame)
                 else:
-                    frame = camera[which_cam].image.normalize_raw(frame)
-                    if camera[which_cam].param["image"]["date_time"]:
-                        frame = camera[which_cam].image.draw_date_raw(frame)
-
-                    if camera[which_cam].video.recording:
-                        logging.debug("VIDEO RECORDING")
-                        length = str(round(camera[which_cam].video.info_recording()["length"]))
-                        framerate = str(round(camera[which_cam].video.info_recording()["framerate"]))
-                        y_position = camera[which_cam].image_size[1] - 40
-                        frame = camera[which_cam].image.draw_text_raw(frame, "Recording", position=(20, y_position),
-                                                                      color=(0, 0, 255), scale=1, thickness=2)
-                        frame = camera[which_cam].image.draw_text_raw(frame, "(" + length + "s/" + framerate + "fps)",
-                                                                      position=(200, y_position), color=(0, 0, 255),
-                                                                      scale=0.5, thickness=1)
-
-                    if camera[which_cam].video.processing:
-                        logging.debug("VIDEO PROCESSING")
-                        length = str(round(camera[which_cam].video.info_recording()["length"]))
-                        image_size = str(camera[which_cam].video.info_recording()["image_size"])
-                        y_position = camera[which_cam].image_size[1] - 40
-                        frame = camera[which_cam].image.draw_text_raw(frame, "Processing", position=(20, y_position),
-                                                                      color=(0, 255, 255), scale=1, thickness=2)
-                        frame = camera[which_cam].image.draw_text_raw(frame, "(" + length + "s/" + image_size + ")",
-                                                                      position=(200, y_position), color=(0, 255, 255),
-                                                                      scale=0.5, thickness=1)
-
                     frame = camera[which_cam].image.convert_from_raw(frame)
 
                 try:
