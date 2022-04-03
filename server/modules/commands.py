@@ -250,7 +250,8 @@ class BirdhouseCommands(threading.Thread):
             for entry_id in stamps:
                 if entry_id == entry_from:
                     relevant = True
-                if relevant and config_data[entry_id]["camera"] == camera and config_data[entry_id]["type"] != "data":
+                if relevant and config_data[entry_id]["camera"] == camera and \
+                        (not "type" in config_data[entry_id] or config_data[entry_id]["type"] != "data"):
                     self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=1)
                     self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=0)
                 if entry_id == entry_to:
