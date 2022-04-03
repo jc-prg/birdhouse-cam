@@ -57,7 +57,6 @@ h3 { margin : 4px; }
     padding : 2px; 
     float   : left; 
     valign  : left;
-    height  : 190px;
 }
 
 .thumbnail { 
@@ -112,8 +111,7 @@ h3 { margin : 4px; }
 .camera_info_image { 
     float      : left;
     margin     : 5px;
-    width      : 30%;
-    min-width  : 120px;
+    width      : 100%;
     text-align : center;
 }
 
@@ -121,7 +119,7 @@ h3 { margin : 4px; }
     float      : left;
     margin     : 5px;
     text-align : left;
-    width      : 60%;
+    width      : 100%;
 }
 
 .camera_video_edit { 
@@ -132,7 +130,7 @@ h3 { margin : 4px; }
     width      : 100%;
     text-align : center;
     z-index    : 61;
-/*    
+    /*
     float      : left;
     margin     : 5px;
     display    : none;
