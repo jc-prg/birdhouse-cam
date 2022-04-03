@@ -60,11 +60,13 @@ class BirdhouseVideoProcessing(threading.Thread):
 
     def _msg_error(self, message):
         """
-        Report Error, set variables of modules
+        Report Error, set variables of modules, collect last 3 messages in var self.error_msg
         """
         logging.error("Video Processing (" + self.id + "): " + message)
         self.error = True
         self.error_msg.append(message)
+        if len(self.error_msg) >= 3:
+            self.error_msg.pop()
 
     def _msg_warning(self, message):
         """
@@ -457,11 +459,13 @@ class BirdhouseImageProcessing(object):
 
     def _msg_error(self, message):
         """
-        Report Error, set variables of modules
+        Report Error, set variables of modules; collect last 3 messages in central var  self.error_msg
         """
         logging.error("Image Processing (" + self.id + "): " + message)
         self.error = True
         self.error_msg.append(message)
+        if len(self.error_msg) >= 3:
+            self.error_msg.pop()
 
     def _msg_warning(self, message):
         """
@@ -723,7 +727,7 @@ class BirdhouseImageProcessing(object):
         """
         rotate image
         """
-        logging.info("Rotate image "+str(degree)+" ...")
+        logging.debug("Rotate image "+str(degree)+" ...")
         rotate_degree = "don't rotate"
         if int(degree) == 90:
             rotate_degree = cv2.ROTATE_90_CLOCKWISE
@@ -733,7 +737,6 @@ class BirdhouseImageProcessing(object):
             rotate_degree = cv2.ROTATE_90_COUNTERCLOCKWISE
         try:
             if rotate_degree != "don't rotate":
-                logging.info("... Test: "+str(rotate_degree))
                 raw = cv2.rotate(raw, rotate_degree)
             return raw
         except Exception as e:
@@ -816,6 +819,7 @@ class BirdhouseCamera(threading.Thread):
         self.error = False
         self.error_msg = ""
         self.error_time = 0
+        self.error_image = False
         self.error_no_reconnect = False
 
         self.param = self.config.param["devices"]["cameras"][self.id]
@@ -842,7 +846,7 @@ class BirdhouseCamera(threading.Thread):
         elif self.type == "usb":
             self.camera_start_usb()
         else:
-            self.camera_error(True, False, "Unknown type of camera!")
+            self.camera_error(True, "Unknown type of camera!")
 
         if not self.error and self.param["video"]["allow_recording"]:
             self.camera_start_recording()
@@ -859,33 +863,34 @@ class BirdhouseCamera(threading.Thread):
             seconds = datetime.now().strftime('%S')
             hours = datetime.now().strftime('%H')
             stamp = datetime.now().strftime('%H%M%S')
+            config_update = self.config.update["camera_" + self.id]
 
             while self.pause and self.running:
                 logging.info(self.id + " = paused ...")
-                time.sleep(0.1)
+                time.sleep(0.5)
 
-            if self.config.update["camera_" + self.id]:
+            if config_update:
                 self.update_main_config()
 
-            # Error with camera - try to restart from time to time
-            if self.error:
+            # Error with camera / or update main config - try to restart from time to time
+            if self.running and self.error and not self.error_no_reconnect:
                 retry_time = 60
-                if not self.error_no_reconnect and self.error_time + retry_time < time.time() and self.running:
+                if self.error_time + retry_time < time.time():
+                    self.update_main_config()
                     logging.info("Try to restart camera ...")
-                    self.active = True
                     if self.type == "pi":
                         self.camera_start_pi()
                     elif self.type == "usb":
                         self.camera_start_usb()
                     self.error_time = time.time()
-                    time.sleep(0.1)
+                    if not self.error and self.param["video"]["allow_recording"]:
+                        self.camera_start_recording()
 
             # Video Recording
             elif self.video.recording:
 
                 if self.video.auto_stop():
                     self.video.stop_recording()
-
                 else:
                     image = self.get_image()
                     image = self.image.convert_to_raw(image)
@@ -989,10 +994,16 @@ class BirdhouseCamera(threading.Thread):
         self.running = False
 
     def camera_start_pi(self):
+        """
+        Initialize picamera incl. initial settings
+        """
+        self.error = False
+        self.error_msg = ""
+        self.error_image = False
         try:
             import picamera
         except ImportError:
-            self.camera_error(True, False, "Module for PiCamera isn't installed. Try 'pip3 install picamera'.")
+            self.camera_error(True, "Module for PiCamera isn't installed. Try 'pip3 install picamera'.")
             self.error_no_reconnect = True
         try:
             if not self.error:
@@ -1006,37 +1017,45 @@ class BirdhouseCamera(threading.Thread):
                 self.camera.start_recording(self.video.output, format='mjpeg')
                 logging.info(self.id + ": OK.")
         except Exception as e:
-            self.camera_error(True, False, "Starting PiCamera doesn't work: " + str(e))
+            self.camera_error(True, "Starting PiCamera doesn't work: " + str(e))
 
     def camera_start_usb(self):
+        """
+        Initialize USB Camera
+        """
+        self.error = False
+        self.error_msg = ""
+        self.error_image = False
         try:
             self.camera = WebcamVideoStream(src=self.source).start()
             if self.camera.stream is None or not self.camera.stream.isOpened():
-                self.camera_error(True, False, "Can't connect to camera, check if source is "+str(self.source)+".")
+                self.camera_error(True, "Can't connect to camera, check if source is "+str(self.source)+".")
             else:
                 raw = self.get_image_raw()
                 check = str(type(raw))
                 if "NoneType" in check:
-                    self.camera_error(True, False, "Images are empty, cv2 doesn't work for source " + str(self.source) + ", try picamera.")
+                    self.camera_error(True, "Images are empty, cv2 doesn't work for source " + str(self.source) + ", try picamera.")
                 else:
                     if "x" in self.param["image"]["resolution"]:
                         resolution = self.param["image"]["resolution"].split("x")
-                        logging.info(str(resolution))
+                        logging.debug(str(resolution))
                         self.camera.stream.set(3, int(resolution[0]))
                         self.camera.stream.set(4, int(resolution[1]))
                     self.cameraFPS = FPS().start()
                     logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
         except Exception as e:
-            self.camera_error(True, False, "Starting USB camera doesn't work: " + str(e))
+            self.camera_error(True, "Starting USB camera doesn't work: " + str(e))
 
-    def camera_error(self, cam_error, active, message):
+    def camera_error(self, cam_error, message):
         """
         Report Error, set variables of modules
         """
-        self.error = cam_error
+        if cam_error:
+            self.error = True
+        else:
+            self.error_image = True
         self.error_msg = message
         self.error_time = time.time()
-        self.active = active
         logging.error(self.id + ": " + message + " (" + str(self.error_time) + ")")
 
     def camera_start_recording(self):
@@ -1055,7 +1074,7 @@ class BirdhouseCamera(threading.Thread):
                 return encoded
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
-                self.camera_error(False, True, error_msg)
+                self.camera_error(False, error_msg)
                 return ""
 
         elif self.type == "usb":
@@ -1065,7 +1084,7 @@ class BirdhouseCamera(threading.Thread):
 
         else:
             error_msg = "Camera type not supported (" + str(self.type) + ")."
-            self.camera_error(True, False, error_msg)
+            self.camera_error(True, error_msge)
             return ""
 
     def get_image_raw(self):
@@ -1081,7 +1100,7 @@ class BirdhouseCamera(threading.Thread):
                 return raw
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
-                self.camera_error(False, True, error_msg)
+                self.camera_error(False, error_msg)
                 return ""
 
         elif self.type == "usb":
@@ -1089,7 +1108,7 @@ class BirdhouseCamera(threading.Thread):
                 raw = self.camera.read()
                 check = str(type(raw))
                 if "NoneType" in check:
-                    self.camera_error(True, False, "Get Image led to empty image (source=" + str(self.source) + ")")
+                    self.camera_error(False, "Got an empty image (source=" + str(self.source) + ")")
                     return ""
                 else:
                     if self.param["image"]["rotation"] != 0:
@@ -1097,11 +1116,11 @@ class BirdhouseCamera(threading.Thread):
                     return raw.copy()
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
-                self.camera_error(False, True, error_msg)
+                self.camera_error(False, error_msg)
                 return ""
         else:
             error_msg = "Camera type not supported (" + str(self.type) + ")."
-            self.camera_error(True, False, error_msg)
+            self.camera_error(True, error_msg)
             return ""
 
     def image_differs(self, file_info):
@@ -1206,7 +1225,7 @@ class BirdhouseCamera(threading.Thread):
 
         except Exception as e:
             error_msg = "Can't save image and/or create thumbnail '" + image_path + "': " + str(e)
-            self.camera_error(False, True, error_msg)
+            self.camera_error(False, error_msg)
             return ""
 
     def write_image_info(self, timestamp, data):

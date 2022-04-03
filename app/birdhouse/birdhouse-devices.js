@@ -88,14 +88,19 @@ function birdhouseDevices( title, data ) {
 		id_list += "set_record_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_record", "Record Images", html_entry, false );
 
-		if (cameras[camera]["status"]["error"] || cameras[camera]["status"]["image_error"] || cameras[camera]["status"]["video_error"]) {
+		if (cameras[camera]["status"]["error"] || cameras[camera]["status"]["error_warn"] || cameras[camera]["status"]["image_error"] || cameras[camera]["status"]["video_error"]) {
             html_entry = tab.start();
-		    html_entry += tab.row("Error-Msg:", cameras[camera]["status"]["error_msg"]);
+		    if (cameras[camera]["status"]["error"]) {
+    		    html_entry += tab.row("Error:", cameras[camera]["status"]["error_msg"]);
+    		}
+		    if (cameras[camera]["status"]["error_warn"]) {
+    		    html_entry += tab.row("Warning:", cameras[camera]["status"]["error_msg"]);
+    		}
 		    if (cameras[camera]["status"]["image_error"]) {
-                html_entry += tab.row("Image-Error-Msg:", cameras[camera]["status"]["image_error_msg"]);
+                html_entry += tab.row("Image-Error:", cameras[camera]["status"]["image_error_msg"]);
             }
             if (cameras[camera]["status"]["video_error"]) {
-                html_entry += tab.row("Video-Error-Msg:", cameras[camera]["status"]["video_error_msg"]);
+                html_entry += tab.row("Video-Error:", cameras[camera]["status"]["video_error_msg"]);
             }
         html_entry += tab.end();
         html_temp += birdhouse_OtherGroup( camera+"_error", "Error messages", html_entry, true );

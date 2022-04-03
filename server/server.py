@@ -346,6 +346,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     camera_data[key]["device"] = "camera"
                     camera_data[key]["status"] = {
                         "error": camera[key].error,
+                        "error_warn": camera[key].error_image,
                         "error_msg": camera[key].error_msg,
                         "image_error": camera[key].image.error,
                         "image_error_msg": camera[key].image.error_msg,
