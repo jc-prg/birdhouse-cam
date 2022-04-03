@@ -33,7 +33,7 @@ class BirdhouseArchive(threading.Thread):
                 backup_started = True
                 self.backup_files()
                 logging.info("OK.")
-                self.views.create_archive_list()
+                self.views.archive_list_create()
                 count = 0
                 while self._running and count < 60:
                     time.sleep(1)

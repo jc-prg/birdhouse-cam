@@ -93,7 +93,7 @@ class BirdhouseViews(threading.Thread):
 
     def __init__(self, camera, config):
         """
-        Initialize new thread and set inital parameters
+        Initialize new thread and set initial parameters
         """
         threading.Thread.__init__(self)
         self.server = None
@@ -104,6 +104,7 @@ class BirdhouseViews(threading.Thread):
         self.config = config
         self.which_cam = ""
         self.archive_views = {}
+        self.create_archive = True
 
     def run(self):
         """
@@ -111,6 +112,9 @@ class BirdhouseViews(threading.Thread):
         """
         logging.info("Starting HTML views and REST API for GET ...")
         while self._running:
+            if self.create_archive:
+                self.archive_list_create()
+                self.create_archive = False
             time.sleep(1)
         logging.info("Stopped HTML views and REST API for GET.")
 
@@ -170,7 +174,7 @@ class BirdhouseViews(threading.Thread):
 
     def index(self, server):
         """
-        Index page with live streaming pictures
+        Index page with live-streaming pictures
         """
         self.server = server
         path, which_cam = self.selected_camera()
@@ -187,7 +191,7 @@ class BirdhouseViews(threading.Thread):
 
     def favorites(self, server):
         """
-        Page with pictures (and videos) marked as favorits and sorted by date
+        Page with pictures (and videos) marked as favorites and sorted by date
         """
         self.server = server
         path, which_cam = self.selected_camera()
@@ -384,8 +388,6 @@ class BirdhouseViews(threading.Thread):
                 if "date" not in files_all[stamp]:
                     files_all[stamp]["date"] = date_backup[6:8] + "." + date_backup[4:6] + "." + date_backup[0:4]
 
-                # GROSSE BAUSTELLE
-
                 select_image = self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity)
                 if ((int(stamp) < int(time_now) or time_now == "000000") and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
                     if "camera" not in files_all[stamp] or select_image or (backup and files_all[stamp]["camera"] == which_cam):
@@ -466,14 +468,20 @@ class BirdhouseViews(threading.Thread):
         return content
 
     def archive_list(self, camera):
-        content = self.archive_views[camera]
+        """
+        Return data for list of archive folders (or an empty list if still loading)
+        """
+        if camera in self.archive_views:
+            content = self.archive_views[camera]
+        else:
+            content = {}
         if self.admin_allowed():
             content["links"] = print_links_json(link_list=("live", "favorit", "today", "today_complete", "videos"), cam=camera)
         else:
             content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos"), cam=camera)
         return content
 
-    def create_archive_list(self):
+    def archive_list_create(self):
         """
         Page with backup/archive directory
         """
@@ -599,6 +607,12 @@ class BirdhouseViews(threading.Thread):
             content["chart_data"] = create_chart_data(content["entries"].copy())
             self.archive_views[cam] = content
 
+    def archive_list_update(self):
+        """
+        Trigger recreation of the archive list
+        """
+        self.create_archive = True
+
     def complete_list_today(self, server):
         """
         Page with all pictures of the current day
@@ -670,14 +684,12 @@ class BirdhouseViews(threading.Thread):
         return content
 
     def video_list(self, server):
-        '''
-        Page with all videos 
-        '''
+        """
+        Page with all videos
+        """
         self.server = server
         path, which_cam = self.selected_camera()
-        content = {}
-        content["active_cam"] = which_cam
-        content["view"] = "list_videos"
+        content = {"active_cam": which_cam, "view": "list_videos"}
         param = server.path.split("/")
         if "app-v1" in param: del param[1]
 
@@ -692,7 +704,6 @@ class BirdhouseViews(threading.Thread):
         if self.config.exists("videos"):
             files_all = self.config.read_cache(config="videos")
             for file in files_all:
-                #files_all[file]["directory"] = self.camera[which_cam].param["video"]["streaming_server"]
                 files_all[file]["directory"] = "http://"+self.config.param["server"]["ip4_stream_video"]
                 files_all[file]["directory"] += ":"+str(self.config.param["server"]["port_video"])+"/"
                 files_all[file]["type"] = "video"
@@ -718,15 +729,12 @@ class BirdhouseViews(threading.Thread):
         return content
 
     def camera_list(self, server):
-        '''
-        Page with all videos 
-        '''
+        """
+        Page with all videos
+        """
         self.server = server
         path, which_cam = self.selected_camera()
-        content = {}
-        content["active_cam"] = which_cam
-        content["view"] = "list_cameras"
-        content["entries"] = {}
+        content = {"active_cam": which_cam, "view": "list_cameras", "entries": {}}
         param = server.path.split("/")
         if "app-v1" in param: del param[1]
         count = 0

@@ -553,7 +553,6 @@ if __name__ == "__main__":
     # start views and commands
     views = BirdhouseViews(config=config, camera=camera)
     views.start()
-    views.create_archive_list()
 
     # start backups
     time.sleep(1)
@@ -561,7 +560,7 @@ if __name__ == "__main__":
     backup.start()
     if len(sys.argv) > 0 and "--backup" in sys.argv:
         backup.backup_files()
-        views.create_archive_list()
+        views.archive_list_update()
 
     commands = BirdhouseCommands(config=config, camera=camera, backup=backup)
     commands.start()
