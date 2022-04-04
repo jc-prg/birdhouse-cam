@@ -1039,6 +1039,10 @@ class BirdhouseCamera(threading.Thread):
         self.error_msg = ""
         self.error_image = False
         try:
+            self.camera.stream.release()
+        except Exception as e:
+            logging.info("Ensure Stream is released ...")
+        try:
             self.camera = WebcamVideoStream(src=self.source).start()
             if not self.camera.stream.isOpened():
                 self.camera_error(True, "Can't connect to camera, check if source is "+str(self.source)+" ("+str(self.camera.stream.isOpened())+").")
@@ -1056,6 +1060,9 @@ class BirdhouseCamera(threading.Thread):
                         logging.debug(str(resolution))
                         self.camera.stream.set(3, int(resolution[0]))
                         self.camera.stream.set(4, int(resolution[1]))
+                        # self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 1280);
+                        # self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 720);
+                        # potential source for errors ... errno=16 / device or resource is busy
                     self.cameraFPS = FPS().start()
                     logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
         except Exception as e:
@@ -1168,13 +1175,12 @@ class BirdhouseCamera(threading.Thread):
         if "similarity" not in file_info:
             return False
 
-        elif ("camera" in file_info and file_info["camera"] == self.id) or (
-                "camera" not in file_info and self.id == "cam1"):
+        elif "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
+            return False
 
-            if "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
-                return False
+        elif ("camera" in file_info and file_info["camera"] == self.id) or ("camera" not in file_info and self.id == "cam1"):
 
-            elif "favorit" in file_info and int(file_info["favorit"]) == 1:
+            if "favorit" in file_info and int(file_info["favorit"]) == 1:
                 return True
 
             elif "00" + str(self.param["image_save"]["seconds"][0]) in timestamp:
