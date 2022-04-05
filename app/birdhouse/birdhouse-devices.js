@@ -133,7 +133,6 @@ function birdhouseDevices( title, data ) {
 		html_entry += tab.row("Active:", birdhouse_edit_field(id="set_active_"+sensor, field="devices:sensors:"+sensor+":active", type="select", options="true,false", data_type="boolean"));
         if (sensors[sensor]["status"] && sensors[sensor]["status"]["error"] == true) {
     		html_entry += tab.row("<hr/>");
-            html_entry += tab.row("Error:", sensors[sensor]["status"]["error"]);
             html_entry += tab.row("Error-Msg:", sensors[sensor]["status"]["error_msg"]);
         }
 		html_entry += tab.row("<hr/>");
