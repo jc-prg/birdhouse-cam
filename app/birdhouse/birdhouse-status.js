@@ -22,6 +22,12 @@ function birdhouseStatus_print(data) {
             html_entry += sensors[sensor]["units"]["temperature"];
             count += 1;
             if (count < keys.length) { html_entry += " / "; }
+
+            var summary = "";
+            for (let key in sensors[sensor]["values"]) {
+                summary += sensors[sensor]["values"][key] + sensors[sensor]["units"][key] + "<br/>";
+            }
+            setTextById("sensor_info_"+sensor, summary);
         }
     }
     if (count > 0 ) {

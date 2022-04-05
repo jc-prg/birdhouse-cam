@@ -122,7 +122,9 @@ function birdhouseDevices( title, data ) {
 		    sensor_name += " &nbsp; <i>(inactive)</i>";
         }
         html_entry = "<div class='camera_info'>";
-        html_entry += "<div class='camera_info_image'>&nbsp;</div>";
+        html_entry += "<div class='camera_info_image'>";
+        html_entry +=  "<div class='sensor_info' id='sensor_info_"+sensor+"'></div>;"
+        html_entry += "</div>";
         html_entry += "<div class='camera_info_text'>";
         html_entry += tab.start();
 		html_entry += tab.row("Name:", birdhouse_edit_field(id="set_name_"+sensor, field="devices:sensors:"+sensor+":name", type="input"));

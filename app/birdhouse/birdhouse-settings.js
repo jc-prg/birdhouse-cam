@@ -26,7 +26,7 @@ function birdhouse_app_settings (name="Settings") {
         var cameras  = app_data["DATA"]["devices"]["cameras"];
         var button_style = "background-color:lightgray;color:black;width:90px;margin:3px;";
         var api_call = "<button onclick='window.open(\"" + RESTurl + "api/list/\",\"_blank\");' style='"+button_style+"';>REST API</button>";
-        api_call    += "<button onclick='window.open(\"" + RESTurl + "api/INDEX/\",\"_blank\");' style='"+button_style+"';>REST API</button>";
+        api_call    += "<button onclick='window.open(\"" + RESTurl + "api/INDEX/\",\"_blank\");' style='"+button_style+"';>INDEX</button>";
 	    for (let camera in cameras) {
 	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/TODAY/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Today "+camera.toUpperCase()+"</button>";
 	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Compl. "+camera.toUpperCase()+"</button>";
