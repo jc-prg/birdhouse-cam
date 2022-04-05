@@ -162,6 +162,11 @@ h3 { margin : 4px; }
     margin : 4px;	
 }
 
+.sensor_info {
+    font-size   : 18px;
+    color       : green;
+}
+
 /* image overlay - configuration of delete, recycle and video play symbols (overlay on images) */
 
 .play_button {

@@ -123,7 +123,7 @@ function birdhouseDevices( title, data ) {
         }
         html_entry = "<div class='camera_info'>";
         html_entry += "<div class='camera_info_image'>";
-        html_entry +=  "<div class='sensor_info' id='sensor_info_"+sensor+"'></div>;"
+        html_entry +=  "<div class='sensor_info' id='sensor_info_"+sensor+"'></div>";
         html_entry += "</div>";
         html_entry += "<div class='camera_info_text'>";
         html_entry += tab.start();
