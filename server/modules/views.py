@@ -57,6 +57,9 @@ def create_chart_data(data):
     used_keys = []
     used_cameras = []
 
+    if data == {} or not "dict" in str(type(data)):
+        logging.error("Could not create chart data!")
+
     # get categories / titles
     for key in data:
         print_key = key[0:2]+":"+key[2:4]
