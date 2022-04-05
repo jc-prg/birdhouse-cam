@@ -60,7 +60,7 @@ def create_chart_data(data):
     # get categories / titles
     for key in data:
         print_key = key[0:2]+":"+key[2:4]
-        if data[key]["camera"] not in used_cameras:
+        if "camera" in data[key] and [key]["camera"] not in used_cameras:
             used_cameras.append(data[key]["camera"])
         if "similarity" in data[key]:
             if round(float(data[key]["similarity"])) == 0:
