@@ -69,7 +69,7 @@ function birdhouse_INDEX(data, camera) {
 
 		onclick = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
 		html += birdhouse_Camera(main=true, view="cam1cam2", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed);
-		app_camera_source[active_cam["name"]] = stream_server + cameras[active_cam["name"]]["stream"];
+		app_camera_source[active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream"];
 		/*
 		for (let micro in birdhouseMicrophones) {
 		    if (birdhouseMicrophones[micro]["active"]) {
