@@ -60,7 +60,7 @@ function birdhouse_INDEX(data, camera) {
 		    }
 		}
 		*/
-		app_camera_source[active_cam["name"]] = stream_server + cameras[active_cam["name"]]["stream"];
+		app_camera_source[active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream"];
     }
 	else {
 		var onclick  = "birdhousePrint_load(view=\"INDEX\", camera=\""+other_cams[0]["name"]+"\");";

@@ -185,7 +185,8 @@ function birdhouseReloadView() {
 	birdhouse_overlayHide();
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 	
-	if (app_active_page == "INDEX")
+	if (app_active_page == "INDEX") {
+console.log(app_camera_source);
 		for (let key in app_camera_source) {
 			var image = document.getElementById("stream_"+key);
 			image.src = "";
@@ -193,8 +194,9 @@ function birdhouseReloadView() {
 			app_camera_source[key] = app_camera_source[key].replace(/\/\//g,"/");
 			app_camera_source[key] = app_camera_source[key].replace(":/","://");
 			if (app_unique_stream_url)	{ image.src = app_camera_source[key]+"?"+app_unique_stream_id; }
-			else				{ image.src = app_camera_source[key]; }
+			else                        { image.src = app_camera_source[key]; }
 			}
+		}
 	else {
 		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
 		}
