@@ -392,7 +392,7 @@ class BirdhouseViews(threading.Thread):
                 if ((int(stamp) < int(time_now) or time_now == "000000") and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
                     if "camera" not in files_all[stamp] or select_image or (backup and files_all[stamp]["camera"] == which_cam):
                         if files_all[stamp]["datestamp"] == date_today or backup:
-                            if "to_be_deleted" not in files_all[stamp] or in    t(files_all[stamp]["to_be_deleted"]) != 1:
+                            if "to_be_deleted" not in files_all[stamp] or int(files_all[stamp]["to_be_deleted"]) != 1:
                                 files_today[stamp] = files_all[stamp].copy()
                                 if "type" not in files_today[stamp]:
                                     files_today[stamp]["type"] = "image"
