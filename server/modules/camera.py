@@ -904,8 +904,8 @@ class BirdhouseCamera(threading.Thread):
                 if self.video.auto_stop():
                     self.video.stop_recording()
                 else:
-                    image = self.get_image()
-                    image = self.image.convert_to_raw(image)
+                    image = self.get_image_raw()
+                    image = self.image.normalize_raw(image)
                     self.video.image_size = self.image_size
                     self.video.save_image(image=image)
 
