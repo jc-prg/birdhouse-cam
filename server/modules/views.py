@@ -62,32 +62,38 @@ def create_chart_data(data):
 
     # get categories / titles
     for key in data:
-        print_key = key[0:2]+":"+key[2:4]
-        if "camera" in data[key] and [key]["camera"] not in used_cameras:
-            used_cameras.append(data[key]["camera"])
-        if "similarity" in data[key]:
-            if round(float(data[key]["similarity"])) == 0:
-                data[key]["similarity"] = 100
-            chart["data"][print_key] = [100-float(data[key]["similarity"])]
-        if "sensor" in data[key]:
-            for sensor in data[key]["sensor"]:
-                for sensor_key in data[key]["sensor"][sensor]:
-                    sensor_title = sensor + ":" + sensor_key
-                    if sensor_title not in chart["titles"]:
-                        chart["titles"].append(sensor_title)
+        if not "error" in data[key]:
+            print_key = key[0:2]+":"+key[2:4]
+            if "camera" in data[key] and [key]["camera"] not in used_cameras:
+                used_cameras.append(data[key]["camera"])
+            if "similarity" in data[key]:
+                if round(float(data[key]["similarity"])) == 0:
+                    data[key]["similarity"] = 100
+                chart["data"][print_key] = [100-float(data[key]["similarity"])]
+            if "sensor" in data[key]:
+                for sensor in data[key]["sensor"]:
+                    for sensor_key in data[key]["sensor"][sensor]:
+                        sensor_title = sensor + ":" + sensor_key
+                        if sensor_title not in chart["titles"]:
+                            chart["titles"].append(sensor_title)
+        else:
+            logging.warning("Could not create chart data for "+str(key))
 
     # get data
     for key in data:
-        print_key = key[0:2] + ":" + key[2:4]
-        if print_key not in used_keys and used_cameras[0] == data[key]["camera"]:
-            used_keys.append(print_key)
-            for sensor_title in chart["titles"]:
-                if sensor_title != "Activity" and print_key in chart["data"]:
-                    sensor = sensor_title.split(":")
-                    if "sensor" in data[key] and sensor[0] in data[key]["sensor"] and sensor[1] in data[key]["sensor"][sensor[0]]:
-                        chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
-                    else:
-                        chart["data"][print_key].append(None)
+        if not "error" in data[key]:
+            print_key = key[0:2] + ":" + key[2:4]
+            if print_key not in used_keys and used_cameras[0] == data[key]["camera"]:
+                used_keys.append(print_key)
+                for sensor_title in chart["titles"]:
+                    if sensor_title != "Activity" and print_key in chart["data"]:
+                        sensor = sensor_title.split(":")
+                        if "sensor" in data[key] and sensor[0] in data[key]["sensor"] and sensor[1] in data[key]["sensor"][sensor[0]]:
+                            chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
+                        else:
+                            chart["data"][print_key].append(None)
+        else:
+            logging.warning("Could not create chart data for "+str(key))
 
     return chart
 
