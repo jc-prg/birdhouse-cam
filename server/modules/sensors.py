@@ -106,10 +106,10 @@ class BirdhouseSensor(threading.Thread):
                     self.sensor = dht11.DHT11(pin=self.pin)
                 elif self.param["type"] == "dht22":
                     import modules.dht22 as dh22
+                    self.sensor = dht22.DHT22(pin=self.pin)
                 else:
                     raise "Sensor type not supported"
 
-                self.sensor = dht11.DHT11(pin=self.pin)
                 indoor = self.sensor.read()
                 if indoor.is_valid():
                     temp = indoor.temperature
