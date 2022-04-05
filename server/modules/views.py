@@ -58,13 +58,13 @@ def create_chart_data(data):
     used_cameras = []
 
     if data == {} or not "dict" in str(type(data)):
-        logging.error("Could not create chart data!")
+        logging.error("Could not create chart data (empty)!")
 
     # get categories / titles
     for key in data:
-        if not "error" in data[key]:
+        if "error" not in data[key]:
             print_key = key[0:2]+":"+key[2:4]
-            if "camera" in data[key] and [key]["camera"] not in used_cameras:
+            if "camera" in data[key] and data[key]["camera"] not in used_cameras:
                 used_cameras.append(data[key]["camera"])
             if "similarity" in data[key]:
                 if round(float(data[key]["similarity"])) == 0:
@@ -77,11 +77,11 @@ def create_chart_data(data):
                         if sensor_title not in chart["titles"]:
                             chart["titles"].append(sensor_title)
         else:
-            logging.warning("Could not create chart data for "+str(key))
+            logging.warning("Could not create chart data for "+str(key)+", error in config file.")
 
     # get data
     for key in data:
-        if not "error" in data[key]:
+        if "error" not in data[key]:
             print_key = key[0:2] + ":" + key[2:4]
             if print_key not in used_keys and used_cameras[0] == data[key]["camera"]:
                 used_keys.append(print_key)
@@ -92,8 +92,6 @@ def create_chart_data(data):
                             chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
                         else:
                             chart["data"][print_key].append(None)
-        else:
-            logging.warning("Could not create chart data for "+str(key))
 
     return chart
 
