@@ -164,6 +164,7 @@ h3 { margin : 4px; }
 
 .sensor_info {
     font-size   : 18px;
+    font-weight : bold;
     color       : green;
 }
 
