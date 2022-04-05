@@ -56,7 +56,7 @@ class BirdhouseSensor(threading.Thread):
         count = 0
         retry = 0
         retry_wait = 120
-        logging.info("- Starting sensor loop (" + self.id + "/" + str(self.pin) + ") ...")
+        logging.info("- Starting sensor loop (" + self.id + "/" + str(self.pin) + "/"+self.param["type"]+") ...")
         while self.running:
             time.sleep(1)
 
@@ -92,7 +92,7 @@ class BirdhouseSensor(threading.Thread):
                 count = 0
 
         # GPIO.cleanup()
-        logging.info("Stopped sensor (" + self.id + ").")
+        logging.info("Stopped sensor (" + self.id + "/"+self.param["type"]+").")
 
     def connect(self):
         """
@@ -105,7 +105,7 @@ class BirdhouseSensor(threading.Thread):
                     import modules.dht11 as dht11
                     self.sensor = dht11.DHT11(pin=self.pin)
                 elif self.param["type"] == "dht22":
-                    import modules.dht22 as dh22
+                    import modules.dht22 as dht22
                     self.sensor = dht22.DHT22(pin=self.pin)
                 else:
                     raise "Sensor type not supported"
@@ -121,7 +121,7 @@ class BirdhouseSensor(threading.Thread):
             except Exception as e:
                 self.error = True
                 self.error_connect = True
-                self.error_msg = "Could not load DHT11 sensor module: "+str(e)
+                self.error_msg = "Could not load "+self.param["type"]+" sensor module: "+str(e)
                 logging.error(self.error_msg)
             if not self.error:
                 logging.info("Loaded Sensor: "+self.id)
