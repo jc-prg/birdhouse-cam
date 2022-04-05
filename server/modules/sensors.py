@@ -101,7 +101,14 @@ class BirdhouseSensor(threading.Thread):
         temp = ""
         if "rpi_active" in self.config.param["server"] and self.config.param["server"]["rpi_active"]:
             try:
-                import modules.dht11 as dht11
+                if self.param["type"] == "dht11":
+                    import modules.dht11 as dht11
+                    self.sensor = dht11.DHT11(pin=self.pin)
+                elif self.param["type"] == "dht22":
+                    import modules.dht22 as dh22
+                else:
+                    raise "Sensor type not supported"
+
                 self.sensor = dht11.DHT11(pin=self.pin)
                 indoor = self.sensor.read()
                 if indoor.is_valid():
