@@ -111,7 +111,9 @@ class BirdhouseViews(threading.Thread):
         self.config = config
         self.which_cam = ""
         self.archive_views = {}
+        self.favorite_views = {}
         self.create_archive = True
+        self.create_favorites = True
 
     def run(self):
         """
@@ -119,6 +121,9 @@ class BirdhouseViews(threading.Thread):
         """
         logging.info("Starting HTML views and REST API for GET ...")
         while self._running:
+            if self.create_favorites:
+                self.favorite_list_create()
+                self.create_favorites = False
             if self.create_archive:
                 self.archive_list_create()
                 self.create_archive = False
@@ -193,129 +198,6 @@ class BirdhouseViews(threading.Thread):
             content["links"] = print_links_json(link_list=("favorit", "today", "backup", "cam_info"))
         else:
             content["links"] = print_links_json(link_list=("favorit", "today", "backup"))
-
-        return content
-
-    def favorites(self, server):
-        """
-        Page with pictures (and videos) marked as favorites and sorted by date
-        """
-        self.server = server
-        path, which_cam = self.selected_camera()
-        content = {
-            "active_cam": which_cam,
-            "view": "favorits",
-            "entries": {},
-            "groups": {}
-        }
-        favorites = {}
-
-        # videos
-        files_videos = {}
-        if self.config.exists("videos"):
-            files_all = self.config.read_cache(config="videos")
-            for file in files_all:
-                date = file.split("_")[0]
-                if "favorit" in files_all[file] and int(files_all[file]["favorit"]) == 1:
-                    if date not in files_videos: files_videos[date] = {}
-                    files_videos[date][file] = files_all[file]
-
-        # today
-        date_today = datetime.now().strftime("%Y%m%d")
-        files = self.config.read_cache(config="images")
-        category = "/current/"
-
-        for stamp in files:
-            if date_today == files[stamp]["datestamp"] and "favorit" in files[stamp] and int(
-                    files[stamp]["favorit"]) == 1:
-                new = datetime.now().strftime("%Y%m%d") + "_" + stamp
-                favorites[new] = files[stamp]
-                favorites[new]["source"] = ("images", "")
-                favorites[new]["date"] = "Aktuell"
-                favorites[new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
-                if "type" not in favorites[new]:
-                    favorites[new]["type"] = "image"
-                favorites[new]["category"] = category + stamp
-                favorites[new]["directory"] = "/" + self.config.directories["images"]
-
-        if date_today in files_videos:
-            for stamp in files_videos[date_today]:
-                new = stamp
-                favorites[new] = files_videos[date_today][stamp]
-                favorites[new]["source"] = ("videos", "")
-                favorites[new]["date"] = "Aktuell"
-                favorites[new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
-                favorites[new]["type"] = "video"
-                favorites[new]["category"] = category + stamp
-                favorites[new]["directory"] = "/" + self.config.directories["videos"]
-
-        if len(favorites) > 0:
-            content["view_count"] = ["star"]
-            content["groups"]["today"] = []
-            for entry in favorites:
-                content["entries"][entry] = favorites[entry]
-                content["groups"]["today"].append(entry)
-
-        # other days
-        main_directory = self.config.directory(config="backup")
-        dir_list = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
-        dir_list = list(reversed(sorted(dir_list)))
-
-        video_list = []
-        for file_date in files_videos:
-            if file_date not in dir_list:
-                dir_list.append(file_date)
-                video_list.append(file_date)
-
-        dir_list = list(reversed(sorted(dir_list)))
-
-        for directory in dir_list:
-            category = "/backup/" + directory + "/"
-            favorites[directory] = {}
-
-            if self.config.exists(config="backup", date=directory):
-                files_data = self.config.read_cache(config="backup", date=directory)
-                if "info" in files_data and "files" in files_data:
-                    files = files_data["files"]
-                    date = directory[6:8] + "." + directory[4:6] + "." + directory[0:4]
-
-                    if directory not in video_list:
-                        for stamp in files:
-                            if "datestamp" in files[stamp] and files[stamp]["datestamp"] == directory:
-                                if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
-                                    new = directory + "_" + stamp
-                                    favorites[directory][new] = files[stamp]
-                                    favorites[directory][new]["source"] = ("backup", directory)
-                                    favorites[directory][new]["date"] = date
-                                    favorites[directory][new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
-                                    favorites[directory][new]["date2"] = favorites[directory][new]["date"]
-                                    if "type" not in favorites[directory][new]:
-                                        favorites[directory][new]["type"] = "image"
-                                    favorites[directory][new]["category"] = category + stamp
-                                    favorites[directory][new]["directory"] = "/" + self.config.directories[
-                                        "backup"] + directory + "/"
-
-            if directory in files_videos:
-                for stamp in files_videos[directory]:
-                    new = stamp
-                    date = directory[6:8] + "." + directory[4:6] + "." + directory[0:4]
-                    favorites[directory][new] = files_videos[directory][stamp]
-                    favorites[directory][new]["source"] = ("videos", "")
-                    favorites[directory][new]["date"] = date  # ?????
-                    favorites[directory][new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
-                    favorites[directory][new]["type"] = "video"
-                    favorites[directory][new]["category"] = "/videos/" + stamp
-                    favorites[directory][new]["directory"] = "/" + self.config.directories["videos"]
-
-            if len(favorites[directory]) > 0:
-                content["groups"][date] = []
-                for entry in favorites[directory]:
-                    content["entries"][entry] = favorites[directory][entry]
-                    content["groups"][date].append(entry)
-
-        content["view_count"] = ["star"]
-        content["subtitle"] = birdhouse_pages["favorit"][0]
-        content["links"] = print_links_json(link_list=("live", "today", "videos", "backup"), cam=which_cam)
 
         return content
 
@@ -618,6 +500,8 @@ class BirdhouseViews(threading.Thread):
             content["chart_data"] = create_chart_data(content["entries"].copy())
             self.archive_views[cam] = content
 
+        logging.info("Create data for archive view done.")
+
     def archive_list_update(self):
         """
         Trigger recreation of the archive list
@@ -693,6 +577,147 @@ class BirdhouseViews(threading.Thread):
         length = getsizeof(content)/1024
         logging.debug("CompleteListToday: End - "+datetime.now().strftime("%H:%M:%S")+" ("+str(length)+" kB)")
         return content
+
+    def favorite_list(self, camera):
+        """
+        Return data for list of favorites from cache
+        """
+        content = self.favorite_views
+        content["active_cam"] = camera
+
+        if self.admin_allowed():
+            content["links"] = print_links_json(link_list=("live", "today", "today_complete", "videos", "backup"), cam=camera)
+        else:
+            content["links"] = print_links_json(link_list=("live", "today", "videos", "backup"), cam=camera)
+        return content
+
+    def favorite_list_create(self):
+        """
+        Page with pictures (and videos) marked as favorites and sorted by date
+        """
+        logging.info("Create data for favorite view  ...")
+        content = {
+            "active_cam": "none",
+            "view": "favorits",
+            "entries": {},
+            "groups": {}
+        }
+        favorites = {}
+
+        # videos
+        files_videos = {}
+        if self.config.exists("videos"):
+            files_all = self.config.read_cache(config="videos")
+            for file in files_all:
+                date = file.split("_")[0]
+                if "favorit" in files_all[file] and int(files_all[file]["favorit"]) == 1:
+                    if date not in files_videos: files_videos[date] = {}
+                    files_videos[date][file] = files_all[file]
+
+        # today
+        date_today = datetime.now().strftime("%Y%m%d")
+        files = self.config.read_cache(config="images")
+        category = "/current/"
+
+        for stamp in files:
+            if date_today == files[stamp]["datestamp"] and "favorit" in files[stamp] and int(
+                    files[stamp]["favorit"]) == 1:
+                new = datetime.now().strftime("%Y%m%d") + "_" + stamp
+                favorites[new] = files[stamp]
+                favorites[new]["source"] = ("images", "")
+                favorites[new]["date"] = "Aktuell"
+                favorites[new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
+                if "type" not in favorites[new]:
+                    favorites[new]["type"] = "image"
+                favorites[new]["category"] = category + stamp
+                favorites[new]["directory"] = "/" + self.config.directories["images"]
+
+        if date_today in files_videos:
+            for stamp in files_videos[date_today]:
+                new = stamp
+                favorites[new] = files_videos[date_today][stamp]
+                favorites[new]["source"] = ("videos", "")
+                favorites[new]["date"] = "Aktuell"
+                favorites[new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
+                favorites[new]["type"] = "video"
+                favorites[new]["category"] = category + stamp
+                favorites[new]["directory"] = "/" + self.config.directories["videos"]
+
+        if len(favorites) > 0:
+            content["view_count"] = ["star"]
+            content["groups"]["today"] = []
+            for entry in favorites:
+                content["entries"][entry] = favorites[entry]
+                content["groups"]["today"].append(entry)
+
+        # other days
+        main_directory = self.config.directory(config="backup")
+        dir_list = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
+        dir_list = list(reversed(sorted(dir_list)))
+
+        video_list = []
+        for file_date in files_videos:
+            if file_date not in dir_list:
+                dir_list.append(file_date)
+                video_list.append(file_date)
+
+        dir_list = list(reversed(sorted(dir_list)))
+
+        for directory in dir_list:
+            category = "/backup/" + directory + "/"
+            favorites[directory] = {}
+
+            if self.config.exists(config="backup", date=directory):
+                files_data = self.config.read_cache(config="backup", date=directory)
+                if "info" in files_data and "files" in files_data:
+                    files = files_data["files"]
+                    date = directory[6:8] + "." + directory[4:6] + "." + directory[0:4]
+
+                    if directory not in video_list:
+                        for stamp in files:
+                            if "datestamp" in files[stamp] and files[stamp]["datestamp"] == directory:
+                                if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
+                                    new = directory + "_" + stamp
+                                    favorites[directory][new] = files[stamp]
+                                    favorites[directory][new]["source"] = ("backup", directory)
+                                    favorites[directory][new]["date"] = date
+                                    favorites[directory][new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
+                                    favorites[directory][new]["date2"] = favorites[directory][new]["date"]
+                                    if "type" not in favorites[directory][new]:
+                                        favorites[directory][new]["type"] = "image"
+                                    favorites[directory][new]["category"] = category + stamp
+                                    favorites[directory][new]["directory"] = "/" + self.config.directories[
+                                        "backup"] + directory + "/"
+
+            if directory in files_videos:
+                for stamp in files_videos[directory]:
+                    new = stamp
+                    date = directory[6:8] + "." + directory[4:6] + "." + directory[0:4]
+                    favorites[directory][new] = files_videos[directory][stamp]
+                    favorites[directory][new]["source"] = ("videos", "")
+                    favorites[directory][new]["date"] = date  # ?????
+                    favorites[directory][new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
+                    favorites[directory][new]["type"] = "video"
+                    favorites[directory][new]["category"] = "/videos/" + stamp
+                    favorites[directory][new]["directory"] = "/" + self.config.directories["videos"]
+
+            if len(favorites[directory]) > 0:
+                content["groups"][date] = []
+                for entry in favorites[directory]:
+                    content["entries"][entry] = favorites[directory][entry]
+                    content["groups"][date].append(entry)
+
+        content["view_count"] = ["star"]
+        content["subtitle"] = birdhouse_pages["favorit"][0]
+
+        self.favorite_views = content
+        logging.info("Create data for favorite view done.")
+
+    def favorite_list_update(self):
+        """
+        Trigger recreation of the favorit list
+        """
+        self.create_favorites = True
 
     def video_list(self, server):
         """
