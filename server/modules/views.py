@@ -119,14 +119,23 @@ class BirdhouseViews(threading.Thread):
         """
         Do nothing at the moment
         """
+        count = 0
+        count_rebuild = 60*5
         logging.info("Starting HTML views and REST API for GET ...")
         while self._running:
-            if self.create_favorites:
+
+            if self.create_favorites or count > count_rebuild:
                 self.favorite_list_create()
                 self.create_favorites = False
-            if self.create_archive:
+
+            if self.create_archive or count > count_rebuild:
                 self.archive_list_create()
                 self.create_archive = False
+
+            if count > count_rebuild:
+                count = 0
+
+            count += 1
             time.sleep(1)
         logging.info("Stopped HTML views and REST API for GET.")
 

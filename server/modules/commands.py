@@ -80,7 +80,9 @@ class BirdhouseCommands(threading.Thread):
                                     entries[key][change_status] = status
                                 else:
                                     test = "no"
-                                logging.debug("QUEUE: " + config_file + " // " + key + " - " + change_status + "=" + str(status) + " ... " + test)
+                                logging.debug(
+                                    "QUEUE: " + config_file + " // " + key + " - " + change_status + "=" + str(
+                                        status) + " ... " + test)
 
                             if change_status == "favorit":
                                 self.views.favorite_list_update()
@@ -105,9 +107,8 @@ class BirdhouseCommands(threading.Thread):
                                         entries[key][change_status] = status
                                     else:
                                         test = "no"
-                                    logging.debug(
-                                        "QUEUE: " + config_file + "/" + date + " // " + key + " - " + change_status + "=" + str(
-                                            status) + " ... " + test)
+                                    logging.debug("QUEUE: " + config_file + "/" + date + " // " + key + " - " + \
+                                                  change_status + "=" + str(status) + " ... " + test)
 
                                 if change_status == "favorit":
                                     self.views.favorite_list_update()
@@ -166,9 +167,11 @@ class BirdhouseCommands(threading.Thread):
 
         response["command"] = ["mark/unmark as favorit", entry_id]
         if entry_id in config_data:
-            self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=entry_value)
+            self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="favorit",
+                              status=entry_value)
             if entry_value == 1:
-                self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=1)
+                self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted",
+                                  status=1)
         else:
             response["error"] = "no entry found with stamp " + entry_id
 
@@ -259,7 +262,8 @@ class BirdhouseCommands(threading.Thread):
                     relevant = True
                 if relevant and config_data[entry_id]["camera"] == camera and \
                         (not "type" in config_data[entry_id] or config_data[entry_id]["type"] != "data"):
-                    self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted", status=1)
+                    self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted",
+                                      status=1)
                     self.add_to_queue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=0)
                 if entry_id == entry_to:
                     relevant = False
@@ -281,7 +285,8 @@ class BirdhouseCommands(threading.Thread):
         else:
             delete_not_used = False
         if param[2] == "backup":
-            response = self.backup.delete_marked_files(file_type="image", date=param[3], delete_not_used=delete_not_used)
+            response = self.backup.delete_marked_files(file_type="image", date=param[3],
+                                                       delete_not_used=delete_not_used)
         elif param[2] == "today":
             response = self.backup.delete_marked_files(file_type="image", date="", delete_not_used=delete_not_used)
         elif param[2] == "video":
