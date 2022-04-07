@@ -18,7 +18,7 @@ mark favorites ...).
 * Recycle range of photos between two marked photos
 * Archive photos with movement and favorite photos once a day
 * Trim videos
-* Get data from sensors connected to the Raspberry Pi (DHT11) and draw a chart: Temperature and Humidity
+* Get data from sensors connected to the Raspberry Pi (DHT11/DHT22) and draw a chart: Temperature and Humidity
 * Connect to audio stream from microphone (under construction)
 * Deny recording and admin functionality for specific IP addresses (e.g. router or proxy, to deny for access from the internet)
 
@@ -78,6 +78,7 @@ Thanks for your inspiration, code snippets, images:
 * [https://github.com/manuelstofer/pinchzoom](https://github.com/manuelstofer/pinchzoom)
 * [https://gifer.com/en/ZHug](https://gifer.com/en/ZHug)
 * [https://github.com/szazo/DHT11_Python](https://github.com/szazo/DHT11_Python)
+* [https://github.com/bullet64/DHT22_Python](https://github.com/bullet64/DHT22_Python)
 
 ## Impressions
 
