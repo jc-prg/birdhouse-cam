@@ -1140,7 +1140,7 @@ class BirdhouseCamera(threading.Thread):
         if self.type == "pi":
             try:
                 with self.video.output.condition:
-                    self.video.output.condition.camera_wait_recording()
+                    self.video.output.condition.wait()
                     encoded = self.video.output.frame
                 raw = self.image.convert_to_raw(encoded)
                 return raw
