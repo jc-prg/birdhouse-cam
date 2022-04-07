@@ -8,7 +8,7 @@ from datetime import datetime
 
 class BirdhouseCommands(threading.Thread):
 
-    def __init__(self, camera, config, backup):
+    def __init__(self, camera, config, backup, views):
         """
         Initialize new thread and set inital parameters
         """
@@ -17,6 +17,7 @@ class BirdhouseCommands(threading.Thread):
         self.camera = camera
         self.config = config
         self.backup = backup
+        self.views = views
         self._running = True
         self.which_cam = ""
         self.status_queue = {"images": [], "videos": [], "backup": {}}
@@ -54,7 +55,7 @@ class BirdhouseCommands(threading.Thread):
                     self.config.async_running = True
                     [which_cam, video_id, start, end] = self.create_queue.pop()
                     logging.info("Start video creation (" + video_id + "): " + str(start) + " - " + str(end) + ")")
-                    response = self.camera[which_cam].create_trim_video(video_id, start, end)
+                    response = self.camera[which_cam].create_video_trimmed(video_id, start, end)
                     logging.info(str(response))
                     self.config.async_answers.append(["TRIM_DONE", video_id, response["result"]])
                     self.config.async_running = True
@@ -81,6 +82,9 @@ class BirdhouseCommands(threading.Thread):
                                     test = "no"
                                 logging.debug("QUEUE: " + config_file + " // " + key + " - " + change_status + "=" + str(status) + " ... " + test)
 
+                            if change_status == "favorit":
+                                self.views.favorite_list_update()
+
                         self.config.unlock(config_file)
                         self.config.write(config_file, entries)
 
@@ -104,6 +108,9 @@ class BirdhouseCommands(threading.Thread):
                                     logging.debug(
                                         "QUEUE: " + config_file + "/" + date + " // " + key + " - " + change_status + "=" + str(
                                             status) + " ... " + test)
+
+                                if change_status == "favorit":
+                                    self.views.favorite_list_update()
 
                             entry_data["files"] = entries
                             self.config.unlock(config_file, date)
@@ -295,7 +302,7 @@ class BirdhouseCommands(threading.Thread):
         which_cam = param[3]
         if which_cam in self.camera and not self.camera[which_cam].error and self.camera[which_cam].active:
             if not self.camera[which_cam].video.recording:
-                self.camera[which_cam].video.start_recording()
+                self.camera[which_cam].video.record_start()
             else:
                 response["error"] = "camera is already recording " + str(param[3])
         elif self.camera[which_cam].error or self.camera[which_cam].active == False:
@@ -316,7 +323,7 @@ class BirdhouseCommands(threading.Thread):
         which_cam = param[3]
         if which_cam in self.camera and not self.camera[which_cam].error and self.camera[which_cam].active:
             if self.camera[which_cam].video.recording:
-                self.camera[which_cam].video.stop_recording()
+                self.camera[which_cam].video.record_stop()
             else:
                 response["error"] = "camera isn't recording at the moment " + str(param[3])
         elif self.camera[which_cam].error or self.camera[which_cam].active == False:
