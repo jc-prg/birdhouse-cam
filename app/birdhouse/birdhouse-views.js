@@ -58,8 +58,6 @@ function birdhouse_INDEX(data, camera) {
 		html += birdhouse_Camera(main=true, view="cam1cam2", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed);
 		app_camera_source[active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream"];
 	}
-
-    html += "<br/>&nbsp;"
 	setTextById(app_frame_content,html);
 }
 
