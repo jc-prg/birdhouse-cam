@@ -33,6 +33,31 @@ function birdhouse_Camera( main, view, onclick, camera, stream_server, admin_all
 	return html;
 }
 
+
+function birdhouse_OtherGroup( key, title, content, header_open) {
+    var html = "";
+    var display = "";
+	if (header_open == false) { display = "style='display:none;'"; }
+
+    html += birdhouse_OtherGroupHeader( key, title, header_open );
+    html += "<div id='group_"+key+"' "+display+">";
+    html += content;
+    html += "</div>";
+    return html;
+}
+
+function birdhouse_OtherGroupHeader( key, title, header_open ) {
+	var status = "−";
+	if (header_open == false) { status = "+"; }
+	var html   = "";
+	html += "<div id='group_header_"+key+"' class='separator_group' onclick='birdhouse_groupToggle(\""+key+"\")'>";
+	html += "<text id='group_link_"+key+"' style='cursor:pointer;'>("+status+")</text> ";
+	html += title;
+	html += "</div>";
+	return html;
+}
+
+
 function birdhouse_ImageGroup( title, entries, entry_count, entry_category, header_open, admin=false, video_short=false ) {
 	var count     = {};
 	var html      = "";
@@ -97,29 +122,6 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
 	return html;
 }
 
-function birdhouse_OtherGroup( key, title, content, header_open) {
-    var html = "";
-    var display = "";
-	if (header_open == false) { display = "style='display:none;'"; }
-
-    html += birdhouse_OtherGroupHeader( key, title, header_open );
-    html += "<div id='group_"+key+"' "+display+">";
-    html += content;
-    html += "</div>";
-    return html;
-}
-
-function birdhouse_OtherGroupHeader( key, title, header_open ) {
-	var status = "−";
-	if (header_open == false) { status = "+"; }
-	var html   = "";
-	html += "<div id='group_header_"+key+"' class='separator_group' onclick='birdhouse_groupToggle(\""+key+"\")'>";
-	html += "<text id='group_link_"+key+"' style='cursor:pointer;'>("+status+")</text> ";
-	html += title;
-	html += "</div>";
-	return html;
-}
-
 function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 	var status = "−";
 	if (header_open == false) { status = "+"; }
@@ -162,13 +164,6 @@ function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 
 	html += "</font></div>";
 	return html;
-	}
-
-function birdhouse_ImageURL(URL) {
-	URL = URL.replaceAll("//","/");
-	URL = URL.replace("http:/","http://");
-	URL = URL.replace("https:/","https://");
-	return URL;
 	}
 
 function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false, group_id="") {
@@ -282,8 +277,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	html += "<div class='image_container'>";
 	html += "  <div class='star'>"+star+"</div>";
 	html += "  <div class='recycle'>"+recycle+"</div>";
-	html += "  <div class='thumbnail_container'>"
-//	html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+entry["lowres"]+"' class='thumbnail' style='"+style+"'/></a>";
+	html += "  <div class='thumbnail_container'>";
 	html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id2+"' class='thumbnail' style='"+style+"'/></a>";
 	html +=      play_button;
 	html += "    <br/><center><small>"+description+"</small></center>";
@@ -292,3 +286,11 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 
 	return html;
 }
+
+
+function birdhouse_ImageURL(URL) {
+	URL = URL.replaceAll("//","/");
+	URL = URL.replace("http:/","http://");
+	URL = URL.replace("https:/","https://");
+	return URL;
+	}

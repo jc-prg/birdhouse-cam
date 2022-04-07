@@ -117,8 +117,10 @@ function birdhouse_edit_send(id_list) {
 }
 
 function birdhouse_edit_done(data) {
-    alert("Done");
+
+    appMsg.alert("Done");
 }
+
 
 function birdhouse_initTooltip() {
 	tooltip_mode     	= "other";
@@ -135,6 +137,7 @@ function birdhouse_tooltip( tooltip_element, tooltip_content, name, left="" ) {
 	result = button_tooltip.create( tooltip_element, tooltip_content, name, left );
 	return result;
 	}
+
 
 function birdhouse_table () {
 
@@ -170,6 +173,19 @@ function birdhouse_table () {
 	    return "</table>";
 	}
 }
+
+function birdhouse_Links(link_list) {
+	var html = "";
+	var keys = Object.keys(link_list);
+	for (var i=0;i<keys.length;i++) { if (keys[i] != "active_cam") {
+		var key     = keys[i];
+		var onclick = "birdhousePrint_load(view=\""+link_list[key]["link"]+"\", camera=\""+app_active_cam+"\");";
+		html += "<a style='cursor:pointer;' onclick='"+onclick+"'>"+lang(link_list[key]["link"])+"</a> ";
+		if (i+1 < keys.length) { html += " | "; }
+		} }
+	return html;
+	}
+
 
 function birdhouse_imageOverlay(filename, description="", favorit="", to_be_deleted="") {
 
@@ -248,8 +264,8 @@ function birdhouse_overlayHide() {
         pz.update();
         pz.enable();
 */
-        alert("HIDE");
        }
+
 
 function birdhouse_groupToggle(id) {
         if (document.getElementById("group_"+id).style.display == "none") {
@@ -280,7 +296,8 @@ function birdhouse_groupToggle(id) {
         	document.getElementById("group_link_"+id).innerHTML = "(+)";
 		}
 	}
-	
+
+
 function iOS() {
   return [
     'iPad Simulator',
