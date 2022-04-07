@@ -3,33 +3,6 @@
 //--------------------------------------
 // additional functions 
 //--------------------------------------
-/* INDEX:
-function birdhouse_edit_field(id, field, type="input", options="", data_type="string")
-function birdhouse_edit_save(id, id_list, text="")
-function birdhouse_edit_send(id_list)
-function birdhouse_edit_done(data)
-function birdhouse_initTooltip()
-function birdhouse_tooltip( tooltip_element, tooltip_content, name, left="" )
-function birdhouse_table ()
-    this.update_settings = function ()
-	this.start	= function ()
-	this.row	= function (td1, td2=false)
-	this.end	= function ()
-function birdhouse_imageOverlay(filename, description="", favorit="", to_be_deleted="")
-function birdhouse_videoOverlay(filename, description="", favorit="", to_be_deleted="")
-function birdhouse_videoOverlayToggle(status="")
-function birdhouse_overlayHide()
-function birdhouse_groupToggle(id)
-function iOS()
-function toggleVideoEdit()
-var loadJS = function(url, implementationCode, location)
-var yourCodeToBeCalled = function()
-*/
-//----------------------------------------
-
-
-// Generic editing functions
-//----------------------------------------
 
 function birdhouse_edit_field(id, field, type="input", options="", data_type="string") {
     var fields = field.split(":");
@@ -147,10 +120,6 @@ function birdhouse_edit_done(data) {
     alert("Done");
 }
 
-
-// Tooltips
-//----------------------------------------
-
 function birdhouse_initTooltip() {
 	tooltip_mode     	= "other";
 	tooltip_width    	= 160;
@@ -161,14 +130,11 @@ function birdhouse_initTooltip() {
 	button_tooltip = new jcTooltip("button_tooltip") ;
 	button_tooltip.settings( tooltip_mode, tooltip_width, tooltip_height, tooltip_offset_height, tooltip_offset_width );	
 	}
-	
+
 function birdhouse_tooltip( tooltip_element, tooltip_content, name, left="" ) {
-	return button_tooltip.create( tooltip_element, tooltip_content, name, left );
+	result = button_tooltip.create( tooltip_element, tooltip_content, name, left );
+	return result;
 	}
-
-birdhouse_initTooltip();
-
-//----------------------------------------
 
 function birdhouse_table () {
 
@@ -205,10 +171,8 @@ function birdhouse_table () {
 	}
 }
 
-
-//----------------------------------------
-
 function birdhouse_imageOverlay(filename, description="", favorit="", to_be_deleted="") {
+
         var overlay = "<div id=\"overlay_content\" class=\"overlay_content\" onclick=\"birdhouse_overlayHide();\"><!--overlay--></div>";
         setTextById("overlay_content",overlay);
         document.getElementById("overlay").style.display         = "block";
@@ -224,10 +188,14 @@ function birdhouse_imageOverlay(filename, description="", favorit="", to_be_dele
         document.getElementById("overlay_content").innerHTML = html;
         
         myElement = document.getElementById("overlay_content");
-	new window.PinchZoom.default(myElement);
+	    pz = new PinchZoom.default(myElement);
+/*
+	    pz.zoomFactor = 1;
+	    pz.offset = { x: 0, y: 0 };
+	    pz.update();
+*/
+	    // check, how to destroy ...
 	}
-
-//--------------------------------------
 
 function birdhouse_videoOverlay(filename, description="", favorit="", to_be_deleted="") {
         check_iOS = iOS();
@@ -250,8 +218,6 @@ function birdhouse_videoOverlay(filename, description="", favorit="", to_be_dele
           }
 	}
 
-//----------------------------------------
-	
 function birdhouse_videoOverlayToggle(status="") {
         video_edit1 = document.getElementById("camera_video_edit");
         video_edit2 = document.getElementById("camera_video_edit_overlay");
@@ -268,16 +234,22 @@ function birdhouse_videoOverlayToggle(status="") {
 		}
 	}
 
-//----------------------------------------
-
 function birdhouse_overlayHide() {
        document.getElementById("overlay").style.display = "none";
        document.getElementById("overlay_content").style.display = "none";
        document.getElementById("overlay_parent").style.display = "none";
+/*
+	    pz.zoomFactor = 2;
+	    pz.lastScale = 1;
+	    pz.offset = { x: 0, y: 0 };
+	    pz.initialOffset = { x: 0, y: 0 };
+        pz.setupMarkup();
+        pz.bindEvents();
+        pz.update();
+        pz.enable();
+*/
+        alert("HIDE");
        }
-
-
-//----------------------------------------
 
 function birdhouse_groupToggle(id) {
         if (document.getElementById("group_"+id).style.display == "none") {
@@ -309,8 +281,6 @@ function birdhouse_groupToggle(id) {
 		}
 	}
 	
-//----------------------------------------
-	
 function iOS() {
   return [
     'iPad Simulator',
@@ -323,8 +293,6 @@ function iOS() {
   // iPad on iOS 13 detection
   || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
 }
-
-//----------------------------------------
 
 function toggleVideoEdit() {
         video_edit1 = document.getElementById("camera_video_edit");
@@ -344,13 +312,9 @@ function toggleVideoEdit() {
 		}
 	}
 
-//-----------------------------------------
-// load addition javascript
-//-----------------------------------------
-
-var loadJS = function(url, implementationCode, location){
+var loadJS = function(url, implementationCode, location) {
     //url is URL of external file, implementationCode is the code
-    //to be called from the file, location is the location to 
+    //to be called from the file, location is the location to
     //insert the <script> element
 
     //var scriptTag = document.createElement('script');
@@ -361,11 +325,9 @@ var loadJS = function(url, implementationCode, location){
     scriptTag.onreadystatechange = implementationCode;
 
     location.appendChild(scriptTag);
-};
-
-var yourCodeToBeCalled = function(){
-//your code goes here
 }
 
 //-----------------------------------------
-// EOF
+
+birdhouse_initTooltip();
+

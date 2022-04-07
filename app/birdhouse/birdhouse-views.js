@@ -3,12 +3,6 @@
 //--------------------------------------
 // birdhouse views
 //--------------------------------------
-/* INDEX:
-function birdhouse_INDEX(data, camera)
-function birdhouse_VIDEO_DETAIL( title, data )
-function birdhouse_LIST(title, data, camera, header_open=true)
-*/
-//--------------------------------------
 
 function birdhouse_INDEX(data, camera) {
 
@@ -81,7 +75,6 @@ function birdhouse_INDEX(data, camera) {
 
 	setTextById(app_frame_content,html);
 }
-
 
 function birdhouse_VIDEO_DETAIL( title, data ) {
 	var html = "";
@@ -204,7 +197,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
     }
 
 	// group favorits per month
-        if (active_page == "FAVORITS") {
+        if (active_page == "FAVORITS" && groups != undefined) {
                 var groups2 = {}
                 Object.entries(groups).forEach(([key, value]) => {
                         if (key.indexOf(".") > 0) {
@@ -238,6 +231,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 			html += birdhouse_ImageGroup(title, group_entries, entry_count, entry_category, header_open, admin, video_short);
 			count_groups += 1;
 			}
+			if (html == "") {
+    			html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;</center>";
+			}
 		}
 	// today, backup, video
 	else {
@@ -249,7 +245,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 		        if (entries_delete != undefined && Object.keys(entries_delete).length > 0)		{ html += birdhouse_ImageGroup(lang("RECYCLE"), entries_delete, ["recycle"], entry_category, false, admin, video_short); entries_available = true; }
 		        }
 		if (entries_available == false) {
-			html += "<center>"+lang("NO_ENTRIES")+"</center>";
+   			html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;</center>";
 			}
 		}
 	setTextById(app_frame_content, html);

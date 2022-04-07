@@ -3,17 +3,10 @@
 //--------------------------------------
 // settings
 //--------------------------------------
-/* INDEX:
-function birdhouse_app_settings (name="Settings")
-	this.create	= function (data)
-	this.toggle	= function (active=false)
-*/
-//--------------------------------------
 
 var app_settings_active = false;
 var birdhouse_settings  = new birdhouse_app_settings();
 
-// ------------------------------------
 
 function birdhouse_app_settings (name="Settings") {
 

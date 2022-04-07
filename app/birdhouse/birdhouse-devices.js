@@ -8,7 +8,6 @@ function birdhouseDevices( title, data )
 */
 //--------------------------------------
 
-
 function birdhouseDevices( title, data ) {
 	var cameras	= data["DATA"]["devices"]["cameras"];
 	var sensors = data["DATA"]["devices"]["sensors"];
@@ -171,5 +170,6 @@ function birdhouseDevices( title, data ) {
 
         html += birdhouse_OtherGroup( micro, micro_name, html_entry, open );
 	}
+
 	setTextById(app_frame_content,html);
 }

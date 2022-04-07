@@ -3,16 +3,6 @@
 //--------------------------------------
 // streaming functions
 //--------------------------------------
-/* INDEX:
-function birdhouseStream_load(server, microphones)
-function birdhouseStream_play(mic)
-function birdhouseStream_stop(mic)
-function birdhouseStream_toggle(mic="", add_id="")
-function birdhouseStream_toggle_image(mic, add_id="")
-function birdhouseStream_image(on=true)
-function birdhouseStream_image_header(on=true)
-*/
-//--------------------------------------
 
 birdhouse_stream = {};
 birdhouse_stream_play = {};

@@ -3,17 +3,6 @@
 //--------------------------------------
 // main functions 
 //--------------------------------------
-/* INDEX:
-function birdhousePrint_load(view="INDEX", camera="", date="")
-function birdhousePrint(data)
-function birdhousePrintTitle(data, active_page="", camera="")
-function birdhouseSetMainVars(data)
-function birdhouseHeaderFunctions()
-function birdhouseSwitchCam()
-function birdhouseReloadView()
-function birdhouse_Links(link_list)
-*/
-//--------------------------------------
 
 var color_code = {
 	"star"    : "lime",
@@ -42,9 +31,6 @@ var app_frame_content = "frame2";
 var app_frame_info = "frame3";
 var app_frame_index = "frame4";
 
-//-----------------------------------------
-// load content from API and call print
-//-----------------------------------------
 
 function birdhousePrint_load(view="INDEX", camera="", date="") {
 
@@ -57,10 +43,6 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 	appFW.requestAPI('GET',commands,"",birdhousePrint,"","birdhousePrint_load");
 	}
 	
-//-----------------------------------------
-// print views based on active page
-//-----------------------------------------
-
 function birdhousePrint(data) {
     app_data = data;
 	console.debug("Request->Print ...");
@@ -101,11 +83,6 @@ function birdhousePrint(data) {
 
 	scroll(0,0);
 	}
-	
-	
-//-----------------------------------------
-// print titel and footer, set vars
-//-----------------------------------------
 
 function birdhousePrintTitle(data, active_page="", camera="") {
 
@@ -186,12 +163,11 @@ function birdhouseReloadView() {
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 	
 	if (app_active_page == "INDEX") {
-console.log(app_camera_source);
 		for (let key in app_camera_source) {
 			var image = document.getElementById("stream_"+key);
 			image.src = "";
 			
-			app_camera_source[key] = app_camera_source[key].replace(/\/\//g,"/");
+			app_camera_source[key] = app_camera_source[key].replaceAll("//","/");
 			app_camera_source[key] = app_camera_source[key].replace(":/","://");
 			if (app_unique_stream_url)	{ image.src = app_camera_source[key]+"?"+app_unique_stream_id; }
 			else                        { image.src = app_camera_source[key]; }
@@ -201,9 +177,6 @@ console.log(app_camera_source);
 		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
 		}
 	}	
-
-
-//-----------------------------------------
 
 function birdhouse_Links(link_list) {
 	var html = "";
@@ -216,9 +189,4 @@ function birdhouse_Links(link_list) {
 		} }
 	return html;
 	}
-
-
-//-----------------------------------------
-// EOF
-	
 

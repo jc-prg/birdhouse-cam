@@ -3,11 +3,6 @@
 //--------------------------------------
 // main charts and analysis
 //--------------------------------------
-/* INDEX:
-function load_chartJS()
-function birdhouseChart_create (title, data, type="line", sort_keys=true)
-*/
-//--------------------------------------
 
 var chartJS_loaded = false;
 var chartJS_URL    = 'https://cdn.jsdelivr.net/npm/chart.js';
@@ -24,11 +19,6 @@ var chartJS_darkColors = ["red","aquamarine","chartreuse","coral", "cadetblue",
 				"forestgreen", "goldenrod", "greenyellow", "hotpink", "indigo"
 				];
 
-//-----------------------------------------
-// load chart.js
-//-----------------------------------------
-
-
 function load_chartJS() {
 	if (chartJS_loaded == false) {
 		chartJS_script       = document.createElement('script');
@@ -38,11 +28,6 @@ function load_chartJS() {
 		(document.getElementsByTagName('HEAD')[0]||document.body).appendChild(chartJS_script);
 		}
 	}
-
-
-//-----------------------------------------
-// load chart.js
-//-----------------------------------------
 
 function birdhouseChart_create (title, data, type="line", sort_keys=true) {
 
