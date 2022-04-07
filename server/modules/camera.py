@@ -100,7 +100,26 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.running = False
         return
 
-    def start_recording(self):
+    def status(self):
+        """
+        Return recording status
+        """
+        return self.record_video_info.copy()
+
+    def filename(self, file_type="image"):
+        """
+        generate filename for images
+        """
+        if file_type == "video":
+            return self.config.imageName(image_type="video", timestamp=self.info["date_start"], camera=self.camera)
+        elif file_type == "thumb":
+            return self.config.imageName(image_type="thumb", timestamp=self.info["date_start"], camera=self.camera)
+        elif file_type == "vimages":
+            return self.config.imageName(image_type="vimages", timestamp=self.info["date_start"], camera=self.camera)
+        else:
+            return
+
+    def record_start(self):
         """
         Start recording
         """
@@ -116,7 +135,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.info["image_count"] = 0
         return
 
-    def stop_recording(self):
+    def record_stop(self):
         """
         Stop recording and trigger video creation
         """
@@ -146,7 +165,19 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.info = {}
         return
 
-    def info_recording(self):
+    def record_stop_auto(self):
+        """
+        Check if maximum length is achieved
+        """
+        if self.info["status"] == "recording":
+            max_time = float(self.info["stamp_start"] + self.max_length)
+            if max_time < float(datetime.now().timestamp()):
+                logging.info("Maximum recording time achieved ...")
+                logging.info(str(max_time) + " < " + str(datetime.now().timestamp()))
+                return True
+        return False
+
+    def record_info(self):
         """
         Get info of recording
         """
@@ -163,53 +194,6 @@ class BirdhouseVideoProcessing(threading.Thread):
             self.info["framerate"] = 0
 
         return self.info
-
-    def auto_stop(self):
-        """
-        Check if maximum length is achieved
-        """
-        if self.info["status"] == "recording":
-            max_time = float(self.info["stamp_start"] + self.max_length)
-            if max_time < float(datetime.now().timestamp()):
-                logging.info("Maximum recording time achieved ...")
-                logging.info(str(max_time) + " < " + str(datetime.now().timestamp()))
-                return True
-        return False
-
-    def status(self):
-        """
-        Return recording status
-        """
-        return self.record_video_info.copy()
-
-    def save_image(self, image):
-        """
-       Save image
-       """
-        self.info["image_count"] += 1
-        self.info["image_files"] = self.filename("vimages")
-        self.info["video_file"] = self.filename("video")
-        filename = self.info["image_files"] + str(self.info["image_count"]).zfill(self.count_length) + ".jpg"
-        path = os.path.join(self.directory, filename)
-        logging.debug("Save image as: " + path)
-
-        try:
-            return cv2.imwrite(path, image)
-        except Exception as e:
-            self._msg_error("Could not save image '" + filename + "': " + str(e))
-
-    def filename(self, file_type="image"):
-        """
-        generate filename for images
-        """
-        if file_type == "video":
-            return self.config.imageName(image_type="video", timestamp=self.info["date_start"], camera=self.camera)
-        elif file_type == "thumb":
-            return self.config.imageName(image_type="thumb", timestamp=self.info["date_start"], camera=self.camera)
-        elif file_type == "vimages":
-            return self.config.imageName(image_type="vimages", timestamp=self.info["date_start"], camera=self.camera)
-        else:
-            return
 
     def create_video(self):
         """
@@ -249,6 +233,23 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.processing = False
         logging.info("OK.")
         return
+
+    def create_video_image(self, image):
+        """
+        Save image
+        """
+        self.info["image_count"] += 1
+        self.info["image_files"] = self.filename("vimages")
+        self.info["video_file"] = self.filename("video")
+        filename = self.info["image_files"] + str(self.info["image_count"]).zfill(self.count_length) + ".jpg"
+        path = os.path.join(self.directory, filename)
+        logging.debug("Save image as: " + path)
+
+        try:
+            logging.debug("Write  image '" + path + "')")
+            return cv2.imwrite(path, image)
+        except Exception as e:
+            self._msg_error("Could not save image '" + filename + "': " + str(e))
 
     def create_video_day(self, filename, stamp, date):
         """
@@ -382,7 +383,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         }
         return response
 
-    def create_trim_video(self, video_id, start, end):
+    def create_video_trimmed(self, video_id, start, end):
         """
         create a shorter video based on date and time
         """
@@ -826,7 +827,7 @@ class BirdhouseCamera(threading.Thread):
         self.video = None
         self.image = None
         self.running = True
-        self.pause = False
+        self._paused = False
         self.error = False
         self.error_msg = ""
         self.error_time = 0
@@ -877,7 +878,7 @@ class BirdhouseCamera(threading.Thread):
             stamp = datetime.now().strftime('%H%M%S')
             config_update = self.config.update["camera_" + self.id]
 
-            while self.pause and self.running:
+            while self._paused and self.running:
                 logging.info(self.id + " = paused ...")
                 time.sleep(0.5)
 
@@ -898,16 +899,19 @@ class BirdhouseCamera(threading.Thread):
                     if not self.error and self.param["video"]["allow_recording"]:
                         self.camera_start_recording()
 
+            # [image2 @ 0x561e328229c0] Could find no file
+            # with path '/home/jean/Projekte/test/birdhouse-cam/server/../data/videos/video_cam2_20220405_221441_%08d.jpg' and index in the range 0-4
+
             # Video Recording
             elif self.video.recording:
 
-                if self.video.auto_stop():
-                    self.video.stop_recording()
+                if self.video.record_stop_auto():
+                    self.video.record_stop()
                 else:
                     image = self.get_image_raw()
                     image = self.image.normalize_raw(image)
                     self.video.image_size = self.image_size
-                    self.video.save_image(image=image)
+                    self.video.create_video_image(image=image)
 
                     if self.image_size == [0, 0]:
                         self.image_size = self.image.size_raw(image)
@@ -978,22 +982,13 @@ class BirdhouseCamera(threading.Thread):
 
         logging.info("Stopped camera (" + self.id + "/" + self.type + ").")
 
-    def wait(self):
-        """
-        Wait with recording between two pictures
-        """
-        if self.type == "pi":
-            self.camera.wait_recording(0.1)
-        if self.type == "usb":
-            time.sleep(0.1)
-
     def stop(self):
         """
         Stop recording
         """
         if not self.error and self.active:
             if self.type == "pi":
-                self.camera.stop_recording()
+                self.camera.record_stop()
                 self.camera.close()
 
             elif self.type == "usb":
@@ -1004,6 +999,12 @@ class BirdhouseCamera(threading.Thread):
                 self.video.stop()
 
         self.running = False
+
+    def pause(self, command):
+        """
+        pause image recording and reconnect try
+        """
+        self._paused = command
 
     def camera_start_pi(self):
         """
@@ -1026,7 +1027,7 @@ class BirdhouseCamera(threading.Thread):
                 self.camera.saturation = self.param["image"]["saturation"]
                 # self.camera.zoom = self.param["image"]["crop"]
                 # self.camera.annotate_background = picamera.Color('black')
-                self.camera.start_recording(self.video.output, format='mjpeg')
+                self.camera.record_start(self.video.output, format='mjpeg')
                 logging.info(self.id + ": OK.")
         except Exception as e:
             self.camera_error(True, "Starting PiCamera doesn't work: " + str(e))
@@ -1086,8 +1087,20 @@ class BirdhouseCamera(threading.Thread):
         logging.error(self.id + ": " + message + " (" + str(self.error_time) + ")")
 
     def camera_start_recording(self):
+        """
+        start recording and set current image size
+        """
         self.video.start()
         self.video.image_size = self.image_size
+
+    def camera_wait_recording(self):
+        """
+        Wait with recording between two pictures
+        """
+        if self.type == "pi":
+            self.camera.wait_recording(0.1)
+        if self.type == "usb":
+            time.sleep(0.1)
 
     def get_image(self):
         """
@@ -1099,7 +1112,7 @@ class BirdhouseCamera(threading.Thread):
         if self.type == "pi":
             try:
                 with self.video.output.condition:
-                    self.video.output.condition.wait()
+                    self.video.output.condition.camera_wait_recording()
                     encoded = self.video.output.frame
                 return encoded
             except Exception as e:
@@ -1114,7 +1127,7 @@ class BirdhouseCamera(threading.Thread):
 
         else:
             error_msg = "Camera type not supported (" + str(self.type) + ")."
-            self.camera_error(True, error_msge)
+            self.camera_error(True, error_msg)
             return ""
 
     def get_image_raw(self):
@@ -1127,7 +1140,7 @@ class BirdhouseCamera(threading.Thread):
         if self.type == "pi":
             try:
                 with self.video.output.condition:
-                    self.video.output.condition.wait()
+                    self.video.output.condition.camera_wait_recording()
                     encoded = self.video.output.frame
                 raw = self.image.convert_to_raw(encoded)
                 return raw
