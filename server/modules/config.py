@@ -55,21 +55,29 @@ class BirdhouseConfig(threading.Thread):
             if not self.exists("main"):
                 logging.info("OK.")
             else:
-                logging.error("Could not create main config file, check if directory '"+directory+"' is writable.")
+                logging.error("Could not create main config file, check if directory '" + directory + "' is writable.")
                 sys.exit()
 
-        logging.info("Read configuration from '"+self.file("main")+"' ...")
+        logging.info("Read configuration from '" + self.file("main") + "' ...")
         self.param = self.read("main")
         self.param["path"] = main_directory
         self._running = True
+        self._paused = False
 
     def run(self):
         """
         Core function (not clear what to do yet)
         """
+        count = 0
         logging.info("Starting config handler ...")
         while self._running:
             time.sleep(1)
+            if self._paused and count == 0:
+                if count == 0:
+                   logging.info("Writing config files is paused ...")
+                count += 1
+            else:
+                count = 0
         logging.info("Stopped config handler.")
 
     def stop(self):
@@ -79,6 +87,12 @@ class BirdhouseConfig(threading.Thread):
         self._running = False
 
         return
+
+    def pause(self, command):
+        """
+        pause all writing processes (under construction)
+        """
+        self._paused = command
 
     def reload(self):
         """
@@ -100,22 +114,42 @@ class BirdhouseConfig(threading.Thread):
         filename = os.path.join(self.directory(config), date, self.files[config])
         self.locked[filename] = False
 
-    def check_locked(self, filename):
+    def wait_if_locked(self, filename):
         """
         wait, while a file is locked for writing
         """
+        wait = 0.2
         count = 0
-        logging.debug("Start check locked: "+filename+" ...")
+        logging.debug("Start check locked: " + filename + " ...")
+
         if filename in self.locked and self.locked[filename]:
             while self.locked[filename]:
-                time.sleep(0.2)
+                time.sleep(wait)
                 count += 1
                 if count > 10:
                     logging.warning("Waiting! File '" + filename + "' is locked (" + str(count) + ")")
                     time.sleep(1)
+
+        elif filename == "ALL":
+            logging.info("Wait until no file is locked ...")
+            locked = len(self.locked.keys())
+            while locked > 0:
+                locked = 0
+                for key in self.locked:
+                    if self.locked[key]:
+                        locked += 1
+                time.sleep(wait)
+            logging.info("OK")
         if count > 10:
             logging.warning("File '" + filename + "' is not locked any more (" + str(count) + ")")
         return "OK"
+
+    def wait_if_paused(self):
+        """
+        wait if paused to avoid loss of data
+        """
+        while self._paused:
+            time.sleep(0.2)
 
     def directory(self, config, date=""):
         """
@@ -157,7 +191,7 @@ class BirdhouseConfig(threading.Thread):
         read json file including check if locked
         """
         try:
-            self.check_locked(filename)
+            self.wait_if_locked(filename)
             with open(filename) as json_file:
                 data = json.load(json_file)
             return data
@@ -203,14 +237,15 @@ class BirdhouseConfig(threading.Thread):
         """
         write json file including locking mechanism
         """
+        self.wait_if_locked(filename)
+        self.wait_if_paused()
         try:
-            self.check_locked(filename)
             self.locked[filename] = True
             with open(filename, 'wb') as json_file:
                 json.dump(data, codecs.getwriter('utf-8')(json_file), ensure_ascii=False, sort_keys=True, indent=4)
                 json_file.close()
             self.locked[filename] = False
-            logging.debug("Write JSON file: "+filename)
+            logging.debug("Write JSON file: " + filename)
 
         except Exception as e:
             self.locked[filename] = False
@@ -220,7 +255,7 @@ class BirdhouseConfig(threading.Thread):
     def create_copy(self, config, date="", add="copy"):
         config_file = self.file(config, date)
         content = self.read_json(config_file)
-        self.write_json(config_file+"."+add, content)
+        self.write_json(config_file + "." + add, content)
 
     def exists(self, config, date=""):
         """
@@ -281,7 +316,7 @@ class BirdhouseConfig(threading.Thread):
         change configuration base on dict in form
         dict["key1:ey2:key3"] = "value"
         """
-        logging.info("Change configuration ... "+config+"/"+date+" ... "+str(config_data))
+        logging.info("Change configuration ... " + config + "/" + date + " ... " + str(config_data))
         param = self.read(config, date)
         data_type = ""
         for key in config_data:
@@ -305,7 +340,7 @@ class BirdhouseConfig(threading.Thread):
                 try:
                     value = json.loads(value)
                 except Exception as e:
-                    logging.error("Could not load as JSON: "+str(e))
+                    logging.error("Could not load as JSON: " + str(e))
 
             if ":" not in key:
                 param[key] = value

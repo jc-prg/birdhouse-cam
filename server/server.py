@@ -33,14 +33,22 @@ def on_exit(signum, handler):
     Clean exit on Strg+C
     All shutdown functions are defined in the "finally:" section in the end of this script
     """
-    time.sleep(1)
     print('\nSTRG+C pressed! (Signal: %s)' % (signum,))
+    config.wait_if_locked("ALL")
+    config.pause(True)
+    camera.pause(True)
+
     while True:
         confirm = input('Enter "yes" to cancel program now or "no" to keep running [yes/no]: ').strip().lower()
         if confirm == 'yes':
             print("Cancel!\n")
+            config.pause(False)
+            camera.pause(False)
+            config.wait_if_locked("ALL")
             sys.exit()
         elif confirm == 'no':
+            config.pause(False)
+            camera.pause(False)
             print("Keep running!\n")
             break
         else:
@@ -290,7 +298,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if command == "INDEX":
                 content = views.index(server=self)
             elif command == "FAVORITS":
-                content = views.favorites(server=self)
+                content = views.favorite_list(camera=which_cam)
             elif command == "TODAY":
                 content = views.list(server=self)
             elif command == "TODAY_COMPLETE":
@@ -440,8 +448,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                         if camera[which_cam].video.recording:
                             logging.debug("VIDEO RECORDING")
-                            length = str(round(camera[which_cam].video.info_recording()["length"]))
-                            framerate = str(round(camera[which_cam].video.info_recording()["framerate"]))
+                            length = str(round(camera[which_cam].video.record_info()["length"]))
+                            framerate = str(round(camera[which_cam].video.record_info()["framerate"]))
                             y_position = camera[which_cam].image_size[1] - 40
                             frame = camera[which_cam].image.draw_text_raw(frame, "Recording", position=(20, y_position),
                                                                           color=(0, 0, 255), scale=1, thickness=2)
@@ -451,8 +459,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                         if camera[which_cam].video.processing:
                             logging.debug("VIDEO PROCESSING")
-                            length = str(round(camera[which_cam].video.info_recording()["length"]))
-                            image_size = str(camera[which_cam].video.info_recording()["image_size"])
+                            length = str(round(camera[which_cam].video.record_info()["length"]))
+                            image_size = str(camera[which_cam].video.record_info()["image_size"])
                             y_position = camera[which_cam].image_size[1] - 40
                             frame = camera[which_cam].image.draw_text_raw(frame, "Processing", position=(20, y_position),
                                                                           color=(0, 255, 255), scale=1, thickness=2)
@@ -465,7 +473,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     frame = camera[which_cam].image.convert_from_raw(frame)
 
                 try:
-                    camera[which_cam].wait()
+                    camera[which_cam].camera_wait_recording()
                     self.stream_video_frame(frame)
                 except Exception as e:
                     stream = False
@@ -566,17 +574,17 @@ if __name__ == "__main__":
         backup.backup_files()
         views.archive_list_update()
 
-    commands = BirdhouseCommands(config=config, camera=camera, backup=backup)
+    commands = BirdhouseCommands(config=config, camera=camera, backup=backup, views=views)
     commands.start()
 
     # check if config files for main image directory exists and create if not exists
     if not os.path.isfile(config.file("images")):
         for cam in camera:
-            camera[cam].pause = True
+            camera[cam]._paused = True
         logging.info("Create image list for main directory ...")
         backup.compare_files_init()
         for cam in camera:
-            camera[cam].pause = False
+            camera[cam]._paused = False
         logging.info("OK.")
     else:
         test_config = config.read(config="images")
