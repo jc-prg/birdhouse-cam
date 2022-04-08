@@ -264,53 +264,6 @@ class BirdhouseConfig(threading.Thread):
         config_file = os.path.join(self.directory(config), date, self.files[config])
         return os.path.isfile(config_file)
 
-    def imageName(self, image_type, timestamp, camera=""):
-        """
-        set image name
-        """
-        if camera != "":
-            camera += '_'
-
-        if image_type == "lowres":
-            return "image_" + camera + timestamp + ".jpg"
-        elif image_type == "hires":
-            return "image_" + camera + "big_" + timestamp + ".jpeg"
-        elif image_type == "thumb":
-            return "video_" + camera + timestamp + "_thumb.jpeg"
-        elif image_type == "video":
-            return "video_" + camera + timestamp + ".mp4"
-        elif image_type == "vimages":
-            return "video_" + camera + timestamp + "_"
-        else:
-            return "image_" + camera + timestamp + ".jpg"
-
-    def imageName2Param(self, filename):
-        """
-        Analyze image name ...
-        """
-        if filename.endswith(".jpg"):
-            filename = filename.replace(".jpg", "")
-        elif filename.endswith(".jpeg"):
-            filename = filename.replace(".jpeg", "")
-        else:
-            return {"error": "not an image"}
-
-        parts = filename.split("_")
-        info = {"stamp": '', "type": 'lowres', "cam": 'cam1'}
-        if len(parts) == 2:
-            info["stamp"] = parts[1]
-        if len(parts) == 3 and parts[1] == "big":
-            info["stamp"] = parts[2]
-            info["type"] = "hires"
-        if len(parts) == 3:
-            info["cam"] = parts[1]
-            info["stamp"] = parts[2]
-        if len(parts) == 4:
-            info["cam"] = parts[1]
-            info["type"] = "hires"
-            info["stamp"] = parts[3]
-        return info
-
     def change_config(self, config, config_data, date=""):
         """
         change configuration base on dict in form
@@ -360,3 +313,53 @@ class BirdhouseConfig(threading.Thread):
             self.param = self.read(config, date)
             for key in self.update:
                 self.update[key] = True
+
+    @staticmethod
+    def filename_image(image_type, timestamp, camera=""):
+        """
+        set image name
+        """
+        if camera != "":
+            camera += '_'
+
+        if image_type == "lowres":
+            return "image_" + camera + timestamp + ".jpg"
+        elif image_type == "hires":
+            return "image_" + camera + "big_" + timestamp + ".jpeg"
+        elif image_type == "thumb":
+            return "video_" + camera + timestamp + "_thumb.jpeg"
+        elif image_type == "video":
+            return "video_" + camera + timestamp + ".mp4"
+        elif image_type == "vimages":
+            return "video_" + camera + timestamp + "_"
+        else:
+            return "image_" + camera + timestamp + ".jpg"
+
+    @staticmethod
+    def filename_image_get_param(filename):
+        """
+        Analyze image name ...
+        """
+        if filename.endswith(".jpg"):
+            filename = filename.replace(".jpg", "")
+        elif filename.endswith(".jpeg"):
+            filename = filename.replace(".jpeg", "")
+        else:
+            return {"error": "not an image"}
+
+        parts = filename.split("_")
+        info = {"stamp": '', "type": 'lowres', "cam": 'cam1'}
+        if len(parts) == 2:
+            info["stamp"] = parts[1]
+        if len(parts) == 3 and parts[1] == "big":
+            info["stamp"] = parts[2]
+            info["type"] = "hires"
+        if len(parts) == 3:
+            info["cam"] = parts[1]
+            info["stamp"] = parts[2]
+        if len(parts) == 4:
+            info["cam"] = parts[1]
+            info["type"] = "hires"
+            info["stamp"] = parts[3]
+        return info
+
