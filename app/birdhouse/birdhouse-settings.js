@@ -59,6 +59,7 @@ function birdhouse_app_settings (name="Settings") {
 		html_entry = tab.start();
 		html_entry += tab.row("Window:", document.body.clientWidth + "x" + document.body.clientHeight );
 		html_entry += tab.row("Position:", "<div id='scrollPosition'>0 px</div>" );
+		html_entry += tab.row("Format:", print_display_definition());
 		html_entry += tab.end();
 
         html += birdhouse_OtherGroup( "display_info", "Display information", html_entry, false );

@@ -58,7 +58,7 @@ function birdhouse_OtherGroupHeader( key, title, header_open ) {
 }
 
 
-function birdhouse_ImageGroup( title, entries, entry_count, entry_category, header_open, admin=false, video_short=false ) {
+function birdhouse_ImageGroup( title, entries, entry_count, entry_category, header_open, admin=false, video_short=false, same_img_size=false ) {
 	var count     = {};
 	var html      = "";
 	var image_ids = "";
@@ -115,7 +115,7 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
 		key   = entry_keys[i];
 		var img_title = key;
 		//if (entry_keys[key]["type"] == "video") {  title = entry_keys[key]["date"]; }
-		html += birdhouse_Image(title=img_title, entry=entries[key], header_open=header_open, admin=admin, video_short=video_short, group_id=group_id);
+		html += birdhouse_Image(title=img_title, entry=entries[key], header_open=header_open, admin=admin, video_short=video_short, group_id=group_id, same_img_size=same_img_size);
     }
 
 	html += "</div>";
@@ -166,7 +166,7 @@ function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 	return html;
 	}
 
-function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false, group_id="") {
+function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false, group_id="", same_img_size=false) {
 	var html        = "";
 	var play_button = "";
 	var dont_load   = "";
@@ -273,8 +273,9 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		star        = "<div id='s_"+img_id2+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id2+"' src='"+img_dir+"star"+img_star+".png'       onclick='"+onclick_star+"'/>";
 		recycle     = "<div id='d_"+img_id2+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id2+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
     }
-
-	html += "<div class='image_container'>";
+    var height = "";
+    if (!same_img_size) { height = " fixed_height"; }
+	html += "<div class='image_container"+height+"'>";
 	html += "  <div class='star'>"+star+"</div>";
 	html += "  <div class='recycle'>"+recycle+"</div>";
 	html += "  <div class='thumbnail_container'>";

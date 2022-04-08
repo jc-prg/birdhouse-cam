@@ -1,35 +1,50 @@
-/* size of iphone XS */
-
-@media (min-width: 375px) {
-    .livestream_main { max-width : 330px; }
-    .separator_group { width  : 328px; font-size : 10px; }
-    .thumbnail       { width  : 104px; }
-    .image_container { height : 195px; }
+/* iPhone X/XS */
+@media only screen and
+    (device-width : 375px) and (device-height : 812px) and (orientation : portrait)  {
     }
-    
-/* iPhone XS: 2436x1125px at 458ppi */
-@media only screen 
-  and (device-width : 375px) and (device-height : 812px) and (orientation : landscape)
-  {
-        .thumbnail       { width : 100%; max-width : 155px; max-height : 210px; }
-        .image_container { height  : 230px; }
-        .recycle         { width   : 30px;  height   : 30px;  top : 30px; }
-        .recycle_img     { width   : 30px;  height   : 30px; }
-        .star            { width   : 30px;  height   : 30px;  top : 25px; }
-        .star_img        { width   : 30px;  height   : 30px; }
+@media only screen and
+    (device-width : 375px) and (device-height : 812px) and (orientation : landscape) {
+}
+/* iPhone SE2 */
+@media only screen and
+    (device-width : 375px) and (device-height : 667px) and (orientation : portrait)  {
+    }
+@media only screen and
+    (device-width : 375px) and (device-height : 667px) and (orientation : landscape) {
+    }
 
-        .frame_column.wide { width : 695px; font-size: 8px; }
-        h2 { font-size: 18px; }
+/* iPhone SE2 & X/XS */
 
-  }
+@media only screen and
+    (device-width : 375px) and (orientation : portrait) {
 
-@media only screen 
-    and (device-width : 375px) 
-    and (device-height : 812px) 
-    and (orientation : portrait)
-    and (-webkit-device-pixel-ratio : 3) { }
+        .separator_group     { width  : 328px; font-size : 11px; }
+        .thumbnail           { width :  98%;  }
+        .thumbnail_container { width : 80px; }
 
-h2 { font8px; }
+}
+
+/* iPhone XS: landscape */
+
+@media only screen and
+    (device-width : 375px) and (device-height : 812px) and (orientation : landscape) {
+
+        .livestream_main { max-width : 330px; }
+        .separator_group { font-size : 9px; }
+
+        .image_container.fixed_height { height  : 230px; }
+
+        .thumbnail           { width :  98%;  }
+        .thumbnail_container { width : 130px; }
+
+        .recycle         { width   : 20px;  height   : 20px;  top : 12px; }
+        .recycle_img     { width   : 20px;  height   : 20px; }
+        .star            { width   : 20px;  height   : 20px;  top : 5px; }
+        .star_img        { width   : 20px;  height   : 20px; }
+
+        .frame_column.wide { width : 695px; }
+    }
+
 /* ----------*/
 
 

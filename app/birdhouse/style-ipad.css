@@ -1,3 +1,22 @@
+
+/* iPad Air */
+@media only screen and
+    (device-width : 820px) and (device-height : 1180px) and (orientation : portrait) {
+    }
+@media only screen and
+    (device-width : 820px) and (device-height : 1180px) and (orientation : landscape) {
+    }
+
+/* iPad */
+@media only screen and
+    (device-width : 810px) and (device-height : 1080px) and (orientation : portrait) {
+    }
+@media only screen and
+    (device-width : 810px) and (device-height : 1080px) and (orientation : landscape) {
+    }
+
+
+
 /* iPad 3 & 4 – Landscape */
 @media only screen 
     and (min-device-width : 768px) 
@@ -5,9 +24,9 @@
     and (orientation : landscape)
     and (-webkit-min-device-pixel-ratio: 2) { 
     
+        .image_container.fixed_height { height  : 240px; }
+        .thumbnail                    { width   : 155px; }
 	    .frame_column.wide { width : 900px; }
-        .thumbnail       { width   : 155px; }
-        .image_container { height  : 240px; }
         .recycle         { width   : 30px;  height   : 30px;  top : 30px; }
         .recycle_img     { width   : 30px;  height   : 30px; }
         .star            { width   : 30px;  height   : 30px;  top : 25px; }
@@ -24,7 +43,7 @@
     
     	.frame_column.wide { width : 760px; }
         .thumbnail       { width   : 155px; }
-        .image_container { height  : 240px; }
+        .image_container.fixed_height { height  : 240px; }
         .recycle         { width   : 30px;  height   : 30px;  top : 30px; }
         .recycle_img     { width   : 30px;  height   : 30px; }
         .star            { width   : 30px;  height   : 30px;  top : 25px; }

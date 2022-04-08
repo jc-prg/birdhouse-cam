@@ -5,8 +5,8 @@
 @media (min-width: 705px) {
 
     .livestream_main { max-width : 640px; }
-    .separator_group { width : 98%; font-size : 10px; }
-    .image_container { height : 215px; }
+    .separator_group { width : 98%; }
+    .image_container.fixed_height { height : 215px; }
 
     .camera_info_image { width : 30%; }
     .camera_info_text  { width : 65%; }
