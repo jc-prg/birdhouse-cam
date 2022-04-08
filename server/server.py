@@ -36,7 +36,8 @@ def on_exit(signum, handler):
     print('\nSTRG+C pressed! (Signal: %s)' % (signum,))
     config.wait_if_locked("ALL")
     config.pause(True)
-    camera.pause(True)
+    for key in camera:
+        camera[key].pause(True)
 
     while True:
         confirm = input('Enter "yes" to cancel program now or "no" to keep running [yes/no]: ').strip().lower()
