@@ -362,7 +362,7 @@ class BirdhouseViews(threading.Thread):
                 content["entries_delete"] = files_recycle
 
         content["subtitle"] += " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
-        content["view_count"] = ["all", "star", "detect"]
+        content["view_count"] = ["all", "star", "detect", "data"]
         content["chart_data"] = create_chart_data(content["entries"].copy())
         return content
 
