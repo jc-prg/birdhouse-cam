@@ -44,12 +44,14 @@ def on_exit(signum, handler):
         if confirm == 'yes':
             print("Cancel!\n")
             config.pause(False)
-            camera.pause(False)
+            for key in camera:
+                camera[key].pause(False)
             config.wait_if_locked("ALL")
             sys.exit()
         elif confirm == 'no':
             config.pause(False)
-            camera.pause(False)
+            for key in camera:
+                camera[key].pause(False)
             print("Keep running!\n")
             break
         else:
