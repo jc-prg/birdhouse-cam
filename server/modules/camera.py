@@ -987,7 +987,7 @@ class BirdhouseCamera(threading.Thread):
         """
         if not self.error and self.active:
             if self.type == "pi":
-                self.camera.record_stop()
+                self.camera.stop_recording()
                 self.camera.close()
 
             elif self.type == "usb":
