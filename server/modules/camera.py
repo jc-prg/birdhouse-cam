@@ -111,11 +111,11 @@ class BirdhouseVideoProcessing(threading.Thread):
         generate filename for images
         """
         if file_type == "video":
-            return self.config.imageName(image_type="video", timestamp=self.info["date_start"], camera=self.camera)
+            return self.config.filename_image(image_type="video", timestamp=self.info["date_start"], camera=self.camera)
         elif file_type == "thumb":
-            return self.config.imageName(image_type="thumb", timestamp=self.info["date_start"], camera=self.camera)
+            return self.config.filename_image(image_type="thumb", timestamp=self.info["date_start"], camera=self.camera)
         elif file_type == "vimages":
-            return self.config.imageName(image_type="vimages", timestamp=self.info["date_start"], camera=self.camera)
+            return self.config.filename_image(image_type="vimages", timestamp=self.info["date_start"], camera=self.camera)
         else:
             return
 
@@ -202,8 +202,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.processing = True
         cmd_create = self.ffmpeg_cmd
         cmd_create = cmd_create.replace("{INPUT_FILENAMES}", os.path.join(self.config.directory("videos"),
-                                                                          self.filename("vimages") + "%" + str(
-                                                                              self.count_length).zfill(2) + "d.jpg"))
+                                        self.filename("vimages") + "%" + str(self.count_length).zfill(2) + "d.jpg"))
         cmd_create = cmd_create.replace("{OUTPUT_FILENAME}",
                                         os.path.join(self.config.directory("videos"), self.filename("video")))
         cmd_create = cmd_create.replace("{FRAMERATE}", str(round(self.info["framerate"])))
@@ -946,8 +945,8 @@ class BirdhouseCamera(threading.Thread):
 
                         image_info = {
                             "camera": self.id,
-                            "hires": self.config.imageName("hires", stamp, self.id),
-                            "lowres": self.config.imageName("lowres", stamp, self.id),
+                            "hires": self.config.filename_image("hires", stamp, self.id),
+                            "lowres": self.config.filename_image("lowres", stamp, self.id),
                             "compare": (stamp, self.previous_stamp),
                             "datestamp": datetime.now().strftime("%Y%m%d"),
                             "date": datetime.now().strftime("%d.%m.%Y"),
@@ -965,9 +964,9 @@ class BirdhouseCamera(threading.Thread):
                                 self.write_cache(data_type="sensor", timestamp=stamp, data=sensor_data)
 
                         path_lowres = os.path.join(self.config.directory("images"),
-                                                   self.config.imageName("lowres", stamp, self.id))
+                                                   self.config.filename_image("lowres", stamp, self.id))
                         path_hires = os.path.join(self.config.directory("images"),
-                                                  self.config.imageName("hires", stamp, self.id))
+                                                  self.config.filename_image("hires", stamp, self.id))
 
                         logging.debug("WRITE:" + path_lowres)
 
