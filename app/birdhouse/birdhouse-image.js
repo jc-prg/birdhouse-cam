@@ -88,9 +88,8 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
 			    image_ids += " " + img_id2;
             }
 
-			if (count["data"] == undefined) {
-			    if (count["all"] != undefined) { count["data"] = 0; }
-			    else if (entries[key]["type"] == "data") { count["data"] += 1; }
+			if (count["data"] == undefined && count["all"] != undefined) { count["data"] = 0; }
+			if (count["data"] != undefined && entries[key]["type"] == "data") { count["data"] += 1; }
 			}
         }
 		if (count["all"] != undefined) { count["all"] -= count["data"]; }
