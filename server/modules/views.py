@@ -400,7 +400,7 @@ class BirdhouseViews(threading.Thread):
             files_total = 0
 
             image_title = str(self.config.param["backup"]["time"]) + str(self.camera[cam].param["image_save"]["seconds"][0])
-            image_today = self.config.imageName(image_type="lowres", timestamp=image_title, camera=cam)
+            image_today = self.config.filename_image(image_type="lowres", timestamp=image_title, camera=cam)
             image = os.path.join(self.config.directory(config="images"), image_today)
 
             for directory in dir_list:
