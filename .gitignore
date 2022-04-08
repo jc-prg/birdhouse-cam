@@ -12,3 +12,6 @@ tryout/
 /data/couchdb/_dbs.couch
 /data/couchdb/_nodes.couch
 *.sicher
+
+server/__pycache__/
+server/modules/dht11/__pycache__/
