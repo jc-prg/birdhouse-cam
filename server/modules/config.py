@@ -75,7 +75,7 @@ class BirdhouseConfig(threading.Thread):
             if self._paused and count == 0:
                 if count == 0:
                    logging.info("Writing config files is paused ...")
-                count += 1
+                   count += 1
             else:
                 count = 0
         logging.info("Stopped config handler.")
