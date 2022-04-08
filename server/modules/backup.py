@@ -196,7 +196,7 @@ class BirdhouseArchive(threading.Thread):
         for file in file_list:
             if ".jpg" in file:
 
-                analyze = self.config.imageName2Param(filename=file)
+                analyze = self.config.filename_image_get_param(filename=file)
                 if "error" in analyze:
                     continue
 
@@ -206,11 +206,11 @@ class BirdhouseArchive(threading.Thread):
                 files[time]["camera"] = which_cam
 
                 if "cam" in file:
-                    files[time]["lowres"] = self.config.imageName(image_type="lowres", timestamp=time, camera=which_cam)
-                    files[time]["hires"] = self.config.imageName(image_type="hires", timestamp=time, camera=which_cam)
+                    files[time]["lowres"] = self.config.filename_image(image_type="lowres", timestamp=time, camera=which_cam)
+                    files[time]["hires"] = self.config.filename_image(image_type="hires", timestamp=time, camera=which_cam)
                 else:
-                    files[time]["lowres"] = self.config.imageName(image_type="lowres", timestamp=time)
-                    files[time]["hires"] = self.config.imageName(image_type="hires", timestamp=time)
+                    files[time]["lowres"] = self.config.filename_image(image_type="lowres", timestamp=time)
+                    files[time]["hires"] = self.config.filename_image(image_type="hires", timestamp=time)
 
                 if subdir == "":
                     file_dir = os.path.join(self.config.directory(config='images'), file)
@@ -278,8 +278,8 @@ class BirdhouseArchive(threading.Thread):
                         # if images are to archived
                         if self.camera[cam].image_to_select(timestamp=stamp, file_info=files[stamp]):
                             count += 1
-                            file_lowres = self.config.imageName(image_type="lowres", timestamp=stamp, camera=cam)
-                            file_hires = self.config.imageName(image_type="hires", timestamp=stamp, camera=cam)
+                            file_lowres = self.config.filename_image(image_type="lowres", timestamp=stamp, camera=cam)
+                            file_hires = self.config.filename_image(image_type="hires", timestamp=stamp, camera=cam)
 
                             if "similarity" not in update_new:
                                 update_new["similarity"] = 100
@@ -316,8 +316,8 @@ class BirdhouseArchive(threading.Thread):
                                 del update_new["compare"]
                             if "favorit" in update_new:
                                 del update_new["favorit"]
-                            if "delete" in update_new:
-                                del update_new["delete"]
+                            if "to_be_deleted" in update_new:
+                                del update_new["to_be_deleted"]
 
                         files_backup["files"][stamp] = update_new.copy()
 
@@ -342,6 +342,9 @@ class BirdhouseArchive(threading.Thread):
         """
         delete files which are marked to be recycled for a specific date + database entry
         """
+
+        ###### -> don't delete data entries => see ARCHIVE 7.4. CAM2
+
         response = {}
         files = {}
 
