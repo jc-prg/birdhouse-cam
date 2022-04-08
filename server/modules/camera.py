@@ -871,14 +871,20 @@ class BirdhouseCamera(threading.Thread):
         Start recording for livestream and save images every x seconds
         """
         similarity = 0
+        count_paused = 0
         while self.running:
             seconds = datetime.now().strftime('%S')
             hours = datetime.now().strftime('%H')
             stamp = datetime.now().strftime('%H%M%S')
             config_update = self.config.update["camera_" + self.id]
 
+            if not self._paused:
+                count_paused = 0
+
             while self._paused and self.running:
-                logging.info(self.id + " = paused ...")
+                if count_paused == 0:
+                    logging.info("Recording images with " +self.id + " paused ...")
+                    count_paused += 1
                 time.sleep(0.5)
 
             if config_update:
