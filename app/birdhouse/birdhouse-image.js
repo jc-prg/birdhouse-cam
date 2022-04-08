@@ -74,12 +74,24 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
 			img_id2 += entries[key]["directory"] + entries[key]["lowres"];
 			img_id2 = img_id2.replaceAll( "/", "_");
 
-			if (count["star"] != undefined && parseInt(entries[key]["favorit"]) == 1) { count["star"]    += 1; }
-			else if (count["recycle"] != undefined && parseInt(entries[key]["to_be_deleted"]) == 1)	{ count["recycle"] += 1; }
-			else if (count["detect"] != undefined && parseInt(entries[key]["detect"]) == 1) { count["detect"]  += 1; }
-			if (header_open == false && entries[key]["lowres"] != undefined) { image_ids += " " + img_id2; }
-			if (count["all"] != undefined && count["data"] == undefined) { count["data"] = 0; }
-			if (count["data"] != undefined && entries[key]["type"] == "data") { count["data"] += 1; }
+			if (count["star"] != undefined && parseInt(entries[key]["favorit"]) == 1) {
+			    count["star"]    += 1;
+            }
+			else if (count["recycle"] != undefined && entries[key]["type"] != "data" && (entries[key]["to_be_deleted"]) == 1)	{
+			    count["recycle"] += 1;
+            }
+			else if (count["detect"] != undefined && parseInt(entries[key]["detect"]) == 1) {
+			    count["detect"]  += 1;
+            }
+
+			if (header_open == false && entries[key]["lowres"] != undefined) {
+			    image_ids += " " + img_id2;
+            }
+
+			if (count["data"] == undefined) {
+			    if (count["all"] != undefined) { count["data"] = 0; }
+			    else if (entries[key]["type"] == "data") { count["data"] += 1; }
+			}
         }
 		if (count["all"] != undefined) { count["all"] -= count["data"]; }
     }
