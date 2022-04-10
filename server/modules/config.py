@@ -488,9 +488,9 @@ class BirdhouseConfig(threading.Thread):
             time.sleep(1)
             if self._paused and count == 0:
                 if count == 0:
-                   logging.info("Writing config files is paused ...")
-                   count += 1
-            else:
+                    logging.info("Writing config files is paused ...")
+                    count += 1
+            elif not self._paused:
                 count = 0
         logging.info("Stopped config handler.")
 
