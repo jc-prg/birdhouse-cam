@@ -197,7 +197,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 self.info["framerate"] = 0
             self.create_video()
             self.info["status"] = "finished"
-            self.config.queue.entry_add(config="videos", date="", key=self.info["date_start"], entry=self.info)
+            self.config.queue.entry_add(config="videos", date="", key=self.info["date_start"], entry=self.info.copy())
             self.info = {}
         elif not self.camera.active:
             response["error"] = "camera is not active " + self.camera.id
