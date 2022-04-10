@@ -670,6 +670,13 @@ class BirdhouseImageProcessing(object):
             else:
                 (x_start, y_start, x_end, y_end) = crop_area
 
+            width = x_end - x_start
+            height = y_end - y_start
+            if round(width/2) != width/2:
+                x_end -= 1
+            if round(height/2) != height/2:
+                y_end -= 1
+
             logging.debug("H: " + str(y_start) + "-" + str(y_end) + " / W: " + str(x_start) + "-" + str(x_end))
             frame_cropped = raw[y_start:y_end, x_start:x_end]
             return frame_cropped, crop_area
