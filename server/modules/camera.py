@@ -433,6 +433,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         if len(param) < 3:
             response["result"] = "Error: Parameters are missing "
             response["result"] += "(/create-short-video/video-id/start-timecode/end-timecode/which-cam/)"
+            ### error in error message
             logging.warning("Create video of daily images ... Parameters are missing.")
 
         else:

@@ -209,7 +209,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         REST API for javascript commands e.g. to change values in runtime
         """
         logging.debug("POST API request with '" + self.path + "'.")
-        path, which_cam = views.selected_camera(self.path)
         response = {}
 
         if not self.admin_allowed():
@@ -220,6 +219,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if self.path.startswith("/api"):
             self.path = self.path.replace("/api", "")
 
+        param = self.path.split("/")
+        if self.path.endswith("/"):
+            which_cam = param[len(param)-2]
+        else:
+            which_cam = param[len(param)-1]
+
         if self.path.startswith("/favorit/"):
             response = config.queue.set_status_favorite(self.path)
             views.favorite_list_update()
@@ -227,11 +232,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = config.queue.set_status_recycle(self.path)
         elif self.path.startswith("/recycle-range/"):
             response = config.queue.set_status_recycle_range(self.path)
-
         elif self.path.startswith("/start/recording/"):
             response = camera[which_cam].video.record_start()
         elif self.path.startswith("/stop/recording/"):
             response = camera[which_cam].video.record_stop()
+
+        # to be tested after refactoring
         elif self.path.startswith("/create-short-video/"):
             response = camera[which_cam].video.create_video_trimmed_queue(self.path)
         elif self.path.startswith("/create-day-video/"):
