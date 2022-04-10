@@ -243,8 +243,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = camera[which_cam].video.record_start()
         elif self.path.startswith("/stop/recording/"):
             response = camera[which_cam].video.record_stop()
-
-        # to be tested after refactoring
         elif self.path.startswith("/create-short-video/"):
             response = camera[which_cam].video.create_video_trimmed_queue(self.path)
         elif self.path.startswith("/create-day-video/"):
