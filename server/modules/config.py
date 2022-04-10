@@ -115,8 +115,8 @@ class BirdhouseConfigQueue(threading.Thread):
             if start_time + self.queue_wait < time.time():
                 start_time = time.time()
 
+                count_entries = 0
                 for config_file in config_files:
-                    count_entries = 0
 
                     # EDIT QUEUE: today, video (without date)
                     if config_file != "backup" and len(self.edit_queue[config_file]) > 0:
@@ -215,9 +215,9 @@ class BirdhouseConfigQueue(threading.Thread):
                             self.config.unlock(config_file, date)
                             self.config.write(config_file, entry_data, date)
 
-                    if count_entries > 0:
-                        logging.info("Queue: wrote "+str(count_entries)+" entries to config files ("+str(round(time.time()-start_time, 2))+"s)")
-                    # self.views.favorite_list_update()
+                if count_entries > 0:
+                    logging.info("Queue: wrote "+str(count_entries)+" entries to config files (" +
+                                 str(round(time.time()-start_time, 2))+"s/"+str(round(time.time()))+")")
 
             time.sleep(1)
 
