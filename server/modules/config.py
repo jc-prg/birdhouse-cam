@@ -224,7 +224,7 @@ class BirdhouseConfigQueue(threading.Thread):
                             self.config.write(config_file, entry_data, date)
 
                 if count_entries > 0:
-                    logging.info("Queue: wrote "+str(count_entries)+" entries to config files (" +
+                    logging.info("Queue: wrote "+str(count_entries)+" entries to "+str(count_files)+" config files (" +
                                  str(round(time.time()-start_time, 2))+"s/"+str(round(time.time()))+")")
 
             time.sleep(1)
