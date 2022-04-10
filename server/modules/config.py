@@ -612,8 +612,10 @@ class BirdhouseConfig(threading.Thread):
         """
         read dict from json config file
         """
-        config_file = self.file_path(config, date)
-        config_data = self.json.read(config_file)
+        config_data = {}
+        if self.exists(config, date):
+            config_file = self.file_path(config, date)
+            config_data = self.json.read(config_file)
         return config_data.copy()
 
     def read_cache(self, config, date=""):
