@@ -597,11 +597,11 @@ if __name__ == "__main__":
     # check if config files for main image directory exists and create if not exists
     if not os.path.isfile(config.file_path("images")):
         for cam in camera:
-            camera[cam]._paused = True
+            camera[cam].pause(True)
         logging.info("Create image list for main directory ...")
         backup.compare_files_init()
         for cam in camera:
-            camera[cam]._paused = False
+            camera[cam].pause(False)
         logging.info("OK.")
     else:
         test_config = config.read(config="images")

@@ -54,7 +54,7 @@ class BirdhouseArchive(threading.Thread):
         recreate video config file, if not exists
         """
         path = self.config.directory(config="videos")
-        logging.info("Reading files from path: " + path)
+        logging.debug("Reading files from path: " + path)
 
         file_list = [f for f in os.listdir(path) if
                      os.path.isfile(os.path.join(path, f)) and ".mp4" in f and not "short" in f]
@@ -62,12 +62,12 @@ class BirdhouseArchive(threading.Thread):
         files = {}
         for file in file_list:
 
-            logging.info(file)
+            logging.info(" - "+file)
             file_name = file.split(".")
             param = file_name[0].split("_")  # video_cam2_20210428_175551*
             fid = param[2] + "_" + param[3]
-            date = param[2][6:8] + "." + param[2][4:6] + "." + param[2][0:4] + " " + \
-                   param[3][0:2] + ":" + param[3][2:4] + ":" + param[3][4:6]
+            date = param[2][6:8] + "." + param[2][4:6] + "." + param[2][0:4] + " "
+            date += param[3][0:2] + ":" + param[3][2:4] + ":" + param[3][4:6]
             file_short = ""
             file_short_length = 0
 
@@ -114,8 +114,7 @@ class BirdhouseArchive(threading.Thread):
                 "video_file_short": file_short,
                 "video_file_short_length": file_short_length,
             }
-
-        self.config.write(config="videos", config_data=files)
+            self.config.queue.add_to_edit_queue(config="videos", date="", key=fid, entry=files[fid])
 
     def compare_files_init(self, date=""):
         """

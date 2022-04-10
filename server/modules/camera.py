@@ -163,7 +163,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         response = {"command": ["start recording"]}
 
         if self.camera.active and not self.camera.error and not self.recording:
-            logging.info("Starting video recording ...")
+            logging.info("Starting video recording ("+self.id+") ...")
             self.recording = True
             self.info = {
                 "date": datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
@@ -187,7 +187,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         """
         response = {"command": ["stop recording"]}
         if self.camera.active and not self.camera.error and self.recording:
-            logging.info("Stopping video recording ...")
+            logging.info("Stopping video recording ("+self.id+") ...")
             self.recording = False
             self.info["date_end"] = datetime.now().strftime('%Y%m%d_%H%M%S')
             self.info["stamp_end"] = datetime.now().timestamp()
