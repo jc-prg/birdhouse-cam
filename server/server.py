@@ -250,7 +250,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.startswith("/create-day-video/"):
             response = camera[which_cam].video.create_video_day_queue(self.path)
         elif self.path.startswith('/remove/'):
-            response = backup.delete_marked_files_call(self.path)
+            response = backup.delete_marked_files(self.path)
 
         elif self.path.startswith("/edit_presets/"):
             param_string = self.path.replace("/edit_presets/", "")

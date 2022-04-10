@@ -162,8 +162,7 @@ class BirdhouseArchive(threading.Thread):
                         image_current = cv2.imread(filename)
                         image_current = cv2.cvtColor(image_current, cv2.COLOR_BGR2GRAY)
                     except Exception as e:
-                        logging.error("Could not load image: " + filename)
-                        logging.error(e)
+                        logging.error("Could not load image: " + filename + " ... "+str(e))
 
                     if len(filename_last) > 0:
                         detection_area = self.camera[cam].param["similarity"]["detection_area"]
@@ -176,9 +175,8 @@ class BirdhouseArchive(threading.Thread):
                         files_new[key]["similarity"] = 0
 
                     if init:
-                        logging.info(
-                            cam + ": " + filename_current + "  " + str(count) + "/" + str(len(files)) + " - " + str(
-                                files_new[key]["similarity"]) + "%")
+                        logging.info(" - " + cam + ": " + filename_current + "  " + str(count) + "/" + str(len(files)) +
+                                     " - " + str(files_new[key]["similarity"]) + "%")
 
                     filename_last = filename_current
                     image_last = image_current
@@ -264,14 +262,12 @@ class BirdhouseArchive(threading.Thread):
             stamps = list(reversed(sorted(files.keys())))
             dir_source = self.config.directory(config="images")
             count = 0
+            count_data = 0
+            count_other_date = 0
             backup_size = 0
 
             for cam in self.camera:
-                count = 0
-                count_data = 0
-                count_other_date = 0
                 for stamp in stamps:
-
                     # if files are to be archived
                     if files[stamp]["datestamp"] == backup_date and files[stamp]["camera"] == cam:
                         update_new = files[stamp].copy()
@@ -339,41 +335,60 @@ class BirdhouseArchive(threading.Thread):
 
             self.config.write(config="backup", config_data=files_backup, date=directory)
 
-    def delete_marked_files(self, file_type="image", date="", delete_not_used=False):
+    def delete_marked_files(self, path):
+        """
+        set / unset recycling
+        """
+        param = path.split("/")
+        response = {"command": ["delete files that are marked as 'to_be_deleted'", param]}
+
+        if "delete_not_used" in param:
+            delete_not_used = True
+        else:
+            delete_not_used = False
+
+        if param[2] == "backup":
+            response = self.delete_marked_files_exec(config="images", date=param[3], delete_not_used=delete_not_used)
+        elif param[2] == "today":
+            response = self.delete_marked_files_exec(config="images", date="", delete_not_used=delete_not_used)
+        elif param[2] == "video":
+            response = self.delete_marked_files_exec(config="videos", date="", delete_not_used=delete_not_used)
+        else:
+            response["error"] = "not clear, which files shall be deleted"
+
+        return response
+
+    def delete_marked_files_exec(self, config="images", date="", delete_not_used=False):
         """
         delete files which are marked to be recycled for a specific date + database entry
         """
-
-        ###### -> don't delete data entries => see ARCHIVE 7.4. CAM2
-
         response = {}
-        files = {}
+        file_types = ["lowres", "hires", "video_file", "thumbnail"]
+        files_in_config = []
+        delete_keys = []
 
-        if file_type == "image":
-            if date == "":
-                files = self.config.read_cache(config='images')
-                directory = self.config.directory(config='images')
-            else:
-                config_file = self.config.read_cache(config='backup', date=date)
-                directory = self.config.directory(config='backup', date=date)
-                files = config_file["files"]
-        elif file_type == "video":
+        if config == "images" and date == "":
+            files = self.config.read_cache(config='images')
+            directory = self.config.directory(config='images')
+        elif config == "images":
+            config_file = self.config.read_cache(config='backup', date=date)
+            directory = self.config.directory(config='backup', date=date)
+            files = config_file["files"]
+        elif config == "videos":
             files = self.config.read_cache(config='videos')
             directory = self.config.directory(config='videos')
         else:
             response["error"] = "file type not supported"
+            return response
 
-        file_types = ["lowres", "hires", "video_file", "thumbnail"]
-        files_in_dir = [f for f in os.listdir(directory) if
-                        os.path.isfile(os.path.join(directory, f)) and not ".json" in f]
-        files_in_config = []
-        delete_keys = []
-
+        files_in_dir = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and ".json" not in f]
         count = 0
         for key in files:
-
             if date != "":
                 check_date = date[6:8] + "." + date[4:6] + "." + date[0:4]
+            else:
+                check_date = ""
+
             if date == "" or ("date" in files[key] and check_date in files[key]["date"]):
                 for file_type in file_types:
                     if file_type in files[key]:
@@ -390,17 +405,10 @@ class BirdhouseArchive(threading.Thread):
                         if os.path.isfile(os.path.join(directory, files[key][file_type])):
                             os.remove(os.path.join(directory, files[key][file_type]))
                             logging.debug("Delete - "+str(key)+": "+os.path.join(directory, files[key][file_type]))
-                # del files[key]
-                del files[key]["hires"]
-                del files[key]["lowres"]
-                del files[key]["size"]
-                del files[key]["to_be_deleted"]
-                del files[key]["favorit"]
-                files[key]["type"] = "data"
+
+                self.config.queue.entry_keep_data(config=config, date="", key=key)
 
             except Exception as e:
-                if "error" not in response:
-                    response["error"] = ""
                 logging.error("Error while deleting file '" + key + "' ... " + str(e))
                 response["error"] += "delete file '" + key + "': " + str(e) + "\n"
 
@@ -415,39 +423,6 @@ class BirdhouseArchive(threading.Thread):
         response["deleted_keys"] = delete_keys
         response["files_not_used"] = len(files_in_dir) - len(files_in_config)
         response["files_used"] = len(files_in_config)
-
-        if file_type == "image":
-            if date == "":
-                self.config.write(config='images', config_data=files)
-            else:
-                config_file["files"] = files
-                self.config.write(config='backup', config_data=config_file, date=date)
-        elif file_type == "video":
-            self.config.write(config='videos', config_data=files)
-
         logging.info("Deleted " + str(count) + " marked files in " + directory + ".")
-        return response
-
-    def delete_marked_files_call(self, path):
-        """
-        set / unset recycling
-        """
-        param = path.split("/")
-        response = {"command": ["delete files that are marked as 'to_be_deleted'", param]}
-
-        if "delete_not_used" in param:
-            delete_not_used = True
-        else:
-            delete_not_used = False
-
-        if param[2] == "backup":
-            response = self.delete_marked_files(file_type="image", date=param[3], delete_not_used=delete_not_used)
-        elif param[2] == "today":
-            response = self.delete_marked_files(file_type="image", date="", delete_not_used=delete_not_used)
-        elif param[2] == "video":
-            response = self.delete_marked_files(file_type="video", date="", delete_not_used=delete_not_used)
-        else:
-            response["error"] = "not clear, which files shall be deleted"
-
         return response
 
