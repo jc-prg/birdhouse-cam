@@ -506,6 +506,7 @@ class BirdhouseConfig(threading.Thread):
         """
         Core function (not clear what to do yet)
         """
+        self.queue.stop()
         self._running = False
 
         return
