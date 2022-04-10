@@ -115,7 +115,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 			var player = "<div id='camera_video_edit_overlay' class='camera_video_edit_overlay' style='display:none'></div>";
 			player += "<div id='camera_video_edit' class='camera_video_edit' style='display:none'>";
 			player += "<div style='height:46px;width:100%'></div>";
-			var trim_command = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_birdhouse_birdhouse_createShortVideo();";
+			var trim_command = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_createShortVideo();";
 
 			loadJS(videoplayer_script, "", document.body);
 
