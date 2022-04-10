@@ -124,13 +124,15 @@ class BirdhouseViews(threading.Thread):
         logging.info("Starting HTML views and REST API for GET ...")
         while self._running:
 
-            if self.create_favorites or count > count_rebuild:
+            if self.create_favorites or count > count_rebuild or self.config.update_views["favorite"]:
                 self.favorite_list_create()
                 self.create_favorites = False
+                self.config.update_views["favorite"] = False
 
-            if self.create_archive or count > count_rebuild:
+            if self.create_archive or count > count_rebuild or self.config.update_views["archive"]:
                 self.archive_list_create()
                 self.create_archive = False
+                self.config.update_views["archive"] = False
 
             if count > count_rebuild:
                 count = 0
@@ -598,7 +600,6 @@ class BirdhouseViews(threading.Thread):
         """
         Page with pictures (and videos) marked as favorites and sorted by date
         """
-        time.sleep(1)
         logging.info("Create data for favorite view  ...")
         content = {
             "active_cam": "none",
