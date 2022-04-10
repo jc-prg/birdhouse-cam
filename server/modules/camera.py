@@ -468,8 +468,8 @@ class BirdhouseVideoProcessing(threading.Thread):
         cmd = cmd.replace("{OUTPUT_FILENAME}", str(output_file))
         cmd = cmd.replace("{FRAMERATE}", str(framerate))
 
-        start_frame = round(start_timecode * framerate)
-        end_frame = round(end_timecode * framerate)
+        start_frame = round(float(start_timecode) * float(framerate))
+        end_frame = round(float(end_timecode) * float(framerate))
 
         try:
             (
