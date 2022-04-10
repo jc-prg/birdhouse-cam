@@ -125,12 +125,10 @@ class BirdhouseViews(threading.Thread):
         while self._running:
 
             if self.create_favorites or count > count_rebuild:
-                time.sleep(1)
                 self.favorite_list_create()
                 self.create_favorites = False
 
             if self.create_archive or count > count_rebuild:
-                time.sleep(1)
                 self.archive_list_create()
                 self.create_archive = False
 
@@ -600,6 +598,7 @@ class BirdhouseViews(threading.Thread):
         """
         Page with pictures (and videos) marked as favorites and sorted by date
         """
+        time.sleep(1)
         logging.info("Create data for favorite view  ...")
         content = {
             "active_cam": "none",
