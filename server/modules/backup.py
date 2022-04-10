@@ -66,9 +66,8 @@ class BirdhouseArchive(threading.Thread):
             file_name = file.split(".")
             param = file_name[0].split("_")  # video_cam2_20210428_175551*
             fid = param[2] + "_" + param[3]
-            date = param[2][6:8] + "." + param[2][4:6] + "." + param[2][0:4] + " " + param[3][0:2] + ":" + param[3][
-                                                                                                           2:4] + ":" + \
-                   param[3][4:6]
+            date = param[2][6:8] + "." + param[2][4:6] + "." + param[2][0:4] + " " + \
+                   param[3][0:2] + ":" + param[3][2:4] + ":" + param[3][4:6]
             file_short = ""
             file_short_length = 0
 
@@ -142,7 +141,7 @@ class BirdhouseArchive(threading.Thread):
             return
         self.processing = True
 
-        if os.path.isfile(self.config.file("images")) and subdir == "":
+        if os.path.isfile(self.config.file_path("images")) and subdir == "":
             files = self.config.read_cache(config='images')
         else:
             files = {}
@@ -240,7 +239,7 @@ class BirdhouseArchive(threading.Thread):
         if os.path.isdir(directory):
             logging.info("Backup files: create a new config file, directory already exists")
 
-            if not os.path.isfile(self.config.file(config="backup", date=backup_date)):
+            if not os.path.isfile(self.config.file_path(config="backup", date=backup_date)):
                 files = self.compare_files_init(date=backup_date)
                 files_backup = {"files": files, "info": {}}
                 files_backup["info"]["count"] = len(files)
@@ -388,8 +387,7 @@ class BirdhouseArchive(threading.Thread):
                     if file_type in files[key]:
                         if os.path.isfile(os.path.join(directory, files[key][file_type])):
                             os.remove(os.path.join(directory, files[key][file_type]))
-                            logging.debug(
-                                "Delete - " + str(key) + ": " + os.path.join(directory, files[key][file_type]))
+                            logging.debug("Delete - "+str(key)+": "+os.path.join(directory, files[key][file_type]))
                 # del files[key]
                 del files[key]["hires"]
                 del files[key]["lowres"]
@@ -427,3 +425,27 @@ class BirdhouseArchive(threading.Thread):
 
         logging.info("Deleted " + str(count) + " marked files in " + directory + ".")
         return response
+
+    def delete_marked_files_call(self, path):
+        """
+        set / unset recycling
+        """
+        param = path.split("/")
+        response = {"command": ["delete files that are marked as 'to_be_deleted'", param]}
+
+        if "delete_not_used" in param:
+            delete_not_used = True
+        else:
+            delete_not_used = False
+
+        if param[2] == "backup":
+            response = self.delete_marked_files(file_type="image", date=param[3], delete_not_used=delete_not_used)
+        elif param[2] == "today":
+            response = self.delete_marked_files(file_type="image", date="", delete_not_used=delete_not_used)
+        elif param[2] == "video":
+            response = self.delete_marked_files(file_type="video", date="", delete_not_used=delete_not_used)
+        else:
+            response["error"] = "not clear, which files shall be deleted"
+
+        return response
+

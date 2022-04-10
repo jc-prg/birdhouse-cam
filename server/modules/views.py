@@ -258,7 +258,7 @@ class BirdhouseViews(threading.Thread):
             content["subtitle"] = birdhouse_pages["backup"][0] + " " + files_data["info"]["date"]
             content["links"] = print_links_json(link_list=("live", "today", "backup", "favorit"), cam=which_cam)
 
-        elif os.path.isfile(self.config.file(config="images")):
+        elif os.path.isfile(self.config.file_path(config="images")):
             backup = False
             files_all = self.config.read_cache(config="images")
             time_now = datetime.now().strftime('%H%M%S')
@@ -286,7 +286,8 @@ class BirdhouseViews(threading.Thread):
                 if "date" not in files_all[stamp]:
                     files_all[stamp]["date"] = date_backup[6:8] + "." + date_backup[4:6] + "." + date_backup[0:4]
 
-                select_image = self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp], check_similarity=check_similarity)
+                select_image = self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp],
+                                                                      check_similarity=check_similarity)
                 if ((int(stamp) < int(time_now) or time_now == "000000") and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
                     if "camera" not in files_all[stamp] or select_image or (backup and files_all[stamp]["camera"] == which_cam):
                         if files_all[stamp]["datestamp"] == date_today or backup:
@@ -299,10 +300,7 @@ class BirdhouseViews(threading.Thread):
                                 files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
                                 count += 1
 
-            if first_title == "":
-                first_title = files_all[stamp]["date"]
-
-            elif not backup:
+            if not backup:
                 files_today["999999"] = {
                     "lowres": "stream.mjpg?" + which_cam,
                     "hires": "index.html?" + which_cam,
@@ -310,12 +308,6 @@ class BirdhouseViews(threading.Thread):
                     "type": "addon",
                     "title": "Live-Stream"
                 }
-
-            if self.admin_allowed():
-                header = True
-            else:
-                header = False
-
             content["entries"] = files_today
 
             # Yesterday
@@ -362,8 +354,10 @@ class BirdhouseViews(threading.Thread):
                 content["entries_delete"] = files_recycle
 
         content["subtitle"] += " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
-        content["view_count"] = ["all", "star", "detect", "data"]
         content["chart_data"] = create_chart_data(content["entries"].copy())
+        content["view_count"] = ["all", "star", "detect"]
+        if backup:
+            content["view_count"].append("data")
         return content
 
     def archive_list(self, camera):
@@ -410,7 +404,7 @@ class BirdhouseViews(threading.Thread):
                 if group_name not in content["groups"]:
                     content["groups"][group_name] = []
 
-                if os.path.isfile(self.config.file(config="backup", date=directory)):
+                if os.path.isfile(self.config.file_path(config="backup", date=directory)):
 
                     file_data = self.config.read_cache(config="backup", date=directory)
                     content["groups"][group_name].append(directory)

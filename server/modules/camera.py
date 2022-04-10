@@ -19,18 +19,22 @@ class BirdhouseVideoProcessing(threading.Thread):
     Record videos: start and stop; from all pictures of the day
     """
 
-    def __init__(self, camera, config, param, directory):
+    def __init__(self, camera_id, camera, config, param, directory):
         """
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
-        logging.info("- Loading Video Processing for " + camera + "... ")
-        self.id = camera
+        logging.info("- Loading Video Processing for " + camera_id + "... ")
+        self.id = camera_id
         self.camera = camera
         self.name = param["name"]
         self.param = param
         self.config = config
         self.directory = directory
+
+        self.queue_create = []
+        self.queue_trim = []
+        self.queue_wait = 10
 
         self.record_video_info = None
         self.image_size = [0, 0]
@@ -41,6 +45,10 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.output = None
         self.ffmpeg_cmd = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} "
         self.ffmpeg_cmd += "-vcodec libx264 -crf 18"
+        self.ffmpeg_cmd += " {OUTPUT_FILENAME}"
+
+        self.ffmpeg_trim = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} -vcodec libx264 -crf 18 " + \
+                           "-ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
 
         # Other working options:
         # self.ffmpeg_cmd  += "-b 1000k -strict -2 -vcodec libx264 -profile:v main -level 3.1 -preset medium - \
@@ -50,13 +58,16 @@ class BirdhouseVideoProcessing(threading.Thread):
         # self.ffmpeg_cmd  += "-vcodec libx264 -preset fast -profile:v baseline -lossless 1 -vf \
         #                     \"scale=720:540,setsar=1,pad=720:540:0:0\" -acodec aac -ac 2 -ar 22050 -ab 48k"
 
-        self.ffmpeg_cmd += " {OUTPUT_FILENAME}"
-        self.ffmpeg_trim = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} -vcodec libx264 -crf 18 -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
         # self.ffmpeg_trim  = "ffmpeg -y -i {INPUT_FILENAME} -c copy -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
         self.count_length = 8
         self.running = True
         self.error = False
         self.error_msg = []
+        self.info = {
+            "start": 0,
+            "start_stamp": 0,
+            "status": "ready"
+        }
 
     def _msg_error(self, message):
         """
@@ -76,22 +87,48 @@ class BirdhouseVideoProcessing(threading.Thread):
 
     def run(self):
         """
-        Initialize, set inital values
+        Initialize, set initial values
         """
         logging.info("Initialize video recording ...")
-        self.info = {
-            "start": 0,
-            "start_stamp": 0,
-            "status": "ready"
-        }
         if "video" in self.param and "max_length" in self.param["video"]:
             self.max_length = self.param["video"]["max_length"]
-            logging.debug("Set max video recording length for " + self.camera + " to " + str(self.max_length))
+            logging.debug("Set max video recording length for " + self.id + " to " + str(self.max_length))
         else:
-            logging.debug("Use default max video recording length for " + self.camera + " = " + str(self.max_length))
+            logging.debug("Use default max video recording length for " + self.id + " = " + str(self.max_length))
 
+        count = 0
         while self.running:
             time.sleep(1)
+            count += 1
+            if count >= self.queue_wait:
+                count = 0
+
+                # create short videos
+                if len(self.queue_create) > 0:
+                    self.config.async_running = True
+                    [filename, stamp, date] = self.queue_create.pop()
+
+                    logging.info("Start day video creation (" + filename + "): " + stamp + " - " + date + ")")
+                    response = self.create_video_day(filename=filename, stamp=stamp, date=date)
+
+                    if response["result"] == "OK":
+                        self.config.queue.entry_add(config="videos", date="", key=stamp, entry=response["data"])
+                        self.config.async_answers.append(["CREATE_DAY_DONE", date, response["result"]])
+                    else:
+                        self.config.async_answers.append(["CREATE_DAY_ERROR", date, response["result"]])
+                    self.config.async_running = False
+
+                # create short videos
+                if len(self.queue_trim) > 0:
+                    self.config.async_running = True
+                    [video_id, start, end] = self.queue_trim.pop()
+
+                    logging.info("Start video trimming (" + video_id + "): " + str(start) + " - " + str(end) + ")")
+                    response = self.create_video_trimmed(video_id, start, end)
+                    self.config.async_answers.append(["TRIM_DONE", video_id, response["result"]])
+                    self.config.async_running = True
+
+        logging.info("Stopped video recording.")
 
     def stop(self):
         """
@@ -111,59 +148,62 @@ class BirdhouseVideoProcessing(threading.Thread):
         generate filename for images
         """
         if file_type == "video":
-            return self.config.filename_image(image_type="video", timestamp=self.info["date_start"], camera=self.camera)
+            return self.config.filename_image(image_type="video", timestamp=self.info["date_start"], camera=self.id)
         elif file_type == "thumb":
-            return self.config.filename_image(image_type="thumb", timestamp=self.info["date_start"], camera=self.camera)
+            return self.config.filename_image(image_type="thumb", timestamp=self.info["date_start"], camera=self.id)
         elif file_type == "vimages":
-            return self.config.filename_image(image_type="vimages", timestamp=self.info["date_start"], camera=self.camera)
+            return self.config.filename_image(image_type="vimages", timestamp=self.info["date_start"], camera=self.id)
         else:
             return
 
     def record_start(self):
         """
-        Start recording
+        start video recoding
         """
-        logging.info("Starting video recording ...")
-        self.recording = True
-        self.info["date"] = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-        self.info["date_start"] = datetime.now().strftime('%Y%m%d_%H%M%S')
-        self.info["stamp_start"] = datetime.now().timestamp()
-        self.info["status"] = "recording"
-        self.info["camera"] = self.camera
-        self.info["camera_name"] = self.name
-        self.info["directory"] = self.directory
-        self.info["image_count"] = 0
-        return
+        response = {"command": ["start recording"]}
+
+        if self.camera.active and not self.camera.error and not self.recording:
+            logging.info("Starting video recording ...")
+            self.recording = True
+            self.info["date"] = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+            self.info["date_start"] = datetime.now().strftime('%Y%m%d_%H%M%S')
+            self.info["stamp_start"] = datetime.now().timestamp()
+            self.info["status"] = "recording"
+            self.info["camera"] = self.camera
+            self.info["camera_name"] = self.name
+            self.info["directory"] = self.directory
+            self.info["image_count"] = 0
+        elif not self.camera.active:
+            response["error"] = "camera is not active " + self.camera.id
+        elif self.recording:
+            response["error"] = "camera is already recording " + self.camera.id
+        return response
 
     def record_stop(self):
         """
-        Stop recording and trigger video creation
+        stop video recoding
         """
-        logging.info("Stopping video recording ...")
-        self.recording = False
-        self.info["date_end"] = datetime.now().strftime('%Y%m%d_%H%M%S')
-        self.info["stamp_end"] = datetime.now().timestamp()
-        self.info["status"] = "processing"
-        self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 1)
-
-        if float(self.info["length"]) > 1:
-            self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
-        else:
-            self.info["framerate"] = 0
-
-        self.create_video()
-
-        self.info["status"] = "finished"
-        if not self.config.exists("videos"):
-            config_file = {}
-        else:
-            config_file = self.config.read_cache("videos")
-        config_file[self.info["date_start"]] = self.info
-        self.config.write("videos", config_file)
-
-        time.sleep(1)
-        self.info = {}
-        return
+        response = {"command": ["stop recording"]}
+        if self.camera.active and not self.camera.error and self.recording:
+            logging.info("Stopping video recording ...")
+            self.recording = False
+            self.info["date_end"] = datetime.now().strftime('%Y%m%d_%H%M%S')
+            self.info["stamp_end"] = datetime.now().timestamp()
+            self.info["status"] = "processing"
+            self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 1)
+            if float(self.info["length"]) > 1:
+                self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+            else:
+                self.info["framerate"] = 0
+            self.create_video()
+            self.info["status"] = "finished"
+            self.config.queue.entry_add(config="videos", date="", key=self.info["date_start"], entry=self.info)
+            self.info = {}
+        elif not self.camera.active:
+            response["error"] = "camera is not active " + self.camera.id
+        elif not self.recording:
+            response["error"] = "camera isn't recording " + self.camera.id
+        return response
 
     def record_stop_auto(self):
         """
@@ -200,11 +240,13 @@ class BirdhouseVideoProcessing(threading.Thread):
         Create video from images
         """
         self.processing = True
+        input_filenames = os.path.join(self.config.directory("videos"), self.filename("vimages") + "%" +
+                                       str(self.count_length).zfill(2) + "d.jpg")
+        output_filename = os.path.join(self.config.directory("videos"), self.filename("video"))
+
         cmd_create = self.ffmpeg_cmd
-        cmd_create = cmd_create.replace("{INPUT_FILENAMES}", os.path.join(self.config.directory("videos"),
-                                        self.filename("vimages") + "%" + str(self.count_length).zfill(2) + "d.jpg"))
-        cmd_create = cmd_create.replace("{OUTPUT_FILENAME}",
-                                        os.path.join(self.config.directory("videos"), self.filename("video")))
+        cmd_create = cmd_create.replace("{INPUT_FILENAMES}", input_filenames)
+        cmd_create = cmd_create.replace("{OUTPUT_FILENAME}", output_filename)
         cmd_create = cmd_create.replace("{FRAMERATE}", str(round(self.info["framerate"])))
 
         self.info["thumbnail"] = self.filename("thumb")
@@ -268,13 +310,12 @@ class BirdhouseVideoProcessing(threading.Thread):
             if message != 0:
                 response = {
                     "result": "error",
-                    "reason": "copy temp image files",
+                    "reason": "remove temp image files",
                     "message": message
                 }
-                self._msg_error("Error during day video creation: copy temp image files.")
-                return response
+                self._msg_warning("Error during day video creation: remove old temp image files.")
         except Exception as e:
-            self._msg_error("Error during day video creation: " + str(e))
+            self._msg_warning("Error during day video creation: " + str(e))
 
         try:
             cmd_copy = "cp " + self.config.directory("images") + filename + "* " + self.config.directory("videos_temp")
@@ -294,7 +335,6 @@ class BirdhouseVideoProcessing(threading.Thread):
         cmd_filename = self.config.directory("videos_temp") + cmd_tempfiles
         cmd_rename = "i=0; for fi in " + self.config.directory(
             "videos_temp") + "image_*; do mv \"$fi\" $(printf \"" + cmd_filename + "%05d.jpg\" $i); i=$((i+1)); done"
-
         try:
             logging.info(cmd_rename)
             message = os.system(cmd_rename)
@@ -382,6 +422,30 @@ class BirdhouseVideoProcessing(threading.Thread):
         }
         return response
 
+    def create_video_day_queue(self, path):
+        """
+        create a video of all existing images of the day
+        """
+        param = path.split("/")
+        response = {}
+        logging.info(str(param))
+
+        if len(param) < 3:
+            response["result"] = "Error: Parameters are missing "
+            response["result"] += "(/create-short-video/video-id/start-timecode/end-timecode/which-cam/)"
+            logging.warning("Create video of daily images ... Parameters are missing.")
+
+        else:
+            which_cam = param[2]
+            stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            date = datetime.now().strftime('%d.%m.%Y')
+            filename = "image_" + which_cam + "_big_"
+            self.queue_create.append([filename, stamp, date])
+            response["command"] = ["Create video of the day"]
+            response["video"] = {"camera": which_cam, "date": date}
+
+        return response
+
     def create_video_trimmed(self, video_id, start, end):
         """
         create a shorter video based on date and time
@@ -391,7 +455,7 @@ class BirdhouseVideoProcessing(threading.Thread):
             input_file = config_file[video_id]["video_file"]
             output_file = input_file.replace(".mp4", "_short.mp4")
             framerate = config_file[video_id]["framerate"]
-            result = self.trim_video(input_file=input_file, output_file=output_file, start_timecode=start,
+            result = self.create_video_trimmed_exec(input_file=input_file, output_file=output_file, start_timecode=start,
                                      end_timecode=end, framerate=framerate)
             if result == "OK":
                 config_file[video_id]["video_file_short"] = output_file
@@ -408,7 +472,7 @@ class BirdhouseVideoProcessing(threading.Thread):
             logging.warning("No video with the ID " + str(video_id) + " available.")
             return {"result": "No video with the ID " + str(video_id) + " available."}
 
-    def trim_video(self, input_file, output_file, start_timecode, end_timecode, framerate):
+    def create_video_trimmed_exec(self, input_file, output_file, start_timecode, end_timecode, framerate):
         """
         creates a shortened version of the video
         """
@@ -434,16 +498,44 @@ class BirdhouseVideoProcessing(threading.Thread):
         else:
             return "Error"
 
+    def create_video_trimmed_queue(self, path):
+        """
+        create a short video and save in DB (not deleting the old video at the moment)
+        """
+        param = path.split("/")
+        response = {}
+
+        if len(param) < 6:
+            response["result"] = "Error: Parameters are missing"
+            response["result"] += " (/create-short-video/video-id/start-timecode/end-timecode/which-cam/)"
+            logging.warning("Create short version of video ... Parameters are missing.")
+
+        else:
+            logging.info("Create short version of video '" + str(param[2]) + "' [" + str(param[3]) + ":" +
+                         str(param[4]) + "] ...")
+            which_cam = param[5]
+            config_data = self.config.read_cache(config="videos")
+
+            if param[2] not in config_data:
+                response["result"] = "Error: video ID '" + str(param[2]) + "' doesn't exist."
+                logging.warning("VideoID '" + str(param[2]) + "' doesn't exist.")
+            else:
+                self.queue_trim.append([param[2], param[3], param[4]])
+                response["command"] = ["Create short version of video"]
+                response["video"] = {"video_id": param[2], "start": param[3], "end": param[4]}
+
+        return response
+
 
 class BirdhouseImageProcessing(object):
     """
     modify encoded and raw images
     """
 
-    def __init__(self, camera, config, param):
-        logging.info("- Loading Image Processing for " + camera + "... ")
+    def __init__(self, camera_id, camera, config, param):
+        logging.info("- Loading Image Processing for " + camera_id + "... ")
         self.frame = None
-        self.id = camera
+        self.id = camera_id
         self.config = config
         self.param = param
 
@@ -847,8 +939,8 @@ class BirdhouseCamera(threading.Thread):
 
         logging.info("Starting camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
 
-        self.image = BirdhouseImageProcessing(camera=self.id, config=self.config, param=self.param)
-        self.video = BirdhouseVideoProcessing(camera=self.id, config=self.config, param=self.param, directory=self.config.directory("videos"))
+        self.image = BirdhouseImageProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param)
+        self.video = BirdhouseVideoProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param, directory=self.config.directory("videos"))
         self.video.output = BirdhouseCameraOutput()
         self.camera = None
         self.cameraFPS = None
@@ -896,9 +988,9 @@ class BirdhouseCamera(threading.Thread):
                 if self.error_time + retry_time < time.time():
                     self.update_main_config()
                     logging.info("Try to restart camera ...")
-                    if self.type == "pi":
+                    if self.type == "pi" and self.param["active"]:
                         self.camera_start_pi()
-                    elif self.type == "usb":
+                    elif self.type == "usb" and self.param["active"]:
                         self.camera_start_usb()
                     self.error_time = time.time()
                     if not self.error and self.param["video"]["allow_recording"]:
@@ -966,8 +1058,9 @@ class BirdhouseCamera(threading.Thread):
                                 sensor_data = self.sensor[key].get_values()
                                 sensor_data["date"] = datetime.now().strftime("%d.%m.%Y")
                                 image_info["sensor"][key] = self.sensor[key].get_values()
+                                self.config.queue.entry_add(config="sensor", date="", key=stamp, entry=sensor_data)
                                 # self.write_sensor_info(timestamp=stamp, data=self.sensor[key].get_values())
-                                self.write_cache(data_type="sensor", timestamp=stamp, data=sensor_data)
+                                # self.write_cache(data_type="sensor", timestamp=stamp, data=sensor_data)
 
                         path_lowres = os.path.join(self.config.directory("images"),
                                                    self.config.filename_image("lowres", stamp, self.id))
@@ -977,7 +1070,8 @@ class BirdhouseCamera(threading.Thread):
                         logging.debug("WRITE:" + path_lowres)
 
                         # self.write_image_info(timestamp=stamp, data=image_info)
-                        self.write_cache(data_type="images", timestamp=stamp, data=image_info)
+                        self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
+                        # self.write_cache(data_type="images", timestamp=stamp, data=image_info)
                         self.write_image(filename=path_hires, image=image)
                         self.write_image(filename=path_lowres, image=image,
                                          scale_percent=self.param["image"]["preview_scale"])
@@ -1241,25 +1335,6 @@ class BirdhouseCamera(threading.Thread):
         image = self.image.draw_area_raw(raw=image, area=inner_area, color=(0, 0, 255), thickness=4)
         return image
 
-    def write_cache(self, data_type, timestamp, data, force_write=False):
-        """
-        store entries in a cache and write packages of entries to reduce file write access
-        """
-        if data_type in self.config_cache and len(self.config_cache[data_type].keys()) >= self.config_cache_size:
-            files = self.config.read_cache(data_type)
-            for key in self.config_cache[data_type]:
-                files[key] = self.config_cache[data_type][key]
-            if timestamp != "":
-                files[timestamp] = data.copy()
-            self.config.write(data_type, files)
-            logging.debug("Wrote " + str(len(self.config_cache[data_type].keys())) + " entries from cache: " + data_type)
-            self.config_cache[data_type] = {}
-        else:
-            if data_type not in self.config_cache:
-                self.config_cache[data_type] = {}
-            self.config_cache[data_type][timestamp] = data.copy()
-            logging.debug("Stored in cache: " + timestamp + "/" + data_type + " ... " + str(len(self.config_cache[data_type].keys())))
-
     def write_image(self, filename, image, scale_percent=100):
         """
         Scale image and write to file
@@ -1278,40 +1353,6 @@ class BirdhouseCamera(threading.Thread):
             error_msg = "Can't save image and/or create thumbnail '" + image_path + "': " + str(e)
             self.camera_error(False, error_msg)
             return ""
-
-    def write_image_info(self, timestamp, data):
-        """
-        Write image information to file
-        """
-        logging.debug(self.id + ": Write image info: " + self.config.file("images"))
-        if os.path.isfile(self.config.file("images")):
-            files = self.config.read_cache("images")
-            files[timestamp] = data.copy()
-            self.config.write("images", files)
-        else:
-            logging.error("Could not find file: " + self.config.file("images"))
-
-    def write_video_info(self, timestamp, data):
-        """
-        Write image information to file
-        """
-        logging.debug(self.id + ": Write video info: " + self.config.file("images"))
-        if os.path.isfile(self.config.file("videos")):
-            files = self.config.read_cache("videos")
-            files[timestamp] = data
-            self.config.write("videos", files)
-
-    def write_sensor_info(self, timestamp, data):
-        """
-        Write Sensor information to separate config file (for recovery purposes)
-        """
-        logging.debug(self.id + ": Write video info: " + self.config.file("sensor"))
-        if os.path.isfile(self.config.file("sensor")):
-            files = self.config.read_cache("sensor")
-        else:
-            files = {}
-        files[timestamp] = data
-        self.config.write("sensor", files)
 
     def update_main_config(self):
         logging.info("Update data from main configuration file for camera " + self.id)

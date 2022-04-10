@@ -37,7 +37,7 @@ class BirdhouseSensor(threading.Thread):
         self.pin = self.param["pin"]
         self.values = {}
         self.last_read = 0
-        self.interval = 10
+        self.interval = 20
 
         if not error_module:
             self.connect()

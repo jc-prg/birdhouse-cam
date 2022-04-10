@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import os
 import sys
 import time
@@ -10,6 +8,416 @@ import threading
 from datetime import datetime
 
 
+class BirdhouseConfigJSON(object):
+
+    def __init__(self):
+        self.locked = {}
+        logging.info("Starting JSON handler ...")
+
+    def lock(self, filename):
+        """
+        lock config file
+        """
+        self.locked[filename] = True
+
+    def unlock(self, filename):
+        """
+        unlock config file
+        """
+        self.locked[filename] = False
+
+    def wait_if_locked(self, filename):
+        """
+        wait, while a file is locked for writing
+        """
+        wait = 0.2
+        count = 0
+        logging.debug("Start check locked: " + filename + " ...")
+
+        if filename in self.locked and self.locked[filename]:
+            while self.locked[filename]:
+                time.sleep(wait)
+                count += 1
+                if count > 10:
+                    logging.warning("Waiting! File '" + filename + "' is locked (" + str(count) + ")")
+                    time.sleep(1)
+
+        elif filename == "ALL":
+            logging.info("Wait until no file is locked ...")
+            locked = len(self.locked.keys())
+            while locked > 0:
+                locked = 0
+                for key in self.locked:
+                    if self.locked[key]:
+                        locked += 1
+                time.sleep(wait)
+            logging.info("OK")
+        if count > 10:
+            logging.warning("File '" + filename + "' is not locked any more (" + str(count) + ")")
+        return "OK"
+
+    def read(self, filename):
+        """
+        read json file including check if locked
+        """
+        try:
+            self.wait_if_locked(filename)
+            with open(filename) as json_file:
+                data = json.load(json_file)
+            return data
+
+        except Exception as e:
+            logging.error("Could not read JSON file: " + filename)
+            logging.error(str(e))
+            return {}
+
+    def write(self, filename, data):
+        """
+        write json file including locking mechanism
+        """
+        self.wait_if_locked(filename)
+        try:
+            self.locked[filename] = True
+            with open(filename, 'wb') as json_file:
+                json.dump(data, codecs.getwriter('utf-8')(json_file), ensure_ascii=False, sort_keys=True, indent=4)
+                json_file.close()
+            self.locked[filename] = False
+            logging.debug("Write JSON file: " + filename)
+
+        except Exception as e:
+            self.locked[filename] = False
+            logging.error("Could not write JSON file: " + filename)
+            logging.error(str(e))
+
+
+class BirdhouseConfigQueue(threading.Thread):
+
+    def __init__(self, config):
+        """
+        Initialize new thread and set inital parameters
+        """
+        threading.Thread.__init__(self)
+        self.config = config
+        self._running = True
+        self.edit_queue = {"images": [], "videos": [], "backup": {}, "sensor": []}
+        self.status_queue = {"images": [], "videos": [], "backup": {}, "sensor": []}
+        self.queue_wait = 10
+
+    def run(self):
+        """
+        create videos and process queue
+        """
+        logging.info("Starting Config Queue ...")
+        config_files = ["images", "videos", "backup", "sensor"]
+        queue_count = 0
+        while self._running:
+            if queue_count >= self.queue_wait:
+                queue_count = 0
+                for config_file in config_files:
+
+                    start_time = time.time()
+                    count_entries = 0
+
+                    # EDIT QUEUE: today, video (without date)
+                    if config_file != "backup" and len(self.edit_queue[config_file]) > 0:
+                        entries = self.config.read_cache(config_file)
+                        self.config.lock(config_file)
+
+                        while len(self.edit_queue[config_file]) > 0:
+                            [key, entry, command] = self.edit_queue[config_file].pop()
+                            count_entries += 1
+                            if command == "add" or command == "edit":
+                                entries[key] = entry
+                            elif command == "delete" and key in entries:
+                                del entries[key]
+                            elif command == "keep_data":
+                                entries[key]["type"] = "data"
+                                if "hires" in entries[key]:
+                                    del entries[key]["hires"]
+                                if "lowres" in entries[key]:
+                                    del entries[key]["lowres"]
+                                if "directory" in entries[key]:
+                                    del entries[key]["directory"]
+                                if "compare" in entries[key]:
+                                    del entries[key]["compare"]
+                                if "favorit" in entries[key]:
+                                    del entries[key]["favorit"]
+                                if "to_be_deleted" in entries[key]:
+                                    del entries[key]["to_be_deleted"]
+
+                        self.config.unlock(config_file)
+                        self.config.write(config_file, entries)
+
+                    # EDIT QUEUE: backup (with date)
+                    elif config_file == "backup":
+                        for date in self.status_queue[config_file]:
+                            entries = self.config.read_cache(config_file, date)
+                            self.config.lock(config_file, date)
+
+                            while len(self.edit_queue[config_file][date]) > 0:
+                                [key, entry, command] = self.edit_queue[config_file][date].pop()
+                                count_entries += 1
+                                if command == "add" or command == "edit":
+                                    entries[key] = entry
+                                elif command == "delete" and key in entries:
+                                    del entries[key]
+                                elif command == "keep_data":
+                                    entries[key]["type"] = "data"
+                                    if "hires" in entries[key]:
+                                        del entries[key]["hires"]
+                                    if "lowres" in entries[key]:
+                                        del entries[key]["lowres"]
+                                    if "directory" in entries[key]:
+                                        del entries[key]["directory"]
+                                    if "compare" in entries[key]:
+                                        del entries[key]["compare"]
+                                    if "favorit" in entries[key]:
+                                        del entries[key]["favorit"]
+                                    if "to_be_deleted" in entries[key]:
+                                        del entries[key]["to_be_deleted"]
+
+                            self.config.unlock(config_file, date)
+                            self.config.write(config_file, entries, date)
+
+                    # STATUS QUEUE: today, video (without date)
+                    if config_file != "backup" and len(self.status_queue[config_file]) > 0:
+                        entries = self.config.read_cache(config_file)
+                        self.config.lock(config_file)
+
+                        while len(self.status_queue[config_file]) > 0:
+                            [date, key, change_status, status] = self.status_queue[config_file].pop()
+                            count_entries += 1
+
+                            if change_status == "RANGE_END":
+                                self.config.async_answers.append(["RANGE_DONE"])
+                            elif key in entries:
+                                entries[key][change_status] = status
+
+                        self.config.unlock(config_file)
+                        self.config.write(config_file, entries)
+
+                    # STATUS QUEUE: backup (with date)
+                    elif config_file == "backup":
+                        for date in self.status_queue[config_file]:
+                            entry_data = self.config.read_cache(config_file, date)
+                            entries = entry_data["files"]
+                            self.config.lock(config_file, date)
+                            while len(self.status_queue[config_file][date]) > 0:
+                                [date, key, change_status, status] = self.status_queue[config_file][date].pop()
+                                count_entries += 1
+
+                                if change_status == "RANGE_END":
+                                    self.config.async_answers.append(["RANGE_DONE"])
+                                elif key in entries:
+                                    entries[key][change_status] = status
+
+                            entry_data["files"] = entries
+                            self.config.unlock(config_file, date)
+                            self.config.write(config_file, entry_data, date)
+
+                    if count_entries > 0:
+                        logging.info("Queue: wrote "+str(count_entries)+" entries to config files ("+str(round(time.time()-start_time, 2))+"s)")
+                    # self.views.favorite_list_update()
+
+            queue_count += 1
+            time.sleep(1)
+
+        logging.info("Stopped Config Queue.")
+
+    def stop(self):
+        """
+        Do nothing at the moment
+        """
+        self._running = False
+
+    def add_to_status_queue(self, config, date, key, change_status, status):
+        """
+        add status change to queue
+        """
+        if config != "backup":
+            self.status_queue[config].append([date, key, change_status, status])
+        elif config == "backup":
+            if date not in self.status_queue[config]:
+                self.status_queue[config][date] = []
+            self.status_queue[config][date].append([date, key, change_status, status])
+
+    def add_to_edit_queue(self, config, date, key, entry, command):
+        """
+        add, remove or edit complete entry using a queue
+        """
+        if config != "backup":
+            self.edit_queue[config].append([key, entry, command])
+        elif config == "backup":
+            if date not in self.edit_queue[config]:
+                self.edit_queue[config][date] = []
+            self.edit_queue[config][date].append([key, entry, command])
+
+    def set_status_favorite(self, path):
+        """
+        set / unset favorite -> redesigned
+        """
+        param = path.split("/")
+        response = {}
+        category = param[2]
+        config_data = {}
+
+        if category == "current":
+            entry_id = param[3]
+            entry_value = param[4]
+            entry_date = ""
+            category = "images"
+        elif category == "videos":
+            entry_id = param[3]
+            entry_value = param[4]
+            entry_date = ""
+        else:
+            entry_date = param[3]
+            entry_id = param[4]
+            entry_value = param[5]
+
+        if category == "images":
+            config_data = self.config.read_cache(config="images")
+        elif category == "backup":
+            config_data = self.config.read_cache(config="backup", date=entry_date)["files"]
+        elif category == "videos":
+            config_data = self.config.read_cache(config="videos")
+
+        response["command"] = ["mark/unmark as favorit", entry_id]
+        if entry_id in config_data:
+            self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="favorit",
+                                     status=entry_value)
+            if entry_value == 1:
+                self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted",
+                                         status=1)
+        else:
+            response["error"] = "no entry found with stamp " + entry_id
+
+        return response
+
+    def set_status_recycle(self, path):
+        """
+        set / unset recycling -> redesigned
+        """
+        param = path.split("/")
+        response = {}
+        category = param[2]
+        config_data = {}
+
+        if category == "current":
+            entry_id = param[3]
+            entry_value = param[4]
+            entry_date = ""
+            category = "images"
+        elif category == "videos":
+            entry_id = param[3]
+            entry_value = param[4]
+            entry_date = ""
+        else:
+            entry_date = param[3]
+            entry_id = param[4]
+            entry_value = param[5]
+
+        if category == "images":
+            config_data = self.config.read_cache(config="images")
+        elif category == "backup":
+            config_data = self.config.read_cache(config="backup", date=entry_date)["files"]
+        elif category == "videos":
+            config_data = self.config.read_cache(config="videos")
+
+        logging.info("test:" + entry_date)
+
+        response["command"] = ["mark/unmark for deletion", entry_id]
+        if entry_id in config_data:
+            logging.info("OK")
+            self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted",
+                                     status=entry_value)
+            if entry_value == 1:
+                self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=1)
+        else:
+            response["error"] = "no entry found with stamp " + entry_id
+
+        return response
+
+    def set_status_recycle_range(self, path):
+        """
+        set / unset recycling -> range from-to
+        """
+        param = path.split("/")
+        response = {}
+        category = param[2]
+        config_data = {}
+
+        if category == "current":
+            entry_from = param[3]
+            entry_to = param[4]
+            entry_value = param[5]
+            entry_date = ""
+            category = "images"
+        elif category == "videos":
+            entry_from = param[3]
+            entry_to = param[4]
+            entry_value = param[5]
+            entry_date = ""
+        else:
+            entry_date = param[3]
+            entry_from = param[4]
+            entry_to = param[5]
+            entry_value = param[6]
+
+        if category == "images":
+            config_data = self.config.read_cache(config="images")
+        elif category == "backup":
+            config_data = self.config.read_cache(config="backup", date=entry_date)["files"]
+        elif category == "videos":
+            config_data = self.config.read_cache(config="videos")
+
+        response["command"] = ["mark/unmark for deletion", entry_from, entry_to]
+        if entry_from in config_data and entry_to in config_data:
+            relevant = False
+            stamps = list(reversed(sorted(config_data.keys())))
+            camera = config_data[entry_from]["camera"]
+            for entry_id in stamps:
+                if entry_id == entry_from:
+                    relevant = True
+                if relevant and config_data[entry_id]["camera"] == camera and \
+                        ("type" not in config_data[entry_id] or config_data[entry_id]["type"] != "data"):
+                    self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
+                                             change_status="to_be_deleted", status=1)
+                    self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
+                                             change_status="favorit", status=0)
+                if entry_id == entry_to:
+                    relevant = False
+        else:
+            response["error"] = "no entry found with stamp " + entry_from + "/" + entry_to
+
+        self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="RANGE_END", status=0)
+        return response
+
+    def entry_add(self, config, date, key, entry):
+        """
+        add entry to config file using the queue
+        """
+        self.add_to_edit_queue(config, date, key, entry, "add")
+
+    def entry_edit(self, config, date, key, entry):
+        """
+        edit entry in config file using the queue
+        """
+        self.add_to_edit_queue(config, date, key, entry, "edit")
+
+    def entry_delete(self, config, date, key):
+        """
+        delete entry from config file using the queue
+        """
+        self.add_to_edit_queue(config, date, key, {}, "delete")
+
+    def entry_keep_data(self, config, date, key):
+        """
+        cleaning image entry keeping activity and sensor data for charts using the queue
+        """
+        self.add_to_edit_queue(config, date, key, {}, "keep_data")
+
+
 class BirdhouseConfig(threading.Thread):
 
     def __init__(self, param_init, main_directory):
@@ -17,12 +425,18 @@ class BirdhouseConfig(threading.Thread):
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
-        self.update = {}
-        self.param_init = param_init
         self.name = "Config"
+        self.queue = BirdhouseConfigQueue(config=self)
+        self.json = BirdhouseConfigJSON()
+        self.queue.start()
+
+        self._running = True
+        self._paused = False
+        self.update = {}
         self.async_answers = []
         self.async_running = False
         self.locked = {}
+        self.param_init = param_init
         self.config_cache = {}
         self.html_replace = {
             "start_date": datetime.now().strftime("%d.%m.%Y %H:%M:%S")
@@ -46,7 +460,6 @@ class BirdhouseConfig(threading.Thread):
         }
 
         self.main_directory = main_directory
-
         if not self.exists("main"):
             directory = os.path.join(self.main_directory, self.directories["data"])
             filename = os.path.join(directory, self.files["main"])
@@ -58,11 +471,9 @@ class BirdhouseConfig(threading.Thread):
                 logging.error("Could not create main config file, check if directory '" + directory + "' is writable.")
                 sys.exit()
 
-        logging.info("Read configuration from '" + self.file("main") + "' ...")
+        logging.info("Read configuration from '" + self.file_path("main") + "' ...")
         self.param = self.read("main")
         self.param["path"] = main_directory
-        self._running = True
-        self._paused = False
 
     def run(self):
         """
@@ -105,14 +516,14 @@ class BirdhouseConfig(threading.Thread):
         lock config file
         """
         filename = os.path.join(self.directory(config), date, self.files[config])
-        self.locked[filename] = True
+        self.json.lock(filename)
 
     def unlock(self, config, date=""):
         """
         unlock config file
         """
         filename = os.path.join(self.directory(config), date, self.files[config])
-        self.locked[filename] = False
+        self.json.unlock(filename)
 
     def wait_if_locked(self, filename):
         """
@@ -151,11 +562,37 @@ class BirdhouseConfig(threading.Thread):
         while self._paused:
             time.sleep(0.2)
 
+    def exists(self, config, date=""):
+        """
+        check if config file exists
+        """
+        config_file = os.path.join(self.directory(config), date, self.files[config])
+        return os.path.isfile(config_file)
+
+    def file_path(self, config, date=""):
+        """
+        return complete path of config file
+        """
+        return os.path.join(self.directory(config, date), self.files[config])
+
     def directory(self, config, date=""):
         """
         return directory of config file
         """
-        return os.path.join(self.main_directory, self.directories["data"], self.directories[config], date)
+        path = os.path.join(self.main_directory, self.directories["data"], self.directories[config], date)
+        if ".." in path:
+            elements = path.split("/")
+            path_new = []
+            for element in elements:
+                if element == "..":
+                    path_new.pop(-1)
+                else:
+                    path_new.append(element)
+            path = ""
+            for element in path_new:
+                path += "/" + element
+            path = path.replace("//", "/")
+        return path
 
     def directory_create(self, config, date=""):
         """
@@ -171,35 +608,13 @@ class BirdhouseConfig(threading.Thread):
             os.mkdir(os.path.join(self.directory(config), date))
             logging.info("OK.")
 
-    def file(self, config, date=""):
-        """
-        return complete path of config file
-        """
-        return os.path.join(self.directory(config, date), self.files[config])
-
     def read(self, config, date=""):
         """
         read dict from json config file
         """
-        config_file = self.file(config, date)
-        config_data = self.read_json(config_file)
-        logging.debug("Read JSON file " + config_file)
+        config_file = self.file_path(config, date)
+        config_data = self.json.read(config_file)
         return config_data.copy()
-
-    def read_json(self, filename):
-        """
-        read json file including check if locked
-        """
-        try:
-            self.wait_if_locked(filename)
-            with open(filename) as json_file:
-                data = json.load(json_file)
-            return data
-
-        except Exception as e:
-            logging.error("Could not read JSON file: " + filename)
-            logging.error(str(e))
-            return {}
 
     def read_cache(self, config, date=""):
         """
@@ -222,8 +637,9 @@ class BirdhouseConfig(threading.Thread):
         """
         write dict to json config file and update cache
         """
-        config_file = self.file(config, date)
-        self.write_json(config_file, config_data)
+        self.wait_if_paused()
+        config_file = self.file_path(config, date)
+        self.json.write(config_file, config_data)
 
         if date == "":
             self.config_cache[config] = config_data
@@ -233,38 +649,15 @@ class BirdhouseConfig(threading.Thread):
             self.config_cache[config] = {}
             self.config_cache[config][date] = config_data
 
-    def write_json(self, filename, data):
+    def write_copy(self, config, date="", add="copy"):
         """
-        write json file including locking mechanism
+        create a copy of a complete config file
         """
-        self.wait_if_locked(filename)
-        self.wait_if_paused()
-        try:
-            self.locked[filename] = True
-            with open(filename, 'wb') as json_file:
-                json.dump(data, codecs.getwriter('utf-8')(json_file), ensure_ascii=False, sort_keys=True, indent=4)
-                json_file.close()
-            self.locked[filename] = False
-            logging.debug("Write JSON file: " + filename)
+        config_file = self.file_path(config, date)
+        content = self.json.read(config_file)
+        self.json.write(config_file + "." + add, content)
 
-        except Exception as e:
-            self.locked[filename] = False
-            logging.error("Could not write JSON file: " + filename)
-            logging.error(str(e))
-
-    def create_copy(self, config, date="", add="copy"):
-        config_file = self.file(config, date)
-        content = self.read_json(config_file)
-        self.write_json(config_file + "." + add, content)
-
-    def exists(self, config, date=""):
-        """
-        check if config file exists
-        """
-        config_file = os.path.join(self.directory(config), date, self.files[config])
-        return os.path.isfile(config_file)
-
-    def change_config(self, config, config_data, date=""):
+    def main_config_edit(self, config, config_data, date=""):
         """
         change configuration base on dict in form
         dict["key1:ey2:key3"] = "value"

@@ -15,7 +15,6 @@ from urllib.parse import unquote
 from modules.backup import BirdhouseArchive
 from modules.camera import BirdhouseCamera
 from modules.config import BirdhouseConfig
-from modules.commands import BirdhouseCommands
 from modules.presets import birdhouse_preset, file_types
 from modules.views import BirdhouseViews
 from modules.sensors import BirdhouseSensor
@@ -210,6 +209,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         REST API for javascript commands e.g. to change values in runtime
         """
         logging.debug("POST API request with '" + self.path + "'.")
+        path, which_cam = views.selected_camera(self.path)
         response = {}
 
         if not self.admin_allowed():
@@ -221,21 +221,24 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.path = self.path.replace("/api", "")
 
         if self.path.startswith("/favorit/"):
-            response = commands.set_status_favorite(self)
+            response = config.queue.set_status_favorite(self.path)
+            views.favorite_list_update()
         elif self.path.startswith("/recycle/"):
-            response = commands.set_status_recycle(self)
+            response = config.queue.set_status_recycle(self.path)
         elif self.path.startswith("/recycle-range/"):
-            response = commands.set_status_recycle_range(self)
-        elif self.path.startswith('/remove/'):
-            response = commands.delete_marked_files(self)
+            response = config.queue.set_status_recycle_range(self.path)
+
         elif self.path.startswith("/start/recording/"):
-            response = commands.start_recording(self)
+            response = camera[which_cam].video.record_start()
         elif self.path.startswith("/stop/recording/"):
-            response = commands.stop_recording(self)
+            response = camera[which_cam].video.record_stop()
         elif self.path.startswith("/create-short-video/"):
-            response = commands.create_short_video(self)
+            response = camera[which_cam].video.create_video_trimmed_queue(self.path)
         elif self.path.startswith("/create-day-video/"):
-            response = commands.create_day_video(self)
+            response = camera[which_cam].video.create_video_day_queue(self.path)
+        elif self.path.startswith('/remove/'):
+            response = backup.delete_marked_files_call(self.path)
+
         elif self.path.startswith("/edit_presets/"):
             param_string = self.path.replace("/edit_presets/", "")
             param = param_string.split("/")
@@ -251,7 +254,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     data[key] = data[key].replace("%7B", "{")
                     data[key] = data[key].replace("%7C", "|")
                     data[key] = data[key].replace("%7D", "}")
-            config.change_config("main", data)
+            config.main_config_edit("main", data)
         elif self.path.startswith("/check-timeout/"):
             time.sleep(30)
             response = {"check": "timeout"}
@@ -577,11 +580,8 @@ if __name__ == "__main__":
         backup.backup_files()
         views.archive_list_update()
 
-    commands = BirdhouseCommands(config=config, camera=camera, backup=backup, views=views)
-    commands.start()
-
     # check if config files for main image directory exists and create if not exists
-    if not os.path.isfile(config.file("images")):
+    if not os.path.isfile(config.file_path("images")):
         for cam in camera:
             camera[cam]._paused = True
         logging.info("Create image list for main directory ...")
@@ -596,7 +596,7 @@ if __name__ == "__main__":
             backup.compare_files_init()
             logging.info("OK.")
 
-    if not os.path.isfile(config.file("videos")):
+    if not os.path.isfile(config.file_path("videos")):
         logging.info("Create video list for video directory ...")
         backup.create_video_config()
         logging.info("OK.")
@@ -625,7 +625,6 @@ if __name__ == "__main__":
             camera[cam].stop()
         for sen in sensor:
             sensor[sen].stop()
-        commands.stop()
         views.stop()
 
         server.server_close()
