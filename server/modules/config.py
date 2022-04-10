@@ -152,15 +152,24 @@ class BirdhouseConfigQueue(threading.Thread):
 
                     # EDIT QUEUE: backup (with date)
                     elif config_file == "backup":
-                        for date in self.status_queue[config_file]:
-                            entries = self.config.read_cache(config_file, date)
+                        for date in self.edit_queue[config_file]:
+                            entry_data = self.config.read_cache(config_file, date)
+                            entries = entry_data["files"]
+                            logging.info(date+"//"+str(entries))
                             self.config.lock(config_file, date)
 
-                            if len(self.edit_queue[config_file][date]) > 0:
+                            if date in self.edit_queue[config_file] and len(self.edit_queue[config_file][date]) > 0:
                                 count_files += 1
+                                logging.info("...."+str(date))
+                            elif date not in self.edit_queue[config_file]:
+                                self.edit_queue[config_file][date] = []
+
                             while len(self.edit_queue[config_file][date]) > 0:
                                 [key, entry, command] = self.edit_queue[config_file][date].pop()
                                 count_entries += 1
+
+                                logging.info("... "+key+" "+command+" ... "+str(entry))
+
                                 if command == "add" or command == "edit":
                                     entries[key] = entry
                                 elif command == "delete" and key in entries:
@@ -180,8 +189,9 @@ class BirdhouseConfigQueue(threading.Thread):
                                     if "to_be_deleted" in entries[key]:
                                         del entries[key]["to_be_deleted"]
 
+                            entry_data["files"] = entries
                             self.config.unlock(config_file, date)
-                            self.config.write(config_file, entries, date)
+                            self.config.write(config_file, entry_data, date)
 
                     # STATUS QUEUE: today, video (without date)
                     if config_file != "backup" and len(self.status_queue[config_file]) > 0:
@@ -205,10 +215,14 @@ class BirdhouseConfigQueue(threading.Thread):
                     elif config_file == "backup":
                         for date in self.status_queue[config_file]:
                             entry_data = self.config.read_cache(config_file, date)
+                            entries = entry_data["files"]
                             self.config.lock(config_file, date)
 
-                            if len(self.status_queue[config_file][date]) > 0:
+                            if date in self.status_queue[config_file] and len(self.status_queue[config_file][date]) > 0:
                                 count_files += 1
+                            else:
+                                self.status_queue[config_file][date] = []
+
                             while len(self.status_queue[config_file][date]) > 0:
                                 [date, key, change_status, status] = self.status_queue[config_file][date].pop()
                                 count_entries += 1
@@ -338,7 +352,7 @@ class BirdhouseConfigQueue(threading.Thread):
             self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted",
                                      status=entry_value)
             if entry_value == 1:
-                self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=1)
+                self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=0)
         else:
             response["error"] = "no entry found with stamp " + entry_id
 

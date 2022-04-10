@@ -339,6 +339,7 @@ class BirdhouseArchive(threading.Thread):
         """
         set / unset recycling
         """
+        logging.info(path)
         param = path.split("/")
         response = {"command": ["delete files that are marked as 'to_be_deleted'", param]}
 
@@ -406,7 +407,7 @@ class BirdhouseArchive(threading.Thread):
                             os.remove(os.path.join(directory, files[key][file_type]))
                             logging.debug("Delete - "+str(key)+": "+os.path.join(directory, files[key][file_type]))
 
-                self.config.queue.entry_keep_data(config=config, date="", key=key)
+                self.config.queue.entry_keep_data(config="backup", date=date, key=key)
 
             except Exception as e:
                 logging.error("Error while deleting file '" + key + "' ... " + str(e))
