@@ -654,7 +654,8 @@ class BirdhouseImageProcessing(object):
 
     def crop_raw(self, raw, crop_area, crop_type="relative"):
         """
-        crop image using relative dimensions (0.0 ... 1.0)
+        crop image using relative dimensions (0.0 ... 1.0);
+        ensure dimension is dividable by 2, which is required to create a video based on this images
         """
         try:
             height = raw.shape[0]
