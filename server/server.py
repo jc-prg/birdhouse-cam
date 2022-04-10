@@ -559,6 +559,7 @@ if __name__ == "__main__":
     config.directory_create("images")
     config.directory_create("videos")
     config.directory_create("videos_temp")
+    time.sleep(0.5)
 
     # start sensors
     sensor = {}

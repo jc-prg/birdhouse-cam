@@ -12,7 +12,7 @@ class BirdhouseConfigJSON(object):
 
     def __init__(self):
         self.locked = {}
-        logging.info("Starting JSON handler ...")
+        logging.info("Starting config JSON handler ...")
 
     def lock(self, filename):
         """
@@ -107,7 +107,7 @@ class BirdhouseConfigQueue(threading.Thread):
         """
         create videos and process queue
         """
-        logging.info("Starting Config Queue ...")
+        logging.info("Starting config queue ...")
         config_files = ["images", "videos", "backup", "sensor"]
         queue_count = 0
         while self._running:
@@ -426,9 +426,9 @@ class BirdhouseConfig(threading.Thread):
         """
         threading.Thread.__init__(self)
         self.name = "Config"
-        self.queue = BirdhouseConfigQueue(config=self)
-        self.json = BirdhouseConfigJSON()
-        self.queue.start()
+        self.param = None
+        self.queue = None
+        self.json = None
 
         self._running = True
         self._paused = False
@@ -472,8 +472,6 @@ class BirdhouseConfig(threading.Thread):
                 sys.exit()
 
         logging.info("Read configuration from '" + self.file_path("main") + "' ...")
-        self.param = self.read("main")
-        self.param["path"] = main_directory
 
     def run(self):
         """
@@ -481,6 +479,12 @@ class BirdhouseConfig(threading.Thread):
         """
         count = 0
         logging.info("Starting config handler ...")
+        self.json = BirdhouseConfigJSON()
+        self.queue = BirdhouseConfigQueue(config=self)
+        self.queue.start()
+        self.param = self.read("main")
+        self.param["path"] = self.main_directory
+
         while self._running:
             time.sleep(1)
             if self._paused and count == 0:
