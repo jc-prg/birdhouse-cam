@@ -114,7 +114,7 @@ class BirdhouseArchive(threading.Thread):
                 "video_file_short": file_short,
                 "video_file_short_length": file_short_length,
             }
-            self.config.queue.add_to_edit_queue(config="videos", date="", key=fid, entry=files[fid])
+            self.config.queue.entry_add(config="videos", date="", key=fid, entry=files[fid])
 
     def compare_files_init(self, date=""):
         """
