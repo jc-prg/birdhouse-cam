@@ -127,10 +127,6 @@ class BirdhouseConfigQueue(threading.Thread):
                         count_files += 1
                         while len(self.edit_queue[config_file]) > 0:
                             [key, entry, command] = self.edit_queue[config_file].pop()
-
-                            if config_file == "videos":
-                                logging.info(" -> "+key+" "+command+": "+str(entry))
-
                             count_entries += 1
                             if command == "add" or command == "edit":
                                 entries[key] = entry
