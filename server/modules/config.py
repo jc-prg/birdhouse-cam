@@ -97,6 +97,7 @@ class BirdhouseConfigQueue(threading.Thread):
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
+        self.queue_count = None
         self.config = config
         self._running = True
         self.edit_queue = {"images": [], "videos": [], "backup": {}, "sensor": []}
@@ -109,13 +110,12 @@ class BirdhouseConfigQueue(threading.Thread):
         """
         logging.info("Starting config queue ...")
         config_files = ["images", "videos", "backup", "sensor"]
-        queue_count = 0
+        start_time = time.time()
         while self._running:
-            if queue_count >= self.queue_wait:
-                queue_count = 0
-                for config_file in config_files:
+            if start_time + self.queue_wait < time.time():
+                start_time = time.time()
 
-                    start_time = time.time()
+                for config_file in config_files:
                     count_entries = 0
 
                     # EDIT QUEUE: today, video (without date)
@@ -219,7 +219,6 @@ class BirdhouseConfigQueue(threading.Thread):
                         logging.info("Queue: wrote "+str(count_entries)+" entries to config files ("+str(round(time.time()-start_time, 2))+"s)")
                     # self.views.favorite_list_update()
 
-            queue_count += 1
             time.sleep(1)
 
         logging.info("Stopped Config Queue.")
