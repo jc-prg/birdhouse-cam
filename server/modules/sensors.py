@@ -27,6 +27,7 @@ class BirdhouseSensor(threading.Thread):
         self.param = self.config.param["devices"]["sensors"][sensor_id]
         self.active = self.param["active"]
         self.running = True
+        self._paused = False
 
         self.GPIO = None
         self.sensor = None
@@ -59,6 +60,13 @@ class BirdhouseSensor(threading.Thread):
         logging.info("- Starting sensor loop (" + self.id + "/" + str(self.pin) + "/"+self.param["type"]+") ...")
         while self.running:
             time.sleep(1)
+
+            p_count = 0
+            while self._paused:
+                if p_count == 0:
+                    logging.info("Pause sensor "+self.id+" ...")
+                    p_count += 1
+                time.sleep(0.5)
 
             if self.config.update["sensor_"+self.id]:
                 self.param = self.config.param["devices"]["sensors"][self.id]
@@ -137,6 +145,12 @@ class BirdhouseSensor(threading.Thread):
         Stop sensors
         """
         self.running = False
+
+    def pause(self, value):
+        """
+        pause sensor measurement
+        """
+        self._paused = value
 
     def get_values(self):
         """

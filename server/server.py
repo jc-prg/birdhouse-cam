@@ -37,6 +37,9 @@ def on_exit(signum, handler):
     config.pause(True)
     for key in camera:
         camera[key].pause(True)
+    for key in sensor:
+        sensor[key].pause(True)
+    time.sleep(0.5)
 
     while True:
         confirm = input('Enter "yes" to cancel program now or "no" to keep running [yes/no]: ').strip().lower()
@@ -45,12 +48,16 @@ def on_exit(signum, handler):
             config.pause(False)
             for key in camera:
                 camera[key].pause(False)
+            for key in sensor:
+                sensor[key].pause(False)
             config.wait_if_locked("ALL")
             sys.exit()
         elif confirm == 'no':
             config.pause(False)
             for key in camera:
                 camera[key].pause(False)
+            for key in sensor:
+                sensor[key].pause(False)
             print("Keep running!\n")
             break
         else:
