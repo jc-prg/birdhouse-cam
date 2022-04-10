@@ -165,14 +165,16 @@ class BirdhouseVideoProcessing(threading.Thread):
         if self.camera.active and not self.camera.error and not self.recording:
             logging.info("Starting video recording ...")
             self.recording = True
-            self.info["date"] = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-            self.info["date_start"] = datetime.now().strftime('%Y%m%d_%H%M%S')
-            self.info["stamp_start"] = datetime.now().timestamp()
-            self.info["status"] = "recording"
-            self.info["camera"] = self.camera
-            self.info["camera_name"] = self.name
-            self.info["directory"] = self.directory
-            self.info["image_count"] = 0
+            self.info = {
+                "date": datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                "date_start": datetime.now().strftime('%Y%m%d_%H%M%S'),
+                "stamp_start": datetime.now().timestamp(),
+                "status": "recording",
+                "camera": self.camera,
+                "camera_name": self.name,
+                "directory": self.directory,
+                "image_count": 0
+            }
         elif not self.camera.active:
             response["error"] = "camera is not active " + self.camera.id
         elif self.recording:
@@ -198,7 +200,6 @@ class BirdhouseVideoProcessing(threading.Thread):
             self.create_video()
             self.info["status"] = "finished"
             self.config.queue.entry_add(config="videos", date="", key=self.info["date_start"], entry=self.info.copy())
-            self.info = {}
         elif not self.camera.active:
             response["error"] = "camera is not active " + self.camera.id
         elif not self.recording:
