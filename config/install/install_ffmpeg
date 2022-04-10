@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pip3 install ffmpeg-python
+
 git clone --depth 1 https://code.videolan.org/videolan/x264
 cd x264
 ./configure --host=arm-unknown-linux-gnueabi --enable-static --disable-opencl

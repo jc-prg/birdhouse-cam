@@ -3,7 +3,7 @@ import os
 import time
 import logging
 import numpy as np
-
+import ffmpeg
 import cv2
 from imutils.video import WebcamVideoStream
 from imutils.video import FPS
@@ -41,8 +41,8 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.recording = False
         self.processing = False
         self.max_length = 0.25 * 60
-        self.info = {}
         self.output = None
+        self.output_codec = {"vcodec": "libx264", "crf": 18}
         self.ffmpeg_cmd = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} "
         self.ffmpeg_cmd += "-vcodec libx264 -crf 18"
         self.ffmpeg_cmd += " {OUTPUT_FILENAME}"
@@ -241,26 +241,31 @@ class BirdhouseVideoProcessing(threading.Thread):
         Create video from images
         """
         self.processing = True
+        logging.info("Start video creation with ffmpeg ...")
+
         input_filenames = os.path.join(self.config.directory("videos"), self.filename("vimages") + "%" +
                                        str(self.count_length).zfill(2) + "d.jpg")
         output_filename = os.path.join(self.config.directory("videos"), self.filename("video"))
 
-        cmd_create = self.ffmpeg_cmd
-        cmd_create = cmd_create.replace("{INPUT_FILENAMES}", input_filenames)
-        cmd_create = cmd_create.replace("{OUTPUT_FILENAME}", output_filename)
-        cmd_create = cmd_create.replace("{FRAMERATE}", str(round(self.info["framerate"])))
+        try:
+            (
+                ffmpeg
+                .input(input_filenames)
+                .filter('fps', fps=self.info["framerate"], round='up')
+                .output(output_filename, vcodec=self.output_codec["vcodec"], crf=self.output_codec["crf"])
+                .overwrite_output()
+                .run(capture_stdout=True, capture_stderr=False)
+            )
+        except ffmpeg.Error as e:
+            self._msg_error("Error during ffmpeg video creation: "+str(e))
+            self.processing = False
+            return
 
         self.info["thumbnail"] = self.filename("thumb")
         cmd_thumb = "cp " + os.path.join(self.config.directory("videos"), self.filename("vimages") + str(1).zfill(
             self.count_length) + ".jpg ") + os.path.join(self.config.directory("videos"), self.filename("thumb"))
         cmd_delete = "rm " + os.path.join(self.config.directory("videos"), self.filename("vimages") + "*.jpg")
-        logging.info("Start video creation with ffmpeg ...")
-
         try:
-            logging.info(cmd_create)
-            message = os.system(cmd_create)
-            logging.debug(message)
-
             logging.info(cmd_thumb)
             message = os.system(cmd_thumb)
             logging.debug(message)
@@ -270,7 +275,9 @@ class BirdhouseVideoProcessing(threading.Thread):
             logging.debug(message)
 
         except Exception as e:
-            self._msg_error("Error during video creation: " + str(e))
+            self._msg_error("Error during video creation (thumbnail/cleanup): " + str(e))
+            self.processing = False
+            return
 
         self.processing = False
         logging.info("OK.")
@@ -302,19 +309,15 @@ class BirdhouseVideoProcessing(threading.Thread):
         cmd_thumbfile = "video_" + camera + "_" + stamp + "_thumb.jpeg"
         cmd_tempfiles = "img_" + camera + "_" + stamp + "_"
         framerate = 20
-        message = ""
 
         try:
             cmd_rm = "rm " + self.config.directory("videos_temp") + "*"
             logging.debug(cmd_rm)
             message = os.system(cmd_rm)
             if message != 0:
-                response = {
-                    "result": "error",
-                    "reason": "remove temp image files",
-                    "message": message
-                }
+                response = {"result": "error", "reason": "remove temp image files", "message": message}
                 self._msg_warning("Error during day video creation: remove old temp image files.")
+                return response
         except Exception as e:
             self._msg_warning("Error during day video creation: " + str(e))
 
@@ -323,28 +326,20 @@ class BirdhouseVideoProcessing(threading.Thread):
             logging.debug(cmd_copy)
             message = os.system(cmd_copy)
             if message != 0:
-                response = {
-                    "result": "error",
-                    "reason": "copy temp image files",
-                    "message": message
-                }
+                response = {"result": "error", "reason": "copy temp image files", "message": message}
                 self._msg_error("Error during day video creation: copy temp image files.")
                 return response
         except Exception as e:
             self._msg_error("Error during day video creation: " + str(e))
 
         cmd_filename = self.config.directory("videos_temp") + cmd_tempfiles
-        cmd_rename = "i=0; for fi in " + self.config.directory(
-            "videos_temp") + "image_*; do mv \"$fi\" $(printf \"" + cmd_filename + "%05d.jpg\" $i); i=$((i+1)); done"
+        cmd_rename = "i=0; for fi in " + self.config.directory("videos_temp") + "image_*; do mv \"$fi\" $(printf \""
+        cmd_rename += cmd_filename + "%05d.jpg\" $i); i=$((i+1)); done"
         try:
             logging.info(cmd_rename)
             message = os.system(cmd_rename)
             if message != 0:
-                response = {
-                    "result": "error",
-                    "reason": "rename temp image files",
-                    "message": message
-                }
+                response = {"result": "error", "reason": "rename temp image files", "message": message}
                 self._msg_error("Error during day video creation: rename temp image files.")
                 return response
         except Exception as e:
@@ -356,47 +351,36 @@ class BirdhouseVideoProcessing(threading.Thread):
                 if cmd_tempfiles in filename:
                     amount += 1
 
-        cmd_create = self.ffmpeg_cmd
-        cmd_create = cmd_create.replace("{INPUT_FILENAMES}", cmd_filename + "%05d.jpg")
-        cmd_create = cmd_create.replace("{OUTPUT_FILENAME}",
-                                        os.path.join(self.config.directory("videos"), cmd_videofile))
-        cmd_create = cmd_create.replace("{FRAMERATE}", str(framerate))
+        input_filenames = cmd_filename + "%05d.jpg"
+        output_filename = os.path.join(self.config.directory("videos"), cmd_videofile)
+        try:
+            (
+                ffmpeg
+                .input(input_filenames)
+                .filter('fps', fps=framerate, round='up')
+                .output(output_filename, vcodec=self.output_codec["vcodec"], crf=self.output_codec["crf"])
+                .overwrite_output()
+                .run(capture_stdout=True, capture_stderr=False)
+            )
+        except ffmpeg.Error as e:
+            self._msg_error("Error during ffmpeg video creation: "+str(e))
+            response = {"result": "error", "reason": "create video with ffmpeg", "message": str(e)}
+            return response
 
         try:
-            logging.debug(cmd_create)
-            message = os.system(cmd_create)
+            cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.directory("videos") + cmd_thumbfile
+            logging.info(cmd_thumb)
+            message = os.system(cmd_thumb)
             if message != 0:
-                response = {
-                    "result": "error",
-                    "reason": "create video with ffmpeg",
-                    "message": message
-                }
-                self._msg_error("Error during day video creation: create video with ffmpeg.")
-                return response
-        except Exception as e:
-            self._msg_error("Error during day video creation: " + str(e))
-
-        cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.directory("videos") + cmd_thumbfile
-        logging.info(cmd_thumb)
-        message = os.system(cmd_thumb)
-        try:
-            if message != 0:
-                response = {
-                    "result": "error",
-                    "reason": "create thumbnail",
-                    "message": message
-                }
+                response = {"result": "error", "reason": "create thumbnail", "message": message}
                 self._msg_error("Error during day video creation: create thumbnails.")
                 return response
+
             cmd_rm2 = "rm " + self.config.directory("videos_temp") + "*.jpg"
             logging.info(cmd_rm2)
             message = os.system(cmd_rm2)
             if message != 0:
-                response = {
-                    "result": "error",
-                    "reason": "remove temp image files",
-                    "message": message
-                }
+                response = {"result": "error", "reason": "remove temp image files", "message": message}
                 self._msg_error("Error during day video creation: remove temp image files.")
                 return response
         except Exception as e:
