@@ -116,6 +116,7 @@ class BirdhouseConfigQueue(threading.Thread):
                 start_time = time.time()
 
                 count_entries = 0
+                count_files = 0
                 for config_file in config_files:
 
                     # EDIT QUEUE: today, video (without date)
@@ -123,6 +124,7 @@ class BirdhouseConfigQueue(threading.Thread):
                         entries = self.config.read_cache(config_file)
                         self.config.lock(config_file)
 
+                        count_files += 1
                         while len(self.edit_queue[config_file]) > 0:
                             [key, entry, command] = self.edit_queue[config_file].pop()
                             count_entries += 1
@@ -154,6 +156,8 @@ class BirdhouseConfigQueue(threading.Thread):
                             entries = self.config.read_cache(config_file, date)
                             self.config.lock(config_file, date)
 
+                            if len(self.edit_queue[config_file][date]) > 0:
+                                count_files += 1
                             while len(self.edit_queue[config_file][date]) > 0:
                                 [key, entry, command] = self.edit_queue[config_file][date].pop()
                                 count_entries += 1
@@ -184,6 +188,7 @@ class BirdhouseConfigQueue(threading.Thread):
                         entries = self.config.read_cache(config_file)
                         self.config.lock(config_file)
 
+                        count_files += 1
                         while len(self.status_queue[config_file]) > 0:
                             [date, key, change_status, status] = self.status_queue[config_file].pop()
                             count_entries += 1
@@ -202,6 +207,9 @@ class BirdhouseConfigQueue(threading.Thread):
                             entry_data = self.config.read_cache(config_file, date)
                             entries = entry_data["files"]
                             self.config.lock(config_file, date)
+
+                            if len(self.status_queue[config_file][date]) > 0
+                                count_files += 1
                             while len(self.status_queue[config_file][date]) > 0:
                                 [date, key, change_status, status] = self.status_queue[config_file][date].pop()
                                 count_entries += 1
