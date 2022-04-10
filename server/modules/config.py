@@ -208,7 +208,7 @@ class BirdhouseConfigQueue(threading.Thread):
                             entries = entry_data["files"]
                             self.config.lock(config_file, date)
 
-                            if len(self.status_queue[config_file][date]) > 0
+                            if len(self.status_queue[config_file][date]) > 0:
                                 count_files += 1
                             while len(self.status_queue[config_file][date]) > 0:
                                 [date, key, change_status, status] = self.status_queue[config_file][date].pop()
