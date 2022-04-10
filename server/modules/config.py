@@ -155,20 +155,16 @@ class BirdhouseConfigQueue(threading.Thread):
                         for date in self.edit_queue[config_file]:
                             entry_data = self.config.read_cache(config_file, date)
                             entries = entry_data["files"]
-                            logging.info(date+"//"+str(entries))
                             self.config.lock(config_file, date)
 
                             if date in self.edit_queue[config_file] and len(self.edit_queue[config_file][date]) > 0:
                                 count_files += 1
-                                logging.info("...."+str(date))
                             elif date not in self.edit_queue[config_file]:
                                 self.edit_queue[config_file][date] = []
 
                             while len(self.edit_queue[config_file][date]) > 0:
                                 [key, entry, command] = self.edit_queue[config_file][date].pop()
                                 count_entries += 1
-
-                                logging.info("... "+key+" "+command+" ... "+str(entry))
 
                                 if command == "add" or command == "edit":
                                     entries[key] = entry
