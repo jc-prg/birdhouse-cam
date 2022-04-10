@@ -595,6 +595,8 @@ class BirdhouseImageProcessing(object):
         if detection_area is not None:
             image_1st, area = self.crop_raw(raw=image_1st, crop_area=detection_area, crop_type="relative")
             image_2nd, area = self.crop_raw(raw=image_2nd, crop_area=detection_area, crop_type="relative")
+        else:
+            area = [0, 0, 1, 1]
 
         try:
             logging.debug(self.id + "/compare 1: " + str(detection_area) + " / " + str(image_1st.shape))

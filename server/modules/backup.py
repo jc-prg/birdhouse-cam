@@ -154,9 +154,9 @@ class BirdhouseArchive(threading.Thread):
             image_current = ""
             image_last = ""
 
-            for time in files_keys:
-                if time in files_new and files_new[time]["camera"] == cam:
-                    filename_current = files_new[time]["lowres"]
+            for key in files_keys:
+                if key in files_new and files_new[key]["camera"] == cam:
+                    filename_current = files_new[key]["lowres"]
                     try:
                         filename = os.path.join(self.config.directory(config="images"), subdir, filename_current)
                         image_current = cv2.imread(filename)
@@ -166,24 +166,27 @@ class BirdhouseArchive(threading.Thread):
                         logging.error(e)
 
                     if len(filename_last) > 0:
-                        score = self.camera[cam].image.compare_raw(image_current, image_last)
-                        files_new[time]["compare"] = (filename_current, filename_last)
-                        files_new[time]["similarity"] = score
+                        detection_area = self.camera[cam].param["similarity"]["detection_area"]
+                        score = self.camera[cam].image.compare_raw(image_current, image_last, detection_area)
+                        files_new[key]["compare"] = (filename_current, filename_last)
+                        files_new[key]["similarity"] = score
                         count += 1
                     else:
-                        files_new[time]["compare"] = filename_current
-                        files_new[time]["similarity"] = 0
+                        files_new[key]["compare"] = filename_current
+                        files_new[key]["similarity"] = 0
 
                     if init:
                         logging.info(
                             cam + ": " + filename_current + "  " + str(count) + "/" + str(len(files)) + " - " + str(
-                                files_new[time]["similarity"]) + "%")
+                                files_new[key]["similarity"]) + "%")
 
                     filename_last = filename_current
                     image_last = image_current
 
-        if subdir == '':
-            self.config.write("images", files_new)
+                    self.config.queue.entry_add(config="images", date=subdir, key=key, entry=files_new[key])
+
+#        if subdir == '':
+#            self.config.write("images", files_new)
         self.processing = False
         return files_new
 
