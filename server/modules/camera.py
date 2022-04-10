@@ -170,7 +170,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 "date_start": datetime.now().strftime('%Y%m%d_%H%M%S'),
                 "stamp_start": datetime.now().timestamp(),
                 "status": "recording",
-                "camera": self.camera,
+                "camera": self.id,
                 "camera_name": self.name,
                 "directory": self.directory,
                 "image_count": 0
