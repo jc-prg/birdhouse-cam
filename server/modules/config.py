@@ -127,6 +127,10 @@ class BirdhouseConfigQueue(threading.Thread):
                         count_files += 1
                         while len(self.edit_queue[config_file]) > 0:
                             [key, entry, command] = self.edit_queue[config_file].pop()
+
+                            if config_file == "videos":
+                                logging.info(" -> "+key+" "+command+": "+str(entry))
+
                             count_entries += 1
                             if command == "add" or command == "edit":
                                 entries[key] = entry
@@ -205,7 +209,6 @@ class BirdhouseConfigQueue(threading.Thread):
                     elif config_file == "backup":
                         for date in self.status_queue[config_file]:
                             entry_data = self.config.read_cache(config_file, date)
-                            entries = entry_data["files"]
                             self.config.lock(config_file, date)
 
                             if len(self.status_queue[config_file][date]) > 0:

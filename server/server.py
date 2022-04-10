@@ -39,7 +39,7 @@ def on_exit(signum, handler):
         camera[key].pause(True)
     for key in sensor:
         sensor[key].pause(True)
-    time.sleep(0.5)
+    time.sleep(1)
 
     while True:
         confirm = input('Enter "yes" to cancel program now or "no" to keep running [yes/no]: ').strip().lower()
