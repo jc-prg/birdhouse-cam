@@ -468,12 +468,15 @@ class BirdhouseVideoProcessing(threading.Thread):
         cmd = cmd.replace("{OUTPUT_FILENAME}", str(output_file))
         cmd = cmd.replace("{FRAMERATE}", str(framerate))
 
+        start_frame = round(start_timecode * framerate)
+        end_frame = round(end_timecode * framerate)
+
         try:
             (
                 ffmpeg
                 .input(input_file)
                 .filter('fps', fps=framerate, round='up')
-                .trim(start_frame=start_timecode, end_frame=end_timecode)
+                .trim(start_frame=start_frame, end_frame=end_frame)
                 .output(output_file)
                 .overwrite_output()
                 .run(capture_stdout=True, capture_stderr=False)
