@@ -413,14 +413,10 @@ class BirdhouseVideoProcessing(threading.Thread):
         """
         param = path.split("/")
         response = {}
-        logging.info(str(param))
-
         if len(param) < 3:
             response["result"] = "Error: Parameters are missing "
-            response["result"] += "(/create-short-video/video-id/start-timecode/end-timecode/which-cam/)"
-            ### error in error message
+            response["result"] += "(/create-day-video/which-cam/)"
             logging.warning("Create video of daily images ... Parameters are missing.")
-
         else:
             which_cam = param[2]
             stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -473,11 +469,25 @@ class BirdhouseVideoProcessing(threading.Thread):
         cmd = cmd.replace("{FRAMERATE}", str(framerate))
 
         try:
-            logging.debug(cmd)
-            message = os.system(cmd)
-            logging.debug(message)
-        except Exception as e:
+            (
+                ffmpeg
+                .input(input_file)
+                .filter('fps', fps=framerate, round='up')
+                .trim(start_frame=start_timecode, end_frame=end_timecode)
+                .output(output_file)
+                .overwrite_output()
+                .run(capture_stdout=True, capture_stderr=False)
+            )
+        except ffmpeg.Error as e:
             self._msg_error("Error during video trimming: " + str(e))
+            return "Error"
+
+        #try:
+        #    logging.debug(cmd)
+        #    message = os.system(cmd)
+        #    logging.debug(message)
+        #except Exception as e:
+        #    self._msg_error("Error during video trimming: " + str(e))
 
         if os.path.isfile(output_file):
             return "OK"
