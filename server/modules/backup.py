@@ -146,6 +146,12 @@ class BirdhouseArchive(threading.Thread):
             files = {}
             files = self.update_image_config(file_list=file_list, files=files, subdir=subdir)
 
+            if os.path.isfile(self.config.file_path("sensor")):
+                sensor_data = self.config.read_cache(config="sensor")
+                for key in files:
+                    if key in sensor_data:
+                        files[key]["sensor"]["sensor1"] = sensor_data[key]
+
         count = 0
         files_new = files.copy()
         files_keys = files_new.keys()
