@@ -70,6 +70,16 @@ $ nano data/config.json
 $ systemctl start stream.service
 ```
 
+* Update swap memory (usually 100MiB is set as default)
+```
+$ sudo nano /etc/dphys-swapfile
+
+# change the following values to:
+CONF_SWAPSIZE=
+CONF_SWAPFACTOR=2
+
+$ sudo systemctl restart dphys-swapfile
+```
 ## Sources
 
 Thanks for your inspiration, code snippets, images:
