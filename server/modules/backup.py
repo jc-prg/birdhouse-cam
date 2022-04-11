@@ -154,6 +154,8 @@ class BirdhouseArchive(threading.Thread):
                             files[key]["sensor"]["sensor1"] = sensor_data[key]
                         else:
                             files[key]["sensor"] = sensor_data[key]
+                            if "activity" in files[key]["sensor"]:
+                                del files[key]["sensor"]["activity"]
 
         count = 0
         files_new = files.copy()
