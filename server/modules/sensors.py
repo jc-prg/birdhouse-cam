@@ -92,7 +92,7 @@ class BirdhouseSensor(threading.Thread):
                             logging.debug("Humidity:    " + str(indoor.humidity))
                         else:
                             raise Exception("Not valid ("+str(indoor.is_valid())+")")
-                    elif if self.param["type"] == "dht22":
+                    elif self.param["type"] == "dht22":
                         self.values["temperature"] = self.sensor.temperature
                         self.values["humidity"] = self.sensor.humidity
                         self.last_read = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
