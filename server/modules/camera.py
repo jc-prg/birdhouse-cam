@@ -1063,7 +1063,7 @@ class BirdhouseCamera(threading.Thread):
                             "sensor": {},
                             "size": self.image_size
                         }
-                        sensor_data = {}
+                        sensor_data = {"activity": round(100-float(similarity), 1)}
                         for key in self.sensor:
                             if self.sensor[key].running:
                                 sensor_data[key] = self.sensor[key].get_values()

@@ -155,8 +155,6 @@ class BirdhouseArchive(threading.Thread):
                         else:
                             files[key]["sensor"] = sensor_data[key]
 
-
-
         count = 0
         files_new = files.copy()
         files_keys = files_new.keys()
@@ -273,12 +271,17 @@ class BirdhouseArchive(threading.Thread):
             self.config.directory_create(config="images", date=backup_date)
             files = self.config.read_cache(config="images")
             files_backup = {"files": {}, "info": {}}
+            file_sensor = self.config.file_path(config="sensor")
+            file_sensor_copy = os.path.join(self.config.directory(config="images", date=backup_date), self.config.files["sensor"])
             stamps = list(reversed(sorted(files.keys())))
             dir_source = self.config.directory(config="images")
             count = 0
             count_data = 0
             count_other_date = 0
             backup_size = 0
+
+            if os.path.isfile(file_sensor):
+                os.popen("cp "+file_sensor+" "+file_sensor_copy)
 
             for cam in self.camera:
                 for stamp in stamps:

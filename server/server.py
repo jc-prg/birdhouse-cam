@@ -514,7 +514,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # images, js, css, ...
         elif file_ending in file_types:
-            if "/images/" in self.path or "/videos/" in self.path:
+            if "/images/" in self.path or "/videos/" in self.path or "/archive/" in self.path:
                 file_path = config.directories["data"]
             else:
                 file_path = "../"
