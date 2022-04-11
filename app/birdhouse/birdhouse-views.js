@@ -182,7 +182,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, true );
     }
 
-    if (active_page != "FAVORITS" && app_active_page != "VIDEOS") {
+    if (active_page != "FAVORITS" && app_active_page != "VIDEOS" && app_active_page != "ARCHIVE") {
         same_img_size = true;
     }
 
