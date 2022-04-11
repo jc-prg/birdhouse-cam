@@ -1166,6 +1166,8 @@ class BirdhouseCamera(threading.Thread):
                 else:
                     if "x" in self.param["image"]["resolution"]:
                         resolution = self.param["image"]["resolution"].split("x")
+                        current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH ,self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+                        logging.info("Current resolution: "+str(current))
                         logging.info("Set resolution: "+str(resolution))
                         # self.camera.stream.set(3, int(resolution[0]))
                         # self.camera.stream.set(4, int(resolution[1]))
