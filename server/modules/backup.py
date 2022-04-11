@@ -150,7 +150,12 @@ class BirdhouseArchive(threading.Thread):
                 sensor_data = self.config.read_cache(config="sensor")
                 for key in files:
                     if key in sensor_data:
-                        files[key]["sensor"]["sensor1"] = sensor_data[key]
+                        if "date" in sensor_data[key]:
+                            files[key]["sensor"]["sensor1"] = sensor_data[key]
+                        else:
+                            files[key]["sensor"] = sensor_data[key]
+
+
 
         count = 0
         files_new = files.copy()
@@ -181,8 +186,11 @@ class BirdhouseArchive(threading.Thread):
                         files_new[key]["similarity"] = 0
 
                     if init:
+                        sensor_str = ""
+                        if "sensor" in files_new[key]:
+                            sensor_str = str(files_new[key]["sensor"])
                         logging.info(" - " + cam + ": " + filename_current + "  " + str(count) + "/" + str(len(files)) +
-                                     " - " + str(files_new[key]["similarity"]) + "%")
+                                     " - " + str(files_new[key]["similarity"]) + "%  "+sensor_str)
 
                     filename_last = filename_current
                     image_last = image_current

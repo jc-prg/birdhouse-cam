@@ -1063,14 +1063,16 @@ class BirdhouseCamera(threading.Thread):
                             "sensor": {},
                             "size": self.image_size
                         }
+                        sensor_data = {}
                         for key in self.sensor:
                             if self.sensor[key].running:
-                                sensor_data = self.sensor[key].get_values()
-                                sensor_data["date"] = datetime.now().strftime("%d.%m.%Y")
+                                sensor_data[key] = self.sensor[key].get_values()
+                                sensor_data[key]["date"] = datetime.now().strftime("%d.%m.%Y")
                                 image_info["sensor"][key] = self.sensor[key].get_values()
-                                self.config.queue.entry_add(config="sensor", date="", key=stamp, entry=sensor_data)
-                                # self.write_sensor_info(timestamp=stamp, data=self.sensor[key].get_values())
-                                # self.write_cache(data_type="sensor", timestamp=stamp, data=sensor_data)
+
+                        self.config.queue.entry_add(config="sensor", date="", key=stamp, entry=sensor_data)
+                        # self.write_sensor_info(timestamp=stamp, data=self.sensor[key].get_values())
+                        # self.write_cache(data_type="sensor", timestamp=stamp, data=sensor_data)
 
                         path_lowres = os.path.join(self.config.directory("images"),
                                                    self.config.filename_image("lowres", stamp, self.id))
