@@ -1393,3 +1393,4 @@ class BirdhouseCamera(threading.Thread):
         self.video.param = self.param
         self.image.param = self.param
         self.config.update["camera_" + self.id] = False
+        self.camera_resolution_usb(self.param["image"]["resolution"])
