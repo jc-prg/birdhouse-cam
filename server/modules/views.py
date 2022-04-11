@@ -433,7 +433,8 @@ class BirdhouseViews(threading.Thread):
                         else:
                             for file in list(sorted(file_data["files"].keys())):
                                 if "camera" in file_data["files"][file] and file_data["files"][file]["camera"] == cam \
-                                        and file_data["files"][file]["type"] == "image":
+                                        and ("type" not in file_data["files"][file] or
+                                             file_data["files"][file]["type"] == "image"):
                                     first_img = file
                                     break
                             if first_img != "" and "lowres" in file_data["files"][first_img]:
