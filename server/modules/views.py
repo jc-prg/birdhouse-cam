@@ -414,6 +414,7 @@ class BirdhouseViews(threading.Thread):
                     file_data = self.config.read_cache(config="backup", date=directory)
                     content["groups"][group_name].append(directory)
 
+                    # check if config file in correct format
                     if "info" not in file_data or "files" not in file_data:
                         if directory not in content["entries"]:
                             content["entries"][directory] = {}
@@ -428,8 +429,11 @@ class BirdhouseViews(threading.Thread):
                         dir_count_delete = 0
                         dir_count_data = 0
 
-                        if image_title in file_data["files"] and "lowres" in file_data["files"]:
+                        # select preview image
+                        if image_title in file_data["files"] and "lowres" in file_data["files"][image_title]:
                             image = os.path.join(directory, file_data["files"][image_title]["lowres"])
+
+                        # or take first image as title image
                         else:
                             for file in list(sorted(file_data["files"].keys())):
                                 if "camera" in file_data["files"][file] and file_data["files"][file]["camera"] == cam \
