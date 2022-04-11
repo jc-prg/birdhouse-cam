@@ -83,7 +83,7 @@ class BirdhouseSensor(threading.Thread):
 
             elif count >= self.interval and self.param["active"]:
                 try:
-                    if self.param["type"] == "dht11":
+                    if self.param["type"] == "dht11" or self.param["type"] == "dht22-alt":
                         indoor = self.sensor.read()
                         if indoor.is_valid():
                             self.values["temperature"] = indoor.temperature
@@ -134,7 +134,7 @@ class BirdhouseSensor(threading.Thread):
                 else:
                     raise "Sensor type not supported"
 
-                if self.param["type"] == "dht11":
+                if self.param["type"] == "dht11" or self.param["type"] == "dht22-alt":
                     indoor = self.sensor.read()
                     if indoor.is_valid():
                         temp = "Temp: {:.1f} C; Humidity: {}% ".format(indoor.temperature, indoor.humidity)
