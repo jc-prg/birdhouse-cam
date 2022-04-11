@@ -443,7 +443,7 @@ class BirdhouseViews(threading.Thread):
                         for file in file_data["files"]:
                             file_info = file_data["files"][file]
                             if ("datestamp" in file_info and file_info["datestamp"] == directory) or "datestamp" not in file_info:
-                                if file_info["type"] == "image":
+                                if "type" not in file_info or file_info["type"] == "image":
                                     count += 1
                                 else:
                                     dir_count_data += 1
