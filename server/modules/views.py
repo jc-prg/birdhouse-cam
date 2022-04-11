@@ -300,7 +300,8 @@ class BirdhouseViews(threading.Thread):
                                 files_today[stamp]["category"] = category + stamp
                                 files_today[stamp]["detect"] = self.camera[which_cam].image_differs(file_info=files_today[stamp])
                                 files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
-                                count += 1
+                                if "type" in files_today[stamp] and files_today[stamp]["type"] != "data":
+                                    count += 1
 
             if not backup:
                 files_today["999999"] = {
@@ -322,13 +323,14 @@ class BirdhouseViews(threading.Thread):
                         if self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp],
                                                                   check_similarity=check_similarity):
                             files_yesterday[stamp] = files_all[stamp]
-                            if not "type" in files_yesterday[stamp]:
+                            if "type" not in files_yesterday[stamp]:
                                 files_yesterday[stamp]["type"] = "image"
                             files_yesterday[stamp]["category"] = category + stamp
                             files_yesterday[stamp]["detect"] = self.camera[which_cam].image_differs(
                                 file_info=files_yesterday[stamp])
                             files_yesterday[stamp]["directory"] = "/" + self.config.directories["images"]
-                            count += 1
+                            if "type" in files_yesterday[stamp] and files_yesterday[stamp]["type"] != "data":
+                                count += 1
 
             if len(files_yesterday) > 0:
                 content["entries_yesterday"] = files_yesterday
@@ -344,7 +346,8 @@ class BirdhouseViews(threading.Thread):
                                 files_recycle[stamp]["type"] = "image"
                             files_recycle[stamp]["category"] = category + stamp
                             files_recycle[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
-                            count += 1
+                            if "type" in files_recycle[stamp] and files_recycle[stamp]["type"] != "data":
+                                count += 1
 
             if len(files_recycle) > 0:
                 if backup:
