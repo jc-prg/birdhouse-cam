@@ -1173,6 +1173,8 @@ class BirdhouseCamera(threading.Thread):
                         # self.camera.stream.set(4, int(resolution[1]))
                         self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, float(resolution[0]))
                         self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, float(resolution[1]))
+                        current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH) ,self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+                        logging.info("New resolution: "+str(current))
                         # potential source for errors ... errno=16 / device or resource is busy === >>
                         # [ WARN:0@3.021] global /tmp/pip-wheel-8dvnqe62/opencv-python_7949e8065e824f1480edaa2d75fce534
                         # /opencv/modules/videoio/src/cap_v4l.cpp (801) requestBuffers VIDEOIO(V4L2:/dev/video1):
