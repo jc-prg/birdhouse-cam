@@ -48,6 +48,7 @@ function birdhouseStream_play(mic) {
     else if (birdhouse_infinity) { player.currentTime = player.duration - 1; }
 
     console.log("Play Audio Streams: "+mic+" (ID:"+id+" | URL:"+src+" | DURATION:"+player.duration+" | POS:"+player.currentTime+")");
+    player.muted = false;
     player.play();
     birdhouse_stream_play[mic] = true;
 }
