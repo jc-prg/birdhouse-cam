@@ -80,6 +80,7 @@ class BirdhouseSensor(threading.Thread):
                     logging.info("Retry starting sensor: "+self.id)
                     self.connect()
                     retry = 0
+
             elif count >= self.interval and self.param["active"]:
                 try:
                     if self.param["type"] == "dht11":
@@ -92,14 +93,17 @@ class BirdhouseSensor(threading.Thread):
                             logging.debug("Humidity:    " + str(indoor.humidity))
                         else:
                             raise Exception("Not valid ("+str(indoor.is_valid())+")")
+
                     elif self.param["type"] == "dht22":
                         self.values["temperature"] = self.sensor.temperature
                         self.values["humidity"] = self.sensor.humidity
                         self.last_read = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
                         logging.debug("Temperature: " + str(self.sensor.temperature))
                         logging.debug("Humidity:    " + str(self.sensor.humidity))
+
                     self.error = False
                     self.error_msg = ""
+
                 except Exception as e:
                     self.error = True
                     self.error_msg = "Error reading data from sensor: "+str(e)
@@ -125,7 +129,8 @@ class BirdhouseSensor(threading.Thread):
                 elif self.param["type"] == "dht22":
                     import board
                     import adafruit_dht
-                    self.sensor = adafruit_dht.DHT22(board.D4, use_pulseio=False)
+                    ada_pin = eval("board.D"+self.pin)
+                    self.sensor = adafruit_dht.DHT22(ada_pin, use_pulseio=False)
                 else:
                     raise "Sensor type not supported"
 
@@ -135,15 +140,11 @@ class BirdhouseSensor(threading.Thread):
                         temp = indoor.temperature
                     else:
                         temp = "error"
-                elif self.param["type"] == "dht-neu":
+                elif self.param["type"] == "dht22":
                     temperature_c = self.sensor.temperature
                     temperature_f = temperature_c * (9 / 5) + 32
                     humidity = self.sensor.humidity
-                    print(
-                        "Temp: {:.1f} F / {:.1f} C    Humidity: {}% ".format(
-                            temperature_f, temperature_c, humidity
-                        )
-                    )
+                    temp = "Temp: {:.1f} F / {:.1f} C    Humidity: {}% ".format(temperature_f, temperature_c, humidity)
                 self.error = False
                 self.error_connect = False
                 self.error_msg = ""
