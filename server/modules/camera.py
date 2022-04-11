@@ -1175,6 +1175,8 @@ class BirdhouseCamera(threading.Thread):
         """
         set resolution for USB
         """
+        self.type != "usb":
+            return
         if "x" in resolution:
             dimensions = resolution.split("x")
             current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH), self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
