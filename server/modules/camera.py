@@ -1166,12 +1166,21 @@ class BirdhouseCamera(threading.Thread):
                 else:
                     if "x" in self.param["image"]["resolution"]:
                         resolution = self.param["image"]["resolution"].split("x")
-                        logging.debug(str(resolution))
-                        self.camera.stream.set(3, int(resolution[0]))
-                        self.camera.stream.set(4, int(resolution[1]))
-                        # self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 1280);
-                        # self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 720);
-                        # potential source for errors ... errno=16 / device or resource is busy
+                        logging.info("Set resolution: "+str(resolution))
+                        # self.camera.stream.set(3, int(resolution[0]))
+                        # self.camera.stream.set(4, int(resolution[1]))
+                        self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, int(resolution[0]))
+                        self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, int(resolution[1]))
+                        # potential source for errors ... errno=16 / device or resource is busy === >>
+                        # [ WARN:0@3.021] global /tmp/pip-wheel-8dvnqe62/opencv-python_7949e8065e824f1480edaa2d75fce534
+                        # /opencv/modules/videoio/src/cap_v4l.cpp (801) requestBuffers VIDEOIO(V4L2:/dev/video1):
+                        # failed VIDIOC_REQBUFS: errno=16 (Device or resource busy)
+                        # ---
+                        # cale OpenCV(4.5.5) :-1: error: (-5:Bad argument) in function 'cvtColor'
+                        # > Overload resolution failed:
+                        # >  - src is not a numpy array, neither a scalar
+                        # >  - Expected Ptr<cv::UMat> for argument 'src'
+                        # )
                     self.cameraFPS = FPS().start()
                     logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
         except Exception as e:
