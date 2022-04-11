@@ -59,6 +59,10 @@ h3 { margin : 4px; }
     valign  : left;
 }
 
+.image_container.fixed_height {
+    height  : 220px;
+}
+
 .thumbnail { 
     width         : 137px;
     margin-bottom : 5px;
