@@ -467,7 +467,7 @@ class BirdhouseViews(threading.Thread):
                                     if "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
                                         dir_count_delete += 1
 
-                                    if file_info["type"] == "image":
+                                    if "type" not in file_info or file_info["type"] == "image":
                                         dir_count_cam += 1
 
                         dir_size += dir_size_cam
