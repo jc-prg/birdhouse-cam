@@ -137,14 +137,14 @@ class BirdhouseSensor(threading.Thread):
                 if self.param["type"] == "dht11":
                     indoor = self.sensor.read()
                     if indoor.is_valid():
-                        temp = indoor.temperature
+                        temp = "Temp: {:.1f} C; Humidity: {}% ".format(indoor.temperature, indoor.humidity)
                     else:
                         temp = "error"
                 elif self.param["type"] == "dht22":
                     temperature_c = self.sensor.temperature
                     temperature_f = temperature_c * (9 / 5) + 32
                     humidity = self.sensor.humidity
-                    temp = "Temp: {:.1f} F / {:.1f} C    Humidity: {}% ".format(temperature_f, temperature_c, humidity)
+                    temp = "Temp: {:.1f} F / {:.1f} C; Humidity: {}% ".format(temperature_f, temperature_c, humidity)
                 self.error = False
                 self.error_connect = False
                 self.error_msg = ""
@@ -155,7 +155,7 @@ class BirdhouseSensor(threading.Thread):
                 logging.error(self.error_msg)
             if not self.error:
                 logging.info("Loaded Sensor: "+self.id)
-                logging.info("- Initial temperature: "+str(temp))
+                logging.info("- Initial values: "+str(temp))
         else:
             self.error = True
             self.error_connect = True
