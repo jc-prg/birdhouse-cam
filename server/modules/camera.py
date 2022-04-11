@@ -13,6 +13,7 @@ import threading
 from threading import Condition
 from datetime import datetime
 
+# https://learn.circuit.rocks/introduction-to-opencv-using-the-raspberry-pi
 
 class BirdhouseVideoProcessing(threading.Thread):
     """
@@ -1164,31 +1165,40 @@ class BirdhouseCamera(threading.Thread):
                 if "NoneType" in check:
                     self.camera_error(True, "Images are empty, cv2 doesn't work for source " + str(self.source) + ", try picamera.")
                 else:
-                    if "x" in self.param["image"]["resolution"]:
-                        resolution = self.param["image"]["resolution"].split("x")
-                        current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH) ,self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
-                        logging.info("Current resolution: "+str(current))
-                        logging.info("Set resolution: "+str(resolution))
-                        # self.camera.stream.set(3, int(resolution[0]))
-                        # self.camera.stream.set(4, int(resolution[1]))
-                        self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, float(resolution[0]))
-                        self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, float(resolution[1]))
-                        current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH) ,self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
-                        logging.info("New resolution: "+str(current))
-                        # potential source for errors ... errno=16 / device or resource is busy === >>
-                        # [ WARN:0@3.021] global /tmp/pip-wheel-8dvnqe62/opencv-python_7949e8065e824f1480edaa2d75fce534
-                        # /opencv/modules/videoio/src/cap_v4l.cpp (801) requestBuffers VIDEOIO(V4L2:/dev/video1):
-                        # failed VIDIOC_REQBUFS: errno=16 (Device or resource busy)
-                        # ---
-                        # cale OpenCV(4.5.5) :-1: error: (-5:Bad argument) in function 'cvtColor'
-                        # > Overload resolution failed:
-                        # >  - src is not a numpy array, neither a scalar
-                        # >  - Expected Ptr<cv::UMat> for argument 'src'
-                        # )
+                    self.camera_resolution_usb(self.param["image"]["resolution"])
                     self.cameraFPS = FPS().start()
                     logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
         except Exception as e:
             self.camera_error(True, "Starting USB camera doesn't work: " + str(e))
+
+    def camera_resolution_usb(self, resolution):
+        """
+        set resolution for USB
+        """
+        if "x" in resolution:
+            dimensions = resolution.split("x")
+            current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH), self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+            logging.info("Current resolution: " + str(current))
+            logging.info("Set resolution: " + str(dimensions))
+            # self.camera.stream.set(3, int(resolution[0]))
+            # self.camera.stream.set(4, int(resolution[1]))
+            self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, float(dimensions[0]))
+            self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, float(dimensions[1]))
+            current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH), self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+            logging.info("New resolution: " + str(current))
+        else:
+            logging.info("Resolution definition not supported: "+str(resolution))
+
+        # potential source for errors ... errno=16 / device or resource is busy === >>
+        # [ WARN:0@3.021] global /tmp/pip-wheel-8dvnqe62/opencv-python_7949e8065e824f1480edaa2d75fce534
+        # /opencv/modules/videoio/src/cap_v4l.cpp (801) requestBuffers VIDEOIO(V4L2:/dev/video1):
+        # failed VIDIOC_REQBUFS: errno=16 (Device or resource busy)
+        # ---
+        # cale OpenCV(4.5.5) :-1: error: (-5:Bad argument) in function 'cvtColor'
+        # > Overload resolution failed:
+        # >  - src is not a numpy array, neither a scalar
+        # >  - Expected Ptr<cv::UMat> for argument 'src'
+        # )
 
     def camera_error(self, cam_error, message):
         """
