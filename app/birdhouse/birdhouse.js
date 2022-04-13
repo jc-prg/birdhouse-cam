@@ -127,15 +127,15 @@ function birdhouseHeaderFunctions() {
 	var reload_view = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
 	var audio_stream = "<img id='stream_toggle_header' class='header_icon_wide' src='birdhouse/img/icon_bird_mute.png' onclick='birdhouseStream_toggle();'>";
 	var active_cam  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_cam.toUpperCase()+"</text>";
-	if (app_active_mic) { var active_mic  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_mic.toUpperCase()+"</text>"; }
-	else                { var active_mic = ""; }
+	if (app_active_mic && !iOS) { var active_mic  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_mic.toUpperCase()+"</text>"  + audio_stream; }
+	else                        { var active_mic = ""; }
 	var info        = "&nbsp;";
 	var info = birdhouse_tooltip( info, "<div id='command_dropdown' style='width:90%;margin:auto;'>empty</div>", "info", "" );
 	
 	//html = reload_view + audio_stream + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info;
 	html = reload_view;
 	if (app_available_cameras != undefined && app_available_cameras.length > 1) { html += active_cam + switch_cam; }
-	if (app_available_cameras != undefined && app_available_micros.length > 1)  { html += active_mic + audio_stream; }
+	if (app_available_cameras != undefined && app_available_micros.length > 1)  { html += active_mic; }
 /*
 	if (app_available_cameras == undefined)	{ html = reload_view + audio_stream + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
 	else if (app_available_cameras.length > 1) { html = reload_view + audio_stream + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info; }

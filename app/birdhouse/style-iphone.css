@@ -18,6 +18,7 @@
 @media only screen and
     (device-width : 375px) and (orientation : portrait) {
 
+        .livestream_main     { max-width : 320px; }
         .image_container.fixed_height { height  : 180px; }
         .separator_group     { width  : 328px; font-size : 11px; }
         .thumbnail           { width :  98%;  }
