@@ -11,6 +11,6 @@ cd ..
 
 git clone git://source.ffmpeg.org/ffmpeg --depth=1
 cd ffmpeg
-/configure --arch=armel --target-os=linux --enable-gpl --enable-libx264 --enable-nonfree
+./configure --arch=armel --target-os=linux --enable-gpl --enable-libx264 --enable-nonfree
 make -j4
 sudo make install
