@@ -3,6 +3,7 @@ import time
 import logging
 import cv2
 import threading
+from tqdm import tqdm
 from datetime import datetime
 
 
@@ -132,7 +133,7 @@ class BirdhouseArchive(threading.Thread):
 
     def compare_files(self, file_list, init=False, subdir=""):
         """
-        Compare image files and write to config file
+        Compare image files and write to config file (incl. sensor data if exist)
         """
         if self.processing:
             # this part potentially can be removed again
@@ -156,16 +157,32 @@ class BirdhouseArchive(threading.Thread):
                             files[key]["sensor"] = sensor_data[key]
                             if "activity" in files[key]["sensor"]:
                                 del files[key]["sensor"]["activity"]
+                            if "date" in files[key]["sensor"]:
+                                del files[key]["sensor"]["date"]
 
         count = 0
         files_new = files.copy()
-        files_keys = files_new.keys()
+        files_new_cam = {}
+        files_keys = list(files_new.keys())
+
+        for cam in self.config.param["devices"]["cameras"]:
+            for key in files_keys:
+                if key in files_new and files_new[key]["camera"] == cam:
+                    if cam not in files_new_cam:
+                        files_new_cam[cam] = {}
+                    files_new_cam[cam][key] = files_new[key]
+
         for cam in self.config.param["devices"]["cameras"]:
             filename_last = ""
             image_current = ""
             image_last = ""
+            if cam not in files_new_cam:
+                continue
+            files_keys = list(files_new_cam[cam].keys())
+            keys_count = len(files_keys)
 
-            for key in files_keys:
+            for i in tqdm(range(0, keys_count), desc="Reloading images "+cam+" ..."):
+                key = files_keys[i]
                 if key in files_new and files_new[key]["camera"] == cam:
                     filename_current = files_new[key]["lowres"]
                     try:
@@ -189,7 +206,7 @@ class BirdhouseArchive(threading.Thread):
                         sensor_str = ""
                         if "sensor" in files_new[key]:
                             sensor_str = str(files_new[key]["sensor"])
-                        logging.info(" - " + cam + ": " + filename_current + "  " + str(count) + "/" + str(len(files)) +
+                        logging.debug(" - " + cam + ": " + filename_current + "  " + str(count) + "/" + str(len(files)) +
                                      " - " + str(files_new[key]["similarity"]) + "%  "+sensor_str)
 
                     filename_last = filename_current
