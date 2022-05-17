@@ -15,6 +15,7 @@ from datetime import datetime
 
 # https://learn.circuit.rocks/introduction-to-opencv-using-the-raspberry-pi
 
+
 class BirdhouseVideoProcessing(threading.Thread):
     """
     Record videos: start and stop; from all pictures of the day
@@ -318,7 +319,7 @@ class BirdhouseVideoProcessing(threading.Thread):
             if message != 0:
                 response = {"result": "error", "reason": "remove temp image files", "message": message}
                 self._msg_warning("Error during day video creation: remove old temp image files.")
-                return response
+                #return response
         except Exception as e:
             self._msg_warning("Error during day video creation: " + str(e))
 
