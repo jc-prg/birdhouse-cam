@@ -39,7 +39,6 @@ function birdhouse_app_settings (name="Settings") {
 						"jcApp: "		+ appFW.appVersion);
 
 		html += tab.row("Source:","<a href='https://github.com/jc-prg/birdhouse-cam/' target='_blank'>https://github.com/jc-prg/birdhouse-cam/</a>");
-		html += tab.row("CPU Temperature:",app_data["STATUS"]["cpu_temperature"] + "°C");
 		html += tab.row("&nbsp;");
 		html += tab.end();
 
@@ -77,7 +76,8 @@ function birdhouse_app_settings (name="Settings") {
 		html += tab.row("Backup-Time:&nbsp;", birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
 		html += tab.row("Backup-Preview:&nbsp;", birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
 		html += tab.row("RPi Active:&nbsp;", birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false", data_type="boolean") );
-        html += tab.row("<hr>");
+    	html += tab.row("RPi CPU Temperature:",app_data["STATUS"]["cpu_temperature"] + "°C");
+	    html += tab.row("<hr>");
 		html += tab.row("HTTP Server:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
 		html += tab.row("HTTP Port:&nbsp;", birdhouse_edit_field(id="set_port", field="server:port", type="input", options="true,false", data_type="integer") );
 		html += tab.row("Videostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_video", field="server:ip4_stream_video", type="input", options="true,false", data_type="string") );
