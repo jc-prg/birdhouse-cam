@@ -28,6 +28,7 @@ function birdhouseDevices( title, data ) {
 	    info["id"]    = camera;
 	    camera_name   = camera.toUpperCase() + ": " + cameras[camera]["name"];
 	    camera_stream = birdhouse_Image(camera_name, info);
+	    max_resolution = cameras[camera]["image"]["resolution_max"];
 
 		if (cameras[camera]["active"] == false || cameras[camera]["active"] == "false") {
 		    open = false;
@@ -51,6 +52,8 @@ function birdhouseDevices( title, data ) {
 		id_list += "set_name_"+camera+":set_type_"+camera+":set_active_"+camera+":set_source_"+camera+":";
 
         html_entry = tab.start();
+		html_entry += tab.row("- Max. Resolution:", max_resolution );
+		//birdhouse_edit_field(id="set_resolution_"+camera, field="devices:cameras:"+camera+":image:resolution", type="input", options="", data_type="string"));
 		html_entry += tab.row("- Resolution:", birdhouse_edit_field(id="set_resolution_"+camera, field="devices:cameras:"+camera+":image:resolution", type="input", options="", data_type="string"));
 		html_entry += tab.row("- Rotation:", birdhouse_edit_field(id="set_rotation_"+camera, field="devices:cameras:"+camera+":image:rotation", type="select", options="0,90,180,270", data_type="integer"));
 		html_entry += tab.row("- Crop:", birdhouse_edit_field(id="set_crop_"+camera, field="devices:cameras:"+camera+":image:crop", type="input", options="", data_type="json"));
@@ -128,7 +131,8 @@ function birdhouseDevices( title, data ) {
         html_entry += tab.start();
 		html_entry += tab.row("Name:", birdhouse_edit_field(id="set_name_"+sensor, field="devices:sensors:"+sensor+":name", type="input"));
 		html_entry += tab.row("Type:", birdhouse_edit_field(id="set_type_"+sensor, field="devices:sensors:"+sensor+":type", type="select", options="dht11,dht22"));
-		html_entry += tab.row("Source:", birdhouse_edit_field(id="set_source_"+sensor, field="devices:sensors:"+sensor+":pin", type="input", options="", data_type="integer"));
+		html_entry += tab.row("Source:", birdhouse_edit_field(id="set_source_"+sensor, field="devices:sensors:"+sensor+":pin", type="input", options="", data_type="integer")
+		                + " (data pin on RPi)");
 		html_entry += tab.row("Active:", birdhouse_edit_field(id="set_active_"+sensor, field="devices:sensors:"+sensor+":active", type="select", options="true,false", data_type="boolean"));
         if (sensors[sensor]["status"] && sensors[sensor]["status"]["error"] == true) {
     		html_entry += tab.row("<hr/>");
