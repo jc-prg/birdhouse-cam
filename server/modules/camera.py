@@ -730,10 +730,11 @@ class BirdhouseImageProcessing(object):
         if thickness == 0:
             thickness = self.text_default_thickness
 
+        param = str(text) + ", " + str(position) + ", " + str(font) + ", " + str(scale) + ", " + str(color) + ", " + str(thickness)
         try:
             raw = cv2.putText(raw, text, position, font, scale, color, thickness, cv2.LINE_AA)
         except Exception as e:
-            self._msg_warning("Could not draw text into image (" + str(e) + ")")
+            self._msg_warning("Could not draw text into image (" + str(e) + "|"+param+")")
 
         return raw
 
