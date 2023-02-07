@@ -39,6 +39,7 @@ function birdhouse_app_settings (name="Settings") {
 						"jcApp: "		+ appFW.appVersion);
 
 		html += tab.row("Source:","<a href='https://github.com/jc-prg/birdhouse-cam/' target='_blank'>https://github.com/jc-prg/birdhouse-cam/</a>");
+		html += tab.row("CPU Temperature:",app_data["STATUS"]["cpu_temperature"] + "°C");
 		html += tab.row("&nbsp;");
 		html += tab.end();
 
