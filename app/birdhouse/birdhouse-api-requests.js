@@ -25,6 +25,11 @@ function birdhouse_createDayVideo(camera) {
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerCreateDay,'','birdhouse_createDayVideo');
 	}
 	
+function birdhouse_recreateImageConfig() {
+	commands = ["recreate-image-config"];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerRecreateImageConfig,'','birdhouse_recreateImageConfig');
+	}
+
 function birdhouse_recycleRange(group_id, index, status, lowres_file) {
 	console.log("birdhouse_recycleRange: "+group_id+"/"+index+"/"+lowres_file);
 	
@@ -136,5 +141,11 @@ function birdhouse_AnswerTrim(data) {
 function birdhouse_AnswerCreateDay(data) {
 	//console.log(data);
 	appMsg.alert(lang("CREATE_DAY_STARTED"));
+	birdhouseReloadView();
+	}
+
+function birdhouse_AnswerRecreateImageConfig(data) {
+	//console.log(data);
+	appMsg.alert(lang("RECREATE_IMAGE_CONFIG"));
 	birdhouseReloadView();
 	}

@@ -504,6 +504,7 @@ class BirdhouseConfig(threading.Thread):
         self.queue.start()
         self.param = self.read("main")
         self.param["path"] = self.main_directory
+        self.param["swap"] = self.read_swap_info()
 
         while self._running:
             time.sleep(1)
@@ -733,6 +734,16 @@ class BirdhouseConfig(threading.Thread):
             self.param = self.read(config, date)
             for key in self.update:
                 self.update[key] = True
+
+    @staticmethod
+    def read_swap_info():
+        """
+        read swap info, if raspberry pi
+        """
+        cmd = "cat /etc/dphys-swapfile | grep CONF_SWAPSIZE"
+        message = os.system(cmd)
+        logging.info(message)
+        return message
 
     @staticmethod
     def filename_image(image_type, timestamp, camera=""):

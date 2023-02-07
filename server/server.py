@@ -247,8 +247,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = camera[which_cam].video.create_video_trimmed_queue(self.path)
         elif self.path.startswith("/create-day-video/"):
             response = camera[which_cam].video.create_video_day_queue(self.path)
+        elif self.path.startswith('/recreate-image-config/'):
+            response = backup.create_image_config_api(self.path)
         elif self.path.startswith('/remove/'):
-            response = backup.delete_marked_files(self.path)
+            response = backup.delete_marked_files_api(self.path)
 
         elif self.path.startswith("/edit_presets/"):
             param_string = self.path.replace("/edit_presets/", "")
@@ -596,28 +598,20 @@ if __name__ == "__main__":
     if not os.path.isfile(config.file_path("images")):
         for cam in camera:
             camera[cam].pause(True)
-        logging.info("Create image list for main directory ...")
-        backup.compare_files_init()
+        backup.create_image_config()
         for cam in camera:
             camera[cam].pause(False)
-        logging.info("OK.")
     else:
         test_config = config.read(config="images")
         if test_config == {}:
-            logging.info("Create image list for main directory ...")
-            backup.compare_files_init()
-            logging.info("OK.")
+            backup.create_image_config()
 
     if not os.path.isfile(config.file_path("videos")):
-        logging.info("Create video list for video directory ...")
         backup.create_video_config()
-        logging.info("OK.")
     else:
         test_config = config.read(config="videos")
         if test_config == {}:
-            logging.info("Create video list for video directory ...")
             backup.create_video_config()
-            logging.info("OK.")
 
     # Start Webserver
     try:

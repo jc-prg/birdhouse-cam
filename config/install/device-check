@@ -20,3 +20,22 @@ sudo apt-get install fswebcam
 sudo fswebcam image.jpg
 sudo fswebcam -d /dev/video0 image0.jpg
 sudo fswebcam -d /dev/video1 image1.jpg
+
+# get dev info
+/bin/udevadm info --name=/dev/video1
+
+# list USB devices
+lsusb
+
+# network devices (install before?)
+sudo lshw -C network
+
+# modules
+lsmod
+
+# network
+sudo apt install network-manager
+
+# network infos
+https://www.maketecheasier.com/fix-wi-fi-not-working-ubuntu/
+https://sleeplessbeastie.eu/2013/01/11/how-to-change-the-mac-address-of-an-ethernet-interface/

@@ -55,6 +55,7 @@ class BirdhouseArchive(threading.Thread):
         recreate video config file, if not exists
         """
         path = self.config.directory(config="videos")
+        logging.info("Create video list for video directory ...")
         logging.debug("Reading files from path: " + path)
 
         file_list = [f for f in os.listdir(path) if
@@ -116,22 +117,40 @@ class BirdhouseArchive(threading.Thread):
                 "video_file_short_length": file_short_length,
             }
             self.config.queue.entry_add(config="videos", date="", key=fid, entry=files[fid])
+        logging.info("Done.")
 
-    def compare_files_init(self, date=""):
+    def create_image_config(self, date="", recreate=False):
         """
         Initial compare files to create new config file
         """
+        time.sleep(1)
         if date == "":
+            logging.info("(Re)create image config file for main directory ...")
             path = self.config.directory(config="images")
         else:
+            logging.info("(Re)create image config file for  directory "+date+" ...")
             path = self.config.directory(config="backup", date=date)
-
+        if recreate and os.path.isfile(path):
+            logging.info("Remove existing image config file ...")
+            os.remove(path)
         file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and "_big" not in f]
         file_list.sort(reverse=True)
-        files = self.compare_files(file_list=file_list, init=True, subdir=date)
+        files = self.create_image_config_analyze(file_list=file_list, init=True, subdir=date)
+        logging.info("Done.")
         return files
 
-    def compare_files(self, file_list, init=False, subdir=""):
+    def create_image_config_api(self, path):
+        """
+        Call (re)creation via API and return JSON answer
+        """
+        logging.debug(path)
+        param = path.split("/")
+        response = {"command": ["recreate main image config file", param]}
+
+        self.create_image_config(date="", recreate=True)
+        return response
+
+    def create_image_config_analyze(self, file_list, init=False, subdir=""):
         """
         Compare image files and write to config file (incl. sensor data if exist)
         """
@@ -145,7 +164,7 @@ class BirdhouseArchive(threading.Thread):
             files = self.config.read_cache(config='images')
         else:
             files = {}
-            files = self.update_image_config(file_list=file_list, files=files, subdir=subdir)
+            files = self.create_image_config_get_filelist(file_list=file_list, files=files, subdir=subdir)
 
             if os.path.isfile(self.config.file_path("sensor")):
                 sensor_data = self.config.read_cache(config="sensor")
@@ -219,7 +238,7 @@ class BirdhouseArchive(threading.Thread):
         self.processing = False
         return files_new
 
-    def update_image_config(self, file_list, files, subdir=""):
+    def create_image_config_get_filelist(self, file_list, files, subdir=""):
         """
         get image date from file
         """
@@ -271,7 +290,7 @@ class BirdhouseArchive(threading.Thread):
             logging.info("Backup files: create a new config file, directory already exists")
 
             if not os.path.isfile(self.config.file_path(config="backup", date=backup_date)):
-                files = self.compare_files_init(date=backup_date)
+                files = self.create_image_config(date=backup_date)
                 files_backup = {"files": files, "info": {}}
                 files_backup["info"]["count"] = len(files)
                 files_backup["info"]["threshold"] = {}
@@ -371,11 +390,11 @@ class BirdhouseArchive(threading.Thread):
 
             self.config.write(config="backup", config_data=files_backup, date=directory)
 
-    def delete_marked_files(self, path):
+    def delete_marked_files_api(self, path):
         """
         set / unset recycling
         """
-        logging.info(path)
+        logging.debug(path)
         param = path.split("/")
         response = {"command": ["delete files that are marked as 'to_be_deleted'", param]}
 
