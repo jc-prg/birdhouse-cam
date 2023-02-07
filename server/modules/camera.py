@@ -732,9 +732,10 @@ class BirdhouseImageProcessing(object):
 
         param = str(text) + ", " + str(position) + ", " + str(font) + ", " + str(scale) + ", " + str(color) + ", " + str(thickness)
         try:
-            raw = cv2.putText(raw, text, position, font, scale, color, thickness, cv2.LINE_AA)
+            raw = cv2.putText(raw, text, tuple(position), font, scale, color, thickness, cv2.LINE_AA)
         except Exception as e:
-            self._msg_warning("Could not draw text into image (" + str(e) + "|"+param+")")
+            self._msg_warning("Could not draw text into image (" + str(e) + ")")
+            self._msg_warning(" ... "+param)
 
         return raw
 
@@ -926,6 +927,7 @@ class BirdhouseCamera(threading.Thread):
         self.source = self.param["source"]
         self.type = self.param["type"]
         self.record = self.param["record"]
+        self.max_resolution = None
 
         self.video = None
         self.image = None
@@ -1181,17 +1183,24 @@ class BirdhouseCamera(threading.Thread):
         """
         if self.type != "usb":
             return
+
+        current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH), self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+        logging.info("USB Current resolution: " + str(current))
+        high_value = 10000
+        self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, high_value)
+        self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, high_value)
+        self.max_resolution = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH), self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+        logging.info("USB Maximum resolution: " + str(self.max_resolution))
+
         if "x" in resolution:
             dimensions = resolution.split("x")
-            current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH), self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
-            logging.info("Current resolution: " + str(current))
-            logging.info("Set resolution: " + str(dimensions))
+            logging.info("USB Set resolution: " + str(dimensions))
             # self.camera.stream.set(3, int(resolution[0]))
             # self.camera.stream.set(4, int(resolution[1]))
             self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, float(dimensions[0]))
             self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, float(dimensions[1]))
             current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH), self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
-            logging.info("New resolution: " + str(current))
+            logging.info("USB New resolution: " + str(current))
         else:
             logging.info("Resolution definition not supported: "+str(resolution))
 
