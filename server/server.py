@@ -6,6 +6,7 @@ import logging
 import json
 import signal
 import sys
+import psutil
 
 import socketserver
 from http import server
@@ -122,12 +123,10 @@ def read_image(directory, filename):
     return f
 
 
-def get_cpu_temp():
+def get_system_data():
     """
-    Obtains the current value of the CPU temperature.
-    :returns: Current value of the CPU temperature if successful, zero value otherwise.
-    :rtype: float
     """
+    system = {}
     # Initialize the result.
     result = 0.0
     # The first line in this file holds the CPU temperature as an integer times 1000.
@@ -140,7 +139,14 @@ def get_cpu_temp():
             # Convert the string with the CPU temperature to a float in degrees Celsius.
             result = float(line) / 1000
     # Give the result back to the caller.
-    return result
+    system["cpu_temperature"] = result
+
+    hdd = psutil.disk_usage("/")
+    system["hdd_used"] = hdd.used / 1024
+    system["hdd_total"] = hdd.total / 1024
+
+    return system
+
 
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
@@ -440,7 +446,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "admin_allowed": self.admin_allowed(),
                     "check-version": version,
                     "api-call": status,
-                    "cpu_temperature": get_cpu_temp(),
+                    "system": get_system_data(),
                     "reload": False
                 },
                 "API": api_description,
