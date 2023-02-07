@@ -1,8 +1,6 @@
 numpy
 picamera
 imutils
-opencv-python
-scikit-image
 flask
 tqdm
 psutil
