@@ -76,7 +76,9 @@ function birdhouse_app_settings (name="Settings") {
 		html += tab.row("Backup-Time:&nbsp;", birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
 		html += tab.row("Backup-Preview:&nbsp;", birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
 		html += tab.row("RPi Active:&nbsp;", birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false", data_type="boolean") );
-    	html += tab.row("RPi CPU Temperature:",Math.round(app_data["STATUS"]["cpu_temperature"]*10)/10 + "°C");
+    	html += tab.row("RPi CPU Temperature:",Math.round(app_data["STATUS"]["system"]["cpu_temperature"]*10)/10 + "°C");
+    	html += tab.row("RPi HDD used:",Math.round(app_data["STATUS"]["system"]["hdd_used"]*10)/10 + " GB");
+    	html += tab.row("RPi HDD total:",Math.round(app_data["STATUS"]["system"]["hdd_total"]*10)/10 + " GB");
 	    html += tab.row("<hr>");
 		html += tab.row("HTTP Server:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
 		html += tab.row("HTTP Port:&nbsp;", birdhouse_edit_field(id="set_port", field="server:port", type="input", options="true,false", data_type="integer") );
