@@ -448,6 +448,7 @@ class BirdhouseConfig(threading.Thread):
         self.param = None
         self.queue = None
         self.json = None
+        self.json = BirdhouseConfigJSON()
 
         self._running = True
         self._paused = False
@@ -499,7 +500,6 @@ class BirdhouseConfig(threading.Thread):
         """
         count = 0
         logging.info("Starting config handler ...")
-        self.json = BirdhouseConfigJSON()
         self.queue = BirdhouseConfigQueue(config=self)
         self.queue.start()
         self.param = self.read("main")
@@ -667,7 +667,7 @@ class BirdhouseConfig(threading.Thread):
         """
         self.wait_if_paused()
         config_file = self.file_path(config, date)
-        self.json.write(config_file, config_data)
+        self.config.write(config_file, config_data)
 
         if date == "":
             self.config_cache[config] = config_data
