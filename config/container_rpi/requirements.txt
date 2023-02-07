@@ -4,3 +4,9 @@ imutils
 opencv-python
 scikit-image
 flask
+tqdm
+psutil
+setuptools
+wheel
+ffmpeg-python
+adafruit-circuitpython-dht
