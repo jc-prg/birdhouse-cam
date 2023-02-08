@@ -1033,7 +1033,7 @@ class BirdhouseCamera(threading.Thread):
                         datetime.now().strftime("%H:%M:%S")))
 
             # Image Recording (if not video recording)
-            elif self.param["active"]:
+            elif self.param["active"] and self.param["active"] != "False":
                 time.sleep(1)
                 if self.record:
                     if (seconds in self.param["image_save"]["seconds"]) and (
