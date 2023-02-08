@@ -143,8 +143,8 @@ def get_system_data():
 
     # ----> Einheit passt noch nicht?! Lt. Anleitung -> in Bytes?!
     hdd = psutil.disk_usage("/")
-    system["hdd_used"] = hdd.used / 8 / 1024 / 1024
-    system["hdd_total"] = hdd.total / 8 / 1024 / 1024
+    system["hdd_used"] = hdd.used / 1024 / 1024 / 1024
+    system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
 
     return system
 
