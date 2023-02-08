@@ -908,7 +908,8 @@ class BirdhouseCameraOutput(object):
 
 class BirdhouseCameraOther(object):
 
-    def __init__(self, source):
+    def __init__(self, source, name):
+        logging.info("Initialize Camera Thread for "+name+", source=/dev/video"+str(source)+" ...")
         self.stream = cv2.VideoCapture("/dev/video"+str(source), cv2.CAP_V4L)
 
     def read(self):
@@ -1174,7 +1175,7 @@ class BirdhouseCamera(threading.Thread):
             logging.info("Ensure Stream is released ...")
 
         try:
-            self.camera =BirdhouseCameraOther(self.source)
+            self.camera =BirdhouseCameraOther(self.source, self.id)
 
             if not self.camera.stream.isOpened():
                 self.camera_error(True, "Can't connect to camera, check if source is "+str(self.source)+" ("+str(self.camera.stream.isOpened())+").")
