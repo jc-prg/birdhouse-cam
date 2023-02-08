@@ -31,7 +31,7 @@ function birdhouse_app_settings (name="Settings") {
         html  = "<h2>Information: System &amp; App</h2>";
 		html += "<hr style='border:1px solid gray;'>"
 		html += tab.start();
-		html += tab.row("App:",				app_title);
+		html += tab.row("App:",			app_title);
 		html += tab.row("Versions:",
 						"App: " 		+ app_version + "<br/>" +
 						"API: " 		+ app_api_version + "<br/>" +
@@ -79,7 +79,7 @@ function birdhouse_app_settings (name="Settings") {
     	html += tab.row("RPi CPU Temperature:",Math.round(app_data["STATUS"]["system"]["cpu_temperature"]*10)/10 + "°C");
     	html += tab.row("RPi HDD used:",Math.round(app_data["STATUS"]["system"]["hdd_used"]*10)/10 + " GB");
     	html += tab.row("RPi HDD total:",Math.round(app_data["STATUS"]["system"]["hdd_total"]*10)/10 + " GB");
-	    html += tab.row("<hr>");
+	    html += tab.row("<hr/>");
 	    link = "http://"+app_data["DATA"]["server"]["ip4_address"]+":5100/_utils/";
     	html += tab.row("DB Server:","<a href='"+link+"' target='_blank'>"+link+"</a>");
 		html += tab.row("HTTP Server:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
