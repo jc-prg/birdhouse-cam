@@ -35,7 +35,7 @@ function birdhouseDevices( title, data ) {
 		    camera_name += " &nbsp; <i>(inactive)</i>";
         }
 	    html_temp = "<div class='camera_info'><div class='camera_info_image' style='max-height:120px;'><div style='margin:auto;width:130px;'>";
-	    if (cameras[camera]["active"] && !cameras[camera]["status"]["error"])
+	    if (cameras[camera]["active"])
 	         { html_temp  += camera_stream; }
 	    else { html_temp  += lang("CAMERA_INACTIVE"); }
 		html_temp += "</div></div>";

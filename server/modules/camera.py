@@ -760,7 +760,7 @@ class BirdhouseImageProcessing(object):
         image = self.draw_text(image, date_information, position, font, scale, color, thickness)
         return image
 
-    def draw_date_raw(self, raw):
+    def draw_date_raw(self, raw, overwrite_color="", overwrite_position=""):
         date_information = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 
         font = self.text_default_font
@@ -778,6 +778,11 @@ class BirdhouseImageProcessing(object):
         else:
             scale = ""
 
+        if overwrite_color != "":
+            color = overwrite_color
+        if overwrite_position != "":
+            position = overwrite_position
+            thickness = 1
         raw = self.draw_text_raw(raw, date_information, position, font, scale, color, thickness)
         return raw
 
@@ -1334,6 +1339,22 @@ class BirdhouseCamera(threading.Thread):
             error_msg = "Camera type not supported (" + str(self.type) + ")."
             self.camera_error(True, error_msg)
             return ""
+
+    def get_image_stream_raw(self):
+        """
+        get image, if error show error message
+        """
+        image = self.get_image_raw()
+        image_error = self.image.image_error_raw().copy()
+
+        if self.error or image == "":
+            msg = "Error: " + self.id + " (" + str(self.active) + "/" + str(self.source) + ")"
+            image_error = self.image.draw_text_raw(raw=image_error, text=msg, position=(20,400), font="", scale="",
+                                                   color=(0,0,255), thickness=1)
+            image_error = self.image.draw_date_raw(raw=image_error, overwrite_color=(0,0,255), overwrite_position=(20,440))
+            return image_error
+        else:
+            return image
 
     def get_image_raw(self):
         """
