@@ -667,7 +667,7 @@ class BirdhouseConfig(threading.Thread):
         """
         self.wait_if_paused()
         config_file = self.file_path(config, date)
-        self.config.write(config_file, config_data)
+        self.json.write(config_file, config_data)
 
         if date == "":
             self.config_cache[config] = config_data
