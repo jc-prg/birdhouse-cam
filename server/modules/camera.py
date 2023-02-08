@@ -1355,7 +1355,7 @@ class BirdhouseCamera(threading.Thread):
             try:
                 raw = self.camera.read()
                 if self.type == "other":
-                    raw = raw[1]
+                    raw = self.image.convert_to_raw(raw[1])
                 check = str(type(raw))
                 if "NoneType" in check:
                     self.camera_error(False, "Got an empty image (source=" + str(self.source) + ")")
