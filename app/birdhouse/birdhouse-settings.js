@@ -80,8 +80,8 @@ function birdhouse_app_settings (name="Settings") {
     	html += tab.row("RPi HDD used:",Math.round(app_data["STATUS"]["system"]["hdd_used"]*10)/10 + " GB");
     	html += tab.row("RPi HDD total:",Math.round(app_data["STATUS"]["system"]["hdd_total"]*10)/10 + " GB");
 	    html += tab.row("<hr>");
-	    link = "http://"+app_data["server"]["ip4_address"]+":5100/_utils/";
-    	html += tab.row("DB Server:","<a href='"+link+"'>"+link+"</a>");
+	    link = "http://"+app_data["DATA"]["server"]["ip4_address"]+":5100/_utils/";
+    	html += tab.row("DB Server:","<a href='"+link+"' target='_blank'>"+link+"</a>");
 		html += tab.row("HTTP Server:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
 		html += tab.row("HTTP Port:&nbsp;", birdhouse_edit_field(id="set_port", field="server:port", type="input", options="true,false", data_type="integer") );
 		html += tab.row("Videostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_video", field="server:ip4_stream_video", type="input", options="true,false", data_type="string") );
