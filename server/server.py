@@ -161,10 +161,10 @@ def get_system_data():
     output = process.communicate()[0]
     output = output.decode()
     output = output.replace("\n", ",")
-    output = output.replace(":,", ":")
-    output = output.replace(",,", "")
+    output = output.replace(":,", ":</b><br/>")
+    output = output.replace(",,", "<br/><b>")
     output = output.replace("\t", " ")
-    system["video_devices"] = str(output)
+    system["video_devices"] = "<b>"+str(output)
 
     return system
 
