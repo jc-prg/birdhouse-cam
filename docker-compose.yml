@@ -23,13 +23,13 @@ services:
 #        ipv4_address: 192.168.201.4
 
   birdhouse_server:
-    build: {CONTAINER_SERVER:./config/container_rpi/}
+    build: {CONTAINER_SERVER:-./config/container_rpi/}
     container_name: birdhouse_server
     privileged: true
     volumes:
       - ./:/usr/src/app/
-      - ${BIRDHOUSE_DIR_LOGGING:./log}:/log
-      - ${BIRDHOUSE_DIR_PROJECT:/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
+      - ${BIRDHOUSE_DIR_LOGGING:-./log}:/log
+      - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
     ports:
       - "8000:8000"
 #    depends_on:
@@ -39,13 +39,13 @@ services:
         ipv4_address: 192.168.201.5
 
   birdhouse_video_stream:
-    build: {CONTAINER_VIDEO:./config/container_video_rpi/}
+    build: {CONTAINER_VIDEO:-./config/container_video_rpi/}
     container_name: birdhouse_video
     privileged: true
     volumes:
       - ./:/usr/src/app/
-      - ${BIRDHOUSE_DIR_LOGGING:./log}:/log
-      - ${BIRDHOUSE_DIR_PROJECT:/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
+      - ${BIRDHOUSE_DIR_LOGGING:-./log}:/log
+      - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
     ports:
       - "8008:8008"
 #    depends_on:
