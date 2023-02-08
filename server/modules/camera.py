@@ -951,6 +951,9 @@ class BirdhouseCamera(threading.Thread):
         self.error_image_count = 0
         self.error_no_reconnect = False
 
+        self.reload_camera = True
+        self.config_update = None
+
         self.param = self.config.param["devices"]["cameras"][self.id]
         self.name = self.param["name"]
         self.active = self.param["active"]
@@ -970,18 +973,6 @@ class BirdhouseCamera(threading.Thread):
         self.camera = None
         self.cameraFPS = None
 
-        if self.type == "pi":
-            self.camera_start_pi()
-        elif self.type == "default":
-            self.camera_start_default()
-        elif self.type == "usb":
-            self.camera_start_usb()
-        else:
-            self.camera_error(True, "Unknown type of camera!")
-
-        if not self.error and self.param["video"]["allow_recording"]:
-            self.camera_start_recording()
-
         logging.debug("HOURS:   " + str(self.param["image_save"]["hours"]))
         logging.debug("SECONDS: " + str(self.param["image_save"]["seconds"]))
 
@@ -995,37 +986,45 @@ class BirdhouseCamera(threading.Thread):
             seconds = datetime.now().strftime('%S')
             hours = datetime.now().strftime('%H')
             stamp = datetime.now().strftime('%H%M%S')
-            config_update = self.config.update["camera_" + self.id]
+            self.config_update = self.config.update["camera_" + self.id]
 
+            # check if configuration shall be updated
+            if self.config_update:
+                self.update_main_config()
+                self.reload_camera = True
+
+            # start or reload camera connection
+            if self.reload_camera:
+                if self.type == "pi":
+                    self.camera_start_pi()
+                elif self.type == "default":
+                    self.camera_start_default()
+                elif self.type == "usb":
+                    self.camera_start_usb()
+                else:
+                    self.camera_error(True, "Unknown type of camera!")
+                if not self.error and self.param["video"]["allow_recording"]:
+                    self.camera_start_recording()
+                self.reload_camera = False
+
+            # check if camera is paused, wait with all processes ...
             if not self._paused:
                 count_paused = 0
-
             while self._paused and self.running:
                 if count_paused == 0:
                     logging.info("Recording images with " +self.id + " paused ...")
                     count_paused += 1
                 time.sleep(0.5)
 
-            if config_update:
-                self.update_main_config()
-
-            # Error with camera / or update main config - try to restart from time to time
+            # Error with camera / or update main config -> try to restart from time to time
             if self.running and self.error and not self.error_no_reconnect:
                 retry_time = 60
                 if self.error_time + retry_time < time.time():
-                    self.update_main_config()
-                    if self.param["active"] and self.param["active"] != "False":
-                        logging.info("Try to restart camera ("+self.type+"/"+str(self.param["active"])+") ...")
-                        if self.type == "pi":
-                            self.camera_start_pi()
-                        elif self.type == "usb":
-                            self.camera_start_usb()
-                    self.error_time = time.time()
-                    if not self.error and self.param["video"]["allow_recording"]:
-                        self.camera_start_recording()
+                    logging.info("Try to restart camera (" + self.type + "/" + str(self.param["active"]) + ") ...")
+                    self.config_update = True
 
-            # [image2 @ 0x561e328229c0] Could find no file
-            # with path '/home/jean/Projekte/test/birdhouse-cam/server/../data/videos/video_cam2_20220405_221441_%08d.jpg' and index in the range 0-4
+                # [image2 @ 0x561e328229c0] Could find no file
+                # with path '/home/jean/Projekte/test/birdhouse-cam/server/../data/videos/video_cam2_20220405_221441_%08d.jpg' and index in the range 0-4
 
             # Video Recording
             elif self.video.recording:

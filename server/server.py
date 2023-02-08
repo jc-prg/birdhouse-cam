@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os
+import threading
 import time
 import logging
 import json
@@ -145,10 +146,14 @@ def get_system_data():
     # Give the result back to the caller.
     system["cpu_temperature"] = result
 
-    # ----> Einheit passt noch nicht?! Lt. Anleitung -> in Bytes?!
+    # diskusage
     hdd = psutil.disk_usage("/")
     system["hdd_used"] = hdd.used / 1024 / 1024 / 1024
     system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
+
+    # threading informations
+    system["threads_active"] = str(threading.active_count())
+    system["threads_info"] = str(threading.enumerate())
 
     return system
 
