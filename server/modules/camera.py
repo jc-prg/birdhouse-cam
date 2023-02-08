@@ -908,7 +908,7 @@ class BirdhouseCameraOutput(object):
 
 class BirdhouseCameraOther(object):
 
-    def __int__(self, source):
+    def __init__(self, source):
         self.stream = cv2.VideoCapture("/dev/video"+str(source), cv2.CAP_V4L)
 
 
