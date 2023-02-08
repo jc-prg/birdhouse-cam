@@ -911,6 +911,9 @@ class BirdhouseCameraOther(object):
     def __init__(self, source):
         self.stream = cv2.VideoCapture("/dev/video"+str(source), cv2.CAP_V4L)
 
+    def read(self):
+        return self.stream.read()
+
 
 class BirdhouseCamera(threading.Thread):
 
