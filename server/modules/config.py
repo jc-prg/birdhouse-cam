@@ -5,8 +5,111 @@ import logging
 import json
 import codecs
 import threading
+import couchdb
+import requests
 from datetime import datetime
 
+
+class BirdhouseConfigCouchDB(object):
+
+    def __int__(self, db_usr, db_pwd, db_server, db_port, base_dir):
+        """
+        initialize
+        """
+        self.locked = {}
+        self.db_url = "http://"+db_usr+":"+db_pwd+"@"+db_server+":"+db_port+"/"
+        self.connected = False
+        self.basic_directory = base_dir
+        logging.info("Starting config CouchDB handler ...")
+
+        connects2db = 0
+        max_connects = 30
+
+        while connects2db < max_connects + 1:
+
+            if connects2db == 8 or connects2db == 15 or connects2db == 25:
+                logging.info("Waiting for DB ...")
+
+            try:
+                logging.info(" - Try to connect to CouchDB")
+                response = requests.get(self.db_url)
+                connects2db = max_connects + 1
+
+            except requests.exceptions.RequestException as e:
+                connects2db += 1
+                logging.warning(" - Waiting 5s for next connect to CouchDB: " + str(connects2db) + "/" + str(max_connects))
+                logging.warning("   -> " + str(e))
+                time.sleep(5)
+
+            if connects2db == max_connects:
+                logging.warning("Error connecting to CouchDB, give up.")
+                return
+
+        self.connected = True
+        self.database = couchdb.Server(self.db_url)
+        self.check_db()
+        logging.info("Connected.")
+
+    def check_db(self):
+        """
+        check if required DB exists or create (under construction)
+        """
+        return
+
+    def lock(self, filename):
+        """
+        not required for couch db
+        """
+        return
+
+    def unlock(self, filename):
+        """
+        not required for couch db
+        """
+        return
+
+    def wait_if_locked(self, filename):
+        """
+        not required for couch db
+        """
+        return
+
+    def filename2keys(self, filename):
+        """
+        translate filename to keys
+        """
+        filename = filename.replace(self.basic_directory, "")
+        filename = filename.replace(".json", "")
+        keys = filename.split("/")
+        return keys
+
+    def read(self, filename):
+        """
+        read data from DB
+        """
+        data = {}
+        keys = self.filename2keys(filename)
+        if keys[0] in self.database:
+            logging.info("FOUND ("+keys[0]+"/"+filename+")")
+            data = self.database[keys[0]]
+            if len(keys) == 1:
+                return data
+            elif len(keys) == 2 and keys[1] in data:
+                return data[keys[1]]
+            elif len(keys) == 3 and keys[2] in data[keys[1]]:
+                return data[keys[1]][keys[2]]
+            elif len(keys) == 4 and keys[3] in data[keys[1]][keys[2]]:
+                return data[keys[1]][keys[2]][keys[3]]
+        else:
+            logging.info("NOT FOUND (" + keys[0] + "/" + filename + ")")
+            return {}
+
+    def write(self, filename, data):
+        """
+        read data from DB
+        """
+        keys = self.filename2keys(filename)
+        return
 
 class BirdhouseConfigJSON(object):
 
