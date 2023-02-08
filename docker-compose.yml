@@ -6,21 +6,20 @@ version: "3"
 
 services:
 
-#  birdhouse_db:
-#    image: apache/couchdb:latest
-#    # image: matthiasg/rpi-couchdb:latest
-#    container_name: birdhouse_db
-#    ports:
-#      - "5100:5984"
-#    volumes:
-#      - ./data/couchdb:/opt/couchdb/data
-#      - ./config/couchdb/default.ini:/opt/couchdb/etc/default.ini
-#    environment:
-#      - 'COUCHDB_USER=birdhouse'
-#      - 'COUCHDB_PASSWORD=birdhouse'
-#    networks:
-#      mynet:
-#        ipv4_address: 192.168.201.4
+  birdhouse_db:
+    image:  ${IMAGE_DB:-matthiasg/rpi-couchdb:latest}
+    container_name: birdhouse_db
+    ports:
+      - "${BIRDHOUSE_DB_PORT:-5100}:5984"
+    volumes:
+      - ./data/couchdb:/opt/couchdb/data
+      - ./config/couchdb/default.ini:/opt/couchdb/etc/default.ini
+    environment:
+      - 'COUCHDB_USER=birdhouse'
+      - 'COUCHDB_PASSWORD=birdhouse'
+    networks:
+      mynet:
+        ipv4_address: 192.168.201.4
 
   birdhouse_server:
     build: ${CONTAINER_SERVER:-./config/container_rpi/}
@@ -31,7 +30,7 @@ services:
       - ${BIRDHOUSE_DIR_LOGGING:-./log}:/log
       - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
     ports:
-      - "8000:8000"
+      - "${BIRDHOUSE_HTTP_PORT:-8000}:8000"
 #    depends_on:
 #      - birdhouse_db
     restart: on-failure
@@ -48,7 +47,7 @@ services:
       - ${BIRDHOUSE_DIR_LOGGING:-./log}:/log
       - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
     ports:
-      - "8008:8008"
+      - "${BIRDHOUSE_HTTP_VIDEO:-8008}:8008"
 #    depends_on:
 #      - birdhouse_db
     restart: on-failure
