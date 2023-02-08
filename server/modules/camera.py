@@ -1298,7 +1298,7 @@ class BirdhouseCamera(threading.Thread):
         """
         if self.type == "pi":
             self.camera.wait_recording(0.1)
-        if self.type == "usb":
+        if self.type == "usb" or self.type == "other":
             time.sleep(0.1)
 
     def get_image(self):
@@ -1319,7 +1319,7 @@ class BirdhouseCamera(threading.Thread):
                 self.camera_error(False, error_msg)
                 return ""
 
-        elif self.type == "usb":
+        elif self.type == "usb" or self.type == "other":
             raw = self.get_image_raw()
             encoded = self.image.convert_from_raw(raw)
             return encoded
@@ -1348,7 +1348,7 @@ class BirdhouseCamera(threading.Thread):
                 self.camera_error(False, error_msg)
                 return ""
 
-        elif self.type == "usb":
+        elif self.type == "usb" or self.type == "other":
             try:
                 raw = self.camera.read()
                 check = str(type(raw))
