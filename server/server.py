@@ -497,7 +497,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             stream = True
 
             while stream:
-                frame = camera[which_cam].get_image_raw()
+                frame = camera[which_cam].get_image_stream_raw().copy()
                 frame_raw = frame
 
                 if config.update["camera_"+which_cam]:
