@@ -1192,11 +1192,11 @@ class BirdhouseCamera(threading.Thread):
 
 
 
-        self.camera_pi2.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
-        self.camera_pi2.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
-        ret, frame = self.camera_pi2.read()
-        cv2.imwrite('image_test_ck.jpg', frame)
-        self.camera_pi2.release()
+        #self.camera_pi2.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
+        #self.camera_pi2.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
+        #ret, frame = self.camera_pi2.read()
+        #cv2.imwrite('image_test_ck.jpg', frame)
+        #self.camera_pi2.release()
 
         return
 
