@@ -41,9 +41,12 @@ def on_exit(signum, handler):
     for key in sensor:
         sensor[key].pause(True)
     time.sleep(1)
+    confirm = "yes"
 
     while True:
-        confirm = input('Enter "yes" to cancel program now or "no" to keep running [yes/no]: ').strip().lower()
+        if confirm == "":
+            confirm = input('Enter "yes" to cancel program now or "no" to keep running [yes/no]: ').strip().lower()
+
         if confirm == 'yes':
             print("Cancel!\n")
             config.pause(False)
@@ -62,6 +65,7 @@ def on_exit(signum, handler):
             print("Keep running!\n")
             break
         else:
+            confirm = ""
             print('Sorry, no valid answer...\n')
         pass
 

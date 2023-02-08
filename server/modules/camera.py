@@ -972,8 +972,8 @@ class BirdhouseCamera(threading.Thread):
 
         if self.type == "pi":
             self.camera_start_pi()
-        elif self.type == "other":
-            self.camera_start_other()
+        elif self.type == "default":
+            self.camera_start_default()
         elif self.type == "usb":
             self.camera_start_usb()
         else:
@@ -1162,7 +1162,7 @@ class BirdhouseCamera(threading.Thread):
         except Exception as e:
             self.camera_error(True, "Starting PiCamera doesn't work: " + str(e))
 
-    def camera_start_other(self):
+    def camera_start_default(self):
         """
         Try out new
         """
@@ -1239,7 +1239,7 @@ class BirdhouseCamera(threading.Thread):
         """
         set resolution for USB
         """
-        if self.type != "usb" and self.type != "other":
+        if self.type != "usb" and self.type != "default":
             return
 
         current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH), self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
@@ -1303,7 +1303,7 @@ class BirdhouseCamera(threading.Thread):
         """
         if self.type == "pi":
             self.camera.wait_recording(0.1)
-        if self.type == "usb" or self.type == "other":
+        if self.type == "usb" or self.type == "default":
             time.sleep(0.1)
 
     def get_image(self):
@@ -1324,7 +1324,7 @@ class BirdhouseCamera(threading.Thread):
                 self.camera_error(False, error_msg)
                 return ""
 
-        elif self.type == "usb" or self.type == "other":
+        elif self.type == "usb" or self.type == "default":
             raw = self.get_image_raw()
             encoded = self.image.convert_from_raw(raw)
             return encoded
@@ -1353,7 +1353,7 @@ class BirdhouseCamera(threading.Thread):
                 self.camera_error(False, error_msg)
                 return ""
 
-        elif self.type == "usb" or self.type == "other":
+        elif self.type == "usb" or self.type == "default":
             try:
                 raw = self.camera.read()
                 check = str(type(raw))

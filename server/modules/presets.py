@@ -12,9 +12,9 @@ birdhouse_pages = {
 }
 
 birdhouse_default_cam_pi = {
-    "type": "pi",
+    "type": "default",
     "name": "Inside",
-    "source": 1,
+    "source": 0,
     "active": True,
     "record": True,
     "similarity": {
@@ -46,9 +46,9 @@ birdhouse_default_cam_pi = {
     }
 }
 birdhouse_default_cam_usb = {
-    "type": "usb",
+    "type": "default",
     "name": "Outside",
-    "source": 0,
+    "source": 1,
     "active": True,
     "record": True,
     "similarity": {
@@ -109,7 +109,8 @@ birdhouse_preset = {
         "ip4_stream_video": "",
         "rpi_active":       False,
         "port":             8000,              # http-port
-        "port_video":       8008
+        "port_video":       8008,
+        "database:type":    "json"             # can be "json" or "couchdb"
     },
     "devices": {
         "cameras": {
