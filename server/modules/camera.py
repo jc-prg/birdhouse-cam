@@ -961,6 +961,8 @@ class BirdhouseCamera(threading.Thread):
 
         if self.type == "pi":
             self.camera_start_pi()
+        elif self.type = "pi_new":
+            self.camera_start_pi_new()
         elif self.type == "usb":
             self.camera_start_usb()
         else:
@@ -1122,7 +1124,7 @@ class BirdhouseCamera(threading.Thread):
         """
         self._paused = command
 
-    def camera_start_pi(self):
+    def camera_start_pi_new(self):
         """
         Initialize picamera incl. initial settings
         """
@@ -1148,6 +1150,27 @@ class BirdhouseCamera(threading.Thread):
                 logging.info(self.id + ": OK.")
         except Exception as e:
             self.camera_error(True, "Starting PiCamera doesn't work: " + str(e))
+
+    def camera_start_pi(self):
+        """
+        Try out new
+        """
+        self.error = False
+        self.error_msg = ""
+        self.error_image = False
+        try:
+            self.camera_pi2.release()
+        except Exception as e:
+            logging.info("Ensure Stream is released ...")
+
+        self.camera_pi2 = cv2.VideoCapture('/dev/video0', cv2.CAP_V4L)
+        self.camera_pi2.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
+        self.camera_pi2.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
+        ret, frame = cap.read()
+        cv2.imwrite('image_test_ck.jpg', frame)
+        self.camera_pi2.release()
+
+        return
 
     def camera_start_usb(self):
         """
