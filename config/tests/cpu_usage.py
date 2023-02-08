@@ -1,4 +1,7 @@
+#!/usr/bin/python3
+
 import psutil, sys, time, os
+
 
 def clear():
     if os.name == "nt":
@@ -6,12 +9,14 @@ def clear():
     else:
         _ = os.system("clear")
 
+
 def get_threads_cpu_percent(p, interval=0.1):
    total_percent = p.cpu_percent(interval)
    total_time = sum(p.cpu_times())
    return [('%s %s %s' % (total_percent * ((t.system_time + t.user_time)/total_time), t.id, psutil.Process(t.id).name())) for t in p.threads()]
 
-try:s
+
+try:
     sys.argv[1]
 except:
     sys.exit('Enter PID')
