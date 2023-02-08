@@ -1318,7 +1318,7 @@ class BirdhouseCamera(threading.Thread):
                     encoded = self.video.output.frame
                 return encoded
             except Exception as e:
-                error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
+                error_msg = "Can't grab image from piCamera '" + self.id + "': " + str(e)
                 self.camera_error(False, error_msg)
                 return ""
 
@@ -1347,13 +1347,15 @@ class BirdhouseCamera(threading.Thread):
                 raw = self.image.convert_to_raw(encoded)
                 return raw
             except Exception as e:
-                error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
+                error_msg = "Can't grab image from piCamera '" + self.id + "': " + str(e)
                 self.camera_error(False, error_msg)
                 return ""
 
         elif self.type == "usb" or self.type == "other":
             try:
                 raw = self.camera.read()
+                if self.type == "other":
+                    raw = raw[1]
                 check = str(type(raw))
                 if "NoneType" in check:
                     self.camera_error(False, "Got an empty image (source=" + str(self.source) + ")")
