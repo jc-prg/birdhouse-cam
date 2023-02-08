@@ -906,6 +906,12 @@ class BirdhouseCameraOutput(object):
         return self.buffer.write(buf)
 
 
+class BirdhouseCameraOther(object):
+
+    def __int__(self, source):
+        self.stream = cv2.VideoCapture("/dev/video"+str(source), cv2.CAP_V4L)
+
+
 class BirdhouseCamera(threading.Thread):
 
     def __init__(self, thread_id, config, sensor):
@@ -961,8 +967,8 @@ class BirdhouseCamera(threading.Thread):
 
         if self.type == "pi":
             self.camera_start_pi()
-        elif self.type = "pi_new":
-            self.camera_start_pi_new()
+        elif self.type == "other":
+            self.camera_start_other()
         elif self.type == "usb":
             self.camera_start_usb()
         else:
@@ -1124,7 +1130,7 @@ class BirdhouseCamera(threading.Thread):
         """
         self._paused = command
 
-    def camera_start_pi_new(self):
+    def camera_start_pi(self):
         """
         Initialize picamera incl. initial settings
         """
@@ -1151,7 +1157,7 @@ class BirdhouseCamera(threading.Thread):
         except Exception as e:
             self.camera_error(True, "Starting PiCamera doesn't work: " + str(e))
 
-    def camera_start_pi(self):
+    def camera_start_other(self):
         """
         Try out new
         """
@@ -1159,14 +1165,36 @@ class BirdhouseCamera(threading.Thread):
         self.error_msg = ""
         self.error_image = False
         try:
-            self.camera_pi2.release()
+            self.camera.stream.release()
         except Exception as e:
             logging.info("Ensure Stream is released ...")
 
-        self.camera_pi2 = cv2.VideoCapture('/dev/video0', cv2.CAP_V4L)
+        try:
+            self.camera =BirdhouseCameraOther(self.source)
+
+            if not self.camera.stream.isOpened():
+                self.camera_error(True, "Can't connect to camera, check if source is "+str(self.source)+" ("+str(self.camera.stream.isOpened())+").")
+                self.camera.stream.release()
+            elif self.camera.stream is None:
+                self.camera_error(True, "Can't connect to camera, check if source is " + str(self.source) + ".)")
+            else:
+                raw = self.get_image_raw()
+                check = str(type(raw))
+                if "NoneType" in check:
+                    self.camera_error(True, "Images are empty, cv2 doesn't work for source " + str(self.source) + ", try picamera.")
+                else:
+                    self.camera_resolution_usb(self.param["image"]["resolution"])
+                    self.cameraFPS = FPS().start()
+                    logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
+
+        except Exception as e:
+            self.camera_error(True, "Starting OTHER camera doesn't work: " + str(e))
+
+
+
         self.camera_pi2.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
         self.camera_pi2.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
-        ret, frame = cap.read()
+        ret, frame = self.camera_pi2.read()
         cv2.imwrite('image_test_ck.jpg', frame)
         self.camera_pi2.release()
 
