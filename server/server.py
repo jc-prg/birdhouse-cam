@@ -149,7 +149,6 @@ def get_system_data():
     return system
 
 
-
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
@@ -468,7 +467,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # show live stream
         elif '/stream.mjpg' in self.path:
-            if camera[which_cam].type != "pi" and camera[which_cam].type != "usb":
+            if camera[which_cam].type != "pi" and camera[which_cam].type != "usb" and camera[which_cam].type != "other":
                 logging.warning(
                     "Unknown type of camera (" + camera[which_cam].type + "/" + camera[which_cam].name + ")")
                 self.error_404()
