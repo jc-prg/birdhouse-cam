@@ -1130,6 +1130,7 @@ class BirdhouseCamera(threading.Thread):
         self.error_image = False
         try:
             import picamera
+            # https://raspberrypi.stackexchange.com/questions/114035/picamera-and-ubuntu-20-04-arm64
         except ImportError:
             self.camera_error(True, "Module for PiCamera isn't installed. Try 'pip3 install picamera'.")
             self.error_no_reconnect = True
