@@ -1,7 +1,10 @@
-scikit-image
 numpy
 imutils
-opencv-python
 flask
+tqdm
+psutil
+setuptools
+wheel
+ffmpeg-python
 couchdb
 requests
