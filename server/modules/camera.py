@@ -912,7 +912,8 @@ class BirdhouseCameraOther(object):
         self.stream = cv2.VideoCapture("/dev/video"+str(source), cv2.CAP_V4L)
 
     def read(self):
-        return self.stream.read()
+        ref, raw = self.stream.read()
+        return raw
 
 
 class BirdhouseCamera(threading.Thread):
@@ -1354,8 +1355,6 @@ class BirdhouseCamera(threading.Thread):
         elif self.type == "usb" or self.type == "other":
             try:
                 raw = self.camera.read()
-                if self.type == "other":
-                    raw = self.image.convert_to_raw(raw[1])
                 check = str(type(raw))
                 if "NoneType" in check:
                     self.camera_error(False, "Got an empty image (source=" + str(self.source) + ")")
