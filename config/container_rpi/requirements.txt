@@ -8,3 +8,5 @@ setuptools
 wheel
 ffmpeg-python
 adafruit-circuitpython-dht
+couchdb
+requests
