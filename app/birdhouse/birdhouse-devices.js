@@ -44,7 +44,7 @@ function birdhouseDevices( title, data ) {
 		html_temp += tab.start();
 		html_temp += tab.row("Name:", birdhouse_edit_field(id="set_name_"+camera, field="devices:cameras:"+camera+":name", type="input"));
 		html_temp += tab.row("Type:", birdhouse_edit_field(id="set_type_"+camera, field="devices:cameras:"+camera+":type", type="select", options="default,pi,usb"));
-		html_temp += tab.row("Source:", birdhouse_edit_field(id="set_source_"+camera, field="devices:cameras:"+camera+":source", type="select", options="0,1,2,3,4,5", data_type="integer"));
+		html_temp += tab.row("Source:", birdhouse_edit_field(id="set_source_"+camera, field="devices:cameras:"+camera+":source", type="select", options="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20", data_type="integer"));
 		html_temp += tab.row("Active:", birdhouse_edit_field(id="set_active_"+camera, field="devices:cameras:"+camera+":active", type="select", options="true,false", data_type="boolean"));
 		html_temp += tab.row("Streaming:", cameras[camera]["video"]["streaming_server"]);
 		html_temp += tab.end();
@@ -89,6 +89,12 @@ function birdhouseDevices( title, data ) {
 
 		id_list += "set_record_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_record", "Record Images", html_entry, false );
+
+        html_entry = tab.start();
+        html_entry += tab.row("v4l2-ctl: ", app_data["STATUS"]["system"]["video_devices"]);
+        html_entry += tab.end();
+
+        html_temp += birdhouse_OtherGroup( camera+"_v4l2", "Available video devices", html_entry, false );
 
 		if (cameras[camera]["status"]["error"] || cameras[camera]["status"]["error_warn"] || cameras[camera]["status"]["image_error"] || cameras[camera]["status"]["video_error"]) {
             html_entry = tab.start();

@@ -8,6 +8,7 @@ import json
 import signal
 import sys
 import psutil
+import subprocess
 
 import socketserver
 from http import server
@@ -154,6 +155,16 @@ def get_system_data():
     # threading informations
     system["threads_active"] = str(threading.active_count())
     system["threads_info"] = str(threading.enumerate())
+
+    # read camera infos
+    process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
+    output = process.communicate()[0]
+    output = output.decode()
+    output = output.replace("\n", ",")
+    output = output.replace(":,", ":")
+    output = output.replace(",,", "")
+    output = output.replace("\t", " ")
+    system["video_devices"] = str(output)
 
     return system
 

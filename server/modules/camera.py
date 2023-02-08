@@ -965,7 +965,7 @@ class BirdhouseCamera(threading.Thread):
         self.previous_image = None
         self.previous_stamp = "000000"
 
-        logging.info("Starting camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
+        logging.info("Initializing camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
 
         self.image = BirdhouseImageProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param)
         self.video = BirdhouseVideoProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param, directory=self.config.directory("videos"))
@@ -994,7 +994,8 @@ class BirdhouseCamera(threading.Thread):
                 self.reload_camera = True
 
             # start or reload camera connection
-            if self.reload_camera:
+            if self.reload_camera and self.active:
+                logging.info("- (Re)starting Camera ("+self.id+") ...")
                 if self.type == "pi":
                     self.camera_start_pi()
                 elif self.type == "default":
@@ -1022,6 +1023,7 @@ class BirdhouseCamera(threading.Thread):
                 if self.error_time + retry_time < time.time():
                     logging.info("Try to restart camera (" + self.type + "/" + str(self.param["active"]) + ") ...")
                     self.config_update = True
+                    self.error_time = time.time()
 
                 # [image2 @ 0x561e328229c0] Could find no file
                 # with path '/home/jean/Projekte/test/birdhouse-cam/server/../data/videos/video_cam2_20220405_221441_%08d.jpg' and index in the range 0-4
