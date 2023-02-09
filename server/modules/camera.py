@@ -549,6 +549,7 @@ class BirdhouseImageProcessing(object):
 
         self.img_camera_error = "camera_na.jpg"
         self.img_camera_error_v2 = "camera_na_v3.jpg"
+        self.img_camera_error_v3 = "camera_na_v4.jpg"
         self.error = False
         self.error_msg = []
         self.error_camera = False
@@ -789,6 +790,38 @@ class BirdhouseImageProcessing(object):
         raw = self.draw_text_raw(raw, date_information, position, font, scale, color, thickness)
         return raw
 
+    def draw_error_information(self, raw, error_msg, reload_time, info_type="complete"):
+        """
+        add error information to image
+        """
+        if info_type == "complete":
+            raw = self.image_error_v2_raw()
+
+            msg = self.id + ": " + self.param["name"]
+            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 160), font="", scale=1,
+                                     color=(0, 0, 255), thickness=2)
+
+            msg = "Device: type=" + self.param["type"] + ", active=" + str(self.param["active"]) + ", source=" + str(self.param["source"])
+            msg += ", resolution=" + self.param["image"]["resolution"]
+            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 200), font="", scale=0.6,
+                                     color=(0, 0, 255), thickness=1)
+
+            msg = "Last Error: " + error_msg[len(error_msg) - 1] + " [#" + str(len(error_msg)) + "]"
+            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 230), font="", scale=0.6,
+                                     color=(0, 0, 255), thickness=1)
+
+            msg = "Last Reconnect: " + str(round(time.time() - reload_time)) + "s"
+            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 260), font="", scale=0.6,
+                                     color=(0, 0, 255), thickness=1)
+
+            raw = self.draw_date_raw(raw=raw, overwrite_color=(0, 0, 255), overwrite_position=(20, 310))
+
+        else:
+            raw = self.image_error_v2_raw(image=self.img_camera_error_v3)
+            raw = self.draw_date_raw(raw=raw, overwrite_color=(255, 0, 0), overwrite_position=(20, 40))
+
+        return raw
+
     def draw_area_raw(self, raw, area=(0, 0, 1, 1), color=(0, 0, 255), thickness=2):
         """
         draw as colored rectangle
@@ -831,10 +864,13 @@ class BirdhouseImageProcessing(object):
         else:
             return self.error_image_raw
 
-    def image_error_v2_raw(self, reload=False):
+    def image_error_v2_raw(self, reload=False, image=""):
         """
         return image with error message
         """
+        if image == "":
+            image = self.img_camera_error_v2
+
         if self.param["image"]["resolution"] and "x" in self.param["image"]["resolution"]:
             resolution = self.param["image"]["resolution"].split("x")
         else:
@@ -842,7 +878,7 @@ class BirdhouseImageProcessing(object):
         area = (0, 0, int(resolution[0]), int(resolution[1]))
 
         if self.error_image_raw is None or reload:
-            filename = os.path.join(self.config.main_directory, self.config.directories["data"], self.img_camera_error_v2)
+            filename = os.path.join(self.config.main_directory, self.config.directories["data"], image)
             raw = cv2.imread(filename)
             raw, area = self.crop_raw(raw=raw, crop_area=area, crop_type="absolute")
             self.error_image_v2_raw = raw
@@ -860,6 +896,31 @@ class BirdhouseImageProcessing(object):
         else:
             normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw,
                                                                          crop_area=self.param["image"]["crop_area"],
+                                                                         crop_type="pixel")
+        # rotate     - not implemented yet
+        # resize     - not implemented yet
+        # saturation - not implemented yet
+        return normalized
+
+    def normalize_error_raw(self, raw):
+        """
+        apply presets per camera to image -> implemented = crop to given values
+        """
+
+        if "crop_area" not in self.param["image"]:
+            [start_x, start_y, end_x, end_y] = self.param["image"]["crop"]
+            end_x = start_x + end_x
+            start_x = 0
+            area = [start_x, start_y, end_x, end_y]
+            normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw, crop_area=area,
+                                                                         crop_type="relative")
+        else:
+            [start_x, start_y, end_x, end_y] = self.param["image"]["crop_area"]
+            end_x = start_x + end_x
+            start_x = 0
+            area = [start_x, start_y, end_x, end_y]
+            normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw,
+                                                                         crop_area=area,
                                                                          crop_type="pixel")
         # rotate     - not implemented yet
         # resize     - not implemented yet
@@ -1396,7 +1457,7 @@ class BirdhouseCamera(threading.Thread):
             self.camera_error(True, error_msg)
             return ""
 
-    def get_image_stream_raw(self):
+    def get_image_stream_raw(self, detection=False):
         """
         get image, if error show error message
         """
@@ -1404,25 +1465,11 @@ class BirdhouseCamera(threading.Thread):
 
         if self.error or image == "":
             image_error = self.image.image_error_v2_raw()
+            if detection:
+                image_error = self.image.draw_error_information(image_error, self.error_msg, self.reload_time, "complete")
+            else:
+                image_error = self.image.draw_error_information(image_error, self.error_msg, self.reload_time, "reduced")
 
-            msg = self.id + ": " + self.name
-            image_error = self.image.draw_text_raw(raw=image_error, text=msg, position=(20,160), font="", scale=1,
-                                                   color=(0,0,255), thickness=2)
-
-            msg = "Device: type=" + self.type + ", active=" + str(self.active) + ", source=" + str(self.source)
-            msg += ", resolution=" + self.param["image"]["resolution"]
-            image_error = self.image.draw_text_raw(raw=image_error, text=msg, position=(20,200), font="", scale=0.6,
-                                                   color=(0,0,255), thickness=1)
-
-            msg = "Last Error: " + self.error_msg[len(self.error_msg)-1] + " [#" + str(len(self.error_msg)) + "]"
-            image_error = self.image.draw_text_raw(raw=image_error, text=msg, position=(20,230), font="", scale=0.6,
-                                                   color=(0,0,255), thickness=1)
-
-            msg = "Last Reconnect: " + str(round(time.time() - self.reload_time)) + "s"
-            image_error = self.image.draw_text_raw(raw=image_error, text=msg, position=(20,260), font="", scale=0.6,
-                                                   color=(0,0,255), thickness=1)
-
-            image_error = self.image.draw_date_raw(raw=image_error, overwrite_color=(0,0,255), overwrite_position=(20,310))
             return image_error
         else:
             return image

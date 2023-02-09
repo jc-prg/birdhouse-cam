@@ -513,11 +513,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             stream = True
 
             while stream:
-                frame = camera[which_cam].get_image_stream_raw()
-                frame_raw = frame
-
                 if config.update["camera_"+which_cam]:
                     camera[which_cam].update_main_config()
+
+                frame = camera[which_cam].get_image_stream_raw()
+                frame_raw = frame
 
                 if not camera[which_cam].error and not camera[which_cam].error_image:
 
@@ -554,6 +554,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                         frame = camera[which_cam].image.convert_from_raw(frame)
                 else:
+                    if self.path.startswith("/detection/"):
+                        frame = camera[which_cam].get_image_stream_raw(detection=True)
+                    else:
+                        frame = camera[which_cam].image.normalize_error_raw(frame)
                     frame = camera[which_cam].image.convert_from_raw(frame)
 
                 try:
