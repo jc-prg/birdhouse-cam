@@ -160,6 +160,19 @@ def get_system_data():
     process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
     output = process.communicate()[0]
     output = output.decode()
+    output_2 = output.split("\n")
+    last_key = "none"
+    system["video_dev_new"] = {}
+    system["video_dev_new2"] = {}
+    for value in output_2:
+        if ":" in value:
+            system["video_dev_new"][value] = []
+            last_key = value
+        elif value != "":
+            value = value.replace("\t","")
+            system["video_dev_new"][last_key].append(value)
+            info = last_key.split(":")
+            system["video_dev_new2"][value] = value + " (" +info[0] + ")"
     output = output.replace("\n", ",")
     output = output.replace(":,", ":</b><br/>")
     output = output.replace(",,", "<br/><b>")
@@ -301,7 +314,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         elif self.path.startswith("/edit_presets/"):
             param_string = self.path.replace("/edit_presets/", "")
-            param = param_string.split("/")
+            param = param_string.split("///")
             data = {}
             for entry in param:
                 if "==" in entry:
@@ -315,6 +328,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     data[key] = data[key].replace("%7C", "|")
                     data[key] = data[key].replace("%7D", "}")
             config.main_config_edit("main", data)
+            for key in camera:
+                camera[key].config_update = True
+
         elif self.path.startswith("/check-timeout/"):
             time.sleep(30)
             response = {"check": "timeout"}
@@ -485,7 +501,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.stream_file(filetype='image/jpeg',
                              content=read_image(directory="", filename='image_' + which_cam + '.jpg'))
 
-        # show live stream
+        # show live streamss
         elif '/stream.mjpg' in self.path:
             if camera[which_cam].type != "pi" and camera[which_cam].type != "usb" and camera[which_cam].type != "default":
                 logging.warning(
@@ -497,7 +513,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             stream = True
 
             while stream:
-                frame = camera[which_cam].get_image_stream_raw().copy()
+                frame = camera[which_cam].get_image_stream_raw()
                 frame_raw = frame
 
                 if config.update["camera_"+which_cam]:

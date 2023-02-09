@@ -111,6 +111,7 @@ class BirdhouseConfigCouchDB(object):
         keys = self.filename2keys(filename)
         return
 
+
 class BirdhouseConfigJSON(object):
 
     def __init__(self):
@@ -813,6 +814,8 @@ class BirdhouseConfig(threading.Thread):
                 value = float(value)
             elif data_type == "integer":
                 value = int(value)
+            elif data_type == "string":
+                value = value
             elif data_type == "json":
                 try:
                     value = json.loads(value)

@@ -15,7 +15,7 @@ function birdhouse_INDEX(data, camera) {
 	var other_cams    = [];
 
 	for (let key in cameras) {
-	    if (cameras[key]["active"] && cameras[key]["status"]["error"] == false) {
+	    if (cameras[key]["active"] ) { //&& cameras[key]["status"]["error"] == false) {
     	    if (active_camera == undefined) { active_camera = key; }
             if (key == active_camera) {
                 active_cam  = {

@@ -22,6 +22,16 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
     if (type == "input") {
         html += "<input id='"+id+"' value='"+data+"' style='"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");'>";
     }
+    else if (type == "select_dict") {
+        html += "<select id='"+id+"'>";
+        Object.keys(options).forEach (key => {
+            if (data == true || data == false) { data_str = data.toString(); }
+            else { data_str = data; }
+            if (data_str == key)  { html += "<option selected='selected' value='"+key+"'>"+options[key]+"</option>"; }
+            else                  { html += "<option value='"+key+"'>"+options[key]+"</option>"; }
+            });
+        html += "</select>";
+        }
     else if (type == "select") {
         var values = options.split(",");
         html += "<select id='"+id+"'>";
@@ -106,7 +116,7 @@ function birdhouse_edit_send(id_list) {
             info += document.getElementById(ids[i]+"_data").value + "==";
             info += encodeURI(field_data) + "||";
             info += document.getElementById(ids[i]+"_data_type").value;
-            info += "/";
+            info += "///";
         }
         else {
             console.error("Could not find element: "+ids[i]);
