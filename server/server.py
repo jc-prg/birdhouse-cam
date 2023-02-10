@@ -147,6 +147,12 @@ def get_system_data():
     # Give the result back to the caller.
     system["cpu_temperature"] = result
 
+    # cpu information
+    system["cpu_usage"] = psutil.cpu_percent(interval=1, percpu=False)
+    system["cpu_usage_detail"] = psutil.cpu_percent(interval=1, percpu=True)
+    system["mem_total"] = psutil.virtual_memory().total / 1024 / 1024
+    system["mem_used"] = psutil.virtual_memory().used / 1024 / 1024
+
     # diskusage
     hdd = psutil.disk_usage("/")
     system["hdd_used"] = hdd.used / 1024 / 1024 / 1024

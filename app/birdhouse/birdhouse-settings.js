@@ -68,7 +68,22 @@ function birdhouse_app_settings (name="Settings") {
 
 		setTextById("setting1", html);
 
-        html  = "<h2>"+lang("SETTINGS")+": Server</h2>";
+        html  = "<h2>"+lang("INFORMATION")+": Server</h2>";
+		html += "<hr style='border:1px solid gray;'>"
+
+		html += tab.start();
+    	html += tab.row("CPU Temperature:",     "<div id='system_info_cpu_temperature'>please wait ...</div>");
+    	html += tab.row("CPU Usage:",           "<div id='system_info_cpu_usage'>please wait ...</div>");
+    	html += tab.row("CPU Usage (Details):", "<div id='system_info_cpu_usage_detail'>please wait ...</div>");
+    	html += tab.row("Memory Total:",        "<div id='system_info_mem_total'>please wait ...</div>");
+    	html += tab.row("Memory Used:",         "<div id='system_info_mem_used'>please wait ...</div>");
+    	html += tab.row("HDD used:",Math.round(app_data["STATUS"]["system"]["hdd_used"]*10)/10 + " GB");
+    	html += tab.row("HDD total:",Math.round(app_data["STATUS"]["system"]["hdd_total"]*10)/10 + " GB");
+        html += tab.row("&nbsp;");
+        html += tab.end();
+        html += "<br/>&nbsp;"
+
+        html += "<h2>"+lang("SETTINGS")+": Server</h2>";
 		html += "<hr style='border:1px solid gray;'>"
 
 		html += tab.start();
@@ -76,9 +91,6 @@ function birdhouse_app_settings (name="Settings") {
 		html += tab.row("Backup-Time:&nbsp;", birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
 		html += tab.row("Backup-Preview:&nbsp;", birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
 		html += tab.row("RPi Active:&nbsp;", birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false", data_type="boolean") );
-    	html += tab.row("RPi CPU Temperature:",Math.round(app_data["STATUS"]["system"]["cpu_temperature"]*10)/10 + "°C");
-    	html += tab.row("RPi HDD used:",Math.round(app_data["STATUS"]["system"]["hdd_used"]*10)/10 + " GB");
-    	html += tab.row("RPi HDD total:",Math.round(app_data["STATUS"]["system"]["hdd_total"]*10)/10 + " GB");
 	    html += tab.row("<hr/>");
 	    link = "http://"+app_data["DATA"]["server"]["ip4_address"]+":5100/_utils/";
     	html += tab.row("DB Server:","<a href='"+link+"' target='_blank'>"+link+"</a>");
@@ -91,6 +103,7 @@ function birdhouse_app_settings (name="Settings") {
         html += tab.row("<hr>");
 		html += tab.row("", birdhouse_edit_save("set_main","set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port") );
         html += tab.row("&nbsp;");
+        html += tab.end();
 
 		setTextById("setting2", html);
         setTextById("setting3", "");

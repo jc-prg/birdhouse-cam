@@ -6,6 +6,23 @@
 
 function birdhouseStatus_print(data) {
     console.debug("Update Status ...");
+
+    // add system information
+    percentage = (data["STATUS"]["system"]["mem_used"]/data["STATUS"]["system"]["mem_total"])*100
+    setTextById("system_info_mem_total",        (Math.round(data["STATUS"]["system"]["mem_total"]*10)/10)+" MB")
+    setTextById("system_info_mem_used",         (Math.round(data["STATUS"]["system"]["mem_used"]*10)/10)+" MB ("
+            + Math.round(percentage) + "%)")
+
+    setTextById("system_info_cpu_usage",        (Math.round(data["STATUS"]["system"]["cpu_usage"]*10)/10)+"%")
+    setTextById("system_info_cpu_temperature",  (Math.round(data["STATUS"]["system"]["cpu_temperature"]*10)/10)+"°C")
+
+    var cpu_details = "";
+    for (var i=0;i<data["STATUS"]["system"]["cpu_usage_detail"].length;i++) {
+        cpu_details += "cpu"+i+"="+Math.round(data["STATUS"]["system"]["cpu_usage_detail"][i])+"%, ";
+        }
+    setTextById("system_info_cpu_usage_detail", cpu_details);
+
+    // add sensor information
     var sensors = data["DATA"]["devices"]["sensors"];
     html = "<center><i><font color='gray'>";
     html_entry = "";

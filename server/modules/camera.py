@@ -5,6 +5,8 @@ import logging
 import numpy as np
 import ffmpeg
 import cv2
+import psutil
+
 from imutils.video import WebcamVideoStream
 from imutils.video import FPS
 from skimage.metrics import structural_similarity as ssim
@@ -814,7 +816,21 @@ class BirdhouseImageProcessing(object):
             raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 260), font="", scale=0.6,
                                      color=(0, 0, 255), thickness=1)
 
-            raw = self.draw_date_raw(raw=raw, overwrite_color=(0, 0, 255), overwrite_position=(20, 310))
+            msg = "CPU Usage: " + str(psutil.cpu_percent(interval=1, percpu=False)) + "% "
+            msg += "("+ str(psutil.cpu_count()) + " CPU)"
+            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 290), font="", scale=0.6,
+                                     color=(0, 0, 255), thickness=1)
+
+            total = psutil.virtual_memory().total
+            total = round(total / 1024 / 1024)
+            used = psutil.virtual_memory().used
+            used = round(used / 1024 / 1024)
+            percentage = psutil.virtual_memory().percent
+            msg = "Memory: total=" + str(total) + "MB, used=" + str(used) + "MB ("+str(percentage)+"%)"
+            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 320), font="", scale=0.6,
+                                     color=(0, 0, 255), thickness=1)
+
+            raw = self.draw_date_raw(raw=raw, overwrite_color=(0, 0, 255), overwrite_position=(20, 370))
 
         else:
             raw = self.image_error_v2_raw(image=self.img_camera_error_v3)
