@@ -15,6 +15,7 @@ import threading
 from threading import Condition
 from datetime import datetime
 
+
 # https://learn.circuit.rocks/introduction-to-opencv-using-the-raspberry-pi
 
 
@@ -168,7 +169,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         response = {"command": ["start recording"]}
 
         if self.camera.active and not self.camera.error and not self.recording:
-            logging.info("Starting video recording ("+self.id+") ...")
+            logging.info("Starting video recording (" + self.id + ") ...")
             self.recording = True
             self.info = {
                 "date": datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
@@ -192,7 +193,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         """
         response = {"command": ["stop recording"]}
         if self.camera.active and not self.camera.error and self.recording:
-            logging.info("Stopping video recording ("+self.id+") ...")
+            logging.info("Stopping video recording (" + self.id + ") ...")
             self.recording = False
             self.info["date_end"] = datetime.now().strftime('%Y%m%d_%H%M%S')
             self.info["stamp_end"] = datetime.now().timestamp()
@@ -262,7 +263,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 .run(capture_stdout=True, capture_stderr=False)
             )
         except ffmpeg.Error as e:
-            self._msg_error("Error during ffmpeg video creation: "+str(e))
+            self._msg_error("Error during ffmpeg video creation: " + str(e))
             self.processing = False
             return
 
@@ -322,7 +323,7 @@ class BirdhouseVideoProcessing(threading.Thread):
             if message != 0:
                 response = {"result": "error", "reason": "remove temp image files", "message": message}
                 self._msg_warning("Error during day video creation: remove old temp image files.")
-                #return response
+                # return response
         except Exception as e:
             self._msg_warning("Error during day video creation: " + str(e))
 
@@ -368,7 +369,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 .run(capture_stdout=True, capture_stderr=False)
             )
         except ffmpeg.Error as e:
-            self._msg_error("Error during ffmpeg video creation: "+str(e))
+            self._msg_error("Error during ffmpeg video creation: " + str(e))
             response = {"result": "error", "reason": "create video with ffmpeg", "message": str(e)}
             return response
 
@@ -442,8 +443,9 @@ class BirdhouseVideoProcessing(threading.Thread):
             input_file = config_file[video_id]["video_file"]
             output_file = input_file.replace(".mp4", "_short.mp4")
             framerate = config_file[video_id]["framerate"]
-            result = self.create_video_trimmed_exec(input_file=input_file, output_file=output_file, start_timecode=start,
-                                     end_timecode=end, framerate=framerate)
+            result = self.create_video_trimmed_exec(input_file=input_file, output_file=output_file,
+                                                    start_timecode=start,
+                                                    end_timecode=end, framerate=framerate)
             if result == "OK":
                 config_file[video_id]["video_file_short"] = output_file
                 config_file[video_id]["video_file_short_start"] = float(start)
@@ -490,11 +492,11 @@ class BirdhouseVideoProcessing(threading.Thread):
             self._msg_error("Error during video trimming: " + str(e))
             return "Error"
 
-        #try:
+        # try:
         #    logging.debug(cmd)
         #    message = os.system(cmd)
         #    logging.debug(message)
-        #except Exception as e:
+        # except Exception as e:
         #    self._msg_error("Error during video trimming: " + str(e))
 
         if os.path.isfile(output_file):
@@ -680,9 +682,9 @@ class BirdhouseImageProcessing(object):
 
             width = x_end - x_start
             height = y_end - y_start
-            if round(width/2) != width/2:
+            if round(width / 2) != width / 2:
                 x_end -= 1
-            if round(height/2) != height/2:
+            if round(height / 2) != height / 2:
                 y_end -= 1
 
             logging.debug("H: " + str(y_start) + "-" + str(y_end) + " / W: " + str(x_start) + "-" + str(x_end))
@@ -694,7 +696,8 @@ class BirdhouseImageProcessing(object):
 
         return raw, (0, 0, 1, 1)
 
-    def crop_area_pixel(self, raw, area):
+    @staticmethod
+    def crop_area_pixel(raw, area):
         """
         calculate start & end pixel for relative area
         """
@@ -712,7 +715,7 @@ class BirdhouseImageProcessing(object):
 
         return pixel_area
 
-    def draw_text(self, image, text, position="", font="", scale="", color="", thickness=0):
+    def draw_text(self, image, text, position=None, font=None, scale=None, color=None, thickness=0):
         """
         Add text on image
         """
@@ -721,27 +724,28 @@ class BirdhouseImageProcessing(object):
         image = self.convert_from_raw(raw)
         return image
 
-    def draw_text_raw(self, raw, text, position="", font="", scale="", color="", thickness=0):
+    def draw_text_raw(self, raw, text, position=None, font=None, scale=None, color=None, thickness=0):
         """
         Add text on image
         """
-        if position == "":
+        if position is None:
             position = self.text_default_position
-        if font == "":
+        if font is None:
             font = self.text_default_font
-        if scale == "":
+        if scale is None:
             scale = self.text_default_scale
-        if color == "":
+        if color is None:
             color = self.text_default_color
         if thickness == 0:
             thickness = self.text_default_thickness
 
-        param = str(text) + ", " + str(position) + ", " + str(font) + ", " + str(scale) + ", " + str(color) + ", " + str(thickness)
+        param = str(text) + ", " + str(position) + ", " + str(font) + ", " + str(scale) + ", " + str(
+            color) + ", " + str(thickness)
         try:
             raw = cv2.putText(raw, text, tuple(position), font, scale, color, thickness, cv2.LINE_AA)
         except Exception as e:
             self._msg_warning("Could not draw text into image (" + str(e) + ")")
-            self._msg_warning(" ... "+param)
+            self._msg_warning(" ... " + param)
 
         return raw
 
@@ -766,7 +770,7 @@ class BirdhouseImageProcessing(object):
         image = self.draw_text(image, date_information, position, font, scale, color, thickness)
         return image
 
-    def draw_date_raw(self, raw, overwrite_color="", overwrite_position=""):
+    def draw_date_raw(self, raw, overwrite_color=None, overwrite_position=None):
         date_information = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 
         font = self.text_default_font
@@ -774,19 +778,19 @@ class BirdhouseImageProcessing(object):
         if self.param["image"]["date_time_color"]:
             color = self.param["image"]["date_time_color"]
         else:
-            color = ""
+            color = None
         if self.param["image"]["date_time_position"]:
             position = self.param["image"]["date_time_position"]
         else:
-            position = ""
+            position = None
         if self.param["image"]["date_time_size"]:
             scale = self.param["image"]["date_time_size"]
         else:
-            scale = ""
+            scale = None
 
-        if overwrite_color != "":
+        if overwrite_color is not None:
             color = overwrite_color
-        if overwrite_position != "":
+        if overwrite_position is not None:
             position = overwrite_position
             thickness = 1
         raw = self.draw_text_raw(raw, date_information, position, font, scale, color, thickness)
@@ -796,39 +800,43 @@ class BirdhouseImageProcessing(object):
         """
         add error information to image
         """
+        time.sleep(0.5)
         if info_type == "complete":
             raw = self.image_error_v2_raw()
 
             msg = self.id + ": " + self.param["name"]
-            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 160), font="", scale=1,
+            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 160), font=None, scale=1,
                                      color=(0, 0, 255), thickness=2)
 
-            msg = "Device: type=" + self.param["type"] + ", active=" + str(self.param["active"]) + ", source=" + str(self.param["source"])
+            msg = "Device: type=" + self.param["type"] + ", active=" + str(self.param["active"]) + ", source=" + str(
+                self.param["source"])
             msg += ", resolution=" + self.param["image"]["resolution"]
-            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 200), font="", scale=0.6,
+            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 200), font=None, scale=0.6,
                                      color=(0, 0, 255), thickness=1)
 
             msg = "Last Error: " + error_msg[len(error_msg) - 1] + " [#" + str(len(error_msg)) + "]"
-            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 230), font="", scale=0.6,
+            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 230), font=None, scale=0.6,
                                      color=(0, 0, 255), thickness=1)
 
             msg = "Last Reconnect: " + str(round(time.time() - reload_time)) + "s"
-            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 260), font="", scale=0.6,
+            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 260), font=None, scale=0.6,
                                      color=(0, 0, 255), thickness=1)
 
-            msg = "CPU Usage: " + str(psutil.cpu_percent(interval=1, percpu=False)) + "% "
-            msg += "("+ str(psutil.cpu_count()) + " CPU)"
-            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 290), font="", scale=0.6,
-                                     color=(0, 0, 255), thickness=1)
+            details = True
+            if details:
+                msg = "CPU Usage: " + str(psutil.cpu_percent(interval=1, percpu=False)) + "% "
+                msg += "(" + str(psutil.cpu_count()) + " CPU)"
+                raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 290), font=None, scale=0.6,
+                                         color=(0, 0, 255), thickness=1)
 
-            total = psutil.virtual_memory().total
-            total = round(total / 1024 / 1024)
-            used = psutil.virtual_memory().used
-            used = round(used / 1024 / 1024)
-            percentage = psutil.virtual_memory().percent
-            msg = "Memory: total=" + str(total) + "MB, used=" + str(used) + "MB ("+str(percentage)+"%)"
-            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 320), font="", scale=0.6,
-                                     color=(0, 0, 255), thickness=1)
+                total = psutil.virtual_memory().total
+                total = round(total / 1024 / 1024)
+                used = psutil.virtual_memory().used
+                used = round(used / 1024 / 1024)
+                percentage = psutil.virtual_memory().percent
+                msg = "Memory: total=" + str(total) + "MB, used=" + str(used) + "MB (" + str(percentage) + "%)"
+                raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 320), font=None, scale=0.6,
+                                         color=(0, 0, 255), thickness=1)
 
             raw = self.draw_date_raw(raw=raw, overwrite_color=(0, 0, 255), overwrite_position=(20, 370))
 
@@ -947,7 +955,7 @@ class BirdhouseImageProcessing(object):
         """
         rotate image
         """
-        logging.debug("Rotate image "+str(degree)+" ...")
+        logging.debug("Rotate image " + str(degree) + " ...")
         rotate_degree = "don't rotate"
         if int(degree) == 90:
             rotate_degree = cv2.ROTATE_90_CLOCKWISE
@@ -1019,14 +1027,14 @@ class BirdhouseCameraOther(object):
         if "/dev/" not in str(source):
             source = "/dev/video" + str(source)
 
-        logging.info("Initialize Camera Thread for "+name+", source="+source+" ...")
+        logging.info("Initialize Camera Thread for " + name + ", source=" + source + " ...")
         self.stream = cv2.VideoCapture(source, cv2.CAP_V4L)
         try:
             ref, raw = self.stream.read()
         except cv2.error as e:
             self.error = True
             self.error_msg = str(e)
-            logging.warning("- Error connecting to camera '"+source+"' and reading first image")
+            logging.warning("- Error connecting to camera '" + source + "' and reading first image")
 
     def read(self):
         try:
@@ -1034,7 +1042,7 @@ class BirdhouseCameraOther(object):
             self.error = False
             return raw
         except cv2.error as e:
-            logging.warning("- Error connecting to camera '"+source+"' and reading first image")
+            logging.warning("- Error connecting to camera '" + source + "' and reading first image")
             self.error = True
             self.error_msg = str(e)
             return
@@ -1086,6 +1094,8 @@ class BirdhouseCamera(threading.Thread):
         self.record = self.param["record"]
 
         self.image_size = [0, 0]
+        self.image_last_raw = None
+        self.image_count_empty = 0
         self.previous_image = None
         self.previous_stamp = "000000"
 
@@ -1093,7 +1103,8 @@ class BirdhouseCamera(threading.Thread):
 
         self.image = BirdhouseImageProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param)
         self.image.resolution = self.param["image"]["resolution"]
-        self.video = BirdhouseVideoProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param, directory=self.config.directory("videos"))
+        self.video = BirdhouseVideoProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param,
+                                              directory=self.config.directory("videos"))
         self.video.output = BirdhouseCameraOutput()
         self.camera = None
         self.cameraFPS = None
@@ -1118,7 +1129,7 @@ class BirdhouseCamera(threading.Thread):
             # if error reload from time to time
             if self.active and self.error and (reload_time + reload_time_error) < time.time():
                 reload_time = time.time()
-                logging.error("....... RELOAD - "+str(reload_time+reload_time_error)+" > "+str(time.time()))
+                logging.error("....... RELOAD - " + str(reload_time + reload_time_error) + " > " + str(time.time()))
                 self.reload_camera = True
 
             # check if configuration shall be updated
@@ -1128,7 +1139,7 @@ class BirdhouseCamera(threading.Thread):
 
             # start or reload camera connection
             if self.reload_camera and self.active:
-                logging.info("- (Re)starting Camera ("+self.id+") ...")
+                logging.info("- (Re)starting Camera (" + self.id + ") ...")
                 if self.type == "pi":
                     self.camera_start_pi()
                 elif self.type == "default":
@@ -1146,7 +1157,7 @@ class BirdhouseCamera(threading.Thread):
                 count_paused = 0
             while self._paused and self.running:
                 if count_paused == 0:
-                    logging.info("Recording images with " +self.id + " paused ...")
+                    logging.info("Recording images with " + self.id + " paused ...")
                     count_paused += 1
                 time.sleep(0.5)
 
@@ -1215,7 +1226,7 @@ class BirdhouseCamera(threading.Thread):
                             "sensor": {},
                             "size": self.image_size
                         }
-                        sensor_data = {"activity": round(100-float(similarity), 1)}
+                        sensor_data = {"activity": round(100 - float(similarity), 1)}
                         for key in self.sensor:
                             if self.sensor[key].running:
                                 sensor_data[key] = self.sensor[key].get_values()
@@ -1310,26 +1321,30 @@ class BirdhouseCamera(threading.Thread):
             self.camera = BirdhouseCameraOther(self.source, self.id)
 
             if self.camera.error:
-                self.camera_error(True, "Can't connect to camera, check if '"+str(self.source)+"' is a valid source ("+self.camera.error_msg+").")
+                self.camera_error(True, "Can't connect to camera, check if '" + str(
+                    self.source) + "' is a valid source (" + self.camera.error_msg + ").")
                 self.camera.stream.release()
             elif not self.camera.stream.isOpened():
-                self.camera_error(True, "Can't connect to camera, check if '"+str(self.source)+"' is a valid source (could not open).")
+                self.camera_error(True, "Can't connect to camera, check if '" + str(
+                    self.source) + "' is a valid source (could not open).")
                 self.camera.stream.release()
             elif self.camera.stream is None:
-                self.camera_error(True, "Can't connect to camera, check if '" + str(self.source) + "' is a valid source (empty image).")
+                self.camera_error(True, "Can't connect to camera, check if '" + str(
+                    self.source) + "' is a valid source (empty image).")
                 self.camera.stream.release()
             else:
                 raw = self.get_image_raw()
                 check = str(type(raw))
                 if "NoneType" in check:
-                    self.camera_error(True, "Source " + str(self.source) + " returned empty image, try type 'pi' or 'usb'.")
+                    self.camera_error(True,
+                                      "Source " + str(self.source) + " returned empty image, try type 'pi' or 'usb'.")
                 else:
                     self.camera_resolution_usb(self.param["image"]["resolution"])
                     self.cameraFPS = FPS().start()
                     logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
 
         except Exception as e:
-            self.camera_error(True, "Starting camera '"+self.source+"' doesn't work: " + str(e))
+            self.camera_error(True, "Starting camera '" + self.source + "' doesn't work: " + str(e))
 
         return
 
@@ -1346,7 +1361,8 @@ class BirdhouseCamera(threading.Thread):
         try:
             self.camera = WebcamVideoStream(src=self.source).start()
             if not self.camera.stream.isOpened():
-                self.camera_error(True, "Can't connect to camera, check if source is "+str(self.source)+" ("+str(self.camera.stream.isOpened())+").")
+                self.camera_error(True, "Can't connect to camera, check if source is " + str(self.source) + " (" + str(
+                    self.camera.stream.isOpened()) + ").")
                 self.camera.stream.release()
             elif self.camera.stream is None:
                 self.camera_error(True, "Can't connect to camera, check if source is " + str(self.source) + ".)")
@@ -1354,7 +1370,8 @@ class BirdhouseCamera(threading.Thread):
                 raw = self.get_image_raw()
                 check = str(type(raw))
                 if "NoneType" in check:
-                    self.camera_error(True, "Images are empty, cv2 doesn't work for source " + str(self.source) + ", try picamera.")
+                    self.camera_error(True, "Images are empty, cv2 doesn't work for source " + str(
+                        self.source) + ", try picamera.")
                 else:
                     self.camera_resolution_usb(self.param["image"]["resolution"])
                     self.cameraFPS = FPS().start()
@@ -1374,7 +1391,8 @@ class BirdhouseCamera(threading.Thread):
         high_value = 10000
         self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, high_value)
         self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, high_value)
-        self.max_resolution = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH), self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+        self.max_resolution = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
+                               self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
         logging.info("USB Maximum resolution: " + str(self.max_resolution))
 
         if "x" in resolution:
@@ -1384,10 +1402,11 @@ class BirdhouseCamera(threading.Thread):
             # self.camera.stream.set(4, int(resolution[1]))
             self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, float(dimensions[0]))
             self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, float(dimensions[1]))
-            current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH), self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+            current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
+                       self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
             logging.info("USB New resolution: " + str(current))
         else:
-            logging.info("Resolution definition not supported: "+str(resolution))
+            logging.info("Resolution definition not supported: " + str(resolution))
 
         # potential source for errors ... errno=16 / device or resource is busy === >>
         # [ WARN:0@3.021] global /tmp/pip-wheel-8dvnqe62/opencv-python_7949e8065e824f1480edaa2d75fce534
@@ -1406,10 +1425,10 @@ class BirdhouseCamera(threading.Thread):
         """
         if cam_error:
             self.error = True
-#        elif self.error_image_count > 20:
-#            self.error = True
-#            self.error_image_count = 0
-#            message = "Too much image errors, connection to camera seems to be lost."
+        #        elif self.error_image_count > 20:
+        #            self.error = True
+        #            self.error_image_count = 0
+        #            message = "Too much image errors, connection to camera seems to be lost."
         else:
             self.error_image = True
             self.error_image_count += 1
@@ -1479,15 +1498,23 @@ class BirdhouseCamera(threading.Thread):
         """
         image = self.get_image_raw()
 
-        if self.error or image == "":
+        if (image == "" or image is None) and self.image_count_empty < 20 and self.image_last_raw is not None:
+            image = self.image_last_raw
+            self.image_count_empty += 1
+
+        elif self.error or image == "" or image is None:
             image_error = self.image.image_error_v2_raw()
             if detection:
-                image_error = self.image.draw_error_information(image_error, self.error_msg, self.reload_time, "complete")
+                image_error = self.image.draw_error_information(image_error, self.error_msg, self.reload_time,
+                                                                "complete")
             else:
-                image_error = self.image.draw_error_information(image_error, self.error_msg, self.reload_time, "reduced")
+                image_error = self.image.draw_error_information(image_error, self.error_msg, self.reload_time,
+                                                                "reduced")
 
             return image_error
         else:
+            self.image_last_raw = image
+            self.image_count_empty = 0
             return image
 
     def get_image_raw(self):
@@ -1514,7 +1541,8 @@ class BirdhouseCamera(threading.Thread):
                 raw = self.camera.read()
                 check = str(type(raw))
                 if self.camera.error:
-                    self.camera_error(False, "Error reading image (source=" + str(self.source) + ", " + self.camera.error_msg + ")")
+                    self.camera_error(False, "Error reading image (source=" + str(
+                        self.source) + ", " + self.camera.error_msg + ")")
                     return ""
                 elif "NoneType" in check:
                     self.camera_error(False, "Got an empty image (source=" + str(self.source) + ")")
@@ -1557,7 +1585,8 @@ class BirdhouseCamera(threading.Thread):
         elif "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
             return False
 
-        elif ("camera" in file_info and file_info["camera"] == self.id) or ("camera" not in file_info and self.id == "cam1"):
+        elif ("camera" in file_info and file_info["camera"] == self.id) or (
+                "camera" not in file_info and self.id == "cam1"):
 
             if "favorit" in file_info and int(file_info["favorit"]) == 1:
                 return True
