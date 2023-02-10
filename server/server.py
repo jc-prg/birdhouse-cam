@@ -509,9 +509,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # show live streamss
         elif '/stream.mjpg' in self.path:
-            if camera[which_cam].type != "pi" and camera[which_cam].type != "usb" and camera[which_cam].type != "default":
-                logging.warning(
-                    "Unknown type of camera (" + camera[which_cam].type + "/" + camera[which_cam].name + ")")
+            if camera[which_cam].type != "pi" and camera[which_cam].type != "usb" and \
+                    camera[which_cam].type != "default":
+                logging.warning("Unknown type of camera (" + camera[which_cam].type + "/" +
+                                camera[which_cam].name + ")")
                 self.error_404()
                 return
 
@@ -522,53 +523,46 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if config.update["camera_"+which_cam]:
                     camera[which_cam].update_main_config()
 
-                frame = camera[which_cam].get_image_stream_raw()
-                frame_raw = frame
+                if self.path.startswith("/detection/"):
+                    frame_raw = camera[which_cam].get_image_stream_raw(normalize=False)
+                else:
+                    frame_raw = camera[which_cam].get_image_stream_raw(normalize=True)
 
                 if not camera[which_cam].error and not camera[which_cam].error_image:
-
                     if self.path.startswith("/detection/"):
                         frame_raw = camera[which_cam].show_areas_raw(image=frame_raw)
-                        frame = camera[which_cam].image.convert_from_raw(frame_raw)
 
                     else:
-                        frame = camera[which_cam].image.normalize_raw(frame)
                         if camera[which_cam].param["image"]["date_time"]:
-                            frame = camera[which_cam].image.draw_date_raw(frame)
+                            frame_raw = camera[which_cam].image.draw_date_raw(frame_raw)
 
                         if camera[which_cam].video.recording:
                             logging.debug("VIDEO RECORDING")
                             length = str(round(camera[which_cam].video.record_info()["length"]))
                             framerate = str(round(camera[which_cam].video.record_info()["framerate"]))
                             y_position = camera[which_cam].image_size[1] - 40
-                            frame = camera[which_cam].image.draw_text_raw(frame, "Recording", position=(20, y_position),
-                                                                          color=(0, 0, 255), scale=1, thickness=2)
-                            frame = camera[which_cam].image.draw_text_raw(frame, "(" + length + "s/" + framerate + "fps)",
-                                                                          position=(200, y_position), color=(0, 0, 255),
-                                                                          scale=0.5, thickness=1)
+                            frame_raw = camera[which_cam].image.draw_text_raw(frame_raw, "Recording", position=(20, y_position),
+                                                                              color=(0, 0, 255), scale=1, thickness=2)
+                            frame_raw = camera[which_cam].image.draw_text_raw(frame_raw, "(" + length + "s/" + framerate + "fps)",
+                                                                              position=(200, y_position), color=(0, 0, 255),
+                                                                              scale=0.5, thickness=1)
 
                         if camera[which_cam].video.processing:
                             logging.debug("VIDEO PROCESSING")
                             length = str(round(camera[which_cam].video.record_info()["length"]))
                             image_size = str(camera[which_cam].video.record_info()["image_size"])
                             y_position = camera[which_cam].image_size[1] - 40
-                            frame = camera[which_cam].image.draw_text_raw(frame, "Processing", position=(20, y_position),
-                                                                          color=(0, 255, 255), scale=1, thickness=2)
-                            frame = camera[which_cam].image.draw_text_raw(frame, "(" + length + "s/" + image_size + ")",
-                                                                          position=(200, y_position), color=(0, 255, 255),
-                                                                          scale=0.5, thickness=1)
-
-                        frame = camera[which_cam].image.convert_from_raw(frame)
-                else:
-                    if self.path.startswith("/detection/"):
-                        frame = camera[which_cam].get_image_stream_raw(detection=True)
-                    else:
-                        frame = camera[which_cam].image.normalize_error_raw(frame)
-                    frame = camera[which_cam].image.convert_from_raw(frame)
+                            frame_raw = camera[which_cam].image.draw_text_raw(frame_raw, "Processing", position=(20, y_position),
+                                                                              color=(0, 255, 255), scale=1, thickness=2)
+                            frame_raw = camera[which_cam].image.draw_text_raw(frame_raw, "(" + length + "s/" + image_size + ")",
+                                                                              position=(200, y_position), color=(0, 255, 255),
+                                                                              scale=0.5, thickness=1)
 
                 try:
+                    frame = camera[which_cam].image.convert_from_raw(frame_raw)
                     camera[which_cam].camera_wait_recording()
                     self.stream_video_frame(frame)
+
                 except Exception as e:
                     stream = False
                     if "Errno 104" in str(e) or "Errno 32" in str(e):

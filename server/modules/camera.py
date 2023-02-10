@@ -796,7 +796,49 @@ class BirdhouseImageProcessing(object):
         raw = self.draw_text_raw(raw, date_information, position, font, scale, color, thickness)
         return raw
 
-    def draw_error_information(self, raw, error_msg, reload_time, info_type="complete"):
+    def draw_area_raw(self, raw, area=(0, 0, 1, 1), color=(0, 0, 255), thickness=2):
+        """
+        draw as colored rectangle
+        """
+        try:
+            height = raw.shape[0]
+            width = raw.shape[1]
+            (x_start, y_start, x_end, y_end, x_width, y_height) = self.crop_area_pixel(raw, area)
+            image = cv2.line(raw, (x_start, y_start), (x_start, y_end), color, thickness)
+            image = cv2.line(image, (x_start, y_start), (x_end, y_start), color, thickness)
+            image = cv2.line(image, (x_end, y_end), (x_start, y_end), color, thickness)
+            image = cv2.line(image, (x_end, y_end), (x_end, y_start), color, thickness)
+            return image
+
+        except Exception as e:
+            self._msg_warning("Could not draw area into the image (" + str(e) + ")")
+            return raw
+
+    def image_error(self):
+        """
+        return image with error message
+        """
+        if self.error_image is None:
+            raw = self.image_error_raw()
+            image = self.convert_from_raw(raw)
+            self.error_image = image
+            return image
+        else:
+            return self.error_image
+
+    def image_error_raw(self):
+        """
+        return image with error message
+        """
+        if self.error_image_raw is None:
+            filename = os.path.join(self.config.main_directory, self.config.directories["data"], self.img_camera_error)
+            raw = cv2.imread(filename)
+            self.error_image_raw = raw
+            return raw
+        else:
+            return self.error_image_raw
+
+    def image_error_info_raw(self, error_msg, reload_time, info_type="complete"):
         """
         add error information to image
         """
@@ -845,48 +887,6 @@ class BirdhouseImageProcessing(object):
             raw = self.draw_date_raw(raw=raw, overwrite_color=(255, 0, 0), overwrite_position=(20, 40))
 
         return raw
-
-    def draw_area_raw(self, raw, area=(0, 0, 1, 1), color=(0, 0, 255), thickness=2):
-        """
-        draw as colored rectangle
-        """
-        try:
-            height = raw.shape[0]
-            width = raw.shape[1]
-            (x_start, y_start, x_end, y_end, x_width, y_height) = self.crop_area_pixel(raw, area)
-            image = cv2.line(raw, (x_start, y_start), (x_start, y_end), color, thickness)
-            image = cv2.line(image, (x_start, y_start), (x_end, y_start), color, thickness)
-            image = cv2.line(image, (x_end, y_end), (x_start, y_end), color, thickness)
-            image = cv2.line(image, (x_end, y_end), (x_end, y_start), color, thickness)
-            return image
-
-        except Exception as e:
-            self._msg_warning("Could not draw area into the image (" + str(e) + ")")
-            return raw
-
-    def image_error(self):
-        """
-        return image with error message
-        """
-        if self.error_image is None:
-            raw = self.image_error_raw()
-            image = self.convert_from_raw(raw)
-            self.error_image = image
-            return image
-        else:
-            return self.error_image
-
-    def image_error_raw(self):
-        """
-        return image with error message
-        """
-        if self.error_image_raw is None:
-            filename = os.path.join(self.config.main_directory, self.config.directories["data"], self.img_camera_error)
-            raw = cv2.imread(filename)
-            self.error_image_raw = raw
-            return raw
-        else:
-            return self.error_image_raw
 
     def image_error_v2_raw(self, reload=False, image=""):
         """
@@ -1492,27 +1492,28 @@ class BirdhouseCamera(threading.Thread):
             self.camera_error(True, error_msg)
             return ""
 
-    def get_image_stream_raw(self, detection=False):
+    def get_image_stream_raw(self, normalize=False):
         """
         get image, if error show error message
         """
         image = self.get_image_raw()
 
-        if (image == "" or image is None) and self.image_count_empty < 20 and self.image_last_raw is not None:
+        if (image == "" or image is None) and self.image_count_empty < 10 and self.image_last_raw is not None:
             image = self.image_last_raw
+            image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
             self.image_count_empty += 1
+            return image
 
         elif self.error or image == "" or image is None:
-            image_error = self.image.image_error_v2_raw()
-            if detection:
-                image_error = self.image.draw_error_information(image_error, self.error_msg, self.reload_time,
-                                                                "complete")
+            if normalize:
+                image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "reduced")
+                image_error = self.image.normalize_error_raw(image_error)
             else:
-                image_error = self.image.draw_error_information(image_error, self.error_msg, self.reload_time,
-                                                                "reduced")
-
+                image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "complete")
             return image_error
         else:
+            if normalize:
+                image = self.image.normalize_raw(image)
             self.image_last_raw = image
             self.image_count_empty = 0
             return image
