@@ -69,14 +69,14 @@ function birdhousePrint(data) {
 
 	// check if admin allowed! -> create respective menu
 	
-	if (app_active_page == "INDEX") { birdhouse_INDEX(data, camera); }
-	else if (app_active_page == "CAMERAS") { birdhouseDevices(lang("DEVICES"), data, camera); }
-	else if (app_active_page == "FAVORITS")	{ birdhouse_LIST(lang("FAVORITS"),  data, camera); }
-	else if (app_active_page == "ARCHIVE") { birdhouse_LIST(lang("ARCHIVE"), data, camera); }
-	else if (app_active_page == "TODAY") { birdhouse_LIST(lang("TODAY"), data, camera); }
-	else if (app_active_page == "TODAY_COMPLETE") { birdhouse_LIST(lang("TODAY_COMPLETE"), data, camera, false); }
-	else if (app_active_page == "VIDEOS") { birdhouse_LIST(lang("VIDEOS"), data, camera); }
-	else if (app_active_page == "VIDEO_DETAIL")	{ birdhouse_VIDEO_DETAIL(lang("VIDEOS"), data, camera); }
+	if (app_active_page == "INDEX")                 { birdhouse_INDEX(data, camera); }
+	else if (app_active_page == "CAMERAS")          { birdhouseDevices(lang("DEVICES"), data, camera); }
+	else if (app_active_page == "FAVORITS")         { birdhouse_LIST(lang("FAVORITS"),  data, camera); }
+	else if (app_active_page == "ARCHIVE")          { birdhouse_LIST(lang("ARCHIVE"), data, camera); }
+	else if (app_active_page == "TODAY")            { birdhouse_LIST(lang("TODAY"), data, camera); }
+	else if (app_active_page == "TODAY_COMPLETE")   { birdhouse_LIST(lang("TODAY_COMPLETE"), data, camera, false); }
+	else if (app_active_page == "VIDEOS")           { birdhouse_LIST(lang("VIDEOS"), data, camera); }
+	else if (app_active_page == "VIDEO_DETAIL")	    { birdhouse_VIDEO_DETAIL(lang("VIDEOS"), data, camera); }
 	else { setTextById(app_frame_content,lang("ERROR") + ": "+app_active_page); }
 
 	birdhouseStatus_print(data);
