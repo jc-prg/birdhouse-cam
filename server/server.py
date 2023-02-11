@@ -533,6 +533,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if not camera[which_cam].error and not camera[which_cam].image.error:
                     if self.path.startswith("/detection/"):
                         frame_raw = camera[which_cam].show_areas_raw(image=frame_raw)
+                        if camera[which_cam].param["image"]["black_white"]:
+                            frame_raw = camera[which_cam].image.convert_to_gray_raw(frame_raw)
                         if camera[which_cam].param["image"]["date_time"]:
                             frame_raw = camera[which_cam].image.draw_date_raw(frame_raw)
 
