@@ -33,25 +33,59 @@ mark favorites ...).
 * Camera module for RPi / HD with IR sensor
 * USB camera
 * Small USB Microphone
-* DHT11 Sensor
-* Python 3, PiCamera, CV2, imutils, JSON, Flask
+* DHT11 / DHT2 Sensor
+* Python 3, PiCamera, CV2, imutils, JSON, Flask, ...
 * HTML, CSS, JavaScript, Pinch-Zoom, ffmpeg 
 * jc://modules/, jc://app-framework/
 
 ## Installation
 
-* Prepare a Raspberry Pi 3B or newer with the latest version of Rasbian
-* Ensure Python 3 and pip3 is installed
-* Install git: ```bash sudo apt-get install git ```
-* Install birdhouse-cam:
+* Prepare a Raspberry Pi 3B or newer
+  * Install a fresh image on an SDCard (https://www.raspberrypi.com/software/)
+  * Recommend OS: Ubuntu 22.04 (32bit) Server OS
+  * Install git: ```sudo apt-get install git```
+  * Install raspi-config: ```sudo apt-get install raspi-config```
+  * Install v4l2-ctl: ```sudo apt-get install v4l-utils```
+  * Create and move to your projects directory (e.g. /projects/prod/)
+
+
+* Get sources:
 ```bash 
-# Get source code
 $ git clone http://github.com/jc-prg/birdhouse-cam.git
 $ cd birdhouse-cam
+$ git submodule update --init --recursive
+```
 
-# Install required Python modules and ffmpeg
-$ ./config/install/install
-$ ./config/install/install_ffmpeg
+### Install as Docker version (under construction)
+
+* Install docker and docker-compose
+```bash
+$ sudo ./config/install/install_docker
+```
+
+* Create configuration and edit (if required)
+```bash
+$ sudo cp sample.env .env
+$ sudo nano .env
+```
+
+* Build docker container and run the first time
+```bash
+$ docker-compose up --build
+```
+
+* Add the following lines to crontab (start on boot):
+```bash 
+@reboot /usr/sbin/docker-compose -f /<path_to_script>/docker-compose.yml up -d
+```
+
+### Install directly
+
+* Install birdhouse-cam:
+```bash 
+# Install required Python modules and ffmpeg (this may take a while)
+$ sudo ./config/install/install
+$ sudo ./config/install/install_ffmpeg
 
 # Initial start, will create a config file
 # -> check via http://<your-ip-address>:8000/ and stop via <Ctrl>+<C>
@@ -70,6 +104,21 @@ $ nano data/config.json
 $ systemctl start stream.service
 ```
 
+### Optimize system configuration (Ubuntu 22.04)
+
+* Update swap memory (see also [https://bitlaunch.io/](https://bitlaunch.io/blog/how-to-create-and-adjust-swap-space-in-ubuntu-20-04/))
+
+```commandline
+free -h
+fallocate -l 2G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+free -h
+```
+
+### Optimize system configuration (Raspbian / Raspberry OS)
+
 * Update swap memory (usually 100MiB is set as default)
 ```
 $ sudo nano /etc/dphys-swapfile
@@ -80,6 +129,20 @@ CONF_SWAPFACTOR=2
 
 $ sudo systemctl restart dphys-swapfile
 ```
+
+### Helping stuff
+
+* Check attached cameras
+
+```bash
+# list video devices (install: apt-get install v4l2-ctl) 
+$ v4l2-ctl --list-devices
+
+# check available cameras
+$ vcgencmd get_camera
+```
+
+
 ## Sources
 
 Thanks for your inspiration, code snippets, images:
