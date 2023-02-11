@@ -22,6 +22,7 @@ birdhouse_default_cam_pi = {
         "detection_area": (0.05, 0.1, 0.95, 0.95)
     },
     "image": {
+        "black_white": False,
         "crop": (0.1, 0.0, 0.9, 1.0),
         "framerate": 24,
         "resolution": "900x1080",

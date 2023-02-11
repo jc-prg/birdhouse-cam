@@ -528,7 +528,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 else:
                     frame_raw = camera[which_cam].get_image_stream_raw(normalize=True)
 
-                logging.info(which_cam+"..........."+self.path+".."+str(camera[which_cam].error)+".."+str(camera[which_cam].error_image))
+                logging.debug(which_cam+"..........."+self.path+".."+str(camera[which_cam].error)+".."+str(camera[which_cam].error_image))
 
                 if not camera[which_cam].error and not camera[which_cam].error_image:
                     if self.path.startswith("/detection/"):

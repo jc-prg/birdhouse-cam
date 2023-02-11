@@ -322,10 +322,10 @@ class BirdhouseVideoProcessing(threading.Thread):
             message = os.system(cmd_rm)
             if message != 0:
                 response = {"result": "error", "reason": "remove temp image files", "message": message}
-                self._msg_warning("Error during day video creation: remove old temp image files.")
+                self._msg_error("Error during day video creation: remove old temp image files.", warning=True)
                 # return response
         except Exception as e:
-            self._msg_warning("Error during day video creation: " + str(e))
+            self._msg_error("Error during day video creation: " + str(e), warning=True)
 
         try:
             cmd_copy = "cp " + self.config.directory("images") + filename + "* " + self.config.directory("videos_temp")
@@ -561,21 +561,29 @@ class BirdhouseImageProcessing(object):
         self.error_image_raw = None
         self.error_image_v2_raw = None
 
-    def _msg_error(self, message):
+    def raise_error(self, message, warning=False):
         """
         Report Error, set variables of modules; collect last 3 messages in central var  self.error_msg
         """
-        logging.error("Image Processing (" + self.id + "): " + message)
-        self.error = True
-        self.error_msg.append(message)
-        if len(self.error_msg) >= 3:
-            self.error_msg.pop()
+        if not warning:
+            logging.error("Image Processing (" + self.id + "): " + message)
+            self.error = True
+            self.error_msg.append(message)
+            if len(self.error_msg) >= 3:
+                self.error_msg.pop()
+        else:
+            logging.warning("Image Processing (" + self.id + "): " + message)
 
-    def _msg_warning(self, message):
+    def reset_error(self):
         """
-        Report Error, set variables of modules
+        reset error vars
         """
-        logging.warning("Image Processing (" + self.id + "): " + message)
+        self.error = False
+        self.error_msg = []
+        self.error_camera = False
+        self.error_image = None
+        self.error_image_raw = None
+        self.error_image_v2_raw = None
 
     def compare(self, image_1st, image_2nd, detection_area=None):
         """
@@ -592,12 +600,12 @@ class BirdhouseImageProcessing(object):
         """
         try:
             if len(image_1st) == 0 or len(image_2nd) == 0:
-                self._msg_warning(
+                self.raise_error(
                     "Compare: At least one file has a zero length - A:" + str(len(image_1st)) + "/ B:" + str(
-                        len(image_2nd)))
+                        len(image_2nd)), warning=True)
                 score = 0
         except Exception as e:
-            self._msg_warning("Compare: At least one file has a zero length.")
+            self.raise_error("Compare: At least one file has a zero length.", warning=True)
 
         if detection_area is not None:
             image_1st, area = self.crop_raw(raw=image_1st, crop_area=detection_area, crop_type="relative")
@@ -611,7 +619,7 @@ class BirdhouseImageProcessing(object):
             (score, diff) = ssim(image_1st, image_2nd, full=True)
 
         except Exception as e:
-            self._msg_warning("Error comparing images (" + str(e) + ")")
+            self.raise_error("Error comparing images (" + str(e) + ")", warning=True)
             score = 0
 
         return round(score * 100, 1)
@@ -626,7 +634,7 @@ class BirdhouseImageProcessing(object):
             image = bytearray(buf)
             return image
         except Exception as e:
-            self._msg_error("Error convert RAW image -> image (" + str(e) + ")")
+            self.raise_error("Error convert RAW image -> image (" + str(e) + ")")
             return self.image_error()
 
     def convert_to_raw(self, image):
@@ -638,7 +646,7 @@ class BirdhouseImageProcessing(object):
             raw = cv2.imdecode(image, 1)
             return raw
         except Exception as e:
-            self._msg_error("Error convert image -> RAW image (" + str(e) + ")")
+            self.raise_error("Error convert image -> RAW image (" + str(e) + ")")
             return self.image_error_raw()
 
     def convert_to_gray_raw(self, raw):
@@ -649,7 +657,7 @@ class BirdhouseImageProcessing(object):
             return cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
 
         except Exception as e:
-            self._msg_error("Could not convert image to gray scale " + str(e) + ")")
+            self.raise_error("Could not convert image to gray scale " + str(e) + ")")
             return raw
 
     def crop(self, image, crop_area, crop_type="relative"):
@@ -692,7 +700,7 @@ class BirdhouseImageProcessing(object):
             return frame_cropped, crop_area
 
         except Exception as e:
-            self._msg_error("Could not crop image (" + str(e) + ")")
+            self.raise_error("Could not crop image (" + str(e) + ")")
 
         return raw, (0, 0, 1, 1)
 
@@ -749,8 +757,8 @@ class BirdhouseImageProcessing(object):
         try:
             raw = cv2.putText(raw, text, tuple(position), font, scale, color, thickness, cv2.LINE_AA)
         except Exception as e:
-            self._msg_warning("Could not draw text into image (" + str(e) + ")")
-            self._msg_warning(" ... " + param)
+            self.raise_error("Could not draw text into image (" + str(e) + ")", warning=True)
+            self.raise_error(" ... " + param, warning=True)
 
         return raw
 
@@ -816,7 +824,7 @@ class BirdhouseImageProcessing(object):
             return image
 
         except Exception as e:
-            self._msg_warning("Could not draw area into the image (" + str(e) + ")")
+            self.raise_error("Could not draw area into the image (" + str(e) + ")", warning=True)
             return raw
 
     def image_error(self):
@@ -928,6 +936,10 @@ class BirdhouseImageProcessing(object):
             normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw,
                                                                          crop_area=self.param["image"]["crop_area"],
                                                                          crop_type="pixel")
+
+        if "black_white" in self.param["image"] and self.param["image"]["black_white"] is True:
+            normalized = self.convert_to_gray_raw(normalized)
+
         # rotate     - not implemented yet
         # resize     - not implemented yet
         # saturation - not implemented yet
@@ -978,7 +990,7 @@ class BirdhouseImageProcessing(object):
                 raw = cv2.rotate(raw, rotate_degree)
             return raw
         except Exception as e:
-            self._msg_error("Could not rotate image (" + str(e) + ")")
+            self.raise_error("Could not rotate image (" + str(e) + ")")
 
     def size(self, image):
         """
@@ -990,7 +1002,7 @@ class BirdhouseImageProcessing(object):
             width = frame.shape[1]
             return [width, height]
         except Exception as e:
-            self._msg_warning("Could not analyze image (" + str(e) + ")")
+            self.raise_error("Could not analyze image (" + str(e) + ")", warning=True)
             return [0, 0]
 
     def size_raw(self, raw):
@@ -1002,7 +1014,7 @@ class BirdhouseImageProcessing(object):
             width = raw.shape[1]
             return [width, height]
         except Exception as e:
-            self._msg_warning("Could not analyze image (" + str(e) + ")")
+            self.raise_error("Could not analyze image (" + str(e) + ")", warning=True)
             return [0, 0]
 
 
@@ -1157,7 +1169,7 @@ class BirdhouseCamera(threading.Thread):
                 elif self.type == "usb":
                     self.camera_start_usb()
                 else:
-                    self.camera_error(True, "Unknown type of camera!")
+                    self.raise_error(True, "Unknown type of camera!")
                 if not self.error and self.param["video"]["allow_recording"]:
                     self.camera_start_recording()
                 self.reload_camera = False
@@ -1302,17 +1314,41 @@ class BirdhouseCamera(threading.Thread):
         """
         self._paused = command
 
+    def raise_error(self, cam_error, message):
+        """
+        Report Error, set variables of modules
+        """
+        if cam_error:
+            self.error = True
+        else:
+            self.image.raise_error(message)
+            self.error_image = True
+            self.error_image_count += 1
+        self.error_msg.append(message)
+        self.error_time = time.time()
+        logging.error(self.id + ": " + message + " (" + str(self.error_time) + ")")
+
+    def reset_error(self):
+        """
+        remove all errors
+        """
+        self.error = False
+        self.error_msg = []
+        self.error_time = 0
+        self.error_image = False
+        self.error_image_count = 0
+
     def camera_start_pi(self):
         """
         Initialize picamera incl. initial settings
         """
-        self.camera_error_reset()
+        self.reset_error()
         self.reload_time = time.time()
         try:
             import picamera
             # https://raspberrypi.stackexchange.com/questions/114035/picamera-and-ubuntu-20-04-arm64
         except ImportError:
-            self.camera_error(True, "Module for PiCamera isn't installed. Try 'pip3 install picamera'.")
+            self.raise_error(True, "Module for PiCamera isn't installed. Try 'pip3 install picamera'.")
             self.error_no_reconnect = True
         try:
             if not self.error:
@@ -1326,13 +1362,13 @@ class BirdhouseCamera(threading.Thread):
                 self.camera.start_recording(self.video.output, format='mjpeg')
                 logging.info(self.id + ": OK.")
         except Exception as e:
-            self.camera_error(True, "Starting PiCamera doesn't work: " + str(e))
+            self.raise_error(True, "Starting PiCamera doesn't work: " + str(e))
 
     def camera_start_default(self):
         """
         Try out new
         """
-        self.camera_error_reset()
+        self.reset_error()
         self.reload_time = time.time()
         try:
             self.camera.stream.release()
@@ -1343,22 +1379,22 @@ class BirdhouseCamera(threading.Thread):
             self.camera = BirdhouseCameraOther(self.source, self.id)
 
             if self.camera.error:
-                self.camera_error(True, "Can't connect to camera, check if '" + str(
+                self.raise_error(True, "Can't connect to camera, check if '" + str(
                     self.source) + "' is a valid source (" + self.camera.error_msg + ").")
                 self.camera.stream.release()
             elif not self.camera.stream.isOpened():
-                self.camera_error(True, "Can't connect to camera, check if '" + str(
+                self.raise_error(True, "Can't connect to camera, check if '" + str(
                     self.source) + "' is a valid source (could not open).")
                 self.camera.stream.release()
             elif self.camera.stream is None:
-                self.camera_error(True, "Can't connect to camera, check if '" + str(
+                self.raise_error(True, "Can't connect to camera, check if '" + str(
                     self.source) + "' is a valid source (empty image).")
                 self.camera.stream.release()
             else:
                 raw = self.get_image_raw()
                 check = str(type(raw))
                 if "NoneType" in check:
-                    self.camera_error(True,
+                    self.raise_error(True,
                                       "Source " + str(self.source) + " returned empty image, try type 'pi' or 'usb'.")
                 else:
                     self.camera_resolution_usb(self.param["image"]["resolution"])
@@ -1366,7 +1402,7 @@ class BirdhouseCamera(threading.Thread):
                     logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
 
         except Exception as e:
-            self.camera_error(True, "Starting camera '" + self.source + "' doesn't work: " + str(e))
+            self.raise_error(True, "Starting camera '" + self.source + "' doesn't work: " + str(e))
 
         return
 
@@ -1374,7 +1410,7 @@ class BirdhouseCamera(threading.Thread):
         """
         Initialize USB Camera
         """
-        self.camera_error_reset()
+        self.reset_error()
         self.reload_time = time.time()
         try:
             self.camera.stream.release()
@@ -1383,23 +1419,23 @@ class BirdhouseCamera(threading.Thread):
         try:
             self.camera = WebcamVideoStream(src=self.source).start()
             if not self.camera.stream.isOpened():
-                self.camera_error(True, "Can't connect to camera, check if source is " + str(self.source) + " (" + str(
+                self.raise_error(True, "Can't connect to camera, check if source is " + str(self.source) + " (" + str(
                     self.camera.stream.isOpened()) + ").")
                 self.camera.stream.release()
             elif self.camera.stream is None:
-                self.camera_error(True, "Can't connect to camera, check if source is " + str(self.source) + ".)")
+                self.raise_error(True, "Can't connect to camera, check if source is " + str(self.source) + ".)")
             else:
                 raw = self.get_image_raw()
                 check = str(type(raw))
                 if "NoneType" in check:
-                    self.camera_error(True, "Images are empty, cv2 doesn't work for source " + str(
+                    self.raise_error(True, "Images are empty, cv2 doesn't work for source " + str(
                         self.source) + ", try picamera.")
                 else:
                     self.camera_resolution_usb(self.param["image"]["resolution"])
                     self.cameraFPS = FPS().start()
                     logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
         except Exception as e:
-            self.camera_error(True, "Starting USB camera doesn't work: " + str(e))
+            self.raise_error(True, "Starting USB camera doesn't work: " + str(e))
 
     def camera_resolution_usb(self, resolution):
         """
@@ -1449,33 +1485,6 @@ class BirdhouseCamera(threading.Thread):
         # >  - Expected Ptr<cv::UMat> for argument 'src'
         # )
 
-    def camera_error(self, cam_error, message):
-        """
-        Report Error, set variables of modules
-        """
-        if cam_error:
-            self.error = True
-        #        elif self.error_image_count > 20:
-        #            self.error = True
-        #            self.error_image_count = 0
-        #            message = "Too much image errors, connection to camera seems to be lost."
-        else:
-            self.error_image = True
-            self.error_image_count += 1
-        self.error_msg.append(message)
-        self.error_time = time.time()
-        logging.error(self.id + ": " + message + " (" + str(self.error_time) + ")")
-
-    def camera_error_reset(self):
-        """
-        remove all errors
-        """
-        self.error = False
-        self.error_msg = []
-        self.error_time = 0
-        self.error_image = False
-        self.error_image_count = 0
-
     def camera_start_recording(self):
         """
         start recording and set current image size
@@ -1511,7 +1520,7 @@ class BirdhouseCamera(threading.Thread):
                 return encoded
             except Exception as e:
                 error_msg = "Can't grab image from piCamera '" + self.id + "': " + str(e)
-                self.camera_error(False, error_msg)
+                self.raise_error(False, error_msg)
                 return ""
 
         elif self.type == "usb" or self.type == "default":
@@ -1521,7 +1530,7 @@ class BirdhouseCamera(threading.Thread):
 
         else:
             error_msg = "Camera type not supported (" + str(self.type) + ")."
-            self.camera_error(True, error_msg)
+            self.raise_error(True, error_msg)
             return ""
 
     def get_image_raw(self):
@@ -1543,7 +1552,7 @@ class BirdhouseCamera(threading.Thread):
                 return raw
             except Exception as e:
                 error_msg = "Can't grab image from piCamera '" + self.id + "': " + str(e)
-                self.camera_error(False, error_msg)
+                self.raise_error(False, error_msg)
                 return ""
 
         elif self.type == "usb" or self.type == "default":
@@ -1551,11 +1560,11 @@ class BirdhouseCamera(threading.Thread):
                 raw = self.camera.read()
                 check = str(type(raw))
                 if self.camera.error:
-                    self.camera_error(False, "Error reading image (source=" + str(
+                    self.raise_error(False, "Error reading image (source=" + str(
                         self.source) + ", " + self.camera.error_msg + ")")
                     return ""
                 elif "NoneType" in check:
-                    self.camera_error(False, "Got an empty image (source=" + str(self.source) + ")")
+                    self.raise_error(False, "Got an empty image (source=" + str(self.source) + ")")
                     return ""
                 else:
                     if self.param["image"]["rotation"] != 0:
@@ -1566,12 +1575,12 @@ class BirdhouseCamera(threading.Thread):
                     return raw.copy()
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
-                self.camera_error(False, error_msg)
+                self.raise_error(False, error_msg)
                 return ""
 
         else:
             error_msg = "Camera type not supported (" + str(self.type) + ")."
-            self.camera_error(True, error_msg)
+            self.raise_error(True, error_msg)
             return ""
 
     def get_image_stream_raw(self, normalize=False):
@@ -1684,7 +1693,7 @@ class BirdhouseCamera(threading.Thread):
 
         except Exception as e:
             error_msg = "Can't save image and/or create thumbnail '" + image_path + "': " + str(e)
-            self.camera_error(False, error_msg)
+            self.raise_error(False, error_msg)
             return ""
 
     def update_main_config(self):
