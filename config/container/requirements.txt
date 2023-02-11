@@ -1,0 +1,10 @@
+numpy
+imutils
+flask
+tqdm
+psutil
+setuptools
+wheel
+ffmpeg-python
+couchdb
+requests

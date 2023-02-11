@@ -1,5 +1,31 @@
 /* ... */
-/* configuration of streaming HTML elements */ 
+
+.audiostream_bird_container {
+    float: left;
+    width: 60px;
+    height: 60px;
+    text-align: left;
+    margin: 5px;
+}
+
+.audiostream_bird_image {
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    position: relative;
+    top: -15px;
+}
+
+.audiostream_bird_info {
+    cursor: pointer;
+    position: relative;
+    top: -38px;
+    right: -40px;
+    color: #888888;
+    font-size: 10px;
+}
+
+/* configuration of streaming HTML elements */
 
 .livestream_content { 
     width        : 100%; 
@@ -19,7 +45,7 @@
 
 .livestream_main {
     max-width    : 280px;
-    max-height   : 95vh;
+    max-height   : 90vh;
     transform    : scale(0.98);
     border       : 1px solid white;
 }
@@ -49,14 +75,14 @@
 .livestream_main_container.cam1     { top    :   20px; }
 .livestream_2nd_container.cam1      {}
 .livestream_links.cam1              { bottom :   -5%; }
-.livestream_record.cam1             {}
+.livestream_record.cam1             { top    :   20px; }
 .livestream_startinfo.cam1          { top    :   40px; }
 
 /* two live streams with cam1 as main stream */
 
 .livestream_main_container.cam1cam2 { top :   -70px; }
 .livestream_2nd_container.cam1cam2  { top :     5px;  left : +25vw; }
-.livestream_record.cam1cam2         { top :     0px; }
+.livestream_record.cam1cam2         { top :    20px; }
 .livestream_links.cam1cam2          { top :   100px; }
 .livestream_startinfo.cam1cam2      { top :   100px; }
 

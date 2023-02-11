@@ -37,12 +37,19 @@ h3 { margin : 4px; }
   vertical-align       : middle;
 }
 
-.headerRight img {
+.header_icon {
   height               : 23px;
   width                : 23px;
   cursor		: pointer;
 }
 
+.header_icon_wide {
+  position      : relative;
+  top           : -6px;
+  height        : 20px;
+  width         : 32px;
+  cursor		: pointer;
+}
 
 /* configuration of image / thumbnail sizes */
 
@@ -50,12 +57,14 @@ h3 { margin : 4px; }
     padding : 2px; 
     float   : left; 
     valign  : left;
-    height  : 190px;
+}
+
+.image_container.fixed_height {
+    height  : 220px;
 }
 
 .thumbnail { 
     width         : 137px;
-    //height      : 138px;
     margin-bottom : 5px;
     border        : 1px solid white;
 }
@@ -105,8 +114,7 @@ h3 { margin : 4px; }
 .camera_info_image { 
     float      : left;
     margin     : 5px;
-    width      : 30%;
-    min-width  : 120px;
+    width      : 100%;
     text-align : center;
 }
 
@@ -114,7 +122,7 @@ h3 { margin : 4px; }
     float      : left;
     margin     : 5px;
     text-align : left;
-    width      : 50%;
+    width      : 100%;
 }
 
 .camera_video_edit { 
@@ -125,7 +133,7 @@ h3 { margin : 4px; }
     width      : 100%;
     text-align : center;
     z-index    : 61;
-/*    
+    /*
     float      : left;
     margin     : 5px;
     display    : none;
@@ -155,6 +163,12 @@ h3 { margin : 4px; }
     border-radius : 4px;
     padding : 4px;
     margin : 4px;	
+}
+
+.sensor_info {
+    font-size   : 18px;
+    font-weight : bold;
+    color       : green;
 }
 
 /* image overlay - configuration of delete, recycle and video play symbols (overlay on images) */
@@ -328,4 +342,3 @@ h3 { margin : 4px; }
     color            : black;
     border           : 1px solid white;
 }
-

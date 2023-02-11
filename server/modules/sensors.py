@@ -1,0 +1,181 @@
+import time
+import threading
+import logging
+from datetime import datetime
+
+
+try:
+    import RPi.GPIO as GPIO
+    GPIO.setmode(GPIO.BCM)
+    error_module = False
+    error_module_msg = ""
+except Exception as e:
+    error_module = True
+    error_module_msg = "Couldn't load module RPi.GPIO: "+str(e)
+
+
+class BirdhouseSensor(threading.Thread):
+
+    def __init__(self, sensor_id, param, config):
+        """
+        Initialize new thread and set inital parameters
+        """
+        threading.Thread.__init__(self)
+        self.id = sensor_id
+        self.config = config
+        self.config.update["sensor_"+self.id] = False
+        self.param = self.config.param["devices"]["sensors"][sensor_id]
+        self.active = self.param["active"]
+        self.running = True
+        self._paused = False
+
+        self.GPIO = None
+        self.sensor = None
+
+        self.error = False
+        self.error_connect = False
+        self.error_msg = ""
+        self.pin = self.param["pin"]
+        self.values = {}
+        self.last_read = 0
+        self.interval = 20
+
+        if not error_module:
+            self.connect()
+        else:
+            logging.error(error_module_msg)
+            logging.error("- Requires Raspberry and installation of this module.")
+            logging.error("- To install module, try 'sudo apt-get -y install rpi.gpio'.")
+            self.error_connect = True
+            self.error_msg = error_module_msg
+            self.running = False
+
+    def run(self):
+        """
+        Start recording from sensors
+        """
+        count = 0
+        retry = 0
+        retry_wait = 120
+        logging.info("- Starting sensor loop (" + self.id + "/" + str(self.pin) + "/"+self.param["type"]+") ...")
+        while self.running:
+            time.sleep(1)
+
+            p_count = 0
+            while self._paused:
+                if p_count == 0:
+                    logging.info("Pause sensor "+self.id+" ...")
+                    p_count += 1
+                time.sleep(0.5)
+
+            if self.config.update["sensor_"+self.id]:
+                self.param = self.config.param["devices"]["sensors"][self.id]
+                self.config.update["sensor_"+self.id] = False
+                self.active = self.param["active"]
+
+            count += 1
+            if self.error_connect and self.param["active"]:
+                retry += 1
+                if retry > retry_wait:
+                    logging.info("Retry starting sensor: "+self.id)
+                    self.connect()
+                    retry = 0
+
+            elif count >= self.interval and self.param["active"]:
+                try:
+                    if self.param["type"] == "dht11" or self.param["type"] == "dht22-alt":
+                        indoor = self.sensor.read()
+                        if indoor.is_valid():
+                            self.values["temperature"] = indoor.temperature
+                            self.values["humidity"] = indoor.humidity
+                            self.last_read = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+                            logging.debug("Temperature: " + str(indoor.temperature))
+                            logging.debug("Humidity:    " + str(indoor.humidity))
+                        else:
+                            raise Exception("Not valid ("+str(indoor.is_valid())+")")
+
+                    elif self.param["type"] == "dht22":
+                        self.values["temperature"] = self.sensor.temperature
+                        self.values["humidity"] = self.sensor.humidity
+                        self.last_read = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+                        logging.debug("Temperature: " + str(self.sensor.temperature))
+                        logging.debug("Humidity:    " + str(self.sensor.humidity))
+
+                    self.error = False
+                    self.error_msg = ""
+
+                except Exception as e:
+                    self.error = True
+                    self.error_msg = "Error reading data from sensor: "+str(e)
+                    logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
+                count = 0
+
+        # GPIO.cleanup()
+        logging.info("Stopped sensor (" + self.id + "/"+self.param["type"]+").")
+
+    def connect(self):
+        """
+        connect with sensor
+        """
+        temp = ""
+        if "rpi_active" in self.config.param["server"] and self.config.param["server"]["rpi_active"]:
+            try:
+                if self.param["type"] == "dht11":
+                    import modules.dht11 as dht11
+                    self.sensor = dht11.DHT11(pin=self.pin)
+                elif self.param["type"] == "dht22-alt":
+                    import modules.dht22.dht22 as dht22
+                    self.sensor = dht22.DHT22(pin=self.pin)
+                elif self.param["type"] == "dht22":
+                    import board
+                    import adafruit_dht
+                    ada_pin = eval("board.D"+str(self.pin))
+                    self.sensor = adafruit_dht.DHT22(ada_pin, use_pulseio=False)
+                else:
+                    raise "Sensor type not supported"
+
+                if self.param["type"] == "dht11" or self.param["type"] == "dht22-alt":
+                    indoor = self.sensor.read()
+                    if indoor.is_valid():
+                        temp = "Temp: {:.1f} C; Humidity: {}% ".format(indoor.temperature, indoor.humidity)
+                    else:
+                        temp = "error"
+                elif self.param["type"] == "dht22":
+                    temperature_c = self.sensor.temperature
+                    temperature_f = temperature_c * (9 / 5) + 32
+                    humidity = self.sensor.humidity
+                    temp = "Temp: {:.1f} F / {:.1f} C; Humidity: {}% ".format(temperature_f, temperature_c, humidity)
+                self.error = False
+                self.error_connect = False
+                self.error_msg = ""
+            except Exception as e:
+                self.error = True
+                self.error_connect = True
+                self.error_msg = "Could not load "+self.param["type"]+" sensor module: "+str(e)
+                logging.error(self.error_msg)
+            if not self.error:
+                logging.info("Loaded Sensor: "+self.id)
+                logging.info("- Initial values: "+str(temp))
+        else:
+            self.error = True
+            self.error_connect = True
+            self.error_msg = "No sensor available: requires Raspberry Pi / activate 'rpi_active' in config file."
+            logging.info(self.error_msg)
+
+    def stop(self):
+        """
+        Stop sensors
+        """
+        self.running = False
+
+    def pause(self, value):
+        """
+        pause sensor measurement
+        """
+        self._paused = value
+
+    def get_values(self):
+        """
+        get values from all sensors
+        """
+        return self.values.copy()

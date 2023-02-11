@@ -1,0 +1,5 @@
+#!/bin/bash
+# https://www.tunbury.org/audio-stream/
+
+/usr/bin/ffmpeg -loglevel error -ar 44100 -ac 1 -f alsa -i plughw:1,0 -f mp3 -listen 1 tcp://0.0.0.0:5002
+

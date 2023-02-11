@@ -2,10 +2,10 @@
 // config menu and main functions
 //--------------------------------
 
-var app_frame_count       = 4;
+var app_frame_count       = 5;
 var app_frame_style       = "frame_column wide";
 var app_setting_count     = 4;
-var app_setting_style     = "setting_bg";
+var app_setting_style     = "frame_column wide";
 var app_last_load         = 0;
 var app_title             = "jc://birdhouse/";
 var app_version           = "v0.9.1"; 
@@ -34,9 +34,9 @@ function app_menu_entries() {
 	if (app_admin_allowed) {
 		app_menu = app_menu.concat([
 		["LINE"],
-		[lang("CAMERAS"),       "script", hideSettings+"birdhousePrint_load('CAMERAS','"+app_active_cam+"');"],
 		[lang("TODAY_COMPLETE"),"script", hideSettings+"birdhousePrint_load('TODAY_COMPLETE','"+app_active_cam+"');"],
 		["LINE"],
+		[lang("DEVICES"),       "script", hideSettings+"birdhousePrint_load('CAMERAS','"+app_active_cam+"');"],
 		[lang("SETTINGS"),      "script", "birdhouse_settings.create();" ],
 		]);
 		}
@@ -71,6 +71,7 @@ function app_status(data) {
 	if (data["DATA"]["background_process"] == true)	{ setTextById("statusLED","<div id='blue'></div>"); }
 	else 							{ setTextById("statusLED","<div id='green'></div>"); }
 
+    birdhouseStatus_print(data);
 	app_last_load = Date.now();
 	}
 	

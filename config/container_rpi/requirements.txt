@@ -1,0 +1,12 @@
+numpy
+picamera
+imutils
+flask
+tqdm
+psutil
+setuptools
+wheel
+ffmpeg-python
+adafruit-circuitpython-dht
+couchdb
+requests

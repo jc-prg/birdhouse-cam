@@ -1,16 +1,23 @@
 
-modules/__pycache__/
-
-images/
-
 config.json
-
-videos/
-
 stream.log
+*.sicher
 
 app/00-index-js.txt
-
 app/cache.manifest
-
 app/birdhouse/node_modules/
+
+config/install/ffmpeg
+config/install/x264
+
+data/images/
+data/videos/
+data/couchdb/_dbs.couch
+data/couchdb/_nodes.couch
+
+server/__pycache__/
+server/modules/__pycache__/
+server/modules/dht11/__pycache__/
+
+.idea/
+tryout/

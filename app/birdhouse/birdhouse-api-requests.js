@@ -3,21 +3,6 @@
 //--------------------------------------
 // additional functions 
 //--------------------------------------
-/* INDEX:
-function birdhouse_createShortVideo()
-function birdhouse_createDayVideo(camera)
-function birdhouse_recycleRange(group_id, index, status, lowres_file)
-function birdhouse_setRecycleRange(index, status)
-function birdhouse_setRecycleRangeShow(command, param)
-function birdhouse_setRecycle(index, status, lowres_file="")
-function birdhouse_setRecycleShow(command, param)
-function birdhouse_setFavorit(index, status, lowres_file="")
-function birdhouse_setFavoritShow(command, param)
-function birdhouse_AnswerDelete(data)
-function birdhouse_AnswerTrim(data)
-function birdhouse_AnswerCreateDay(data)
-*/
-//--------------------------------------
 
 function birdhouse_createShortVideo() {
         video_id = document.getElementById("video-id");
@@ -35,16 +20,15 @@ function birdhouse_createShortVideo() {
 		}
 	}
 	
-//----------------------------------------
-
 function birdhouse_createDayVideo(camera) {
 	commands = ["create-day-video",camera];
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerCreateDay,'','birdhouse_createDayVideo');
 	}
 	
-//----------------------------------------
-// change favorit / recycle status
-//----------------------------------------
+function birdhouse_recreateImageConfig() {
+	commands = ["recreate-image-config"];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerRecreateImageConfig,'','birdhouse_recreateImageConfig');
+	}
 
 function birdhouse_recycleRange(group_id, index, status, lowres_file) {
 	console.log("birdhouse_recycleRange: "+group_id+"/"+index+"/"+lowres_file);
@@ -90,7 +74,7 @@ function birdhouse_setRecycleRange(index, status) {
         commands    = index.split("/");
         commands[0] = "recycle-range";
         commands.push(status);
-        appFW.requestAPI('POST',commands,"",[birdhouse_setRecycleRangeShow,[index,status,lowres_file]],"","birdhouse_setRecycleRange"); 
+        appFW.requestAPI('POST',commands,"",[birdhouse_setRecycleRangeShow,[index,status,lowres_file]],"","birdhouse_setRecycleRange");
 	}
 
 function birdhouse_setRecycleRangeShow(command, param) {
@@ -101,15 +85,13 @@ function birdhouse_setRecycleRangeShow(command, param) {
         //setTimeout(function(){ birdhouseReloadView(); }, reloadInterval*1000);
 	}
 	
-//----------------------------------------
-
 function birdhouse_setRecycle(index, status, lowres_file="", img_id="") {
         commands    = index.split("/");
         commands[0] = "recycle";
         commands.push(status);
         
         document.getElementById(img_id).style.borderColor = color_code["request"];
-        appFW.requestAPI('POST',commands,"",[birdhouse_setRecycleShow,[index,status,lowres_file,img_id]],"","birdhouse_setRecycle"); 
+        appFW.requestAPI('POST',commands,"",[birdhouse_setRecycleShow,[index,status,lowres_file,img_id]],"","birdhouse_setRecycle");
 	}
 
 function birdhouse_setRecycleShow(command, param) {
@@ -124,15 +106,13 @@ function birdhouse_setRecycleShow(command, param) {
         document.getElementById(img_id).style.borderColor = color;
 	}
 
-//----------------------------------------
-
 function birdhouse_setFavorit(index, status, lowres_file="", img_id="") {
         commands    = index.split("/");
         commands[0] = "favorit";
         commands.push(status);
 
         document.getElementById(img_id).style.borderColor = color_code["request"];
-        appFW.requestAPI('POST',commands,"",[birdhouse_setFavoritShow,[index,status,lowres_file,img_id]],"","birdhouse_setFavorit"); 
+        appFW.requestAPI('POST',commands,"",[birdhouse_setFavoritShow,[index,status,lowres_file,img_id]],"","birdhouse_setFavorit");
 	}
 
 function birdhouse_setFavoritShow(command, param) {
@@ -146,18 +126,11 @@ function birdhouse_setFavoritShow(command, param) {
         document.getElementById(img_id).style.borderColor = color;
 	}
 
-//-----------------------------------------
-// Answers
-//-----------------------------------------
-
-
 function birdhouse_AnswerDelete(data) {
 	//console.log(data);
 	appMsg.alert(lang("DELETE_DONE") + "<br/>(" + data["deleted_count"] + " " + lang("FILES")+")","");
 	birdhouseReloadView();
 	}
-
-//-----------------------------------------
 
 function birdhouse_AnswerTrim(data) {
 	//console.log(data);
@@ -165,13 +138,14 @@ function birdhouse_AnswerTrim(data) {
 	birdhouseReloadView();
 	}
 
-//-----------------------------------------
-
 function birdhouse_AnswerCreateDay(data) {
 	//console.log(data);
 	appMsg.alert(lang("CREATE_DAY_STARTED"));
 	birdhouseReloadView();
 	}
-	
-//----------------------------------------
-// EOF
+
+function birdhouse_AnswerRecreateImageConfig(data) {
+	//console.log(data);
+	appMsg.alert(lang("RECREATE_IMAGE_CONFIG"));
+	birdhouseReloadView();
+	}
