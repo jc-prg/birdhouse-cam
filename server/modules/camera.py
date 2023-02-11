@@ -1206,7 +1206,7 @@ class BirdhouseCamera(threading.Thread):
                             hours in self.param["image_save"]["hours"]):
 
                         image = self.get_image_raw()
-                        if not self.error:
+                        if not self.error_image:
                             image = self.image.normalize_raw(image)
                             image_compare = self.image.convert_to_gray_raw(image)
 
@@ -1465,7 +1465,6 @@ class BirdhouseCamera(threading.Thread):
         self.error_time = 0
         self.error_image = False
         self.error_image_count = 0
-        self.error_no_reconnect = False
 
     def camera_start_recording(self):
         """
@@ -1488,6 +1487,10 @@ class BirdhouseCamera(threading.Thread):
         """
         read image from device
         """
+        if self.error:
+            self.error_image = True
+            return
+
         if self.type == "pi":
             try:
                 with self.video.output.condition:
@@ -1513,6 +1516,10 @@ class BirdhouseCamera(threading.Thread):
         """
         get image and convert to raw
         """
+        if self.error:
+            self.error_image = True
+            return
+
         if self.type == "pi":
             try:
                 with self.video.output.condition:
