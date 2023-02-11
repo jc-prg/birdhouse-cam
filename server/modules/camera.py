@@ -889,7 +889,9 @@ class BirdhouseImageProcessing(object):
 
         else:
             raw = self.image_error_v2_raw(image=self.img_camera_error_v3)
-            raw = self.draw_date_raw(raw=raw, overwrite_color=(255, 0, 0), overwrite_position=(20, 40))
+            raw = self.draw_text_raw(raw=raw, text=self.id+": "+self.param["name"],
+                                     position=(20, 40), color=(255, 255, 255), thickness=2)
+            raw = self.draw_date_raw(raw=raw, overwrite_color=(255, 255, 255), overwrite_position=(20, 80))
 
         return raw
 
@@ -1405,9 +1407,17 @@ class BirdhouseCamera(threading.Thread):
         """
         if self.type != "usb" and self.type != "default":
             return
+        if self.camera is None:
+            return
 
-        current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH), self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
-        logging.info("USB Current resolution: " + str(current))
+        self.param["image"]["crop_area"] = self.image.crop_area_pixel(resolution=self.param["image"]["resolution"],
+                                                                      area=self.param["image"]["crop"], dimension=False)
+
+        try:
+            current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH), self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+            logging.info("USB Current resolution: " + str(current))
+        except Exception as e:
+            logging.warning("Could not get current resolution: "+self.id)
         high_value = 10000
         self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, high_value)
         self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, high_value)
@@ -1490,6 +1500,8 @@ class BirdhouseCamera(threading.Thread):
         if self.error:
             self.error_image = True
             return
+        else:
+            self.error_image = False
 
         if self.type == "pi":
             try:
@@ -1519,6 +1531,8 @@ class BirdhouseCamera(threading.Thread):
         if self.error:
             self.error_image = True
             return
+        else:
+            self.error_image = False
 
         if self.type == "pi":
             try:
@@ -1640,6 +1654,7 @@ class BirdhouseCamera(threading.Thread):
         """
         Draw a red rectangle into the image to show detection area / and a yellow to show the crop area
         """
+        logging.info("-----------------"+self.id+"------- show area")
         outer_area = self.param["image"]["crop"]
         inner_area = self.param["similarity"]["detection_area"]
         image = self.image.draw_area_raw(raw=image, area=outer_area, color=(0, 255, 255), thickness=4)
@@ -1681,8 +1696,6 @@ class BirdhouseCamera(threading.Thread):
         self.source = self.param["source"]
         self.type = self.param["type"]
         self.record = self.param["record"]
-        self.param["image"]["crop_area"] = self.image.crop_area_pixel(resolution=self.param["image"]["resolution"],
-                                                                      area=self.param["image"]["crop"], dimension=False)
         self.video.param = self.param
         self.image.param = self.param
         self.config.update["camera_" + self.id] = False
