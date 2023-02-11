@@ -27,7 +27,7 @@ api_description = {
     "name": "BirdhouseCAM",
     "version": "v0.9.0"
 }
-app_framework = "v0.9.1"
+app_framework = "v0.9.2"
 
 
 def on_exit(signum, handler):
