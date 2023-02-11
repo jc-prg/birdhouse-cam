@@ -443,7 +443,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     camera_data[key]["image"]["resolution_max"] = str(camera[key].max_resolution)
                     camera_data[key]["status"] = {
                         "error": camera[key].error,
-                        "error_warn": camera[key].error_image,
+                        "error_warn": camera[key].error_msg,
                         "error_msg": camera[key].error_msg,
                         "image_error": camera[key].image.error,
                         "image_error_msg": camera[key].image.error_msg,
@@ -528,11 +528,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 else:
                     frame_raw = camera[which_cam].get_image_stream_raw(normalize=True)
 
-                logging.debug(which_cam+"..........."+self.path+".."+str(camera[which_cam].error)+".."+str(camera[which_cam].error_image))
+                logging.debug(which_cam+"..........."+self.path+".."+str(camera[which_cam].error)+".."+str(camera[which_cam].image.error))
 
-                if not camera[which_cam].error and not camera[which_cam].error_image:
+                if not camera[which_cam].error and not camera[which_cam].image.error:
                     if self.path.startswith("/detection/"):
                         frame_raw = camera[which_cam].show_areas_raw(image=frame_raw)
+                        if camera[which_cam].param["image"]["date_time"]:
+                            frame_raw = camera[which_cam].image.draw_date_raw(frame_raw)
 
                     else:
                         if camera[which_cam].param["image"]["date_time"]:

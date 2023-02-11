@@ -554,12 +554,13 @@ class BirdhouseImageProcessing(object):
         self.img_camera_error = "camera_na.jpg"
         self.img_camera_error_v2 = "camera_na_v3.jpg"
         self.img_camera_error_v3 = "camera_na_v4.jpg"
+
         self.error = False
         self.error_msg = []
+        self.error_time = 0
+        self.error_count = 0
         self.error_camera = False
-        self.error_image = None
-        self.error_image_raw = None
-        self.error_image_v2_raw = None
+        self.error_image = {}
 
     def raise_error(self, message, warning=False):
         """
@@ -569,7 +570,10 @@ class BirdhouseImageProcessing(object):
             logging.error("Image Processing (" + self.id + "): " + message)
             self.error = True
             self.error_msg.append(message)
-            if len(self.error_msg) >= 3:
+            self.error_count += 1
+            if self.error_time == 0:
+                self.error_time = time.time()
+            if len(self.error_msg) >= 10:
                 self.error_msg.pop()
         else:
             logging.warning("Image Processing (" + self.id + "): " + message)
@@ -580,15 +584,16 @@ class BirdhouseImageProcessing(object):
         """
         self.error = False
         self.error_msg = []
-        self.error_camera = False
-        self.error_image = None
-        self.error_image_raw = None
-        self.error_image_v2_raw = None
+        self.error_count = 0
+        self.error_time = 0
 
     def compare(self, image_1st, image_2nd, detection_area=None):
         """
         calculate structural similarity index (SSIM) of two images
         """
+        if self.error_camera:
+            return 0
+
         image_1st = self.convert_to_raw(image_1st)
         image_2nd = self.convert_to_raw(image_2nd)
         similarity = self.compare_raw(image_1st, image_2nd, detection_area)
@@ -598,14 +603,17 @@ class BirdhouseImageProcessing(object):
         """
         calculate structural similarity index (SSIM) of two images
         """
+        if self.error_camera:
+            return 0
+
         try:
             if len(image_1st) == 0 or len(image_2nd) == 0:
-                self.raise_error(
-                    "Compare: At least one file has a zero length - A:" + str(len(image_1st)) + "/ B:" + str(
-                        len(image_2nd)), warning=True)
+                self.raise_error("Compare: At least one file has a zero length - A:" +
+                                 str(len(image_1st)) + "/ B:" + str(len(image_2nd)), warning=True)
                 score = 0
         except Exception as e:
             self.raise_error("Compare: At least one file has a zero length.", warning=True)
+            score = 0
 
         if detection_area is not None:
             image_1st, area = self.crop_raw(raw=image_1st, crop_area=detection_area, crop_type="relative")
@@ -635,24 +643,30 @@ class BirdhouseImageProcessing(object):
             return image
         except Exception as e:
             self.raise_error("Error convert RAW image -> image (" + str(e) + ")")
-            return self.image_error()
+            return raw
 
     def convert_to_raw(self, image):
         """
         convert from device to raw image -> to be modifeid with CV2
         """
+        if self.error_camera:
+            return
+
         try:
             image = np.frombuffer(image, dtype=np.uint8)
             raw = cv2.imdecode(image, 1)
             return raw
         except Exception as e:
             self.raise_error("Error convert image -> RAW image (" + str(e) + ")")
-            return self.image_error_raw()
+            return
 
     def convert_to_gray_raw(self, raw):
         """
         convert image from RGB to gray scale image (e.g. for analyzing similarity)
         """
+        if self.error_camera:
+            return raw
+
         try:
             return cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
 
@@ -712,7 +726,7 @@ class BirdhouseImageProcessing(object):
         if "x" in resolution:
             resolution = resolution.split("x")
         width = int(resolution[0])
-        height = int(resolution[0])
+        height = int(resolution[1])
 
         (w_start, h_start, w_end, h_end) = area
         x_start = int(round(width * w_start, 0))
@@ -827,83 +841,73 @@ class BirdhouseImageProcessing(object):
             self.raise_error("Could not draw area into the image (" + str(e) + ")", warning=True)
             return raw
 
-    def image_error(self):
-        """
-        return image with error message
-        """
-        if self.error_image is None:
-            raw = self.image_error_raw()
-            image = self.convert_from_raw(raw)
-            self.error_image = image
-            return image
-        else:
-            return self.error_image
-
-    def image_error_raw(self):
-        """
-        return image with error message
-        """
-        if self.error_image_raw is None:
-            filename = os.path.join(self.config.main_directory, self.config.directories["data"], self.img_camera_error)
-            raw = cv2.imread(filename)
-            self.error_image_raw = raw
-            return raw
-        else:
-            return self.error_image_raw
-
     def image_error_info_raw(self, error_msg, reload_time, info_type="complete"):
         """
         add error information to image
         """
         time.sleep(0.5)
         if info_type == "complete":
-            raw = self.image_error_v2_raw()
+            raw = self.image_error_raw(image=self.img_camera_error_v2)
 
+            line_position = 160
             msg = self.id + ": " + self.param["name"]
-            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 160), font=None, scale=1,
+            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=1,
                                      color=(0, 0, 255), thickness=2)
 
+            line_position += 40
             msg = "Device: type=" + self.param["type"] + ", active=" + str(self.param["active"]) + ", source=" + str(
                 self.param["source"])
             msg += ", resolution=" + self.param["image"]["resolution"]
-            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 200), font=None, scale=0.6,
+            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
                                      color=(0, 0, 255), thickness=1)
 
-            msg = "Last Error: " + error_msg[len(error_msg) - 1] + " [#" + str(len(error_msg)) + "]"
-            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 230), font=None, scale=0.6,
-                                     color=(0, 0, 255), thickness=1)
+            if len(error_msg) > 0:
+                line_position += 30
+                msg = "Last Cam Error: " + error_msg[len(error_msg) - 1] + " [#" + str(len(error_msg)) + "]"
+                raw = self.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
+                                         color=(0, 0, 255), thickness=1)
 
+            if len(self.error_msg) > 0:
+                line_position += 30
+                msg = "Last Img Error: " + self.error_msg[len(self.error_msg) - 1] + " [#" + str(len(error_msg)) + "]"
+                raw = self.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
+                                         color=(0, 0, 255), thickness=1)
+
+            line_position += 30
             msg = "Last Reconnect: " + str(round(time.time() - reload_time)) + "s"
-            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 260), font=None, scale=0.6,
+            raw = self.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
                                      color=(0, 0, 255), thickness=1)
 
             details = True
             if details:
+                line_position += 30
                 msg = "CPU Usage: " + str(psutil.cpu_percent(interval=1, percpu=False)) + "% "
                 msg += "(" + str(psutil.cpu_count()) + " CPU)"
-                raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 290), font=None, scale=0.6,
+                raw = self.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
                                          color=(0, 0, 255), thickness=1)
 
+                line_position += 30
                 total = psutil.virtual_memory().total
                 total = round(total / 1024 / 1024)
                 used = psutil.virtual_memory().used
                 used = round(used / 1024 / 1024)
                 percentage = psutil.virtual_memory().percent
                 msg = "Memory: total=" + str(total) + "MB, used=" + str(used) + "MB (" + str(percentage) + "%)"
-                raw = self.draw_text_raw(raw=raw, text=msg, position=(20, 320), font=None, scale=0.6,
+                raw = self.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
                                          color=(0, 0, 255), thickness=1)
 
-            raw = self.draw_date_raw(raw=raw, overwrite_color=(0, 0, 255), overwrite_position=(20, 370))
+            line_position += 40
+            raw = self.draw_date_raw(raw=raw, overwrite_color=(0, 0, 255), overwrite_position=(20, line_position))
 
         else:
-            raw = self.image_error_v2_raw(image=self.img_camera_error_v3)
+            raw = self.image_error_raw(image=self.img_camera_error_v3)
             raw = self.draw_text_raw(raw=raw, text=self.id+": "+self.param["name"],
                                      position=(20, 40), color=(255, 255, 255), thickness=2)
             raw = self.draw_date_raw(raw=raw, overwrite_color=(255, 255, 255), overwrite_position=(20, 80))
 
         return raw
 
-    def image_error_v2_raw(self, reload=False, image=""):
+    def image_error_raw(self, reload=False, image=""):
         """
         return image with error message
         """
@@ -916,19 +920,22 @@ class BirdhouseImageProcessing(object):
             resolution = [800, 600]
         area = (0, 0, int(resolution[0]), int(resolution[1]))
 
-        if self.error_image_raw is None or reload:
+        if image not in self.error_image or self.error_image[image] is None or reload:
             filename = os.path.join(self.config.main_directory, self.config.directories["data"], image)
             raw = cv2.imread(filename)
             raw, area = self.crop_raw(raw=raw, crop_area=area, crop_type="absolute")
-            self.error_image_v2_raw = raw
-            return raw
+            self.error_image[image] = raw.copy()
+            return raw.copy()
         else:
-            return self.error_image_v2_raw
+            return self.error_image[image].copy()
 
     def normalize_raw(self, raw):
         """
         apply presets per camera to image -> implemented = crop to given values
         """
+        if self.error_camera:
+            return
+
         if "crop_area" not in self.param["image"]:
             normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw, crop_area=self.param["image"]["crop"],
                                                                          crop_type="relative")
@@ -1100,8 +1107,7 @@ class BirdhouseCamera(threading.Thread):
         self.error = False
         self.error_msg = []
         self.error_time = 0
-        self.error_image = False
-        self.error_image_count = 0
+        self.error_reload_time = 60
         self.error_no_reconnect = False
 
         self.reload_camera = True
@@ -1185,14 +1191,18 @@ class BirdhouseCamera(threading.Thread):
 
             # Error with camera / or update main config -> try to restart from time to time
             if self.running and self.error and not self.error_no_reconnect:
-                retry_time = 60
-                if self.error_time + retry_time < time.time():
+                if self.error_time + self.error_reload_time < time.time():
                     logging.info("Try to restart camera (" + self.type + "/" + str(self.param["active"]) + ") ...")
+                    self.reload_camera = True
                     self.config_update = True
                     self.error_time = time.time()
 
-                # [image2 @ 0x561e328229c0] Could find no file
-                # with path '/home/jean/Projekte/test/birdhouse-cam/server/../data/videos/video_cam2_20220405_221441_%08d.jpg' and index in the range 0-4
+            if self.running and self.image.error and not self.error_no_reconnect:
+                if self.image.error_time + self.error_reload_time < time.time():
+                    logging.info("Try to restart camera (" + self.type + "/" + str(self.param["active"]) + ") ...")
+                    self.reload_camera = True
+                    self.config_update = True
+                    self.image.error_time = time.time()
 
             # Video Recording
             elif self.video.recording:
@@ -1220,7 +1230,7 @@ class BirdhouseCamera(threading.Thread):
                             hours in self.param["image_save"]["hours"]):
 
                         image = self.get_image_raw()
-                        if not self.error_image:
+                        if not self.image.error:
                             image = self.image.normalize_raw(image)
                             image_compare = self.image.convert_to_gray_raw(image)
 
@@ -1320,10 +1330,9 @@ class BirdhouseCamera(threading.Thread):
         """
         if cam_error:
             self.error = True
+            self.image.error_camera = True
         else:
             self.image.raise_error(message)
-            self.error_image = True
-            self.error_image_count += 1
         self.error_msg.append(message)
         self.error_time = time.time()
         logging.error(self.id + ": " + message + " (" + str(self.error_time) + ")")
@@ -1335,8 +1344,8 @@ class BirdhouseCamera(threading.Thread):
         self.error = False
         self.error_msg = []
         self.error_time = 0
-        self.error_image = False
-        self.error_image_count = 0
+        self.image.error_camera = False
+        self.image.reset_error()
 
     def camera_start_pi(self):
         """
@@ -1507,16 +1516,14 @@ class BirdhouseCamera(threading.Thread):
         read image from device
         """
         if self.error:
-            self.error_image = True
             return
-        else:
-            self.error_image = False
 
         if self.type == "pi":
             try:
                 with self.video.output.condition:
                     self.video.output.condition.wait()
                     encoded = self.video.output.frame
+                self.image.reset_error()
                 return encoded
             except Exception as e:
                 error_msg = "Can't grab image from piCamera '" + self.id + "': " + str(e)
@@ -1538,16 +1545,14 @@ class BirdhouseCamera(threading.Thread):
         get image and convert to raw
         """
         if self.error:
-            self.error_image = True
             return
-        else:
-            self.error_image = False
 
         if self.type == "pi":
             try:
                 with self.video.output.condition:
                     self.video.output.condition.wait()
                     encoded = self.video.output.frame
+                self.image.reset_error()
                 raw = self.image.convert_to_raw(encoded)
                 return raw
             except Exception as e:
@@ -1560,18 +1565,16 @@ class BirdhouseCamera(threading.Thread):
                 raw = self.camera.read()
                 check = str(type(raw))
                 if self.camera.error:
-                    self.raise_error(False, "Error reading image (source=" + str(
-                        self.source) + ", " + self.camera.error_msg + ")")
+                    self.raise_error(False, "Error reading image (source=" + str(self.source) + ", " +
+                                     self.camera.error_msg + ")")
                     return ""
                 elif "NoneType" in check:
                     self.raise_error(False, "Got an empty image (source=" + str(self.source) + ")")
                     return ""
                 else:
+                    self.image.reset_error()
                     if self.param["image"]["rotation"] != 0:
                         raw = self.image.rotate_raw(raw, self.param["image"]["rotation"])
-                        self.error = False
-                        self.error_image = False
-                        self.error_msg = []
                     return raw.copy()
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
@@ -1589,24 +1592,23 @@ class BirdhouseCamera(threading.Thread):
         """
         image = self.get_image_raw()
 
-        if (image == "" or image is None) and self.image_count_empty < 10 and self.image_last_raw is not None:
+        if not self.error and self.image.error and self.image.error_count < 10 and self.image_last_raw is not None:
             image = self.image_last_raw
             image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
-            self.image_count_empty += 1
             return image
 
-        elif self.error or image == "" or image is None:
+        elif self.error or self.image.error:
             if normalize:
                 image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "reduced")
                 image_error = self.image.normalize_error_raw(image_error)
             else:
                 image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "complete")
             return image_error
+
         else:
             if normalize:
                 image = self.image.normalize_raw(image)
             self.image_last_raw = image
-            self.image_count_empty = 0
             return image
 
     def image_differs(self, file_info):
@@ -1663,7 +1665,7 @@ class BirdhouseCamera(threading.Thread):
         """
         Draw a red rectangle into the image to show detection area / and a yellow to show the crop area
         """
-        logging.info("-----------------"+self.id+"------- show area")
+        logging.debug("-----------------"+self.id+"------- show area")
         outer_area = self.param["image"]["crop"]
         inner_area = self.param["similarity"]["detection_area"]
         image = self.image.draw_area_raw(raw=image, area=outer_area, color=(0, 255, 255), thickness=4)
