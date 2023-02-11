@@ -69,7 +69,7 @@ function birdhouseDevices( title, data ) {
 		html_entry += tab.row("- Preview Scale:", birdhouse_edit_field(id="set_scale_"+camera, field="devices:cameras:"+camera+":image:preview_scale", type="input", options="", data_type="integer") + " %");
         html_entry += tab.end();
 
-		id_list += "set_resolution_"+camera+":set_rotation_"+camera+":set_crop_"+camera+":set_scale_"+camera+":";
+		id_list += "set_resolution_"+camera+":set_rotation_"+camera+":set_crop_"+camera+":set_scale_"+camera+":set_black_white_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_image", "Image/Video", html_entry, false );
 
         html_entry = tab.start();

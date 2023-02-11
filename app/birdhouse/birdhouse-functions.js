@@ -104,7 +104,8 @@ function birdhouse_edit_send(id_list) {
     var error = false;
     var error_msg = "Error in the data fields:\n\n";
     for (var i=0;i<ids.length;i++) {
-        if (document.getElementById(ids[i])) {
+        console.info(i+"_"+ids[i]);
+        if (ids[i] != "" && document.getElementById(ids[i])) {
             var data_type = document.getElementById(ids[i]+"_data_type").value;
             var field_name = document.getElementById(ids[i]+"_data").value.split(":");
             var field_data = document.getElementById(ids[i]).value;
@@ -118,7 +119,7 @@ function birdhouse_edit_send(id_list) {
             info += document.getElementById(ids[i]+"_data_type").value;
             info += "///";
         }
-        else {
+        else if (ids[i] != "") {
             console.error("Could not find element: "+ids[i]);
         }
     }
