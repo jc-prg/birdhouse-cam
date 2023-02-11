@@ -697,12 +697,14 @@ class BirdhouseImageProcessing(object):
         return raw, (0, 0, 1, 1)
 
     @staticmethod
-    def crop_area_pixel(raw, area):
+    def crop_area_pixel(resolution, area, dimension=True):
         """
         calculate start & end pixel for relative area
         """
-        height = raw.shape[0]
-        width = raw.shape[1]
+        if "x" in resolution:
+            resolution = resolution.split("x")
+        width = int(resolution[0])
+        height = int(resolution[0])
 
         (w_start, h_start, w_end, h_end) = area
         x_start = int(round(width * w_start, 0))
@@ -711,7 +713,10 @@ class BirdhouseImageProcessing(object):
         y_end = int(round(height * h_end, 0))
         x_width = x_end - x_start
         y_height = y_end - y_start
-        pixel_area = (x_start, y_start, x_end, y_end, x_width, y_height)
+        if dimension:
+            pixel_area = (x_start, y_start, x_end, y_end, x_width, y_height)
+        else:
+            pixel_area = (x_start, y_start, x_end, y_end)
 
         return pixel_area
 
@@ -803,7 +808,7 @@ class BirdhouseImageProcessing(object):
         try:
             height = raw.shape[0]
             width = raw.shape[1]
-            (x_start, y_start, x_end, y_end, x_width, y_height) = self.crop_area_pixel(raw, area)
+            (x_start, y_start, x_end, y_end, x_width, y_height) = self.crop_area_pixel([width, height], area)
             image = cv2.line(raw, (x_start, y_start), (x_start, y_end), color, thickness)
             image = cv2.line(image, (x_start, y_start), (x_end, y_start), color, thickness)
             image = cv2.line(image, (x_end, y_end), (x_start, y_end), color, thickness)
@@ -924,6 +929,9 @@ class BirdhouseImageProcessing(object):
         # rotate     - not implemented yet
         # resize     - not implemented yet
         # saturation - not implemented yet
+
+        # see https://www.programmerall.com/article/5684321533/
+
         return normalized
 
     def normalize_error_raw(self, raw):
@@ -1198,34 +1206,51 @@ class BirdhouseCamera(threading.Thread):
                             hours in self.param["image_save"]["hours"]):
 
                         image = self.get_image_raw()
-                        image = self.image.normalize_raw(image)
-                        image_compare = self.image.convert_to_gray_raw(image)
+                        if not self.error:
+                            image = self.image.normalize_raw(image)
+                            image_compare = self.image.convert_to_gray_raw(image)
 
-                        if self.param["image"]["date_time"]:
-                            image = self.image.draw_date_raw(image)
+                            if self.param["image"]["date_time"]:
+                                image = self.image.draw_date_raw(image)
 
-                        if self.image_size == [0, 0]:
-                            self.image_size = self.image.size_raw(image)
-                            self.video.image_size = self.image_size
+                            if self.image_size == [0, 0]:
+                                self.image_size = self.image.size_raw(image)
+                                self.video.image_size = self.image_size
 
-                        if self.previous_image is not None:
-                            similarity = self.image.compare_raw(image_1st=image_compare, image_2nd=self.previous_image,
-                                                                detection_area=self.param["similarity"][
-                                                                    "detection_area"])
-                            similarity = str(similarity)
+                            if self.previous_image is not None:
+                                similarity = self.image.compare_raw(image_1st=image_compare,
+                                                                    image_2nd=self.previous_image,
+                                                                    detection_area=self.param["similarity"][
+                                                                        "detection_area"])
+                                similarity = str(similarity)
 
-                        image_info = {
-                            "camera": self.id,
-                            "hires": self.config.filename_image("hires", stamp, self.id),
-                            "lowres": self.config.filename_image("lowres", stamp, self.id),
-                            "compare": (stamp, self.previous_stamp),
-                            "datestamp": datetime.now().strftime("%Y%m%d"),
-                            "date": datetime.now().strftime("%d.%m.%Y"),
-                            "time": datetime.now().strftime("%H:%M:%S"),
-                            "similarity": similarity,
-                            "sensor": {},
-                            "size": self.image_size
-                        }
+                            image_info = {
+                                "camera": self.id,
+                                "hires": self.config.filename_image("hires", stamp, self.id),
+                                "lowres": self.config.filename_image("lowres", stamp, self.id),
+                                "compare": (stamp, self.previous_stamp),
+                                "datestamp": datetime.now().strftime("%Y%m%d"),
+                                "date": datetime.now().strftime("%d.%m.%Y"),
+                                "time": datetime.now().strftime("%H:%M:%S"),
+                                "similarity": similarity,
+                                "sensor": {},
+                                "size": self.image_size
+                            }
+                        else:
+                            image_info = {
+                                "camera": self.id,
+                                "hires": "",
+                                "lowres": "",
+                                "compare": (stamp, self.previous_stamp),
+                                "datestamp": datetime.now().strftime("%Y%m%d"),
+                                "date": datetime.now().strftime("%d.%m.%Y"),
+                                "time": datetime.now().strftime("%H:%M:%S"),
+                                "similarity": 0,
+                                "sensor": {},
+                                "size": self.image_size,
+                                "error": self.error_msg[len(self.error_msg)-1]
+                            }
+
                         sensor_data = {"activity": round(100 - float(similarity), 1)}
                         for key in self.sensor:
                             if self.sensor[key].running:
@@ -1234,22 +1259,17 @@ class BirdhouseCamera(threading.Thread):
                                 image_info["sensor"][key] = self.sensor[key].get_values()
 
                         self.config.queue.entry_add(config="sensor", date="", key=stamp, entry=sensor_data)
-                        # self.write_sensor_info(timestamp=stamp, data=self.sensor[key].get_values())
-                        # self.write_cache(data_type="sensor", timestamp=stamp, data=sensor_data)
-
-                        path_lowres = os.path.join(self.config.directory("images"),
-                                                   self.config.filename_image("lowres", stamp, self.id))
-                        path_hires = os.path.join(self.config.directory("images"),
-                                                  self.config.filename_image("hires", stamp, self.id))
-
-                        logging.debug("WRITE:" + path_lowres)
-
-                        # self.write_image_info(timestamp=stamp, data=image_info)
                         self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
-                        # self.write_cache(data_type="images", timestamp=stamp, data=image_info)
-                        self.write_image(filename=path_hires, image=image)
-                        self.write_image(filename=path_lowres, image=image,
-                                         scale_percent=self.param["image"]["preview_scale"])
+
+                        if not self.error:
+                            path_lowres = os.path.join(self.config.directory("images"),
+                                                       self.config.filename_image("lowres", stamp, self.id))
+                            path_hires = os.path.join(self.config.directory("images"),
+                                                      self.config.filename_image("hires", stamp, self.id))
+                            logging.debug("WRITE:" + path_lowres)
+                            self.write_image(filename=path_hires, image=image)
+                            self.write_image(filename=path_lowres, image=image,
+                                             scale_percent=self.param["image"]["preview_scale"])
 
                         self.previous_image = image_compare
                         self.previous_stamp = stamp
@@ -1468,9 +1488,6 @@ class BirdhouseCamera(threading.Thread):
         """
         read image from device
         """
-        if self.error:
-            return self.image.image_error()
-
         if self.type == "pi":
             try:
                 with self.video.output.condition:
@@ -1492,39 +1509,10 @@ class BirdhouseCamera(threading.Thread):
             self.camera_error(True, error_msg)
             return ""
 
-    def get_image_stream_raw(self, normalize=False):
-        """
-        get image, if error show error message
-        """
-        image = self.get_image_raw()
-
-        if (image == "" or image is None) and self.image_count_empty < 10 and self.image_last_raw is not None:
-            image = self.image_last_raw
-            image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
-            self.image_count_empty += 1
-            return image
-
-        elif self.error or image == "" or image is None:
-            if normalize:
-                image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "reduced")
-                image_error = self.image.normalize_error_raw(image_error)
-            else:
-                image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "complete")
-            return image_error
-        else:
-            if normalize:
-                image = self.image.normalize_raw(image)
-            self.image_last_raw = image
-            self.image_count_empty = 0
-            return image
-
     def get_image_raw(self):
         """
         get image and convert to raw
         """
-        if self.error:
-            return self.image.image_error_v2_raw()
-
         if self.type == "pi":
             try:
                 with self.video.output.condition:
@@ -1564,6 +1552,32 @@ class BirdhouseCamera(threading.Thread):
             error_msg = "Camera type not supported (" + str(self.type) + ")."
             self.camera_error(True, error_msg)
             return ""
+
+    def get_image_stream_raw(self, normalize=False):
+        """
+        get image, if error show error message
+        """
+        image = self.get_image_raw()
+
+        if (image == "" or image is None) and self.image_count_empty < 10 and self.image_last_raw is not None:
+            image = self.image_last_raw
+            image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
+            self.image_count_empty += 1
+            return image
+
+        elif self.error or image == "" or image is None:
+            if normalize:
+                image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "reduced")
+                image_error = self.image.normalize_error_raw(image_error)
+            else:
+                image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "complete")
+            return image_error
+        else:
+            if normalize:
+                image = self.image.normalize_raw(image)
+            self.image_last_raw = image
+            self.image_count_empty = 0
+            return image
 
     def image_differs(self, file_info):
         """
@@ -1660,6 +1674,8 @@ class BirdhouseCamera(threading.Thread):
         self.source = self.param["source"]
         self.type = self.param["type"]
         self.record = self.param["record"]
+        self.param["image"]["crop_area"] = self.image.crop_area_pixel(resolution=self.param["image"]["resolution"],
+                                                                      area=self.param["image"]["crop"], dimension=False)
         self.video.param = self.param
         self.image.param = self.param
         self.config.update["camera_" + self.id] = False
