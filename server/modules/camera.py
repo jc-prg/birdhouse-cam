@@ -1464,14 +1464,12 @@ class BirdhouseCamera(threading.Thread):
         if self.camera is None:
             return
 
-        self.param["image"]["crop_area"] = self.image.crop_area_pixel(resolution=self.param["image"]["resolution"],
-                                                                      area=self.param["image"]["crop"], dimension=False)
-
         try:
             current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH), self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
             logging.info("USB Current resolution: " + str(current))
         except Exception as e:
             logging.warning("Could not get current resolution: "+self.id)
+
         high_value = 10000
         self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, high_value)
         self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, high_value)
@@ -1488,6 +1486,11 @@ class BirdhouseCamera(threading.Thread):
             self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, float(dimensions[1]))
             current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
                        self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+
+            self.param["image"]["resolution_current"] = current
+            self.param["image"]["crop_area"] = self.image.crop_area_pixel(resolution=current,
+                                                                          area=self.param["image"]["crop"],
+                                                                          dimension=False)
             logging.info("USB New resolution: " + str(current))
         else:
             logging.info("Resolution definition not supported: " + str(resolution))

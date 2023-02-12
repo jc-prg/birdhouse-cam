@@ -29,7 +29,8 @@ function birdhouseDevices( title, data ) {
 	    info["id"]    = camera;
 	    camera_name   = camera.toUpperCase() + ": " + cameras[camera]["name"];
 	    camera_stream = birdhouse_Image(camera_name, info);
-	    max_resolution = cameras[camera]["image"]["resolution_max"];
+	    resolution_max = cameras[camera]["image"]["resolution_max"];
+	    resolution_act = cameras[camera]["image"]["resolution_current"];
 
 		if (cameras[camera]["active"] == false || cameras[camera]["active"] == "false") {
 		    open = false;
@@ -61,13 +62,12 @@ function birdhouseDevices( title, data ) {
 		id_list += "set_name_"+camera+":set_type_"+camera+":set_active_"+camera+":set_source_"+camera+":";
 
         html_entry = tab.start();
-		html_entry += tab.row("- Max. Resolution:", max_resolution );
-		//birdhouse_edit_field(id="set_resolution_"+camera, field="devices:cameras:"+camera+":image:resolution", type="input", options="", data_type="string"));
-		html_entry += tab.row("- Resolution:", birdhouse_edit_field(id="set_resolution_"+camera, field="devices:cameras:"+camera+":image:resolution", type="input", options="", data_type="string"));
+		html_entry += tab.row("- Set Resolution:", birdhouse_edit_field(id="set_resolution_"+camera, field="devices:cameras:"+camera+":image:resolution", type="input", options="", data_type="string"));
+		html_entry += tab.row("- Resolution:", "current=(" + resolution_act + "), max=(" + resolution_max + ")");
 		html_entry += tab.row("- Rotation:", birdhouse_edit_field(id="set_rotation_"+camera, field="devices:cameras:"+camera+":image:rotation", type="select", options="0,90,180,270", data_type="integer"));
 		html_entry += tab.row("- Black&White:", birdhouse_edit_field(id="set_black_white_"+camera, field="devices:cameras:"+camera+":image:black_white", type="select", options="false,true", data_type="boolean"));
 		html_entry += tab.row("- Crop (relative):", birdhouse_edit_field(id="set_crop_"+camera, field="devices:cameras:"+camera+":image:crop", type="input", options="", data_type="json"));
-		html_entry += tab.row("- Crop (absolute):", cameras[camera]["image"]["crop_area"]);
+		html_entry += tab.row("- Crop (absolute):", "<div id='get_crop_area_"+camera+"'>Please wait ...</div>");
 		html_entry += tab.row("- Preview Scale:", birdhouse_edit_field(id="set_scale_"+camera, field="devices:cameras:"+camera+":image:preview_scale", type="input", options="", data_type="integer") + " %");
         html_entry += tab.end();
 
@@ -102,28 +102,10 @@ function birdhouseDevices( title, data ) {
         html_temp += birdhouse_OtherGroup( camera+"_record", "Record Images", html_entry, false );
 
         html_entry = tab.start();
-        html_entry += tab.row("v4l2-ctl: ", app_data["STATUS"]["system"]["video_devices"]);
+        html_entry += tab.row("Error Camera:", "<textarea id='error_cam_"+camera+"' class='settings_error_msg'></textarea>");
+        html_entry += tab.row("Error Image:", "<textarea id='error_img_"+camera+"' class='settings_error_msg'></textarea>");
         html_entry += tab.end();
-
-        html_temp += birdhouse_OtherGroup( camera+"_v4l2", "Available video devices", html_entry, false );
-
-		if (cameras[camera]["status"]["error"] || cameras[camera]["status"]["error_warn"] || cameras[camera]["status"]["image_error"] || cameras[camera]["status"]["video_error"]) {
-            html_entry = tab.start();
-		    if (cameras[camera]["status"]["error"]) {
-    		    html_entry += tab.row("Error:", cameras[camera]["status"]["error_msg"]);
-    		}
-		    if (cameras[camera]["status"]["error_warn"]) {
-    		    html_entry += tab.row("Warning:", cameras[camera]["status"]["error_msg"]);
-    		}
-		    if (cameras[camera]["status"]["image_error"]) {
-                html_entry += tab.row("Image-Error:", cameras[camera]["status"]["image_error_msg"]);
-            }
-            if (cameras[camera]["status"]["video_error"]) {
-                html_entry += tab.row("Video-Error:", cameras[camera]["status"]["video_error_msg"]);
-            }
-        html_entry += tab.end();
-        html_temp += birdhouse_OtherGroup( camera+"_error", "Error messages", html_entry, true );
-        }
+        html_temp += birdhouse_OtherGroup( camera+"_error", "Error messages", html_entry, false );
 
         if (admin && cameras[camera]["active"]) { var create =  "<button onclick=\""+onclick+"\" class=\"button-video-edit\">&nbsp;"+lang("CREATE_DAY")+"&nbsp;</button> &nbsp; "; }
     	else { var create = ""; }

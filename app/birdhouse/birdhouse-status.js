@@ -22,6 +22,22 @@ function birdhouseStatus_print(data) {
         }
     setTextById("system_info_cpu_usage_detail", cpu_details);
 
+    // add camera information
+    var cameras = data["DATA"]["devices"]["cameras"];
+    for (let camera in cameras) {
+        setTextById("error_cam_"+camera, cameras[camera]["status"]["error_msg"]);
+        setTextById("error_img_"+camera, cameras[camera]["status"]["image_error_msg"]);
+        if (cameras[camera]["status"]["error"] || cameras[camera]["status"]["image_error"]) {
+            header = document.getElementById("group_header_"+camera+"_error");
+            if (header) { header.style.background = "#993333"; }
+            }
+        if (cameras[camera]["image"]["crop_area"]) {
+            crop = "[" + cameras[camera]["image"]["crop_area"][0] + ", " + cameras[camera]["image"]["crop_area"][1] + ", ";
+            crop += cameras[camera]["image"]["crop_area"][2] + ", " + cameras[camera]["image"]["crop_area"][2] + "] ";
+            setTextById("get_crop_area_"+camera, crop);
+            }
+        }
+
     // add sensor information
     var sensors = data["DATA"]["devices"]["sensors"];
     html = "<center><i><font color='gray'>";

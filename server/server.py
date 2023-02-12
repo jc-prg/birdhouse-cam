@@ -442,7 +442,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     camera_data[key]["video"]["stream"] = "/stream.mjpg?" + key
                     camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
                     camera_data[key]["device"] = "camera"
-                    camera_data[key]["image"]["resolution_max"] = str(camera[key].max_resolution)
+                    camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
                     camera_data[key]["status"] = {
                         "error": camera[key].error,
                         "error_warn": camera[key].error_msg,

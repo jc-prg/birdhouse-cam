@@ -16,6 +16,18 @@
    opacity    : 0.9;
 }
 
+.settings_error_msg {
+    font-family : sans-serif;
+    font-size   : 8px;
+    width       : 95%;
+    height      : 100px;
+    margin      : 3px;
+
+    background-color    : #FFFFDD;
+    border-radius       : 3px;
+    border              : solid 1px red;
+}
+
 /* --------------------------------- */
 
 #settings { 
