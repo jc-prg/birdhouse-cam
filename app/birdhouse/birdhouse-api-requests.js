@@ -25,6 +25,11 @@ function birdhouse_createDayVideo(camera) {
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerCreateDay,'','birdhouse_createDayVideo');
 	}
 	
+function birdhouse_reconnectCamera(camera) {
+	commands = ["reconnect_camera",camera];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_reconnectCamera');
+	}
+
 function birdhouse_recreateImageConfig() {
 	commands = ["recreate-image-config"];
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerRecreateImageConfig,'','birdhouse_recreateImageConfig');
@@ -141,6 +146,11 @@ function birdhouse_AnswerTrim(data) {
 function birdhouse_AnswerCreateDay(data) {
 	//console.log(data);
 	appMsg.alert(lang("CREATE_DAY_STARTED"));
+	birdhouseReloadView();
+	}
+function birdhouse_AnswerOther(data) {
+	//console.log(data);
+	appMsg.alert(lang("DONE"));
 	birdhouseReloadView();
 	}
 

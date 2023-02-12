@@ -1446,6 +1446,15 @@ class BirdhouseCamera(threading.Thread):
         except Exception as e:
             self.raise_error(True, "Starting USB camera doesn't work: " + str(e))
 
+    def camera_reconnect(self):
+        """
+        Reconnect after API call
+        """
+        response = {"command": ["reconnect camera"], "camera": self.id}
+        self.reload_camera = True
+        self.config_update = True
+        return response
+
     def camera_resolution_usb(self, resolution):
         """
         set resolution for USB

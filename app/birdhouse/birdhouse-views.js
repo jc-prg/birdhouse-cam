@@ -182,12 +182,12 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, true );
     }
 
-    if (active_page != "FAVORITS" && app_active_page != "VIDEOS" && app_active_page != "ARCHIVE") {
+    if (active_page != "FAVORITES" && app_active_page != "VIDEOS" && app_active_page != "ARCHIVE") {
         same_img_size = true;
     }
 
 	// group favoritws per month
-    if (active_page == "FAVORITS" && groups != undefined) {
+    if (active_page == "FAVORITES" && groups != undefined) {
         var groups2 = {}
         Object.entries(groups).forEach(([key, value]) => {
             if (key.indexOf(".") > 0) {

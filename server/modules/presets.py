@@ -4,7 +4,7 @@ birdhouse_pages = {
     "backup":           ("Archiv",      "/list_backup.html", "ARCHIVE"),
     "today":            ("Heute",       "/list_short.html",  "TODAY"),
     "today_complete":   ("Alle heute",  "/list_new.html",    "TODAY_COMPLETE"),
-    "favorit":          ("Favoriten",   "/list_star.html",   "FAVORITS"),
+    "favorit":          ("Favoriten",   "/list_star.html",   "FAVORITES"),
     "cam_info":         ("Kameras",     "/cameras.html",     "CAMERAS"),
     "video_info":       ("Video Info",  "/video-info.html",  ""),
     "videos":           ("Videos",      "/videos.html",      "VIDEOS"),

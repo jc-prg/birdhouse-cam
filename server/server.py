@@ -315,6 +315,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = camera[which_cam].video.create_video_day_queue(self.path)
         elif self.path.startswith('/recreate-image-config/'):
             response = backup.create_image_config_api(self.path)
+        elif self.path.startswith('/reconnect_camera/'):
+            response = camera[which_cam].camera_reconnect()
         elif self.path.startswith('/remove/'):
             response = backup.delete_marked_files_api(self.path)
 
@@ -385,7 +387,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             if command == "INDEX":
                 content = views.index(server=self)
-            elif command == "FAVORITS":
+            elif command == "FAVORITES":
                 content = views.favorite_list(camera=which_cam)
             elif command == "TODAY":
                 content = views.list(server=self)

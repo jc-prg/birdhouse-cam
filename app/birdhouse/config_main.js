@@ -26,7 +26,7 @@ function app_menu_entries() {
 	var hideSettings = "birdhouse_settings.toggle(true);";
 	var app_menu = [
 		[lang("LIVESTREAM"),   "script", hideSettings+"birdhousePrint_load('INDEX',   '"+app_active_cam+"');"],
-		[lang("FAVORITS"),     "script", hideSettings+"birdhousePrint_load('FAVORITS','"+app_active_cam+"');"],
+		[lang("FAVORITES"),    "script", hideSettings+"birdhousePrint_load('FAVORITES','"+app_active_cam+"');"],
 		[lang("TODAY"),        "script", hideSettings+"birdhousePrint_load('TODAY',   '"+app_active_cam+"');"],
 		[lang("VIDEOS"),       "script", hideSettings+"birdhousePrint_load('VIDEOS',  '"+app_active_cam+"');"],
 		[lang("ARCHIVE"),      "script", hideSettings+"birdhousePrint_load('ARCHIVE', '"+app_active_cam+"');"],

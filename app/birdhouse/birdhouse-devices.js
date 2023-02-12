@@ -18,7 +18,8 @@ function birdhouseDevices( title, data ) {
 	tab.style_rows["height"] = "27px";
 
 	for (let camera in cameras) {
-    	var onclick = "birdhouse_createDayVideo('"+camera+"');";
+    	var onclick  = "birdhouse_createDayVideo('"+camera+"');";
+    	var onclick2 = "birdhouse_reconnectCamera('"+camera+"');";
     	var open    = true;
     	var info    = {};
 		var id_list = "";
@@ -65,7 +66,8 @@ function birdhouseDevices( title, data ) {
 		html_entry += tab.row("- Resolution:", birdhouse_edit_field(id="set_resolution_"+camera, field="devices:cameras:"+camera+":image:resolution", type="input", options="", data_type="string"));
 		html_entry += tab.row("- Rotation:", birdhouse_edit_field(id="set_rotation_"+camera, field="devices:cameras:"+camera+":image:rotation", type="select", options="0,90,180,270", data_type="integer"));
 		html_entry += tab.row("- Black&White:", birdhouse_edit_field(id="set_black_white_"+camera, field="devices:cameras:"+camera+":image:black_white", type="select", options="false,true", data_type="boolean"));
-		html_entry += tab.row("- Crop:", birdhouse_edit_field(id="set_crop_"+camera, field="devices:cameras:"+camera+":image:crop", type="input", options="", data_type="json"));
+		html_entry += tab.row("- Crop (relative):", birdhouse_edit_field(id="set_crop_"+camera, field="devices:cameras:"+camera+":image:crop", type="input", options="", data_type="json"));
+		html_entry += tab.row("- Crop (absolute):", cameras[camera]["image"]["crop_area"]);
 		html_entry += tab.row("- Preview Scale:", birdhouse_edit_field(id="set_scale_"+camera, field="devices:cameras:"+camera+":image:preview_scale", type="input", options="", data_type="integer") + " %");
         html_entry += tab.end();
 
@@ -126,7 +128,9 @@ function birdhouseDevices( title, data ) {
         if (admin && cameras[camera]["active"]) { var create =  "<button onclick=\""+onclick+"\" class=\"button-video-edit\">&nbsp;"+lang("CREATE_DAY")+"&nbsp;</button> &nbsp; "; }
     	else { var create = ""; }
 
-		html_temp += "<hr/>&nbsp;<br/><center>"+create + birdhouse_edit_save(id="edit_"+camera, id_list)+"</center><br/>";
+    	var reconnect =  "<button onclick=\""+onclick2+"\" class=\"button-video-edit\">&nbsp;"+lang("RECONNECT_CAMERA")+"&nbsp;</button> &nbsp; ";
+
+		html_temp += "<hr/>&nbsp;<br/><center>" + reconnect + create + birdhouse_edit_save(id="edit_"+camera, id_list)+"</center><br/>";
 	    html_temp += "</div></div>";
 
 		html += birdhouse_OtherGroup( camera, camera_name, html_temp, open );

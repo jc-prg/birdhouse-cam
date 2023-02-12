@@ -195,7 +195,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		var hires       = birdhouse_ImageURL(RESTurl + entry["directory"] + entry["hires"]);
 		var description = entry["time"] + " (" + entry["similarity"] + "%)";
 
-		if (app_active_page == "FAVORITS") {
+		if (app_active_page == "FAVORITES") {
 			[day,month,year]  = entry["date"].split(".");
 			[hour,minute,sec] = entry["time"].split(":");
 			description       = entry["date"]+" ("+hour+":"+minute+")";
