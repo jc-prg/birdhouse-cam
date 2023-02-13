@@ -20,7 +20,7 @@ class BirdhouseConfigCouchDB(object):
         self.db_url = "http://"+db_usr+":"+db_pwd+"@"+db_server+":"+str(db_port)+"/"
         self.connected = False
         self.basic_directory = base_dir
-        logging.info("Starting config CouchDB handler ...")
+        logging.info("Starting config CouchDB handler ("+self.db_url+") ...")
 
         connects2db = 0
         max_connects = 30
