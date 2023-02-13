@@ -521,6 +521,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.stream_video_header()
             stream = True
 
+            time_current = 0
+            time_fps = 0
+
             while stream:
                 if config.update["camera_"+which_cam]:
                     camera[which_cam].update_main_config()

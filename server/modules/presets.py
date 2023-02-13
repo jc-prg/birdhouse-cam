@@ -25,6 +25,7 @@ birdhouse_default_cam_pi = {
         "black_white": False,
         "crop": (0.1, 0.0, 0.9, 1.0),
         "framerate": 24,
+        "show_framerate": True,
         "resolution": "800x600",
         "saturation": -50,
         "rotation": 0,
@@ -59,6 +60,7 @@ birdhouse_default_cam_usb = {
     "image": {
         "crop": (0.1, 0.0, 0.85, 1.0),
         "resolution": "800x600",
+        "show_framerate": True,
         "framerate": "not implemented",
         "saturation": "not implemented",
         "rotation": 0,

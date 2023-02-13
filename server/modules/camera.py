@@ -905,7 +905,7 @@ class BirdhouseImageProcessing(object):
 
         else:
             raw = self.image_error_raw(image=self.img_camera_error_v3)
-            raw = self.draw_text_raw(raw=raw, text=self.id+": "+self.param["name"],
+            raw = self.draw_text_raw(raw=raw, text=self.id + ": " + self.param["name"],
                                      position=(20, 40), color=(255, 255, 255), thickness=2)
             raw = self.draw_date_raw(raw=raw, overwrite_color=(255, 255, 255), overwrite_position=(20, 80))
 
@@ -1128,11 +1128,14 @@ class BirdhouseCamera(threading.Thread):
         self.timezone = 0
         if "timezone" in self.config.param["server"]:
             self.timezone = float(self.config.param["server"]["timezone"].replace("UTC", ""))
-            logging.info("Set Timezone: "+self.config.param["server"]["timezone"] + " (" + str(self.timezone) + ")")
+            logging.info("Set Timezone: " + self.config.param["server"]["timezone"] + " (" + str(self.timezone) + ")")
 
         self.image_size = [0, 0]
         self.image_last_raw = None
         self.image_count_empty = 0
+        self.image_time_last = 0
+        self.image_time_current = 0
+        self.image_time_rotate = 0
         self.previous_image = None
         self.previous_stamp = "000000"
 
@@ -1282,7 +1285,7 @@ class BirdhouseCamera(threading.Thread):
                                 "similarity": 0,
                                 "sensor": {},
                                 "size": self.image_size,
-                                "error": self.error_msg[len(self.error_msg)-1]
+                                "error": self.error_msg[len(self.error_msg) - 1]
                             }
 
                         sensor_data = {"activity": round(100 - float(similarity), 1)}
@@ -1414,7 +1417,7 @@ class BirdhouseCamera(threading.Thread):
                 check = str(type(raw))
                 if "NoneType" in check:
                     self.raise_error(True,
-                                      "Source " + str(self.source) + " returned empty image, try type 'pi' or 'usb'.")
+                                     "Source " + str(self.source) + " returned empty image, try type 'pi' or 'usb'.")
                 else:
                     self.camera_resolution_usb(self.param["image"]["resolution"])
                     self.cameraFPS = FPS().start()
@@ -1475,10 +1478,11 @@ class BirdhouseCamera(threading.Thread):
             return
 
         try:
-            current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH), self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+            current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
+                       self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
             logging.info("USB Current resolution: " + str(current))
         except Exception as e:
-            logging.warning("Could not get current resolution: "+self.id)
+            logging.warning("Could not get current resolution: " + self.id)
 
         high_value = 10000
         self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, high_value)
@@ -1612,6 +1616,19 @@ class BirdhouseCamera(threading.Thread):
         """
         get image, if error show error message
         """
+        time_fps = 0
+        time_rotate = ["-", "/", "|", "\\"]
+        if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
+            self.image_time_last = self.image_time_current
+            self.image_time_current = datetime.now().timestamp()
+            if self.image_time_last > 0:
+                time_per_frame = self.image_time_current - self.image_time_last
+                time_fps = 1 / time_per_frame
+
+                self.image_time_rotate += 1
+                if self.image_time_rotate > len(time_rotate)-1:
+                    self.image_time_rotate = 0
+
         image = self.get_image_raw()
 
         if not self.error and self.image.error and self.image.error_count < 10 and self.image_last_raw is not None:
@@ -1625,11 +1642,22 @@ class BirdhouseCamera(threading.Thread):
                 image_error = self.image.normalize_error_raw(image_error)
             else:
                 image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "complete")
+
+            if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
+                image_error = self.image.draw_text_raw(raw=image_error,
+                                                       text=str(round(time_fps, 1)) + "fps   " + time_rotate[self.image_time_rotate],
+                                                       font=cv2.QT_FONT_NORMAL,
+                                                       position=(250, 40), scale=0.4, thickness=1)
             return image_error
 
         else:
             if normalize:
                 image = self.image.normalize_raw(image)
+            if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
+                image = self.image.draw_text_raw(raw=image,
+                                                 text=str(round(time_fps, 1)) + "fps   " + time_rotate[self.image_time_rotate],
+                                                 font=cv2.QT_FONT_NORMAL,
+                                                 position=(250, 20), scale=0.4, thickness=1)
             self.image_last_raw = image
             return image
 
@@ -1687,7 +1715,7 @@ class BirdhouseCamera(threading.Thread):
         """
         Draw a red rectangle into the image to show detection area / and a yellow to show the crop area
         """
-        logging.debug("-----------------"+self.id+"------- show area")
+        logging.debug("-----------------" + self.id + "------- show area")
         outer_area = self.param["image"]["crop"]
         inner_area = self.param["similarity"]["detection_area"]
         image = self.image.draw_area_raw(raw=image, area=outer_area, color=(0, 255, 255), thickness=4)
