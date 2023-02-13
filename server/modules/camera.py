@@ -1643,7 +1643,7 @@ class BirdhouseCamera(threading.Thread):
 
             if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
                 image_error = self.image.draw_text_raw(raw=image_error,
-                                                       text=str(round(time_fps, 1)) + "fps   " + time_rotate[self.image_time_rotate],
+                                                       text=str(round(self.image_fps, 1)) + "fps   " + time_rotate[self.image_time_rotate],
                                                        font=cv2.QT_FONT_NORMAL,
                                                        position=(250, 40), scale=0.4, thickness=1)
             return image_error
@@ -1653,7 +1653,7 @@ class BirdhouseCamera(threading.Thread):
                 image = self.image.normalize_raw(image)
             if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
                 image = self.image.draw_text_raw(raw=image,
-                                                 text=str(round(time_fps, 1)) + "fps   " + time_rotate[self.image_time_rotate],
+                                                 text=str(round(self.image_fps, 1)) + "fps   " + time_rotate[self.image_time_rotate],
                                                  font=cv2.QT_FONT_NORMAL,
                                                  position=(250, 20), scale=0.4, thickness=1)
             self.image_last_raw = image
