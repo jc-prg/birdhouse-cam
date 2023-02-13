@@ -443,6 +443,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
                     camera_data[key]["device"] = "camera"
                     camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
+                    camera_data[key]["image"]["current_fps"] = camera[key].image_fps
                     camera_data[key]["status"] = {
                         "error": camera[key].error,
                         "error_warn": camera[key].error_msg,
@@ -520,9 +521,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             self.stream_video_header()
             stream = True
-
-            time_current = 0
-            time_fps = 0
 
             while stream:
                 if config.update["camera_"+which_cam]:

@@ -10,7 +10,7 @@ import requests
 from datetime import datetime, timezone, timedelta
 
 
-class BirdhouseConfigCouchDB(object):
+-class BirdhouseConfigCouchDB(object):
 
     def __init__(self, db_usr, db_pwd, db_server, db_port, base_dir):
         """

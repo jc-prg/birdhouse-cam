@@ -1136,6 +1136,7 @@ class BirdhouseCamera(threading.Thread):
         self.image_time_last = 0
         self.image_time_current = 0
         self.image_time_rotate = 0
+        self.image_fps = 0
         self.previous_image = None
         self.previous_stamp = "000000"
 
@@ -1616,18 +1617,15 @@ class BirdhouseCamera(threading.Thread):
         """
         get image, if error show error message
         """
-        time_fps = 0
         time_rotate = ["-", "/", "|", "\\"]
-        if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
-            self.image_time_last = self.image_time_current
-            self.image_time_current = datetime.now().timestamp()
-            if self.image_time_last > 0:
-                time_per_frame = self.image_time_current - self.image_time_last
-                time_fps = 1 / time_per_frame
 
-                self.image_time_rotate += 1
-                if self.image_time_rotate > len(time_rotate)-1:
-                    self.image_time_rotate = 0
+        self.image_time_last = self.image_time_current
+        self.image_time_current = datetime.now().timestamp()
+        if self.image_time_last > 0:
+            self.image_fps = 1 / (self.image_time_current - self.image_time_last)
+            self.image_time_rotate += 1
+            if self.image_time_rotate > len(time_rotate)-1:
+                self.image_time_rotate = 0
 
         image = self.get_image_raw()
 
