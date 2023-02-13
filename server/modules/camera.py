@@ -1133,10 +1133,11 @@ class BirdhouseCamera(threading.Thread):
         self.image_size = [0, 0]
         self.image_last_raw = None
         self.image_count_empty = 0
-        self.image_time_last = 0
-        self.image_time_current = 0
-        self.image_time_rotate = 0
-        self.image_fps = 0
+        self.image_time_last = {}
+        self.image_time_current = {}
+        self.image_time_rotate = {}
+        self.image_fps = {}
+        self.image_streams = {}
         self.previous_image = None
         self.previous_stamp = "000000"
 
@@ -1613,21 +1614,48 @@ class BirdhouseCamera(threading.Thread):
             self.raise_error(True, error_msg)
             return ""
 
-    def get_image_stream_raw(self, normalize=False):
+    def get_image_stream_count(self):
+        """
+        identify amount of currently running streams
+        """
+        current_time = datetime.now().timestamp()
+        count_streams = 0
+        for key in self.image_streams:
+            if self.image_streams[key] + 2 > current_time:
+                count_streams += 1
+        return count_streams
+
+    def get_image_stream_fps(self, stream_id):
+        """
+        calculate fps for a specific stream
+        """
+        self.image_streams[stream_id] = datetime.now().timestamp()
+        if stream_id not in self.image_time_current:
+            self.image_time_current[stream_id] = 0
+        if stream_id not in self.image_time_rotate:
+            self.image_time_rotate[stream_id] = 0
+        if stream_id not in self.image_fps:
+            self.image_fps[stream_id] = 0
+
+        time_rotate = ["-", "/", "|", "\\"]
+        self.image_time_last[stream_id] = self.image_time_current[stream_id]
+        self.image_time_current[stream_id] = datetime.now().timestamp()
+        if self.image_time_last[stream_id] > 0:
+            self.image_fps[stream_id] = 1 / (self.image_time_current[stream_id] - self.image_time_last[stream_id])
+            self.image_time_rotate[stream_id] += 1
+            if self.image_time_rotate[stream_id] > len(time_rotate)-1:
+                self.image_time_rotate[stream_id] = 0
+        return time_rotate[self.image_time_rotate[stream_id]]
+
+    def get_image_stream_raw(self, normalize=False, stream_id=""):
         """
         get image, if error show error message
+        -> IMPROVE: reuse images, if multiple streams ... (define primary stream, others use copies ...)
+        ->          check if in device mode there are two streams of each camera?!
         """
-        time_rotate = ["-", "/", "|", "\\"]
-
-        self.image_time_last = self.image_time_current
-        self.image_time_current = datetime.now().timestamp()
-        if self.image_time_last > 0:
-            self.image_fps = 1 / (self.image_time_current - self.image_time_last)
-            self.image_time_rotate += 1
-            if self.image_time_rotate > len(time_rotate)-1:
-                self.image_time_rotate = 0
 
         image = self.get_image_raw()
+        fps_rotate = self.get_image_stream_fps(stream_id=stream_id)
 
         if not self.error and self.image.error and self.image.error_count < 10 and self.image_last_raw is not None:
             image = self.image_last_raw
@@ -1643,7 +1671,7 @@ class BirdhouseCamera(threading.Thread):
 
             if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
                 image_error = self.image.draw_text_raw(raw=image_error,
-                                                       text=str(round(self.image_fps, 1)) + "fps   " + time_rotate[self.image_time_rotate],
+                                                       text=str(round(self.image_fps[stream_id], 1)) + "fps   " + fps_rotate,
                                                        font=cv2.QT_FONT_NORMAL,
                                                        position=(250, 40), scale=0.4, thickness=1)
             return image_error
@@ -1653,7 +1681,7 @@ class BirdhouseCamera(threading.Thread):
                 image = self.image.normalize_raw(image)
             if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
                 image = self.image.draw_text_raw(raw=image,
-                                                 text=str(round(self.image_fps, 1)) + "fps   " + time_rotate[self.image_time_rotate],
+                                                 text=str(round(self.image_fps[stream_id], 1)) + "fps   " + fps_rotate,
                                                  font=cv2.QT_FONT_NORMAL,
                                                  position=(250, 20), scale=0.4, thickness=1)
             self.image_last_raw = image

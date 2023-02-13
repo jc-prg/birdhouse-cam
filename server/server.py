@@ -443,7 +443,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
                     camera_data[key]["device"] = "camera"
                     camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
-                    camera_data[key]["image"]["current_fps"] = camera[key].image_fps
+                    camera_data[key]["image"]["current_streams"] = camera[key].get_image_stream_count()
                     camera_data[key]["status"] = {
                         "error": camera[key].error,
                         "error_warn": camera[key].error_msg,
@@ -521,15 +521,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             self.stream_video_header()
             stream = True
+            stream_id = datetime.now().timestamp()
 
             while stream:
                 if config.update["camera_"+which_cam]:
                     camera[which_cam].update_main_config()
 
                 if self.path.startswith("/detection/"):
-                    frame_raw = camera[which_cam].get_image_stream_raw(normalize=False)
+                    frame_raw = camera[which_cam].get_image_stream_raw(normalize=False, stream_id=stream_id)
                 else:
-                    frame_raw = camera[which_cam].get_image_stream_raw(normalize=True)
+                    frame_raw = camera[which_cam].get_image_stream_raw(normalize=True, stream_id=stream_id)
 
                 logging.debug(which_cam+"..........."+self.path+".."+str(camera[which_cam].error)+".."+str(camera[which_cam].image.error))
 

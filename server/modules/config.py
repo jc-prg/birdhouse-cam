@@ -181,7 +181,7 @@ class BirdhouseConfigDB(object):
     def __init__(self, db_type="json"):
         db_usr = "birdhouse"
         db_pwd = "birdhouse"
-        db_server = "192.168.201.4"
+        db_server = "birdhouse"
         db_port = 5100
         db_basedir = ""
 

@@ -25,6 +25,7 @@ function birdhouseStatus_print(data) {
     // add camera information
     var cameras = data["DATA"]["devices"]["cameras"];
     for (let camera in cameras) {
+        setTextById("show_stream_count_"+camera, cameras[camera]["image"]["current_streams"]);
         setTextById("error_cam_"+camera, cameras[camera]["status"]["error_msg"]);
         setTextById("error_img_"+camera, cameras[camera]["status"]["image_error_msg"]);
         if (cameras[camera]["status"]["error"] || cameras[camera]["status"]["image_error"]) {
