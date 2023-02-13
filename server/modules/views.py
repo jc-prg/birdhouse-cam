@@ -219,7 +219,7 @@ class BirdhouseViews(threading.Thread):
         self.server = server
         param = server.path.split("/")
         path, which_cam = self.selected_camera()
-        time_now = datetime.now().strftime('%H%M%S')
+        time_now = self.config.local_time().strftime('%H%M%S')
 
         if param[1] != "api":
             if len(param) > 2:
@@ -243,7 +243,7 @@ class BirdhouseViews(threading.Thread):
         files_all = {}
         count = 0
 
-        date_today = datetime.now().strftime("%Y%m%d")
+        date_today = self.config.local_time().strftime("%Y%m%d")
         date_yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
 
         if date_backup != "":
@@ -263,7 +263,7 @@ class BirdhouseViews(threading.Thread):
         elif os.path.isfile(self.config.file_path(config="images")):
             backup = False
             files_all = self.config.read_cache(config="images")
-            time_now = datetime.now().strftime('%H%M%S')
+            time_now = self.config.local_time().strftime('%H%M%S')
             check_similarity = True
             category = "/current/"
             subdirectory = ""
@@ -526,7 +526,7 @@ class BirdhouseViews(threading.Thread):
         """
         Page with all pictures of the current day
         """
-        logging.debug("CompleteListToday: Start - "+datetime.now().strftime("%H:%M:%S"))
+        logging.debug("CompleteListToday: Start - "+self.config.local_time().strftime("%H:%M:%S"))
         self.server = server
         path, which_cam = self.selected_camera()
         content = {
@@ -546,8 +546,8 @@ class BirdhouseViews(threading.Thread):
         files_all = self.config.read_cache(config="images")
         # files_all = self.config.read(config="images")
 
-        time_now = datetime.now().strftime('%H%M%S')
-        date_today = datetime.now().strftime("%Y%m%d")
+        time_now = self.config.local_time().strftime('%H%M%S')
+        date_today = self.config.local_time().strftime("%Y%m%d")
         date_yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
 
         hours = list(self.camera[which_cam].param["image_save"]["hours"])
@@ -589,7 +589,7 @@ class BirdhouseViews(threading.Thread):
         content["chart_data"] = create_chart_data(content["entries"].copy())
 
         length = getsizeof(content)/1024
-        logging.debug("CompleteListToday: End - "+datetime.now().strftime("%H:%M:%S")+" ("+str(length)+" kB)")
+        logging.debug("CompleteListToday: End - "+self.config.local_time().strftime("%H:%M:%S")+" ("+str(length)+" kB)")
         return content
 
     def favorite_list(self, camera):
@@ -629,14 +629,14 @@ class BirdhouseViews(threading.Thread):
                     files_videos[date][file] = files_all[file]
 
         # today
-        date_today = datetime.now().strftime("%Y%m%d")
+        date_today = self.config.local_time().strftime("%Y%m%d")
         files = self.config.read_cache(config="images")
         category = "/current/"
 
         for stamp in files:
             if date_today == files[stamp]["datestamp"] and "favorit" in files[stamp] and int(
                     files[stamp]["favorit"]) == 1:
-                new = datetime.now().strftime("%Y%m%d") + "_" + stamp
+                new = self.config.local_time().strftime("%Y%m%d") + "_" + stamp
                 favorites[new] = files[stamp]
                 favorites[new]["source"] = ("images", "")
                 favorites[new]["date"] = "Aktuell"

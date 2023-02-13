@@ -36,8 +36,8 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 
 	var commands = [view];
 	if (camera != "" && date != "")	{ commands.push(camera); commands.push(date); }
-	else if (camera != "")			{ commands.push(camera); }
-	else					{ commands.push(app_active_cam); }
+	else if (camera != "")          { commands.push(camera); }
+	else                            { commands.push(app_active_cam); }
 	
 	console.debug("Request "+view+" / "+camera+" / "+date);	
 	appFW.requestAPI('GET',commands,"",birdhousePrint,"","birdhousePrint_load");
@@ -46,6 +46,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 function birdhousePrint(data) {
     app_data = data;
 	console.debug("Request->Print ...");
+
 	var sensor_data = data["DATA"]["devices"]["sensors"];
 	if (sensor_data["sensor1"]) {
 	    console.log("Sensor data: "+sensor_data["sensor1"]["temperature"] + "C / "+ sensor_data["sensor1"]["humidity"] + "%");
@@ -56,10 +57,11 @@ function birdhousePrint(data) {
 	birdhouseStream_load(data["DATA"]["server"]["ip4_address"], birdhouseMicrophones);
 	//setTimeout(function(){  },2000);
 
+    var initial_setup = data["DATA"]["server"]["initial_setup"];
 	var date          = data["DATA"]["active_date"];
 	var camera        = data["DATA"]["active_cam"];
 	if (camera == "") 	{ camera = app_active_cam; }
-	else			{ app_active_cam = camera; }
+	else			    { app_active_cam = camera; }
 	
 	console.log("Request->Print "+app_active_page+" / "+camera+" / "+date);	
 
@@ -78,6 +80,8 @@ function birdhousePrint(data) {
 	else if (app_active_page == "VIDEOS")           { birdhouse_LIST(lang("VIDEOS"), data, camera); }
 	else if (app_active_page == "VIDEO_DETAIL")	    { birdhouse_VIDEO_DETAIL(lang("VIDEOS"), data, camera); }
 	else { setTextById(app_frame_content,lang("ERROR") + ": "+app_active_page); }
+
+	if (app_active_page == "INDEX" && initial_setup) { birdhouse_settings.create(); }
 
 	birdhouseStatus_print(data);
 
@@ -98,27 +102,39 @@ function birdhousePrintTitle(data, active_page="", camera="") {
 
 function birdhouseSetMainVars(data) {
 
+    var initial_setup = data["DATA"]["server"]["initial_setup"];
+
 	if (data["DATA"]["devices"]["cameras"] != undefined) {
-	    for (let key in data["DATA"]["devices"]["cameras"]) { if (data["DATA"]["devices"]["cameras"][key]["active"]) { app_available_cameras.push(key) }}
+	    for (let key in data["DATA"]["devices"]["cameras"]) {
+	        if (data["DATA"]["devices"]["cameras"][key]["active"])
+	                                                            { app_available_cameras.push(key) }}
 	    }
 	if (data["DATA"]["devices"]["sensors"] != undefined) {
-	    for (let key in data["DATA"]["devices"]["sensors"]) { if (data["DATA"]["devices"]["sensors"][key]["active"]) { app_available_sensors.push(key) }}
+	    for (let key in data["DATA"]["devices"]["sensors"]) {
+	        if (data["DATA"]["devices"]["sensors"][key]["active"])
+	                                                            { app_available_sensors.push(key) }}
 	    }
 	if (data["DATA"]["devices"]["microphones"] != undefined) {
-	    for (let key in data["DATA"]["devices"]["microphones"]) { if (data["DATA"]["devices"]["microphones"][key]["active"]) { app_available_micros.push(key) }}
+	    for (let key in data["DATA"]["devices"]["microphones"]) {
+	        if (data["DATA"]["devices"]["microphones"][key]["active"])
+	                                                            { app_available_micros.push(key) }}
 	    }
 
-	if (data["DATA"]["active_cam"] != undefined && data["DATA"]["active_cam"] != "") { app_active_cam = data["DATA"]["active_cam"]; }
-	else                                                                             { app_active_cam = app_available_cameras[0]; }
+	if (data["DATA"]["active_cam"] != undefined && data["DATA"]["active_cam"] != "")
+	                                                            { app_active_cam = data["DATA"]["active_cam"]; }
+	else                                                        { app_active_cam = app_available_cameras[0]; }
 	app_active_mic = app_available_micros[0];
 
-	if (data["DATA"]["active_page"] != "" && data["DATA"]["active_page"] != undefined && data["DATA"]["active_page"] != "status") { app_active_page = data["DATA"]["active_page"]; }
-	else if (data["DATA"]["active_page"] != "status")                                  { app_active_page = "INDEX"; }
+	if (data["DATA"]["active_page"] != "" && data["DATA"]["active_page"] != undefined && data["DATA"]["active_page"] != "status")
+	                                                             { app_active_page = data["DATA"]["active_page"]; }
+	//else if (data["DATA"]["active_page"] == "" && initial_setup) { app_active_page = ""; }
+	else if (data["DATA"]["active_page"] != "status")            { app_active_page = "INDEX"; }
 
-	if (data["DATA"]["active_date"] != "" && data["DATA"]["active_date"] != undefined) { app_active_date = data["DATA"]["active_date"]; }
-	else                                                                               { app_active_date = ""; }
+	if (data["DATA"]["active_date"] != "" && data["DATA"]["active_date"] != undefined)
+	                                                            { app_active_date = data["DATA"]["active_date"]; }
+	else                                                        { app_active_date = ""; }
 
-	if (data["STATUS"]["admin_allowed"] != undefined)                                  { app_admin_allowed = data["STATUS"]["admin_allowed"]; }
+	if (data["STATUS"]["admin_allowed"] != undefined)           { app_admin_allowed = data["STATUS"]["admin_allowed"]; }
 	}
 	
 function birdhouseHeaderFunctions() {

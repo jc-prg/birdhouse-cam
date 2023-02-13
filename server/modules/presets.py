@@ -14,7 +14,7 @@ birdhouse_pages = {
 birdhouse_default_cam_pi = {
     "type": "default",
     "name": "Inside",
-    "source": 0,
+    "source": "/dev/video0",
     "active": True,
     "record": True,
     "similarity": {
@@ -25,9 +25,9 @@ birdhouse_default_cam_pi = {
         "black_white": False,
         "crop": (0.1, 0.0, 0.9, 1.0),
         "framerate": 24,
-        "resolution": "900x1080",
+        "resolution": "800x600",
         "saturation": -50,
-        "rotation": 180,
+        "rotation": 0,
         "preview_scale": 18,
         "date_time": True,
         "date_time_position": (10, 20),
@@ -49,7 +49,7 @@ birdhouse_default_cam_pi = {
 birdhouse_default_cam_usb = {
     "type": "default",
     "name": "Outside",
-    "source": 1,
+    "source": "/dev/video1",
     "active": True,
     "record": True,
     "similarity": {
@@ -58,7 +58,7 @@ birdhouse_default_cam_usb = {
     },
     "image": {
         "crop": (0.1, 0.0, 0.85, 1.0),
-        "resolution": "640x480",
+        "resolution": "800x600",
         "framerate": "not implemented",
         "saturation": "not implemented",
         "rotation": 0,
@@ -89,8 +89,8 @@ birdhouse_default_micro = {
 birdhouse_default_sensor = {
     "active": True,
     "name": "Inside",
-    "type": "dht11",
-    "pin": 4,
+    "type": "dht22",
+    "pin": 10,
     "units": {
         "temperature": "°C",
         "humidity": "%"
@@ -111,7 +111,9 @@ birdhouse_preset = {
         "rpi_active":       False,
         "port":             8000,              # http-port
         "port_video":       8008,
-        "database:type":    "json"             # can be "json" or "couchdb"
+        "database_type":    "json",             # can be "json" or "couchdb"
+        "timezone":         "UTC+1",
+        "initial_setup":    True
     },
     "devices": {
         "cameras": {

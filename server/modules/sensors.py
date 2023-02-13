@@ -88,7 +88,7 @@ class BirdhouseSensor(threading.Thread):
                         if indoor.is_valid():
                             self.values["temperature"] = indoor.temperature
                             self.values["humidity"] = indoor.humidity
-                            self.last_read = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+                            self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
                             logging.debug("Temperature: " + str(indoor.temperature))
                             logging.debug("Humidity:    " + str(indoor.humidity))
                         else:
@@ -97,7 +97,7 @@ class BirdhouseSensor(threading.Thread):
                     elif self.param["type"] == "dht22":
                         self.values["temperature"] = self.sensor.temperature
                         self.values["humidity"] = self.sensor.humidity
-                        self.last_read = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+                        self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
                         logging.debug("Temperature: " + str(self.sensor.temperature))
                         logging.debug("Humidity:    " + str(self.sensor.humidity))
 

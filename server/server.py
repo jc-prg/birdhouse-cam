@@ -486,7 +486,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             api_response = {
                 "STATUS": {
                     "start_time": api_start,
-                    "current_time": datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                    "current_time": config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
                     "admin_allowed": self.admin_allowed(),
                     "check-version": version,
                     "api-call": status,

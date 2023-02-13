@@ -28,7 +28,7 @@ class BirdhouseArchive(threading.Thread):
         """
         backup_started = False
         while self._running:
-            stamp = datetime.now().strftime('%H%M%S')
+            stamp = self.config.local_time().strftime('%H%M%S')
             if stamp[0:4] == self.config.param["backup"]["time"] and not backup_started:
                 logging.info("Starting daily backup ...")
                 backup_started = True
@@ -279,7 +279,7 @@ class BirdhouseArchive(threading.Thread):
        Backup files with threshold to folder with date ./images/YYMMDD/
        """
         if other_date == "":
-            backup_date = datetime.now().strftime('%Y%m%d')
+            backup_date = self.config.local_time().strftime('%Y%m%d')
         else:
             backup_date = other_date
 

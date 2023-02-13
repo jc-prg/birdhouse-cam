@@ -13,7 +13,7 @@ from skimage.metrics import structural_similarity as ssim
 
 import threading
 from threading import Condition
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 
 # https://learn.circuit.rocks/introduction-to-opencv-using-the-raspberry-pi
@@ -24,7 +24,7 @@ class BirdhouseVideoProcessing(threading.Thread):
     Record videos: start and stop; from all pictures of the day
     """
 
-    def __init__(self, camera_id, camera, config, param, directory):
+    def __init__(self, camera_id, camera, config, param, directory, time_zone):
         """
         Initialize new thread and set inital parameters
         """
@@ -36,6 +36,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.param = param
         self.config = config
         self.directory = directory
+        self.timezone = time_zone
 
         self.queue_create = []
         self.queue_trim = []
@@ -172,9 +173,9 @@ class BirdhouseVideoProcessing(threading.Thread):
             logging.info("Starting video recording (" + self.id + ") ...")
             self.recording = True
             self.info = {
-                "date": datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
-                "date_start": datetime.now().strftime('%Y%m%d_%H%M%S'),
-                "stamp_start": datetime.now().timestamp(),
+                "date": self.config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
+                "date_start": self.config.local_time().strftime('%Y%m%d_%H%M%S'),
+                "stamp_start": self.config.local_time().timestamp(),
                 "status": "recording",
                 "camera": self.id,
                 "camera_name": self.name,
@@ -195,8 +196,8 @@ class BirdhouseVideoProcessing(threading.Thread):
         if self.camera.active and not self.camera.error and self.recording:
             logging.info("Stopping video recording (" + self.id + ") ...")
             self.recording = False
-            self.info["date_end"] = datetime.now().strftime('%Y%m%d_%H%M%S')
-            self.info["stamp_end"] = datetime.now().timestamp()
+            self.info["date_end"] = self.config.local_time().strftime('%Y%m%d_%H%M%S')
+            self.info["stamp_end"] = self.config.local_time().timestamp()
             self.info["status"] = "processing"
             self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 1)
             if float(self.info["length"]) > 1:
@@ -218,9 +219,9 @@ class BirdhouseVideoProcessing(threading.Thread):
         """
         if self.info["status"] == "recording":
             max_time = float(self.info["stamp_start"] + self.max_length)
-            if max_time < float(datetime.now().timestamp()):
+            if max_time < float(self.config.local_time().timestamp()):
                 logging.info("Maximum recording time achieved ...")
-                logging.info(str(max_time) + " < " + str(datetime.now().timestamp()))
+                logging.info(str(max_time) + " < " + str(self.config.local_time().timestamp()))
                 return True
         return False
 
@@ -229,7 +230,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         Get info of recording
         """
         if self.recording:
-            self.info["length"] = round(datetime.now().timestamp() - self.info["stamp_start"], 1)
+            self.info["length"] = round(self.config.local_time().timestamp() - self.info["stamp_start"], 1)
         elif self.processing:
             self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 1)
 
@@ -425,8 +426,8 @@ class BirdhouseVideoProcessing(threading.Thread):
             logging.warning("Create video of daily images ... Parameters are missing.")
         else:
             which_cam = param[2]
-            stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            date = datetime.now().strftime('%d.%m.%Y')
+            stamp = self.config.local_time().strftime('%Y%m%d_%H%M%S')
+            date = self.config.local_time().strftime('%d.%m.%Y')
             filename = "image_" + which_cam + "_big_"
             self.queue_create.append([filename, stamp, date])
             response["command"] = ["Create video of the day"]
@@ -538,7 +539,7 @@ class BirdhouseImageProcessing(object):
     modify encoded and raw images
     """
 
-    def __init__(self, camera_id, camera, config, param):
+    def __init__(self, camera_id, camera, config, param, time_zone):
         logging.info("- Loading Image Processing for " + camera_id + "... ")
         self.frame = None
         self.id = camera_id
@@ -561,6 +562,8 @@ class BirdhouseImageProcessing(object):
         self.error_count = 0
         self.error_camera = False
         self.error_image = {}
+
+        self.timezone = time_zone
 
     def raise_error(self, message, warning=False):
         """
@@ -777,7 +780,7 @@ class BirdhouseImageProcessing(object):
         return raw
 
     def draw_date(self, image):
-        date_information = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+        date_information = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
         font = self.text_default_font
         thickness = 1
@@ -797,8 +800,8 @@ class BirdhouseImageProcessing(object):
         image = self.draw_text(image, date_information, position, font, scale, color, thickness)
         return image
 
-    def draw_date_raw(self, raw, overwrite_color=None, overwrite_position=None):
-        date_information = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+    def draw_date_raw(self, raw, overwrite_color=None, overwrite_position=None, timezone_info=+1):
+        date_information = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
         font = self.text_default_font
         thickness = 1
@@ -897,7 +900,8 @@ class BirdhouseImageProcessing(object):
                                          color=(0, 0, 255), thickness=1)
 
             line_position += 40
-            raw = self.draw_date_raw(raw=raw, overwrite_color=(0, 0, 255), overwrite_position=(20, line_position))
+            raw = self.draw_date_raw(raw=raw, overwrite_color=(0, 0, 255),
+                                     overwrite_position=(20, line_position), timezone_info=self.timezone)
 
         else:
             raw = self.image_error_raw(image=self.img_camera_error_v3)
@@ -1121,6 +1125,11 @@ class BirdhouseCamera(threading.Thread):
         self.type = self.param["type"]
         self.record = self.param["record"]
 
+        self.timezone = 0
+        if "timezone" in self.config.param["server"]:
+            self.timezone = float(self.config.param["server"]["timezone"].replace("UTC", ""))
+            logging.info("Set Timezone: "+self.config.param["server"]["timezone"] + " (" + str(self.timezone) + ")")
+
         self.image_size = [0, 0]
         self.image_last_raw = None
         self.image_count_empty = 0
@@ -1129,10 +1138,11 @@ class BirdhouseCamera(threading.Thread):
 
         logging.info("Initializing camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
 
-        self.image = BirdhouseImageProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param)
+        self.image = BirdhouseImageProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param,
+                                              time_zone=self.timezone)
         self.image.resolution = self.param["image"]["resolution"]
         self.video = BirdhouseVideoProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param,
-                                              directory=self.config.directory("videos"))
+                                              directory=self.config.directory("videos"), time_zone=self.timezone)
         self.video.output = BirdhouseCameraOutput()
         self.camera = None
         self.cameraFPS = None
@@ -1149,9 +1159,9 @@ class BirdhouseCamera(threading.Thread):
         reload_time = time.time()
         reload_time_error = 60
         while self.running:
-            seconds = datetime.now().strftime('%S')
-            hours = datetime.now().strftime('%H')
-            stamp = datetime.now().strftime('%H%M%S')
+            seconds = self.config.local_time().strftime('%S')
+            hours = self.config.local_time().strftime('%H')
+            stamp = self.config.local_time().strftime('%H%M%S')
             self.config_update = self.config.update["camera_" + self.id]
 
             # if error reload from time to time
@@ -1220,7 +1230,7 @@ class BirdhouseCamera(threading.Thread):
                         self.video.image_size = self.image_size
 
                     logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(
-                        datetime.now().strftime("%H:%M:%S")))
+                        self.config.local_time().strftime("%H:%M:%S")))
 
             # Image Recording (if not video recording)
             elif self.param["active"] and self.param["active"] != "False":
@@ -1253,9 +1263,9 @@ class BirdhouseCamera(threading.Thread):
                                 "hires": self.config.filename_image("hires", stamp, self.id),
                                 "lowres": self.config.filename_image("lowres", stamp, self.id),
                                 "compare": (stamp, self.previous_stamp),
-                                "datestamp": datetime.now().strftime("%Y%m%d"),
-                                "date": datetime.now().strftime("%d.%m.%Y"),
-                                "time": datetime.now().strftime("%H:%M:%S"),
+                                "datestamp": self.config.local_time().strftime("%Y%m%d"),
+                                "date": self.config.local_time().strftime("%d.%m.%Y"),
+                                "time": self.config.local_time().strftime("%H:%M:%S"),
                                 "similarity": similarity,
                                 "sensor": {},
                                 "size": self.image_size
@@ -1266,9 +1276,9 @@ class BirdhouseCamera(threading.Thread):
                                 "hires": "",
                                 "lowres": "",
                                 "compare": (stamp, self.previous_stamp),
-                                "datestamp": datetime.now().strftime("%Y%m%d"),
-                                "date": datetime.now().strftime("%d.%m.%Y"),
-                                "time": datetime.now().strftime("%H:%M:%S"),
+                                "datestamp": self.config.local_time().strftime("%Y%m%d"),
+                                "date": self.config.local_time().strftime("%d.%m.%Y"),
+                                "time": self.config.local_time().strftime("%H:%M:%S"),
                                 "similarity": 0,
                                 "sensor": {},
                                 "size": self.image_size,
@@ -1279,7 +1289,7 @@ class BirdhouseCamera(threading.Thread):
                         for key in self.sensor:
                             if self.sensor[key].running:
                                 sensor_data[key] = self.sensor[key].get_values()
-                                sensor_data[key]["date"] = datetime.now().strftime("%d.%m.%Y")
+                                sensor_data[key]["date"] = self.config.local_time().strftime("%d.%m.%Y")
                                 image_info["sensor"][key] = self.sensor[key].get_values()
 
                         self.config.queue.entry_add(config="sensor", date="", key=stamp, entry=sensor_data)

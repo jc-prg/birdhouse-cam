@@ -26,9 +26,9 @@ services:
     container_name: birdhouse_server
     privileged: true
     volumes:
-      - ./:/usr/src/app/
       - ${BIRDHOUSE_DIR_LOGGING:-./log}:/log
       - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
+      - ./:/usr/src/app/
     ports:
       - "${BIRDHOUSE_HTTP_PORT:-8000}:8000"
 #    depends_on:
@@ -43,9 +43,9 @@ services:
     container_name: birdhouse_video
     privileged: true
     volumes:
-      - ./:/usr/src/app/
       - ${BIRDHOUSE_DIR_LOGGING:-./log}:/log
       - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
+      - ./:/usr/src/app/
     ports:
       - "${BIRDHOUSE_HTTP_VIDEO:-8008}:8008"
 #    depends_on:

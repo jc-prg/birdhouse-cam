@@ -7,17 +7,17 @@ import codecs
 import threading
 import couchdb
 import requests
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 
 class BirdhouseConfigCouchDB(object):
 
-    def __int__(self, db_usr, db_pwd, db_server, db_port, base_dir):
+    def __init__(self, db_usr, db_pwd, db_server, db_port, base_dir):
         """
         initialize
         """
         self.locked = {}
-        self.db_url = "http://"+db_usr+":"+db_pwd+"@"+db_server+":"+db_port+"/"
+        self.db_url = "http://"+db_usr+":"+db_pwd+"@"+db_server+":"+str(db_port)+"/"
         self.connected = False
         self.basic_directory = base_dir
         logging.info("Starting config CouchDB handler ...")
@@ -53,24 +53,6 @@ class BirdhouseConfigCouchDB(object):
     def check_db(self):
         """
         check if required DB exists or create (under construction)
-        """
-        return
-
-    def lock(self, filename):
-        """
-        not required for couch db
-        """
-        return
-
-    def unlock(self, filename):
-        """
-        not required for couch db
-        """
-        return
-
-    def wait_if_locked(self, filename):
-        """
-        not required for couch db
         """
         return
 
@@ -192,6 +174,69 @@ class BirdhouseConfigJSON(object):
             self.locked[filename] = False
             logging.error("Could not write JSON file: " + filename)
             logging.error(str(e))
+
+
+class BirdhouseConfigDB(object):
+
+    def __init__(self, db_type="json"):
+        db_usr = "birdhouse"
+        db_pwd = "birdhouse"
+        db_server = "birdhouse"
+        db_port = 5100
+        db_basedir = ""
+
+        self.json = BirdhouseConfigJSON()
+        self.couch = BirdhouseConfigCouchDB(db_usr, db_pwd, db_server, db_port, db_basedir)
+        self.db_type = db_type
+
+    def set_db_type(self, db_type):
+        """
+        set DB type: JSON, CouchDB, BOTH
+        """
+        if self.db_type == "json"  or self.db_type == "couch":
+            self.db_type = db_type
+            return True
+        else:
+            logging.error("Unknown DB type ("+str(self.db_type)+")")
+            return False
+
+    def read(self, filename):
+        """
+        read data from DB
+        """
+        result = {}
+        if self.db_type == "json":
+            result = self.json.read(filename)
+        elif self.db_type == "couch":
+            result = self.couch.read(filename)
+        else:
+            logging.error("Unknown DB type ("+str(self.db_type)+")")
+        return result
+
+    def write(self, filename, data):
+        """
+        write data to DB
+        """
+        if self.db_type == "json":
+            self.json.write(filename, data)
+        elif self.db_type == "couch":
+            self.couch.write(filename, data)
+        else:
+            logging.error("Unknown DB type ("+str(self.db_type)+")")
+
+    def lock(self, filename):
+        """
+        lock file if JSON
+        """
+        if self.db_type == "json":
+            return self.json.lock(filename)
+
+    def unlock(self, filename):
+        """
+        lock file if JSON
+        """
+        if self.db_type == "json":
+            return self.json.unlock(filename)
 
 
 class BirdhouseConfigQueue(threading.Thread):
@@ -551,8 +596,8 @@ class BirdhouseConfig(threading.Thread):
         self.name = "Config"
         self.param = None
         self.queue = None
-        self.json = None
-        self.json = BirdhouseConfigJSON()
+        self.db_handler = BirdhouseConfigDB()
+        self.db_type = "json"
 
         self._running = True
         self._paused = False
@@ -563,6 +608,7 @@ class BirdhouseConfig(threading.Thread):
         self.locked = {}
         self.param_init = param_init
         self.config_cache = {}
+        self.timezone = 0
         self.html_replace = {
             "start_date": datetime.now().strftime("%d.%m.%Y %H:%M:%S")
         }
@@ -585,18 +631,29 @@ class BirdhouseConfig(threading.Thread):
         }
 
         self.main_directory = main_directory
-        if not self.exists("main"):
+        if self.exists("main"):
+            self.param = self.read("main")
+        if not self.exists("main") or self.param == {}:
             directory = os.path.join(self.main_directory, self.directories["data"])
             filename = os.path.join(directory, self.files["main"])
             logging.info("Create main config file (" + filename + ") ...")
+            self.unlock("main")
             self.write("main", self.param_init)
-            if not self.exists("main"):
+            time.sleep(1)
+            self.param = self.read("main")
+            if self.param != {}:
                 logging.info("OK.")
             else:
                 logging.error("Could not create main config file, check if directory '" + directory + "' is writable.")
                 sys.exit()
 
-        logging.info("Read configuration from '" + self.file_path("main") + "' ...")
+        self.param = self.read("main")
+        self.timezone = float(self.param["server"]["timezone"].replace("UTC", ""))
+        self.html_replace = {
+            "start_date": self.local_time().strftime("%d.%m.%Y %H:%M:%S")
+        }
+
+        logging.info("Read configuration from '" + self.file_path("main") + "' (timezone="+str(self.timezone)+") ...")
 
     def run(self):
         """
@@ -646,14 +703,14 @@ class BirdhouseConfig(threading.Thread):
         lock config file
         """
         filename = os.path.join(self.directory(config), date, self.files[config])
-        self.json.lock(filename)
+        self.db_handler.lock(filename)
 
     def unlock(self, config, date=""):
         """
         unlock config file
         """
         filename = os.path.join(self.directory(config), date, self.files[config])
-        self.json.unlock(filename)
+        self.db_handler.unlock(filename)
 
     def wait_if_locked(self, filename):
         """
@@ -745,7 +802,7 @@ class BirdhouseConfig(threading.Thread):
         config_data = {}
         if self.exists(config, date):
             config_file = self.file_path(config, date)
-            config_data = self.json.read(config_file)
+            config_data = self.db_handler.read(config_file)
         return config_data.copy()
 
     def read_cache(self, config, date=""):
@@ -771,7 +828,7 @@ class BirdhouseConfig(threading.Thread):
         """
         self.wait_if_paused()
         config_file = self.file_path(config, date)
-        self.json.write(config_file, config_data)
+        self.db_handler.write(config_file, config_data)
 
         if date == "":
             self.config_cache[config] = config_data
@@ -786,8 +843,8 @@ class BirdhouseConfig(threading.Thread):
         create a copy of a complete config file
         """
         config_file = self.file_path(config, date)
-        content = self.json.read(config_file)
-        self.json.write(config_file + "." + add, content)
+        content = self.db_handler.read(config_file)
+        self.db_handler.write(config_file + "." + add, content)
 
     def main_config_edit(self, config, config_data, date=""):
         """
@@ -899,4 +956,12 @@ class BirdhouseConfig(threading.Thread):
             info["type"] = "hires"
             info["stamp"] = parts[3]
         return info
+
+    def local_time(self):
+        """
+        return time that includes the current timezone
+        """
+        date_tz_info = timezone(timedelta(hours=self.timezone))
+        return datetime.now(date_tz_info)
+
 
