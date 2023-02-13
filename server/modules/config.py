@@ -23,7 +23,7 @@ class BirdhouseConfigCouchDB(object):
         logging.info("Starting config CouchDB handler ("+self.db_url+") ...")
 
         connects2db = 0
-        max_connects = 30
+        max_connects = 10
 
         while connects2db < max_connects + 1:
 
