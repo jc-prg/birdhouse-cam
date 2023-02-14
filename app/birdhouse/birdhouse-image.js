@@ -4,7 +4,7 @@
 // birdhouse image views
 //--------------------------------------
 
-birdhouse_active_streams = {};
+var birdhouse_active_streams = {};
 
 function birdhouse_KillActiveStreams() {
     Object.keys(birdhouse_active_streams).forEach(function (key) {
@@ -14,21 +14,27 @@ function birdhouse_KillActiveStreams() {
             birdhouse_active_streams[key] = false;
             }
         });
+    birdhouse_active_streams = {};
     }
 
-function birdhouse_StreamURL(camera, stream_url, stream_id) {
+function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false) {
     var stream_server = RESTurl;
     var stream_link   = stream_server + stream_url;
     var stream_id_ext = camera;
-    var app_unique_stream_id  = new Date().getTime();
+    if (new_uid)  {
+        app_unique_stream_id += 1;
+    }
+    var stream_uid    = app_unique_stream_id;
+
+    //var app_unique_stream_id  = new Date().getTime();
 
     if (stream_id != "")        {
         stream_link   += "&" + stream_id;
         stream_id_ext += "&" + stream_id;
         }
-    if (app_unique_stream_url)  {
-        stream_link   += "&" + app_unique_stream_id;
-        stream_id_ext += "&" + app_unique_stream_id;
+    if (stream_uid)  {
+        stream_link   += "&" + stream_uid;
+        stream_id_ext += "&" + stream_uid;
         }
     birdhouse_active_streams[stream_id_ext] = true;
 
@@ -44,7 +50,7 @@ function birdhouse_Camera( main, view, onclick, camera, stream_server, admin_all
 	if (main) { var container = 'main'; }
 	else      { var container = '2nd'; }
 
-    var stream_link    = birdhouse_StreamURL(camera["name"], camera["stream"], "stream_main");
+    var stream_link    = birdhouse_StreamURL(camera["name"], camera["stream"], "stream_main", true);
 	var livestream     = "<img src='"+stream_link+"' id='stream_"+camera["name"]+"' class='livestream_"+container+"'/>";
 	var command_record = "appFW.requestAPI(\"POST\",[\"start\",\"recording\",\""+camera["name"]+"\"],\"\",\"\",\"\",\"birdhouse_INDEX\");"; //requestAPI(\"/start/recording/cam2\");
 	var command_stop   = "appFW.requestAPI(\"POST\",[\"stop\", \"recording\",\""+camera["name"]+"\"],\"\",\"\",\"\",\"birdhouse_INDEX\");"; //requestAPI(\"/stop/recording/cam2\");

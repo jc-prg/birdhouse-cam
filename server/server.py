@@ -538,6 +538,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             stream_id_int = datetime.now().timestamp()
             stream_id_ext = "&".join(further_param)
 
+            stream_wait_while_error = 1
+            stream_wait_while_recording = 1
+            stream_wait_while_streaming = 0.1
+
             while stream_active:
                 if config.update["camera_"+which_cam]:
                     camera[which_cam].update_main_config()
@@ -599,13 +603,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     else:
                         logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
 
+                #if camera[which_cam].error or camera[which_cam].image.error:
+                #    time.sleep(stream_wait_while_error)
+                #else:
                 for key in camera:
                     if not camera[key].error:
                         if camera[key].video.processing:
-                            time.sleep(0.1)
+                            time.sleep(stream_wait_while_streaming)
                             break
                         if camera[key].video.recording:
-                            time.sleep(1)
+                            time.sleep(stream_wait_while_recording)
                             break
 
         # favicon
