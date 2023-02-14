@@ -258,6 +258,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.wfile.write(frame)
         self.wfile.write(b'\r\n')
 
+    def stream_video_end(self):
+        """
+        send end header to close stream
+        """
+        self.end_headers()
+
     def admin_allowed(self):
         """
         Check if administration is allowed based on the IP4 the request comes from
@@ -319,6 +325,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = camera[which_cam].camera_reconnect()
         elif self.path.startswith('/remove/'):
             response = backup.delete_marked_files_api(self.path)
+        elif self.path.startswith('/kill_stream/'):
+            if "&" in which_cam:
+                stream_id_kill = which_cam
+                further_param = which_cam.split("&")
+                which_cam = further_param[0]
+                response = camera[which_cam].set_image_stream_kill(stream_id_kill)
 
         elif self.path.startswith("/edit_presets/"):
             param_string = self.path.replace("/edit_presets/", "")
@@ -354,7 +366,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         global camera, sensor, config
 
-        path, which_cam = views.selected_camera(self.path)
+        path, which_cam, further_param = views.selected_camera(self.path)
         file_ending = self.path.split(".")
         file_ending = "." + file_ending[len(file_ending) - 1].lower()
 
@@ -444,6 +456,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     camera_data[key]["device"] = "camera"
                     camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
                     camera_data[key]["image"]["current_streams"] = camera[key].get_image_stream_count()
+                    camera_data[key]["image"]["current_streams_detail"] = camera[key].image_streams
                     camera_data[key]["status"] = {
                         "error": camera[key].error,
                         "error_warn": camera[key].error_msg,
@@ -520,24 +533,27 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 return
 
             self.stream_video_header()
-            stream = True
-            stream_id = datetime.now().timestamp()
 
-            while stream:
+            stream_active = True
+            stream_id_int = datetime.now().timestamp()
+            stream_id_ext = "&".join(further_param)
+
+            while stream_active:
                 if config.update["camera_"+which_cam]:
                     camera[which_cam].update_main_config()
+                if camera[which_cam].get_image_stream_kill(stream_id_ext):
+                    stream_active = False
 
                 if self.path.startswith("/detection/"):
-                    frame_raw = camera[which_cam].get_image_stream_raw(normalize=False, stream_id=stream_id)
+                    frame_raw = camera[which_cam].get_image_stream_raw(normalize=False, stream_id=stream_id_int)
                 else:
-                    frame_raw = camera[which_cam].get_image_stream_raw(normalize=True, stream_id=stream_id)
-
-                logging.debug(which_cam+"..........."+self.path+".."+str(camera[which_cam].error)+".."+str(camera[which_cam].image.error))
+                    frame_raw = camera[which_cam].get_image_stream_raw(normalize=True, stream_id=stream_id_int)
 
                 if not camera[which_cam].error and not camera[which_cam].image.error:
                     if self.path.startswith("/detection/"):
                         frame_raw = camera[which_cam].show_areas_raw(image=frame_raw)
-                        if "black_white" in camera[which_cam].param["image"] and camera[which_cam].param["image"]["black_white"]:
+                        if "black_white" in camera[which_cam].param["image"] and \
+                                camera[which_cam].param["image"]["black_white"]:
                             frame_raw = camera[which_cam].image.convert_to_gray_raw(frame_raw)
                         if camera[which_cam].param["image"]["date_time"]:
                             frame_raw = camera[which_cam].image.draw_date_raw(frame_raw)
@@ -572,9 +588,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     frame = camera[which_cam].image.convert_from_raw(frame_raw)
                     camera[which_cam].camera_wait_recording()
                     self.stream_video_frame(frame)
+                    if not stream_active:
+                        self.stream_video_end()
+                        logging.info("Closed streaming client: " + stream_id_ext)
 
                 except Exception as e:
-                    stream = False
+                    stream_active = False
                     if "Errno 104" in str(e) or "Errno 32" in str(e):
                         logging.debug('Removed streaming client %s: %s', self.client_address, str(e))
                     else:
@@ -583,7 +602,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 for key in camera:
                     if not camera[key].error:
                         if camera[key].video.processing:
-                            time.sleep(0.3)
+                            time.sleep(0.1)
                             break
                         if camera[key].video.recording:
                             time.sleep(1)

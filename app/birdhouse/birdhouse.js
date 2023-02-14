@@ -18,6 +18,7 @@ var app_available_sensors = [];
 var app_available_micros  = [];
 
 var app_active_page       = "";
+var app_last_active_page  = "";
 var app_active_date       = "";
 var app_active_mic        = "";
 var app_camera_source     = {};
@@ -52,25 +53,26 @@ function birdhousePrint(data) {
 	    console.log("Sensor data: "+sensor_data["sensor1"]["temperature"] + "C / "+ sensor_data["sensor1"]["humidity"] + "%");
 	    }
 
-	birdhouseCameras = data["DATA"]["devices"]["cameras"];
+	birdhouseCameras     = data["DATA"]["devices"]["cameras"];
 	birdhouseMicrophones = data["DATA"]["devices"]["microphones"];
 	birdhouseStream_load(data["DATA"]["server"]["ip4_address"], birdhouseMicrophones);
 	//setTimeout(function(){  },2000);
 
-    var initial_setup = data["DATA"]["server"]["initial_setup"];
-	var date          = data["DATA"]["active_date"];
-	var camera        = data["DATA"]["active_cam"];
+    var initial_setup   = data["DATA"]["server"]["initial_setup"];
+	var date            = data["DATA"]["active_date"];
+	var camera          = data["DATA"]["active_cam"];
 	if (camera == "") 	{ camera = app_active_cam; }
 	else			    { app_active_cam = camera; }
 	
 	console.log("Request->Print "+app_active_page+" / "+camera+" / "+date);	
 
 	birdhouseSetMainVars(data);
-	birdhousePrintTitle(data, app_active_page, camera);	
-	setTextById("headerRight", birdhouseHeaderFunctions() );
+	birdhousePrintTitle(data, app_active_page, camera);
+    setTextById("headerRight", birdhouseHeaderFunctions() );
 
 	// check if admin allowed! -> create respective menu
-	
+
+	if (app_active_page != app_last_active_page)    { birdhouse_KillActiveStreams(); }
 	if (app_active_page == "INDEX")                 { birdhouse_INDEX(data, camera); }
 	else if (app_active_page == "CAMERAS")          { birdhouseDevices(lang("DEVICES"), data, camera); }
 	else if (app_active_page == "FAVORITES")        { birdhouse_LIST(lang("FAVORITES"),  data, camera); }
@@ -80,6 +82,8 @@ function birdhousePrint(data) {
 	else if (app_active_page == "VIDEOS")           { birdhouse_LIST(lang("VIDEOS"), data, camera); }
 	else if (app_active_page == "VIDEO_DETAIL")	    { birdhouse_VIDEO_DETAIL(lang("VIDEOS"), data, camera); }
 	else { setTextById(app_frame_content,lang("ERROR") + ": "+app_active_page); }
+
+	app_last_active_page = app_active_page;
 
 	if (app_active_page == "INDEX" && initial_setup) { birdhouse_settings.create(); }
 

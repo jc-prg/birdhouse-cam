@@ -198,7 +198,7 @@ function birdhouse_Links(link_list) {
 	}
 
 
-function birdhouse_imageOverlay(filename, description="", favorit="", to_be_deleted="") {
+function birdhouse_imageOverlay(filename, description="", favorite="", to_be_deleted="") {
 
         var overlay = "<div id=\"overlay_content\" class=\"overlay_content\" onclick=\"birdhouse_overlayHide();\"><!--overlay--></div>";
         setTextById("overlay_content",overlay);
@@ -224,7 +224,7 @@ function birdhouse_imageOverlay(filename, description="", favorit="", to_be_dele
 	    // check, how to destroy ...
 	}
 
-function birdhouse_videoOverlay(filename, description="", favorit="", to_be_deleted="") {
+function birdhouse_videoOverlay(filename, description="", favorite="", to_be_deleted="") {
         check_iOS = iOS();
         if (check_iOS == true) {
           window.location.href = filename;

@@ -163,6 +163,8 @@ class BirdhouseViews(threading.Thread):
         Check path, which cam has been selected
         """
         which_cam = "cam1"
+        further_param = ""
+
         if check_path == "":
             path = self.server.path
         else:
@@ -177,7 +179,9 @@ class BirdhouseViews(threading.Thread):
                 which_cam = "cam1"
         elif "?" in path:
             param = path.split("?")
-            which_cam = param[1]
+            param = param[1].split("&")
+            which_cam = param[0]
+            further_param = param
 
         self.active_cams = []
         for key in self.camera:
@@ -193,14 +197,14 @@ class BirdhouseViews(threading.Thread):
             logging.debug("Selected CAM = " + which_cam + " (" + check_path + ")")
 
         self.which_cam = which_cam
-        return path, which_cam
+        return path, which_cam, further_param
 
     def index(self, server):
         """
         Index page with live-streaming pictures
         """
         self.server = server
-        path, which_cam = self.selected_camera()
+        path, which_cam, further_param = self.selected_camera()
         content = {
             "active_cam": which_cam,
             "view": "index"
@@ -218,7 +222,7 @@ class BirdhouseViews(threading.Thread):
         """
         self.server = server
         param = server.path.split("/")
-        path, which_cam = self.selected_camera()
+        path, which_cam, further_param = self.selected_camera()
         time_now = self.config.local_time().strftime('%H%M%S')
 
         if param[1] != "api":
@@ -305,6 +309,7 @@ class BirdhouseViews(threading.Thread):
 
             if not backup:
                 files_today["999999"] = {
+                    "stream": "stream.mjpg?" + which_cam,
                     "lowres": "stream.mjpg?" + which_cam,
                     "hires": "index.html?" + which_cam,
                     "camera": which_cam,
@@ -528,7 +533,7 @@ class BirdhouseViews(threading.Thread):
         """
         logging.debug("CompleteListToday: Start - "+self.config.local_time().strftime("%H:%M:%S"))
         self.server = server
-        path, which_cam = self.selected_camera()
+        path, which_cam, further_param = self.selected_camera()
         content = {
             "active_cam": which_cam,
             "view": "list_complete",
@@ -738,7 +743,7 @@ class BirdhouseViews(threading.Thread):
         Page with all videos
         """
         self.server = server
-        path, which_cam = self.selected_camera()
+        path, which_cam, further_param = self.selected_camera()
         content = {"active_cam": which_cam, "view": "list_videos"}
         param = server.path.split("/")
         if "app-v1" in param: del param[1]
@@ -783,7 +788,7 @@ class BirdhouseViews(threading.Thread):
         Page with all videos
         """
         self.server = server
-        path, which_cam = self.selected_camera()
+        path, which_cam, further_param = self.selected_camera()
         content = {"active_cam": which_cam, "view": "list_cameras", "entries": {}}
         param = server.path.split("/")
         if "app-v1" in param: del param[1]
@@ -809,7 +814,7 @@ class BirdhouseViews(threading.Thread):
         Show details and edit options for a video file
         """
         self.server = server
-        path, which_cam = self.selected_camera()
+        path, which_cam, further_param = self.selected_camera()
         content = {"active_cam": which_cam, "view": "detail_video", "entries": {}}
         param = server.path.split("/")
         if "app-v1" in param: del param[1]

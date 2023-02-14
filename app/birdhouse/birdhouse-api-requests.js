@@ -30,6 +30,12 @@ function birdhouse_reconnectCamera(camera) {
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_reconnectCamera');
 	}
 
+function birdhouse_killStream(camera_id, stream_id) {
+    console.log("birdhouse_killStream: "+stream_id);
+	commands = ["kill_stream", camera_id, stream_id];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_killStream');
+    }
+
 function birdhouse_recreateImageConfig() {
 	commands = ["recreate-image-config"];
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerRecreateImageConfig,'','birdhouse_recreateImageConfig');

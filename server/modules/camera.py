@@ -1138,6 +1138,7 @@ class BirdhouseCamera(threading.Thread):
         self.image_time_rotate = {}
         self.image_fps = {}
         self.image_streams = {}
+        self.image_streams_to_kill = {}
         self.previous_image = None
         self.previous_stamp = "000000"
 
@@ -1275,6 +1276,7 @@ class BirdhouseCamera(threading.Thread):
                                 "sensor": {},
                                 "size": self.image_size
                             }
+                            self.previous_image = image_compare
                         else:
                             image_info = {
                                 "camera": self.id,
@@ -1310,7 +1312,6 @@ class BirdhouseCamera(threading.Thread):
                             self.write_image(filename=path_lowres, image=image,
                                              scale_percent=self.param["image"]["preview_scale"])
 
-                        self.previous_image = image_compare
                         self.previous_stamp = stamp
 
         logging.info("Stopped camera (" + self.id + "/" + self.type + ").")
@@ -1620,9 +1621,14 @@ class BirdhouseCamera(threading.Thread):
         """
         current_time = datetime.now().timestamp()
         count_streams = 0
+        del_key = ""
         for key in self.image_streams:
-            if self.image_streams[key] + 2 > current_time:
+            if self.image_streams[key] + 1 > current_time:
                 count_streams += 1
+            else:
+                del_key = key
+        if del_key != "":
+            del self.image_streams[del_key]
         return count_streams
 
     def get_image_stream_fps(self, stream_id):
@@ -1650,6 +1656,7 @@ class BirdhouseCamera(threading.Thread):
     def get_image_stream_raw(self, normalize=False, stream_id=""):
         """
         get image, if error show error message
+        -> IMPROVE: create possibility to stop stream via API Command (Cam-ID + external Stream-ID)
         -> IMPROVE: reuse images, if multiple streams ... (define primary stream, others use copies ...)
         ->          check if in device mode there are two streams of each camera?!
         """
@@ -1686,6 +1693,25 @@ class BirdhouseCamera(threading.Thread):
                                                  position=(250, 20), scale=0.4, thickness=1)
             self.image_last_raw = image
             return image
+
+    def get_image_stream_kill(self, stream_id):
+        """
+        check if stream has to be killed
+        """
+        logging.debug("get_image_stream_kill: " + str(stream_id))
+        if stream_id in self.image_streams_to_kill:
+            logging.info("get_image_stream_kill - True: " + str(stream_id))
+            del self.image_streams_to_kill[stream_id]
+            return True
+        else:
+            return False
+
+    def set_image_stream_kill(self, stream_id):
+        """
+        mark streams to be killed
+        """
+        logging.info("set_image_stream_kill: "+stream_id)
+        self.image_streams_to_kill[stream_id] = datetime.now().timestamp()
 
     def image_differs(self, file_info):
         """

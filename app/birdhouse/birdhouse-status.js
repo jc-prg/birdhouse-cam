@@ -24,8 +24,10 @@ function birdhouseStatus_print(data) {
 
     // add camera information
     var cameras = data["DATA"]["devices"]["cameras"];
+    var camera_streams = 0;
     for (let camera in cameras) {
         setTextById("show_stream_count_"+camera, cameras[camera]["image"]["current_streams"]);
+        camera_streams += cameras[camera]["image"]["current_streams"];
         setTextById("error_cam_"+camera, cameras[camera]["status"]["error_msg"]);
         setTextById("error_img_"+camera, cameras[camera]["status"]["image_error_msg"]);
         if (cameras[camera]["status"]["error"] || cameras[camera]["status"]["image_error"]) {
@@ -38,6 +40,7 @@ function birdhouseStatus_print(data) {
             setTextById("get_crop_area_"+camera, crop);
             }
         }
+    setTextById("system_active_streams", camera_streams);
 
     // add sensor information
     var sensors = data["DATA"]["devices"]["sensors"];

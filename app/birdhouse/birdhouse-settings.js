@@ -63,13 +63,14 @@ function birdhouse_app_settings (name="Settings") {
         html += birdhouse_OtherGroup( "app_info_01", "App Information (Version)", html_entry, open_settings["app_info_01"] );
 
         html_entry = tab.start();
+    	html_entry += tab.row("Active Streams:",      "<div id='system_active_streams'>please wait ...</div>");
     	html_entry += tab.row("CPU Temperature:",     "<div id='system_info_cpu_temperature'>please wait ...</div>");
     	html_entry += tab.row("CPU Usage:",           "<div id='system_info_cpu_usage'>please wait ...</div>");
     	html_entry += tab.row("CPU Usage (Details):", "<div id='system_info_cpu_usage_detail'>please wait ...</div>");
     	html_entry += tab.row("Memory Total:",        "<div id='system_info_mem_total'>please wait ...</div>");
     	html_entry += tab.row("Memory Used:",         "<div id='system_info_mem_used'>please wait ...</div>");
-    	html_entry += tab.row("HDD used:",Math.round(app_data["STATUS"]["system"]["hdd_used"]*10)/10 + " GB");
-    	html_entry += tab.row("HDD total:",Math.round(app_data["STATUS"]["system"]["hdd_total"]*10)/10 + " GB");
+    	html_entry += tab.row("HDD used:",            Math.round(app_data["STATUS"]["system"]["hdd_used"]*10)/10 + " GB");
+    	html_entry += tab.row("HDD total:",           Math.round(app_data["STATUS"]["system"]["hdd_total"]*10)/10 + " GB");
         html_entry += tab.row("&nbsp;");
         html_entry += tab.end();
         html += birdhouse_OtherGroup( "server_info", "Server Information", html_entry, open_settings["server_info"] );

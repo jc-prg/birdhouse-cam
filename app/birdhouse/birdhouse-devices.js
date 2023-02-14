@@ -17,6 +17,8 @@ function birdhouseDevices( title, data ) {
 	var tab     = new birdhouse_table();
 	tab.style_rows["height"] = "27px";
 
+    //birdhouse_KillActiveStreams();
+
 	for (let camera in cameras) {
     	var onclick  = "birdhouse_createDayVideo('"+camera+"');";
     	var onclick2 = "birdhouse_reconnectCamera('"+camera+"');";
@@ -35,7 +37,7 @@ function birdhouseDevices( title, data ) {
 		if (cameras[camera]["active"] == false || cameras[camera]["active"] == "false") {
 		    open = false;
 		    camera_name += " &nbsp; <i>(inactive)</i>";
-        }
+            }
 	    html_temp = "<div class='camera_info'><div class='camera_info_image' style='max-height:120px;'><div style='margin:auto;width:130px;'>";
 	    if (cameras[camera]["active"])
 	         { html_temp  += camera_stream; }

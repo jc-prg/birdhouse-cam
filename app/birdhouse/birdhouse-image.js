@@ -4,6 +4,38 @@
 // birdhouse image views
 //--------------------------------------
 
+birdhouse_active_streams = {};
+
+function birdhouse_KillActiveStreams() {
+    Object.keys(birdhouse_active_streams).forEach(function (key) {
+        if (birdhouse_active_streams[key] == true) {
+            var param = key.split("&");
+            birdhouse_killStream(param[0], key);
+            birdhouse_active_streams[key] = false;
+            }
+        });
+    }
+
+function birdhouse_StreamURL(camera, stream_url, stream_id) {
+    var stream_server = RESTurl;
+    var stream_link   = stream_server + stream_url;
+    var stream_id_ext = camera;
+    var app_unique_stream_id  = new Date().getTime();
+
+    if (stream_id != "")        {
+        stream_link   += "&" + stream_id;
+        stream_id_ext += "&" + stream_id;
+        }
+    if (app_unique_stream_url)  {
+        stream_link   += "&" + app_unique_stream_id;
+        stream_id_ext += "&" + app_unique_stream_id;
+        }
+    birdhouse_active_streams[stream_id_ext] = true;
+
+	stream_link = stream_link.replaceAll("//", '/');
+	stream_link = stream_link.replace(":/","://");
+    return stream_link;
+    }
 
 function birdhouse_Camera( main, view, onclick, camera, stream_server, admin_allowed=false ) {
 	var html      = "";
@@ -12,11 +44,7 @@ function birdhouse_Camera( main, view, onclick, camera, stream_server, admin_all
 	if (main) { var container = 'main'; }
 	else      { var container = '2nd'; }
 
-	if (app_unique_stream_url) { var stream_link = stream_server + camera["stream"] + "?" + app_unique_stream_id; }
-	else { var stream_link = stream_server + camera["stream"]; }
-	stream_link = stream_link.replaceAll("//", '/');
-	stream_link = stream_link.replace(":/","://");
-
+    var stream_link    = birdhouse_StreamURL(camera["name"], camera["stream"], "stream_main");
 	var livestream     = "<img src='"+stream_link+"' id='stream_"+camera["name"]+"' class='livestream_"+container+"'/>";
 	var command_record = "appFW.requestAPI(\"POST\",[\"start\",\"recording\",\""+camera["name"]+"\"],\"\",\"\",\"\",\"birdhouse_INDEX\");"; //requestAPI(\"/start/recording/cam2\");
 	var command_stop   = "appFW.requestAPI(\"POST\",[\"stop\", \"recording\",\""+camera["name"]+"\"],\"\",\"\",\"\",\"birdhouse_INDEX\");"; //requestAPI(\"/stop/recording/cam2\");
@@ -31,7 +59,7 @@ function birdhouse_Camera( main, view, onclick, camera, stream_server, admin_all
     }
 	html     += "</div></center>";
 	return html;
-}
+    }
 
 
 function birdhouse_OtherGroup( key, title, content, header_open) {
@@ -212,18 +240,21 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
     }
 	else if (entry["type"] == "addon") {
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["lowres"]);
+		var lowres      = birdhouse_StreamURL(app_active_cam, entry["stream"], "stream_list_5");
 		var onclick     = "birdhousePrint_load(view=\"INDEX\", camera = \""+entry["camera"]+"\");";
 		var description = lang("LIVESTREAM");
     }
 	else if (entry["type"] == "camera") {
 		var description = title;
-		var lowres      = entry["video"]["stream"];
+		//var lowres      = entry["video"]["stream"];
+		var lowres      = birdhouse_StreamURL(entry["id"], entry["video"]["stream"], "image_stream");
 		var hires       = lowres;
 		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
     }
 	else if (entry["type"] == "detection") {
 		var description = title;
-		var lowres      = entry["video"]["stream_detect"];
+		//var lowres      = entry["video"]["stream_detect"];
+		var lowres      = birdhouse_StreamURL(entry["id"], entry["video"]["stream_detect"], "image_stream_detect");
 		var hires       = lowres;
 		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
     }
@@ -263,27 +294,25 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	img_id2 += entry["directory"] + entry["lowres"];
 	img_id2 = img_id2.replaceAll( "/", "_");
 
-	if (entry["detect"] == 1)						{ style = "border: 1px solid "+color_code["detect"]+";"; }
-	if (entry["to_be_deleted"] == 1 || entry["to_be_deleted"] == "1")	{ style = "border: 1px solid "+color_code["recycle"]+";"; }
-	if (entry["favorit"] == 1 || entry["favorit"] == "1")		{ style = "border: 1px solid "+color_code["star"]+";"; }
+	if (entry["detect"] == 1)                                           { style = "border: 1px solid "+color_code["detect"]+";"; }
+	if (entry["to_be_deleted"] == 1 || entry["to_be_deleted"] == "1")   { style = "border: 1px solid "+color_code["recycle"]+";"; }
+	if (entry["favorit"] == 1 || entry["favorit"] == "1")               { style = "border: 1px solid "+color_code["star"]+";"; }
 
 	if (admin && edit) {
 		var img_id      = entry["category"];
 		var img_name    = entry["lowres"];
 		var img_star    = entry["favorit"];
 		var img_recycle = entry["to_be_deleted"];
+		var img_dir     = "birdhouse/img/";
 		if (img_star == undefined)       { img_star = 0; }
 		if (img_recycle == undefined)    { img_recycle = 0; }
 		if (parseInt(img_star) == 0)     { img_star_r = 1; }    else { img_star_r = 0; }
 		if (parseInt(img_recycle) == 0)  { img_recycle_r = 1; } else { img_recycle_r = 0; }
-		var img_dir     = "birdhouse/img/";
-
 		var onclick_star    = "birdhouse_setFavorit(index=\""+img_id+"\",status=document.getElementById(\"s_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\",img_id=\""+img_id2+"\");";
 		var onclick_recycle = "birdhouse_setRecycle(index=\""+img_id+"\",status=document.getElementById(\"d_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\",img_id=\""+img_id2+"\");";
 		onclick_recycle    += "birdhouse_recycleRange(group_id=\""+group_id+"\", index=\""+img_id+"\", status=document.getElementById(\"d_"+img_id2+"_value\").innerHTML, lowres_file=\""+img_name+"\")";
-
-		star        = "<div id='s_"+img_id2+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id2+"' src='"+img_dir+"star"+img_star+".png'       onclick='"+onclick_star+"'/>";
-		recycle     = "<div id='d_"+img_id2+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id2+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
+		star                = "<div id='s_"+img_id2+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id2+"' src='"+img_dir+"star"+img_star+".png'       onclick='"+onclick_star+"'/>";
+		recycle             = "<div id='d_"+img_id2+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id2+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
     }
     var height = "";
     if (!same_img_size) { height = " fixed_height"; }
