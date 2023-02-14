@@ -73,6 +73,7 @@ function birdhousePrint(data) {
 	// check if admin allowed! -> create respective menu
 
 	if (app_active_page != app_last_active_page)    { birdhouse_KillActiveStreams(); }
+	if (app_active_page == "INDEX")                 { birdhouse_KillActiveStreams(); }
 
 	if (app_active_page == "INDEX")                 { birdhouse_INDEX(data, camera); }
 	else if (app_active_page == "CAMERAS")          { birdhouseDevices(lang("DEVICES"), data, camera); }

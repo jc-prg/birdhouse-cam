@@ -848,7 +848,6 @@ class BirdhouseImageProcessing(object):
         """
         add error information to image
         """
-        time.sleep(0.5)
         if info_type == "complete":
             raw = self.image_error_raw(image=self.img_camera_error_v2)
 
