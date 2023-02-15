@@ -1525,6 +1525,8 @@ class BirdhouseCamera(threading.Thread):
                                                                           area=self.param["image"]["crop"],
                                                                           dimension=False)
             logging.info("USB New resolution: " + str(current))
+            logging.info("USB New crop area:  " + str(self.param["image"]["crop"]) + " -> " +
+                         str(self.param["image"]["crop_area"]))
         else:
             logging.info("Resolution definition not supported: " + str(resolution))
 
@@ -1718,6 +1720,11 @@ class BirdhouseCamera(threading.Thread):
 
         else:
             logging.info("... "+str(normalize) + " ... " + str(self.param["image"]["crop"]))
+            logging.info("... "+str(normalize) + " ... " + str(self.param["image"]["resolution"]))
+            logging.info("... "+str(normalize) + " ... " + str(self.param["image"]["resolution_current"]))
+            if "crop_area" in self.param["image"]:
+                logging.info("... "+str(normalize) + " ... " + str(self.param["image"]["crop_area"]))
+
             if normalize:
                 image = self.image.normalize_raw(image)
 
