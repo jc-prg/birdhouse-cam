@@ -769,6 +769,19 @@ class BirdhouseImageProcessing(object):
         if thickness == 0:
             thickness = self.text_default_thickness
 
+        (x, y) = tuple(position)
+        if x < 0 or y < 0:
+            if "resolution_current" in self.param["image"] and self.param["image"]["resolution_current"] != (0, 0, 0, 0):
+                (width, height) = self.param["image"]["resolution_current"]
+            else:
+                height = raw.shape[0]
+                width = raw.shape[1]
+            if x < 0:
+                x = width + x
+            if y < 0:
+                y = height + y
+            position = (int(x), int(y))
+
         param = str(text) + ", " + str(position) + ", " + str(font) + ", " + str(scale) + ", " + str(
             color) + ", " + str(thickness)
         try:
@@ -962,8 +975,7 @@ class BirdhouseImageProcessing(object):
         """
         apply presets per camera to image -> implemented = crop to given values
         """
-
-        if "crop_area" not in self.param["image"]:
+        if "crop_area" not in self.param["image"] or self.param["image"]["crop_area"] == (0, 0, 0, 0):
             [start_x, start_y, end_x, end_y] = self.param["image"]["crop"]
             end_x = start_x + end_x
             start_x = 0
@@ -978,6 +990,7 @@ class BirdhouseImageProcessing(object):
             normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw,
                                                                          crop_area=area,
                                                                          crop_type="pixel")
+
         # rotate     - not implemented yet
         # resize     - not implemented yet
         # saturation - not implemented yet
@@ -1232,7 +1245,7 @@ class BirdhouseCamera(threading.Thread):
 
             # Image Recording (if not video recording)
             elif not self.error and self.param["active"] and self.param["active"] != "False":
-                time.sleep(0.5)
+                time.sleep(0.3)
                 if self.record:
                     logging.debug("Check if record ... " + str(hours) + "/*/" + str(seconds) + " ...")
                     if (seconds in self.param["image_save"]["seconds"]) and \
@@ -1240,6 +1253,8 @@ class BirdhouseCamera(threading.Thread):
 
                         logging.debug(" ...... record now!")
                         image = self.get_image_raw_buffered(max_age_seconds=1)
+
+                        # ----> creates error images ?? see RPi
 
                         if not self.image.error and image != "":
                             image = self.image.normalize_raw(image)
@@ -1307,7 +1322,7 @@ class BirdhouseCamera(threading.Thread):
                             self.write_image(filename=path_lowres, image=image,
                                              scale_percent=self.param["image"]["preview_scale"])
 
-                        time.sleep(0.5)
+                        time.sleep(0.7)
                         self.previous_stamp = stamp
 
         logging.info("Stopped camera (" + self.id + "/" + self.type + ").")
@@ -1358,6 +1373,8 @@ class BirdhouseCamera(threading.Thread):
         self.error_time = 0
         self.image.error_camera = False
         self.image.reset_error()
+        self.image_last_raw = None
+        self.image_last_edited = None
 
     def camera_start_pi(self):
         """
@@ -1500,6 +1517,9 @@ class BirdhouseCamera(threading.Thread):
             current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
                        self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
 
+            if current == [0, 0]:
+                current = [int(dimensions[0]), int(dimensions[1])]
+
             self.param["image"]["resolution_current"] = current
             self.param["image"]["crop_area"] = self.image.crop_area_pixel(resolution=current,
                                                                           area=self.param["image"]["crop"],
@@ -1534,7 +1554,7 @@ class BirdhouseCamera(threading.Thread):
         if self.type == "pi":
             self.camera.wait_recording(0.1)
         if self.type == "usb" or self.type == "default":
-            time.sleep(0.1)
+            return
 
     def get_image(self):
         """
@@ -1570,7 +1590,7 @@ class BirdhouseCamera(threading.Thread):
         get image and convert to raw
         """
         if self.error:
-            return
+            return ""
 
         if self.type == "pi":
             try:
@@ -1595,7 +1615,7 @@ class BirdhouseCamera(threading.Thread):
                     self.raise_error(False, "Error reading image (source=" + str(self.source) + ", " +
                                      self.camera.error_msg + ")")
                     return ""
-                elif "NoneType" in check:
+                elif "NoneType" in check or raw == "":
                     self.raise_error(False, "Got an empty image (source=" + str(self.source) + ")")
                     return ""
                 else:
@@ -1685,15 +1705,15 @@ class BirdhouseCamera(threading.Thread):
         elif self.error or self.image.error:
             if normalize:
                 image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "reduced")
-                image_error = self.image.normalize_error_raw(image_error)
+                image_error = self.image.normalize_error_raw(image_error)  # ---> causes error after a while?
             else:
                 image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "complete")
 
             if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
                 image_error = self.image.draw_text_raw(raw=image_error,
                                                        text=str(round(self.image_fps[stream_id], 1)) + "fps   " + fps_rotate,
-                                                       font=cv2.QT_FONT_NORMAL,
-                                                       position=(250, 40), scale=0.4, thickness=1)
+                                                       font=cv2.QT_FONT_NORMAL, color=(0, 0, 0),
+                                                       position=(20, -20), scale=0.4, thickness=1)
             return image_error
 
         else:
@@ -1703,7 +1723,7 @@ class BirdhouseCamera(threading.Thread):
                 image = self.image.draw_text_raw(raw=image,
                                                  text=str(round(self.image_fps[stream_id], 1)) + "fps   " + fps_rotate,
                                                  font=cv2.QT_FONT_NORMAL,
-                                                 position=(250, 20), scale=0.4, thickness=1)
+                                                 position=(10, -20), scale=0.4, thickness=1)
             self.image_last_edited = image
             return image
 

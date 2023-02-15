@@ -540,7 +540,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             stream_wait_while_error = 0.5
             stream_wait_while_recording = 1
-            stream_wait_while_streaming = 0.1
+            stream_wait_while_streaming = 0.01
 
             while stream_active:
                 if config.update["camera_"+which_cam]:
