@@ -373,17 +373,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         config.html_replace["title"] = config.param["title"]
         config.html_replace["active_cam"] = which_cam
 
+        # get param
+        param = ""
+        redirect_app = "/app/index.html"
+        if "?" in self.path:
+            param = self.path.split("?")[1]
+            redirect_app = "/app/index.html?"+param
+
         # index
         if self.path == "/":
-            self.redirect("/app/index.html")
-        elif self.path == "/index.html":
-            self.redirect("/app/index.html")
-        elif self.path == "/index.html?cam1":
-            self.redirect("/app/index.html")
-        elif self.path == "/app":
-            self.redirect("/app/index.html")
-        elif self.path == "/app/":
-            self.redirect("/app/index.html")
+            self.redirect(redirect_app)
+        elif self.path.startswith("/index.html"):
+            self.redirect(redirect_app)
+        elif self.path == "/app" or self.path == "/app/":
+            self.redirect(redirect_app)
 
         # REST API call :  /api/<cmd>/<camera>/param1>/<param2>
         elif self.path.startswith("/api/"):
@@ -618,6 +621,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # favicon
         elif self.path.endswith('favicon.ico'):
             self.stream_file(filetype='image/ico', content=read_image(directory='../app', filename=self.path))
+
+        # main app
+        elif self.path.startswith("/app/index.html"):
+            self.stream_file(filetype=file_types[".html"], content=read_html(directory="../app", filename="index.html"))
 
         # images, js, css, ...
         elif file_ending in file_types:

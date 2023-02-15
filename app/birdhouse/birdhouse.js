@@ -27,13 +27,28 @@ var app_active_cam        = "cam1";
 var app_admin_allowed     = false;
 var app_data              = {};
 
-var app_frame_header = "frame1";
-var app_frame_content = "frame2";
-var app_frame_info = "frame3";
-var app_frame_index = "frame4";
+var app_frame_header    = "frame1";
+var app_frame_content   = "frame2";
+var app_frame_info      = "frame3";
+var app_frame_index     = "frame4";
+
+var app_first_load      = true;
+var app_2nd_load        = true;
 
 
 function birdhousePrint_load(view="INDEX", camera="", date="") {
+
+	if (app_first_load || app_2nd_load) {
+	    if (app_first_load) { app_first_load = false; }
+	    else                { app_2nd_load = false; }
+	    var param = window.location.href.split("?");
+	    var options = ["INDEX", "CAMERAS", "FAVORITES", "ARCHIVE", "TODAY", "INFO"];
+	    if (options.includes(param[1])) {
+	        view = param[1];
+	        app_active_page = param[1];
+	        app_last_active_page = param[1];
+	        }
+	    }
 
 	var commands = [view];
 	if (camera != "" && date != "")	{ commands.push(camera); commands.push(date); }
@@ -83,6 +98,7 @@ function birdhousePrint(data) {
 	else if (app_active_page == "TODAY_COMPLETE")   { birdhouse_LIST(lang("TODAY_COMPLETE"), data, camera, false); }
 	else if (app_active_page == "VIDEOS")           { birdhouse_LIST(lang("VIDEOS"), data, camera); }
 	else if (app_active_page == "VIDEO_DETAIL")	    { birdhouse_VIDEO_DETAIL(lang("VIDEOS"), data, camera); }
+	else if (app_active_page == "INFO") 	        { birdhouse_settings.create("INFO_ONLY"); }
 	else { setTextById(app_frame_content,lang("ERROR") + ": "+app_active_page); }
 
 	app_last_active_page = app_active_page;
@@ -98,11 +114,11 @@ function birdhousePrintTitle(data, active_page="", camera="") {
 
 	var title = document.getElementById("navTitle");
 	if (title.innerHTML == "..." && data["DATA"]["title"] != undefined)	{ setNavTitle(data["DATA"]["title"]); setTextById("title",data["DATA"]["title"]); }
-	if (data["DATA"]["subtitle"] != undefined)   { setTextById(app_frame_header, "<center><h2>" + data["DATA"]["subtitle"] + "</h2></center>"); }
-	else                                         { setTextById(app_frame_header, "<center><h2>" + data["DATA"]["title"] + "</h2></center>"); }
-	if (data["DATA"]["links"] != undefined)      { setTextById(app_frame_index, "<center>" + birdhouse_Links(data["DATA"]["links"]) + "</center>"); }
-	if (data["STATUS"]["start_time"] != undefined) { setTextById("frame5", "<center><small>" + lang( "STARTTIME") + ": " + data["STATUS"]["start_time"] + "</small></center>"); }
-	else                                           { setTextById("frame5", ""); }
+	if (data["DATA"]["subtitle"] != undefined)      { setTextById(app_frame_header, "<center><h2>" + data["DATA"]["subtitle"] + "</h2></center>"); }
+	else                                            { setTextById(app_frame_header, "<center><h2>" + data["DATA"]["title"] + "</h2></center>"); }
+	if (data["DATA"]["links"] != undefined)         { setTextById(app_frame_index, "<center>" + birdhouse_Links(data["DATA"]["links"]) + "</center>"); }
+	if (data["STATUS"]["start_time"] != undefined)  { setTextById("frame5", "<center><small>" + lang( "STARTTIME") + ": " + data["STATUS"]["start_time"] + "</small></center>"); }
+	else                                            { setTextById("frame5", ""); }
 	}
 
 

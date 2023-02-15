@@ -19,10 +19,11 @@
     (device-width : 375px) and (orientation : portrait) {
 
         .livestream_main     { max-width : 320px; }
-        .image_container.fixed_height { height  : 180px; }
+        .image_container.fixed_height { height  : 250px; }
         .separator_group     { width  : 328px; font-size : 11px; }
         .thumbnail           { width :  98%;  }
-        .thumbnail_container { width : 80px; }
+        .thumbnail_container { width : 200px; }
+        .camera_info_image   { max-height: 200px; }
 
 }
 

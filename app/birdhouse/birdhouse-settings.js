@@ -10,7 +10,7 @@ var birdhouse_settings  = new birdhouse_app_settings();
 
 function birdhouse_app_settings (name="Settings") {
 
-	this.create	= function () {
+	this.create	= function (type="SETTINGS") {
 
         var tab             = new birdhouse_table();
         var initial_setup   = app_data["DATA"]["server"]["initial_setup"];
@@ -50,7 +50,7 @@ function birdhouse_app_settings (name="Settings") {
 		html += "<hr style='border:1px solid gray;'>"
 
 		html_entry = tab.start();
-		html_entry += tab.row("App:",			app_title);
+		html_entry += tab.row("App:",	"<a href='/app/index.html?INFO' target='_blank'>"+ app_title + "</a>");
 		html_entry += tab.row("Versions:",
 						"App: " 		+ app_version + "<br/>" +
 						"API: " 		+ app_api_version + "<br/>" +
@@ -75,61 +75,71 @@ function birdhouse_app_settings (name="Settings") {
         html_entry += tab.end();
         html += birdhouse_OtherGroup( "server_info", "Server Information", html_entry, open_settings["server_info"] );
 
-        api_call = "&nbsp;<br/><center>"+api_call+"</center><br/>&nbsp;";
-        html += birdhouse_OtherGroup( "api_calls", "API Calls", api_call, open_settings["api_calls"] );
+        if (type == "SETTINGS") {
+            api_call = "&nbsp;<br/><center>"+api_call+"</center><br/>&nbsp;";
+            html += birdhouse_OtherGroup( "api_calls", "API Calls", api_call, open_settings["api_calls"] );
 
-		html_entry = tab.start();
-		html_entry += tab.row("Window:", document.body.clientWidth + "x" + document.body.clientHeight );
-		html_entry += tab.row("Position:", "<div id='scrollPosition'>0 px</div>" );
-		html_entry += tab.row("Format:", print_display_definition());
-		html_entry += tab.row("Browser:", navigator.userAgent);
-		html_entry += tab.end();
+            html_entry = tab.start();
+            html_entry += tab.row("Window:", document.body.clientWidth + "x" + document.body.clientHeight );
+            html_entry += tab.row("Position:", "<div id='scrollPosition'>0 px</div>" );
+            html_entry += tab.row("Format:", print_display_definition());
+            html_entry += tab.row("Browser:", navigator.userAgent);
+            html_entry += tab.end();
 
-        html += birdhouse_OtherGroup( "display_info", "Display information", html_entry, open_settings["display_info"] );
+            html += birdhouse_OtherGroup( "display_info", "Display information", html_entry, open_settings["display_info"] );
 
-        html_entry = tab.start();
-		html_entry += tab.row("Reload Interval:", app_reload_interval + "s");
-		html_entry += tab.row("Active Camera:&nbsp;", app_active_cam);
-		html_entry += tab.row("Available Cameras:&nbsp;", app_available_cameras.length);
-		html_entry += tab.row("Active Page:&nbsp;", app_active_page);
-		html_entry += tab.row("Active Date:&nbsp;", app_active_date);
-		html_entry += tab.row("Unique stream URL:&nbsp;", app_unique_stream_url);
-		html_entry += tab.row("Unique stream ID:&nbsp;",	app_unique_stream_id);
-        html_entry += tab.end();
-        html += birdhouse_OtherGroup( "app_info_02", "App Information (Cookie, Reload)", html_entry, open_settings["app_info_02"] );
+            html_entry = tab.start();
+            html_entry += tab.row("Reload Interval:", app_reload_interval + "s");
+            html_entry += tab.row("Active Camera:&nbsp;", app_active_cam);
+            html_entry += tab.row("Available Cameras:&nbsp;", app_available_cameras.length);
+            html_entry += tab.row("Active Page:&nbsp;", app_active_page);
+            html_entry += tab.row("Active Date:&nbsp;", app_active_date);
+            html_entry += tab.row("Unique stream URL:&nbsp;", app_unique_stream_url);
+            html_entry += tab.row("Unique stream ID:&nbsp;",	app_unique_stream_id);
+            html_entry += tab.end();
+            html += birdhouse_OtherGroup( "app_info_02", "App Information (Cookie, Reload)", html_entry, open_settings["app_info_02"] );
+            }
 
-		setTextById("setting1", html);
+        if (type == "INFO_ONLY") {
+            setTextById("frame2", html)
+            }
 
-        html = "<h2>"+lang("SETTINGS")+"</h2>";
-		html += "<hr style='border:1px solid gray;'>"
+        if (type == "SETTINGS") {
+            setTextById("setting1", html);
+            setTextById("setting2", "");
+            setTextById("setting3", "");
 
-		timezones = "UTC-12,UTC-11,UTC-10,UTC-9,UTC-8,UTC-7,UTC-6,UTC-5,UTC-4,UTC-3,UTC-2,UTC-1,UTC+0,UTC+1,UTC+2,UTC+3,UTC+4,UTC+5,UTC+6,UTC+7,UTC+8,UTC+9,UTC+10,UTC+11,UTC+12"
+            html = "<h2>"+lang("SETTINGS")+"</h2>";
+            html += "<hr style='border:1px solid gray;'>"
 
-        html += "<div style='display:none'>Edit initial setup: "+birdhouse_edit_field(id="set_initial_setup", field="server:initial_setup", type="select", options="false", data_type="boolean")+"</div>";
-		html += tab.start();
-		html += tab.row("Title:&nbsp;", birdhouse_edit_field(id="set_title", field="title", type="input") );
-		html += tab.row("Backup-Time:&nbsp;", birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
-		html += tab.row("Backup-Preview:&nbsp;", birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
-		html += tab.row("Timezone:&nbsp;", birdhouse_edit_field(id="set_timezone", field="server:timezone", type="select", options=timezones, data_type="string") );
-		html += tab.row("RPi Active:&nbsp;", birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false", data_type="boolean") );
-	    html += tab.row("<hr/>");
-	    link = "http://"+app_data["DATA"]["server"]["ip4_address"]+":5100/_utils/";
-    	html += tab.row("DB Server:","<a href='"+link+"' target='_blank'>"+link+"</a>");
-		html += tab.row("HTTP Server:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
-		html += tab.row("HTTP Port:&nbsp;", birdhouse_edit_field(id="set_port", field="server:port", type="input", options="true,false", data_type="integer") );
-		html += tab.row("Videostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_video", field="server:ip4_stream_video", type="input", options="true,false", data_type="string") );
-		html += tab.row("Videostream Port:&nbsp;", birdhouse_edit_field(id="set_ip4_video_port", field="server:port_video", type="input", data_type="integer") );
-		html += tab.row("Audiostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_audio", field="server:ip4_stream_audio", type="input", options="true,false", data_type="string") );
-		html += tab.row("Deny admin from IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_deny", field="server:ip4_admin_deny", type="input", options="true,false", data_type="json") );
-        html += tab.row("<hr>");
-		html += tab.row("", birdhouse_edit_save("set_main","set_initial_setup:set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port") );
-        html += tab.row("&nbsp;");
-        html += tab.end();
+            timezones = "UTC-12,UTC-11,UTC-10,UTC-9,UTC-8,UTC-7,UTC-6,UTC-5,UTC-4,UTC-3,UTC-2,UTC-1,UTC+0,UTC+1,UTC+2,UTC+3,UTC+4,UTC+5,UTC+6,UTC+7,UTC+8,UTC+9,UTC+10,UTC+11,UTC+12"
 
-		setTextById("setting2", html);
-        setTextById("setting3", "");
+            html += "<div style='display:none'>Edit initial setup: "+birdhouse_edit_field(id="set_initial_setup", field="server:initial_setup", type="select", options="false", data_type="boolean")+"</div>";
+            html += tab.start();
+            html += tab.row("Title:&nbsp;", birdhouse_edit_field(id="set_title", field="title", type="input") );
+            html += tab.row("Backup-Time:&nbsp;", birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
+            html += tab.row("Backup-Preview:&nbsp;", birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
+            html += tab.row("Timezone:&nbsp;", birdhouse_edit_field(id="set_timezone", field="server:timezone", type="select", options=timezones, data_type="string") );
+            html += tab.row("RPi Active:&nbsp;", birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false", data_type="boolean") );
+            html += tab.row("<hr/>");
+            link = "http://"+app_data["DATA"]["server"]["ip4_address"]+":5100/_utils/";
+            html += tab.row("DB Server:","<a href='"+link+"' target='_blank'>"+link+"</a>");
+            html += tab.row("HTTP Server:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
+            html += tab.row("HTTP Port:&nbsp;", birdhouse_edit_field(id="set_port", field="server:port", type="input", options="true,false", data_type="integer") );
+            html += tab.row("Videostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_video", field="server:ip4_stream_video", type="input", options="true,false", data_type="string") );
+            html += tab.row("Videostream Port:&nbsp;", birdhouse_edit_field(id="set_ip4_video_port", field="server:port_video", type="input", data_type="integer") );
+            html += tab.row("Audiostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_audio", field="server:ip4_stream_audio", type="input", options="true,false", data_type="string") );
+            html += tab.row("Deny admin from IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_deny", field="server:ip4_admin_deny", type="input", options="true,false", data_type="json") );
+            html += tab.row("<hr>");
+            html += tab.row("", birdhouse_edit_save("set_main","set_initial_setup:set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port") );
+            html += tab.row("&nbsp;");
+            html += tab.end();
 
-		this.toggle();
+            setTextById("setting2", html);
+    		this.toggle();
+            }
+
+
 		}
 
 

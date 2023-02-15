@@ -38,7 +38,7 @@ function birdhouseDevices( title, data ) {
 		    open = false;
 		    camera_name += " &nbsp; <i>(inactive)</i>";
             }
-	    html_temp = "<div class='camera_info'><div class='camera_info_image' style='max-height:120px;'><div style='margin:auto;width:130px;'>";
+	    html_temp = "<div class='camera_info'><div class='camera_info_image'><div style='margin:auto;min-width:120px;'>";
 	    if (cameras[camera]["active"])
 	         { html_temp  += camera_stream; }
 	    else { html_temp  += lang("CAMERA_INACTIVE"); }
@@ -71,7 +71,7 @@ function birdhouseDevices( title, data ) {
 		html_entry += tab.row("- Crop (relative):", birdhouse_edit_field(id="set_crop_"+camera, field="devices:cameras:"+camera+":image:crop", type="input", options="", data_type="json"));
 		html_entry += tab.row("- Crop (absolute):", "<div id='get_crop_area_"+camera+"'>Please wait ...</div>");
 		html_entry += tab.row("- Preview Scale:", birdhouse_edit_field(id="set_scale_"+camera, field="devices:cameras:"+camera+":image:preview_scale", type="input", options="", data_type="integer") + " %");
-		html_entry += tab.row("- Show Framerate:", birdhouse_edit_field(id="set_show_framerate_"+camera, field="devices:cameras:"+camera+":image:show_framerate", type="select", options="true,false", data_type="boolean") + " %");
+		html_entry += tab.row("- Show Framerate:", birdhouse_edit_field(id="set_show_framerate_"+camera, field="devices:cameras:"+camera+":image:show_framerate", type="select", options="true,false", data_type="boolean") + " fps");
 		html_entry += tab.row("- Current Streams:", "<div id='show_stream_count_"+camera+"'>Please wait ...</div>");
         html_entry += tab.end();
 

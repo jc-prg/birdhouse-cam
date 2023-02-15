@@ -177,7 +177,7 @@ class BirdhouseViews(threading.Thread):
             if which_cam not in self.camera or len(param) <= 3:
                 logging.warning("Unknown camera requested (%s).", path)
                 which_cam = "cam1"
-        elif "?" in path:
+        elif "?" in path and "index.html" not in path:
             param = path.split("?")
             param = param[1].split("&")
             which_cam = param[0]
