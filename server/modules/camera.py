@@ -952,16 +952,18 @@ class BirdhouseImageProcessing(object):
         if self.error_camera:
             return
 
-        if "crop_area" not in self.param["image"]:
-            normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw, crop_area=self.param["image"]["crop"],
-                                                                         crop_type="relative")
-        else:
-            logging.info(" .............. "+str(self.param["image"]["crop"]) + "->" +
-                         str(self.param["image"]["crop_area"]))
+        normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw, crop_area=self.param["image"]["crop"],
+                                                                     crop_type="relative")
 
-            normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw,
-                                                                         crop_area=self.param["image"]["crop_area"],
-                                                                         crop_type="pixel")
+# --> the following part doesn't work at the moment, self.param["image"]["crop_area"] somewhere is set wrong
+#
+#        if "crop_area" not in self.param["image"]:
+#            normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw, crop_area=self.param["image"]["crop"],
+#                                                                         crop_type="relative")
+#        else:
+#            normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw,
+#                                                                         crop_area=self.param["image"]["crop_area"],
+#                                                                         crop_type="pixel")
 
         if "black_white" in self.param["image"] and self.param["image"]["black_white"] is True:
             normalized = self.convert_to_gray_raw(normalized)
