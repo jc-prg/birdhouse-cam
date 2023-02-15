@@ -1724,12 +1724,6 @@ class BirdhouseCamera(threading.Thread):
             return image_error
 
         else:
-            logging.info("... "+str(normalize) + " ... " + str(self.param["image"]["crop"]))
-            if "crop_area" in self.param["image"]:
-                logging.info("      -> " + str(self.param["image"]["crop_area"]))
-            logging.info("... "+str(normalize) + " ... res=" + str(self.param["image"]["resolution"]))
-            logging.info("... "+str(normalize) + " ... res_current=" + str(self.param["image"]["resolution_current"]))
-
             if normalize:
                 image = self.image.normalize_raw(image)
 
