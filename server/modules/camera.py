@@ -1505,11 +1505,11 @@ class BirdhouseCamera(threading.Thread):
         self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, high_value)
         self.max_resolution = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
                                self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
-        logging.info("USB Maximum resolution: " + str(self.max_resolution))
+        logging.info(self.id + " Maximum resolution: " + str(self.max_resolution))
 
         if "x" in resolution:
             dimensions = resolution.split("x")
-            logging.info("USB Set resolution: " + str(dimensions))
+            logging.info(self.id + " Set resolution: " + str(dimensions))
             # self.camera.stream.set(3, int(resolution[0]))
             # self.camera.stream.set(4, int(resolution[1]))
             self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, float(dimensions[0]))
@@ -1524,8 +1524,8 @@ class BirdhouseCamera(threading.Thread):
             self.param["image"]["crop_area"] = self.image.crop_area_pixel(resolution=current,
                                                                           area=self.param["image"]["crop"],
                                                                           dimension=False)
-            logging.info("USB New resolution: " + str(current))
-            logging.info("USB New crop area:  " + str(self.param["image"]["crop"]) + " -> " +
+            logging.info(self.id + " New resolution: " + str(current))
+            logging.info(self.id + " New crop area:  " + str(self.param["image"]["crop"]) + " -> " +
                          str(self.param["image"]["crop_area"]))
         else:
             logging.info("Resolution definition not supported: " + str(resolution))
@@ -1720,10 +1720,10 @@ class BirdhouseCamera(threading.Thread):
 
         else:
             logging.info("... "+str(normalize) + " ... " + str(self.param["image"]["crop"]))
-            logging.info("... "+str(normalize) + " ... " + str(self.param["image"]["resolution"]))
-            logging.info("... "+str(normalize) + " ... " + str(self.param["image"]["resolution_current"]))
             if "crop_area" in self.param["image"]:
-                logging.info("... "+str(normalize) + " ... " + str(self.param["image"]["crop_area"]))
+                logging.info("      -> " + str(self.param["image"]["crop_area"]))
+            logging.info("... "+str(normalize) + " ... res=" + str(self.param["image"]["resolution"]))
+            logging.info("... "+str(normalize) + " ... res_current=" + str(self.param["image"]["resolution_current"]))
 
             if normalize:
                 image = self.image.normalize_raw(image)
