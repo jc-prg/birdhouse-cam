@@ -1001,6 +1001,7 @@ class BirdhouseImageProcessing(object):
             return raw
         except Exception as e:
             self.raise_error("Could not rotate image (" + str(e) + ")")
+            return raw
 
     def size(self, image):
         """
@@ -1131,6 +1132,8 @@ class BirdhouseCamera(threading.Thread):
 
         self.image_size = [0, 0]
         self.image_last_raw = None
+        self.image_last_raw_time = 0
+        self.image_last_edited = None
         self.image_count_empty = 0
         self.image_time_last = {}
         self.image_time_current = {}
@@ -1163,6 +1166,7 @@ class BirdhouseCamera(threading.Thread):
         count_paused = 0
         reload_time = time.time()
         reload_time_error = 60
+
         while self.running:
             seconds = self.config.local_time().strftime('%S')
             hours = self.config.local_time().strftime('%H')
@@ -1171,12 +1175,16 @@ class BirdhouseCamera(threading.Thread):
 
             # if error reload from time to time
             if self.active and self.error and (reload_time + reload_time_error) < time.time():
+                logging.info("....... RELOAD Error: " + self.id + " - " +
+                             str(reload_time + reload_time_error) + " > " + str(time.time()))
                 reload_time = time.time()
-                logging.error("....... RELOAD - " + str(reload_time + reload_time_error) + " > " + str(time.time()))
+                self.config_update = True
                 self.reload_camera = True
 
             # check if configuration shall be updated
             if self.config_update:
+                logging.info("....... RELOAD Update: " + self.id + " - " +
+                             str(reload_time + reload_time_error) + " > " + str(time.time()))
                 self.update_main_config()
                 self.reload_camera = True
 
@@ -1204,23 +1212,8 @@ class BirdhouseCamera(threading.Thread):
                     count_paused += 1
                 time.sleep(0.5)
 
-            # Error with camera / or update main config -> try to restart from time to time
-            if self.running and self.error and not self.error_no_reconnect:
-                if self.error_time + self.error_reload_time < time.time():
-                    logging.info("Try to restart camera (" + self.type + "/" + str(self.param["active"]) + ") ...")
-                    self.reload_camera = True
-                    self.config_update = True
-                    self.error_time = time.time()
-
-            if self.running and self.image.error and not self.error_no_reconnect:
-                if self.image.error_time + self.error_reload_time < time.time():
-                    logging.info("Try to restart camera (" + self.type + "/" + str(self.param["active"]) + ") ...")
-                    self.reload_camera = True
-                    self.config_update = True
-                    self.image.error_time = time.time()
-
             # Video Recording
-            elif self.video.recording:
+            if not self.error and self.video.recording:
 
                 if self.video.record_stop_auto():
                     self.video.record_stop()
@@ -1238,14 +1231,17 @@ class BirdhouseCamera(threading.Thread):
                         self.config.local_time().strftime("%H:%M:%S")))
 
             # Image Recording (if not video recording)
-            elif self.param["active"] and self.param["active"] != "False":
-                time.sleep(1)
+            elif not self.error and self.param["active"] and self.param["active"] != "False":
+                time.sleep(0.5)
                 if self.record:
-                    if (seconds in self.param["image_save"]["seconds"]) and (
-                            hours in self.param["image_save"]["hours"]):
+                    logging.debug("Check if record ... " + str(hours) + "/*/" + str(seconds) + " ...")
+                    if (seconds in self.param["image_save"]["seconds"]) and \
+                            (hours in self.param["image_save"]["hours"]):
 
-                        image = self.get_image_raw()
-                        if not self.image.error:
+                        logging.debug(" ...... record now!")
+                        image = self.get_image_raw_buffered(max_age_seconds=1)
+
+                        if not self.image.error and image != "":
                             image = self.image.normalize_raw(image)
                             image_compare = self.image.convert_to_gray_raw(image)
 
@@ -1311,6 +1307,7 @@ class BirdhouseCamera(threading.Thread):
                             self.write_image(filename=path_lowres, image=image,
                                              scale_percent=self.param["image"]["preview_scale"])
 
+                        time.sleep(0.5)
                         self.previous_stamp = stamp
 
         logging.info("Stopped camera (" + self.id + "/" + self.type + ").")
@@ -1582,6 +1579,8 @@ class BirdhouseCamera(threading.Thread):
                     encoded = self.video.output.frame
                 self.image.reset_error()
                 raw = self.image.convert_to_raw(encoded)
+                self.image_last_raw = raw
+                self.image_last_raw_time = datetime.now().timestamp()
                 return raw
             except Exception as e:
                 error_msg = "Can't grab image from piCamera '" + self.id + "': " + str(e)
@@ -1603,6 +1602,8 @@ class BirdhouseCamera(threading.Thread):
                     self.image.reset_error()
                     if self.param["image"]["rotation"] != 0:
                         raw = self.image.rotate_raw(raw, self.param["image"]["rotation"])
+                    self.image_last_raw = raw
+                    self.image_last_raw_time = datetime.now().timestamp()
                     return raw.copy()
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
@@ -1613,6 +1614,19 @@ class BirdhouseCamera(threading.Thread):
             error_msg = "Camera type not supported (" + str(self.type) + ")."
             self.raise_error(True, error_msg)
             return ""
+
+    def get_image_raw_buffered(self, max_age_seconds=1):
+        """
+        get image from buffer if not to old
+        """
+        if self.image_last_raw_time == 0:
+            self.image_last_raw_time = datetime.now().timestamp()
+
+        if self.image_last_raw is not None and self.image_last_raw != "":
+            if self.image_last_raw_time + max_age_seconds < datetime.now().timestamp():
+                return self.image_last_raw
+
+        return self.get_image_raw()
 
     def get_image_stream_count(self):
         """
@@ -1663,8 +1677,8 @@ class BirdhouseCamera(threading.Thread):
         image = self.get_image_raw()
         fps_rotate = self.get_image_stream_fps(stream_id=stream_id)
 
-        if not self.error and self.image.error and self.image.error_count < 10 and self.image_last_raw is not None:
-            image = self.image_last_raw
+        if not self.error and self.image.error and self.image.error_count < 10 and self.image_last_edited is not None:
+            image = self.image_last_edited
             image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
             return image
 
@@ -1690,7 +1704,7 @@ class BirdhouseCamera(threading.Thread):
                                                  text=str(round(self.image_fps[stream_id], 1)) + "fps   " + fps_rotate,
                                                  font=cv2.QT_FONT_NORMAL,
                                                  position=(250, 20), scale=0.4, thickness=1)
-            self.image_last_raw = image
+            self.image_last_edited = image
             return image
 
     def get_image_stream_kill(self, stream_id):
