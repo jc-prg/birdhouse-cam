@@ -956,6 +956,9 @@ class BirdhouseImageProcessing(object):
             normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw, crop_area=self.param["image"]["crop"],
                                                                          crop_type="relative")
         else:
+            logging.info(" .............. "+str(self.param["image"]["crop"]) + "->" +
+                         str(self.param["image"]["crop_area"]))
+
             normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw,
                                                                          crop_area=self.param["image"]["crop_area"],
                                                                          crop_type="pixel")
