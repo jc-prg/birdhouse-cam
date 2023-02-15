@@ -1717,8 +1717,10 @@ class BirdhouseCamera(threading.Thread):
             return image_error
 
         else:
+            logging.info("... "+str(normalize) + " ... " + str(self.param["image"]["crop"]))
             if normalize:
                 image = self.image.normalize_raw(image)
+
             if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
                 image = self.image.draw_text_raw(raw=image,
                                                  text=str(round(self.image_fps[stream_id], 1)) + "fps   " + fps_rotate,
