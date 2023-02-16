@@ -1257,8 +1257,8 @@ class BirdhouseCamera(threading.Thread):
                             (hours in self.param["image_save"]["hours"]):
 
                         logging.debug(" ...... record now!")
-                        # image = self.get_image_raw_buffered(max_age_seconds=1)
-                        image = self.get_image_raw()
+                        image = self.get_image_raw_buffered(max_age_seconds=1)
+                        # image = self.get_image_raw()
 
                         # ----> creates error images ?? see RPi
 
@@ -1616,6 +1616,7 @@ class BirdhouseCamera(threading.Thread):
                 return ""
 
         elif self.type == "usb" or self.type == "default":
+            self.image.reset_error()
             try:
                 raw = self.camera.read()
                 check = str(type(raw))
@@ -1627,12 +1628,14 @@ class BirdhouseCamera(threading.Thread):
                     self.raise_error(False, "Got an empty image (source=" + str(self.source) + ")")
                     return ""
                 else:
-                    self.image.reset_error()
                     if self.param["image"]["rotation"] != 0:
                         raw = self.image.rotate_raw(raw, self.param["image"]["rotation"])
-                    self.image_last_raw = raw
+                if len(raw) > 0 and not self.image.error:
+                    self.image_last_raw = raw.copy()
                     self.image_last_raw_time = datetime.now().timestamp()
                     return raw.copy()
+                else:
+                    return ""
             except Exception as e:
                 error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
                 self.raise_error(False, error_msg)
