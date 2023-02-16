@@ -172,10 +172,11 @@ class BirdhouseVideoProcessing(threading.Thread):
         if self.camera.active and not self.camera.error and not self.recording:
             logging.info("Starting video recording (" + self.id + ") ...")
             self.recording = True
+            current_time = self.config.local_time()
             self.info = {
-                "date": self.config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
-                "date_start": self.config.local_time().strftime('%Y%m%d_%H%M%S'),
-                "stamp_start": self.config.local_time().timestamp(),
+                "date": current_time.strftime('%d.%m.%Y %H:%M:%S'),
+                "date_start": current_time.strftime('%Y%m%d_%H%M%S'),
+                "stamp_start": current_time.timestamp(),
                 "status": "recording",
                 "camera": self.id,
                 "camera_name": self.name,
@@ -195,9 +196,10 @@ class BirdhouseVideoProcessing(threading.Thread):
         response = {"command": ["stop recording"]}
         if self.camera.active and not self.camera.error and self.recording:
             logging.info("Stopping video recording (" + self.id + ") ...")
+            current_time = self.config.local_time()
             self.recording = False
-            self.info["date_end"] = self.config.local_time().strftime('%Y%m%d_%H%M%S')
-            self.info["stamp_end"] = self.config.local_time().timestamp()
+            self.info["date_end"] = current_time.strftime('%Y%m%d_%H%M%S')
+            self.info["stamp_end"] = current_time.timestamp()
             self.info["status"] = "processing"
             self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 1)
             if float(self.info["length"]) > 1:
@@ -426,8 +428,9 @@ class BirdhouseVideoProcessing(threading.Thread):
             logging.warning("Create video of daily images ... Parameters are missing.")
         else:
             which_cam = param[2]
-            stamp = self.config.local_time().strftime('%Y%m%d_%H%M%S')
-            date = self.config.local_time().strftime('%d.%m.%Y')
+            current_time = self.config.local_time()
+            stamp = current_time.strftime('%Y%m%d_%H%M%S')
+            date = current_time.strftime('%d.%m.%Y')
             filename = "image_" + which_cam + "_big_"
             self.queue_create.append([filename, stamp, date])
             response["command"] = ["Create video of the day"]
@@ -1247,7 +1250,7 @@ class BirdhouseCamera(threading.Thread):
                         self.video.image_size = self.image_size
 
                     logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(
-                        self.config.local_time().strftime("%H:%M:%S")))
+                        current_time.strftime("%H:%M:%S")))
 
             # Image Recording (if not video recording)
             elif not self.error and self.param["active"] and self.param["active"] != "False":

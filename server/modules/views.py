@@ -57,7 +57,7 @@ def create_chart_data(data):
     used_keys = []
     used_cameras = []
 
-    if data == {} or not "dict" in str(type(data)):
+    if data == {} or "dict" not in str(type(data)):
         logging.error("Could not create chart data (empty)!")
 
     # get categories / titles
@@ -78,6 +78,7 @@ def create_chart_data(data):
                             chart["titles"].append(sensor_title)
         else:
             logging.warning("Could not create chart data for "+str(key)+", error in config file.")
+            logging.warning(str(data[key]))
 
     # get data
     for key in data:
