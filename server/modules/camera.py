@@ -782,7 +782,8 @@ class BirdhouseImageProcessing(object):
 
         (x, y) = tuple(position)
         if x < 0 or y < 0:
-            if "resolution_current" in self.param["image"] and self.param["image"]["resolution_current"] != (0, 0, 0, 0):
+            if "resolution_current" in self.param["image"] and \
+                    self.param["image"]["resolution_current"] != (0, 0, 0, 0):
                 (width, height) = self.param["image"]["resolution_current"]
             else:
                 height = raw.shape[0]
@@ -792,9 +793,10 @@ class BirdhouseImageProcessing(object):
             if y < 0:
                 y = height + y
             position = (int(x), int(y))
+            logging.info(" .... " + self.id + " / " + str(position))
 
-        param = str(text) + ", " + str(position) + ", " + str(font) + ", " + str(scale) + ", " + str(
-            color) + ", " + str(thickness)
+        param = str(text) + ", " + str(position) + ", " + str(font) + ", " + str(scale) + ", " + str(color) + ", " + \
+                str(thickness)
         try:
             raw = cv2.putText(raw, text, tuple(position), font, scale, color, thickness, cv2.LINE_AA)
         except Exception as e:
@@ -966,15 +968,15 @@ class BirdhouseImageProcessing(object):
         normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw, crop_area=self.param["image"]["crop"],
                                                                      crop_type="relative")
 
-# --> the following part doesn't work at the moment, self.param["image"]["crop_area"] somewhere is set wrong
-#
-#        if "crop_area" not in self.param["image"]:
-#            normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw, crop_area=self.param["image"]["crop"],
-#                                                                         crop_type="relative")
-#        else:
-#            normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw,
-#                                                                         crop_area=self.param["image"]["crop_area"],
-#                                                                         crop_type="pixel")
+        # --> the following part doesn't work at the moment, self.param["image"]["crop_area"] somewhere is set wrong
+        #
+        #        if "crop_area" not in self.param["image"]:
+        #            normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw, crop_area=self.param["image"]["crop"],
+        #                                                                         crop_type="relative")
+        #        else:
+        #            normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw,
+        #                                                                         crop_area=self.param["image"]["crop_area"],
+        #                                                                         crop_type="pixel")
 
         if "black_white" in self.param["image"] and self.param["image"]["black_white"] is True:
             normalized = self.convert_to_gray_raw(normalized)
@@ -1703,7 +1705,7 @@ class BirdhouseCamera(threading.Thread):
         if self.image_time_last[stream_id] > 0:
             self.image_fps[stream_id] = 1 / (self.image_time_current[stream_id] - self.image_time_last[stream_id])
             self.image_time_rotate[stream_id] += 1
-            if self.image_time_rotate[stream_id] > len(time_rotate)-1:
+            if self.image_time_rotate[stream_id] > len(time_rotate) - 1:
                 self.image_time_rotate[stream_id] = 0
         return time_rotate[self.image_time_rotate[stream_id]]
 
@@ -1732,7 +1734,8 @@ class BirdhouseCamera(threading.Thread):
 
             if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
                 image_error = self.image.draw_text_raw(raw=image_error,
-                                                       text=str(round(self.image_fps[stream_id], 1)) + "fps   " + fps_rotate,
+                                                       text=str(
+                                                           round(self.image_fps[stream_id], 1)) + "fps   " + fps_rotate,
                                                        font=cv2.QT_FONT_NORMAL, color=(0, 0, 0),
                                                        position=(20, -20), scale=0.4, thickness=1)
             return image_error
@@ -1765,7 +1768,7 @@ class BirdhouseCamera(threading.Thread):
         """
         mark streams to be killed
         """
-        logging.info("set_image_stream_kill: "+stream_id)
+        logging.info("set_image_stream_kill: " + stream_id)
         self.image_streams_to_kill[stream_id] = datetime.now().timestamp()
 
     def image_differs(self, file_info):
