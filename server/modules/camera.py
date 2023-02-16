@@ -794,15 +794,15 @@ class BirdhouseImageProcessing(object):
             if y < 0:
                 y = height + y
             position = (int(x), int(y))
-            logging.info(" .... " + self.id + " / " + str(position) + "/" + str(raw.shape) + " - " + text)
 
-        param = str(text) + ", " + str(position) + ", " + str(font) + ", " + str(scale) + ", " + str(color) + ", " + \
-                str(thickness)
+        param = str(text) + ", " + str(position) + ", " + str(font) + ", " + str(scale) + ", " + str(
+            color) + ", " + str(thickness)
+        logging.debug("draw_text_raw: "+param)
         try:
             raw = cv2.putText(raw, text, tuple(position), font, scale, color, thickness, cv2.LINE_AA)
         except Exception as e:
             self.raise_error("Could not draw text into image (" + str(e) + ")", warning=True)
-            self.raise_error(" ... " + param, warning=True)
+            logging.error(" ... " + param, warning=True)
 
         return raw
 
