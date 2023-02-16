@@ -1272,8 +1272,6 @@ class BirdhouseCamera(threading.Thread):
                         # image = self.get_image_raw_buffered(max_age_seconds=1)    # does not work at the moment
                         image = self.get_image_raw()
 
-                        # ----> creates error images ?? see RPi
-
                         if not self.image.error and len(image) > 0:
                             image = self.image.normalize_raw(image)
                             image_compare = self.image.convert_to_gray_raw(image)
