@@ -677,7 +677,8 @@ class BirdhouseImageProcessing(object):
             return cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
 
         except Exception as e:
-            self.raise_error("Could not convert image to gray scale " + str(e) + ")")
+            self.raise_error("Could not convert image to gray scale (" + str(e) + ")")
+            logging.error("Shape " + str(raw.shape))
             return raw
 
     def crop(self, image, crop_area, crop_type="relative"):
