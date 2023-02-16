@@ -62,7 +62,7 @@ def create_chart_data(data):
 
     # get categories / titles
     for key in data:
-        if "error" not in data[key]:
+        if "error" not in data[key] or data[key]["lowres"] == "":
             print_key = key[0:2]+":"+key[2:4]
             if "camera" in data[key] and data[key]["camera"] not in used_cameras:
                 used_cameras.append(data[key]["camera"])
