@@ -793,7 +793,7 @@ class BirdhouseImageProcessing(object):
             if y < 0:
                 y = height + y
             position = (int(x), int(y))
-            logging.info(" .... " + self.id + " / " + str(position))
+            logging.info(" .... " + self.id + " / " + str(position) + "/" + str(raw.shape) + " - " + text)
 
         param = str(text) + ", " + str(position) + ", " + str(font) + ", " + str(scale) + ", " + str(color) + ", " + \
                 str(thickness)
