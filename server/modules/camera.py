@@ -674,7 +674,9 @@ class BirdhouseImageProcessing(object):
             return raw
 
         try:
-            return cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
+            gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
+            logging.info("Gray ... " + str(raw.shape))
+            return gray
 
         except Exception as e:
             self.raise_error("Could not convert image to gray scale (" + str(e) + ")")
