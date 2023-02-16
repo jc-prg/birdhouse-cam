@@ -674,8 +674,8 @@ class BirdhouseImageProcessing(object):
             return raw
 
         try:
-            gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
             logging.info("Gray ... " + str(raw.shape))
+            gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
             return gray
 
         except Exception as e:
