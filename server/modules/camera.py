@@ -783,11 +783,12 @@ class BirdhouseImageProcessing(object):
         (x, y) = tuple(position)
         if x < 0 or y < 0:
             if "resolution_cropped" in self.param["image"] and \
-                    self.param["image"]["resolution_cropped"] != (0, 0, 0, 0):
+                    self.param["image"]["resolution_cropped"] != (0, 0):
                 (width, height) = self.param["image"]["resolution_cropped"]
             else:
                 height = raw.shape[0]
                 width = raw.shape[1]
+                self.param["image"]["resolution_cropped"] = (width, height)
             if x < 0:
                 x = width + x
             if y < 0:
