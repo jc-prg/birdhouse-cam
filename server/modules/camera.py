@@ -802,7 +802,7 @@ class BirdhouseImageProcessing(object):
             raw = cv2.putText(raw, text, tuple(position), font, scale, color, thickness, cv2.LINE_AA)
         except Exception as e:
             self.raise_error("Could not draw text into image (" + str(e) + ")", warning=True)
-            logging.error(" ... " + param, warning=True)
+            logging.warning(" ... " + param)
 
         return raw
 
