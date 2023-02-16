@@ -688,6 +688,24 @@ class BirdhouseImageProcessing(object):
             logging.error("Shape " + str(raw.shape))
             return raw
 
+    def convert_from_gray_raw(self, raw):
+        """
+        convert image from RGB to gray scale image (e.g. for analyzing similarity)
+        """
+        # error in camera
+        if self.error_camera:
+            return raw
+
+        # convert and catch possible errors
+        try:
+            color = cv2.cvtColor(raw, cv2.COLOR_GRAY2BGR)
+            return color
+
+        except Exception as e:
+            self.raise_error("Could not convert image back from gray scale (" + str(e) + ")")
+            logging.error("Shape " + str(raw.shape))
+            return raw
+
     def crop(self, image, crop_area, crop_type="relative"):
         """
         crop encoded image
@@ -983,6 +1001,7 @@ class BirdhouseImageProcessing(object):
 
         if "black_white" in self.param["image"] and self.param["image"]["black_white"] is True:
             normalized = self.convert_to_gray_raw(normalized)
+            normalized = self.convert_from_gray_raw(normalized)
 
         # rotate     - not implemented yet
         # resize     - not implemented yet
