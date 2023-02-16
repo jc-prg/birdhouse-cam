@@ -1186,9 +1186,10 @@ class BirdhouseCamera(threading.Thread):
         reload_time_error = 60
 
         while self.running:
-            seconds = self.config.local_time().strftime('%S')
-            hours = self.config.local_time().strftime('%H')
-            stamp = self.config.local_time().strftime('%H%M%S')
+            current_time = self.config.local_time()
+            seconds = current_time.strftime('%S')
+            hours = current_time.strftime('%H')
+            stamp = current_time.strftime('%H%M%S')
             self.config_update = self.config.update["camera_" + self.id]
 
             # if error reload from time to time
@@ -1285,9 +1286,9 @@ class BirdhouseCamera(threading.Thread):
                                 "hires": self.config.filename_image("hires", stamp, self.id),
                                 "lowres": self.config.filename_image("lowres", stamp, self.id),
                                 "compare": (stamp, self.previous_stamp),
-                                "datestamp": self.config.local_time().strftime("%Y%m%d"),
-                                "date": self.config.local_time().strftime("%d.%m.%Y"),
-                                "time": self.config.local_time().strftime("%H:%M:%S"),
+                                "datestamp": current_time.strftime("%Y%m%d"),
+                                "date": current_time.strftime("%d.%m.%Y"),
+                                "time": current_time.strftime("%H:%M:%S"),
                                 "similarity": similarity,
                                 "sensor": {},
                                 "size": self.image_size
@@ -1299,9 +1300,9 @@ class BirdhouseCamera(threading.Thread):
                                 "hires": "",
                                 "lowres": "",
                                 "compare": (stamp, self.previous_stamp),
-                                "datestamp": self.config.local_time().strftime("%Y%m%d"),
-                                "date": self.config.local_time().strftime("%d.%m.%Y"),
-                                "time": self.config.local_time().strftime("%H:%M:%S"),
+                                "datestamp": current_time.strftime("%Y%m%d"),
+                                "date": current_time.strftime("%d.%m.%Y"),
+                                "time": current_time.strftime("%H:%M:%S"),
                                 "similarity": 0,
                                 "sensor": {},
                                 "size": self.image_size,
@@ -1312,7 +1313,7 @@ class BirdhouseCamera(threading.Thread):
                         for key in self.sensor:
                             if self.sensor[key].running:
                                 sensor_data[key] = self.sensor[key].get_values()
-                                sensor_data[key]["date"] = self.config.local_time().strftime("%d.%m.%Y")
+                                sensor_data[key]["date"] = current_time.strftime("%d.%m.%Y")
                                 image_info["sensor"][key] = self.sensor[key].get_values()
 
                         self.config.queue.entry_add(config="sensor", date="", key=stamp, entry=sensor_data)
