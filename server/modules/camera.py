@@ -1747,11 +1747,12 @@ class BirdhouseCamera(threading.Thread):
             if normalize:
                 image = self.image.normalize_raw(image)
 
-            if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
-                image = self.image.draw_text_raw(raw=image,
-                                                 text=str(round(self.image_fps[stream_id], 1)) + "fps   " + fps_rotate,
-                                                 font=cv2.QT_FONT_NORMAL,
-                                                 position=(10, -20), scale=0.4, thickness=1)
+            if not self.video.recording and not self.video.processing:
+                if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
+                    image = self.image.draw_text_raw(raw=image,
+                                                     text=str(round(self.image_fps[stream_id], 1)) + "fps   "
+                                                          + fps_rotate, font=cv2.QT_FONT_NORMAL,
+                                                     position=(10, -20), scale=0.4, thickness=1)
             self.image_last_edited = image
             return image
 
