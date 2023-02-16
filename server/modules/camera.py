@@ -1258,8 +1258,8 @@ class BirdhouseCamera(threading.Thread):
                             (hours in self.param["image_save"]["hours"]):
 
                         logging.debug(" ...... record now!")
-                        image = self.get_image_raw_buffered(max_age_seconds=1)
-                        # image = self.get_image_raw()
+                        # image = self.get_image_raw_buffered(max_age_seconds=1)    # does not work at the moment
+                        image = self.get_image_raw()
 
                         # ----> creates error images ?? see RPi
 
