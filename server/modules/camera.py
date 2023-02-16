@@ -670,11 +670,16 @@ class BirdhouseImageProcessing(object):
         """
         convert image from RGB to gray scale image (e.g. for analyzing similarity)
         """
+        # error in camera
         if self.error_camera:
             return raw
 
+        # image already seems to be in gray scale
+        if len(raw.shape) == 2:
+            return raw
+
+        # convert and catch possible errors
         try:
-            logging.info("Gray ... " + str(raw.shape))
             gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
             return gray
 
