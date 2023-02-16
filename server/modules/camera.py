@@ -782,9 +782,9 @@ class BirdhouseImageProcessing(object):
 
         (x, y) = tuple(position)
         if x < 0 or y < 0:
-            if "resolution_current" in self.param["image"] and \
-                    self.param["image"]["resolution_current"] != (0, 0, 0, 0):
-                (width, height) = self.param["image"]["resolution_current"]
+            if "resolution_cropped" in self.param["image"] and \
+                    self.param["image"]["resolution_cropped"] != (0, 0, 0, 0):
+                (width, height) = self.param["image"]["resolution_cropped"]
             else:
                 height = raw.shape[0]
                 width = raw.shape[1]
@@ -965,8 +965,10 @@ class BirdhouseImageProcessing(object):
         if self.error_camera:
             return
 
-        normalized, self.param["image"]["crop_area"] = self.crop_raw(raw=raw, crop_area=self.param["image"]["crop"],
+        normalized, area = self.crop_raw(raw=raw, crop_area=self.param["image"]["crop"],
                                                                      crop_type="relative")
+        self.param["image"]["crop_area"] = area
+        self.param["image"]["resolution_cropped"] = [area[2] - area[0], area[3] - area[1]]
 
         # --> the following part doesn't work at the moment, self.param["image"]["crop_area"] somewhere is set wrong
         #
