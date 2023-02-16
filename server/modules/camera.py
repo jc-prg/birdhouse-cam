@@ -927,7 +927,7 @@ class BirdhouseImageProcessing(object):
         """
         return image with error message
         """
-        if image == "":
+        if len(image) == 0:
             image = self.img_camera_error_v2
 
         if self.param["image"]["resolution"] and "x" in self.param["image"]["resolution"]:
@@ -1261,7 +1261,7 @@ class BirdhouseCamera(threading.Thread):
 
                         # ----> creates error images ?? see RPi
 
-                        if not self.image.error and image != "":
+                        if not self.image.error and len(image) > 0:
                             image = self.image.normalize_raw(image)
                             image_compare = self.image.convert_to_gray_raw(image)
 
@@ -1622,7 +1622,7 @@ class BirdhouseCamera(threading.Thread):
                     self.raise_error(False, "Error reading image (source=" + str(self.source) + ", " +
                                      self.camera.error_msg + ")")
                     return ""
-                elif "NoneType" in check or raw == "":
+                elif "NoneType" in check or len(raw) == 0:
                     self.raise_error(False, "Got an empty image (source=" + str(self.source) + ")")
                     return ""
                 else:
@@ -1649,7 +1649,7 @@ class BirdhouseCamera(threading.Thread):
         if self.image_last_raw_time == 0:
             self.image_last_raw_time = datetime.now().timestamp()
 
-        if self.image_last_raw is not None and self.image_last_raw != "":
+        if self.image_last_raw is not None and len(self.image_last_raw) > 0:
             if self.image_last_raw_time + max_age_seconds < datetime.now().timestamp():
                 return self.image_last_raw
 
