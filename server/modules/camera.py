@@ -824,7 +824,7 @@ class BirdhouseImageProcessing(object):
 
         return raw
 
-    def draw_date(self, image):
+    def draw_date(self, image, offset=None):
         date_information = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
         font = self.text_default_font
@@ -837,6 +837,8 @@ class BirdhouseImageProcessing(object):
             position = self.param["image"]["date_time_position"]
         else:
             position = ""
+        if offset is not None:
+            position = (int(position[0] + offset[0]), int(position[1] + offset[1]))
         if self.param["image"]["date_time_size"]:
             scale = self.param["image"]["date_time_size"]
         else:
@@ -845,7 +847,7 @@ class BirdhouseImageProcessing(object):
         image = self.draw_text(image, date_information, position, font, scale, color, thickness)
         return image
 
-    def draw_date_raw(self, raw, overwrite_color=None, overwrite_position=None, timezone_info=+1):
+    def draw_date_raw(self, raw, overwrite_color=None, overwrite_position=None, offset=[0, 0], timezone_info=+1):
         date_information = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
         font = self.text_default_font
@@ -858,6 +860,8 @@ class BirdhouseImageProcessing(object):
             position = self.param["image"]["date_time_position"]
         else:
             position = None
+        if offset is not None:
+            position = (int(position[0] + offset[0]), int(position[1] + offset[1]))
         if self.param["image"]["date_time_size"]:
             scale = self.param["image"]["date_time_size"]
         else:
