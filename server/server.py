@@ -443,6 +443,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content["server"] = config.param["server"]
             content["backup"] = config.param["backup"]
 
+            if "language" in config.param:
+                content["language"] = config.param["language"]
+            else:
+                content["language"] = "EN"
+
             micro_data = config.param["devices"]["microphones"].copy()
             for key in micro_data:
                 if config.param["server"]["ip4_stream_audio"] == "":

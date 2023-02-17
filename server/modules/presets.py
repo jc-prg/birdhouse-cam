@@ -101,6 +101,7 @@ birdhouse_default_sensor = {
 
 birdhouse_preset = {
     "title": "Our Birdhouse :-)",
+    "language": "EN",
     "backup": {
         "preview":   "0700",               # HHMM
         "time":      "2000"

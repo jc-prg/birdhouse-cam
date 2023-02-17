@@ -50,6 +50,7 @@ function app_menu_entries() {
 function app_initialize(data) {
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 	app_api_version = data["API"]["version"];
+    if (data["DATA"]["language"]) { LANG = data["DATA"]["language"]; }
 	}
 
 //--------------------------------

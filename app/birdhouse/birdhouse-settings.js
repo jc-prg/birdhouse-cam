@@ -117,6 +117,7 @@ function birdhouse_app_settings (name="Settings") {
             html += "<div style='display:none'>Edit initial setup: "+birdhouse_edit_field(id="set_initial_setup", field="server:initial_setup", type="select", options="false", data_type="boolean")+"</div>";
             html += tab.start();
             html += tab.row("Title:&nbsp;", birdhouse_edit_field(id="set_title", field="title", type="input") );
+            html += tab.row("Language:&nbsp;", birdhouse_edit_field(id="set_language", field="language", type="select", options="EN,DE") );
             html += tab.row("Backup-Time:&nbsp;", birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
             html += tab.row("Backup-Preview:&nbsp;", birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
             html += tab.row("Timezone:&nbsp;", birdhouse_edit_field(id="set_timezone", field="server:timezone", type="select", options=timezones, data_type="string") );
@@ -131,7 +132,7 @@ function birdhouse_app_settings (name="Settings") {
             html += tab.row("Audiostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_audio", field="server:ip4_stream_audio", type="input", options="true,false", data_type="string") );
             html += tab.row("Deny admin from IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_deny", field="server:ip4_admin_deny", type="input", options="true,false", data_type="json") );
             html += tab.row("<hr>");
-            html += tab.row("", birdhouse_edit_save("set_main","set_initial_setup:set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port") );
+            html += tab.row("", birdhouse_edit_save("set_main","set_initial_setup:set_language:set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port") );
             html += tab.row("&nbsp;");
             html += tab.end();
 

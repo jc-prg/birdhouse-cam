@@ -63,6 +63,8 @@ function birdhousePrint(data) {
     app_data = data;
 	console.debug("Request->Print ...");
 
+    if (data["DATA"]["language"]) { LANG = data["DATA"]["language"]; }
+
 	var sensor_data = data["DATA"]["devices"]["sensors"];
 	if (sensor_data["sensor1"]) {
 	    console.log("Sensor data: "+sensor_data["sensor1"]["temperature"] + "C / "+ sensor_data["sensor1"]["humidity"] + "%");
