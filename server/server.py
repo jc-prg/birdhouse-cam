@@ -330,7 +330,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 stream_id_kill = which_cam
                 further_param = which_cam.split("&")
                 which_cam = further_param[0]
-                response = camera[which_cam].set_image_stream_kill(stream_id_kill)
+                response = camera[which_cam].set_stream_kill(stream_id_kill)
 
         elif self.path.startswith("/edit_presets/"):
             param_string = self.path.replace("/edit_presets/", "")
@@ -458,7 +458,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
                     camera_data[key]["device"] = "camera"
                     camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
-                    camera_data[key]["image"]["current_streams"] = camera[key].get_image_stream_count()
+                    camera_data[key]["image"]["current_streams"] = camera[key].get_stream_count()
                     camera_data[key]["image"]["current_streams_detail"] = camera[key].image_streams
                     camera_data[key]["status"] = {
                         "error": camera[key].error,
@@ -548,13 +548,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             while stream_active:
                 if config.update["camera_"+which_cam]:
                     camera[which_cam].update_main_config()
-                if camera[which_cam].get_image_stream_kill(stream_id_ext):
+                if camera[which_cam].get_stream_kill(stream_id_ext):
                     stream_active = False
 
                 if self.path.startswith("/detection/"):
-                    frame_raw = camera[which_cam].get_image_stream_raw(normalize=False, stream_id=stream_id_int)
+                    frame_raw = camera[which_cam].get_stream_raw(normalize=False, stream_id=stream_id_int)
                 else:
-                    frame_raw = camera[which_cam].get_image_stream_raw(normalize=True, stream_id=stream_id_int)
+                    frame_raw = camera[which_cam].get_stream_raw(normalize=True, stream_id=stream_id_int)
 
                 if not camera[which_cam].error and not camera[which_cam].image.error:
                     if self.path.startswith("/detection/"):
@@ -562,6 +562,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         if "black_white" in camera[which_cam].param["image"] and \
                                 camera[which_cam].param["image"]["black_white"]:
                             frame_raw = camera[which_cam].image.convert_to_gray_raw(frame_raw)
+                            frame_raw = camera[which_cam].image.convert_from_gray_raw(frame_raw)
                         if camera[which_cam].param["image"]["date_time"]:
                             frame_raw = camera[which_cam].image.draw_date_raw(frame_raw)
 

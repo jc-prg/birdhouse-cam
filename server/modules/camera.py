@@ -1693,107 +1693,6 @@ class BirdhouseCamera(threading.Thread):
 
         return self.get_image_raw()
 
-    def get_image_stream_count(self):
-        """
-        identify amount of currently running streams
-        """
-        current_time = datetime.now().timestamp()
-        count_streams = 0
-        del_key = ""
-        for key in self.image_streams:
-            if self.image_streams[key] + 1 > current_time:
-                count_streams += 1
-            else:
-                del_key = key
-        if del_key != "":
-            del self.image_streams[del_key]
-        return count_streams
-
-    def get_image_stream_fps(self, stream_id):
-        """
-        calculate fps for a specific stream
-        """
-        self.image_streams[stream_id] = datetime.now().timestamp()
-        if stream_id not in self.image_time_current:
-            self.image_time_current[stream_id] = 0
-        if stream_id not in self.image_time_rotate:
-            self.image_time_rotate[stream_id] = 0
-        if stream_id not in self.image_fps:
-            self.image_fps[stream_id] = 0
-
-        time_rotate = ["-", "/", "|", "\\"]
-        self.image_time_last[stream_id] = self.image_time_current[stream_id]
-        self.image_time_current[stream_id] = datetime.now().timestamp()
-        if self.image_time_last[stream_id] > 0:
-            self.image_fps[stream_id] = 1 / (self.image_time_current[stream_id] - self.image_time_last[stream_id])
-            self.image_time_rotate[stream_id] += 1
-            if self.image_time_rotate[stream_id] > len(time_rotate) - 1:
-                self.image_time_rotate[stream_id] = 0
-        return time_rotate[self.image_time_rotate[stream_id]]
-
-    def get_image_stream_raw(self, normalize=False, stream_id=""):
-        """
-        get image, if error show error message
-        -> IMPROVE: create possibility to stop stream via API Command (Cam-ID + external Stream-ID)
-        -> IMPROVE: reuse images, if multiple streams ... (define primary stream, others use copies ...)
-        ->          check if in device mode there are two streams of each camera?!
-        """
-
-        image = self.get_image_raw()
-        fps_rotate = self.get_image_stream_fps(stream_id=stream_id)
-
-        if not self.error and self.image.error and self.image.error_count < 10 and self.image_last_edited is not None:
-            image = self.image_last_edited
-            image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
-            return image
-
-        elif self.error or self.image.error:
-            if normalize:
-                image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "reduced")
-                image_error = self.image.normalize_error_raw(image_error)  # ---> causes error after a while?
-            else:
-                image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "complete")
-
-            if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
-                image_error = self.image.draw_text_raw(raw=image_error,
-                                                       text=str(
-                                                           round(self.image_fps[stream_id], 1)) + "fps   " + fps_rotate,
-                                                       font=cv2.QT_FONT_NORMAL, color=(0, 0, 0),
-                                                       position=(20, -20), scale=0.4, thickness=1)
-            return image_error
-
-        else:
-            if normalize:
-                image = self.image.normalize_raw(image)
-
-            if not self.video.recording and not self.video.processing:
-                if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
-                    image = self.image.draw_text_raw(raw=image,
-                                                     text=str(round(self.image_fps[stream_id], 1)) + "fps   "
-                                                          + fps_rotate, font=cv2.QT_FONT_NORMAL,
-                                                     position=(10, -20), scale=0.4, thickness=1)
-            self.image_last_edited = image
-            return image
-
-    def get_image_stream_kill(self, stream_id):
-        """
-        check if stream has to be killed
-        """
-        logging.debug("get_image_stream_kill: " + str(stream_id))
-        if stream_id in self.image_streams_to_kill:
-            logging.info("get_image_stream_kill - True: " + str(stream_id))
-            del self.image_streams_to_kill[stream_id]
-            return True
-        else:
-            return False
-
-    def set_image_stream_kill(self, stream_id):
-        """
-        mark streams to be killed
-        """
-        logging.info("set_image_stream_kill: " + stream_id)
-        self.image_streams_to_kill[stream_id] = datetime.now().timestamp()
-
     def image_differs(self, file_info):
         """
         check if similarity is under threshold
@@ -1834,6 +1733,107 @@ class BirdhouseCamera(threading.Thread):
                 return True  # to be checked !!!
 
         return False
+
+    def get_stream_raw(self, normalize=False, stream_id=""):
+        """
+        get image, if error show error message
+        -> IMPROVE: create possibility to stop stream via API Command (Cam-ID + external Stream-ID)
+        -> IMPROVE: reuse images, if multiple streams ... (define primary stream, others use copies ...)
+        ->          check if in device mode there are two streams of each camera?!
+        """
+
+        image = self.get_image_raw()
+        fps_rotate = self.get_stream_fps(stream_id=stream_id)
+
+        if not self.error and self.image.error and self.image.error_count < 10 and self.image_last_edited is not None:
+            image = self.image_last_edited
+            image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
+            return image
+
+        elif self.error or self.image.error:
+            if normalize:
+                image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "reduced")
+                image_error = self.image.normalize_error_raw(image_error)  # ---> causes error after a while?
+            else:
+                image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "complete")
+
+            if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
+                image_error = self.image.draw_text_raw(raw=image_error,
+                                                       text=str(
+                                                           round(self.image_fps[stream_id], 1)) + "fps   " + fps_rotate,
+                                                       font=cv2.QT_FONT_NORMAL, color=(0, 0, 0),
+                                                       position=(20, -20), scale=0.4, thickness=1)
+            return image_error
+
+        else:
+            if normalize:
+                image = self.image.normalize_raw(image)
+
+            if not self.video.recording and not self.video.processing:
+                if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
+                    image = self.image.draw_text_raw(raw=image,
+                                                     text=str(round(self.image_fps[stream_id], 1)) + "fps   "
+                                                          + fps_rotate, font=cv2.QT_FONT_NORMAL,
+                                                     position=(10, -20), scale=0.4, thickness=1)
+            self.image_last_edited = image
+            return image
+
+    def get_stream_count(self):
+        """
+        identify amount of currently running streams
+        """
+        current_time = datetime.now().timestamp()
+        count_streams = 0
+        del_key = ""
+        for key in self.image_streams:
+            if self.image_streams[key] + 1 > current_time:
+                count_streams += 1
+            else:
+                del_key = key
+        if del_key != "":
+            del self.image_streams[del_key]
+        return count_streams
+
+    def get_stream_fps(self, stream_id):
+        """
+        calculate fps for a specific stream
+        """
+        self.image_streams[stream_id] = datetime.now().timestamp()
+        if stream_id not in self.image_time_current:
+            self.image_time_current[stream_id] = 0
+        if stream_id not in self.image_time_rotate:
+            self.image_time_rotate[stream_id] = 0
+        if stream_id not in self.image_fps:
+            self.image_fps[stream_id] = 0
+
+        time_rotate = ["-", "/", "|", "\\"]
+        self.image_time_last[stream_id] = self.image_time_current[stream_id]
+        self.image_time_current[stream_id] = datetime.now().timestamp()
+        if self.image_time_last[stream_id] > 0:
+            self.image_fps[stream_id] = 1 / (self.image_time_current[stream_id] - self.image_time_last[stream_id])
+            self.image_time_rotate[stream_id] += 1
+            if self.image_time_rotate[stream_id] > len(time_rotate) - 1:
+                self.image_time_rotate[stream_id] = 0
+        return time_rotate[self.image_time_rotate[stream_id]]
+
+    def get_stream_kill(self, stream_id):
+        """
+        check if stream has to be killed
+        """
+        logging.debug("get_image_stream_kill: " + str(stream_id))
+        if stream_id in self.image_streams_to_kill:
+            logging.info("get_image_stream_kill - True: " + str(stream_id))
+            del self.image_streams_to_kill[stream_id]
+            return True
+        else:
+            return False
+
+    def set_stream_kill(self, stream_id):
+        """
+        mark streams to be killed
+        """
+        logging.info("set_image_stream_kill: " + stream_id)
+        self.image_streams_to_kill[stream_id] = datetime.now().timestamp()
 
     def show_areas(self, image):
         """
