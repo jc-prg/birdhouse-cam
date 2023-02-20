@@ -92,7 +92,7 @@ function birdhouse_OtherGroupHeader( key, title, header_open ) {
 }
 
 
-function birdhouse_ImageGroup( title, entries, entry_count, entry_category, header_open, admin=false, video_short=false, same_img_size=false ) {
+function birdhouse_ImageGroup( title, entries, entry_count, entry_category, header_open, admin=false, video_short=false, same_img_size=false, max_lowres_size=0) {
 	var count     = {};
 	var html      = "";
 	var image_ids = "";
@@ -161,7 +161,9 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
 		key   = entry_keys[i];
 		var img_title = key;
 		//if (entry_keys[key]["type"] == "video") {  title = entry_keys[key]["date"]; }
-		html += birdhouse_Image(title=img_title, entry=entries[key], header_open=header_open, admin=admin, video_short=video_short, group_id=group_id, same_img_size=same_img_size);
+		html += birdhouse_Image(title=img_title, entry=entries[key], header_open=header_open, admin=admin,
+		                        video_short=video_short, group_id=group_id, same_img_size=same_img_size,
+		                        max_lowres_size=max_lowres_size);
     }
 
 	html += "</div>";
@@ -212,7 +214,7 @@ function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 	return html;
 	}
 
-function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false, group_id="", same_img_size=false) {
+function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false, group_id="", same_img_size=false, max_lowres_size=0) {
 	var html        = "";
 	var play_button = "";
 	var dont_load   = "";
@@ -321,8 +323,19 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		recycle             = "<div id='d_"+img_id2+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id2+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
     }
     var height = "";
+    var container_style = "";
+    if (max_lowres_size != 0) {
+        lowres_width = max_lowres_size[0];
+        lowres_height = max_lowres_size[1];
+        // add here calculation regarding image height & width
+        // important: includes a scaling at the moment; requires width of frame with thumbnail images
+        // maybe its a calculation with relative values (height vs. width)?
+        // ... add enough space for the text (depending on max. 2 expected lines if not favorites)
+        // or switch to not scale thumbnails (at the moment the width is fixed depending on the screen resolution)
+        container_style += "";
+    }
     if (!same_img_size) { height = " fixed_height"; }
-	html += "<div class='image_container"+height+"'>";
+	html += "<div class='image_container"+height+"' style='" + container_style + "'>";
 	html += "  <div class='star'>"+star+"</div>";
 	html += "  <div class='recycle'>"+recycle+"</div>";
 	html += "  <div class='thumbnail_container'>";

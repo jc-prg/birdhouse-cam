@@ -1073,11 +1073,15 @@ class BirdhouseImageProcessing(object):
             self.raise_error("Could not analyze image (" + str(e) + ")", warning=True)
             return [0, 0]
 
-    def size_raw(self, raw):
+    def size_raw(self, raw, scale_percent=100):
         """
         Return size of raw image
         """
         try:
+            if scale_percent != 100:
+                width = int(raw.shape[1] * float(scale_percent) / 100)
+                height = int(raw.shape[0] * float(scale_percent) / 100)
+                raw = cv2.resize(raw, (width, height))
             height = raw.shape[0]
             width = raw.shape[1]
             return [width, height]
@@ -1188,6 +1192,7 @@ class BirdhouseCamera(threading.Thread):
             logging.info("Set Timezone: " + self.config.param["server"]["timezone"] + " (" + str(self.timezone) + ")")
 
         self.image_size = [0, 0]
+        self.image_size_lowres = [0, 0]
         self.image_last_raw = None
         self.image_last_raw_time = 0
         self.image_last_edited = None
@@ -1311,6 +1316,11 @@ class BirdhouseCamera(threading.Thread):
                                 self.image_size = self.image.size_raw(image)
                                 self.video.image_size = self.image_size
 
+                            if self.image_size_lowres == [0, 0]:
+                                scale = self.param["image"]["preview_scale"]
+                                self.image_size_lowres = self.image.size_raw(image, scale)
+                                self.video.image_size = self.image_size
+
                             if self.previous_image is not None:
                                 similarity = self.image.compare_raw(image_1st=image_compare,
                                                                     image_2nd=self.previous_image,
@@ -1321,14 +1331,15 @@ class BirdhouseCamera(threading.Thread):
                             image_info = {
                                 "camera": self.id,
                                 "hires": self.config.filename_image("hires", stamp, self.id),
+                                "hires_size": self.image_size,
                                 "lowres": self.config.filename_image("lowres", stamp, self.id),
+                                "lowres_size": self.image_size_lowres,
                                 "compare": (stamp, self.previous_stamp),
                                 "datestamp": current_time.strftime("%Y%m%d"),
                                 "date": current_time.strftime("%d.%m.%Y"),
                                 "time": current_time.strftime("%H:%M:%S"),
                                 "similarity": similarity,
-                                "sensor": {},
-                                "size": self.image_size
+                                "sensor": {}
                             }
                             self.previous_image = image_compare
                         else:
@@ -1875,8 +1886,8 @@ class BirdhouseCamera(threading.Thread):
 
         try:
             if scale_percent != 100:
-                width = int(image.shape[1] * scale_percent / 100)
-                height = int(image.shape[0] * scale_percent / 100)
+                width = int(image.shape[1] * float(scale_percent) / 100)
+                height = int(image.shape[0] * float(scale_percent) / 100)
                 image = cv2.resize(image, (width, height))
             return cv2.imwrite(image_path, image)
 
@@ -1898,4 +1909,20 @@ class BirdhouseCamera(threading.Thread):
         self.image.param = self.param
         self.config.update["camera_" + self.id] = False
         self.reload_camera = True
+
+        self.image_size = [0, 0]
+        self.image_size_lowres = [0, 0]
+        self.image_last_raw = None
+        self.image_last_raw_time = 0
+        self.image_last_edited = None
+        self.image_count_empty = 0
+        self.image_time_last = {}
+        self.image_time_current = {}
+        self.image_time_rotate = {}
+        self.image_fps = {}
+        self.image_streams = {}
+        self.image_streams_to_kill = {}
+        self.previous_image = None
+        self.previous_stamp = "000000"
+
         self.camera_resolution_usb(self.param["image"]["resolution"])

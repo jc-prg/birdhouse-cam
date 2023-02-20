@@ -155,6 +155,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var entries_yesterday = data["DATA"]["entries_yesterday"];
 	var entries_delete    = data["DATA"]["entries_delete"];
 	var active_date       = data["DATA"]["active_date"];
+	var max_image_size_LR  = data["DATA"]["max_image_size"]["lowres"];
+	var max_image_size_HR  = data["DATA"]["max_image_size"]["hires"];
 	var active_page       = app_active_page;
 	var groups            = data["DATA"]["groups"];
 	var admin             = data["STATUS"]["admin_allowed"];
@@ -241,7 +243,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             }
 		if (admin) {
 		        if (entries_yesterday != undefined && Object.keys(entries_yesterday).length > 0) {
-		            html += birdhouse_ImageGroup(lang("YESTERDAY"), entries_yesterday, entry_count, entry_category, false, admin, video_short,same_img_size);
+		            html += birdhouse_ImageGroup(lang("YESTERDAY"), entries_yesterday, entry_count, entry_category, false, admin, video_short, same_img_size);
 		            entries_available = true;
 		            }
 		        if (entries_delete != undefined && Object.keys(entries_delete).length > 0) {
