@@ -4,13 +4,16 @@ import logging
 import threading
 from sys import getsizeof
 from datetime import datetime, timedelta
-from modules.presets import birdhouse_pages
+import modules.presets as presets
 
 
-def read_html(filename, content=""):
+def read_html(filename, content=None):
     """
     read html file, replace placeholders and return for stream via webserver
     """
+    if content is None:
+        content = {}
+
     if not os.path.isfile(filename):
         logging.warning("File '" + filename + "' does not exist!")
         return ""
@@ -40,9 +43,9 @@ def print_links_json(link_list, cam=""):
 
     for link in link_list:
         json[link] = {
-            "link": birdhouse_pages[link][2],
+            "link": presets.birdhouse_pages[link][2],
             "camera": cam_link,
-            "description": birdhouse_pages[link][0],
+            "description": presets.birdhouse_pages[link][0],
             "position": count
         }
         count += 1
@@ -62,37 +65,33 @@ def create_chart_data(data):
 
     # get categories / titles
     for key in data:
-        if "error" not in data[key] or data[key]["lowres"] == "":
-            print_key = key[0:2]+":"+key[2:4]
-            if "camera" in data[key] and data[key]["camera"] not in used_cameras:
-                used_cameras.append(data[key]["camera"])
-            if "similarity" in data[key]:
-                if round(float(data[key]["similarity"])) == 0:
-                    data[key]["similarity"] = 100
-                chart["data"][print_key] = [100-float(data[key]["similarity"])]
-            if "sensor" in data[key]:
-                for sensor in data[key]["sensor"]:
-                    for sensor_key in data[key]["sensor"][sensor]:
-                        sensor_title = sensor + ":" + sensor_key
-                        if sensor_title not in chart["titles"]:
-                            chart["titles"].append(sensor_title)
-        else:
-            logging.warning("Could not create chart data for "+str(key)+", error in config file.")
-            logging.warning(str(data[key]))
+        print_key = key[0:2]+":"+key[2:4]
+        if "camera" in data[key] and data[key]["camera"] not in used_cameras:
+            used_cameras.append(data[key]["camera"])
+        if "similarity" in data[key]:
+            if round(float(data[key]["similarity"])) == 0:
+                data[key]["similarity"] = 100
+            chart["data"][print_key] = [100-float(data[key]["similarity"])]
+        if "sensor" in data[key]:
+            for sensor in data[key]["sensor"]:
+                for sensor_key in data[key]["sensor"][sensor]:
+                    sensor_title = sensor + ":" + sensor_key
+                    if sensor_title not in chart["titles"]:
+                        chart["titles"].append(sensor_title)
 
     # get data
     for key in data:
-        if "error" not in data[key]:
-            print_key = key[0:2] + ":" + key[2:4]
-            if print_key not in used_keys and used_cameras[0] == data[key]["camera"]:
-                used_keys.append(print_key)
-                for sensor_title in chart["titles"]:
-                    if sensor_title != "Activity" and print_key in chart["data"]:
-                        sensor = sensor_title.split(":")
-                        if "sensor" in data[key] and sensor[0] in data[key]["sensor"] and sensor[1] in data[key]["sensor"][sensor[0]]:
-                            chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
-                        else:
-                            chart["data"][print_key].append(None)
+        print_key = key[0:2] + ":" + key[2:4]
+        if print_key not in used_keys and used_cameras[0] == data[key]["camera"]:
+            used_keys.append(print_key)
+            for sensor_title in chart["titles"]:
+                if sensor_title != "Activity" and print_key in chart["data"]:
+                    sensor = sensor_title.split(":")
+                    if "sensor" in data[key] and sensor[0] in data[key]["sensor"] and \
+                            sensor[1] in data[key]["sensor"][sensor[0]]:
+                        chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
+                    else:
+                        chart["data"][print_key].append("")
 
     return chart
 
@@ -225,6 +224,9 @@ class BirdhouseViews(threading.Thread):
         param = server.path.split("/")
         path, which_cam, further_param = self.selected_camera()
         time_now = self.config.local_time().strftime('%H%M%S')
+        check_similarity = True
+        backup = False
+        category = ""
 
         if param[1] != "api":
             if len(param) > 2:
@@ -262,19 +264,18 @@ class BirdhouseViews(threading.Thread):
             time_now = "000000"
             first_title = ""
 
-            content["subtitle"] = birdhouse_pages["backup"][0] + " " + files_data["info"]["date"]
+            content["subtitle"] = presets.birdhouse_pages["backup"][0] + " " + files_data["info"]["date"]
             content["links"] = print_links_json(link_list=("live", "today", "backup", "favorit"), cam=which_cam)
 
         elif os.path.isfile(self.config.file_path(config="images")):
             backup = False
             files_all = self.config.read_cache(config="images")
             time_now = self.config.local_time().strftime('%H%M%S')
-            check_similarity = True
             category = "/current/"
             subdirectory = ""
             first_title = "Heute &nbsp; "
 
-            content["subtitle"] = birdhouse_pages["today"][0]
+            content["subtitle"] = presets.birdhouse_pages["today"][0]
             if self.admin_allowed():
                 content["links"] = print_links_json(
                     link_list=("live", "favorit", "today_complete", "videos", "backup"), cam=which_cam)
@@ -295,8 +296,10 @@ class BirdhouseViews(threading.Thread):
 
                 select_image = self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp],
                                                                       check_similarity=check_similarity)
-                if ((int(stamp) < int(time_now) or time_now == "000000") and files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
-                    if "camera" not in files_all[stamp] or select_image or (backup and files_all[stamp]["camera"] == which_cam):
+                if ((int(stamp) < int(time_now) or time_now == "000000") and
+                        files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
+                    if "camera" not in files_all[stamp] or select_image or \
+                            (backup and files_all[stamp]["camera"] == which_cam):
                         if files_all[stamp]["datestamp"] == date_today or backup:
                             if "to_be_deleted" not in files_all[stamp] or int(files_all[stamp]["to_be_deleted"]) != 1:
                                 files_today[stamp] = files_all[stamp].copy()
@@ -348,7 +351,7 @@ class BirdhouseViews(threading.Thread):
                     if "to_be_deleted" in files_all[stamp] and int(files_all[stamp]["to_be_deleted"]) == 1:
                         if files_all[stamp]["camera"] == which_cam:
                             files_recycle[stamp] = files_all[stamp]
-                            if not "type" in files_recycle[stamp]:
+                            if "type" not in files_recycle[stamp]:
                                 files_recycle[stamp]["type"] = "image"
                             files_recycle[stamp]["category"] = category + stamp
                             files_recycle[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
@@ -361,7 +364,8 @@ class BirdhouseViews(threading.Thread):
                 else:
                     url = "/remove/today"
 
-                intro = "<a onclick='removeFiles(\"" + url + "\");' style='cursor:pointer;'>Delete all files marked for recycling ...</a>"
+                intro = "<a onclick='removeFiles(\"" + url + \
+                        "\");' style='cursor:pointer;'>Delete all files marked for recycling ...</a>"
                 content["entries_delete"] = files_recycle
 
         content["subtitle"] += " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
@@ -389,6 +393,14 @@ class BirdhouseViews(threading.Thread):
         """
         Page with backup/archive directory
         """
+        count = 0
+        dir_size = 0
+        dir_size_cam = 0
+        dir_count = 0
+        dir_count_cam = 0
+        dir_count_data = 0
+        dir_count_delete = 0
+
         logging.info("Create data for archive view from '"+self.config.directory(config="backup")+"' ...")
         for cam in self.camera:
             content = {
@@ -516,7 +528,7 @@ class BirdhouseViews(threading.Thread):
                     # self.sendError()
 
             content["view_count"] = []
-            content["subtitle"] = birdhouse_pages["backup"][0] + " (" + self.camera[cam].name + ")"
+            content["subtitle"] = presets.birdhouse_pages["backup"][0] + " (" + self.camera[cam].name + ")"
             content["chart_data"] = create_chart_data(content["entries"].copy())
             self.archive_views[cam] = content
 
@@ -590,7 +602,7 @@ class BirdhouseViews(threading.Thread):
                     content["groups"][hour + ":00"].append(entry)
 
         content["view_count"] = ["all", "star", "detect", "recycle"]
-        content["subtitle"] = birdhouse_pages["today_complete"][0] + " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
+        content["subtitle"] = presets.birdhouse_pages["today_complete"][0] + " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
         content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"), cam=which_cam)
         content["chart_data"] = create_chart_data(content["entries"].copy())
 
@@ -684,6 +696,7 @@ class BirdhouseViews(threading.Thread):
         dir_list = list(reversed(sorted(dir_list)))
 
         for directory in dir_list:
+            date = ""
             category = "/backup/" + directory + "/"
             favorites[directory] = {}
 
@@ -728,7 +741,7 @@ class BirdhouseViews(threading.Thread):
                     content["groups"][date].append(entry)
 
         content["view_count"] = ["star"]
-        content["subtitle"] = birdhouse_pages["favorit"][0]
+        content["subtitle"] = presets.birdhouse_pages["favorit"][0]
 
         self.favorite_views = content
         logging.info("Create data for favorite view done.")
@@ -774,7 +787,7 @@ class BirdhouseViews(threading.Thread):
             if len(files_delete) > 0 and self.admin_allowed(): content["entries_delete"] = files_delete
 
         content["view_count"] = ["all", "star", "detect", "recycle"]
-        content["subtitle"] = birdhouse_pages["videos"][
+        content["subtitle"] = presets.birdhouse_pages["videos"][
             0]  # + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
 
         if self.admin_allowed():
@@ -805,7 +818,7 @@ class BirdhouseViews(threading.Thread):
             content["entries"][cam]["active"] = self.camera[cam].active
 
         content["view_count"] = []
-        content["subtitle"] = birdhouse_pages["cam_info"][0]
+        content["subtitle"] = presets.birdhouse_pages["cam_info"][0]
         content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"), cam=which_cam)
 
         return content.copy()
@@ -845,7 +858,7 @@ class BirdhouseViews(threading.Thread):
                 }
 
         content["view_count"] = []
-        content["subtitle"] = birdhouse_pages["video_info"][0]
+        content["subtitle"] = presets.birdhouse_pages["video_info"][0]
         content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"))
 
         return content
