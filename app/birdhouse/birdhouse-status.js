@@ -65,7 +65,7 @@ function birdhouseStatus_print(data) {
     }
     if (count > 0 ) {
         document.getElementById(app_frame_info).style.display = "block";
-        html_entry = "Temperature - " + html_entry;
+        html_entry = lang("TEMPERATURE") + ": " + html_entry;
     }
     else {
         document.getElementById(app_frame_info).style.display = "none";
