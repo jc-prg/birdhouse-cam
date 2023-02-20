@@ -155,8 +155,14 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var entries_yesterday = data["DATA"]["entries_yesterday"];
 	var entries_delete    = data["DATA"]["entries_delete"];
 	var active_date       = data["DATA"]["active_date"];
-	var max_image_size_LR  = data["DATA"]["max_image_size"]["lowres"];
-	var max_image_size_HR  = data["DATA"]["max_image_size"]["hires"];
+	if (data["DATA"]["max_image_size"]) {
+        var max_image_size_LR  = data["DATA"]["max_image_size"]["lowres"];
+        var max_image_size_HR  = data["DATA"]["max_image_size"]["hires"];
+        }
+    else {
+        var max_image_size_LR  = 0;
+        var max_image_size_HR  = 0;
+        }
 	var active_page       = app_active_page;
 	var groups            = data["DATA"]["groups"];
 	var admin             = data["STATUS"]["admin_allowed"];
