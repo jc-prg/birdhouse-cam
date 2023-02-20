@@ -38,6 +38,7 @@ function birdhouse_app_settings (name="Settings") {
 
         var api_call = "<button onclick='window.open(\"" + RESTurl + "api/list/\",\"_blank\");' style='"+button_style+"';>REST API</button>";
         api_call    += "<button onclick='window.open(\"" + RESTurl + "api/INDEX/\",\"_blank\");' style='"+button_style+"';>INDEX</button>";
+        api_call    += "<button onclick='birdhouse_forceBackup();' style='"+button_style+"';>Force Backup</button>";
         api_call    += "<button onclick='birdhouse_recreateImageConfig();' style='"+button_style+"';>NewImgCfg</button>";
 	    for (let camera in cameras) {
 	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/TODAY/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Today "+camera.toUpperCase()+"</button>";

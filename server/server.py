@@ -158,32 +158,27 @@ def get_system_data():
     system["hdd_used"] = hdd.used / 1024 / 1024 / 1024
     system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
 
-    # threading informations
+    # threading information
     system["threads_active"] = str(threading.active_count())
     system["threads_info"] = str(threading.enumerate())
 
-    # read camera infos
+    # read camera information
     process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
     output = process.communicate()[0]
     output = output.decode()
     output_2 = output.split("\n")
     last_key = "none"
-    system["video_dev_new"] = {}
-    system["video_dev_new2"] = {}
+    system["video_devices"] = {}
+    system["video_devices_02"] = {}
     for value in output_2:
         if ":" in value:
-            system["video_dev_new"][value] = []
+            system["video_devices"][value] = []
             last_key = value
         elif value != "":
-            value = value.replace("\t","")
-            system["video_dev_new"][last_key].append(value)
+            value = value.replace("\t", "")
+            system["video_devices"][last_key].append(value)
             info = last_key.split(":")
-            system["video_dev_new2"][value] = value + " (" +info[0] + ")"
-    output = output.replace("\n", ",")
-    output = output.replace(":,", ":</b><br/>")
-    output = output.replace(",,", "<br/><b>")
-    output = output.replace("\t", " ")
-    system["video_devices"] = "<b>"+str(output)
+            system["video_devices_02"][value] = value + " (" + info[0] + ")"
 
     return system
 
@@ -325,6 +320,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = camera[which_cam].camera_reconnect()
         elif self.path.startswith('/remove/'):
             response = backup.delete_marked_files_api(self.path)
+        elif self.path.startswith('/force_backup/'):
+            response = {}
+            backup.backup_files()
+            views.archive_list_update()
         elif self.path.startswith('/kill_stream/'):
             if "&" in which_cam:
                 stream_id_kill = which_cam
@@ -512,12 +511,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "admin_allowed": self.admin_allowed(),
                     "check-version": version,
                     "api-call": status,
-                    "system": get_system_data(),
                     "reload": False
                 },
                 "API": api_description,
                 "DATA": content
             }
+            api_response["STATUS"]["system"] = get_system_data()
             api_response["DATA"]["selected"] = which_cam
             api_response["DATA"]["active_page"] = command
 

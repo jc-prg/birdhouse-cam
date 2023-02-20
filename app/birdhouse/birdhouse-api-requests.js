@@ -30,6 +30,11 @@ function birdhouse_reconnectCamera(camera) {
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_reconnectCamera');
 	}
 
+function birdhouse_forceBackup(camera) {
+	commands = ["force_backup",camera];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
+	}
+
 function birdhouse_killStream(camera_id, stream_id) {
     console.log("birdhouse_killStream: "+stream_id);
 	commands = ["kill_stream", camera_id, stream_id];
