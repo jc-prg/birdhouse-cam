@@ -15,6 +15,7 @@ function birdhouse_app_settings (name="Settings") {
         var tab             = new birdhouse_table();
         var initial_setup   = app_data["DATA"]["server"]["initial_setup"];
         var cameras         = app_data["DATA"]["devices"]["cameras"];
+        var weather         = app_data["WEATHER"];
         var button_style    = "background-color:lightgray;color:black;width:90px;margin:3px;";
         var open_settings = {
             "app_info_01" : true,
@@ -98,7 +99,16 @@ function birdhouse_app_settings (name="Settings") {
             html_entry += tab.row("Unique stream URL:&nbsp;", app_unique_stream_url);
             html_entry += tab.row("Unique stream ID:&nbsp;",	app_unique_stream_id);
             html_entry += tab.end();
+
             html += birdhouse_OtherGroup( "app_info_02", "App Information (Cookie, Reload)", html_entry, open_settings["app_info_02"] );
+
+            html_entry = tab.start();
+            html_entry += tab.row("Weather:", weather["info_city"] + " (" + weather["info_update"] + ")");
+            html_entry += tab.row("Sunrise / Sunset:", weather["forecast"]["today"]["sunrise"] + " / " + weather["forecast"]["today"]["sunset"]);
+            html_entry += tab.row("Temperature:", weather["current"]["temperature"] + "°C");
+            html_entry += tab.end();
+
+            html += birdhouse_OtherGroup( "weather_info", "Weather Information", html_entry, false );
             }
 
         if (type == "INFO_ONLY") {

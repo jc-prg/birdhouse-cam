@@ -1,0 +1,122 @@
+import threading
+import datetime
+import python_weather
+import asyncio
+import logging
+import time
+from datetime import datetime, timezone, timedelta
+
+
+class BirdhouseWeather(threading.Thread):
+
+    def __init__(self, city):
+        """
+        start weather and sunrise function
+        # https://pypi.org/project/python-weather/
+        # https://pypi.org/project/suntime/
+        """
+        threading.Thread.__init__(self)
+        logging.info("Starting weather process ...")
+
+        self.weather = None
+        self.weather_city = city
+        self.weather_info = {}
+        self.running = True
+        self.update_time = 60 * 15
+        self.timezone = 0
+
+    def run(self):
+        """
+        continuously request fresh data once a minute
+        """
+        logging.info("Starting Weather module ...")
+        while self.running:
+            asyncio.run(self.get_weather())
+            time.sleep(self.update_time)
+
+    def set_timezone(self, time_zone):
+        """
+        set time difference based on timezone
+        """
+        self.timezone = time_zone
+
+    def local_time(self):
+        """
+        return time that includes the current timezone
+        """
+        date_tz_info = timezone(timedelta(hours=self.timezone))
+        return datetime.now(date_tz_info)
+
+    async def get_weather(self):
+        """
+        get complete weather data set for a specific data
+        https://pypi.org/project/python-weather/
+        """
+        # declare the client. format defaults to the metric system (celcius, km/h, etc.)
+        async with python_weather.Client(format=python_weather.METRIC) as client:
+
+            # fetch a weather forecast from a city
+            self.weather = await client.get(self.weather_city)
+
+            self.weather_info["info_update"] = self.local_time().strftime("%d.%m.%Y %H:%M:%S")
+            self.weather_info["info_format"] = "metric"
+            self.weather_info["info_city"] = self.weather_city
+            self.weather_info["info_position"] = self.weather.location
+
+            current = self.weather.current
+            self.weather_info["current"] = {
+                "temperature": current.temperature,
+                "type": str(current.type),
+                "description": current.description,
+                "wind_speed": current.wind_speed,
+                "uv_index": current.uv_index,
+                "pressure": current.pressure,
+                "wind_direction": current.wind_direction,
+                "precipitation": current.precipitation
+
+            }
+            self.weather_info["forecast"] = {}
+
+            # get the weather forecast for a few days
+            for forecast in self.weather.forecasts:
+                info = {
+                    "sunrise": str(forecast.astronomy.sun_rise),
+                    "sunset": str(forecast.astronomy.sun_set),
+                    "moonrise": str(forecast.astronomy.moon_rise),
+                    "moon_phase": str(forecast.astronomy.moon_phase),
+                    "moon_illumination": str(forecast.astronomy.moon_illumination),
+                    "hourly": {}
+                }
+                self.weather_info["forecast"][str(forecast.date)] = info
+                for hourly in forecast.hourly:
+                    hourly_forecast = {
+                        "temperature": hourly.temperature,
+                        "type": str(hourly.type),
+                        "cloud_cover": hourly.cloud_cover,
+                        "description": hourly.description,
+                        "wind_speed": hourly.wind_speed,
+                        "uv_index": hourly.uv_index,
+                        "chance_of_sunshine": hourly.chance_of_sunshine,
+                        "chance_of_windy": hourly.chance_of_windy,
+                        "pressure": hourly.pressure,
+                        "wind_direction": hourly.wind_direction,
+                        "precipitation": hourly.precipitation
+                    }
+                    hourly_forecast_2 = {
+                        "time": hourly.time,
+                        "temperature": hourly.temperature,
+                        "type": hourly.type,
+                        "cloud_cover": hourly.cloud_cover,
+                        "description": hourly.description,
+                        "wind_speed": hourly.wind_speed,
+                        "uv_index": hourly.uv_index,
+                        "chance_of_sunshine": hourly.chance_of_sunshine,
+                        "chance_of_windy": hourly.chance_of_windy,
+                        "pressure": hourly.pressure,
+                        "wind_direction": hourly.wind_direction,
+                        "precipitation": hourly.precipitation
+                    }
+                    self.weather_info["forecast"][str(forecast.date)]["hourly"][str(hourly.time)] = hourly_forecast
+
+            today = self.local_time().strftime("%Y-%m-%d")
+            self.weather_info["forecast"]["today"] = self.weather_info["forecast"][today]

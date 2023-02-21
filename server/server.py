@@ -514,8 +514,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "reload": False
                 },
                 "API": api_description,
+                "WEATHER": weather.weather_info,
                 "DATA": content
             }
+
             api_response["STATUS"]["system"] = get_system_data()
             api_response["DATA"]["selected"] = which_cam
             api_response["DATA"]["active_page"] = command
@@ -712,6 +714,11 @@ if __name__ == "__main__":
     if len(sys.argv) > 0 and "--backup" in sys.argv:
         backup.backup_files()
         views.archive_list_update()
+
+    # start weather
+    from modules.weather import BirdhouseWeather
+    weather = BirdhouseWeather(city="Munich")
+    weather.start()
 
     # check if config files for main image directory exists and create if not exists
     if not os.path.isfile(config.file_path("images")):
