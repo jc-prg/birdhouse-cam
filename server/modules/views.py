@@ -245,7 +245,11 @@ class BirdhouseViews(threading.Thread):
             "view": "list",
             "entries": {},
             "entries_delete": {},
-            "entries_yesterday": {}
+            "entries_yesterday": {},
+            "max_image_size": {
+                "lowres": [0, 0],
+                "hires": [0, 0]
+            }
         }
         files_all = {}
         count = 0
@@ -294,12 +298,25 @@ class BirdhouseViews(threading.Thread):
                 if "date" not in files_all[stamp]:
                     files_all[stamp]["date"] = date_backup[6:8] + "." + date_backup[4:6] + "." + date_backup[0:4]
 
+                if "lowres_size" in files_all[stamp]:
+                    if files_all[stamp]["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
+                        content["max_image_size"]["lowres"][0] = files_all[stamp]["lowres_size"][0]
+                    if files_all[stamp]["lowres_size"][1] > content["max_image_size"]["lowres"][1]:
+                        content["max_image_size"]["lowres"][1] = files_all[stamp]["lowres_size"][1]
+
+                if "hires_size" in files_all[stamp]:
+                    if files_all[stamp]["hires_size"][0] > content["max_image_size"]["hires"][0]:
+                        content["max_image_size"]["hires"][0] = files_all[stamp]["hires_size"][0]
+                    if files_all[stamp]["lowres_size"][1] > content["max_image_size"]["hires"][1]:
+                        content["max_image_size"]["hires"][1] = files_all[stamp]["hires_size"][1]
+
                 select_image = self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp],
                                                                       check_similarity=check_similarity)
                 if ((int(stamp) < int(time_now) or time_now == "000000") and
                         files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
                     if "camera" not in files_all[stamp] or select_image or \
                             (backup and files_all[stamp]["camera"] == which_cam):
+
                         if files_all[stamp]["datestamp"] == date_today or backup:
                             if "to_be_deleted" not in files_all[stamp] or int(files_all[stamp]["to_be_deleted"]) != 1:
                                 files_today[stamp] = files_all[stamp].copy()
@@ -329,6 +346,7 @@ class BirdhouseViews(threading.Thread):
                 for stamp in stamps:
                     if (int(stamp) >= int(time_now) and time_now != "000000") and "datestamp" in files_all[stamp] and \
                             files_all[stamp]["datestamp"] == date_yesterday:
+
                         if self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp],
                                                                   check_similarity=check_similarity):
                             files_yesterday[stamp] = files_all[stamp]
@@ -407,7 +425,11 @@ class BirdhouseViews(threading.Thread):
                 "active_cam": cam,
                 "view": "backup",
                 "entries": {},
-                "groups": {}
+                "groups": {},
+                "max_image_size": {
+                    "lowres": [0, 0],
+                    "hires": [0, 0]
+                }
             }
 
             main_directory = self.config.directory(config="backup")
@@ -482,11 +504,23 @@ class BirdhouseViews(threading.Thread):
                                         if os.path.isfile(lowres_file):
                                             dir_size_cam += os.path.getsize(lowres_file)
                                             logging.debug("lowres size: "+str(os.path.getsize(lowres_file)))
+                                        if "lowres_size" in file_info:
+                                            if file_info["lowres_size"][0] > content[cam]["max_image_size"]["lowres"][0]:
+                                                content[cam]["max_image_size"]["lowres"][0] = file_info["lowres_size"][0]
+                                            if file_info["lowres_size"][1] > content[cam]["max_image_size"]["lowres"][1]:
+                                                content[cam]["max_image_size"]["lowres"][1] = file_info["lowres_size"][1]
+
                                         if "hires" in file_info:
                                             hires_file = os.path.join(self.config.directory(config="backup"), directory, file_info["hires"])
                                             if os.path.isfile(hires_file):
                                                 dir_size_cam += os.path.getsize(hires_file)
                                                 logging.debug("hires size: " + str(os.path.getsize(hires_file)))
+                                        if "hires_size" in file_info:
+                                            if file_info["hires_size"][0] > content[cam]["max_image_size"]["hires"][0]:
+                                                content[cam]["max_image_size"]["hires"][0] = file_info["hires_size"][0]
+                                            if file_info["lowres_size"][1] > content[cam]["max_image_size"]["hires"][1]:
+                                                content[cam]["max_image_size"]["hires"][1] = file_info["hires_size"][1]
+
                                     if "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
                                         dir_count_delete += 1
 
@@ -551,7 +585,11 @@ class BirdhouseViews(threading.Thread):
             "active_cam": which_cam,
             "view": "list_complete",
             "entries": {},
-            "groups": {}
+            "groups": {},
+            "max_image_size": {
+                "lowres": [0, 0],
+                "hires": [0, 0]
+            }
         }
 
         count = 0
@@ -587,13 +625,26 @@ class BirdhouseViews(threading.Thread):
                                 if float(files_all[stamp]["similarity"]) > 0:
                                     count_diff += 1
                             files_part[stamp] = files_all[stamp]
-                            if not "type" in files_part[stamp]:
+                            if "type" not in files_part[stamp]:
                                 files_part[stamp]["type"] = "image"
                             files_part[stamp]["detect"] = self.camera[which_cam].image_differs(
                                 file_info=files_part[stamp])
                             files_part[stamp]["category"] = category + stamp
                             files_part[stamp]["directory"] = "/" + self.config.directories["images"]
                             count += 1
+
+                            if "lowres_size" in files_part[stamp]:
+                                if files_part[stamp]["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
+                                    content["max_image_size"]["lowres"][0] = files_part[stamp]["lowres_size"][0]
+                                if files_part[stamp]["lowres_size"][1] > content["max_image_size"]["lowres"][1]:
+                                    content["max_image_size"]["lowres"][1] = files_part[stamp]["lowres_size"][1]
+
+                            if "hires_size" in files_part[stamp]:
+                                if files_part[stamp]["hires_size"][0] > content["max_image_size"]["hires"][0]:
+                                    content["max_image_size"]["hires"][0] = files_part[stamp]["hires_size"][0]
+                                if files_part[stamp]["lowres_size"][1] > content["max_image_size"]["hires"][1]:
+                                    content["max_image_size"]["hires"][1] = files_all[stamp]["hires_size"][1]
+
 
             if len(files_part) > 0:
                 content["groups"][hour + ":00"] = []

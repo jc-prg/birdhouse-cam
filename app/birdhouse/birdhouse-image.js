@@ -92,7 +92,8 @@ function birdhouse_OtherGroupHeader( key, title, header_open ) {
 }
 
 
-function birdhouse_ImageGroup( title, entries, entry_count, entry_category, header_open, admin=false, video_short=false, same_img_size=false, max_lowres_size=0) {
+function birdhouse_ImageGroup( title, entries, entry_count, entry_category, header_open, admin=false, video_short=false,
+                               same_img_size=false, max_lowres_size=0, max_text_lines=1) {
 	var count     = {};
 	var html      = "";
 	var image_ids = "";
@@ -129,8 +130,48 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
         }
 		if (count["all"] != undefined && count["data"] != undefined) { count["all"] -= count["data"]; }
     }
+
 	if (header_open == false) {
 		display = "style='display:none;'";
+    }
+
+    // calculate optimal thumbnail size based on max image size and lines of text
+    var lowres_size = {};
+    if (max_lowres_size != 0) {
+        lowres_width  = max_lowres_size[0];
+        lowres_height = max_lowres_size[1];
+        frame_width   = document.getElementById("frame1").offsetWidth - 12;
+
+        if (frame_width < 400) {
+            container_width = (frame_width - 12) / 3;
+        }
+        else if (frame_width < 500) {
+            container_width = (frame_width - 12) / 4;
+        }
+        else if (frame_width < 600) {
+            container_width = (frame_width - 12) / 4;
+        }
+        else if (frame_width < 700) {
+            container_width = (frame_width - 12) / 5;
+        }
+        else if (frame_width < 800) {
+            container_width = (frame_width - 12) / 6;
+        }
+        else if (frame_width < 900) {
+            container_width = (frame_width - 12) / 7;
+        }
+        else {
+            container_width = (frame_width - 12) / 8;
+        }
+
+        lowres_size["container_width"]  = Math.round(container_width) - 4;
+        lowres_size["thumbnail_width"]  = lowres_size["container_width"] - 2;
+        lowres_size["thumbnail_height"] = Math.round(lowres_height / lowres_width * lowres_size["container_width"]);
+        lowres_size["container_height"] = lowres_size["thumbnail_height"] + 22 + (max_text_lines * 18);
+
+        console.debug("Thumbnail size: frame-width=" + frame_width + "; thumbnail-width=" + lowres_size["thumbnail_width"]);
+        console.debug("              : container-width=" + lowres_size["container_width"]  + "; container-height=" + lowres_size["container_height"]);
+        console.debug("              : lowres-width=" + lowres_width + "; lowres-height=" + lowres_height);
     }
 
 	html += birdhouse_ImageGroupHeader( group_id, title, header_open, count );
@@ -163,7 +204,7 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
 		//if (entry_keys[key]["type"] == "video") {  title = entry_keys[key]["date"]; }
 		html += birdhouse_Image(title=img_title, entry=entries[key], header_open=header_open, admin=admin,
 		                        video_short=video_short, group_id=group_id, same_img_size=same_img_size,
-		                        max_lowres_size=max_lowres_size);
+		                        lowres_size=lowres_size);
     }
 
 	html += "</div>";
@@ -214,7 +255,7 @@ function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 	return html;
 	}
 
-function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false, group_id="", same_img_size=false, max_lowres_size=0) {
+function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false, group_id="", same_img_size=false, lowres_size=0) {
 	var html        = "";
 	var play_button = "";
 	var dont_load   = "";
@@ -322,19 +363,21 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		star                = "<div id='s_"+img_id2+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id2+"' src='"+img_dir+"star"+img_star+".png'       onclick='"+onclick_star+"'/>";
 		recycle             = "<div id='d_"+img_id2+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id2+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
     }
+
     var height = "";
     var container_style = "";
-    if (max_lowres_size != 0) {
-        lowres_width = max_lowres_size[0];
-        lowres_height = max_lowres_size[1];
-        // add here calculation regarding image height & width
-        // important: includes a scaling at the moment; requires width of frame with thumbnail images
-        // maybe its a calculation with relative values (height vs. width)?
-        // ... add enough space for the text (depending on max. 2 expected lines if not favorites)
-        // or switch to not scale thumbnails (at the moment the width is fixed depending on the screen resolution)
-        container_style += "";
-    }
-    if (!same_img_size) { height = " fixed_height"; }
+
+    if (!same_img_size) {
+        height = " fixed_height";
+        }
+    else if (lowres_size != 0) {
+        container_width  = lowres_size["container_width"];
+        container_height = lowres_size["container_height"];
+        thumbnail_width  = lowres_size["thumbnail_width"];
+        style           += "width:" + thumbnail_width + "px";
+        container_style += "width:" + container_width + "px;height:" + container_height +"px;";
+        }
+
 	html += "<div class='image_container"+height+"' style='" + container_style + "'>";
 	html += "  <div class='star'>"+star+"</div>";
 	html += "  <div class='recycle'>"+recycle+"</div>";

@@ -230,7 +230,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 				//--> doesn't work if image names double across the different groups; image IDs have to be changed (e.g. group id to be added)
 				}
 			delete group_entries["999999"];
-			html += birdhouse_ImageGroup(title, group_entries, entry_count, entry_category, header_open, admin, video_short, same_img_size);
+			html += birdhouse_ImageGroup(title, group_entries, entry_count, entry_category, header_open, admin,
+			                             video_short, same_img_size, max_image_size_LR);
 			count_groups += 1;
 			}
 			if (html == "") {
@@ -244,16 +245,19 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 		    title = active_date;
         }
         if (entries != undefined &&  Object.keys(entries).length > 0) {
-            html += birdhouse_ImageGroup(title, entries, entry_count, entry_category, header_open, admin, video_short, same_img_size);
+            html += birdhouse_ImageGroup(title, entries, entry_count, entry_category, header_open, admin, video_short,
+                                         same_img_size, max_image_size_LR);
             entries_available = true;
             }
 		if (admin) {
 		        if (entries_yesterday != undefined && Object.keys(entries_yesterday).length > 0) {
-		            html += birdhouse_ImageGroup(lang("YESTERDAY"), entries_yesterday, entry_count, entry_category, false, admin, video_short, same_img_size);
+		            html += birdhouse_ImageGroup(lang("YESTERDAY"), entries_yesterday, entry_count, entry_category,
+		                                         false, admin, video_short, same_img_size, max_image_size_LR);
 		            entries_available = true;
 		            }
 		        if (entries_delete != undefined && Object.keys(entries_delete).length > 0) {
-		            html += birdhouse_ImageGroup(lang("RECYCLE"), entries_delete, ["recycle"], entry_category, false, admin, video_short, same_img_size);
+		            html += birdhouse_ImageGroup(lang("RECYCLE"), entries_delete, ["recycle"], entry_category, false,
+		                                         admin, video_short, same_img_size, max_image_size_LR);
 		            entries_available = true;
 		            }
 		        }
