@@ -47,8 +47,11 @@ function birdhouseDevices( title, data ) {
 
 		html_temp += tab.start();
 		html_temp += tab.row("Name:", birdhouse_edit_field(id="set_name_"+camera, field="devices:cameras:"+camera+":name", type="input"));
-		html_temp += tab.row("Type:", birdhouse_edit_field(id="set_type_"+camera, field="devices:cameras:"+camera+":type", type="select", options="default,pi,usb"));
+        var options = data["STATUS"]["system"]["video_devices_02"];
+        html_temp += tab.row("Source:", birdhouse_edit_field(id="set_source_"+camera, field="devices:cameras:"+camera+":source", type="select_dict", options=options, data_type="string"));
 
+		/*
+		html_temp += tab.row("Type:", birdhouse_edit_field(id="set_type_"+camera, field="devices:cameras:"+camera+":type", type="select", options="default,pi,usb"));
 		if (cameras[camera]["type"] != "default") {
 		    html_temp += tab.row("Source:", birdhouse_edit_field(id="set_source_"+camera, field="devices:cameras:"+camera+":source", type="select", options="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21", data_type="integer"));
             }
@@ -56,9 +59,9 @@ function birdhouseDevices( title, data ) {
 		    var options = data["STATUS"]["system"]["video_devices_02"];
 		    html_temp += tab.row("Source:", birdhouse_edit_field(id="set_source_"+camera, field="devices:cameras:"+camera+":source", type="select_dict", options=options, data_type="string"));
 		    }
-
 		html_temp += tab.row("Active:", birdhouse_edit_field(id="set_active_"+camera, field="devices:cameras:"+camera+":active", type="select", options="true,false", data_type="boolean"));
 		html_temp += tab.row("Streaming:", cameras[camera]["video"]["streaming_server"]);
+		*/
 		html_temp += tab.end();
 		html_temp += "&nbsp;<br/>";
 		id_list += "set_name_"+camera+":set_type_"+camera+":set_active_"+camera+":set_source_"+camera+":";
@@ -80,8 +83,8 @@ function birdhouseDevices( title, data ) {
 
         html_entry = tab.start();
 		html_entry += tab.row("- Show Time:", birdhouse_edit_field(id="set_time_"+camera, field="devices:cameras:"+camera+":image:date_time", type="select", options="true,false", data_type="boolean"));
+		html_entry += tab.row("- Position:", birdhouse_edit_field(id="set_time_pos_"+camera, field="devices:cameras:"+camera+":image:date_time_position", type="input", options="", data_type="json"));
 		html_entry += tab.row("- Font Size:", birdhouse_edit_field(id="set_time_size_"+camera, field="devices:cameras:"+camera+":image:date_time_size", type="input", options="", data_type="float"));
-		html_entry += tab.row("- Font Position:", birdhouse_edit_field(id="set_time_pos_"+camera, field="devices:cameras:"+camera+":image:date_time_position", type="input", options="", data_type="json"));
 		html_entry += tab.row("- Font Color:", birdhouse_edit_field(id="set_time_color_"+camera, field="devices:cameras:"+camera+":image:date_time_color", type="input", options="", data_type="json"));
         html_entry += tab.end();
 

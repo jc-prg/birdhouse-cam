@@ -26,8 +26,8 @@ function birdhouseWeather( title, data ) {
     current_weather += tab.row("Sunrise / Sunset:", weather_3day["today"]["sunrise"] + " / " + weather_3day["today"]["sunset"]);
     current_weather += tab.row("Weather:", weather_today["description"]);
     current_weather += tab.row("Temperature:", weather_today["temperature"] +"°C");
-    current_weather += tab.row("Wind:", weather_today["wind_speed"] + " / " + weather_today["wind_direction"]);
-    current_weather += tab.row("Pressure:", weather_today["pressure"]);
+    current_weather += tab.row("Wind:", weather_today["wind_speed"] + " km/h - " + weather_today["wind_direction"]);
+    current_weather += tab.row("Pressure:", weather_today["pressure"] + " hPa");
     current_weather += tab.row("UV Index:", weather_today["uv_index"]);
     current_weather += tab.end();
 
@@ -45,8 +45,8 @@ function birdhouseWeather( title, data ) {
             var current_icon = "<center><font  style='font-size:40px;'>" + forcast_hour["description_icon"] + "</font></center>";
             var current_weather = tab.start();
             current_weather += tab.row("Temperature:", forcast_hour["temperature"] +"°C");
-            current_weather += tab.row("Wind:", forcast_hour["wind_speed"] + " / " + forcast_hour["wind_direction"]);
-            current_weather += tab.row("Pressure:", forcast_hour["pressure"]);
+            current_weather += tab.row("Wind:", forcast_hour["wind_speed"] + " km/h - " + forcast_hour["wind_direction"]);
+            current_weather += tab.row("Pressure:", forcast_hour["pressure"] + " hPa");
             current_weather += tab.end();
 
             html_temp = "<div style='width:100%;text-align:right;'><b>"+key2+"</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div><hr style='width:95%;'/>";
