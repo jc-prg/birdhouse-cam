@@ -50,11 +50,14 @@ function birdhouseStatus_print(data) {
     var keys = Object.keys(sensors);
     for (let sensor in sensors) {
         if (sensors[sensor]["active"]) {
-            html_entry += sensors[sensor]["name"] + ": ";
-            html_entry += "<font id='temp"+sensor+"'>"+sensors[sensor]["values"]["temperature"]+"</font>";
-            html_entry += sensors[sensor]["units"]["temperature"];
-            count += 1;
-            if (count < keys.length) { html_entry += " / "; }
+
+            if (typeof(sensors[sensor]["values"]["temperature"]) != "undefined" && sensors[sensor]["values"]["temperature"] != null) {
+                html_entry += sensors[sensor]["name"] + ": ";
+                html_entry += "<font id='temp"+sensor+"'>"+sensors[sensor]["values"]["temperature"]+"</font>";
+                html_entry += sensors[sensor]["units"]["temperature"];
+                if (count < keys.length) { html_entry += " / "; }
+                count += 1;
+                }
 
             var summary = "";
             for (let key in sensors[sensor]["values"]) {
@@ -63,12 +66,14 @@ function birdhouseStatus_print(data) {
             setTextById("sensor_info_"+sensor, summary);
         }
     }
-    if (count > 0 ) {
-        document.getElementById(app_frame_info).style.display = "block";
-        html_entry = lang("TEMPERATURE") + ": " + html_entry;
+    document.getElementById(app_frame_info).style.display = "block";
+    if (data["WEATHER"]["current"]["description_icon"]) {
+        if (html_entry != "") { html_entry += " / "; }
+        html_entry += data["WEATHER"]["info_city"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
+        html_entry = "<big>" + data["WEATHER"]["current"]["description_icon"] + "</big> &nbsp; " + html_entry;
     }
-    else {
-        document.getElementById(app_frame_info).style.display = "none";
+    else if (count > 0) {
+        html_entry = lang("TEMPERATURE") + ": " + html_entry;
     }
     html += html_entry;
     html += "</font></i></center>";

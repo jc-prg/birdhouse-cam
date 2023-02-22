@@ -103,9 +103,9 @@ function birdhouse_app_settings (name="Settings") {
             html += birdhouse_OtherGroup( "app_info_02", "App Information (Cookie, Reload)", html_entry, open_settings["app_info_02"] );
 
             html_entry = tab.start();
-            html_entry += tab.row("Weather:", weather["info_city"] + " (" + weather["info_update"] + ")");
+            html_entry += tab.row("Location:", weather["info_city"] + " (" + weather["info_update"] + ")");
             html_entry += tab.row("Sunrise / Sunset:", weather["forecast"]["today"]["sunrise"] + " / " + weather["forecast"]["today"]["sunset"]);
-            html_entry += tab.row("Temperature:", weather["current"]["temperature"] + "°C");
+            html_entry += tab.row("Weather:", "<big>" + weather["current"]["description_icon"] + "</big> &nbsp;" + weather["current"]["temperature"] + "°C");
             html_entry += tab.end();
 
             html += birdhouse_OtherGroup( "weather_info", "Weather Information", html_entry, false );

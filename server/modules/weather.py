@@ -13,7 +13,6 @@ class BirdhouseWeather(threading.Thread):
         """
         start weather and sunrise function
         # https://pypi.org/project/python-weather/
-        # https://pypi.org/project/suntime/
         """
         threading.Thread.__init__(self)
         logging.info("Starting weather process ...")
@@ -47,6 +46,32 @@ class BirdhouseWeather(threading.Thread):
         date_tz_info = timezone(timedelta(hours=self.timezone))
         return datetime.now(date_tz_info)
 
+    def _extract(self, icon_type, icon_object):
+        """
+        extract icons
+        """
+        if icon_type != "":
+            icon_string = str(icon_object)
+            parts = icon_string.split(icon_type + "='")
+            if len(parts) > 1:
+                parts = parts[1].split("'")
+                return parts[0]
+            else:
+                parts = icon_string.split(icon_type + "=")
+                if len(parts) > 1:
+                    if " " in parts[1]:
+                        parts = parts[1].split(" ")
+                        return parts[0]
+                    elif ">" in parts[1]:
+                        return parts[1].replace(">", "")
+                    else:
+                        return parts[1]
+                else:
+                    return "Error extracting icon: " + str(icon_object)
+
+        else:
+            return "Error extracting icon: " + str(icon_object)
+
     async def get_weather(self):
         """
         get complete weather data set for a specific data
@@ -66,8 +91,8 @@ class BirdhouseWeather(threading.Thread):
             current = self.weather.current
             self.weather_info["current"] = {
                 "temperature": current.temperature,
-                "type": str(current.type),
                 "description": current.description,
+                "description_icon": self._extract("type", self.weather.current),
                 "wind_speed": current.wind_speed,
                 "uv_index": current.uv_index,
                 "pressure": current.pressure,
@@ -84,6 +109,7 @@ class BirdhouseWeather(threading.Thread):
                     "sunset": str(forecast.astronomy.sun_set),
                     "moonrise": str(forecast.astronomy.moon_rise),
                     "moon_phase": str(forecast.astronomy.moon_phase),
+                    "moon_phase_icon": self._extract("moon_phase", forecast.astronomy),
                     "moon_illumination": str(forecast.astronomy.moon_illumination),
                     "hourly": {}
                 }
@@ -91,9 +117,9 @@ class BirdhouseWeather(threading.Thread):
                 for hourly in forecast.hourly:
                     hourly_forecast = {
                         "temperature": hourly.temperature,
-                        "type": str(hourly.type),
                         "cloud_cover": hourly.cloud_cover,
                         "description": hourly.description,
+                        "description_icon": self._extract("type", hourly),
                         "wind_speed": hourly.wind_speed,
                         "uv_index": hourly.uv_index,
                         "chance_of_sunshine": hourly.chance_of_sunshine,
