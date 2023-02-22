@@ -101,7 +101,11 @@ birdhouse_default_sensor = {
 
 birdhouse_preset = {
     "title": "Our Birdhouse :-)",
-    "language": "EN",
+    "localization" : {
+        "language": "EN",
+        "weather_location": "Munich",
+        "timezone": "UTC+1"
+    },
     "backup": {
         "preview":   "0700",               # HHMM
         "time":      "2000"
@@ -115,7 +119,6 @@ birdhouse_preset = {
         "port":             8000,              # http-port
         "port_video":       8008,
         "database_type":    "json",             # can be "json" or "couchdb"
-        "timezone":         "UTC+1",
         "initial_setup":    True
     },
     "devices": {

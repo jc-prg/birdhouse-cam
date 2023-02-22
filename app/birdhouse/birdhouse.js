@@ -42,7 +42,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 	    if (app_first_load) { app_first_load = false; }
 	    else                { app_2nd_load = false; }
 	    var param = window.location.href.split("?");
-	    var options = ["INDEX", "CAMERAS", "FAVORITES", "ARCHIVE", "TODAY", "INFO"];
+	    var options = ["INDEX", "CAMERAS", "FAVORITES", "ARCHIVE", "TODAY", "INFO", "WEATHER"];
 	    if (options.includes(param[1])) {
 	        view = param[1];
 	        app_active_page = param[1];
@@ -63,7 +63,7 @@ function birdhousePrint(data) {
     app_data = data;
 	console.debug("Request->Print ...");
 
-    if (data["DATA"]["language"]) { LANG = data["DATA"]["language"]; }
+    if (data["DATA"]["localization"]["language"]) { LANG = data["DATA"]["localization"]["language"]; }
 
 	var sensor_data = data["DATA"]["devices"]["sensors"];
 	if (sensor_data["sensor1"]) {
@@ -94,6 +94,7 @@ function birdhousePrint(data) {
 
 	if (app_active_page == "INDEX")                 { birdhouse_INDEX(data, camera); }
 	else if (app_active_page == "CAMERAS")          { birdhouseDevices(lang("DEVICES"), data, camera); }
+	else if (app_active_page == "WEATHER")          { birdhouseWeather(lang("WEATHER"), data); }
 	else if (app_active_page == "FAVORITES")        { birdhouse_LIST(lang("FAVORITES"),  data, camera); }
 	else if (app_active_page == "ARCHIVE")          { birdhouse_LIST(lang("ARCHIVE"), data, camera); }
 	else if (app_active_page == "TODAY")            { birdhouse_LIST(lang("TODAY"), data, camera); }

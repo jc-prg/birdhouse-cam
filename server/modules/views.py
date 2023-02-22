@@ -505,10 +505,10 @@ class BirdhouseViews(threading.Thread):
                                             dir_size_cam += os.path.getsize(lowres_file)
                                             logging.debug("lowres size: "+str(os.path.getsize(lowres_file)))
                                         if "lowres_size" in file_info:
-                                            if file_info["lowres_size"][0] > content[cam]["max_image_size"]["lowres"][0]:
-                                                content[cam]["max_image_size"]["lowres"][0] = file_info["lowres_size"][0]
-                                            if file_info["lowres_size"][1] > content[cam]["max_image_size"]["lowres"][1]:
-                                                content[cam]["max_image_size"]["lowres"][1] = file_info["lowres_size"][1]
+                                            if file_info["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
+                                                content["max_image_size"]["lowres"][0] = file_info["lowres_size"][0]
+                                            if file_info["lowres_size"][1] > content["max_image_size"]["lowres"][1]:
+                                                content["max_image_size"]["lowres"][1] = file_info["lowres_size"][1]
 
                                         if "hires" in file_info:
                                             hires_file = os.path.join(self.config.directory(config="backup"), directory, file_info["hires"])
@@ -516,10 +516,10 @@ class BirdhouseViews(threading.Thread):
                                                 dir_size_cam += os.path.getsize(hires_file)
                                                 logging.debug("hires size: " + str(os.path.getsize(hires_file)))
                                         if "hires_size" in file_info:
-                                            if file_info["hires_size"][0] > content[cam]["max_image_size"]["hires"][0]:
-                                                content[cam]["max_image_size"]["hires"][0] = file_info["hires_size"][0]
-                                            if file_info["lowres_size"][1] > content[cam]["max_image_size"]["hires"][1]:
-                                                content[cam]["max_image_size"]["hires"][1] = file_info["hires_size"][1]
+                                            if file_info["hires_size"][0] > content["max_image_size"]["hires"][0]:
+                                                content["max_image_size"]["hires"][0] = file_info["hires_size"][0]
+                                            if file_info["lowres_size"][1] > content["max_image_size"]["hires"][1]:
+                                                content["max_image_size"]["hires"][1] = file_info["hires_size"][1]
 
                                     if "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
                                         dir_count_delete += 1

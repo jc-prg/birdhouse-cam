@@ -442,10 +442,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content["server"] = config.param["server"]
             content["backup"] = config.param["backup"]
 
-            if "language" in config.param:
-                content["language"] = config.param["language"]
+            if "localization" in config.param:
+                content["localization"] = config.param["localization"]
             else:
-                content["language"] = "EN"
+                content["localization"] = {
+                    "language": "EN",
+                    "weather_location": "London",
+                    "timezone": "UTC-0"
+                }
+            if "language" not in config.param["localization"]:
+                content["localization"]["language"] = "EN"
 
             micro_data = config.param["devices"]["microphones"].copy()
             for key in micro_data:
@@ -514,7 +520,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "reload": False
                 },
                 "API": api_description,
-                "WEATHER": weather.weather_info,
+                "WEATHER": config.weather.weather_info,
                 "DATA": content
             }
 
@@ -714,11 +720,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 0 and "--backup" in sys.argv:
         backup.backup_files()
         views.archive_list_update()
-
-    # start weather
-    from modules.weather import BirdhouseWeather
-    weather = BirdhouseWeather(city="Munich")
-    weather.start()
 
     # check if config files for main image directory exists and create if not exists
     if not os.path.isfile(config.file_path("images")):

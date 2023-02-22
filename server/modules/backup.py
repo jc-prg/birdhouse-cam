@@ -50,6 +50,130 @@ class BirdhouseArchive(threading.Thread):
         """
         self._running = False
 
+    def backup_files(self, other_date=""):
+        """
+       Backup files with threshold to folder with date ./images/YYMMDD/
+       """
+        if other_date == "":
+            backup_date = self.config.local_time().strftime('%Y%m%d')
+        else:
+            backup_date = other_date
+
+        directory = self.config.directory(config="images", date=backup_date)
+
+        # if the directory but no config file exists for backup directory create a new one
+        if os.path.isdir(directory):
+            logging.info("Backup files: create a new config file, directory already exists")
+
+            if not os.path.isfile(self.config.file_path(config="backup", date=backup_date)):
+                files = self.create_image_config(date=backup_date)
+                files_backup = {"files": files, "info": {}}
+                files_backup["info"]["count"] = len(files)
+                files_backup["info"]["threshold"] = {}
+                for cam in self.camera:
+                    files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
+                files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
+                files_backup["info"]["size"] = sum(
+                    os.path.getsize(os.path.join(directory, f)) for f in os.listdir(directory) if
+                    os.path.isfile(os.path.join(directory, f)))
+                self.config.write(config="backup", config_data=files_backup, date=backup_date)
+
+        # if no directory exists, create directory, copy files and create a new config file (copy existing information)
+        else:
+            logging.info("Backup files: copy files and create a new config file (copy existing information)")
+
+            self.config.directory_create(config="images", date=backup_date)
+            files = self.config.read_cache(config="images")
+            files_backup = {"files": {}, "info": {}}
+
+            file_sensor = self.config.file_path(config="sensor")
+            file_sensor_copy = os.path.join(self.config.directory(config="images", date=backup_date),
+                                            self.config.files["sensor"])
+            file_weather = self.config.file_path(config="weather")
+            file_weather_copy = os.path.join(self.config.directory(config="weather", date=backup_date),
+                                             self.config.files["weather"])
+
+            stamps = list(reversed(sorted(files.keys())))
+            dir_source = self.config.directory(config="images")
+            count = 0
+            count_data = 0
+            count_other_date = 0
+            backup_size = 0
+
+            if os.path.isfile(file_sensor):
+                os.popen("cp "+file_sensor+" "+file_sensor_copy)
+            if os.path.isfile(file_weather):
+                os.popen("cp "+file_weather+" "+file_weather_copy)
+
+            for cam in self.camera:
+                for stamp in stamps:
+                    # if files are to be archived
+                    if files[stamp]["datestamp"] == backup_date and files[stamp]["camera"] == cam:
+                        update_new = files[stamp].copy()
+
+                        # if images are to archived
+                        if self.camera[cam].image_to_select(timestamp=stamp, file_info=files[stamp]):
+                            count += 1
+                            file_lowres = self.config.filename_image(image_type="lowres", timestamp=stamp, camera=cam)
+                            file_hires = self.config.filename_image(image_type="hires", timestamp=stamp, camera=cam)
+
+                            if "similarity" not in update_new:
+                                update_new["similarity"] = 100
+                            if "hires" not in update_new:
+                                update_new["hires"] = file_hires
+                            if "favorit" not in update_new:
+                                update_new["favorit"] = 0
+
+                            update_new["type"] = "image"
+                            update_new["directory"] = os.path.join(self.config.directories["images"], backup_date)
+
+                            if os.path.isfile(os.path.join(dir_source, file_lowres)):
+                                update_new["size"] = (
+                                        os.path.getsize(os.path.join(dir_source, file_lowres)) + os.path.getsize(
+                                    os.path.join(dir_source, file_hires)))
+                                backup_size += update_new["size"]
+                                os.popen('cp ' + os.path.join(dir_source, file_lowres) + ' ' + os.path.join(directory,
+                                                                                                            file_lowres))
+                                os.popen('cp ' + os.path.join(dir_source, file_hires) + ' ' + os.path.join(directory,
+                                                                                                           file_hires))
+
+                        # if data are to be archived
+                        else:
+                            count_data += 1
+                            update_new["type"] = "data"
+
+                            if "hires" in update_new:
+                                del update_new["hires"]
+                            if "lowres" in update_new:
+                                del update_new["lowres"]
+                            if "directory" in update_new:
+                                del update_new["directory"]
+                            if "compare" in update_new:
+                                del update_new["compare"]
+                            if "favorit" in update_new:
+                                del update_new["favorit"]
+                            if "to_be_deleted" in update_new:
+                                del update_new["to_be_deleted"]
+
+                        files_backup["files"][stamp] = update_new.copy()
+
+                    else:
+                        count_other_date += 1
+
+                logging.info(cam + ": " + str(count) + " Image entries (" + str(
+                    self.camera[cam].param["similarity"]["threshold"]) + ")")
+                logging.info(cam + ": " + str(count_data) + " Data entries")
+                logging.info(cam + ": " + str(count_other_date) + " not saved (other date)")
+
+            files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
+            files_backup["info"]["count"] = count
+            files_backup["info"]["size"] = backup_size
+            files_backup["info"]["threshold"] = {}
+            for cam in self.camera:
+                files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
+
+            self.config.write(config="backup", config_data=files_backup, date=directory)
+
     def create_video_config(self):
         """
         recreate video config file, if not exists
@@ -273,122 +397,6 @@ class BirdhouseArchive(threading.Thread):
                     files[time]["sensor"] = {}
 
         return files
-
-    def backup_files(self, other_date=""):
-        """
-       Backup files with threshold to folder with date ./images/YYMMDD/
-       """
-        if other_date == "":
-            backup_date = self.config.local_time().strftime('%Y%m%d')
-        else:
-            backup_date = other_date
-
-        directory = self.config.directory(config="images", date=backup_date)
-
-        # if the directory but no config file exists for backup directory create a new one
-        if os.path.isdir(directory):
-            logging.info("Backup files: create a new config file, directory already exists")
-
-            if not os.path.isfile(self.config.file_path(config="backup", date=backup_date)):
-                files = self.create_image_config(date=backup_date)
-                files_backup = {"files": files, "info": {}}
-                files_backup["info"]["count"] = len(files)
-                files_backup["info"]["threshold"] = {}
-                for cam in self.camera:
-                    files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
-                files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
-                files_backup["info"]["size"] = sum(
-                    os.path.getsize(os.path.join(directory, f)) for f in os.listdir(directory) if
-                    os.path.isfile(os.path.join(directory, f)))
-                self.config.write(config="backup", config_data=files_backup, date=backup_date)
-
-        # if no directory exists, create directory, copy files and create a new config file (copy existing information)
-        else:
-            logging.info("Backup files: copy files and create a new config file (copy existing information)")
-
-            self.config.directory_create(config="images", date=backup_date)
-            files = self.config.read_cache(config="images")
-            files_backup = {"files": {}, "info": {}}
-            file_sensor = self.config.file_path(config="sensor")
-            file_sensor_copy = os.path.join(self.config.directory(config="images", date=backup_date), self.config.files["sensor"])
-            stamps = list(reversed(sorted(files.keys())))
-            dir_source = self.config.directory(config="images")
-            count = 0
-            count_data = 0
-            count_other_date = 0
-            backup_size = 0
-
-            if os.path.isfile(file_sensor):
-                os.popen("cp "+file_sensor+" "+file_sensor_copy)
-
-            for cam in self.camera:
-                for stamp in stamps:
-                    # if files are to be archived
-                    if files[stamp]["datestamp"] == backup_date and files[stamp]["camera"] == cam:
-                        update_new = files[stamp].copy()
-
-                        # if images are to archived
-                        if self.camera[cam].image_to_select(timestamp=stamp, file_info=files[stamp]):
-                            count += 1
-                            file_lowres = self.config.filename_image(image_type="lowres", timestamp=stamp, camera=cam)
-                            file_hires = self.config.filename_image(image_type="hires", timestamp=stamp, camera=cam)
-
-                            if "similarity" not in update_new:
-                                update_new["similarity"] = 100
-                            if "hires" not in update_new:
-                                update_new["hires"] = file_hires
-                            if "favorit" not in update_new:
-                                update_new["favorit"] = 0
-
-                            update_new["type"] = "image"
-                            update_new["directory"] = os.path.join(self.config.directories["images"], backup_date)
-
-                            if os.path.isfile(os.path.join(dir_source, file_lowres)):
-                                update_new["size"] = (
-                                        os.path.getsize(os.path.join(dir_source, file_lowres)) + os.path.getsize(
-                                    os.path.join(dir_source, file_hires)))
-                                backup_size += update_new["size"]
-                                os.popen('cp ' + os.path.join(dir_source, file_lowres) + ' ' + os.path.join(directory,
-                                                                                                            file_lowres))
-                                os.popen('cp ' + os.path.join(dir_source, file_hires) + ' ' + os.path.join(directory,
-                                                                                                           file_hires))
-
-                        # if data are to be archived
-                        else:
-                            count_data += 1
-                            update_new["type"] = "data"
-
-                            if "hires" in update_new:
-                                del update_new["hires"]
-                            if "lowres" in update_new:
-                                del update_new["lowres"]
-                            if "directory" in update_new:
-                                del update_new["directory"]
-                            if "compare" in update_new:
-                                del update_new["compare"]
-                            if "favorit" in update_new:
-                                del update_new["favorit"]
-                            if "to_be_deleted" in update_new:
-                                del update_new["to_be_deleted"]
-
-                        files_backup["files"][stamp] = update_new.copy()
-
-                    else:
-                        count_other_date += 1
-
-                logging.info(cam + ": " + str(count) + " Image entries (" + str(
-                    self.camera[cam].param["similarity"]["threshold"]) + ")")
-                logging.info(cam + ": " + str(count_data) + " Data entries")
-                logging.info(cam + ": " + str(count_other_date) + " not saved (other date)")
-
-            files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
-            files_backup["info"]["count"] = count
-            files_backup["info"]["size"] = backup_size
-            files_backup["info"]["threshold"] = {}
-            for cam in self.camera:
-                files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
-
-            self.config.write(config="backup", config_data=files_backup, date=directory)
 
     def delete_marked_files_api(self, path):
         """

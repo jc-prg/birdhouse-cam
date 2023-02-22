@@ -1187,9 +1187,9 @@ class BirdhouseCamera(threading.Thread):
         self.record = self.param["record"]
 
         self.timezone = 0
-        if "timezone" in self.config.param["server"]:
-            self.timezone = float(self.config.param["server"]["timezone"].replace("UTC", ""))
-            logging.info("Set Timezone: " + self.config.param["server"]["timezone"] + " (" + str(self.timezone) + ")")
+        if "localization" in self.config.param and "timezone" in self.config.param["localization"]:
+            self.timezone = float(self.config.param["localization"]["timezone"].replace("UTC", ""))
+            logging.info("Set Timezone: " + self.config.param["localization"]["timezone"] + " (" + str(self.timezone) + ")")
 
         self.image_size = [0, 0]
         self.image_size_lowres = [0, 0]
@@ -1364,8 +1364,11 @@ class BirdhouseCamera(threading.Thread):
                                 sensor_data[key]["date"] = current_time.strftime("%d.%m.%Y")
                                 image_info["sensor"][key] = self.sensor[key].get_values()
 
+                        weather_data = self.config.weather.weather_info["current"]
+
                         self.config.queue.entry_add(config="sensor", date="", key=stamp, entry=sensor_data)
                         self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
+                        self.config.queue.entry_add(config="weather", date="", key=stamp, entry=weather_data)
 
                         if not self.error:
                             path_lowres = os.path.join(self.config.directory("images"),

@@ -8,6 +8,7 @@ import threading
 import couchdb
 import requests
 from datetime import datetime, timezone, timedelta
+from modules.weather import BirdhouseWeather
 
 
 class BirdhouseConfigCouchDB(object):
@@ -249,8 +250,8 @@ class BirdhouseConfigQueue(threading.Thread):
         self.queue_count = None
         self.config = config
         self._running = True
-        self.edit_queue = {"images": [], "videos": [], "backup": {}, "sensor": []}
-        self.status_queue = {"images": [], "videos": [], "backup": {}, "sensor": []}
+        self.edit_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": []}
+        self.status_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": []}
         self.queue_wait = 10
 
     def run(self):
@@ -258,7 +259,7 @@ class BirdhouseConfigQueue(threading.Thread):
         create videos and process queue
         """
         logging.info("Starting config queue ...")
-        config_files = ["images", "videos", "backup", "sensor"]
+        config_files = ["images", "videos", "backup", "sensor", "weather"]
         start_time = time.time()
         while self._running:
             if start_time + self.queue_wait < time.time():
@@ -618,6 +619,7 @@ class BirdhouseConfig(threading.Thread):
             "main": "",
             "sensor": "images/",
             "images": "images/",
+            "weather": "images/",
             "backup": "images/",
             "videos": "videos/",
             "videos_temp": "videos/images2video/"
@@ -626,9 +628,11 @@ class BirdhouseConfig(threading.Thread):
             "main": "config.json",
             "backup": "config_images.json",
             "images": "config_images.json",
+            "videos": "config_videos.json",
             "sensor": "config_sensor.json",
-            "videos": "config_videos.json"
+            "weather": "config_weather.json"
         }
+        self.weather = None
 
         self.main_directory = main_directory
         if self.exists("main"):
@@ -648,7 +652,7 @@ class BirdhouseConfig(threading.Thread):
                 sys.exit()
 
         self.param = self.read("main")
-        self.timezone = float(self.param["server"]["timezone"].replace("UTC", ""))
+        self.timezone = float(self.param["localization"]["timezone"].replace("UTC", ""))
         self.html_replace = {
             "start_date": self.local_time().strftime("%d.%m.%Y %H:%M:%S")
         }
@@ -666,6 +670,9 @@ class BirdhouseConfig(threading.Thread):
         self.param = self.read("main")
         self.param["path"] = self.main_directory
         self.param["swap"] = self.read_swap_info()
+
+        self.weather = BirdhouseWeather(city=self.param["localization"]["weather_location"], time_zone=self.timezone)
+        self.weather.start()
 
         while self._running:
             time.sleep(1)
@@ -897,6 +904,8 @@ class BirdhouseConfig(threading.Thread):
             self.param = self.read(config, date)
             for key in self.update:
                 self.update[key] = True
+            self.weather = BirdhouseWeather(city=self.param["localization"]["weather_location"])
+            self.weather.start()
 
     @staticmethod
     def read_swap_info():

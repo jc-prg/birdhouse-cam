@@ -9,7 +9,7 @@ from datetime import datetime, timezone, timedelta
 
 class BirdhouseWeather(threading.Thread):
 
-    def __init__(self, city):
+    def __init__(self, city, time_zone=0):
         """
         start weather and sunrise function
         # https://pypi.org/project/python-weather/
@@ -21,8 +21,8 @@ class BirdhouseWeather(threading.Thread):
         self.weather_city = city
         self.weather_info = {}
         self.running = True
-        self.update_time = 60 * 15
-        self.timezone = 0
+        self.update_time = 60 * 5
+        self.timezone = time_zone
 
     def run(self):
         """
@@ -32,12 +32,6 @@ class BirdhouseWeather(threading.Thread):
         while self.running:
             asyncio.run(self.get_weather())
             time.sleep(self.update_time)
-
-    def set_timezone(self, time_zone):
-        """
-        set time difference based on timezone
-        """
-        self.timezone = time_zone
 
     def local_time(self):
         """

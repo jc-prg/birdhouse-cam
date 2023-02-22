@@ -25,7 +25,7 @@ var language_app = {
 		"FAVORITES"             : "Favoriten",
 		"FILES"                 : "Dateien",
 		"FRAMERATE"             : "Bildrate",
-		"FRAMECOUNT"            : "Bildanzahl",
+		"FRAME_COUNT"           : "Bildanzahl",
 		"IMAGESIZE"             : "Bildgr&ouml;&szlig;e",
 		"INDEX"                 : "Startseite",
 		"INITIAL_SETUP"         : "<b>Erster Start:</b><br/>&nbsp;<br/>Bitte Einstellungen pr&uuml;fen und speichern, anschlie&szlig;end die Einstellungen für 'Geräte' vornehmen.",
@@ -48,6 +48,7 @@ var language_app = {
 		"TRIM_DONE"             : "Gek&uuml;rztes Video wurde erzeugt.",
 		"TRIM_STARTED"          : "Erzeugung des kurzen Videos wurde gestartet.",
 		"VIDEOS"                : "Videos",
+		"WEATHER"               : "Wetter"
 		},
 	"EN" : {
 	    "ANALYTICS"             : "Analytics",
@@ -67,7 +68,7 @@ var language_app = {
 		"FAVORITES"             : "Favorites",
 		"FILES"                 : "Files",
 		"FRAMERATE"             : "Frame rate",
-		"FRAMECOUNT"            : "Frame count",
+		"FRAME_COUNT"           : "Frame count",
 		"IMAGESIZE"             : "Image size",
 		"INDEX"                 : "Index",
 		"INITIAL_SETUP"         : "<b>First Start:</b>&nbsp;<br/><br/>Please check and save settings. Then proceed with device settings.",
@@ -78,7 +79,7 @@ var language_app = {
 		"RANGE_ADD_ENTRY"       : "Select one additional image to recycle a all image between both selected images.",
 		"RANGE_SELECTED"        : "Press button to recycle all images between the selected images:",
 		"RANGE_DELETE"          : "recycle",
-		"RANGE_DONE"            : "Recycled of selected images.",
+		"RANGE_DONE"            : "Recycled selected images.",
 		"RECONNECT_CAMERA"      : "Reconnect Camera",
 		"RECYCLE"               : "Recycle",
 		"RECYCLE_DELETE"        : "Recycle all files that are marked for deletion.",
@@ -90,6 +91,7 @@ var language_app = {
 		"TRIM_DONE"             : "Created short video.",
 		"TRIM_STARTED"          : "Started creation of short video.",
 		"VIDEOS"                : "Videos",
+		"WEATHER"               : "Weather"
 		}
 	}
 
