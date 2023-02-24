@@ -136,7 +136,7 @@ function birdhouseDevices( title, data ) {
         html_temp += tab.row("Error Sensor:", "<textarea id='error_sensor1_"+sensor+"' class='settings_error_msg'></textarea>");
         html_temp += tab.row("Error Message:", "<textarea id='error_sensor2_"+sensor+"' class='settings_error_msg'></textarea>");
         html_temp += tab.end();
-        html_entry += birdhouse_OtherGroup( sensor+"_error", "Error messages", html_entry, false );
+        html_entry += birdhouse_OtherGroup( sensor+"_error", "Error messages", html_temp, false );
 
 		var id_list = "set_name_"+sensor+":set_type_"+sensor+":set_active_"+sensor+":set_source_"+sensor;
         html_entry += tab.start();
