@@ -24,7 +24,7 @@ class BirdhouseConfigCouchDB(object):
         logging.info("Starting config CouchDB handler ("+self.db_url+") ...")
 
         connects2db = 0
-        max_connects = 1
+        max_connects = 5
 
         while connects2db < max_connects + 1:
 
@@ -32,7 +32,7 @@ class BirdhouseConfigCouchDB(object):
                 logging.info("Waiting for DB ...")
 
             try:
-                logging.info(" - Try to connect to CouchDB")
+                logging.info(" - Try to connect to CouchDB: " + self.db_url)
                 response = requests.get(self.db_url)
                 connects2db = max_connects + 1
 
@@ -182,8 +182,9 @@ class BirdhouseConfigDB(object):
     def __init__(self, db_type="json"):
         db_usr = "birdhouse"
         db_pwd = "birdhouse"
-        db_server = "192.168.201.4"
-        db_port = 5100
+        db_server = "192.168.202.3"
+        db_server = "birdhouse_db"
+        db_port = 5984
         db_basedir = ""
 
         self.json = BirdhouseConfigJSON()
