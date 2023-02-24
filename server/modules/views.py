@@ -79,9 +79,10 @@ def create_chart_data(data, config=None):
         if "sensor" in data[key]:
             for sensor in data[key]["sensor"]:
                 for sensor_key in data[key]["sensor"][sensor]:
-                    sensor_title = sensor + ":" + sensor_key
-                    if sensor_title not in chart["titles"]:
-                        chart["titles"].append(sensor_title)
+                    if sensor_key != "date":
+                        sensor_title = sensor + ":" + sensor_key
+                        if sensor_title not in chart["titles"]:
+                            chart["titles"].append(sensor_title)
 
         if "weather" in data[key]:
             if "location" in data[key]["weather"]:
