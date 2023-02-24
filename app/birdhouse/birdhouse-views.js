@@ -184,7 +184,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         for (var x=0;x<chart_data["titles"].length;x++) {
             if (chart_data["titles"][x].indexOf(":")>-1) {
                 var sensor = chart_data["titles"][x].split(":");
-                var translation = lang(sensor[1].toUpperCase());
+                var translation = lang(sensor[1].toUpperCase().replace(" ",""));
                 if (translation.indexOf("not found") < 0) { sensor[1] = translation; }
                 var title_s = sensor[1].charAt(0).toUpperCase() + sensor[1].slice(1);
                 if (sensors[sensor[0]]) {
