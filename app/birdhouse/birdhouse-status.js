@@ -52,9 +52,7 @@ function birdhouseStatus_print(data) {
         entry = data["WEATHER"]["info_city"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
         entry += "<big>" + data["WEATHER"]["current"]["description_icon"] + "</big> &nbsp; " + html_entry;
     }
-    else if (count > 0) {
-        entry = lang("TEMPERATURE") + ": " + html_entry;
-    }
+
     weather_footer.push(entry);
 
     for (let sensor in sensors) {
