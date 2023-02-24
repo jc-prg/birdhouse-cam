@@ -200,7 +200,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
                 if (translation.indexOf("not found") < 0) { chart_data["titles"][x] = translation; }
                 title_s = chart_data["titles"][x];
                 }
-            title_s = title_s.replace("&szlig", "ß");
+            title_s = title_s.replace("&szlig;", "ß");
             title_s = title_s.replace("&uuml;", "ü");
             title_s = title_s.replace("&auml;", "ä");
             title_s = title_s.replace("&ouml;", "ö");
