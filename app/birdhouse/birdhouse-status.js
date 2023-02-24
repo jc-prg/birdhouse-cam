@@ -44,10 +44,19 @@ function birdhouseStatus_print(data) {
 
     // add sensor information
     var sensors = data["DATA"]["devices"]["sensors"];
-    html = "<center><i><font color='gray'>";
-    html_entry = "";
-    var count = 0;
     var keys = Object.keys(sensors);
+    var weather_footer = [];
+    var entry = "";
+
+    if (data["DATA"]["localization"]["weather_active"] && data["WEATHER"]["current"] && data["WEATHER"]["current"]["description_icon"]) {
+        entry = data["WEATHER"]["info_city"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
+        entry += "<big>" + data["WEATHER"]["current"]["description_icon"] + "</big> &nbsp; " + html_entry;
+    }
+    else if (count > 0) {
+        entry = lang("TEMPERATURE") + ": " + html_entry;
+    }
+    weather_footer.push(entry);
+
     for (let sensor in sensors) {
         if (sensors[sensor]["status"]) {
             status = sensors[sensor]["status"];
@@ -62,14 +71,15 @@ function birdhouseStatus_print(data) {
                 if (header) { header.style.background = "#993333"; }
             }
         }
+
         if (sensors[sensor]["active"]) {
 
+            var entry = "";
             if (typeof(sensors[sensor]["values"]["temperature"]) != "undefined" && sensors[sensor]["values"]["temperature"] != null) {
-                html_entry += sensors[sensor]["name"] + ": ";
-                html_entry += "<font id='temp"+sensor+"'>"+sensors[sensor]["values"]["temperature"]+"</font>";
-                html_entry += sensors[sensor]["units"]["temperature"];
-                count += 1;
-                if (count < keys.length) { html_entry += " / "; }
+                entry += sensors[sensor]["name"] + ": ";
+                entry += "<font id='temp"+sensor+"'>"+sensors[sensor]["values"]["temperature"];
+                entry += sensors[sensor]["units"]["temperature"]+"</font>";
+                weather_footer.push(entry);
                 }
 
             var summary = "";
@@ -80,24 +90,9 @@ function birdhouseStatus_print(data) {
         }
     }
 
-    /*
-            if (sensors[sensor]["status"] && sensors[sensor]["status"]["error"] == true) {
-    		html_entry += tab.row("<hr/>");
-            html_entry += tab.row("Error-Msg:", sensors[sensor]["status"]["error_msg"]);
-        }
-
-    */
-
     document.getElementById(app_frame_info).style.display = "block";
-    if (data["DATA"]["localization"]["weather_active"] && data["WEATHER"]["current"] && data["WEATHER"]["current"]["description_icon"]) {
-        if (html_entry != "") { html_entry += " / "; }
-        html_entry += data["WEATHER"]["info_city"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
-        html_entry = "<big>" + data["WEATHER"]["current"]["description_icon"] + "</big> &nbsp; " + html_entry;
-    }
-    else if (count > 0) {
-        html_entry = lang("TEMPERATURE") + ": " + html_entry;
-    }
-    html += html_entry;
+    html = "<center><i><font color='gray'>";
+    html += weather_footer.join(" / ");
     html += "</font></i></center>";
     setTextById(app_frame_info, html);
 }
