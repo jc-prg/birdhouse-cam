@@ -61,6 +61,7 @@ var language_app = {
 		"WEATHER_DATA_ERROR"    : "Fehlerhafte Wetterdaten.",
 		"WIND"                  : "Wind"
 		},
+
 	"EN" : {
 	    "ACTIVITY"              : "Activity",
 	    "ANALYTICS"             : "Analytics",
