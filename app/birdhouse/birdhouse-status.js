@@ -61,8 +61,12 @@ function birdhouseStatus_print(data) {
             var status = sensors[sensor]["status"];
             var sensor_error_01 = status["error_msg"];
             var sensor_error_02 = "Error: " + status["error"].toString() + "\n\n";
-            sensor_error_02    += "Error Connect: " + status["error_connect"].toString() + "\n\n";
-            sensor_error_02    += "Error Module: " + status["error_module"].toString();
+            if (status["error_connect"]) {
+                sensor_error_02    += "Error Connect: " + status["error_connect"].toString() + "\n\n";
+                }
+            if (status["error_module"]) {
+                sensor_error_02    += "Error Module: " + status["error_module"].toString();
+                }
             setTextById("error_sensor1_"+sensor, sensor_error_01);
             setTextById("error_sensor2_"+sensor, sensor_error_02);
             if (status["error"] || status["error_module"] || status["connect"]) {
