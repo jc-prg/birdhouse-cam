@@ -55,8 +55,8 @@ function birdhouseStatus_print(data) {
                 html_entry += sensors[sensor]["name"] + ": ";
                 html_entry += "<font id='temp"+sensor+"'>"+sensors[sensor]["values"]["temperature"]+"</font>";
                 html_entry += sensors[sensor]["units"]["temperature"];
-                if (count < keys.length) { html_entry += " / "; }
                 count += 1;
+                if (count < keys.length) { html_entry += " / "; }
                 }
 
             var summary = "";
@@ -67,7 +67,7 @@ function birdhouseStatus_print(data) {
         }
     }
     document.getElementById(app_frame_info).style.display = "block";
-    if (data["WEATHER"]["current"]["description_icon"]) {
+    if (data["DATA"]["localization"]["weather_active"] && data["WEATHER"]["current"]["description_icon"]) {
         if (html_entry != "") { html_entry += " / "; }
         html_entry += data["WEATHER"]["info_city"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
         html_entry = "<big>" + data["WEATHER"]["current"]["description_icon"] + "</big> &nbsp; " + html_entry;

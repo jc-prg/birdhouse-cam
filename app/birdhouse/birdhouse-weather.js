@@ -9,26 +9,34 @@ function birdhouseDevices( title, data )
 //--------------------------------------
 
 function birdhouseWeather( title, data ) {
+
+    if (data["DATA"]["localization"]["weather_active"] == false) {
+        setTextById(app_frame_content, "&nbsp;<br/><center>" + lang("NO_WEATHER_CHANGE_SETTINGS") + "</center><br/>&nbsp;");
+        return;
+    }
+
 	var weather	= data["WEATHER"];
 	var weather_today = weather["current"];
 	var weather_3day  = weather["forecast"];
 
 	var tab     = new birdhouse_table();
-	//tab.style_rows["height"] = "150px";
+	tab.style_rows["height"] = "18px";
 
     var html_weather = "";
     var html_temp = "";
     var html_entry = "";
 
-    var current_icon = "<center><font style='font-size:80px;'><big>" + weather_today["description_icon"] + "</big></font></center>";
+    var current_icon = "<center><font style='font-size:80px;'><big>" + weather_today["description_icon"] + "</big></font>"
+                       + "<br/>" + weather_today["description"] + "</center>";
     var current_weather = tab.start();
-    current_weather += tab.row("Location:", weather["info_city"]);
-    current_weather += tab.row("Sunrise / Sunset:", weather_3day["today"]["sunrise"] + " / " + weather_3day["today"]["sunset"]);
-    current_weather += tab.row("Weather:", weather_today["description"]);
-    current_weather += tab.row("Temperature:", weather_today["temperature"] +"°C");
-    current_weather += tab.row("Wind:", weather_today["wind_speed"] + " km/h - " + weather_today["wind_direction"]);
-    current_weather += tab.row("Pressure:", weather_today["pressure"] + " hPa");
-    current_weather += tab.row("UV Index:", weather_today["uv_index"]);
+    current_weather += tab.row(lang("LOCATION") + ":",  weather["info_city"]);
+    current_weather += tab.row(lang("SUNRISE") +":",    weather_3day["today"]["sunrise"]);
+    current_weather += tab.row(lang("SUNSET")+":",      weather_3day["today"]["sunset"]);
+    current_weather += tab.row(lang("TEMPERATURE")+":", weather_today["temperature"] +"°C");
+    current_weather += tab.row(lang("HUMIDITY")+":",    weather_today["humidity"] +"%");
+    current_weather += tab.row(lang("WIND")+":",        weather_today["wind_speed"] + " km/h - " + weather_today["wind_direction"]);
+    current_weather += tab.row(lang("PRESSURE")+":",    weather_today["pressure"] + " hPa");
+    current_weather += tab.row(lang("UV_INDEX")+":",    weather_today["uv_index"]);
     current_weather += tab.end();
 
     html_temp = tab.start();
@@ -44,9 +52,9 @@ function birdhouseWeather( title, data ) {
             var forcast_hour = forecast_day["hourly"][key2];
             var current_icon = "<center><font  style='font-size:40px;'>" + forcast_hour["description_icon"] + "</font></center>";
             var current_weather = tab.start();
-            current_weather += tab.row("Temperature:", forcast_hour["temperature"] +"°C");
-            current_weather += tab.row("Wind:", forcast_hour["wind_speed"] + " km/h - " + forcast_hour["wind_direction"]);
-            current_weather += tab.row("Pressure:", forcast_hour["pressure"] + " hPa");
+            current_weather += tab.row(lang("TEMPERATURE")+":", forcast_hour["temperature"] +"°C");
+            current_weather += tab.row(lang("WIND")+":",        forcast_hour["wind_speed"] + " km/h - " + forcast_hour["wind_direction"]);
+            current_weather += tab.row(lang("PRESSURE")+":",    forcast_hour["pressure"] + " hPa");
             current_weather += tab.end();
 
             html_temp = "<div style='width:100%;text-align:right;'><b>"+key2+"</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div><hr style='width:95%;'/>";

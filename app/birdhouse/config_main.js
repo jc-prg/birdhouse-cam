@@ -22,16 +22,19 @@ var app_unique_stream_id  = new Date().getTime();     // new ID per App-Start
 // create menu entries
 //--------------------------------
 
-function app_menu_entries() {
+function app_menu_entries(data) {
 	var hideSettings = "birdhouse_settings.toggle(true);";
+	var weather_active = data["DATA"]["localization"]["weather_active"];
 	var app_menu = [
 		[lang("LIVESTREAM"),   "script", hideSettings+"birdhousePrint_load('INDEX',   '"+app_active_cam+"');"],
 		[lang("FAVORITES"),    "script", hideSettings+"birdhousePrint_load('FAVORITES','"+app_active_cam+"');"],
 		[lang("TODAY"),        "script", hideSettings+"birdhousePrint_load('TODAY',   '"+app_active_cam+"');"],
 		[lang("VIDEOS"),       "script", hideSettings+"birdhousePrint_load('VIDEOS',  '"+app_active_cam+"');"],
-		[lang("ARCHIVE"),      "script", hideSettings+"birdhousePrint_load('ARCHIVE', '"+app_active_cam+"');"],
-		[lang("WEATHER"),      "script", hideSettings+"birdhousePrint_load('WEATHER', '"+app_active_cam+"');"],
+		[lang("ARCHIVE"),      "script", hideSettings+"birdhousePrint_load('ARCHIVE', '"+app_active_cam+"');"]
 		];
+	if (weather_active) {
+	    app_menu.push([lang("WEATHER"),      "script", hideSettings+"birdhousePrint_load('WEATHER', '"+app_active_cam+"');"]);
+	    }
 	if (app_admin_allowed) {
 		app_menu = app_menu.concat([
 		["LINE"],

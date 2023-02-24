@@ -5,6 +5,8 @@ import asyncio
 import logging
 import time
 from datetime import datetime, timezone, timedelta
+import time
+import logging
 
 
 class BirdhouseWeather(threading.Thread):
@@ -17,20 +19,43 @@ class BirdhouseWeather(threading.Thread):
         threading.Thread.__init__(self)
         logging.info("Starting weather process ...")
 
+        self._running = True
+        self._paused = False
+
         self.weather = None
         self.weather_city = city
         self.weather_info = {}
-        self.running = True
         self.update_time = 60 * 5
         self.timezone = time_zone
+        self.weather_empty = {
+            "info_update": "none",
+            "info_city": "",
+            "info_format": "",
+            "info_position": "",
+            "current": {
+                "temperature": None,
+                "description": "",
+                "description_icon": "",
+                "wind_speed": None,
+                "uv_index": None,
+                "pressure": None,
+                "humidity": None,
+                "wind_direction": "",
+                "precipitation": None
+            },
+            "forecast": {}
+        }
 
     def run(self):
         """
         continuously request fresh data once a minute
         """
         logging.info("Starting Weather module ...")
-        while self.running:
-            asyncio.run(self.get_weather())
+        while self._running:
+            if not self._paused:
+                asyncio.run(self.get_weather())
+            else:
+                self.weather_info = self.weather_empty
             time.sleep(self.update_time)
 
     def local_time(self):
@@ -39,6 +64,12 @@ class BirdhouseWeather(threading.Thread):
         """
         date_tz_info = timezone(timedelta(hours=self.timezone))
         return datetime.now(date_tz_info)
+
+    def active(self, value):
+        """
+        set if active or inactive
+        """
+        self._paused = value
 
     def _extract(self, icon_type, icon_object):
         """
@@ -78,6 +109,7 @@ class BirdhouseWeather(threading.Thread):
             self.weather = await client.get(self.weather_city)
 
             self.weather_info["info_update"] = self.local_time().strftime("%d.%m.%Y %H:%M:%S")
+            self.weather_info["info_update_stamp"] = self.local_time().strftime("%H%M%S")
             self.weather_info["info_format"] = "metric"
             self.weather_info["info_city"] = self.weather_city
             self.weather_info["info_position"] = self.weather.location
@@ -90,6 +122,7 @@ class BirdhouseWeather(threading.Thread):
                 "wind_speed": current.wind_speed,
                 "uv_index": current.uv_index,
                 "pressure": current.pressure,
+                "humidity": current.humidity,
                 "wind_direction": current.wind_direction,
                 "precipitation": current.precipitation
 
@@ -122,21 +155,26 @@ class BirdhouseWeather(threading.Thread):
                         "wind_direction": hourly.wind_direction,
                         "precipitation": hourly.precipitation
                     }
-                    hourly_forecast_2 = {
-                        "time": hourly.time,
-                        "temperature": hourly.temperature,
-                        "type": hourly.type,
-                        "cloud_cover": hourly.cloud_cover,
-                        "description": hourly.description,
-                        "wind_speed": hourly.wind_speed,
-                        "uv_index": hourly.uv_index,
-                        "chance_of_sunshine": hourly.chance_of_sunshine,
-                        "chance_of_windy": hourly.chance_of_windy,
-                        "pressure": hourly.pressure,
-                        "wind_direction": hourly.wind_direction,
-                        "precipitation": hourly.precipitation
-                    }
                     self.weather_info["forecast"][str(forecast.date)]["hourly"][str(hourly.time)] = hourly_forecast
 
             today = self.local_time().strftime("%Y-%m-%d")
             self.weather_info["forecast"]["today"] = self.weather_info["forecast"][today]
+
+    def get_weather_info(self, info_type="all"):
+        """
+        return information with different level of detail
+        """
+        if info_type == "current_small":
+            weather_data = self.weather_info["current"]
+            info = {
+                "description_icon": weather_data["description_icon"],
+                "description": weather_data["description"],
+                "temperature": weather_data["temperature"],
+                "humidity": weather_data["humidity"],
+                "pressure": weather_data["pressure"],
+                "wind": weather_data["wind_speed"]
+            }
+            return info
+        elif info_type == "current":
+            return self.weather_info["current"]
+        return self.weather_info

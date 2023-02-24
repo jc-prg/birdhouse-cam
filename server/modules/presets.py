@@ -101,9 +101,10 @@ birdhouse_default_sensor = {
 
 birdhouse_preset = {
     "title": "Our Birdhouse :-)",
-    "localization" : {
+    "localization": {
         "language": "EN",
         "weather_location": "Munich",
+        "weather_active": True,
         "timezone": "UTC+1"
     },
     "backup": {

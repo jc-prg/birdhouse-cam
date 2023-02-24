@@ -130,6 +130,7 @@ function birdhouse_app_settings (name="Settings") {
             html += tab.row("Title:&nbsp;", birdhouse_edit_field(id="set_title", field="title", type="input") );
             html += tab.row("Language:&nbsp;", birdhouse_edit_field(id="set_language", field="localization:language", type="select", options="EN,DE") );
             html += tab.row("Weather Location:&nbsp;", birdhouse_edit_field(id="set_weather_location", field="localization:weather_location", type="input") );
+            html += tab.row("Weather active:&nbsp;", birdhouse_edit_field(id="set_timezone", field="localization:weather_active", type="select", options="true,false", data_type="boolean") );
             html += tab.row("Timezone:&nbsp;", birdhouse_edit_field(id="set_timezone", field="localization:timezone", type="select", options=timezones, data_type="string") );
             html += tab.row("Backup-Time:&nbsp;", birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
             html += tab.row("Backup-Preview:&nbsp;", birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );

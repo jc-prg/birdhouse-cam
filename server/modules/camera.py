@@ -1157,6 +1157,7 @@ class BirdhouseCamera(threading.Thread):
 
         self.sensor = sensor
         self.param = self.config.param["devices"]["cameras"][self.id]
+        self.weather_active = self.config.param["localization"]["weather_active"]
 
         self.name = self.param["name"]
         self.active = self.param["active"]
@@ -1254,14 +1255,7 @@ class BirdhouseCamera(threading.Thread):
             # start or reload camera connection
             if self.reload_camera and self.active:
                 logging.info("- (Re)starting Camera (" + self.id + ") ...")
-                if self.type == "pi":
-                    self.camera_start_pi()
-                elif self.type == "default":
-                    self.camera_start_default()
-                elif self.type == "usb":
-                    self.camera_start_usb()
-                else:
-                    self.raise_error(True, "Unknown type of camera!")
+                self.camera_start_default()
                 if not self.error and self.param["video"]["allow_recording"]:
                     self.camera_start_recording()
                 self.reload_camera = False
@@ -1339,7 +1333,8 @@ class BirdhouseCamera(threading.Thread):
                                 "date": current_time.strftime("%d.%m.%Y"),
                                 "time": current_time.strftime("%H:%M:%S"),
                                 "similarity": similarity,
-                                "sensor": {}
+                                "sensor": {},
+                                "weather": {}
                             }
                             self.previous_image = image_compare
                         else:
@@ -1353,6 +1348,7 @@ class BirdhouseCamera(threading.Thread):
                                 "time": current_time.strftime("%H:%M:%S"),
                                 "similarity": 0,
                                 "sensor": {},
+                                "weather": {},
                                 "size": self.image_size,
                                 "error": self.error_msg[len(self.error_msg) - 1]
                             }
@@ -1364,11 +1360,15 @@ class BirdhouseCamera(threading.Thread):
                                 sensor_data[key]["date"] = current_time.strftime("%d.%m.%Y")
                                 image_info["sensor"][key] = self.sensor[key].get_values()
 
-                        weather_data = self.config.weather.weather_info["current"]
+                        self.config.weather.active(self.weather_active)
+                        if self.weather_active:
+                            weather_data = self.config.weather.get_weather_info("current")
+                            weather_stamp = self.config.weather.get_weather_info("all")["info_update_stamp"]
+                            image_info["weather"] = self.config.weather.get_weather_info("current_small")
+                            self.config.queue.entry_add(config="weather", date="", key=weather_stamp, entry=weather_data)
 
                         self.config.queue.entry_add(config="sensor", date="", key=stamp, entry=sensor_data)
                         self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
-                        self.config.queue.entry_add(config="weather", date="", key=stamp, entry=weather_data)
 
                         if not self.error:
                             path_lowres = os.path.join(self.config.directory("images"),
@@ -1390,13 +1390,8 @@ class BirdhouseCamera(threading.Thread):
         Stop recording
         """
         if not self.error and self.active:
-            if self.type == "pi":
-                self.camera.stop_recording()
-                self.camera.close()
-
-            elif self.type == "usb":
-                self.camera.stop()
-                self.cameraFPS.stop()
+            self.camera.stop()
+            self.cameraFPS.stop()
 
             if self.video:
                 self.video.stop()
@@ -1433,32 +1428,6 @@ class BirdhouseCamera(threading.Thread):
         self.image.reset_error()
         self.image_last_raw = None
         self.image_last_edited = None
-
-    def camera_start_pi(self):
-        """
-        Initialize picamera incl. initial settings
-        """
-        self.reset_error()
-        self.reload_time = time.time()
-        try:
-            import picamera
-            # https://raspberrypi.stackexchange.com/questions/114035/picamera-and-ubuntu-20-04-arm64
-        except ImportError:
-            self.raise_error(True, "Module for PiCamera isn't installed. Try 'pip3 install picamera'.")
-            self.error_no_reconnect = True
-        try:
-            if not self.error:
-                self.camera = picamera.PiCamera()
-                self.camera.resolution = self.param["image"]["resolution"]
-                self.camera.framerate = self.param["image"]["framerate"]
-                self.camera.rotation = self.param["image"]["rotation"]
-                self.camera.saturation = self.param["image"]["saturation"]
-                # self.camera.zoom = self.param["image"]["crop"]
-                # self.camera.annotate_background = picamera.Color('black')
-                self.camera.start_recording(self.video.output, format='mjpeg')
-                logging.info(self.id + ": OK.")
-        except Exception as e:
-            self.raise_error(True, "Starting PiCamera doesn't work: " + str(e))
 
     def camera_start_default(self):
         """
@@ -1501,37 +1470,6 @@ class BirdhouseCamera(threading.Thread):
             self.raise_error(True, "Starting camera '" + self.source + "' doesn't work: " + str(e))
 
         return
-
-    def camera_start_usb(self):
-        """
-        Initialize USB Camera
-        """
-        self.reset_error()
-        self.reload_time = time.time()
-        try:
-            self.camera.stream.release()
-        except Exception as e:
-            logging.info("Ensure Stream is released ...")
-        try:
-            self.camera = WebcamVideoStream(src=self.source).start()
-            if not self.camera.stream.isOpened():
-                self.raise_error(True, "Can't connect to camera, check if source is " + str(self.source) + " (" + str(
-                    self.camera.stream.isOpened()) + ").")
-                self.camera.stream.release()
-            elif self.camera.stream is None:
-                self.raise_error(True, "Can't connect to camera, check if source is " + str(self.source) + ".)")
-            else:
-                raw = self.get_image_raw()
-                check = str(type(raw))
-                if "NoneType" in check:
-                    self.raise_error(True, "Images are empty, cv2 doesn't work for source " + str(
-                        self.source) + ", try picamera.")
-                else:
-                    self.camera_resolution_usb(self.param["image"]["resolution"])
-                    self.cameraFPS = FPS().start()
-                    logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
-        except Exception as e:
-            self.raise_error(True, "Starting USB camera doesn't work: " + str(e))
 
     def camera_reconnect(self):
         """
@@ -1902,6 +1840,7 @@ class BirdhouseCamera(threading.Thread):
     def update_main_config(self):
         logging.info("Update data from main configuration file for camera " + self.id)
         temp_data = self.config.read("main")
+        self.weather_active = temp_data["localization"]["weather_active"]
         self.param = temp_data["devices"]["cameras"][self.id]
         self.name = self.param["name"]
         self.active = self.param["active"]
