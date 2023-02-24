@@ -49,6 +49,19 @@ function birdhouseStatus_print(data) {
     var count = 0;
     var keys = Object.keys(sensors);
     for (let sensor in sensors) {
+        if (sensors[sensor]["status"]) {
+            status = sensors[sensor]["status"];
+            var sensor_error_01 = status["error_msg"];
+            var sensor_error_02 = "Error:" + status["error"];
+            sensor_error_02    += "Error Connect:" + status["error_connect"];
+            sensor_error_02    += "Error Module:" + status["error_module"];
+            setTextById("error_sensor1_"+sensor, sensor_error_01);
+            setTextById("error_sensor2_"+sensor, sensor_error_02);
+            if (status["error"] || status["error_module"] || status["connect"]) {
+                header = document.getElementById("group_header_"+sensor+"_error");
+                if (header) { header.style.background = "#993333"; }
+            }
+        }
         if (sensors[sensor]["active"]) {
 
             if (typeof(sensors[sensor]["values"]["temperature"]) != "undefined" && sensors[sensor]["values"]["temperature"] != null) {
@@ -66,8 +79,17 @@ function birdhouseStatus_print(data) {
             setTextById("sensor_info_"+sensor, summary);
         }
     }
+
+    /*
+            if (sensors[sensor]["status"] && sensors[sensor]["status"]["error"] == true) {
+    		html_entry += tab.row("<hr/>");
+            html_entry += tab.row("Error-Msg:", sensors[sensor]["status"]["error_msg"]);
+        }
+
+    */
+
     document.getElementById(app_frame_info).style.display = "block";
-    if (data["DATA"]["localization"]["weather_active"] && data["WEATHER"]["current"]["description_icon"]) {
+    if (data["DATA"]["localization"]["weather_active"] && data["WEATHER"]["current"] && data["WEATHER"]["current"]["description_icon"]) {
         if (html_entry != "") { html_entry += " / "; }
         html_entry += data["WEATHER"]["info_city"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
         html_entry = "<big>" + data["WEATHER"]["current"]["description_icon"] + "</big> &nbsp; " + html_entry;

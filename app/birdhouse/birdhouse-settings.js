@@ -33,7 +33,6 @@ function birdhouse_app_settings (name="Settings") {
             appMsg.confirm(img + lang("INITIAL_SETUP"), "console.log('.');", 400);
             }
 
-
         tab.style_rows["height"] = "27px";
         tab.style_cells["width"] = "40%";
 
@@ -152,8 +151,6 @@ function birdhouse_app_settings (name="Settings") {
             setTextById("setting2", html);
     		this.toggle();
             }
-
-
 		}
 
 

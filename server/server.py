@@ -442,17 +442,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content["server"] = config.param["server"]
             content["backup"] = config.param["backup"]
 
+            # ensure localization data are available
             if "localization" in config.param:
                 content["localization"] = config.param["localization"]
+                if "language" not in config.param["localization"]:
+                    content["localization"]["language"] = "EN"
             else:
-                content["localization"] = {
-                    "language": "EN",
-                    "weather_location": "London",
-                    "timezone": "UTC-0"
-                }
-            if "language" not in config.param["localization"]:
-                content["localization"]["language"] = "EN"
+                content["localization"] = birdhouse_preset["localization"]
 
+            # get microphone data and create streaming information
             micro_data = config.param["devices"]["microphones"].copy()
             for key in micro_data:
                 if config.param["server"]["ip4_stream_audio"] == "":
@@ -461,6 +459,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     micro_data[key]["stream_server"] = config.param["server"]["ip4_stream_audio"]
                 micro_data[key]["stream_server"] += ":" + str(micro_data[key]["port"])
 
+            # get camera data and create streaming information
             camera_data = config.param["devices"]["cameras"].copy()
             for key in camera_data:
                 if key in camera:
@@ -470,40 +469,30 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
                     camera_data[key]["image"]["current_streams"] = camera[key].get_stream_count()
                     camera_data[key]["image"]["current_streams_detail"] = camera[key].image_streams
-                    camera_data[key]["status"] = {
-                        "error": camera[key].error,
-                        "error_warn": camera[key].error_msg,
-                        "error_msg": camera[key].error_msg,
-                        "image_error": camera[key].image.error,
-                        "image_error_msg": camera[key].image.error_msg,
-                        "image_cache_size": camera[key].config_cache_size,
-                        "video_error": camera[key].video.error,
-                        "video_error_msg": camera[key].video.error_msg,
-                        "running": camera[key].running,
-                    }
+                    camera_data[key]["status"] = camera[key].get_camera_status()
                     if config.param["server"]["ip4_stream_video"] == "":
                         camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_address"]
                     else:
                         camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_stream_video"]
                     camera_data[key]["video"]["stream_server"] += ":" + str(config.param["server"]["port_video"])
 
+            # get sensor data
             sensor_data = config.param["devices"]["sensors"].copy()
             for key in sensor_data:
                 sensor_data[key]["values"] = {}
                 sensor_data[key]["status"] = {"error": False}
                 if key in sensor and sensor[key].error:
-                    sensor_data[key]["status"] = {
-                        "error": sensor[key].error,
-                        "error_msg": sensor[key].error_msg,
-                    }
+                    sensor_data[key]["status"] = sensor[key].get_error_status()
                 if key in sensor and sensor[key].running:
                     sensor_data[key]["values"] = sensor[key].get_values()
                 else:
                     logging.debug("Sensor not available: "+key)
-                    sensor_data[key]["status"] = {
-                        "error": True,
-                        "error_msg": "Sensor not available: "+key
-                    }
+                    sensor_data[key]["status"] = sensor[key].get_error_status()
+
+                    #sensor_data[key]["status"] = {
+                    #    "error": True,
+                    #    "error_msg": "Sensor not available: "+key
+                    #}
 
             content["devices"] = {
                 "cameras": camera_data,

@@ -33,6 +33,7 @@ class BirdhouseSensor(threading.Thread):
         self.sensor = None
 
         self.error = False
+        self.error_module = error_module
         self.error_connect = False
         self.error_msg = ""
         self.pin = self.param["pin"]
@@ -47,7 +48,8 @@ class BirdhouseSensor(threading.Thread):
             logging.error("- Requires Raspberry and installation of this module.")
             logging.error("- To install module, try 'sudo apt-get -y install rpi.gpio'.")
             self.error_connect = True
-            self.error_msg = error_module_msg
+            self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+            self.error_msg += " - " + error_module_msg
             self.running = False
 
     def run(self):
@@ -83,7 +85,7 @@ class BirdhouseSensor(threading.Thread):
 
             elif count >= self.interval and self.param["active"]:
                 try:
-                    if self.param["type"] == "dht11" or self.param["type"] == "dht22-alt":
+                    if self.param["type"] == "dht11":
                         indoor = self.sensor.read()
                         if indoor.is_valid():
                             self.values["temperature"] = indoor.temperature
@@ -106,7 +108,8 @@ class BirdhouseSensor(threading.Thread):
 
                 except Exception as e:
                     self.error = True
-                    self.error_msg = "Error reading data from sensor: "+str(e)
+                    self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+                    self.error_msg += " - Error reading data from sensor: "+str(e)
                     logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
                 count = 0
 
@@ -123,9 +126,6 @@ class BirdhouseSensor(threading.Thread):
                 if self.param["type"] == "dht11":
                     import modules.dht11 as dht11
                     self.sensor = dht11.DHT11(pin=self.pin)
-                elif self.param["type"] == "dht22-alt":
-                    import modules.dht22.dht22 as dht22
-                    self.sensor = dht22.DHT22(pin=self.pin)
                 elif self.param["type"] == "dht22":
                     import board
                     import adafruit_dht
@@ -134,7 +134,7 @@ class BirdhouseSensor(threading.Thread):
                 else:
                     raise "Sensor type not supported"
 
-                if self.param["type"] == "dht11" or self.param["type"] == "dht22-alt":
+                if self.param["type"] == "dht11":
                     indoor = self.sensor.read()
                     if indoor.is_valid():
                         temp = "Temp: {:.1f} C; Humidity: {}% ".format(indoor.temperature, indoor.humidity)
@@ -151,7 +151,8 @@ class BirdhouseSensor(threading.Thread):
             except Exception as e:
                 self.error = True
                 self.error_connect = True
-                self.error_msg = "Could not load "+self.param["type"]+" sensor module: "+str(e)
+                self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+                self.error_msg += " - Could not load "+self.param["type"]+" sensor module: "+str(e)
                 logging.error(self.error_msg)
             if not self.error:
                 logging.info("Loaded Sensor: "+self.id)
@@ -159,7 +160,8 @@ class BirdhouseSensor(threading.Thread):
         else:
             self.error = True
             self.error_connect = True
-            self.error_msg = "No sensor available: requires Raspberry Pi / activate 'rpi_active' in config file."
+            self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+            self.error_msg += " - No sensor available: requires Raspberry Pi / activate 'rpi_active' in config file."
             logging.info(self.error_msg)
 
     def stop(self):
@@ -179,3 +181,16 @@ class BirdhouseSensor(threading.Thread):
         get values from all sensors
         """
         return self.values.copy()
+
+    def get_error_status(self):
+        """
+        return all error status information
+        """
+        error = {
+            "error": self.error,
+            "error_msg": self.error_msg,
+            "error_module": self.error_module,
+            "error_connect": self.error_connect
+            }
+        return error
+

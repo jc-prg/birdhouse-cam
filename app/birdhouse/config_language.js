@@ -8,6 +8,7 @@
 
 var language_app = {
 	"DE" : {
+	    "ACTIVITY"              : "Aktivit&auml;t",
 	    "ANALYTICS"             : "Analyse",
 		"APP_TRANSLATION"       : "App spezifische Übersetzungen",
 		"ARCHIVE"               : "Archiv",
@@ -57,9 +58,11 @@ var language_app = {
 		"UV_INDEX"              : "UV Index",
 		"VIDEOS"                : "Videos",
 		"WEATHER"               : "Wetter",
+		"WEATHER_DATA_ERROR"    : "Fehlerhafte Wetterdaten.",
 		"WIND"                  : "Wind"
 		},
 	"EN" : {
+	    "ACTIVITY"              : "Activity",
 	    "ANALYTICS"             : "Analytics",
 		"APP_TRANSLATION"       : "App specific Translations",
 		"ARCHIVE"               : "Archive",
@@ -109,6 +112,7 @@ var language_app = {
 		"UV_INDEX"              : "UV Index",
 		"VIDEOS"                : "Videos",
 		"WEATHER"               : "Weather",
+		"WEATHER_DATA_ERROR"    : "Errors in weather data.",
 		"WIND"                  : "Wind"
 		}
 	}

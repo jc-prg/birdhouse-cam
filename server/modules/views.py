@@ -52,13 +52,14 @@ def print_links_json(link_list, cam=""):
     return json
 
 
-def create_chart_data(data):
+def create_chart_data(data, config=None):
     chart = {
         "titles": ["Activity"],
         "data": {}
     }
     used_keys = []
     used_cameras = []
+    weather_data_in_chart = ["temperature", "humidity", "wind"]
 
     if data == {} or "dict" not in str(type(data)):
         logging.error("Could not create chart data (empty)!")
@@ -66,30 +67,51 @@ def create_chart_data(data):
     # get categories / titles
     for key in data:
         print_key = key[0:2]+":"+key[2:4]
+
         if "camera" in data[key] and data[key]["camera"] not in used_cameras:
             used_cameras.append(data[key]["camera"])
+
         if "similarity" in data[key]:
             if round(float(data[key]["similarity"])) == 0:
                 data[key]["similarity"] = 100
             chart["data"][print_key] = [100-float(data[key]["similarity"])]
+
         if "sensor" in data[key]:
             for sensor in data[key]["sensor"]:
                 for sensor_key in data[key]["sensor"][sensor]:
-                    sensor_title = sensor + ":" + sensor_key
+                    sensor_title = sensor + ": " + sensor_key
                     if sensor_title not in chart["titles"]:
                         chart["titles"].append(sensor_title)
+
+        if "weather" in data[key]:
+            if "location" in data[key]["weather"]:
+                location = data[key]["weather"]["location"]
+            elif config is not None:
+                location = config.param["localization"]["weather_location"]
+            else:
+                location = ""
+            for weather_category in weather_data_in_chart:
+                weather_title = "WEATHER/" + location + ":" + weather_category
+                if weather_title not in chart["titles"]:
+                    chart["titles"].append(weather_title)
 
     # get data
     for key in data:
         print_key = key[0:2] + ":" + key[2:4]
         if print_key not in used_keys and used_cameras[0] == data[key]["camera"]:
             used_keys.append(print_key)
-            for sensor_title in chart["titles"]:
-                if sensor_title != "Activity" and print_key in chart["data"]:
-                    sensor = sensor_title.split(":")
+            for title in chart["titles"]:
+
+                if title != "Activity" and print_key in chart["data"]:
+                    sensor = title.split(":")
+
                     if "sensor" in data[key] and sensor[0] in data[key]["sensor"] and \
                             sensor[1] in data[key]["sensor"][sensor[0]]:
                         chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
+
+                    elif "weather" in data[key] and sensor[1] in data[key]["weather"]:
+                        chart["data"][print_key].append(data[key]["weather"][sensor[1]])
+
                     else:
                         chart["data"][print_key].append("")
 
@@ -387,7 +409,7 @@ class BirdhouseViews(threading.Thread):
                 content["entries_delete"] = files_recycle
 
         content["subtitle"] += " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
-        content["chart_data"] = create_chart_data(content["entries"].copy())
+        content["chart_data"] = create_chart_data(content["entries"].copy(), self.config)
         content["view_count"] = ["all", "star", "detect"]
         if backup:
             content["view_count"].append("data")
@@ -563,7 +585,7 @@ class BirdhouseViews(threading.Thread):
 
             content["view_count"] = []
             content["subtitle"] = presets.birdhouse_pages["backup"][0] + " (" + self.camera[cam].name + ")"
-            content["chart_data"] = create_chart_data(content["entries"].copy())
+            content["chart_data"] = create_chart_data(content["entries"].copy(), self.config)
             self.archive_views[cam] = content
 
         logging.info("Create data for archive view done.")
@@ -655,7 +677,7 @@ class BirdhouseViews(threading.Thread):
         content["view_count"] = ["all", "star", "detect", "recycle"]
         content["subtitle"] = presets.birdhouse_pages["today_complete"][0] + " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
         content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"), cam=which_cam)
-        content["chart_data"] = create_chart_data(content["entries"].copy())
+        content["chart_data"] = create_chart_data(content["entries"].copy(), self.config)
 
         length = getsizeof(content)/1024
         logging.debug("CompleteListToday: End - "+self.config.local_time().strftime("%H:%M:%S")+" ("+str(length)+" kB)")

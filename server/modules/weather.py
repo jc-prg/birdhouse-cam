@@ -55,23 +55,13 @@ class BirdhouseWeather(threading.Thread):
             if not self._paused:
                 asyncio.run(self.get_weather())
             else:
-                self.weather_info = self.weather_empty
+                info = self.weather_empty.copy()
+                info["info_status"] = "paused"
+                self.weather_info = info.copy()
             time.sleep(self.update_time)
 
-    def local_time(self):
-        """
-        return time that includes the current timezone
-        """
-        date_tz_info = timezone(timedelta(hours=self.timezone))
-        return datetime.now(date_tz_info)
-
-    def active(self, value):
-        """
-        set if active or inactive
-        """
-        self._paused = value
-
-    def _extract(self, icon_type, icon_object):
+    @staticmethod
+    def _extract(icon_type, icon_object):
         """
         extract icons
         """
@@ -97,6 +87,19 @@ class BirdhouseWeather(threading.Thread):
         else:
             return "Error extracting icon: " + str(icon_object)
 
+    def _local_time(self):
+        """
+        return time that includes the current timezone
+        """
+        date_tz_info = timezone(timedelta(hours=self.timezone))
+        return datetime.now(date_tz_info)
+
+    def active(self, value):
+        """
+        set if active or inactive
+        """
+        self._paused = value
+
     async def get_weather(self):
         """
         get complete weather data set for a specific data
@@ -108,8 +111,8 @@ class BirdhouseWeather(threading.Thread):
             # fetch a weather forecast from a city
             self.weather = await client.get(self.weather_city)
 
-            self.weather_info["info_update"] = self.local_time().strftime("%d.%m.%Y %H:%M:%S")
-            self.weather_info["info_update_stamp"] = self.local_time().strftime("%H%M%S")
+            self.weather_info["info_update"] = self._local_time().strftime("%d.%m.%Y %H:%M:%S")
+            self.weather_info["info_update_stamp"] = self._local_time().strftime("%H%M%S")
             self.weather_info["info_format"] = "metric"
             self.weather_info["info_city"] = self.weather_city
             self.weather_info["info_position"] = self.weather.location
@@ -157,7 +160,7 @@ class BirdhouseWeather(threading.Thread):
                     }
                     self.weather_info["forecast"][str(forecast.date)]["hourly"][str(hourly.time)] = hourly_forecast
 
-            today = self.local_time().strftime("%Y-%m-%d")
+            today = self._local_time().strftime("%Y-%m-%d")
             self.weather_info["forecast"]["today"] = self.weather_info["forecast"][today]
 
     def get_weather_info(self, info_type="all"):

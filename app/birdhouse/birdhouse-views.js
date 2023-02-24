@@ -180,15 +180,31 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
     // create chart data
     if (active_page == "TODAY_COMPLETE" || (active_page == "TODAY" && active_date != "")) {
         var chart_data = data["DATA"]["chart_data"];
-        var chart_titles = ["Activity"];
-        for (var x=1;x<chart_data["titles"].length;x++) {
+        var chart_titles = [];
+        for (var x=0;x<chart_data["titles"].length;x++) {
             if (chart_data["titles"][x].indexOf(":")>-1) {
                 var sensor = chart_data["titles"][x].split(":");
+                var translation = lang(sensor[1].toUpperCase());
+                if (translation.indexOf("NOT FOUND") < 0) { sensor[1] = translation; }
                 var title_s = sensor[1].charAt(0).toUpperCase() + sensor[1].slice(1);
-                if (sensors[sensor[0]]) { title_s += " ("+sensors[sensor[0]]["name"]+")"; }
-                else { console.log(sensor[0]); console.log(sensors); }
-                chart_titles.push(title_s);
-            }
+                if (sensors[sensor[0]]) {
+                    title_s += " ("+sensors[sensor[0]]["name"]+")";
+                    }
+                else if (sensor[0].indexOf("WEATHER/") >= 0) {
+                    var location = sensor[0].replace("WEATHER/", "");
+                    title_s += " ("+location+")";
+                    }
+                }
+            else {
+                var translation = lang(chart_data["titles"][x].toUpperCase());
+                if (translation.indexOf("NOT FOUND") < 0) { chart_data["titles"][x] = translation; }
+                title_s = chart_data["titles"][x];
+                }
+            title_s = title_s.replace("&szlig", "ß");
+            title_s = title_s.replace("&uuml;", "ü");
+            title_s = title_s.replace("&auml;", "ä");
+            title_s = title_s.replace("&ouml;", "ö");
+            chart_titles.push(title_s);
         }
         var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
         html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, true );

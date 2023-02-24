@@ -1358,7 +1358,7 @@ class BirdhouseCamera(threading.Thread):
                             if self.sensor[key].running:
                                 sensor_data[key] = self.sensor[key].get_values()
                                 sensor_data[key]["date"] = current_time.strftime("%d.%m.%Y")
-                                image_info["sensor"][key] = self.sensor[key].get_values()
+                                image_info["sensor"][key] = sensor_data[key]
 
                         self.config.weather.active(self.weather_active)
                         if self.weather_active:
@@ -1790,6 +1790,23 @@ class BirdhouseCamera(threading.Thread):
         """
         logging.info("set_image_stream_kill: " + stream_id)
         self.image_streams_to_kill[stream_id] = datetime.now().timestamp()
+
+    def get_camera_status(self):
+        """
+        return all status and error information
+        """
+        status = {
+            "error": self.error,
+            "error_warn": self.error_msg,
+            "error_msg": self.error_msg,
+            "image_error": self.image.error,
+            "image_error_msg": self.image.error_msg,
+            "image_cache_size": self.config_cache_size,
+            "video_error": self.video.error,
+            "video_error_msg": self.video.error_msg,
+            "running": self.running
+            }
+        return status
 
     def show_areas(self, image):
         """

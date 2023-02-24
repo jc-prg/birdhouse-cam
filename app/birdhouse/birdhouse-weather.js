@@ -19,6 +19,13 @@ function birdhouseWeather( title, data ) {
 	var weather_today = weather["current"];
 	var weather_3day  = weather["forecast"];
 
+    if (!weather["forecast"] || !weather["current"] || !weather["forecast"]["today"]) {
+        setTextById(app_frame_content, "&nbsp;<br/><center>" + lang("WEATHER_DATA_ERROR") + "</center><br/>&nbsp;");
+        console.warn("Error with weather data!")
+        console.warn(weather);
+        return;
+    }
+
 	var tab     = new birdhouse_table();
 	tab.style_rows["height"] = "18px";
 
