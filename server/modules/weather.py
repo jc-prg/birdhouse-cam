@@ -61,7 +61,7 @@ class BirdhouseWeather(threading.Thread):
         continuously request fresh data once a minute
         """
         logging.info("Starting Weather module ...")
-        last_update = time.time()
+        last_update = 0
         while self._running:
             if last_update + self.update_time < time.time():
                 last_update = time.time()
