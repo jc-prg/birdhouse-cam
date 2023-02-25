@@ -1360,7 +1360,6 @@ class BirdhouseCamera(threading.Thread):
                                 sensor_data[key]["date"] = current_time.strftime("%d.%m.%Y")
                                 image_info["sensor"][key] = sensor_data[key]
 
-                        self.config.weather.active(self.weather_active)
                         if self.weather_active:
                             weather_data = self.config.weather.get_weather_info("current")
                             weather_stamp = self.config.weather.get_weather_info("all")["info_update_stamp"]

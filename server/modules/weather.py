@@ -28,6 +28,7 @@ class BirdhouseWeather(threading.Thread):
         self.weather = None
         self.weather_city = city
         self.weather_info = {}
+        self.weather_active = True
         self.update_time = 60 * 5
         self.timezone = time_zone
         self.weather_empty = {
@@ -60,10 +61,11 @@ class BirdhouseWeather(threading.Thread):
         while self._running:
             if not self._paused:
                 asyncio.run(self.get_weather())
+                if not self.error:
+                    self.weather_info["info_status"]["running"] = "OK"
             else:
-                info = self.weather_empty.copy()
-                info["info_status"]["running"] = "paused"
-                self.weather_info = info.copy()
+                self.weather_info = self.weather_empty.copy()
+                self.weather_info["info_status"]["running"] = "paused"
 
             if self.weather_info["info_status"]["running"] == "error":
                 time.sleep(10)
@@ -106,8 +108,9 @@ class BirdhouseWeather(threading.Thread):
 
     def active(self, active):
         """
-        set if active or inactive
+        set if active or inactive (used via config.py)
         """
+        self.weather_active = active
         if active:
             self._paused = False
         else:

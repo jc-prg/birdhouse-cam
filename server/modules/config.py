@@ -683,6 +683,7 @@ class BirdhouseConfig(threading.Thread):
                     count += 1
             elif not self._paused:
                 count = 0
+                self.weather.active(self.param["localization"]["weather_active"])
         logging.info("Stopped config handler.")
 
     def stop(self):
