@@ -104,11 +104,14 @@ class BirdhouseWeather(threading.Thread):
         date_tz_info = timezone(timedelta(hours=self.timezone))
         return datetime.now(date_tz_info)
 
-    def active(self, value):
+    def active(self, active):
         """
         set if active or inactive
         """
-        self._paused = value
+        if active:
+            self._paused = False
+        else:
+            self._paused = True
 
     async def get_weather(self):
         """
