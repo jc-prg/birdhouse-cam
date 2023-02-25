@@ -8,16 +8,71 @@ function birdhouseDevices( title, data )
 */
 //--------------------------------------
 
+var birdhouse_device_list = [];
+
+function birdhouseDevices_openOne(group_id) {
+    for (var i=0;i<birdhouse_device_list.length;i++) {
+        if (birdhouse_device_list[i] == group_id) { birdhouse_groupOpen(birdhouse_device_list[i]); }
+        else                                      { birdhouse_groupClose(birdhouse_device_list[i]); }
+    }
+}
+
 function birdhouseDevices( title, data ) {
-	var cameras	= data["DATA"]["devices"]["cameras"];
-	var sensors = data["DATA"]["devices"]["sensors"];
-	var micros  = data["DATA"]["devices"]["microphones"];
-	var admin 	= data["STATUS"]["admin_allowed"];
-	var html	= "";
+	var html = "";
+	var index = [];
 	var tab     = new birdhouse_table();
 	tab.style_rows["height"] = "27px";
 
-    // camera devices
+    var [settings, info] = birdhouseDevices_cameras(data);
+    html += settings;
+    index.push(info);
+
+    var [settings, info] = birdhouseDevices_weather(data);
+    html += settings;
+    index.push(info);
+
+    var [settings, info] = birdhouseDevices_sensors(data);
+    html += settings;
+    index.push(info);
+
+    var [settings, info] = birdhouseDevices_microphones(data);
+    html += settings;
+    index.push(info);
+
+    var html_index = "<h2>" + lang("DEVICES") + "</h2><hr/>";
+    html_index += "<div class='camera_info'>";
+    html_index += "<div class='camera_info_image'>&nbsp;<br/>";
+    html_index +=  "<div id='loading_img'><img src='"+app_loading_image+"' style='width:50%;'></div>";
+    html_index += "<br/>&nbsp;</div>";
+    html_index += "<div class='camera_info_text'>";
+
+    html_index += tab.start();
+    birdhouse_device_list = [];
+    for (var i=0;i<index.length;i++) {
+        Object.keys(index[i]).forEach(key => {
+            birdhouse_device_list.push(index[i][key]["group"]);
+            var onclick = "birdhouseDevices_openOne('"+index[i][key]["group"]+"')";
+            var button = "<button onclick=\""+onclick+"\" class=\"button-video-edit\">&nbsp;"+lang("SHOW")+"&nbsp;</button>";
+            var action = "(ACTIVE=" + index[i][key]["active"]+")";
+            action = button + "&nbsp;&nbsp;" + action;
+            html_index += tab.row(key, action);
+        });
+    }
+    html_index += tab.end();
+    html_index += "<br/>&nbsp;"
+    html_index += "</div></div>";
+
+	setTextById(app_frame_content, html_index + html);
+}
+
+function birdhouseDevices_cameras(data) {
+	var cameras	= data["DATA"]["devices"]["cameras"];
+	var admin 	= data["STATUS"]["admin_allowed"];
+	var html	= "";
+	var index_info = {};
+	var tab     = new birdhouse_table();
+	tab.style_rows["height"] = "27px";
+
 	for (let camera in cameras) {
     	var onclick  = "birdhouse_createDayVideo('"+camera+"');";
     	var onclick2 = "birdhouse_reconnectCamera('"+camera+"');";
@@ -30,6 +85,10 @@ function birdhouseDevices( title, data ) {
 	    info["id"]    = camera;
 	    camera_name   = camera.toUpperCase() + ": " + cameras[camera]["name"];
 	    camera_stream = birdhouse_Image(camera_name, info);
+	    index_info[camera_name] = {};
+	    index_info[camera_name]["active"] = cameras[camera]["active"];
+	    index_info[camera_name]["group"] = camera;
+
 	    resolution_max = cameras[camera]["image"]["resolution_max"];
 	    resolution_act = cameras[camera]["image"]["resolution_current"];
 
@@ -110,11 +169,24 @@ function birdhouseDevices( title, data ) {
 
 		html += birdhouse_OtherGroup( camera, camera_name, html_temp, open );
 	}
+	return [html, index_info];
+}
 
-	// sensor devices
+function birdhouseDevices_sensors(data) {
+	var sensors = data["DATA"]["devices"]["sensors"];
+	var admin 	= data["STATUS"]["admin_allowed"];
+	var html    = "";
+	var index_info = {};
+	var tab     = new birdhouse_table();
+	tab.style_rows["height"] = "27px";
+
 	for (let sensor in sensors) {
         open = true;
 	    sensor_name   = sensor.toUpperCase() + ": " + sensors[sensor]["name"];
+	    index_info[sensor_name] = {};
+	    index_info[sensor_name]["active"] = sensors[sensor]["active"];
+	    index_info[sensor_name]["group"] = sensor;
+
 		if (sensors[sensor]["active"] == false) {
 		    open = false;
 		    sensor_name += " &nbsp; <i>(inactive)</i>";
@@ -132,27 +204,86 @@ function birdhouseDevices( title, data ) {
 		html_entry += tab.row("Active:", birdhouse_edit_field(id="set_active_"+sensor, field="devices:sensors:"+sensor+":active", type="select", options="true,false", data_type="boolean"));
         html_entry += tab.end();
 
-        html_temp = tab.start();
+        var html_temp = tab.start();
         html_temp += tab.row("Error Sensor:", "<textarea id='error_sensor1_"+sensor+"' class='settings_error_msg'></textarea>");
         html_temp += tab.row("Error Message:", "<textarea id='error_sensor2_"+sensor+"' class='settings_error_msg'></textarea>");
         html_temp += tab.end();
         html_entry += birdhouse_OtherGroup( sensor+"_error", "Error messages", html_temp, false );
 
 		var id_list = "set_name_"+sensor+":set_type_"+sensor+":set_active_"+sensor+":set_source_"+sensor;
+        html_entry += "<hr/>";
         html_entry += tab.start();
 		html_entry += tab.row("<center>"+birdhouse_edit_save(id="edit_"+sensor, id_list)+"</center>");
 		html_entry += tab.end();
         html_entry += "</div>";
-
-
         html_entry += "</div>";
 		html += birdhouse_OtherGroup( sensor, sensor_name, html_entry, open );
 	}
+	return [html, index_info];
+}
 
-	// microphone devices
+function birdhouseDevices_weather(data) {
+	var weather_config  = data["DATA"]["localization"];
+	var weather_data = data["WEATHER"];
+	var info_key = lang("WEATHER").toUpperCase()+": "+weather_config["weather_location"];
+	var index_info = {};
+	index_info[info_key] = {};
+    index_info[info_key]["active"] = weather_config["weather_active"];
+    index_info[info_key]["group"] = "weather_settings";
+
+	var admin = data["STATUS"]["admin_allowed"];
+	var html = "";
+	var open = true;
+	var tab = new birdhouse_table();
+	tab.style_rows["height"] = "27px";
+
+    var html_entry = "<div class='camera_info'>";
+    html_entry += "<div class='camera_info_image'>&nbsp;<br/>";
+    html_entry +=  "<div id='weather_info_icon' style='font-size:80px;'></div>";
+    html_entry += "<br/>&nbsp;</div>";
+    html_entry += "<div class='camera_info_text'>";
+
+    html_entry += tab.start();
+    html_entry += tab.row("Location:", birdhouse_edit_field(id="set_weather_location", field="localization:weather_location", type="input"));
+    html_entry += tab.row("GPS Position:", weather_data["info_position"].toString());
+    html_entry += tab.row("Active:", birdhouse_edit_field(id="set_weather_active", field="localization:weather_active", type="select", options="true,false"));
+    html_entry += tab.row("Last Update:", "<div id='weather_info_update'>Please wait ...</div>");
+    html_entry += tab.end();
+    html_entry += "<br/>";
+
+    var html_temp = tab.start();
+    html_temp += tab.row("Error:", "<textarea id='weather_info_error' class='settings_error_msg'></textarea>");
+    html_temp += tab.end();
+    html_entry += birdhouse_OtherGroup( "weather_error", "Error messages", html_temp, false );
+
+    var id_list = "set_weather_location:set_weather_active";
+    html_entry += "<hr/>";
+    html_entry += tab.start();
+    html_entry += tab.row("<center>"+birdhouse_edit_save(id="edit_weather", id_list)+"</center>");
+    html_entry += tab.end();
+
+    html_entry += "</div></div>";
+    html += birdhouse_OtherGroup( "weather_settings", lang("WEATHER"), html_entry, open );
+
+	return [html, index_info];
+}
+
+function birdhouseDevices_microphones(data) {
+	var micros  = data["DATA"]["devices"]["microphones"];
+	var admin 	= data["STATUS"]["admin_allowed"];
+	var html = "";
+	var index_info = {};
+	var tab     = new birdhouse_table();
+	tab.style_rows["height"] = "27px";
+
 	for (let micro in micros) {
 	    open = true;
 	    micro_name = micro.toUpperCase() + ": " + micros[micro]["name"];
+
+	    index_info[micro_name] = {};
+	    index_info[micro_name]["active"] = micros[micro]["active"];
+	    index_info[micro_name]["group"] = micro;
+
 		if (micros[micro]["active"] == false) {
 		    open = false;
 		    micro_name += " &nbsp; <i>(inactive)</i>";
@@ -179,5 +310,5 @@ function birdhouseDevices( title, data ) {
         html += birdhouse_OtherGroup( micro, micro_name, html_entry, open );
 	}
 
-	setTextById(app_frame_content,html);
+	return [html, index_info];
 }

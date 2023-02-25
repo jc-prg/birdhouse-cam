@@ -4,6 +4,17 @@
 // show status functions
 //--------------------------------------
 
+var header_color_error = "#993333";
+var header_color_warning = "#666633";
+var header_color_default = "";
+
+function setHeaderColor(header_id, header_color) {
+    header = document.getElementById("group_header_" + header_id);
+    if (header) {
+        header.style.background = header_color;
+        }
+}
+
 function birdhouseStatus_print(data) {
     console.debug("Update Status ...");
 
@@ -31,8 +42,7 @@ function birdhouseStatus_print(data) {
         setTextById("error_cam_"+camera, cameras[camera]["status"]["error_msg"]);
         setTextById("error_img_"+camera, cameras[camera]["status"]["image_error_msg"]);
         if (cameras[camera]["status"]["error"] || cameras[camera]["status"]["image_error"]) {
-            header = document.getElementById("group_header_"+camera+"_error");
-            if (header) { header.style.background = "#993333"; }
+            setHeaderColor(header_id=camera+"_error", header_color=header_color_error);
             }
         if (cameras[camera]["image"]["crop_area"]) {
             crop = "[" + cameras[camera]["image"]["crop_area"][0] + ", " + cameras[camera]["image"]["crop_area"][1] + ", ";
@@ -42,21 +52,37 @@ function birdhouseStatus_print(data) {
         }
     setTextById("system_active_streams", camera_streams);
 
-    // add sensor information
-    var sensors = data["DATA"]["devices"]["sensors"];
-    var keys = Object.keys(sensors);
+    // weather information
     var weather_footer = [];
     var entry = "";
-
+    var weather_icon = "N/A";
+    var weather_update = "N/A";
+    var weather_error = "";
     if (data["DATA"]["localization"]["weather_active"] && data["WEATHER"]["current"] && data["WEATHER"]["current"]["description_icon"]) {
         entry = data["WEATHER"]["info_city"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
         entry = "<big>" + data["WEATHER"]["current"]["description_icon"] + "</big> &nbsp; " + entry;
+        weather_icon = data["WEATHER"]["current"]["description_icon"];
+        weather_update = data["WEATHER"]["info_update"];
+        weather_error = "Running: " + data["WEATHER"]["info_status"]["running"] + "\n";
+        if (data["WEATHER"]["info_status"]["error"]) {
+            weather_error += "Error: " + data["WEATHER"]["info_status"]["error"].toString() + "\n";
+            weather_error += "Message: " + data["WEATHER"]["info_status"]["error_msg"];
+            setHeaderColor(header_id="weather_error", header_color=header_color_error);
+        }
+        else if (data["WEATHER"]["info_status"]["running"].indexOf("paused") > -1) {
+            setHeaderColor(header_id="weather_error", header_color=header_color_warning);
+        }
     }
-
     weather_footer.push(entry);
+    setTextById("weather_info_icon", weather_icon);
+    setTextById("weather_info_update", weather_update);
+    setTextById("weather_info_error", weather_error);
+
+    // add sensor information
+    var sensors = data["DATA"]["devices"]["sensors"];
+    var keys = Object.keys(sensors);
 
     for (let sensor in sensors) {
-        console.error(sensors[sensor]["status"]);
         if (sensors[sensor]["status"]) {
             var status = sensors[sensor]["status"];
             var sensor_error_01 = status["error_msg"];
@@ -70,8 +96,7 @@ function birdhouseStatus_print(data) {
             setTextById("error_sensor1_"+sensor, sensor_error_01);
             setTextById("error_sensor2_"+sensor, sensor_error_02);
             if (status["error"] || status["error_module"] || status["connect"]) {
-                header = document.getElementById("group_header_"+sensor+"_error");
-                if (header) { header.style.background = "#993333"; }
+                setHeaderColor(header_id=sensor+"_error", header_color=header_color_error);
             }
         }
 

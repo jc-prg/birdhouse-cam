@@ -278,35 +278,46 @@ function birdhouse_overlayHide() {
        }
 
 
-function birdhouse_groupToggle(id) {
-        if (document.getElementById("group_"+id).style.display == "none") {
-                document.getElementById("group_"+id).style.display = "block";
-            	if (document.getElementById("group_intro_"+id)) {
-            	    document.getElementById("group_intro_"+id).style.display = "block";
-            	}
-            	if (document.getElementById("group_ids_"+id)) {
-                    images = document.getElementById("group_ids_"+id).innerHTML;
-                }
-                else {
-                    images = "";
-                }
-                document.getElementById("group_link_"+id).innerHTML = "(&minus;)";
-                image_list = images.split(" ");
-                for (let i=0; i<image_list.length; i++) {
-                  if (image_list[i] != "") {
-			 img      = document.getElementById(image_list[i]);
-			 if (img != undefined) {
-	                        img_file = img.getAttribute('data-src');
-	                        img.src  = img_file;
-	                        }
-		   }	}
-		}
-	else {
-        	document.getElementById("group_"+id).style.display = "none";
-        	if (document.getElementById("group_intro_"+id)) { document.getElementById("group_intro_"+id).style.display = "none"; }
-        	document.getElementById("group_link_"+id).innerHTML = "(+)";
-		}
-	}
+function birdhouse_groupToggle(id, open="") {
+    if (open == "") {
+        if (document.getElementById("group_"+id).style.display == "none")   { birdhouse_groupOpen(id); }
+        else                                                                { birdhouse_groupClose(id); }
+    }
+    else {
+        if (open == true)   { birdhouse_groupOpen(id); }
+        else                { birdhouse_groupClose(id); }
+    }
+}
+
+function birdhouse_groupOpen(id) {
+    document.getElementById("group_"+id).style.display = "block";
+    if (document.getElementById("group_intro_"+id)) {
+        document.getElementById("group_intro_"+id).style.display = "block";
+    }
+    if (document.getElementById("group_ids_"+id)) {
+        images = document.getElementById("group_ids_"+id).innerHTML;
+    }
+    else {
+        images = "";
+    }
+    document.getElementById("group_link_"+id).innerHTML = "(&minus;)";
+    image_list = images.split(" ");
+    for (let i=0; i<image_list.length; i++) {
+        if (image_list[i] != "") {
+            img      = document.getElementById(image_list[i]);
+            if (img != undefined) {
+                img_file = img.getAttribute('data-src');
+                img.src  = img_file;
+            }
+        }
+    }
+}
+
+function birdhouse_groupClose(id) {
+        document.getElementById("group_"+id).style.display = "none";
+        if (document.getElementById("group_intro_"+id)) { document.getElementById("group_intro_"+id).style.display = "none"; }
+        document.getElementById("group_link_"+id).innerHTML = "(+)";
+}
 
 
 function iOS() {

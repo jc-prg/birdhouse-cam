@@ -22,6 +22,9 @@ class BirdhouseWeather(threading.Thread):
         self._running = True
         self._paused = False
 
+        self.error = False
+        self.error_msg = ""
+
         self.weather = None
         self.weather_city = city
         self.weather_info = {}
@@ -32,6 +35,7 @@ class BirdhouseWeather(threading.Thread):
             "info_city": "",
             "info_format": "",
             "info_position": "",
+            "info_status": {},
             "current": {
                 "temperature": None,
                 "description": "",
@@ -43,7 +47,9 @@ class BirdhouseWeather(threading.Thread):
                 "wind_direction": "",
                 "precipitation": None
             },
-            "forecast": {}
+            "forecast": {
+                "today": {}
+            }
         }
 
     def run(self):
@@ -56,9 +62,13 @@ class BirdhouseWeather(threading.Thread):
                 asyncio.run(self.get_weather())
             else:
                 info = self.weather_empty.copy()
-                info["info_status"] = "paused"
+                info["info_status"]["running"] = "paused"
                 self.weather_info = info.copy()
-            time.sleep(self.update_time)
+
+            if self.weather_info["info_status"]["running"] == "error":
+                time.sleep(10)
+            else:
+                time.sleep(self.update_time)
 
     @staticmethod
     def _extract(icon_type, icon_object):
@@ -108,14 +118,28 @@ class BirdhouseWeather(threading.Thread):
         # declare the client. format defaults to the metric system (celcius, km/h, etc.)
         async with python_weather.Client(format=python_weather.METRIC) as client:
 
-            # fetch a weather forecast from a city
-            self.weather = await client.get(self.weather_city)
+            try:
+                # fetch a weather forecast from a city
+                self.error = False
+                self.weather = await client.get(self.weather_city)
 
+            except Exception as e:
+                self.error = True
+                self.error_msg = "Could not load weather data: " + str(e)
+                self.weather_info = self.weather_empty
+                self.weather_info["info_status"]["running"] = "error"
+                self.weather_info["info_status"]["error"] = self.error
+                self.weather_info["info_status"]["error_msg"] = self.error_msg
+                self.weather_info["info_status"]["error_time"] = self._local_time().strftime("%d.%m.%Y %H:%M:%S")
+                return
+
+            self.weather_info = self.weather_empty
             self.weather_info["info_update"] = self._local_time().strftime("%d.%m.%Y %H:%M:%S")
             self.weather_info["info_update_stamp"] = self._local_time().strftime("%H%M%S")
             self.weather_info["info_format"] = "metric"
             self.weather_info["info_city"] = self.weather_city
             self.weather_info["info_position"] = self.weather.location
+            self.weather_info["info_status"]["running"] = "OK"
 
             current = self.weather.current
             self.weather_info["current"] = {
