@@ -8,12 +8,13 @@ var app_setting_count     = 4;
 var app_setting_style     = "frame_column wide";
 var app_last_load         = 0;
 var app_title             = "jc://birdhouse/";
-var app_version           = "v0.9.3";
+var app_version           = "v0.9.4";
 var app_api_version       = "N/A";
 var app_api_dir           = "api/";
 var app_api_status        = "status";
 var app_reload_interval   = 5;
 var app_loading_image     = "birdhouse/img/bird.gif"; // source: https://gifer.com/en/ZHug
+var app_error_connect_image = "birdhouse/img/camera_na_server.jpg";
 var app_unique_stream_url = true;			// doesn't work for chrome (assumption: mjpeg-streams are not closed correctly)
 var app_unique_stream_id  = new Date().getTime();     // new ID per App-Start
 
@@ -108,5 +109,38 @@ function app_force_reload(data) {
 
 function app_theme_changed(theme) {
 	}
-	
+
+//--------------------------------
+// add code when screen size changed
+//--------------------------------
+
+function app_screen_size_changed(width, height) {
+	console.log("Changed screen size to " + width + "x" + height);
+	}
+
+//--------------------------------
+// add code when connection is lost
+//--------------------------------
+
+var app_connection_status = true;
+function app_connection_lost(error=false) {
+    if (app_connection_status != error) {
+        if (error) {
+            // code if lost connection
+            elementVisible("video_stream_offline");
+            elementHidden("video_stream_online");
+            app_connection_status = false;
+        }
+        else {
+            // code if got back connection
+            elementVisible("video_stream_online");
+            elementHidden("video_stream_offline");
+            birdhouseReloadView();
+            app_connection_status = true;
+        }
+    }
+    app_connection_status = error;
+}
+
+
 
