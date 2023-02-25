@@ -72,11 +72,18 @@ class BirdhouseWeather(threading.Thread):
                 self.weather_info["info_status"]["running"] = "paused"
                 last_update = 0
 
+            if "current" not in self.weather_info:
+                self.error = True
+                self.weather_info = self.weather_empty.copy()
+
+            if self.error:
+                self.weather_info["info_status"]["running"] = "error"
+
             if "info_status" in self.weather_info and "running" in self.weather_info["info_status"] \
                     and self.weather_info["info_status"]["running"] == "error":
                 time.sleep(10)
 
-            time.sleep(1)
+            time.sleep(0.5)
 
     @staticmethod
     def _extract(icon_type, icon_object):
