@@ -216,6 +216,11 @@ class BirdhouseWeather(threading.Thread):
         """
         return information with different level of detail
         """
+        if "current" not in self.weather_info:
+            self.error = True
+            self.error_msg = "Weather data not correct (get_weather_info)"
+            self.weather_info = self.weather_empty.copy()
+
         if info_type == "current_small":
             weather_data = self.weather_info["current"]
             info = {
@@ -227,6 +232,8 @@ class BirdhouseWeather(threading.Thread):
                 "wind": weather_data["wind_speed"]
             }
             return info
+
         elif info_type == "current":
             return self.weather_info["current"]
+
         return self.weather_info
