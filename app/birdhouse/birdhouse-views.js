@@ -43,6 +43,7 @@ function birdhouse_INDEX(data, camera) {
 	console.log(active_cam);
 	console.log(active_camera);
 
+    html += "<div id='video_stream_online' style='display:block;'>";
 	if (Object.keys(cameras).length == 1 || other_cams.length == 0) {
 		var onclick  = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
 		html += birdhouse_Camera(main=true, view="cam1", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed);
@@ -61,6 +62,10 @@ function birdhouse_INDEX(data, camera) {
 		app_camera_source[active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream"];
 		//app_camera_source[active_cam["name"]] = birdhouse_StreamURL(active_cam["name"], cameras[active_cam["name"]]["video"]["stream"], "stream_in_list_3");
 	}
+    html += "</div>";
+    html += "<div id='video_stream_offline' style='display:none;'><center>&nbsp;<br/>&nbsp;<br/>";
+    html += "<img src='"+app_error_connect_image+"' style='width:80%;border:1px solid white;'>";
+    html += "<br/>&nbsp;<br/>&nbsp;</center></div>";
 	setTextById(app_frame_content,html);
 }
 
