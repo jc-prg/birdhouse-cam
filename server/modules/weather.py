@@ -219,6 +219,8 @@ class BirdhouseWeather(threading.Thread):
         if "current" not in self.weather_info:
             self.error = True
             self.error_msg = "Weather data not correct (get_weather_info)"
+            logging.error(self.error_msg)
+            logging.error(str(self.weather_info))
             self.weather_info = self.weather_empty.copy()
 
         if info_type == "current_small":
