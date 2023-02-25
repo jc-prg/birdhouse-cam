@@ -33,6 +33,7 @@ class BirdhouseWeather(threading.Thread):
         self.timezone = time_zone
         self.weather_empty = {
             "info_update": "none",
+            "info_update_stamp": "none",
             "info_city": "",
             "info_format": "",
             "info_position": "",
