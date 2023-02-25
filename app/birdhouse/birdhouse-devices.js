@@ -290,9 +290,10 @@ function birdhouseDevices_microphones(data) {
         }
         url = "http://"+micros[micro]["stream_server"]+"/"+micro+".mp3";
         html_entry = "<div class='camera_info'>";
-        html_entry += "<div class='camera_info_image'>";
+        html_entry += "<div class='camera_info_image'>&nbsp;<br/>";
+        html_entry += "<div id='mic_img_"+micro+"'>"
         html_entry += birdhouseStream_toggle_image(micro);
-        html_entry += "</div>";
+        html_entry += "</div></div>";
         html_entry += "<div class='camera_info_text'>";
         html_entry += tab.start();
 		html_entry += tab.row("Name:", birdhouse_edit_field(id="set_name_"+micro, field="devices:microphones:"+micro+":name", type="input"));
