@@ -25,9 +25,9 @@ from modules.sensors import BirdhouseSensor
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 api_description = {
     "name": "BirdhouseCAM",
-    "version": "v0.9.1"
+    "version": "v0.9.2"
 }
-app_framework = "v0.9.3"
+app_framework = "v0.9.4"
 
 
 def on_exit(signum, handler):
@@ -439,8 +439,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 del content["file_list"]
 
             content["title"] = config.param["title"]
-            content["server"] = config.param["server"]
             content["backup"] = config.param["backup"]
+
+            # server configuration and status
+            content["server"] = config.param["server"]
+            if content["server"]["database_type"] == "couch":
+                if config.db_handler.couch is not None:
+                    content["server"]["database_couch_connect"] = config.db_handler.couch.connected
+                else:
+                    content["server"]["database_couch_connect"] = False
 
             # ensure localization data are available
             if "localization" in config.param:

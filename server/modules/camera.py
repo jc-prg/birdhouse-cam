@@ -558,6 +558,7 @@ class BirdhouseImageProcessing(object):
         self.img_camera_error = "camera_na.jpg"
         self.img_camera_error_v2 = "camera_na_v3.jpg"
         self.img_camera_error_v3 = "camera_na_v4.jpg"
+        self.img_camara_error_server = "camera_na_server.jpg"
 
         self.error = False
         self.error_msg = []

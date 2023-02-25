@@ -108,7 +108,8 @@ class BirdhouseArchive(threading.Thread):
             for cam in self.camera:
                 for stamp in stamps:
                     # if files are to be archived
-                    if files[stamp]["datestamp"] == backup_date and files[stamp]["camera"] == cam:
+                    if "_" not in stamp and stamp in files and \
+                            files[stamp]["datestamp"] == backup_date and files[stamp]["camera"] == cam:
                         update_new = files[stamp].copy()
 
                         # if images are to archived
@@ -214,19 +215,19 @@ class BirdhouseArchive(threading.Thread):
                 cap = cv2.VideoCapture(os.path.join(path, file_short))
                 file_short_length = cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS)
 
+            streaming_server = self.config.param["server"]["ip4_stream_video"]
             files[fid] = {
                 "date_end": fid,
                 "stamp_end": 0,
                 "stamp_start": 0,
                 "start": 0,
                 "start_stamp": 0,
-
                 "camera": param[1],
                 "camera_name": self.camera[param[1]].name,
                 "category": "/videos/" + param[2] + "_" + param[3],
                 "date": date,
                 "date_start": param[2] + "_" + param[3],
-                "directory": self.camera[param[1]].param["video"]["streaming_server"],
+                "directory": streaming_server,
                 "image_size": [width, height],
                 "image_count": frames,
                 "framerate": fps,

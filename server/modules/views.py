@@ -99,7 +99,8 @@ def create_chart_data(data, config=None):
     # get data
     for key in data:
         print_key = key[0:2] + ":" + key[2:4]
-        if print_key not in used_keys and used_cameras[0] == data[key]["camera"]:
+        if print_key not in used_keys and \
+                used_cameras[0] == data[key]["camera"]:
             used_keys.append(print_key)
             for title in chart["titles"]:
 
@@ -726,8 +727,9 @@ class BirdhouseViews(threading.Thread):
         category = "/current/"
 
         for stamp in files:
-            if date_today == files[stamp]["datestamp"] and "favorit" in files[stamp] and int(
-                    files[stamp]["favorit"]) == 1:
+            stamp = str(stamp)
+            if "_" not in stamp and stamp in files and date_today == files[stamp]["datestamp"] and \
+                    "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
                 new = self.config.local_time().strftime("%Y%m%d") + "_" + stamp
                 favorites[new] = files[stamp]
                 favorites[new]["source"] = ("images", "")

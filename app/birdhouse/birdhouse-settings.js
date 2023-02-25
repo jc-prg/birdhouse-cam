@@ -79,8 +79,13 @@ function birdhouse_app_settings (name="Settings") {
     this.settings = function () {
         var tab = new birdhouse_table();
         var timezones = "UTC-12,UTC-11,UTC-10,UTC-9,UTC-8,UTC-7,UTC-6,UTC-5,UTC-4,UTC-3,UTC-2,UTC-1,UTC+0,UTC+1,UTC+2,UTC+3,UTC+4,UTC+5,UTC+6,UTC+7,UTC+8,UTC+9,UTC+10,UTC+11,UTC+12"
-        //var link = "http://"+app_data["DATA"]["server"]["ip4_address"]+":5100/_utils/";
-        var link = "http://"+this.current_server+":5100/_utils/";
+
+        if (app_data["DATA"]["server"]["database_server"] && app_data["DATA"]["server"]["database_server"] != "") {
+            var link = "http://"+app_data["DATA"]["server"]["database_server"]+":5100/_utils/";
+        }
+        else {
+            var link = "http://"+this.current_server+":5100/_utils/";
+        }
 
         var html = "<h2>"+lang("SETTINGS")+"</h2>";
         html += "<hr style='border:1px solid gray;'>"
@@ -94,7 +99,11 @@ function birdhouse_app_settings (name="Settings") {
         html += this.tab.row("RPi Active:&nbsp;", birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false", data_type="boolean") );
         html += this.tab.row("<hr/>");
 
-        html += this.tab.row("DB Server:","<a href='"+link+"' target='_blank'>"+link+"</a>");
+        html += this.tab.row("DB Server:&nbsp;", birdhouse_edit_field(id="set_db_server", field="server:database_server", type="input", options="", data_type="string") );
+        html += this.tab.row("DB Type:&nbsp;", birdhouse_edit_field(id="set_db_type", field="server:database_type", type="select", options="json,couch,both", data_type="string") );
+        html += this.tab.row("DB Link:","<a href='"+link+"' target='_blank'>"+link+"</a>");
+        html += this.tab.row("<hr/>");
+
         html += this.tab.row("HTTP Server:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
         html += this.tab.row("HTTP Port:&nbsp;", birdhouse_edit_field(id="set_port", field="server:port", type="input", options="true,false", data_type="integer") );
         html += this.tab.row("Videostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_video", field="server:ip4_stream_video", type="input", options="true,false", data_type="string") );
@@ -103,7 +112,7 @@ function birdhouse_app_settings (name="Settings") {
         html += this.tab.row("Deny admin from IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_deny", field="server:ip4_admin_deny", type="input", options="true,false", data_type="json") );
         html += this.tab.row("<hr>");
 
-        html += this.tab.row("", birdhouse_edit_save("set_main","set_weather_location:set_initial_setup:set_language:set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port") );
+        html += this.tab.row("", birdhouse_edit_save("set_main","set_db_server:set_db_type:set_weather_location:set_initial_setup:set_language:set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port") );
         html += this.tab.row("&nbsp;");
         html += this.tab.end();
         return html;
@@ -119,7 +128,7 @@ function birdhouse_app_settings (name="Settings") {
         api_call   += "<button onclick='window.open(\"" + RESTurl + "api/INDEX/\",\"_blank\");' style='"+button_style+"';>INDEX</button>";
         html_entry += this.tab.row("API Calls", api_call);
 
-        api_call   += "<button onclick='birdhouse_forceBackup();' style='"+button_style+"';>Force Backup</button>";
+        api_call    = "<button onclick='birdhouse_forceBackup();' style='"+button_style+"';>Force Backup</button>";
         api_call   += "<button onclick='birdhouse_recreateImageConfig();' style='"+button_style+"';>NewImgCfg</button>";
         api_call   += "<button onclick='appFW.requestAPI(\"POST\",[\"check-timeout\"],\"\",\"\",\"\");' style='"+button_style+"';>Timeout</button>";
         html_entry += this.tab.row("API Commands", api_call);
@@ -176,6 +185,7 @@ function birdhouse_app_settings (name="Settings") {
 	this.server_information = function () {
         var html_entry = this.tab.start();
     	html_entry += this.tab.row("Active Streams:",      "<div id='system_active_streams'>please wait ...</div>");
+    	html_entry += this.tab.row("Active Database:",     "<div id='system_info_database'>please wait ...</div>");
     	html_entry += this.tab.row("CPU Temperature:",     "<div id='system_info_cpu_temperature'>please wait ...</div>");
     	html_entry += this.tab.row("CPU Usage:",           "<div id='system_info_cpu_usage'>please wait ...</div>");
     	html_entry += this.tab.row("CPU Usage (Details):", "<div id='system_info_cpu_usage_detail'>please wait ...</div>");

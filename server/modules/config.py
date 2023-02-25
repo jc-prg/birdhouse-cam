@@ -9,6 +9,7 @@ import couchdb
 import requests
 from datetime import datetime, timezone, timedelta
 from modules.weather import BirdhouseWeather
+from modules.presets import birdhouse_databases, birdhouse_dir_to_database
 
 
 class BirdhouseConfigCouchDB(object):
@@ -18,14 +19,14 @@ class BirdhouseConfigCouchDB(object):
         initialize
         """
         self.locked = {}
-        self.db_url = "http://"+db_usr+":"+db_pwd+"@"+db_server+":"+str(db_port)+"/"
         self.connected = False
+        self.changed_data = False
         self.basic_directory = base_dir
+        self.db_url = "http://"+db_usr+":"+db_pwd+"@"+db_server+":"+str(db_port)+"/"
         logging.info("Starting config CouchDB handler ("+self.db_url+") ...")
 
         connects2db = 0
         max_connects = 5
-
         while connects2db < max_connects + 1:
 
             if connects2db == 8 or connects2db == 15 or connects2db == 25:
@@ -46,6 +47,8 @@ class BirdhouseConfigCouchDB(object):
                 logging.warning("Error connecting to CouchDB, give up.")
                 return
 
+        self.database_definition = birdhouse_databases
+        self.database_translation = birdhouse_dir_to_database
         self.connected = True
         self.database = couchdb.Server(self.db_url)
         self.check_db()
@@ -55,43 +58,142 @@ class BirdhouseConfigCouchDB(object):
         """
         check if required DB exists or create (under construction)
         """
+        logging.info(" - Check if DB exist ... ")
+        logging.debug(str(self.database_definition))
+        for db_key in self.database_definition:
+            if db_key in self.database and "main" in self.database[db_key]:
+                logging.info("  -> OK: DB " + db_key + " exists.")
+            else:
+                logging.info("  -> DB " + db_key + " have to be created ...")
+                try:
+                    self.create(db_key)
+                except Exception as e:
+                    logging.error("  -> Could not create DB " + db_key + "! " + str(e))
+
+    def create(self, db_key):
+        """
+        create a database in couch_db
+        """
+        logging.info("   -> create DB " + db_key)
+        if db_key in self.database:
+            logging.warning("   -> DB " + db_key + " exists.")
+            db = self.database[db_key]
+        else:
+            try:
+                db = self.database.create(db_key)
+            except Exception as e:
+                logging.error("   -> Could not create DB " + db_key + "! " + str(e))
+                return
+
+        # create initial data
+        if "main" in self.database[db_key]:
+            logging.warning("CouchDB - Already data in " + db_key + "!")
+            return
+        else:
+            doc = db.get("main")
+            if doc is None:
+                doc = {
+                    '_id': 'main',
+                    'type': db_key,
+                    'time': time.time(),
+                    'change': 'new',
+                    'data': {}
+                }
+            try:
+                db.save(doc)
+            except Exception as e:
+                logging.error("CouchDB - Could not save after create: " + db_key + "  " + str(e))
+                return
+
+        # success
+        logging.info("  -> DB created: " + db_key + " " + str(time.time()))
         return
 
     def filename2keys(self, filename):
         """
         translate filename to keys
         """
+        date = ""
+        database = ""
         filename = filename.replace(self.basic_directory, "")
         filename = filename.replace(".json", "")
-        keys = filename.split("/")
-        return keys
+
+        if filename in self.database_translation:
+            database = self.database_translation[filename]
+            date = ""
+        else:
+            parts1 = filename.split("/")
+            parts2 = parts1[0]+"/<DATE>/"+parts1[2]
+            if parts2 in self.database_translation:
+                database = self.database_translation[parts2]
+                date = parts1[1]
+
+        return [database, date]
 
     def read(self, filename):
         """
         read data from DB
         """
         data = {}
-        keys = self.filename2keys(filename)
-        if keys[0] in self.database:
-            logging.info("FOUND ("+keys[0]+"/"+filename+")")
-            data = self.database[keys[0]]
-            if len(keys) == 1:
-                return data
-            elif len(keys) == 2 and keys[1] in data:
-                return data[keys[1]]
-            elif len(keys) == 3 and keys[2] in data[keys[1]]:
-                return data[keys[1]][keys[2]]
-            elif len(keys) == 4 and keys[3] in data[keys[1]][keys[2]]:
-                return data[keys[1]][keys[2]][keys[3]]
+        [db_key, date] = self.filename2keys(filename)
+        logging.info("-----> READ DB: " + db_key + "/" + date)
+
+        if db_key in self.database:
+            database = self.database[db_key]
+            doc = database.get("main")
+            doc_data = doc["data"]
+            if date != "":
+                if date in doc_data:
+                    logging.error("CouchDB ERROR read (date): " + filename + " - " + db_key + "/" + date)
+                    return doc_data[date]
+                else:
+                    return {}
+            else:
+                return doc_data
         else:
-            logging.info("NOT FOUND (" + keys[0] + "/" + filename + ")")
+            logging.error("CouchDB ERROR read (db_key): " + filename + " - " + db_key + "/" + date)
             return {}
 
     def write(self, filename, data):
         """
         read data from DB
         """
-        keys = self.filename2keys(filename)
+        [db_key, date] = self.filename2keys(filename)
+        logging.debug("-----> WRITE: " + filename + " (" + self.basic_directory + ")")
+        logging.info("-----> WRITE DB: " + db_key + "/" + date)
+
+        if db_key not in self.database:
+            logging.error("CouchDB ERROR save: '" + db_key + "' not found, could not write data.")
+            return
+
+        database = self.database[db_key]
+        doc = database.get("main")
+        doc_data = doc["data"]
+        if date != "":
+            doc_data[date] = data
+        else:
+            doc_data = data
+
+        if doc is None:
+            doc = {
+                '_id': 'main',
+                'type': db_key,
+                'time': time.time(),
+                'change': 'new',
+                'data': doc_data
+            }
+        else:
+            doc["data"] = doc_data
+            doc['time'] = time.time()
+            doc['change'] = 'save changes'
+
+        try:
+            database.save(doc)
+        except Exception as e:
+            logging.warning("CouchDB ERROR save: " + db_key + " " + str(e))
+            return
+
+        self.changed_data = True
         return
 
 
@@ -177,29 +279,44 @@ class BirdhouseConfigJSON(object):
             logging.error(str(e))
 
 
-class BirdhouseConfigDB(object):
+class BirdhouseConfigDBHandler(object):
 
     def __init__(self, db_type="json"):
-        db_usr = "birdhouse"
-        db_pwd = "birdhouse"
-        db_server = "192.168.202.3"
-        db_server = "birdhouse_db"
-        db_port = 5984
-        db_basedir = ""
+        logging.info("Starting config database handler ("+db_type+") ...")
 
-        self.json = BirdhouseConfigJSON()
-        self.couch = BirdhouseConfigCouchDB(db_usr, db_pwd, db_server, db_port, db_basedir)
-        self.db_type = db_type
+        self.db_usr = "birdhouse"
+        self.db_pwd = "birdhouse"
+        self.db_server = "192.168.202.3"
+        self.db_server = "birdhouse_db"
+        self.db_port_internal = 5984
+        self.db_basedir = "/usr/src/app/data/"
+
+        self.json = None
+        self.couch = None
+        self.db_type = None
+        self.set_db_type(db_type)
 
     def set_db_type(self, db_type):
         """
         set DB type: JSON, CouchDB, BOTH
         """
-        if self.db_type == "json"  or self.db_type == "couch":
-            self.db_type = db_type
+        logging.info("  -> database handler set database type ("+db_type+")")
+        self.db_type = db_type
+        if self.json is None:
+            self.json = BirdhouseConfigJSON()
+        if self.db_type == "json":
+            logging.info("  -> database handler - db_type=" + self.db_type + ".")
+            return True
+        elif self.db_type == "couch":
+            if self.couch is None or not self.couch.connected:
+                self.couch = BirdhouseConfigCouchDB(self.db_usr, self.db_pwd, self.db_server,
+                                                    self.db_port_internal, self.db_basedir)
+            if not self.couch.connected:
+                self.db_type = "json"
+            logging.info("  -> database handler - db_type=" + self.db_type + ".")
             return True
         else:
-            logging.error("Unknown DB type ("+str(self.db_type)+")")
+            logging.error("  -> Unknown DB type ("+str(self.db_type)+")")
             return False
 
     def read(self, filename):
@@ -208,6 +325,8 @@ class BirdhouseConfigDB(object):
         """
         result = {}
         if self.db_type == "json":
+            result = self.json.read(filename)
+        elif "config.json" in filename:
             result = self.json.read(filename)
         elif self.db_type == "couch":
             result = self.couch.read(filename)
@@ -222,6 +341,7 @@ class BirdhouseConfigDB(object):
         if self.db_type == "json":
             self.json.write(filename, data)
         elif self.db_type == "couch":
+            self.json.write(filename, data)
             self.couch.write(filename, data)
         else:
             logging.error("Unknown DB type ("+str(self.db_type)+")")
@@ -598,8 +718,6 @@ class BirdhouseConfig(threading.Thread):
         self.name = "Config"
         self.param = None
         self.queue = None
-        self.db_handler = BirdhouseConfigDB()
-        self.db_type = "json"
 
         self._running = True
         self._paused = False
@@ -635,6 +753,8 @@ class BirdhouseConfig(threading.Thread):
         }
         self.weather = None
 
+        # read main config file
+        self.db_handler = BirdhouseConfigDBHandler("json")
         self.main_directory = main_directory
         if self.exists("main"):
             self.param = self.read("main")
@@ -657,8 +777,12 @@ class BirdhouseConfig(threading.Thread):
         self.html_replace = {
             "start_date": self.local_time().strftime("%d.%m.%Y %H:%M:%S")
         }
-
         logging.info("Read configuration from '" + self.file_path("main") + "' (timezone="+str(self.timezone)+") ...")
+
+        # set database type if not JSON
+        self.db_type = self.param["server"]["database_type"]
+        if self.db_type != "json":
+            self.db_handler = BirdhouseConfigDBHandler(self.db_type)
 
     def run(self):
         """

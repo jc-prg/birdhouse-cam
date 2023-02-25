@@ -315,12 +315,24 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 				video_file  = entry["video_file_short"];
 				note = "*";
         }	}
-        var streaming_url = "http://"+app_data["DATA"]["devices"]["cameras"][app_active_cam]["video"]["stream_server"]+"/";
+        var stream_server = "";
+        if (app_data["DATA"]["server"]["ip4_stream_video"] && app_data["DATA"]["server"]["ip4_stream_video"] != "") {
+            stream_server = app_data["DATA"]["server"]["ip4_stream_video"] + ":" + app_data["DATA"]["server"]["port_video"];
+        }
+        else {
+            var this_server = window.location.href;
+            this_server     = this_server.split("//")[1];
+            this_server     = this_server.split("/")[0];
+            this_server     = this_server.split(":")[0];
+            stream_server   = this_server + ":" + app_data["DATA"]["server"]["port_video"];
+        }
+
+        var streaming_url = "http://"+stream_server+"/";
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["path"] + entry["thumbnail"]);
 		var hires       = birdhouse_ImageURL(streaming_url + video_file);
 		var description = "";
-		if (title.indexOf("_") > 0)	{ description = entry["date"] + "[br/]" + entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }
-		else				{ description = title + "[br/]" + entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }
+		if (title.indexOf("_") > 0) { description = entry["date"] + "[br/]" + entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }
+		else                        { description = title + "[br/]" + entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }
 		var onclick     = "birdhouse_videoOverlay(\""+hires+"\",\""+description+"\");";
 		var play_button = "<img src=\"birdhouse/img/play.png\" class=\"play_button\" onclick='"+onclick+"' />";
 		entry["lowres"] = entry["thumbnail"];

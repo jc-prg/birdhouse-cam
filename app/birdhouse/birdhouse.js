@@ -70,9 +70,21 @@ function birdhousePrint(data) {
 	    console.log("Sensor data: "+sensor_data["sensor1"]["temperature"] + "C / "+ sensor_data["sensor1"]["humidity"] + "%");
 	    }
 
+    var server_link = "";
+    if (data["DATA"]["server"]["ip4_address"] == "") {
+        var this_server = window.location.href;
+        this_server     = this_server.split("//")[1];
+        this_server     = this_server.split("/")[0];
+        this_server     = this_server.split(":")[0];
+        server_link = this_server;
+    }
+    else {
+        server_link = data["DATA"]["server"]["ip4_address"];
+    }
+
 	birdhouseCameras     = data["DATA"]["devices"]["cameras"];
 	birdhouseMicrophones = data["DATA"]["devices"]["microphones"];
-	birdhouseStream_load(data["DATA"]["server"]["ip4_address"], birdhouseMicrophones);
+	birdhouseStream_load(server_link, birdhouseMicrophones);
 	//setTimeout(function(){  },2000);
 
     var initial_setup   = data["DATA"]["server"]["initial_setup"];

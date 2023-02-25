@@ -9,6 +9,8 @@ services:
   birdhouse_db:
     image:  ${IMAGE_DB:-matthiasg/rpi-couchdb:latest}
     container_name: birdhouse_db
+    ports:
+      - "5100:5984"
     volumes:
       - ./data/couchdb:/opt/couchdb/data
       - ./config/couchdb/default.ini:/opt/couchdb/etc/default.ini

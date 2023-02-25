@@ -23,11 +23,17 @@ function setStatusColor(status_id, status_color) {
 function birdhouseStatus_print(data) {
     console.debug("Update Status ...");
 
+    // add database information
+    var db_info = "type=" + data["DATA"]["server"]["database_type"]+"; ";
+    if (data["DATA"]["server"]["database_type"] == "couch") {
+        db_info += "connected=" + data["DATA"]["server"]["database_couch_connect"];
+    }
+    setTextById("system_info_database",         db_info);
+
     // add system information
     percentage = (data["STATUS"]["system"]["mem_used"]/data["STATUS"]["system"]["mem_total"])*100
     setTextById("system_info_mem_total",        (Math.round(data["STATUS"]["system"]["mem_total"]*10)/10)+" MB")
-    setTextById("system_info_mem_used",         (Math.round(data["STATUS"]["system"]["mem_used"]*10)/10)+" MB ("
-            + Math.round(percentage) + "%)")
+    setTextById("system_info_mem_used",         (Math.round(data["STATUS"]["system"]["mem_used"]*10)/10)+" MB (" + Math.round(percentage) + "%)")
 
     setTextById("system_info_cpu_usage",        (Math.round(data["STATUS"]["system"]["cpu_usage"]*10)/10)+"%")
     setTextById("system_info_cpu_temperature",  (Math.round(data["STATUS"]["system"]["cpu_temperature"]*10)/10)+"°C")

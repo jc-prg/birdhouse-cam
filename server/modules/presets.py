@@ -11,23 +11,45 @@ birdhouse_pages = {
     "save":             ("Speichern",   "/image.jpg",        "")
 }
 
-birdhouse_default_cam_pi = {
+birdhouse_databases = {
+    "config": {},
+    "favorites": {},
+    "today_images": {},
+    "today_weather": {},
+    "today_sensors": {},
+    "archive_images": {},
+    "archive_sensors": {},
+    "archive_weather": {},
+    "archive_videos": {}
+}
+
+birdhouse_dir_to_database = {
+    "config":                       "config",
+    "images/config_images":         "today_images",
+    "images/config_sensor":         "today_sensors",
+    "images/config_weather":        "today_weather",
+    "videos/config_videos":         "archive_videos",
+    "images/<DATE>/config_images":  "archive_images",
+    "images/<DATE>/config_sensors": "archive_sensors",
+    "images/<DATE>/config_weather": "archive_weather"
+}
+
+birdhouse_default_cam1 = {
     "type": "default",
     "name": "Inside",
     "source": "/dev/video0",
     "active": True,
     "record": True,
     "similarity": {
-        "threshold": 95,
-        "detection_area": (0.05, 0.1, 0.95, 0.95)
+        "threshold": 90,
+        "detection_area": (0.1, 0.1, 0.8, 0.8)
     },
     "image": {
-        "black_white": False,
-        "crop": (0.1, 0.0, 0.9, 1.0),
-        "framerate": 24,
-        "show_framerate": True,
+        "crop": (0.1, 0.0, 0.85, 1.0),
         "resolution": "800x600",
-        "saturation": -50,
+        "show_framerate": True,
+        "framerate": "not implemented",
+        "saturation": "not implemented",
         "rotation": 0,
         "preview_scale": 18,
         "date_time": True,
@@ -37,7 +59,7 @@ birdhouse_default_cam_pi = {
     },
     "image_save": {
         "path": "images",
-        "color": "GRAY",
+        "color": "ORIGINAL",
         "seconds": ("00", "20", "40"),
         "hours": ("06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20")
     },
@@ -47,7 +69,7 @@ birdhouse_default_cam_pi = {
         "stream_port": 8008
     }
 }
-birdhouse_default_cam_usb = {
+birdhouse_default_cam2 = {
     "type": "default",
     "name": "Outside",
     "source": "/dev/video1",
@@ -120,12 +142,14 @@ birdhouse_preset = {
         "port":             8000,              # http-port
         "port_video":       8008,
         "database_type":    "json",             # can be "json" or "couchdb"
+        "database_port":    5100,
+        "database_server":  "",
         "initial_setup":    True
     },
     "devices": {
         "cameras": {
-            "cam1": birdhouse_default_cam_pi,
-            "cam2": birdhouse_default_cam_usb
+            "cam1": birdhouse_default_cam1,
+            "cam2": birdhouse_default_cam2
         },
         "microphones": {
             "mic1": birdhouse_default_micro

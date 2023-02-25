@@ -32,8 +32,7 @@ function birdhouseDevices( title, data ) {
     html += settings;
     index.push(info);
 
-    var html_index = "<h2>" + lang("DEVICES") + "</h2><hr/>";
-    html_index += "<div class='camera_info'>";
+    var html_index = "<div class='camera_info'>";
     html_index += "<div class='camera_info_image'>&nbsp;<br/>";
     html_index +=  "<div id='loading_img'><img src='"+app_loading_image+"' style='width:50%;'></div>";
     html_index += "<br/>&nbsp;</div>";
