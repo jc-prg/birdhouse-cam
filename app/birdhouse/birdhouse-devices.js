@@ -46,8 +46,9 @@ function birdhouseDevices( title, data ) {
             birdhouse_device_list.push(index[i][key]["group"]);
             var onclick = "birdhouseDevices_openOne('"+index[i][key]["group"]+"')";
             var button = "<button onclick=\""+onclick+"\" class=\"button-video-edit\">&nbsp;"+lang("SHOW")+"&nbsp;</button>";
-            var action = "(ACTIVE=" + index[i][key]["active"]+")";
-            action = button + "&nbsp;&nbsp;" + action;
+            var action = "<div id='status_active_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>";
+            action    += "<div id='status_error_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>";
+            action    += "&nbsp;&nbsp;&nbsp;" + button;
             html_index += tab.row(key, action);
         });
     }
@@ -56,6 +57,7 @@ function birdhouseDevices( title, data ) {
     html_index += "</div></div>";
 
 	setTextById(app_frame_content, html_index + html);
+	setTextById(app_frame_header, "<center><h2>" + lang("DEVICES") + "</h2></center>");
 }
 
 function birdhouseDevices_cameras(data) {
@@ -81,6 +83,7 @@ function birdhouseDevices_cameras(data) {
 	    index_info[camera_name] = {};
 	    index_info[camera_name]["active"] = cameras[camera]["active"];
 	    index_info[camera_name]["group"] = camera;
+	    index_info[camera_name]["id"] = camera;
 
 	    resolution_max = cameras[camera]["image"]["resolution_max"];
 	    resolution_act = cameras[camera]["image"]["resolution_current"];
@@ -179,6 +182,7 @@ function birdhouseDevices_sensors(data) {
 	    index_info[sensor_name] = {};
 	    index_info[sensor_name]["active"] = sensors[sensor]["active"];
 	    index_info[sensor_name]["group"] = sensor;
+	    index_info[sensor_name]["id"] = sensor;
 
 		if (sensors[sensor]["active"] == false) {
 		    open = false;
@@ -223,6 +227,7 @@ function birdhouseDevices_weather(data) {
 	index_info[info_key] = {};
     index_info[info_key]["active"] = weather_config["weather_active"];
     index_info[info_key]["group"] = "weather_settings";
+    index_info[info_key]["id"] = "WEATHER";
 
 	var admin = data["STATUS"]["admin_allowed"];
 	var html = "";
@@ -281,6 +286,7 @@ function birdhouseDevices_microphones(data) {
 	    index_info[micro_name] = {};
 	    index_info[micro_name]["active"] = micros[micro]["active"];
 	    index_info[micro_name]["group"] = micro;
+        index_info[micro_name]["id"] = micro;
 
 		if (micros[micro]["active"] == false) {
 		    open = false;
