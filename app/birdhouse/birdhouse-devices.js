@@ -10,13 +10,6 @@ function birdhouseDevices( title, data )
 
 var birdhouse_device_list = [];
 
-function birdhouseDevices_openOne(group_id) {
-    for (var i=0;i<birdhouse_device_list.length;i++) {
-        if (birdhouse_device_list[i] == group_id) { birdhouse_groupOpen(birdhouse_device_list[i]); }
-        else                                      { birdhouse_groupClose(birdhouse_device_list[i]); }
-    }
-}
-
 function birdhouseDevices( title, data ) {
 	var html = "";
 	var index = [];
@@ -167,7 +160,7 @@ function birdhouseDevices_cameras(data) {
 		html_temp += "<hr/>&nbsp;<br/><center>" + reconnect + create + birdhouse_edit_save(id="edit_"+camera, id_list)+"</center><br/>";
 	    html_temp += "</div></div>";
 
-		html += birdhouse_OtherGroup( camera, camera_name, html_temp, open );
+		html += birdhouse_OtherGroup( camera, camera_name, html_temp, false );
 	}
 	return [html, index_info];
 }
@@ -217,7 +210,7 @@ function birdhouseDevices_sensors(data) {
 		html_entry += tab.end();
         html_entry += "</div>";
         html_entry += "</div>";
-		html += birdhouse_OtherGroup( sensor, sensor_name, html_entry, open );
+		html += birdhouse_OtherGroup( sensor, sensor_name, html_entry, false );
 	}
 	return [html, index_info];
 }
@@ -246,7 +239,7 @@ function birdhouseDevices_weather(data) {
     html_entry += tab.start();
     html_entry += tab.row("Location:", birdhouse_edit_field(id="set_weather_location", field="localization:weather_location", type="input"));
     html_entry += tab.row("GPS Position:", weather_data["info_position"].toString());
-    html_entry += tab.row("Active:", birdhouse_edit_field(id="set_weather_active", field="localization:weather_active", type="select", options="true,false"));
+    html_entry += tab.row("Active:", birdhouse_edit_field(id="set_weather_active", field="localization:weather_active", type="select", options="true,false", data_type="boolean"));
     html_entry += tab.row("Last Update:", "<div id='weather_info_update'>Please wait ...</div>");
     html_entry += tab.end();
     html_entry += "<br/>";
@@ -263,7 +256,12 @@ function birdhouseDevices_weather(data) {
     html_entry += tab.end();
 
     html_entry += "</div></div>";
-    html += birdhouse_OtherGroup( "weather_settings", lang("WEATHER"), html_entry, open );
+
+    var title = lang("WEATHER").toUpperCase();
+    if (weather_config["weather_active"] == false) {
+        title += " &nbsp; <i>(inactive)</i>";
+    }
+    html += birdhouse_OtherGroup( "weather_settings", title, html_entry, false );
 
 	return [html, index_info];
 }
@@ -308,8 +306,15 @@ function birdhouseDevices_microphones(data) {
 		html_entry += tab.end();
         html_entry += "</div></div>";
 
-        html += birdhouse_OtherGroup( micro, micro_name, html_entry, open );
+        html += birdhouse_OtherGroup( micro, micro_name, html_entry, false );
 	}
 
 	return [html, index_info];
+}
+
+function birdhouseDevices_openOne(group_id) {
+    for (var i=0;i<birdhouse_device_list.length;i++) {
+        if (birdhouse_device_list[i] == group_id) { birdhouse_groupOpen(birdhouse_device_list[i]); }
+        else                                      { birdhouse_groupClose(birdhouse_device_list[i]); }
+    }
 }

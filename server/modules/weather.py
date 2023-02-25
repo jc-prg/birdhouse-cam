@@ -58,19 +58,25 @@ class BirdhouseWeather(threading.Thread):
         continuously request fresh data once a minute
         """
         logging.info("Starting Weather module ...")
+        last_update = time.time()
         while self._running:
-            if not self._paused:
-                asyncio.run(self.get_weather())
-                if not self.error:
-                    self.weather_info["info_status"]["running"] = "OK"
-            else:
+            if last_update + self.update_time < time.time():
+                last_update = time.time()
+                if not self._paused:
+                    asyncio.run(self.get_weather())
+                    if not self.error:
+                        self.weather_info["info_status"]["running"] = "OK"
+
+            if self._paused:
                 self.weather_info = self.weather_empty.copy()
                 self.weather_info["info_status"]["running"] = "paused"
+                last_update = 0
 
-            if self.weather_info["info_status"]["running"] == "error":
+            if "info_status" in self.weather_info and "running" in self.weather_info["info_status"] \
+                    and self.weather_info["info_status"]["running"] == "error":
                 time.sleep(10)
-            else:
-                time.sleep(self.update_time)
+
+            time.sleep(1)
 
     @staticmethod
     def _extract(icon_type, icon_object):
@@ -106,6 +112,12 @@ class BirdhouseWeather(threading.Thread):
         date_tz_info = timezone(timedelta(hours=self.timezone))
         return datetime.now(date_tz_info)
 
+    def stop(self):
+        """
+        stop weather loop
+        """
+        self._running = False
+
     def active(self, active):
         """
         set if active or inactive (used via config.py)
@@ -132,7 +144,7 @@ class BirdhouseWeather(threading.Thread):
             except Exception as e:
                 self.error = True
                 self.error_msg = "Could not load weather data: " + str(e)
-                self.weather_info = self.weather_empty
+                self.weather_info = self.weather_empty.copy()
                 self.weather_info["info_status"]["running"] = "error"
                 self.weather_info["info_status"]["error"] = self.error
                 self.weather_info["info_status"]["error_msg"] = self.error_msg

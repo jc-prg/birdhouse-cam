@@ -684,6 +684,7 @@ class BirdhouseConfig(threading.Thread):
             elif not self._paused:
                 count = 0
                 self.weather.active(self.param["localization"]["weather_active"])
+
         logging.info("Stopped config handler.")
 
     def stop(self):
@@ -906,8 +907,6 @@ class BirdhouseConfig(threading.Thread):
             self.param = self.read(config, date)
             for key in self.update:
                 self.update[key] = True
-            self.weather = BirdhouseWeather(city=self.param["localization"]["weather_location"])
-            self.weather.start()
 
     @staticmethod
     def read_swap_info():

@@ -1856,7 +1856,6 @@ class BirdhouseCamera(threading.Thread):
     def update_main_config(self):
         logging.info("Update data from main configuration file for camera " + self.id)
         temp_data = self.config.read("main")
-        self.weather_active = temp_data["localization"]["weather_active"]
         self.param = temp_data["devices"]["cameras"][self.id]
         self.name = self.param["name"]
         self.active = self.param["active"]

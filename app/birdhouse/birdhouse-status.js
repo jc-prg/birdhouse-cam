@@ -43,7 +43,12 @@ function birdhouseStatus_print(data) {
         setTextById("error_img_"+camera, cameras[camera]["status"]["image_error_msg"]);
         if (cameras[camera]["status"]["error"] || cameras[camera]["status"]["image_error"]) {
             setHeaderColor(header_id=camera+"_error", header_color=header_color_error);
-            }
+            setHeaderColor(header_id=camera, header_color=header_color_error);
+        }
+        else {
+            setHeaderColor(header_id=camera+"_error", header_color="");
+            setHeaderColor(header_id=camera, header_color="");
+        }
         if (cameras[camera]["image"]["crop_area"]) {
             crop = "[" + cameras[camera]["image"]["crop_area"][0] + ", " + cameras[camera]["image"]["crop_area"][1] + ", ";
             crop += cameras[camera]["image"]["crop_area"][2] + ", " + cameras[camera]["image"]["crop_area"][2] + "] ";
@@ -55,22 +60,29 @@ function birdhouseStatus_print(data) {
     // weather information
     var weather_footer = [];
     var entry = "";
-    var weather_icon = "N/A";
+    var weather_icon = "<small>N/A</small>";
     var weather_update = "N/A";
     var weather_error = "";
-    if (data["DATA"]["localization"]["weather_active"] && data["WEATHER"]["current"] && data["WEATHER"]["current"]["description_icon"]) {
-        entry = data["WEATHER"]["info_city"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
-        entry = "<big>" + data["WEATHER"]["current"]["description_icon"] + "</big> &nbsp; " + entry;
-        weather_icon = data["WEATHER"]["current"]["description_icon"];
-        weather_update = data["WEATHER"]["info_update"];
+    if (data["WEATHER"]["current"] && data["WEATHER"]["current"]["description_icon"]) {
+        if (data["DATA"]["localization"]["weather_active"]) {
+            entry = data["WEATHER"]["info_city"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
+            entry = "<big>" + data["WEATHER"]["current"]["description_icon"] + "</big> &nbsp; " + entry;
+            weather_icon = data["WEATHER"]["current"]["description_icon"];
+            weather_update = data["WEATHER"]["info_update"];
+        }
         weather_error = "Running: " + data["WEATHER"]["info_status"]["running"] + "\n";
         if (data["WEATHER"]["info_status"]["error"]) {
             weather_error += "Error: " + data["WEATHER"]["info_status"]["error"].toString() + "\n";
             weather_error += "Message: " + data["WEATHER"]["info_status"]["error_msg"];
             setHeaderColor(header_id="weather_error", header_color=header_color_error);
+            setHeaderColor(header_id="weather_settings", header_color=header_color_error);
         }
         else if (data["WEATHER"]["info_status"]["running"].indexOf("paused") > -1) {
             setHeaderColor(header_id="weather_error", header_color=header_color_warning);
+        }
+        else {
+            setHeaderColor(header_id="weather_settings", header_color="");
+            setHeaderColor(header_id="weather_error", header_color="");
         }
     }
     weather_footer.push(entry);
@@ -97,6 +109,11 @@ function birdhouseStatus_print(data) {
             setTextById("error_sensor2_"+sensor, sensor_error_02);
             if (status["error"] || status["error_module"] || status["connect"]) {
                 setHeaderColor(header_id=sensor+"_error", header_color=header_color_error);
+                setHeaderColor(header_id=sensor, header_color=header_color_error);
+            }
+            else {
+                setHeaderColor(header_id=sensor+"_error", header_color="");
+                setHeaderColor(header_id=sensor, header_color="");
             }
         }
 

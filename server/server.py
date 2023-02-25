@@ -413,7 +413,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 content = views.video_list(server=self)
             elif command == "VIDEO_DETAIL":
                 content = views.detail_view_video(server=self)
-            elif command == "CAMERAS":
+            elif command == "DEVICES":
                 content = views.camera_list(server=self)
             elif command == "status" or command == "version":
                 content = views.index(server=self)
@@ -509,7 +509,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "reload": False
                 },
                 "API": api_description,
-                "WEATHER": config.weather.weather_info,
+                "WEATHER": config.weather.get_weather_info("all"),
                 "DATA": content
             }
 
