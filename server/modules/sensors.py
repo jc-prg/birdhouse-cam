@@ -58,7 +58,7 @@ class BirdhouseSensor(threading.Thread):
         """
         count = 0
         retry = 0
-        retry_wait = 120
+        retry_wait = 30
         logging.info("- Starting sensor loop (" + self.id + "/" + str(self.pin) + "/"+self.param["type"]+") ...")
         while self.running:
             time.sleep(5)
