@@ -37,7 +37,7 @@ class BirdhouseWeather(threading.Thread):
             "info_city": "",
             "info_format": "",
             "info_position": "",
-            "info_status": {},
+            "info_status": {"running": ""},
             "current": {
                 "temperature": None,
                 "description": "",
@@ -53,6 +53,8 @@ class BirdhouseWeather(threading.Thread):
                 "today": {}
             }
         }
+        self.weather_info = self.weather_empty.copy()
+        self.weather_info["info_status"]["running"] = "started"
 
     def run(self):
         """

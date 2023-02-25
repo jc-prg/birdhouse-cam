@@ -61,7 +61,7 @@ class BirdhouseSensor(threading.Thread):
         retry_wait = 120
         logging.info("- Starting sensor loop (" + self.id + "/" + str(self.pin) + "/"+self.param["type"]+") ...")
         while self.running:
-            time.sleep(1)
+            time.sleep(5)
 
             p_count = 0
             while self._paused:
@@ -121,6 +121,8 @@ class BirdhouseSensor(threading.Thread):
         connect with sensor
         """
         temp = ""
+        self.error = False
+        self.error_connect = False
         if "rpi_active" in self.config.param["server"] and self.config.param["server"]["rpi_active"]:
             try:
                 if self.param["type"] == "dht11":
