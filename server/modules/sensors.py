@@ -45,10 +45,11 @@ class BirdhouseSensor(threading.Thread):
         self.pin = self.param["pin"]
         self.values = {}
         self.last_read = 0
-        self.interval = 20
+        self.interval = 10
 
         if not error_module:
             self.connect()
+
         else:
             self.logging.error(error_module_msg)
             self.logging.error("- Requires Raspberry and installation of this module.")
@@ -64,24 +65,26 @@ class BirdhouseSensor(threading.Thread):
         """
         count = 0
         retry = 0
-        retry_wait = 30
+        retry_wait = 10
         self.logging.info("- Starting sensor loop (" + self.id + "/" + str(self.pin) + "/"+self.param["type"]+") ...")
         while self.running:
-            time.sleep(5)
-
             p_count = 0
+            count += 1
+
+            # wait if paused
             while self._paused:
                 if p_count == 0:
                     self.logging.info("Pause sensor "+self.id+" ...")
                     p_count += 1
                 time.sleep(0.5)
 
+            # check if configuration update
             if self.config.update["sensor_"+self.id]:
                 self.param = self.config.param["devices"]["sensors"][self.id]
                 self.config.update["sensor_"+self.id] = False
                 self.active = self.param["active"]
 
-            count += 1
+            # reconnect if error and active
             if self.error_connect and self.param["active"]:
                 retry += 1
                 if retry > retry_wait:
@@ -89,7 +92,9 @@ class BirdhouseSensor(threading.Thread):
                     self.connect()
                     retry = 0
 
-            elif count >= self.interval and self.param["active"]:
+            # read data
+            if count >= self.interval and self.param["active"]:
+                count = 0
                 try:
                     if self.param["type"] == "dht11":
                         indoor = self.sensor.read()
@@ -115,9 +120,10 @@ class BirdhouseSensor(threading.Thread):
                 except Exception as e:
                     self.error = True
                     self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-                    self.error_msg += " - Error reading data from sensor: "+str(e)
+                    self.error_msg += " - Error reading data from sensor: " + str(e)
                     self.logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
-                count = 0
+
+            time.sleep(1)
 
         # GPIO.cleanup()
         self.logging.info("Stopped sensor (" + self.id + "/"+self.param["type"]+").")
