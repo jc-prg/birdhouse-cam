@@ -104,11 +104,13 @@ class BirdhouseSensor(threading.Thread):
             if count >= self.interval and self.param["active"]:
                 count = 0
                 try:
-                    indoor = self.sensor.read()
                     if self.param["type"] == "dht11":
+                        indoor = self.sensor.read()
                         if indoor.is_valid():
                             self.values["temperature"] = indoor.temperature
                             self.values["humidity"] = indoor.humidity
+                            self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+                            self.last_read_time = time.time()
                             self.logging.debug("Temperature: " + str(indoor.temperature))
                             self.logging.debug("Humidity:    " + str(indoor.humidity))
                         else:
@@ -117,11 +119,11 @@ class BirdhouseSensor(threading.Thread):
                     elif self.param["type"] == "dht22":
                         self.values["temperature"] = self.sensor.temperature
                         self.values["humidity"] = self.sensor.humidity
+                        self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+                        self.last_read_time = time.time()
                         self.logging.debug("Temperature: " + str(self.sensor.temperature))
                         self.logging.debug("Humidity:    " + str(self.sensor.humidity))
 
-                    self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-                    self.last_read_time = time.time()
                     self.error = False
                     self.error_msg = ""
 
