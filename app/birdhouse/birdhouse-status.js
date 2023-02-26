@@ -52,6 +52,8 @@ function birdhouseStatus_print(data) {
         camera_streams += cameras[camera]["image"]["current_streams"];
         setTextById("error_cam_"+camera, cameras[camera]["status"]["error_msg"]);
         setTextById("error_img_"+camera, cameras[camera]["status"]["image_error_msg"]);
+        setTextById("last_image_recorded_"+camera, Math.round(cameras[camera]["status"]["record_image_last"]*10)/10 +
+                    "s (error=" + cameras[camera]["status"]["record_image_error"] + ")");
 
         if (cameras[camera]["status"]["error"] || cameras[camera]["status"]["image_error"]) {
             setHeaderColor(header_id=camera+"_error", header_color=header_color_error);

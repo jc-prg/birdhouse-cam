@@ -227,6 +227,9 @@ class BirdhouseWeather(threading.Thread):
             self.logging.error(str(self.weather_info))
             self.weather_info = self.weather_empty.copy()
 
+        if info_type == "status":
+            return self.weather_info["info_status"]
+
         if info_type == "current_small":
             weather_data = self.weather_info["current"]
             info = {

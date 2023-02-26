@@ -115,7 +115,6 @@ function birdhouseDevices_cameras(data) {
 		html_entry += tab.row("- Crop (absolute):", "<div id='get_crop_area_"+camera+"'>Please wait ...</div>");
 		html_entry += tab.row("- Preview Scale:", birdhouse_edit_field(id="set_scale_"+camera, field="devices:cameras:"+camera+":image:preview_scale", type="input", options="", data_type="integer") + " %");
 		html_entry += tab.row("- Show Framerate:", birdhouse_edit_field(id="set_show_framerate_"+camera, field="devices:cameras:"+camera+":image:show_framerate", type="select", options="true,false", data_type="boolean") + " fps");
-		html_entry += tab.row("- Current Streams:", "<div id='show_stream_count_"+camera+"'>Please wait ...</div>");
         html_entry += tab.end();
 
 		id_list += "set_resolution_"+camera+":set_rotation_"+camera+":set_show_framerate_"+camera+":set_crop_"+camera+":set_scale_"+camera+":set_black_white_"+camera+":";
@@ -149,10 +148,12 @@ function birdhouseDevices_cameras(data) {
         html_temp += birdhouse_OtherGroup( camera+"_record", "Record Images", html_entry, false );
 
         html_entry = tab.start();
+        html_entry += tab.row("Last Recorded:", "<div id='last_image_recorded_"+camera+"'>please wait ...</div>");
+		html_entry += tab.row("Current Streams:", "<div id='show_stream_count_"+camera+"'>Please wait ...</div>");
         html_entry += tab.row("Error Camera:", "<textarea id='error_cam_"+camera+"' class='settings_error_msg'></textarea>");
         html_entry += tab.row("Error Image:", "<textarea id='error_img_"+camera+"' class='settings_error_msg'></textarea>");
         html_entry += tab.end();
-        html_temp += birdhouse_OtherGroup( camera+"_error", "Error messages", html_entry, false );
+        html_temp += birdhouse_OtherGroup( camera+"_error", "Status", html_entry, false );
 
         if (admin && cameras[camera]["active"]) { var create =  "<button onclick=\""+onclick+"\" class=\"button-video-edit\">&nbsp;"+lang("CREATE_DAY")+"&nbsp;</button> &nbsp; "; }
     	else { var create = ""; }
@@ -204,7 +205,7 @@ function birdhouseDevices_sensors(data) {
         html_temp += tab.row("Error Sensor:", "<textarea id='error_sensor1_"+sensor+"' class='settings_error_msg'></textarea>");
         html_temp += tab.row("Error Message:", "<textarea id='error_sensor2_"+sensor+"' class='settings_error_msg'></textarea>");
         html_temp += tab.end();
-        html_entry += birdhouse_OtherGroup( sensor+"_error", "Error messages", html_temp, false );
+        html_entry += birdhouse_OtherGroup( sensor+"_error", "Status", html_temp, false );
 
 		var id_list = "set_name_"+sensor+":set_type_"+sensor+":set_active_"+sensor+":set_source_"+sensor;
         html_entry += "<hr/>";
@@ -251,7 +252,7 @@ function birdhouseDevices_weather(data) {
     var html_temp = tab.start();
     html_temp += tab.row("Error:", "<textarea id='weather_info_error' class='settings_error_msg'></textarea>");
     html_temp += tab.end();
-    html_entry += birdhouse_OtherGroup( "weather_error", "Error messages", html_temp, false );
+    html_entry += birdhouse_OtherGroup( "weather_error", "Status    ", html_temp, false );
 
     var id_list = "set_weather_location:set_weather_active";
     html_entry += "<hr/>";

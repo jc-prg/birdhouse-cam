@@ -436,8 +436,33 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if "file_list" in content:
                 del content["file_list"]
 
+            api_response = {
+                "STATUS": {
+                    "start_time": api_start,
+                    "current_time": config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
+                    "admin_allowed": self.admin_allowed(),
+                    "check-version": version,
+                    "api-call": status,
+                    "reload": False,
+                    "system": get_system_data(),
+                    "server": {},
+                    "devices": {
+                        "cameras": {},
+                        "sensors": {},
+                        "weather": config.weather.get_weather_info("status"),
+                        "microphones": {}
+                    }
+                },
+                "API": api_description,
+                "WEATHER": config.weather.get_weather_info("all"),
+                "DATA": {}
+            }
+
+            # collect data for "DATA" section
             content["title"] = config.param["title"]
             content["backup"] = config.param["backup"]
+            content["selected"] = which_cam
+            content["active_page"] = command
 
             # server configuration and status
             content["server"] = config.param["server"]
@@ -446,6 +471,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     content["server"]["database_couch_connect"] = config.db_handler.couch.connected
                 else:
                     content["server"]["database_couch_connect"] = False
+                api_response["STATUS"]["server"]["database"] = {
+                    "connect": content["server"]["database_couch_connect"],
+                    "type": content["server"]["database_type"]
+                    }
 
             # ensure localization data are available
             if "localization" in config.param:
@@ -458,6 +487,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             # get microphone data and create streaming information
             micro_data = config.param["devices"]["microphones"].copy()
             for key in micro_data:
+                api_response["STATUS"]["devices"]["microphones"][key] = {"status": "not implemented yet"}
                 if config.param["server"]["ip4_stream_audio"] == "":
                     micro_data[key]["stream_server"] = config.param["server"]["ip4_address"]
                 else:
@@ -468,6 +498,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             camera_data = config.param["devices"]["cameras"].copy()
             for key in camera_data:
                 if key in camera:
+                    api_response["STATUS"]["devices"]["cameras"][key] = camera[key].get_camera_status()
                     camera_data[key]["video"]["stream"] = "/stream.mjpg?" + key
                     camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
                     camera_data[key]["device"] = "camera"
@@ -484,6 +515,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             # get sensor data
             sensor_data = config.param["devices"]["sensors"].copy()
             for key in sensor_data:
+                api_response["STATUS"]["devices"]["sensors"][key] = sensor[key].get_error_status()
                 sensor_data[key]["values"] = {}
                 sensor_data[key]["status"] = {"error": False}
                 if key in sensor and sensor[key].error:
@@ -504,23 +536,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "sensors": sensor_data,
                 "microphones": micro_data
             }
-            api_response = {
-                "STATUS": {
-                    "start_time": api_start,
-                    "current_time": config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
-                    "admin_allowed": self.admin_allowed(),
-                    "check-version": version,
-                    "api-call": status,
-                    "reload": False
-                },
-                "API": api_description,
-                "WEATHER": config.weather.get_weather_info("all"),
-                "DATA": content
-            }
 
-            api_response["STATUS"]["system"] = get_system_data()
-            api_response["DATA"]["selected"] = which_cam
-            api_response["DATA"]["active_page"] = command
+            api_response["DATA"] = content
 
             self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'),
                              no_cache=True)

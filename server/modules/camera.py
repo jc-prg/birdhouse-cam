@@ -1227,6 +1227,9 @@ class BirdhouseCamera(threading.Thread):
         self.image_streams_to_kill = {}
         self.previous_image = None
         self.previous_stamp = "000000"
+        self.record_image_last = time.time()
+        self.record_image_last_string = ""
+        self.record_image_error = False
 
         self.logging.info("Initializing camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
 
@@ -1251,6 +1254,7 @@ class BirdhouseCamera(threading.Thread):
         count_paused = 0
         reload_time = time.time()
         reload_time_error = 60
+        reload_time_error_record = 120
 
         while self.running:
             current_time = self.config.local_time()
@@ -1264,6 +1268,17 @@ class BirdhouseCamera(threading.Thread):
                 self.logging.info("....... RELOAD Error: " + self.id + " - " +
                                   str(reload_time + reload_time_error) + " > " + str(time.time()))
                 reload_time = time.time()
+                self.config_update = True
+                self.reload_camera = True
+
+            # if record and images not recorded for while reload
+            if self.record and self.record_image_last > 0 and \
+                    (self.record_image_last + reload_time_error_record) < time.time():
+                self.logging.info("....... RELOAD Record Error: " + self.id + " - " +
+                                  str(self.record_image_last + reload_time_error_record) + " > " +
+                                  str(time.time()))
+                self.record_image_last = time.time()
+                self.record_image_error = True
                 self.config_update = True
                 self.reload_camera = True
 
@@ -1400,6 +1415,10 @@ class BirdhouseCamera(threading.Thread):
                             self.write_image(filename=path_hires, image=image)
                             self.write_image(filename=path_lowres, image=image,
                                              scale_percent=self.param["image"]["preview_scale"])
+
+                            self.record_image_error = False
+                            self.record_image_last = time.time()
+                            self.record_image_last_string = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
                         time.sleep(0.7)
                         self.previous_stamp = stamp
@@ -1817,12 +1836,15 @@ class BirdhouseCamera(threading.Thread):
         return all status and error information
         """
         status = {
+            "active_streams": self.get_stream_count(),
             "error": self.error,
             "error_warn": self.error_msg,
             "error_msg": self.error_msg,
             "image_error": self.image.error,
             "image_error_msg": self.image.error_msg,
             "image_cache_size": self.config_cache_size,
+            "record_image_error": self.record_image_error,
+            "record_image_last": time.time() - self.record_image_last,
             "video_error": self.video.error,
             "video_error_msg": self.video.error_msg,
             "running": self.running
