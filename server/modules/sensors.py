@@ -159,7 +159,7 @@ class BirdhouseSensor(threading.Thread):
                     self.sensor = dht11.DHT11(pin=self.pin)
                 elif self.param["type"] == "dht22":
                     if self.initial_load:
-                        # import board
+                        import board
                         import adafruit_dht
                         self.initial_load = False
                     ada_pin = eval("board.D"+str(self.pin))
