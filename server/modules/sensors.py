@@ -128,10 +128,11 @@ class BirdhouseSensor(threading.Thread):
                     self.error_msg = ""
 
                 except Exception as e:
-                    self.error = True
-                    self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-                    self.error_msg += " - Error reading data from sensor: " + str(e)
-                    self.logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
+                    if self.last_read_time + self.interval_reconnect < time.time():
+                        self.error = True
+                        self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+                        self.error_msg += " - Error reading data from sensor: " + str(e)
+                        self.logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
 
             time.sleep(1)
 
