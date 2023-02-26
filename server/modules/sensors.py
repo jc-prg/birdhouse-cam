@@ -95,7 +95,7 @@ class BirdhouseSensor(threading.Thread):
                     retry = 0
 
             # if longer time no correct data read, reconnect
-            if self.last_read_time + self.interval_reconnect < time.time()
+            if self.last_read_time + self.interval_reconnect < time.time():
                 retry = retry_wait
                 self.error_connect = True
 
