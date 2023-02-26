@@ -420,9 +420,7 @@ class BirdhouseViews(threading.Thread):
 
         content["subtitle"] += " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
         content["chart_data"] = create_chart_data(content["entries"].copy(), self.config)
-        content["view_count"] = ["all", "star", "detect"]
-        if backup:
-            content["view_count"].append("data")
+        content["view_count"] = ["all", "star", "detect", "data"]
         return content
 
     def archive_list(self, camera):
@@ -687,7 +685,7 @@ class BirdhouseViews(threading.Thread):
                     content["entries"][entry] = files_part[entry]
                     content["groups"][hour + ":00"].append(entry)
 
-        content["view_count"] = ["all", "star", "detect", "recycle"]
+        content["view_count"] = ["all", "star", "detect", "recycle", "data"]
         content["subtitle"] = presets.birdhouse_pages["today_complete"][0] + " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
         content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"), cam=which_cam)
         content["chart_data"] = create_chart_data(content["entries"].copy(), self.config)

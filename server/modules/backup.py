@@ -458,23 +458,43 @@ class BirdhouseArchive(threading.Thread):
             response["error"] = "file type not supported"
             return response
 
-        # get files in directory, check which files shall be deleted
+        # prepare date_stamp
+        if date != "":
+            check_date = date[6:8] + "." + date[4:6] + "." + date[0:4]
+        else:
+            check_date = ""
+
+        self.logging.info(" - Prepare DELETE: Start to read data from "+directory)
+        start_time = time.time()
+
+        # get files in directory, check which files shall be deleted -> NEEDS A LOT OF TIME?! Recursive not required
         files_in_dir = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and ".json" not in f]
+
+        self.logging.info(" - Prepare DELETE: Read " + str(len(files_in_dir)) + " files (" +
+                          str(time.time() - start_time) + "s)")
+
         for key in files:
-            if date != "":
-                check_date = date[6:8] + "." + date[4:6] + "." + date[0:4]
-            else:
-                check_date = ""
+            # remove data only entries
+            check = False
+            if "type" in files[key] and files[key]["type"] != "data":
+                check = True
+            elif "type" not in files[key]:
+                check = True
+            elif "to_be_deleted" in files[key] and int(files[key]["to_be_deleted"]) == 1:
+                check = True
 
-            if date == "" or ("date" in files[key] and check_date in files[key]["date"]):
-                for file_type in file_types:
-                    if file_type in files[key]:
-                        files_in_config.append(files[key][file_type])
+            # collect stamps where potentially files exist
+            if check:
+                if date == "" or ("date" in files[key] and check_date in files[key]["date"]):
+                    for file_type in file_types:
+                        if file_type in files[key]:
+                            files_in_config.append(files[key][file_type])
 
-            if "to_be_deleted" in files[key] and int(files[key]["to_be_deleted"]) == 1:
-                delete_keys.append(key)
+                if "to_be_deleted" in files[key] and int(files[key]["to_be_deleted"]) == 1:
+                    delete_keys.append(key)
 
         self.logging.info(" - Prepare DELETE " + config + ": total_entries="+str(len(files)) + "; " +
+                          "total_file_entries=" + str(len(files_in_config)) + "; " +
                           "to_delete=" + str(len(delete_keys)) + "; ")
 
         # delete identified files if exist (videos and backup)

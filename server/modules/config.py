@@ -523,7 +523,7 @@ class BirdhouseConfigQueue(threading.Thread):
         while self._running:
             if start_time + self.queue_wait < time.time():
                 start_time = time.time()
-                self.logging.info("... Check Queue")
+                self.logging.debug("... Check Queue")
 
                 count_entries = 0
                 count_files = 0
@@ -531,7 +531,7 @@ class BirdhouseConfigQueue(threading.Thread):
 
                     # show entries in queue
                     if len(self.edit_queue[config_file]) > 0:
-                        self.logging.info("    - " + config_file + ": " +
+                        self.logging.debug("    - " + config_file + ": " +
                                           str(len(self.edit_queue[config_file])) + " entries")
 
                     # EDIT QUEUE: today, video (without date)
