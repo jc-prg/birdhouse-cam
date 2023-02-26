@@ -47,6 +47,7 @@ class BirdhouseSensor(threading.Thread):
         self.last_read = 0
         self.last_read_time = 0
         self.interval = 10
+        self.interval_reconnect = 60
 
         if not error_module:
             self.connect()
@@ -92,6 +93,11 @@ class BirdhouseSensor(threading.Thread):
                     self.logging.info("Retry starting sensor: "+self.id)
                     self.connect()
                     retry = 0
+
+            # if longer time no correct data read, reconnect
+            if self.last_read_time + self.interval_reconnect < time.time()
+                retry = retry_wait
+                self.error_connect = True
 
             # read data
             if count >= self.interval and self.param["active"]:
