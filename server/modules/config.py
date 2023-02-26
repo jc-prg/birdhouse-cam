@@ -147,9 +147,9 @@ class BirdhouseConfigCouchDB(object):
             doc_data = doc["data"]
             if date != "":
                 if date in doc_data:
-                    self.logging.error("CouchDB ERROR read (date): " + filename + " - " + db_key + "/" + date)
                     return doc_data[date]
                 else:
+                    self.logging.error("CouchDB ERROR read (date): " + filename + " - " + db_key + "/" + date)
                     return {}
             else:
                 return doc_data
@@ -192,17 +192,36 @@ class BirdhouseConfigCouchDB(object):
 
         try:
             database.save(doc)
+
         except Exception as e:
-            self.logging.warning("CouchDB ERROR save: " + db_key + " " + str(e))
+            self.logging.error("CouchDB ERROR save: " + db_key + " " + str(e))
+            self.logging.error("  -> dict entries: " + str(len(doc["data"])))
+            self.logging.error("  -> dict size: " + str(sys.getsizeof(doc["data"])))
             return
 
         self.changed_data = True
         return
 
-    def exists(self, config, date):
+    def exists(self, filename):
         """
         check if db exists
         """
+        [db_key, date] = self.filename2keys(filename)
+        self.logging.debug("-----> CHECK DB: " + db_key + "/" + date)
+
+        if db_key in self.database:
+            database = self.database[db_key]
+            doc = database.get("main")
+            doc_data = doc["data"]
+            if date != "":
+                if date in doc_data:
+                    return True
+                else:
+                    return False
+            else:
+                return True
+        else:
+            return False
 
 
 class BirdhouseConfigJSON(object):
@@ -389,18 +408,16 @@ class BirdhouseConfigDBHandler(object):
         """
         check if file or DB exists
         """
+        if_exists = False
+        filename = self.file_path(config, date)
+
         if self.db_type == "json":
-            return os.path.isfile(self.file_path(config, date))
-
+            if_exists = os.path.isfile(filename)
         elif self.db_type == "couch":
-            data = self.read(config, date)
-            if data != {}:
-                if date == "":
-                    return True
-                elif date in data:
-                    return True
+            if_exists = self.couch.exists(filename)
 
-        return False
+        self.logging.debug("-----> Check DB exists: " + str(if_exists) + " (" + self.db_type + " | " + filename +")")
+        return if_exists
 
     def read(self, config, date=""):
         """
