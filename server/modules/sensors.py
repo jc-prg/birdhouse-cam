@@ -104,6 +104,7 @@ class BirdhouseSensor(threading.Thread):
             if count >= self.interval and self.param["active"]:
                 count = 0
                 try:
+                    self.error = False
                     indoor = self.sensor.read()
                     if self.param["type"] == "dht11":
                         if indoor.is_valid():
