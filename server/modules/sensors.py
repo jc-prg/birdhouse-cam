@@ -45,7 +45,7 @@ class BirdhouseSensor(threading.Thread):
         self.pin = self.param["pin"]
         self.values = {}
         self.last_read = 0
-        self.last_read_time = 0
+        self.last_read_time = time.time()
         self.interval = 10
         self.interval_reconnect = 60
         self.initial_load = True
@@ -104,14 +104,11 @@ class BirdhouseSensor(threading.Thread):
             if count >= self.interval and self.param["active"]:
                 count = 0
                 try:
-                    self.error = False
                     indoor = self.sensor.read()
                     if self.param["type"] == "dht11":
                         if indoor.is_valid():
                             self.values["temperature"] = indoor.temperature
                             self.values["humidity"] = indoor.humidity
-                            self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-                            self.last_read_time = time.time()
                             self.logging.debug("Temperature: " + str(indoor.temperature))
                             self.logging.debug("Humidity:    " + str(indoor.humidity))
                         else:
@@ -120,11 +117,11 @@ class BirdhouseSensor(threading.Thread):
                     elif self.param["type"] == "dht22":
                         self.values["temperature"] = self.sensor.temperature
                         self.values["humidity"] = self.sensor.humidity
-                        self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-                        self.last_read_time = time.time()
                         self.logging.debug("Temperature: " + str(self.sensor.temperature))
                         self.logging.debug("Humidity:    " + str(self.sensor.humidity))
 
+                    self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+                    self.last_read_time = time.time()
                     self.error = False
                     self.error_msg = ""
 
