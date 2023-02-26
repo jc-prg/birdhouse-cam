@@ -48,6 +48,7 @@ class BirdhouseSensor(threading.Thread):
         self.last_read_time = 0
         self.interval = 10
         self.interval_reconnect = 60
+        self.initial_load = True
 
         if not error_module:
             self.connect()
@@ -147,22 +148,35 @@ class BirdhouseSensor(threading.Thread):
         if "rpi_active" in self.config.param["server"] and self.config.param["server"]["rpi_active"]:
             try:
                 if self.param["type"] == "dht11":
-                    import modules.dht11 as dht11
+                    if self.initial_load:
+                        import modules.dht11 as dht11
+                        self.initial_load = False
                     self.sensor = dht11.DHT11(pin=self.pin)
                 elif self.param["type"] == "dht22":
-                    import board
-                    import adafruit_dht
+                    if self.initial_load:
+                        import board
+                        import adafruit_dht
+                        self.initial_load = False
                     ada_pin = eval("board.D"+str(self.pin))
                     self.sensor = adafruit_dht.DHT22(ada_pin, use_pulseio=False)
                 else:
                     raise "Sensor type not supported"
+            except Exception as e:
+                self.error = True
+                self.error_connect = True
+                self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+                self.error_msg += " - Could not load " + self.param["type"] + " sensor module: " + str(e)
+                self.logging.error(self.error_msg)
+                return
 
+            try:
                 if self.param["type"] == "dht11":
                     indoor = self.sensor.read()
                     if indoor.is_valid():
                         temp = "Temp: {:.1f} C; Humidity: {}% ".format(indoor.temperature, indoor.humidity)
                     else:
                         temp = "error"
+
                 elif self.param["type"] == "dht22":
                     temperature_c = self.sensor.temperature
                     temperature_f = temperature_c * (9 / 5) + 32
@@ -171,15 +185,18 @@ class BirdhouseSensor(threading.Thread):
                 self.error = False
                 self.error_connect = False
                 self.error_msg = ""
+
             except Exception as e:
                 self.error = True
-                self.error_connect = True
                 self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-                self.error_msg += " - Could not load "+self.param["type"]+" sensor module: "+str(e)
+                self.error_msg += " - Initial load "+self.param["type"]+" not OK: "+str(e)
                 self.logging.error(self.error_msg)
+                return
+
             if not self.error:
                 self.logging.info("Loaded Sensor: "+self.id)
                 self.logging.info("- Initial values: "+str(temp))
+
         else:
             self.error = True
             self.error_connect = True
