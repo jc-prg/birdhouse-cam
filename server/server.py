@@ -518,16 +518,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             # get sensor data
             sensor_data = config.param["devices"]["sensors"].copy()
             for key in sensor_data:
-                api_response["STATUS"]["devices"]["sensors"][key] = sensor[key].get_error_status()
+                api_response["STATUS"]["devices"]["sensors"][key] = sensor[key].get_status()
                 sensor_data[key]["values"] = {}
                 sensor_data[key]["status"] = {"error": False}
                 if key in sensor and sensor[key].error:
-                    sensor_data[key]["status"] = sensor[key].get_error_status()
+                    sensor_data[key]["status"] = sensor[key].get_status()
                 if key in sensor and sensor[key].running:
                     sensor_data[key]["values"] = sensor[key].get_values()
                 else:
                     logging.debug("Sensor not available: "+key)
-                    sensor_data[key]["status"] = sensor[key].get_error_status()
+                    sensor_data[key]["status"] = sensor[key].get_status()
 
                     #sensor_data[key]["status"] = {
                     #    "error": True,

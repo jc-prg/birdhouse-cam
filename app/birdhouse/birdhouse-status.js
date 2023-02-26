@@ -140,6 +140,8 @@ function birdhouseStatus_print(data) {
                 }
             setTextById("error_sensor1_"+sensor, sensor_error_01);
             setTextById("error_sensor2_"+sensor, sensor_error_02);
+            setTextById("status_sensor_"+sensor, status["running"]);
+            setTextById("status_sensor_last_"+sensor, Math.round(status["last_read"]*10)/10) +"s");
             if (status["error"] || status["error_module"] || status["connect"]) {
                 setHeaderColor(header_id=sensor+"_error", header_color=header_color_error);
                 setHeaderColor(header_id=sensor, header_color=header_color_error);

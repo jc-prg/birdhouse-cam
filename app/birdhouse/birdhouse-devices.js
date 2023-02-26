@@ -202,7 +202,9 @@ function birdhouseDevices_sensors(data) {
         html_entry += tab.end();
 
         var html_temp = tab.start();
-        html_temp += tab.row("Error Sensor:", "<textarea id='error_sensor1_"+sensor+"' class='settings_error_msg'></textarea>");
+        html_temp += tab.row("Last Recorded:", "<div id='status_sensor_last_"+sensor+"'>please wait ...</div>");
+		html_temp += tab.row("Running:",       "<div id='status_sensor_"+sensor+"'>Please wait ...</div>");
+        html_temp += tab.row("Error Sensor:",  "<textarea id='error_sensor1_"+sensor+"' class='settings_error_msg'></textarea>");
         html_temp += tab.row("Error Message:", "<textarea id='error_sensor2_"+sensor+"' class='settings_error_msg'></textarea>");
         html_temp += tab.end();
         html_entry += birdhouse_OtherGroup( sensor+"_error", "Status", html_temp, false );
