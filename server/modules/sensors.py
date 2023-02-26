@@ -134,6 +134,10 @@ class BirdhouseSensor(threading.Thread):
                         self.error_msg += " - Error reading data from sensor: " + str(e)
                         self.logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
 
+                if not self.error:
+                    self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+                    self.last_read_time = time.time()
+
             time.sleep(1)
 
         # GPIO.cleanup()
@@ -155,7 +159,7 @@ class BirdhouseSensor(threading.Thread):
                     self.sensor = dht11.DHT11(pin=self.pin)
                 elif self.param["type"] == "dht22":
                     if self.initial_load:
-                        import board
+                        # import board
                         import adafruit_dht
                         self.initial_load = False
                     ada_pin = eval("board.D"+str(self.pin))
