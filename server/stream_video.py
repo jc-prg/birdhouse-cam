@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 config = BirdhouseConfig(param_init={}, main_directory=os.path.dirname(os.path.abspath(__file__)))
 config.start()
-media_path = config.directory("videos")
+media_path = config.db_handler.directory("videos")
 print("* Starting streaming for files in the directory '" + media_path + "' ...")
 
 

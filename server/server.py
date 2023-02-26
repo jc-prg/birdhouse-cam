@@ -674,7 +674,7 @@ if __name__ == "__main__":
         logging.info('-------------------------------------------')
     else:
         logging.basicConfig(format='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
-                            datefmt='%d.%m. %H:%M:%S',
+                            datefmt='%m/%d %H:%M:%S',
                             level=birdhouse_loglevel)
         logging.info('-------------------------------------------')
         logging.info('Starting ...')
@@ -687,10 +687,10 @@ if __name__ == "__main__":
     # start config    
     config = BirdhouseConfig(param_init=birdhouse_preset, main_directory=os.path.dirname(os.path.abspath(__file__)))
     config.start()
-    config.directory_create("data")
-    config.directory_create("images")
-    config.directory_create("videos")
-    config.directory_create("videos_temp")
+    config.db_handler.directory_create("data")
+    config.db_handler.directory_create("images")
+    config.db_handler.directory_create("videos")
+    config.db_handler.directory_create("videos_temp")
     time.sleep(0.5)
 
     # start sensors
@@ -720,21 +720,21 @@ if __name__ == "__main__":
         views.archive_list_update()
 
     # check if config files for main image directory exists and create if not exists
-    if not os.path.isfile(config.file_path("images")):
+    if not os.path.isfile(config.db_handler.file_path("images")):
         for cam in camera:
             camera[cam].pause(True)
         backup.create_image_config()
         for cam in camera:
             camera[cam].pause(False)
     else:
-        test_config = config.read(config="images")
+        test_config = config.db_handler.read(config="images")
         if test_config == {}:
             backup.create_image_config()
 
-    if not os.path.isfile(config.file_path("videos")):
+    if not os.path.isfile(config.db_handler.file_path("videos")):
         backup.create_video_config()
     else:
-        test_config = config.read(config="videos")
+        test_config = config.db_handler.read(config="videos")
         if test_config == {}:
             backup.create_video_config()
 

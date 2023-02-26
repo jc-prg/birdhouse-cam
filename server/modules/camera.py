@@ -254,9 +254,9 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.processing = True
         self.logging.info("Start video creation with ffmpeg ...")
 
-        input_filenames = os.path.join(self.config.directory("videos"), self.filename("vimages") + "%" +
+        input_filenames = os.path.join(self.config.db_handler.directory("videos"), self.filename("vimages") + "%" +
                                        str(self.count_length).zfill(2) + "d.jpg")
-        output_filename = os.path.join(self.config.directory("videos"), self.filename("video"))
+        output_filename = os.path.join(self.config.db_handler.directory("videos"), self.filename("video"))
 
         try:
             (
@@ -273,9 +273,12 @@ class BirdhouseVideoProcessing(threading.Thread):
             return
 
         self.info["thumbnail"] = self.filename("thumb")
-        cmd_thumb = "cp " + os.path.join(self.config.directory("videos"), self.filename("vimages") + str(1).zfill(
-            self.count_length) + ".jpg ") + os.path.join(self.config.directory("videos"), self.filename("thumb"))
-        cmd_delete = "rm " + os.path.join(self.config.directory("videos"), self.filename("vimages") + "*.jpg")
+        cmd_thumb = "cp " + os.path.join(self.config.db_handler.directory("videos"),
+                                         self.filename("vimages") + str(1).zfill(self.count_length) + ".jpg "
+                                         ) + os.path.join(self.config.db_handler.directory("videos"),
+                                                          self.filename("thumb"))
+        cmd_delete = "rm " + os.path.join(self.config.db_handler.directory("videos"),
+                                          self.filename("vimages") + "*.jpg")
         try:
             self.logging.info(cmd_thumb)
             message = os.system(cmd_thumb)
@@ -322,7 +325,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         framerate = 20
 
         try:
-            cmd_rm = "rm " + self.config.directory("videos_temp") + "*"
+            cmd_rm = "rm " + self.config.db_handler.directory("videos_temp") + "*"
             self.logging.debug(cmd_rm)
             message = os.system(cmd_rm)
             if message != 0:
@@ -333,7 +336,8 @@ class BirdhouseVideoProcessing(threading.Thread):
             self._msg_error("Error during day video creation: " + str(e), warning=True)
 
         try:
-            cmd_copy = "cp " + self.config.directory("images") + filename + "* " + self.config.directory("videos_temp")
+            cmd_copy = "cp " + self.config.db_handler.directory("images") + filename + "* " + \
+                       self.config.db_handler.directory("videos_temp")
             self.logging.debug(cmd_copy)
             message = os.system(cmd_copy)
             if message != 0:
@@ -343,8 +347,8 @@ class BirdhouseVideoProcessing(threading.Thread):
         except Exception as e:
             self._msg_error("Error during day video creation: " + str(e))
 
-        cmd_filename = self.config.directory("videos_temp") + cmd_tempfiles
-        cmd_rename = "i=0; for fi in " + self.config.directory("videos_temp") + "image_*; do mv \"$fi\" $(printf \""
+        cmd_filename = self.config.db_handler.directory("videos_temp") + cmd_tempfiles
+        cmd_rename = "i=0; for fi in " + self.config.db_handler.directory("videos_temp") + "image_*; do mv \"$fi\" $(printf \""
         cmd_rename += cmd_filename + "%05d.jpg\" $i); i=$((i+1)); done"
         try:
             self.logging.info(cmd_rename)
@@ -357,13 +361,13 @@ class BirdhouseVideoProcessing(threading.Thread):
             self._msg_error("Error during day video creation: " + str(e))
 
         amount = 0
-        for root, dirs, files in os.walk(self.config.directory("videos_temp")):
+        for root, dirs, files in os.walk(self.config.db_handler.directory("videos_temp")):
             for filename in files:
                 if cmd_tempfiles in filename:
                     amount += 1
 
         input_filenames = cmd_filename + "%05d.jpg"
-        output_filename = os.path.join(self.config.directory("videos"), cmd_videofile)
+        output_filename = os.path.join(self.config.db_handler.directory("videos"), cmd_videofile)
         try:
             (
                 ffmpeg
@@ -379,7 +383,7 @@ class BirdhouseVideoProcessing(threading.Thread):
             return response
 
         try:
-            cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.directory("videos") + cmd_thumbfile
+            cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.db_handler.directory("videos") + cmd_thumbfile
             self.logging.info(cmd_thumb)
             message = os.system(cmd_thumb)
             if message != 0:
@@ -387,7 +391,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 self._msg_error("Error during day video creation: create thumbnails.")
                 return response
 
-            cmd_rm2 = "rm " + self.config.directory("videos_temp") + "*.jpg"
+            cmd_rm2 = "rm " + self.config.db_handler.directory("videos_temp") + "*.jpg"
             self.logging.info(cmd_rm2)
             message = os.system(cmd_rm2)
             if message != 0:
@@ -444,7 +448,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         """
         create a shorter video based on date and time
         """
-        config_file = self.config.read_cache("videos")
+        config_file = self.config.db_handler.read_cache("videos")
         if video_id in config_file:
             input_file = config_file[video_id]["video_file"]
             output_file = input_file.replace(".mp4", "_short.mp4")
@@ -458,7 +462,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 config_file[video_id]["video_file_short_end"] = float(end)
                 config_file[video_id]["video_file_short_length"] = float(end) - float(start)
 
-                self.config.write("videos", config_file)
+                self.config.db_handler.write("videos", "", config_file)
                 return {"result": "OK"}
             else:
                 return {"result": "Error while creating shorter video."}
@@ -471,8 +475,8 @@ class BirdhouseVideoProcessing(threading.Thread):
         """
         creates a shortened version of the video
         """
-        input_file = os.path.join(self.config.directory("videos"), input_file)
-        output_file = os.path.join(self.config.directory("videos"), output_file)
+        input_file = os.path.join(self.config.db_handler.directory("videos"), input_file)
+        output_file = os.path.join(self.config.db_handler.directory("videos"), output_file)
 
         cmd = self.ffmpeg_trim
         cmd = cmd.replace("{START_TIME}", str(start_timecode))
@@ -526,7 +530,7 @@ class BirdhouseVideoProcessing(threading.Thread):
             self.logging.info("Create short version of video '" + str(param[2]) + "' [" + str(param[3]) + ":" +
                          str(param[4]) + "] ...")
             which_cam = param[5]
-            config_data = self.config.read_cache(config="videos")
+            config_data = self.config.db_handler.read_cache(config="videos")
 
             if param[2] not in config_data:
                 response["result"] = "Error: video ID '" + str(param[2]) + "' doesn't exist."
@@ -1230,7 +1234,8 @@ class BirdhouseCamera(threading.Thread):
                                               time_zone=self.timezone)
         self.image.resolution = self.param["image"]["resolution"]
         self.video = BirdhouseVideoProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param,
-                                              directory=self.config.directory("videos"), time_zone=self.timezone)
+                                              directory=self.config.db_handler.directory("videos"),
+                                              time_zone=self.timezone)
         self.video.output = BirdhouseCameraOutput(self.id)
         self.camera = None
         self.cameraFPS = None
@@ -1387,9 +1392,9 @@ class BirdhouseCamera(threading.Thread):
                         self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
 
                         if not self.error:
-                            path_lowres = os.path.join(self.config.directory("images"),
+                            path_lowres = os.path.join(self.config.db_handler.directory("images"),
                                                        self.config.filename_image("lowres", stamp, self.id))
-                            path_hires = os.path.join(self.config.directory("images"),
+                            path_hires = os.path.join(self.config.db_handler.directory("images"),
                                                       self.config.filename_image("hires", stamp, self.id))
                             self.logging.debug("WRITE:" + path_lowres)
                             self.write_image(filename=path_hires, image=image)
@@ -1872,7 +1877,7 @@ class BirdhouseCamera(threading.Thread):
 
     def update_main_config(self):
         self.logging.info("Update data from main configuration file for camera " + self.id)
-        temp_data = self.config.read("main")
+        temp_data = self.config.db_handler.read("main")
         self.param = temp_data["devices"]["cameras"][self.id]
         self.name = self.param["name"]
         self.active = self.param["active"]

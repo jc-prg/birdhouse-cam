@@ -64,13 +64,13 @@ class BirdhouseArchive(threading.Thread):
         else:
             backup_date = other_date
 
-        directory = self.config.directory(config="images", date=backup_date)
+        directory = self.config.db_handler.directory(config="images", date=backup_date)
 
         # if the directory but no config file exists for backup directory create a new one
         if os.path.isdir(directory):
             self.logging.info("Backup files: create a new config file, directory already exists")
 
-            if not os.path.isfile(self.config.file_path(config="backup", date=backup_date)):
+            if not os.path.isfile(self.config.db_handler.file_path(config="backup", date=backup_date)):
                 files = self.create_image_config(date=backup_date)
                 files_backup = {"files": files, "info": {}}
                 files_backup["info"]["count"] = len(files)
@@ -81,25 +81,25 @@ class BirdhouseArchive(threading.Thread):
                 files_backup["info"]["size"] = sum(
                     os.path.getsize(os.path.join(directory, f)) for f in os.listdir(directory) if
                     os.path.isfile(os.path.join(directory, f)))
-                self.config.write(config="backup", config_data=files_backup, date=backup_date)
+                self.config.db_handler.write(config="backup", date=backup_date, config_data=files_backup)
 
         # if no directory exists, create directory, copy files and create a new config file (copy existing information)
         else:
             self.logging.info("Backup files: copy files and create a new config file (copy existing information)")
 
-            self.config.directory_create(config="images", date=backup_date)
-            files = self.config.read_cache(config="images")
+            self.config.db_handler.directory_create(config="images", date=backup_date)
+            files = self.config.db_handler.read_cache(config="images")
             files_backup = {"files": {}, "info": {}}
 
-            file_sensor = self.config.file_path(config="sensor")
-            file_sensor_copy = os.path.join(self.config.directory(config="images", date=backup_date),
+            file_sensor = self.config.db_handler.file_path(config="sensor")
+            file_sensor_copy = os.path.join(self.config.db_handler.directory(config="images", date=backup_date),
                                             self.config.files["sensor"])
-            file_weather = self.config.file_path(config="weather")
-            file_weather_copy = os.path.join(self.config.directory(config="weather", date=backup_date),
+            file_weather = self.config.db_handler.file_path(config="weather")
+            file_weather_copy = os.path.join(self.config.db_handler.directory(config="weather", date=backup_date),
                                              self.config.files["weather"])
 
             stamps = list(reversed(sorted(files.keys())))
-            dir_source = self.config.directory(config="images")
+            dir_source = self.config.db_handler.directory(config="images")
             count = 0
             count_data = 0
             count_other_date = 0
@@ -178,13 +178,13 @@ class BirdhouseArchive(threading.Thread):
             for cam in self.camera:
                 files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
 
-            self.config.write(config="backup", config_data=files_backup, date=directory)
+            self.config.db_handler.write(config="backup", date=directory, config_data=files_backup)
 
     def create_video_config(self):
         """
         recreate video config file, if not exists
         """
-        path = self.config.directory(config="videos")
+        path = self.config.db_handler.directory(config="videos")
         self.logging.info("Create video list for video directory ...")
         self.logging.debug("Reading files from path: " + path)
 
@@ -256,10 +256,10 @@ class BirdhouseArchive(threading.Thread):
         time.sleep(1)
         if date == "":
             self.logging.info("(Re)create image config file for main directory ...")
-            path = self.config.directory(config="images")
+            path = self.config.db_handler.directory(config="images")
         else:
             self.logging.info("(Re)create image config file for  directory "+date+" ...")
-            path = self.config.directory(config="backup", date=date)
+            path = self.config.db_handler.directory(config="backup", date=date)
         if recreate and os.path.isfile(path):
             self.logging.info("Remove existing image config file ...")
             os.remove(path)
@@ -290,14 +290,14 @@ class BirdhouseArchive(threading.Thread):
             return
         self.processing = True
 
-        if os.path.isfile(self.config.file_path("images")) and subdir == "":
-            files = self.config.read_cache(config='images')
+        if os.path.isfile(self.config.db_handler.file_path("images")) and subdir == "":
+            files = self.config.db_handler.read_cache(config='images')
         else:
             files = {}
             files = self.create_image_config_get_filelist(file_list=file_list, files=files, subdir=subdir)
 
-            if os.path.isfile(self.config.file_path("sensor")):
-                sensor_data = self.config.read_cache(config="sensor")
+            if os.path.isfile(self.config.db_handler.file_path("sensor")):
+                sensor_data = self.config.db_handler.read_cache(config="sensor")
                 for key in files:
                     if key in sensor_data:
                         if "date" in sensor_data[key]:
@@ -335,7 +335,8 @@ class BirdhouseArchive(threading.Thread):
                 if key in files_new and files_new[key]["camera"] == cam:
                     filename_current = files_new[key]["lowres"]
                     try:
-                        filename = os.path.join(self.config.directory(config="images"), subdir, filename_current)
+                        filename = os.path.join(self.config.db_handler.directory(config="images"),
+                                                subdir, filename_current)
                         image_current = cv2.imread(filename)
                         image_current = cv2.cvtColor(image_current, cv2.COLOR_BGR2GRAY)
                     except Exception as e:
@@ -364,7 +365,7 @@ class BirdhouseArchive(threading.Thread):
                     self.config.queue.entry_add(config="images", date=subdir, key=key, entry=files_new[key])
 
 #        if subdir == '':
-#            self.config.write("images", files_new)
+#            self.config.db_handler.write("images", "", files_new)
         self.processing = False
         return files_new
 
@@ -392,7 +393,7 @@ class BirdhouseArchive(threading.Thread):
                     files[time]["hires"] = self.config.filename_image(image_type="hires", timestamp=time)
 
                 if subdir == "":
-                    file_dir = os.path.join(self.config.directory(config='images'), file)
+                    file_dir = os.path.join(self.config.db_handler.directory(config='images'), file)
                     timestamp = datetime.fromtimestamp(os.path.getmtime(file_dir))
 
                     files[time]["datestamp"] = timestamp.strftime("%Y%m%d")
@@ -418,12 +419,16 @@ class BirdhouseArchive(threading.Thread):
             delete_not_used = False
 
         if param[2] == "backup":
+            self.logging.info("Delete marked files: BACKUP ("+path+")")
             response = self.delete_marked_files_exec(config="images", date=param[3], delete_not_used=delete_not_used)
         elif param[2] == "today":
+            self.logging.info("Delete marked files: TODAY ("+path+")")
             response = self.delete_marked_files_exec(config="images", date="", delete_not_used=delete_not_used)
         elif param[2] == "video":
+            self.logging.info("Delete marked files: VIDEO ("+path+")")
             response = self.delete_marked_files_exec(config="videos", date="", delete_not_used=delete_not_used)
         else:
+            self.logging.error("Delete marked files: Not clear what to be deleted ("+path+")")
             response["error"] = "not clear, which files shall be deleted"
 
         return response
@@ -437,22 +442,24 @@ class BirdhouseArchive(threading.Thread):
         files_in_config = []
         delete_keys = []
 
+        # get data from DB
         if config == "images" and date == "":
-            files = self.config.read_cache(config='images')
-            directory = self.config.directory(config='images')
+            files = self.config.db_handler.read_cache(config='images')
+            directory = self.config.db_handler.directory(config='images')
         elif config == "images":
-            config_file = self.config.read_cache(config='backup', date=date)
-            directory = self.config.directory(config='backup', date=date)
+            config_file = self.config.db_handler.read_cache(config='backup', date=date)
+            directory = self.config.db_handler.directory(config='backup', date=date)
             files = config_file["files"]
+            config = "backup"
         elif config == "videos":
-            files = self.config.read_cache(config='videos')
-            directory = self.config.directory(config='videos')
+            files = self.config.db_handler.read_cache(config='videos')
+            directory = self.config.db_handler.directory(config='videos')
         else:
             response["error"] = "file type not supported"
             return response
 
+        # get files in directory, check which files shall be deleted
         files_in_dir = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and ".json" not in f]
-        count = 0
         for key in files:
             if date != "":
                 check_date = date[6:8] + "." + date[4:6] + "." + date[0:4]
@@ -465,34 +472,53 @@ class BirdhouseArchive(threading.Thread):
                         files_in_config.append(files[key][file_type])
 
             if "to_be_deleted" in files[key] and int(files[key]["to_be_deleted"]) == 1:
-                count += 1
                 delete_keys.append(key)
 
+        self.logging.info(" - Prepare DELETE " + config + ": total_entries="+str(len(files)) + "; " +
+                          "to_delete=" + str(len(delete_keys)) + "; ")
+
+        # delete identified files if exist (videos and backup)
+        count_del_file = 0
+        count_del_entry = 0
         for key in delete_keys:
             try:
-                for file_type in file_types:
-                    if file_type in files[key]:
-                        if os.path.isfile(os.path.join(directory, files[key][file_type])):
-                            os.remove(os.path.join(directory, files[key][file_type]))
-                            self.logging.debug("Delete - "+str(key)+": "+os.path.join(directory, files[key][file_type]))
+                if config == "backup" or config == "videos" or config == "images":
+                    for file_type in file_types:
+                        if file_type in files[key]:
+                            if os.path.isfile(os.path.join(directory, files[key][file_type])):
+                                os.remove(os.path.join(directory, files[key][file_type]))
+                                count_del_file += 1
+                                self.logging.debug("Delete - "+str(key)+": "+os.path.join(directory, files[key][file_type]))
 
-                self.config.queue.entry_keep_data(config="backup", date=date, key=key)
+                if config == "backup" or config == "images":
+                    self.config.queue.entry_keep_data(config=config, date=date, key=key)
+                    count_del_entry += 1
+
+                elif config == "videos":
+                    self.config.queue.entry_delete(config=config, date=date, key=key)
+                    count_del_entry += 1
 
             except Exception as e:
-                self.logging.error("Error while deleting file '" + key + "' ... " + str(e))
+                self.logging.error(" - Error while deleting file '" + key + "' ... " + str(e))
                 response["error"] += "delete file '" + key + "': " + str(e) + "\n"
 
+        self.logging.info(" - Perform DELETE " + config + ": files="+str(count_del_file) + "; " +
+                          "entries=" + str(count_del_entry) + "; ")
+
+        count_del_file = 0
+        # delete unused files
         if delete_not_used:
             for file in files_in_dir:
                 if file not in files_in_config:
                     os.remove(os.path.join(directory, file))
+            self.logging.info(" - Perform DELETE 'unused': files="+str(count_del_file) + "; ")
 
-        print(str(len(files_in_dir)) + "/" + str(len(files_in_config)))
+        self.logging.debug(str(len(files_in_dir)) + "/" + str(len(files_in_config)))
 
-        response["deleted_count"] = count
+        response["deleted_count"] = count_del_entry
         response["deleted_keys"] = delete_keys
         response["files_not_used"] = len(files_in_dir) - len(files_in_config)
         response["files_used"] = len(files_in_config)
-        self.logging.info("Deleted " + str(count) + " marked files in " + directory + ".")
+        self.logging.info(" -> Deleted " + str(count_del_entry) + " marked files in " + directory + ".")
         return response
 

@@ -291,8 +291,8 @@ class BirdhouseViews(threading.Thread):
 
         if date_backup != "":
             backup = True
-            path = self.config.directory(config="backup", date=date_backup)
-            files_data = self.config.read_cache(config="backup", date=date_backup)
+            path = self.config.db_handler.directory(config="backup", date=date_backup)
+            files_data = self.config.db_handler.read_cache(config="backup", date=date_backup)
             files_all = files_data["files"]
             check_similarity = False
             category = "/backup/" + date_backup + "/"
@@ -303,9 +303,9 @@ class BirdhouseViews(threading.Thread):
             content["subtitle"] = presets.birdhouse_pages["backup"][0] + " " + files_data["info"]["date"]
             content["links"] = print_links_json(link_list=("live", "today", "backup", "favorit"), cam=which_cam)
 
-        elif os.path.isfile(self.config.file_path(config="images")):
+        elif os.path.isfile(self.config.db_handler.file_path(config="images")):
             backup = False
-            files_all = self.config.read_cache(config="images")
+            files_all = self.config.db_handler.read_cache(config="images")
             time_now = self.config.local_time().strftime('%H%M%S')
             category = "/current/"
             subdirectory = ""
@@ -451,7 +451,8 @@ class BirdhouseViews(threading.Thread):
         dir_count_data = 0
         dir_count_delete = 0
 
-        self.logging.info("Create data for archive view from '"+self.config.directory(config="backup")+"' ...")
+        self.logging.info("Create data for archive view from '" +
+                          self.config.db_handler.directory(config="backup")+"' ...")
         for cam in self.camera:
             content = {
                 "active_cam": cam,
@@ -464,7 +465,7 @@ class BirdhouseViews(threading.Thread):
                 }
             }
 
-            main_directory = self.config.directory(config="backup")
+            main_directory = self.config.db_handler.directory(config="backup")
             dir_list = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
             dir_list.sort(reverse=True)
             dir_total_size = 0
@@ -472,7 +473,7 @@ class BirdhouseViews(threading.Thread):
 
             image_title = str(self.config.param["backup"]["preview"]) + str(self.camera[cam].param["image_save"]["seconds"][0])
             image_today = self.config.filename_image(image_type="lowres", timestamp=image_title, camera=cam)
-            image = os.path.join(self.config.directory(config="images"), image_today)
+            image = os.path.join(self.config.db_handler.directory(config="images"), image_today)
 
             for directory in dir_list:
                 group_name = directory[0:4] + "-" + directory[4:6]
@@ -481,9 +482,9 @@ class BirdhouseViews(threading.Thread):
                 if group_name not in content["groups"]:
                     content["groups"][group_name] = []
 
-                if os.path.isfile(self.config.file_path(config="backup", date=directory)):
+                if os.path.isfile(self.config.db_handler.file_path(config="backup", date=directory)):
 
-                    file_data = self.config.read_cache(config="backup", date=directory)
+                    file_data = self.config.db_handler.read_cache(config="backup", date=directory)
                     content["groups"][group_name].append(directory)
 
                     # check if config file in correct format
@@ -532,7 +533,8 @@ class BirdhouseViews(threading.Thread):
                                     if "size" in file_info and "float" in str(type(file_info["size"])):
                                         dir_size_cam += file_info["size"]
                                     elif "lowres" in file_info:
-                                        lowres_file = os.path.join(self.config.directory(config="backup"), directory, file_info["lowres"])
+                                        lowres_file = os.path.join(self.config.db_handler.directory(config="backup"),
+                                                                   directory, file_info["lowres"])
                                         if os.path.isfile(lowres_file):
                                             dir_size_cam += os.path.getsize(lowres_file)
                                             self.logging.debug("lowres size: "+str(os.path.getsize(lowres_file)))
@@ -543,7 +545,8 @@ class BirdhouseViews(threading.Thread):
                                                 content["max_image_size"]["lowres"][1] = file_info["lowres_size"][1]
 
                                         if "hires" in file_info:
-                                            hires_file = os.path.join(self.config.directory(config="backup"), directory, file_info["hires"])
+                                            hires_file = os.path.join(self.config.db_handler.directory(config="backup"),
+                                                                      directory, file_info["hires"])
                                             if os.path.isfile(hires_file):
                                                 dir_size_cam += os.path.getsize(hires_file)
                                                 self.logging.debug("hires size: " + str(os.path.getsize(hires_file)))
@@ -630,9 +633,9 @@ class BirdhouseViews(threading.Thread):
             del param[1]
 
         category = "/current/"
-        path = self.config.directory(config="images")
-        files_all = self.config.read_cache(config="images")
-        # files_all = self.config.read(config="images")
+        path = self.config.db_handler.directory(config="images")
+        files_all = self.config.db_handler.read_cache(config="images")
+        # files_all = self.config.db_handler.read(config="images")
 
         time_now = self.config.local_time().strftime('%H%M%S')
         date_today = self.config.local_time().strftime("%Y%m%d")
@@ -721,8 +724,8 @@ class BirdhouseViews(threading.Thread):
 
         # videos
         files_videos = {}
-        if self.config.exists("videos"):
-            files_all = self.config.read_cache(config="videos")
+        if self.config.db_handler.exists("videos"):
+            files_all = self.config.db_handler.read_cache(config="videos")
             for file in files_all:
                 date = file.split("_")[0]
                 if "favorit" in files_all[file] and int(files_all[file]["favorit"]) == 1:
@@ -731,7 +734,7 @@ class BirdhouseViews(threading.Thread):
 
         # today
         date_today = self.config.local_time().strftime("%Y%m%d")
-        files = self.config.read_cache(config="images")
+        files = self.config.db_handler.read_cache(config="images")
         category = "/current/"
 
         for stamp in files:
@@ -767,7 +770,7 @@ class BirdhouseViews(threading.Thread):
                 content["groups"]["today"].append(entry)
 
         # other days
-        main_directory = self.config.directory(config="backup")
+        main_directory = self.config.db_handler.directory(config="backup")
         dir_list = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
         dir_list = list(reversed(sorted(dir_list)))
 
@@ -784,8 +787,8 @@ class BirdhouseViews(threading.Thread):
             category = "/backup/" + directory + "/"
             favorites[directory] = {}
 
-            if self.config.exists(config="backup", date=directory):
-                files_data = self.config.read_cache(config="backup", date=directory)
+            if self.config.db_handler.exists(config="backup", date=directory):
+                files_data = self.config.db_handler.read_cache(config="backup", date=directory)
                 if "info" in files_data and "files" in files_data:
                     files = files_data["files"]
                     date = directory[6:8] + "." + directory[4:6] + "." + directory[0:4]
@@ -846,7 +849,7 @@ class BirdhouseViews(threading.Thread):
         param = server.path.split("/")
         if "app-v1" in param: del param[1]
 
-        directory = self.config.directory(config="videos")
+        directory = self.config.db_handler.directory(config="videos")
         category = "/videos/"  # self.config.directories["videos"]
 
         files_all = {}
@@ -854,8 +857,8 @@ class BirdhouseViews(threading.Thread):
         files_show = {}
         content["entries"] = {}
 
-        if self.config.exists("videos"):
-            files_all = self.config.read_cache(config="videos")
+        if self.config.db_handler.exists("videos"):
+            files_all = self.config.db_handler.read_cache(config="videos")
             for file in files_all:
                 files_all[file]["directory"] = "http://"+self.config.param["server"]["ip4_stream_video"]
                 files_all[file]["directory"] += ":"+str(self.config.param["server"]["port_video"])+"/"
@@ -923,7 +926,7 @@ class BirdhouseViews(threading.Thread):
         else:
             video_id = param[1]
 
-        config_data = self.config.read_cache(config="videos")
+        config_data = self.config.db_handler.read_cache(config="videos")
         if video_id in config_data and "video_file" in config_data[video_id]:
 
             data = config_data[video_id]
