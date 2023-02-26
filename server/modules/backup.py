@@ -5,6 +5,7 @@ import cv2
 import threading
 from tqdm import tqdm
 from datetime import datetime
+from modules.presets import birdhouse_loglevel
 
 
 class BirdhouseArchive(threading.Thread):
@@ -14,7 +15,11 @@ class BirdhouseArchive(threading.Thread):
         Initialize new thread and set initial parameters
         """
         threading.Thread.__init__(self)
-        logging.info("Starting backup process ...")
+
+        self.logging = logging.getLogger("backup")
+        self.logging.setLevel = birdhouse_loglevel
+        self.logging.info("Starting backup handler ...")
+
         self.config = config
         self.camera = camera
         self.views = views
@@ -30,10 +35,10 @@ class BirdhouseArchive(threading.Thread):
         while self._running:
             stamp = self.config.local_time().strftime('%H%M%S')
             if stamp[0:4] == self.config.param["backup"]["time"] and not backup_started:
-                logging.info("Starting daily backup ...")
+                self.logging.info("Starting daily backup ...")
                 backup_started = True
                 self.backup_files()
-                logging.info("OK.")
+                self.logging.info("OK.")
                 self.views.archive_list_create()
                 count = 0
                 while self._running and count < 60:
@@ -42,7 +47,7 @@ class BirdhouseArchive(threading.Thread):
             else:
                 backup_started = False
             time.sleep(0.5)
-        logging.info("Stopped backup process.")
+        self.logging.info("Stopped backup process.")
 
     def stop(self):
         """
@@ -63,7 +68,7 @@ class BirdhouseArchive(threading.Thread):
 
         # if the directory but no config file exists for backup directory create a new one
         if os.path.isdir(directory):
-            logging.info("Backup files: create a new config file, directory already exists")
+            self.logging.info("Backup files: create a new config file, directory already exists")
 
             if not os.path.isfile(self.config.file_path(config="backup", date=backup_date)):
                 files = self.create_image_config(date=backup_date)
@@ -80,7 +85,7 @@ class BirdhouseArchive(threading.Thread):
 
         # if no directory exists, create directory, copy files and create a new config file (copy existing information)
         else:
-            logging.info("Backup files: copy files and create a new config file (copy existing information)")
+            self.logging.info("Backup files: copy files and create a new config file (copy existing information)")
 
             self.config.directory_create(config="images", date=backup_date)
             files = self.config.read_cache(config="images")
@@ -161,10 +166,10 @@ class BirdhouseArchive(threading.Thread):
                     else:
                         count_other_date += 1
 
-                logging.info(cam + ": " + str(count) + " Image entries (" + str(
+                self.logging.info(cam + ": " + str(count) + " Image entries (" + str(
                     self.camera[cam].param["similarity"]["threshold"]) + ")")
-                logging.info(cam + ": " + str(count_data) + " Data entries")
-                logging.info(cam + ": " + str(count_other_date) + " not saved (other date)")
+                self.logging.info(cam + ": " + str(count_data) + " Data entries")
+                self.logging.info(cam + ": " + str(count_other_date) + " not saved (other date)")
 
             files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
             files_backup["info"]["count"] = count
@@ -180,8 +185,8 @@ class BirdhouseArchive(threading.Thread):
         recreate video config file, if not exists
         """
         path = self.config.directory(config="videos")
-        logging.info("Create video list for video directory ...")
-        logging.debug("Reading files from path: " + path)
+        self.logging.info("Create video list for video directory ...")
+        self.logging.debug("Reading files from path: " + path)
 
         file_list = [f for f in os.listdir(path) if
                      os.path.isfile(os.path.join(path, f)) and ".mp4" in f and not "short" in f]
@@ -189,7 +194,7 @@ class BirdhouseArchive(threading.Thread):
         files = {}
         for file in file_list:
 
-            logging.info(" - "+file)
+            self.logging.info(" - "+file)
             file_name = file.split(".")
             param = file_name[0].split("_")  # video_cam2_20210428_175551*
             fid = param[2] + "_" + param[3]
@@ -242,7 +247,7 @@ class BirdhouseArchive(threading.Thread):
                 "video_file_short_length": file_short_length,
             }
             self.config.queue.entry_add(config="videos", date="", key=fid, entry=files[fid])
-        logging.info("Done.")
+        self.logging.info("Done.")
 
     def create_image_config(self, date="", recreate=False):
         """
@@ -250,25 +255,25 @@ class BirdhouseArchive(threading.Thread):
         """
         time.sleep(1)
         if date == "":
-            logging.info("(Re)create image config file for main directory ...")
+            self.logging.info("(Re)create image config file for main directory ...")
             path = self.config.directory(config="images")
         else:
-            logging.info("(Re)create image config file for  directory "+date+" ...")
+            self.logging.info("(Re)create image config file for  directory "+date+" ...")
             path = self.config.directory(config="backup", date=date)
         if recreate and os.path.isfile(path):
-            logging.info("Remove existing image config file ...")
+            self.logging.info("Remove existing image config file ...")
             os.remove(path)
         file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and "_big" not in f]
         file_list.sort(reverse=True)
         files = self.create_image_config_analyze(file_list=file_list, init=True, subdir=date)
-        logging.info("Done.")
+        self.logging.info("Done.")
         return files
 
     def create_image_config_api(self, path):
         """
         Call (re)creation via API and return JSON answer
         """
-        logging.debug(path)
+        self.logging.debug(path)
         param = path.split("/")
         response = {"command": ["recreate main image config file", param]}
 
@@ -281,7 +286,7 @@ class BirdhouseArchive(threading.Thread):
         """
         if self.processing:
             # this part potentially can be removed again
-            logging.warning("Compare Files already processing ...")
+            self.logging.warning("Compare Files already processing ...")
             return
         self.processing = True
 
@@ -334,7 +339,7 @@ class BirdhouseArchive(threading.Thread):
                         image_current = cv2.imread(filename)
                         image_current = cv2.cvtColor(image_current, cv2.COLOR_BGR2GRAY)
                     except Exception as e:
-                        logging.error("Could not load image: " + filename + " ... "+str(e))
+                        self.logging.error("Could not load image: " + filename + " ... "+str(e))
 
                     if len(filename_last) > 0:
                         detection_area = self.camera[cam].param["similarity"]["detection_area"]
@@ -350,7 +355,7 @@ class BirdhouseArchive(threading.Thread):
                         sensor_str = ""
                         if "sensor" in files_new[key]:
                             sensor_str = str(files_new[key]["sensor"])
-                        logging.debug(" - " + cam + ": " + filename_current + "  " + str(count) + "/" + str(len(files)) +
+                        self.logging.debug(" - " + cam + ": " + filename_current + "  " + str(count) + "/" + str(len(files)) +
                                      " - " + str(files_new[key]["similarity"]) + "%  "+sensor_str)
 
                     filename_last = filename_current
@@ -403,7 +408,7 @@ class BirdhouseArchive(threading.Thread):
         """
         set / unset recycling
         """
-        logging.debug(path)
+        self.logging.debug(path)
         param = path.split("/")
         response = {"command": ["delete files that are marked as 'to_be_deleted'", param]}
 
@@ -469,12 +474,12 @@ class BirdhouseArchive(threading.Thread):
                     if file_type in files[key]:
                         if os.path.isfile(os.path.join(directory, files[key][file_type])):
                             os.remove(os.path.join(directory, files[key][file_type]))
-                            logging.debug("Delete - "+str(key)+": "+os.path.join(directory, files[key][file_type]))
+                            self.logging.debug("Delete - "+str(key)+": "+os.path.join(directory, files[key][file_type]))
 
                 self.config.queue.entry_keep_data(config="backup", date=date, key=key)
 
             except Exception as e:
-                logging.error("Error while deleting file '" + key + "' ... " + str(e))
+                self.logging.error("Error while deleting file '" + key + "' ... " + str(e))
                 response["error"] += "delete file '" + key + "': " + str(e) + "\n"
 
         if delete_not_used:
@@ -488,6 +493,6 @@ class BirdhouseArchive(threading.Thread):
         response["deleted_keys"] = delete_keys
         response["files_not_used"] = len(files_in_dir) - len(files_in_config)
         response["files_used"] = len(files_in_config)
-        logging.info("Deleted " + str(count) + " marked files in " + directory + ".")
+        self.logging.info("Deleted " + str(count) + " marked files in " + directory + ".")
         return response
 

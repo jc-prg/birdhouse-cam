@@ -9,7 +9,7 @@ import couchdb
 import requests
 from datetime import datetime, timezone, timedelta
 from modules.weather import BirdhouseWeather
-from modules.presets import birdhouse_databases, birdhouse_dir_to_database
+from modules.presets import birdhouse_databases, birdhouse_dir_to_database, birdhouse_loglevel
 
 
 class BirdhouseConfigCouchDB(object):
@@ -23,28 +23,31 @@ class BirdhouseConfigCouchDB(object):
         self.changed_data = False
         self.basic_directory = base_dir
         self.db_url = "http://"+db_usr+":"+db_pwd+"@"+db_server+":"+str(db_port)+"/"
-        logging.info("Starting config CouchDB handler ("+self.db_url+") ...")
+
+        self.logging = logging.getLogger("DB-couch")
+        self.logging.setLevel = birdhouse_loglevel
+        self.logging.info("Starting DB handler CouchDB ("+self.db_url+") ...")
 
         connects2db = 0
         max_connects = 5
         while connects2db < max_connects + 1:
 
             if connects2db == 8 or connects2db == 15 or connects2db == 25:
-                logging.info("Waiting for DB ...")
+                self.logging.info("Waiting for DB ...")
 
             try:
-                logging.info(" - Try to connect to CouchDB: " + self.db_url)
+                self.logging.info(" - Try to connect to CouchDB: " + self.db_url)
                 response = requests.get(self.db_url)
                 connects2db = max_connects + 1
 
             except requests.exceptions.RequestException as e:
                 connects2db += 1
-                logging.warning(" - Waiting 5s for next connect to CouchDB: " + str(connects2db) + "/" + str(max_connects))
-                logging.warning("   -> " + str(e))
+                self.logging.warning(" - Waiting 5s for next connect to CouchDB: " + str(connects2db) + "/" + str(max_connects))
+                self.logging.warning("   -> " + str(e))
                 time.sleep(5)
 
             if connects2db == max_connects:
-                logging.warning("Error connecting to CouchDB, give up.")
+                self.logging.warning("Error connecting to CouchDB, give up.")
                 return
 
         self.database_definition = birdhouse_databases
@@ -52,42 +55,42 @@ class BirdhouseConfigCouchDB(object):
         self.connected = True
         self.database = couchdb.Server(self.db_url)
         self.check_db()
-        logging.info("Connected.")
+        self.logging.info("Connected.")
 
     def check_db(self):
         """
         check if required DB exists or create (under construction)
         """
-        logging.info(" - Check if DB exist ... ")
-        logging.debug(str(self.database_definition))
+        self.logging.info(" - Check if DB exist ... ")
+        self.logging.debug(str(self.database_definition))
         for db_key in self.database_definition:
             if db_key in self.database and "main" in self.database[db_key]:
-                logging.info("  -> OK: DB " + db_key + " exists.")
+                self.logging.info("  -> OK: DB " + db_key + " exists.")
             else:
-                logging.info("  -> DB " + db_key + " have to be created ...")
+                self.logging.info("  -> DB " + db_key + " have to be created ...")
                 try:
                     self.create(db_key)
                 except Exception as e:
-                    logging.error("  -> Could not create DB " + db_key + "! " + str(e))
+                    self.logging.error("  -> Could not create DB " + db_key + "! " + str(e))
 
     def create(self, db_key):
         """
         create a database in couch_db
         """
-        logging.info("   -> create DB " + db_key)
+        self.logging.info("   -> create DB " + db_key)
         if db_key in self.database:
-            logging.warning("   -> DB " + db_key + " exists.")
+            self.logging.warning("   -> DB " + db_key + " exists.")
             db = self.database[db_key]
         else:
             try:
                 db = self.database.create(db_key)
             except Exception as e:
-                logging.error("   -> Could not create DB " + db_key + "! " + str(e))
+                self.logging.error("   -> Could not create DB " + db_key + "! " + str(e))
                 return
 
         # create initial data
         if "main" in self.database[db_key]:
-            logging.warning("CouchDB - Already data in " + db_key + "!")
+            self.logging.warning("CouchDB - Already data in " + db_key + "!")
             return
         else:
             doc = db.get("main")
@@ -102,11 +105,11 @@ class BirdhouseConfigCouchDB(object):
             try:
                 db.save(doc)
             except Exception as e:
-                logging.error("CouchDB - Could not save after create: " + db_key + "  " + str(e))
+                self.logging.error("CouchDB - Could not save after create: " + db_key + "  " + str(e))
                 return
 
         # success
-        logging.info("  -> DB created: " + db_key + " " + str(time.time()))
+        self.logging.info("  -> DB created: " + db_key + " " + str(time.time()))
         return
 
     def filename2keys(self, filename):
@@ -136,7 +139,7 @@ class BirdhouseConfigCouchDB(object):
         """
         data = {}
         [db_key, date] = self.filename2keys(filename)
-        logging.info("-----> READ DB: " + db_key + "/" + date)
+        self.logging.info("-----> READ DB: " + db_key + "/" + date)
 
         if db_key in self.database:
             database = self.database[db_key]
@@ -144,14 +147,14 @@ class BirdhouseConfigCouchDB(object):
             doc_data = doc["data"]
             if date != "":
                 if date in doc_data:
-                    logging.error("CouchDB ERROR read (date): " + filename + " - " + db_key + "/" + date)
+                    self.logging.error("CouchDB ERROR read (date): " + filename + " - " + db_key + "/" + date)
                     return doc_data[date]
                 else:
                     return {}
             else:
                 return doc_data
         else:
-            logging.error("CouchDB ERROR read (db_key): " + filename + " - " + db_key + "/" + date)
+            self.logging.error("CouchDB ERROR read (db_key): " + filename + " - " + db_key + "/" + date)
             return {}
 
     def write(self, filename, data):
@@ -159,11 +162,11 @@ class BirdhouseConfigCouchDB(object):
         read data from DB
         """
         [db_key, date] = self.filename2keys(filename)
-        logging.debug("-----> WRITE: " + filename + " (" + self.basic_directory + ")")
-        logging.info("-----> WRITE DB: " + db_key + "/" + date)
+        self.logging.debug("-----> WRITE: " + filename + " (" + self.basic_directory + ")")
+        self.logging.info("-----> WRITE DB: " + db_key + "/" + date)
 
         if db_key not in self.database:
-            logging.error("CouchDB ERROR save: '" + db_key + "' not found, could not write data.")
+            self.logging.error("CouchDB ERROR save: '" + db_key + "' not found, could not write data.")
             return
 
         database = self.database[db_key]
@@ -190,7 +193,7 @@ class BirdhouseConfigCouchDB(object):
         try:
             database.save(doc)
         except Exception as e:
-            logging.warning("CouchDB ERROR save: " + db_key + " " + str(e))
+            self.logging.warning("CouchDB ERROR save: " + db_key + " " + str(e))
             return
 
         self.changed_data = True
@@ -201,7 +204,10 @@ class BirdhouseConfigJSON(object):
 
     def __init__(self):
         self.locked = {}
-        logging.info("Starting config JSON handler ...")
+
+        self.logging = logging.getLogger("DB-json")
+        self.logging.setLevel = birdhouse_loglevel
+        self.logging.info("Starting DB handler JSON ...")
 
     def lock(self, filename):
         """
@@ -221,18 +227,18 @@ class BirdhouseConfigJSON(object):
         """
         wait = 0.2
         count = 0
-        logging.debug("Start check locked: " + filename + " ...")
+        self.logging.debug("Start check locked: " + filename + " ...")
 
         if filename in self.locked and self.locked[filename]:
             while self.locked[filename]:
                 time.sleep(wait)
                 count += 1
                 if count > 10:
-                    logging.warning("Waiting! File '" + filename + "' is locked (" + str(count) + ")")
+                    self.logging.warning("Waiting! File '" + filename + "' is locked (" + str(count) + ")")
                     time.sleep(1)
 
         elif filename == "ALL":
-            logging.info("Wait until no file is locked ...")
+            self.logging.info("Wait until no file is locked ...")
             locked = len(self.locked.keys())
             while locked > 0:
                 locked = 0
@@ -240,9 +246,9 @@ class BirdhouseConfigJSON(object):
                     if self.locked[key]:
                         locked += 1
                 time.sleep(wait)
-            logging.info("OK")
+            self.logging.info("OK")
         if count > 10:
-            logging.warning("File '" + filename + "' is not locked any more (" + str(count) + ")")
+            self.logging.warning("File '" + filename + "' is not locked any more (" + str(count) + ")")
         return "OK"
 
     def read(self, filename):
@@ -256,8 +262,8 @@ class BirdhouseConfigJSON(object):
             return data
 
         except Exception as e:
-            logging.error("Could not read JSON file: " + filename)
-            logging.error(str(e))
+            self.logging.error("Could not read JSON file: " + filename)
+            self.logging.error(str(e))
             return {}
 
     def write(self, filename, data):
@@ -271,18 +277,20 @@ class BirdhouseConfigJSON(object):
                 json.dump(data, codecs.getwriter('utf-8')(json_file), ensure_ascii=False, sort_keys=True, indent=4)
                 json_file.close()
             self.locked[filename] = False
-            logging.debug("Write JSON file: " + filename)
+            self.logging.debug("Write JSON file: " + filename)
 
         except Exception as e:
             self.locked[filename] = False
-            logging.error("Could not write JSON file: " + filename)
-            logging.error(str(e))
+            self.logging.error("Could not write JSON file: " + filename)
+            self.logging.error(str(e))
 
 
 class BirdhouseConfigDBHandler(object):
 
     def __init__(self, db_type="json"):
-        logging.info("Starting config database handler ("+db_type+") ...")
+        self.logging = logging.getLogger("DB-handler")
+        self.logging.setLevel = birdhouse_loglevel
+        self.logging.info("Starting DB handler (json, couch) ...")
 
         self.db_usr = "birdhouse"
         self.db_pwd = "birdhouse"
@@ -300,12 +308,12 @@ class BirdhouseConfigDBHandler(object):
         """
         set DB type: JSON, CouchDB, BOTH
         """
-        logging.info("  -> database handler set database type ("+db_type+")")
+        self.logging.info("  -> database handler set database type ("+db_type+")")
         self.db_type = db_type
         if self.json is None:
             self.json = BirdhouseConfigJSON()
         if self.db_type == "json":
-            logging.info("  -> database handler - db_type=" + self.db_type + ".")
+            self.logging.info("  -> database handler - db_type=" + self.db_type + ".")
             return True
         elif self.db_type == "couch":
             if self.couch is None or not self.couch.connected:
@@ -313,10 +321,10 @@ class BirdhouseConfigDBHandler(object):
                                                     self.db_port_internal, self.db_basedir)
             if not self.couch.connected:
                 self.db_type = "json"
-            logging.info("  -> database handler - db_type=" + self.db_type + ".")
+            self.logging.info("  -> database handler - db_type=" + self.db_type + ".")
             return True
         else:
-            logging.error("  -> Unknown DB type ("+str(self.db_type)+")")
+            self.logging.error("  -> Unknown DB type ("+str(self.db_type)+")")
             return False
 
     def read(self, filename):
@@ -331,7 +339,7 @@ class BirdhouseConfigDBHandler(object):
         elif self.db_type == "couch":
             result = self.couch.read(filename)
         else:
-            logging.error("Unknown DB type ("+str(self.db_type)+")")
+            self.logging.error("Unknown DB type ("+str(self.db_type)+")")
         return result
 
     def write(self, filename, data):
@@ -344,7 +352,7 @@ class BirdhouseConfigDBHandler(object):
             self.json.write(filename, data)
             self.couch.write(filename, data)
         else:
-            logging.error("Unknown DB type ("+str(self.db_type)+")")
+            self.logging.error("Unknown DB type ("+str(self.db_type)+")")
 
     def lock(self, filename):
         """
@@ -368,6 +376,11 @@ class BirdhouseConfigQueue(threading.Thread):
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
+
+        self.logging = logging.getLogger("config-Q")
+        self.logging.setLevel = birdhouse_loglevel
+        self.logging.info("Starting config queue ...")
+
         self.queue_count = None
         self.config = config
         self._running = True
@@ -379,7 +392,6 @@ class BirdhouseConfigQueue(threading.Thread):
         """
         create videos and process queue
         """
-        logging.info("Starting config queue ...")
         config_files = ["images", "videos", "backup", "sensor", "weather"]
         start_time = time.time()
         while self._running:
@@ -504,12 +516,13 @@ class BirdhouseConfigQueue(threading.Thread):
                             self.config.write(config_file, entry_data, date)
 
                 if count_entries > 0:
-                    logging.info("Queue: wrote "+str(count_entries)+" entries to "+str(count_files)+" config files (" +
-                                 str(round(time.time()-start_time, 2))+"s/"+str(round(time.time()))+")")
+                    self.logging.info("Queue: wrote "+str(count_entries)+" entries to "+str(count_files)+
+                                      " config files (" +str(round(time.time()-start_time, 2))+"s/"+
+                                      str(round(time.time()))+")")
 
             time.sleep(1)
 
-        logging.info("Stopped Config Queue.")
+        self.logging.info("Stopped Config Queue.")
 
     def stop(self):
         """
@@ -613,11 +626,11 @@ class BirdhouseConfigQueue(threading.Thread):
         elif category == "videos":
             config_data = self.config.read_cache(config="videos")
 
-        logging.info("test:" + entry_date)
+        self.logging.info("test:" + entry_date)
 
         response["command"] = ["mark/unmark for deletion", entry_id]
         if entry_id in config_data:
-            logging.info("OK")
+            self.logging.info("OK")
             self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted",
                                      status=entry_value)
             if entry_value == 1:
@@ -718,9 +731,13 @@ class BirdhouseConfig(threading.Thread):
         self.name = "Config"
         self.param = None
         self.queue = None
-
         self._running = True
         self._paused = False
+
+        self.logging = logging.getLogger("config")
+        self.logging.setLevel = birdhouse_loglevel
+        self.logging.info("Starting configuration handler ...")
+
         self.update = {}
         self.update_views = {"favorite": False, "archive": False}
         self.async_answers = []
@@ -761,15 +778,15 @@ class BirdhouseConfig(threading.Thread):
         if not self.exists("main") or self.param == {}:
             directory = os.path.join(self.main_directory, self.directories["data"])
             filename = os.path.join(directory, self.files["main"])
-            logging.info("Create main config file (" + filename + ") ...")
+            self.logging.info("Create main config file (" + filename + ") ...")
             self.unlock("main")
             self.write("main", self.param_init)
             time.sleep(1)
             self.param = self.read("main")
             if self.param != {}:
-                logging.info("OK.")
+                self.logging.info("OK.")
             else:
-                logging.error("Could not create main config file, check if directory '" + directory + "' is writable.")
+                self.logging.error("Could not create main config file, check if directory '" + directory + "' is writable.")
                 sys.exit()
 
         self.param = self.read("main")
@@ -777,7 +794,7 @@ class BirdhouseConfig(threading.Thread):
         self.html_replace = {
             "start_date": self.local_time().strftime("%d.%m.%Y %H:%M:%S")
         }
-        logging.info("Read configuration from '" + self.file_path("main") + "' (timezone="+str(self.timezone)+") ...")
+        self.logging.info("Read configuration from '" + self.file_path("main") + "' (timezone="+str(self.timezone)+") ...")
 
         # set database type if not JSON
         self.db_type = self.param["server"]["database_type"]
@@ -789,7 +806,7 @@ class BirdhouseConfig(threading.Thread):
         Core function (not clear what to do yet)
         """
         count = 0
-        logging.info("Starting config handler ...")
+        self.logging.info("Starting config handler ...")
         self.queue = BirdhouseConfigQueue(config=self)
         self.queue.start()
         self.param = self.read("main")
@@ -803,13 +820,13 @@ class BirdhouseConfig(threading.Thread):
             time.sleep(1)
             if self._paused and count == 0:
                 if count == 0:
-                    logging.info("Writing config files is paused ...")
+                    self.logging.info("Writing config files is paused ...")
                     count += 1
             elif not self._paused:
                 count = 0
                 self.weather.active(self.param["localization"]["weather_active"])
 
-        logging.info("Stopped config handler.")
+        self.logging.info("Stopped config handler.")
 
     def stop(self):
         """
@@ -852,18 +869,18 @@ class BirdhouseConfig(threading.Thread):
         """
         wait = 0.2
         count = 0
-        logging.debug("Start check locked: " + filename + " ...")
+        self.logging.debug("Start check locked: " + filename + " ...")
 
         if filename in self.locked and self.locked[filename]:
             while self.locked[filename]:
                 time.sleep(wait)
                 count += 1
                 if count > 10:
-                    logging.warning("Waiting! File '" + filename + "' is locked (" + str(count) + ")")
+                    self.logging.warning("Waiting! File '" + filename + "' is locked (" + str(count) + ")")
                     time.sleep(1)
 
         elif filename == "ALL":
-            logging.info("Wait until no file is locked ...")
+            self.logging.info("Wait until no file is locked ...")
             locked = len(self.locked.keys())
             while locked > 0:
                 locked = 0
@@ -871,9 +888,9 @@ class BirdhouseConfig(threading.Thread):
                     if self.locked[key]:
                         locked += 1
                 time.sleep(wait)
-            logging.info("OK")
+            self.logging.info("OK")
         if count > 10:
-            logging.warning("File '" + filename + "' is not locked any more (" + str(count) + ")")
+            self.logging.warning("File '" + filename + "' is not locked any more (" + str(count) + ")")
         return "OK"
 
     def wait_if_paused(self):
@@ -920,14 +937,14 @@ class BirdhouseConfig(threading.Thread):
         return directory of config file
         """
         if not os.path.isdir(self.directory(config)):
-            logging.info("Creating directory for " + config + " ...")
+            self.logging.info("Creating directory for " + config + " ...")
             os.mkdir(self.directory(config))
-            logging.info("OK.")
+            self.logging.info("OK.")
 
         if date != "" and not os.path.isdir(os.path.join(self.directory(config), date)):
-            logging.info("Creating directory for " + config + " ...")
+            self.logging.info("Creating directory for " + config + " ...")
             os.mkdir(os.path.join(self.directory(config), date))
-            logging.info("OK.")
+            self.logging.info("OK.")
 
     def read(self, config, date=""):
         """
@@ -985,7 +1002,7 @@ class BirdhouseConfig(threading.Thread):
         change configuration base on dict in form
         dict["key1:ey2:key3"] = "value"
         """
-        logging.info("Change configuration ... " + config + "/" + date + " ... " + str(config_data))
+        self.logging.info("Change configuration ... " + config + "/" + date + " ... " + str(config_data))
         param = self.read(config, date)
         data_type = ""
         for key in config_data:
@@ -1011,7 +1028,7 @@ class BirdhouseConfig(threading.Thread):
                 try:
                     value = json.loads(value)
                 except Exception as e:
-                    logging.error("Could not load as JSON: " + str(e))
+                    self.logging.error("Could not load as JSON: " + str(e))
 
             if ":" not in key:
                 param[key] = value
@@ -1032,14 +1049,13 @@ class BirdhouseConfig(threading.Thread):
             for key in self.update:
                 self.update[key] = True
 
-    @staticmethod
-    def read_swap_info():
+    def read_swap_info(self):
         """
         read swap info, if raspberry pi
         """
         cmd = "cat /etc/dphys-swapfile | grep CONF_SWAPSIZE"
         message = os.system(cmd)
-        logging.info(message)
+        self.logging.info(message)
         return message
 
     @staticmethod

@@ -2,6 +2,7 @@ import time
 import threading
 import logging
 from datetime import datetime
+from modules.presets import birdhouse_loglevel
 
 
 try:
@@ -23,6 +24,11 @@ class BirdhouseSensor(threading.Thread):
         threading.Thread.__init__(self)
         self.id = sensor_id
         self.config = config
+
+        self.logging = logging.getLogger("weather")
+        self.logging.setLevel = birdhouse_loglevel
+        self.logging.info("Starting sensor control for '"+sensor_id+"' ...")
+
         self.config.update["sensor_"+self.id] = False
         self.param = self.config.param["devices"]["sensors"][sensor_id]
         self.active = self.param["active"]
@@ -44,9 +50,9 @@ class BirdhouseSensor(threading.Thread):
         if not error_module:
             self.connect()
         else:
-            logging.error(error_module_msg)
-            logging.error("- Requires Raspberry and installation of this module.")
-            logging.error("- To install module, try 'sudo apt-get -y install rpi.gpio'.")
+            self.logging.error(error_module_msg)
+            self.logging.error("- Requires Raspberry and installation of this module.")
+            self.logging.error("- To install module, try 'sudo apt-get -y install rpi.gpio'.")
             self.error_connect = True
             self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
             self.error_msg += " - " + error_module_msg
@@ -59,14 +65,14 @@ class BirdhouseSensor(threading.Thread):
         count = 0
         retry = 0
         retry_wait = 30
-        logging.info("- Starting sensor loop (" + self.id + "/" + str(self.pin) + "/"+self.param["type"]+") ...")
+        self.logging.info("- Starting sensor loop (" + self.id + "/" + str(self.pin) + "/"+self.param["type"]+") ...")
         while self.running:
             time.sleep(5)
 
             p_count = 0
             while self._paused:
                 if p_count == 0:
-                    logging.info("Pause sensor "+self.id+" ...")
+                    self.logging.info("Pause sensor "+self.id+" ...")
                     p_count += 1
                 time.sleep(0.5)
 
@@ -79,7 +85,7 @@ class BirdhouseSensor(threading.Thread):
             if self.error_connect and self.param["active"]:
                 retry += 1
                 if retry > retry_wait:
-                    logging.info("Retry starting sensor: "+self.id)
+                    self.logging.info("Retry starting sensor: "+self.id)
                     self.connect()
                     retry = 0
 
@@ -91,8 +97,8 @@ class BirdhouseSensor(threading.Thread):
                             self.values["temperature"] = indoor.temperature
                             self.values["humidity"] = indoor.humidity
                             self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-                            logging.debug("Temperature: " + str(indoor.temperature))
-                            logging.debug("Humidity:    " + str(indoor.humidity))
+                            self.logging.debug("Temperature: " + str(indoor.temperature))
+                            self.logging.debug("Humidity:    " + str(indoor.humidity))
                         else:
                             raise Exception("Not valid ("+str(indoor.is_valid())+")")
 
@@ -100,8 +106,8 @@ class BirdhouseSensor(threading.Thread):
                         self.values["temperature"] = self.sensor.temperature
                         self.values["humidity"] = self.sensor.humidity
                         self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-                        logging.debug("Temperature: " + str(self.sensor.temperature))
-                        logging.debug("Humidity:    " + str(self.sensor.humidity))
+                        self.logging.debug("Temperature: " + str(self.sensor.temperature))
+                        self.logging.debug("Humidity:    " + str(self.sensor.humidity))
 
                     self.error = False
                     self.error_msg = ""
@@ -110,11 +116,11 @@ class BirdhouseSensor(threading.Thread):
                     self.error = True
                     self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
                     self.error_msg += " - Error reading data from sensor: "+str(e)
-                    logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
+                    self.logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
                 count = 0
 
         # GPIO.cleanup()
-        logging.info("Stopped sensor (" + self.id + "/"+self.param["type"]+").")
+        self.logging.info("Stopped sensor (" + self.id + "/"+self.param["type"]+").")
 
     def connect(self):
         """
@@ -155,16 +161,16 @@ class BirdhouseSensor(threading.Thread):
                 self.error_connect = True
                 self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
                 self.error_msg += " - Could not load "+self.param["type"]+" sensor module: "+str(e)
-                logging.error(self.error_msg)
+                self.logging.error(self.error_msg)
             if not self.error:
-                logging.info("Loaded Sensor: "+self.id)
-                logging.info("- Initial values: "+str(temp))
+                self.logging.info("Loaded Sensor: "+self.id)
+                self.logging.info("- Initial values: "+str(temp))
         else:
             self.error = True
             self.error_connect = True
             self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
             self.error_msg += " - No sensor available: requires Raspberry Pi / activate 'rpi_active' in config file."
-            logging.info(self.error_msg)
+            self.logging.info(self.error_msg)
 
     def stop(self):
         """

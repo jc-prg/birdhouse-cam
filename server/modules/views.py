@@ -6,6 +6,9 @@ from sys import getsizeof
 from datetime import datetime, timedelta
 import modules.presets as presets
 
+view_logging = logging.getLogger("view-header")
+view_logging.setLevel = presets.birdhouse_loglevel
+
 
 def read_html(filename, content=None):
     """
@@ -15,7 +18,7 @@ def read_html(filename, content=None):
         content = {}
 
     if not os.path.isfile(filename):
-        logging.warning("File '" + filename + "' does not exist!")
+        view_logging.warning("File '" + filename + "' does not exist!")
         return ""
 
     with open(filename, "r") as page:
@@ -62,7 +65,7 @@ def create_chart_data(data, config=None):
     weather_data_in_chart = ["temperature", "humidity", "wind"]
 
     if data == {} or "dict" not in str(type(data)):
-        logging.error("Could not create chart data (empty)!")
+        view_logging.error("Could not create chart data (empty)!")
 
     # get categories / titles
     for key in data:
@@ -127,6 +130,11 @@ class BirdhouseViews(threading.Thread):
         Initialize new thread and set initial parameters
         """
         threading.Thread.__init__(self)
+
+        self.logging = logging.getLogger("views")
+        self.logging.setLevel = presets.birdhouse_loglevel
+        self.logging.info("Starting views thread ...")
+
         self.server = None
         self.active_cams = None
         self._running = True
@@ -145,7 +153,7 @@ class BirdhouseViews(threading.Thread):
         """
         count = 0
         count_rebuild = 60*5
-        logging.info("Starting HTML views and REST API for GET ...")
+        self.logging.info("Starting HTML views and REST API for GET ...")
         while self._running:
 
             if self.create_favorites or count > count_rebuild or self.config.update_views["favorite"]:
@@ -163,7 +171,7 @@ class BirdhouseViews(threading.Thread):
 
             count += 1
             time.sleep(1)
-        logging.info("Stopped HTML views and REST API for GET.")
+        self.logging.info("Stopped HTML views and REST API for GET.")
 
     def stop(self):
         """
@@ -175,7 +183,7 @@ class BirdhouseViews(threading.Thread):
         """
         Check if administration is allowed based on the IP4 the request comes from
         """
-        logging.debug("Check if administration is allowed: " + self.server.address_string() + " / " + str(
+        self.logging.debug("Check if administration is allowed: " + self.server.address_string() + " / " + str(
             self.config.param["server"]["ip4_admin_deny"]))
         if self.server.address_string() in self.config.param["server"]["ip4_admin_deny"]:
             return False
@@ -199,7 +207,7 @@ class BirdhouseViews(threading.Thread):
             if len(param) > 3:
                 which_cam = param[3]
             if which_cam not in self.camera or len(param) <= 3:
-                logging.warning("Unknown camera requested (%s).", path)
+                self.logging.warning("Unknown camera requested (%s).", path)
                 which_cam = "cam1"
         elif "?" in path and "index.html" not in path:
             param = path.split("?")
@@ -216,9 +224,9 @@ class BirdhouseViews(threading.Thread):
             which_cam = self.active_cams[0]
 
         if check_path == "":
-            logging.debug("Selected CAM = " + which_cam + " (" + self.server.path + ")")
+            self.logging.debug("Selected CAM = " + which_cam + " (" + self.server.path + ")")
         else:
-            logging.debug("Selected CAM = " + which_cam + " (" + check_path + ")")
+            self.logging.debug("Selected CAM = " + which_cam + " (" + check_path + ")")
 
         self.which_cam = which_cam
         return path, which_cam, further_param
@@ -443,7 +451,7 @@ class BirdhouseViews(threading.Thread):
         dir_count_data = 0
         dir_count_delete = 0
 
-        logging.info("Create data for archive view from '"+self.config.directory(config="backup")+"' ...")
+        self.logging.info("Create data for archive view from '"+self.config.directory(config="backup")+"' ...")
         for cam in self.camera:
             content = {
                 "active_cam": cam,
@@ -527,7 +535,7 @@ class BirdhouseViews(threading.Thread):
                                         lowres_file = os.path.join(self.config.directory(config="backup"), directory, file_info["lowres"])
                                         if os.path.isfile(lowres_file):
                                             dir_size_cam += os.path.getsize(lowres_file)
-                                            logging.debug("lowres size: "+str(os.path.getsize(lowres_file)))
+                                            self.logging.debug("lowres size: "+str(os.path.getsize(lowres_file)))
                                         if "lowres_size" in file_info:
                                             if file_info["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
                                                 content["max_image_size"]["lowres"][0] = file_info["lowres_size"][0]
@@ -538,7 +546,7 @@ class BirdhouseViews(threading.Thread):
                                             hires_file = os.path.join(self.config.directory(config="backup"), directory, file_info["hires"])
                                             if os.path.isfile(hires_file):
                                                 dir_size_cam += os.path.getsize(hires_file)
-                                                logging.debug("hires size: " + str(os.path.getsize(hires_file)))
+                                                self.logging.debug("hires size: " + str(os.path.getsize(hires_file)))
                                         if "hires_size" in file_info:
                                             if file_info["hires_size"][0] > content["max_image_size"]["hires"][0]:
                                                 content["max_image_size"]["hires"][0] = file_info["hires_size"][0]
@@ -557,7 +565,7 @@ class BirdhouseViews(threading.Thread):
                         dir_total_size += dir_size
                         files_total += count
 
-                        logging.info("- directory: "+str(dir_size)+" / cam: "+str(dir_size_cam)+" / " +
+                        self.logging.info("- directory: "+str(dir_size)+" / cam: "+str(dir_size_cam)+" / " +
                                      str(round(dir_total_size, 1))+" ("+directory+"/"+cam+")")
 
                         image = os.path.join(self.config.directories["backup"], image)
@@ -579,10 +587,10 @@ class BirdhouseViews(threading.Thread):
                             "lowres": image_file
                         }
                     else:
-                        logging.error("Archive: config file available but empty/in wrong format: /backup/" + directory)
+                        self.logging.error("Archive: config file available but empty/in wrong format: /backup/" + directory)
 
                 else:
-                    logging.error("Archive: no config file available: /backup/" + directory)
+                    self.logging.error("Archive: no config file available: /backup/" + directory)
                     # self.sendError()
 
             content["view_count"] = []
@@ -590,7 +598,7 @@ class BirdhouseViews(threading.Thread):
             content["chart_data"] = create_chart_data(content["entries"].copy(), self.config)
             self.archive_views[cam] = content
 
-        logging.info("Create data for archive view done.")
+        self.logging.info("Create data for archive view done.")
 
     def archive_list_update(self):
         """
@@ -602,7 +610,7 @@ class BirdhouseViews(threading.Thread):
         """
         Page with all pictures of the current day
         """
-        logging.debug("CompleteListToday: Start - "+self.config.local_time().strftime("%H:%M:%S"))
+        self.logging.debug("CompleteListToday: Start - "+self.config.local_time().strftime("%H:%M:%S"))
         self.server = server
         path, which_cam, further_param = self.selected_camera()
         content = {
@@ -682,7 +690,7 @@ class BirdhouseViews(threading.Thread):
         content["chart_data"] = create_chart_data(content["entries"].copy(), self.config)
 
         length = getsizeof(content)/1024
-        logging.debug("CompleteListToday: End - "+self.config.local_time().strftime("%H:%M:%S")+" ("+str(length)+" kB)")
+        self.logging.debug("CompleteListToday: End - "+self.config.local_time().strftime("%H:%M:%S")+" ("+str(length)+" kB)")
         return content
 
     def favorite_list(self, camera):
@@ -702,7 +710,7 @@ class BirdhouseViews(threading.Thread):
         """
         Page with pictures (and videos) marked as favorites and sorted by date
         """
-        logging.info("Create data for favorite view  ...")
+        self.logging.info("Create data for favorite view  ...")
         content = {
             "active_cam": "none",
             "view": "favorits",
@@ -820,7 +828,7 @@ class BirdhouseViews(threading.Thread):
         content["subtitle"] = presets.birdhouse_pages["favorit"][0]
 
         self.favorite_views = content
-        logging.info("Create data for favorite view done.")
+        self.logging.info("Create data for favorite view done.")
 
     def favorite_list_update(self):
         """

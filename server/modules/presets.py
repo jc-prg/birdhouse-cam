@@ -1,3 +1,7 @@
+import logging
+
+
+birdhouse_loglevel = logging.INFO
 
 birdhouse_pages = {
     "live":             ("Live-Stream", "/index.html",       "INDEX"),

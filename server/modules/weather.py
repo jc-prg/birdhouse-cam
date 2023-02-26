@@ -5,8 +5,7 @@ import asyncio
 import logging
 import time
 from datetime import datetime, timezone, timedelta
-import time
-import logging
+from modules.presets import birdhouse_loglevel
 
 
 class BirdhouseWeather(threading.Thread):
@@ -17,10 +16,12 @@ class BirdhouseWeather(threading.Thread):
         # https://pypi.org/project/python-weather/
         """
         threading.Thread.__init__(self)
-        logging.info("Starting weather process ...")
-
         self._running = True
         self._paused = False
+
+        self.logging = logging.getLogger("weather")
+        self.logging.setLevel = birdhouse_loglevel
+        self.logging.info("Starting weather process ...")
 
         self.error = False
         self.error_msg = ""
@@ -60,7 +61,7 @@ class BirdhouseWeather(threading.Thread):
         """
         continuously request fresh data once a minute
         """
-        logging.info("Starting Weather module ...")
+        self.logging.info("Starting Weather module ...")
         last_update = 0
         while self._running:
             if last_update + self.update_time < time.time():
@@ -222,8 +223,8 @@ class BirdhouseWeather(threading.Thread):
         if "current" not in self.weather_info:
             self.error = True
             self.error_msg = "Weather data not correct (get_weather_info)"
-            logging.error(self.error_msg)
-            logging.error(str(self.weather_info))
+            self.logging.error(self.error_msg)
+            self.logging.error(str(self.weather_info))
             self.weather_info = self.weather_empty.copy()
 
         if info_type == "current_small":

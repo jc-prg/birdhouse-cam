@@ -6,14 +6,13 @@ import numpy as np
 import ffmpeg
 import cv2
 import psutil
-
-from imutils.video import WebcamVideoStream
-from imutils.video import FPS
-from skimage.metrics import structural_similarity as ssim
-
 import threading
+
+from imutils.video import FPS, WebcamVideoStream
+from skimage.metrics import structural_similarity as ssim
 from threading import Condition
 from datetime import datetime, timezone, timedelta
+from modules.presets import birdhouse_loglevel
 
 
 # https://learn.circuit.rocks/introduction-to-opencv-using-the-raspberry-pi
@@ -29,7 +28,6 @@ class BirdhouseVideoProcessing(threading.Thread):
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
-        logging.info("- Loading Video Processing for " + camera_id + "... ")
         self.id = camera_id
         self.camera = camera
         self.name = param["name"]
@@ -37,6 +35,10 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.config = config
         self.directory = directory
         self.timezone = time_zone
+
+        self.logging = logging.getLogger("cam-video")
+        self.logging.setLevel = birdhouse_loglevel
+        self.logging.info("Starting VIDEO processing for '"+self.id+"' ...")
 
         self.queue_create = []
         self.queue_trim = []
@@ -79,7 +81,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         """
         Report Error, set variables of modules, collect last 3 messages in var self.error_msg
         """
-        logging.error("Video Processing (" + self.id + "): " + message)
+        self.logging.error("Video Processing (" + self.id + "): " + message)
         self.error = True
         self.error_msg.append(message)
         if len(self.error_msg) >= 3:
@@ -89,18 +91,18 @@ class BirdhouseVideoProcessing(threading.Thread):
         """
         Report Error, set variables of modules
         """
-        logging.warning("Video Processing (" + self.id + "): " + message)
+        self.logging.warning("Video Processing (" + self.id + "): " + message)
 
     def run(self):
         """
         Initialize, set initial values
         """
-        logging.info("Initialize video recording ...")
+        self.logging.info("Initialize video recording ...")
         if "video" in self.param and "max_length" in self.param["video"]:
             self.max_length = self.param["video"]["max_length"]
-            logging.debug("Set max video recording length for " + self.id + " to " + str(self.max_length))
+            self.logging.debug("Set max video recording length for " + self.id + " to " + str(self.max_length))
         else:
-            logging.debug("Use default max video recording length for " + self.id + " = " + str(self.max_length))
+            self.logging.debug("Use default max video recording length for " + self.id + " = " + str(self.max_length))
 
         count = 0
         self.running = True
@@ -115,7 +117,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                     self.config.async_running = True
                     [filename, stamp, date] = self.queue_create.pop()
 
-                    logging.info("Start day video creation (" + filename + "): " + stamp + " - " + date + ")")
+                    self.logging.info("Start day video creation (" + filename + "): " + stamp + " - " + date + ")")
                     response = self.create_video_day(filename=filename, stamp=stamp, date=date)
 
                     if response["result"] == "OK":
@@ -130,12 +132,12 @@ class BirdhouseVideoProcessing(threading.Thread):
                     self.config.async_running = True
                     [video_id, start, end] = self.queue_trim.pop()
 
-                    logging.info("Start video trimming (" + video_id + "): " + str(start) + " - " + str(end) + ")")
+                    self.logging.info("Start video trimming (" + video_id + "): " + str(start) + " - " + str(end) + ")")
                     response = self.create_video_trimmed(video_id, start, end)
                     self.config.async_answers.append(["TRIM_DONE", video_id, response["result"]])
                     self.config.async_running = True
 
-        logging.info("Stopped video recording.")
+        self.logging.info("Stopped video recording.")
 
     def stop(self):
         """
@@ -170,7 +172,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         response = {"command": ["start recording"]}
 
         if self.camera.active and not self.camera.error and not self.recording:
-            logging.info("Starting video recording (" + self.id + ") ...")
+            self.logging.info("Starting video recording (" + self.id + ") ...")
             self.recording = True
             current_time = self.config.local_time()
             self.info = {
@@ -195,7 +197,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         """
         response = {"command": ["stop recording"]}
         if self.camera.active and not self.camera.error and self.recording:
-            logging.info("Stopping video recording (" + self.id + ") ...")
+            self.logging.info("Stopping video recording (" + self.id + ") ...")
             current_time = self.config.local_time()
             self.recording = False
             self.info["date_end"] = current_time.strftime('%Y%m%d_%H%M%S')
@@ -222,8 +224,8 @@ class BirdhouseVideoProcessing(threading.Thread):
         if self.info["status"] == "recording":
             max_time = float(self.info["stamp_start"] + self.max_length)
             if max_time < float(self.config.local_time().timestamp()):
-                logging.info("Maximum recording time achieved ...")
-                logging.info(str(max_time) + " < " + str(self.config.local_time().timestamp()))
+                self.logging.info("Maximum recording time achieved ...")
+                self.logging.info(str(max_time) + " < " + str(self.config.local_time().timestamp()))
                 return True
         return False
 
@@ -250,7 +252,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         Create video from images
         """
         self.processing = True
-        logging.info("Start video creation with ffmpeg ...")
+        self.logging.info("Start video creation with ffmpeg ...")
 
         input_filenames = os.path.join(self.config.directory("videos"), self.filename("vimages") + "%" +
                                        str(self.count_length).zfill(2) + "d.jpg")
@@ -275,13 +277,13 @@ class BirdhouseVideoProcessing(threading.Thread):
             self.count_length) + ".jpg ") + os.path.join(self.config.directory("videos"), self.filename("thumb"))
         cmd_delete = "rm " + os.path.join(self.config.directory("videos"), self.filename("vimages") + "*.jpg")
         try:
-            logging.info(cmd_thumb)
+            self.logging.info(cmd_thumb)
             message = os.system(cmd_thumb)
-            logging.debug(message)
+            self.logging.debug(message)
 
-            logging.info(cmd_delete)
+            self.logging.info(cmd_delete)
             message = os.system(cmd_delete)
-            logging.debug(message)
+            self.logging.debug(message)
 
         except Exception as e:
             self._msg_error("Error during video creation (thumbnail/cleanup): " + str(e))
@@ -289,7 +291,7 @@ class BirdhouseVideoProcessing(threading.Thread):
             return
 
         self.processing = False
-        logging.info("OK.")
+        self.logging.info("OK.")
         return
 
     def create_video_image(self, image):
@@ -301,10 +303,10 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.info["video_file"] = self.filename("video")
         filename = self.info["image_files"] + str(self.info["image_count"]).zfill(self.count_length) + ".jpg"
         path = os.path.join(self.directory, filename)
-        logging.debug("Save image as: " + path)
+        self.logging.debug("Save image as: " + path)
 
         try:
-            logging.debug("Write  image '" + path + "')")
+            self.logging.debug("Write  image '" + path + "')")
             return cv2.imwrite(path, image)
         except Exception as e:
             self._msg_error("Could not save image '" + filename + "': " + str(e))
@@ -321,7 +323,7 @@ class BirdhouseVideoProcessing(threading.Thread):
 
         try:
             cmd_rm = "rm " + self.config.directory("videos_temp") + "*"
-            logging.debug(cmd_rm)
+            self.logging.debug(cmd_rm)
             message = os.system(cmd_rm)
             if message != 0:
                 response = {"result": "error", "reason": "remove temp image files", "message": message}
@@ -332,7 +334,7 @@ class BirdhouseVideoProcessing(threading.Thread):
 
         try:
             cmd_copy = "cp " + self.config.directory("images") + filename + "* " + self.config.directory("videos_temp")
-            logging.debug(cmd_copy)
+            self.logging.debug(cmd_copy)
             message = os.system(cmd_copy)
             if message != 0:
                 response = {"result": "error", "reason": "copy temp image files", "message": message}
@@ -345,7 +347,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         cmd_rename = "i=0; for fi in " + self.config.directory("videos_temp") + "image_*; do mv \"$fi\" $(printf \""
         cmd_rename += cmd_filename + "%05d.jpg\" $i); i=$((i+1)); done"
         try:
-            logging.info(cmd_rename)
+            self.logging.info(cmd_rename)
             message = os.system(cmd_rename)
             if message != 0:
                 response = {"result": "error", "reason": "rename temp image files", "message": message}
@@ -378,7 +380,7 @@ class BirdhouseVideoProcessing(threading.Thread):
 
         try:
             cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.directory("videos") + cmd_thumbfile
-            logging.info(cmd_thumb)
+            self.logging.info(cmd_thumb)
             message = os.system(cmd_thumb)
             if message != 0:
                 response = {"result": "error", "reason": "create thumbnail", "message": message}
@@ -386,7 +388,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 return response
 
             cmd_rm2 = "rm " + self.config.directory("videos_temp") + "*.jpg"
-            logging.info(cmd_rm2)
+            self.logging.info(cmd_rm2)
             message = os.system(cmd_rm2)
             if message != 0:
                 response = {"result": "error", "reason": "remove temp image files", "message": message}
@@ -425,7 +427,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         if len(param) < 3:
             response["result"] = "Error: Parameters are missing "
             response["result"] += "(/create-day-video/which-cam/)"
-            logging.warning("Create video of daily images ... Parameters are missing.")
+            self.logging.warning("Create video of daily images ... Parameters are missing.")
         else:
             which_cam = param[2]
             current_time = self.config.local_time()
@@ -462,7 +464,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 return {"result": "Error while creating shorter video."}
 
         else:
-            logging.warning("No video with the ID " + str(video_id) + " available.")
+            self.logging.warning("No video with the ID " + str(video_id) + " available.")
             return {"result": "No video with the ID " + str(video_id) + " available."}
 
     def create_video_trimmed_exec(self, input_file, output_file, start_timecode, end_timecode, framerate):
@@ -497,9 +499,9 @@ class BirdhouseVideoProcessing(threading.Thread):
             return "Error"
 
         # try:
-        #    logging.debug(cmd)
+        #    self.logging.debug(cmd)
         #    message = os.system(cmd)
-        #    logging.debug(message)
+        #    self.logging.debug(message)
         # except Exception as e:
         #    self._msg_error("Error during video trimming: " + str(e))
 
@@ -518,17 +520,17 @@ class BirdhouseVideoProcessing(threading.Thread):
         if len(param) < 6:
             response["result"] = "Error: Parameters are missing"
             response["result"] += " (/create-short-video/video-id/start-timecode/end-timecode/which-cam/)"
-            logging.warning("Create short version of video ... Parameters are missing.")
+            self.logging.warning("Create short version of video ... Parameters are missing.")
 
         else:
-            logging.info("Create short version of video '" + str(param[2]) + "' [" + str(param[3]) + ":" +
+            self.logging.info("Create short version of video '" + str(param[2]) + "' [" + str(param[3]) + ":" +
                          str(param[4]) + "] ...")
             which_cam = param[5]
             config_data = self.config.read_cache(config="videos")
 
             if param[2] not in config_data:
                 response["result"] = "Error: video ID '" + str(param[2]) + "' doesn't exist."
-                logging.warning("VideoID '" + str(param[2]) + "' doesn't exist.")
+                self.logging.warning("VideoID '" + str(param[2]) + "' doesn't exist.")
             else:
                 self.queue_trim.append([param[2], param[3], param[4]])
                 response["command"] = ["Create short version of video"]
@@ -543,11 +545,14 @@ class BirdhouseImageProcessing(object):
     """
 
     def __init__(self, camera_id, camera, config, param, time_zone):
-        logging.info("- Loading Image Processing for " + camera_id + "... ")
         self.frame = None
         self.id = camera_id
         self.config = config
         self.param = param
+
+        self.logging = logging.getLogger("cam-image")
+        self.logging.setLevel = birdhouse_loglevel
+        self.logging.info("Starting IMAGE processing for '"+self.id+"' ...")
 
         self.text_default_position = (30, 40)
         self.text_default_scale = 0.8
@@ -574,7 +579,7 @@ class BirdhouseImageProcessing(object):
         Report Error, set variables of modules; collect last 3 messages in central var  self.error_msg
         """
         if not warning:
-            logging.error("Image Processing (" + self.id + "): " + message)
+            self.logging.error("Image Processing (" + self.id + "): " + message)
             self.error = True
             self.error_msg.append(message)
             self.error_count += 1
@@ -583,7 +588,7 @@ class BirdhouseImageProcessing(object):
             if len(self.error_msg) >= 10:
                 self.error_msg.pop()
         else:
-            logging.warning("Image Processing (" + self.id + "): " + message)
+            self.logging.warning("Image Processing (" + self.id + "): " + message)
 
     def reset_error(self):
         """
@@ -629,8 +634,8 @@ class BirdhouseImageProcessing(object):
             area = [0, 0, 1, 1]
 
         try:
-            logging.debug(self.id + "/compare 1: " + str(detection_area) + " / " + str(image_1st.shape))
-            logging.debug(self.id + "/compare 2: " + str(area) + " / " + str(image_1st.shape))
+            self.logging.debug(self.id + "/compare 1: " + str(detection_area) + " / " + str(image_1st.shape))
+            self.logging.debug(self.id + "/compare 2: " + str(area) + " / " + str(image_1st.shape))
             (score, diff) = ssim(image_1st, image_2nd, full=True)
 
         except Exception as e:
@@ -686,7 +691,7 @@ class BirdhouseImageProcessing(object):
 
         except Exception as e:
             self.raise_error("Could not convert image to gray scale (" + str(e) + ")")
-            logging.error("Shape " + str(raw.shape))
+            self.logging.error("Shape " + str(raw.shape))
             return raw
 
     def convert_from_gray_raw(self, raw):
@@ -704,7 +709,7 @@ class BirdhouseImageProcessing(object):
 
         except Exception as e:
             self.raise_error("Could not convert image back from gray scale (" + str(e) + ")")
-            logging.error("Shape " + str(raw.shape))
+            self.logging.error("Shape " + str(raw.shape))
             return raw
 
     def crop(self, image, crop_area, crop_type="relative"):
@@ -742,7 +747,7 @@ class BirdhouseImageProcessing(object):
             if round(height / 2) != height / 2:
                 y_end -= 1
 
-            logging.debug("H: " + str(y_start) + "-" + str(y_end) + " / W: " + str(x_start) + "-" + str(x_end))
+            self.logging.debug("H: " + str(y_start) + "-" + str(y_end) + " / W: " + str(x_start) + "-" + str(x_end))
             frame_cropped = raw[y_start:y_end, x_start:x_end]
             return frame_cropped, crop_area
 
@@ -816,12 +821,12 @@ class BirdhouseImageProcessing(object):
 
         param = str(text) + ", " + str(position) + ", " + str(font) + ", " + str(scale) + ", " + str(
             color) + ", " + str(thickness)
-        logging.debug("draw_text_raw: "+param)
+        self.logging.debug("draw_text_raw: "+param)
         try:
             raw = cv2.putText(raw, text, tuple(position), font, scale, color, thickness, cv2.LINE_AA)
         except Exception as e:
             self.raise_error("Could not draw text into image (" + str(e) + ")", warning=True)
-            logging.warning(" ... " + param)
+            self.logging.warning(" ... " + param)
 
         return raw
 
@@ -1045,7 +1050,7 @@ class BirdhouseImageProcessing(object):
         """
         rotate image
         """
-        logging.debug("Rotate image " + str(degree) + " ...")
+        self.logging.debug("Rotate image " + str(degree) + " ...")
         rotate_degree = "don't rotate"
         if int(degree) == 90:
             rotate_degree = cv2.ROTATE_90_CLOCKWISE
@@ -1096,10 +1101,14 @@ class BirdhouseCameraOutput(object):
     Create camera output
     """
 
-    def __init__(self):
+    def __init__(self, camera):
         self.frame = None
         self.buffer = io.BytesIO()
         self.condition = Condition()
+
+        self.logging = logging.getLogger("cam-output")
+        self.logging.setLevel = birdhouse_loglevel
+        self.logging.info("Starting CAMERA output for '"+camera+"' ...")
 
     def write(self, buf):
         if buf.startswith(b'\xff\xd8'):
@@ -1119,17 +1128,20 @@ class BirdhouseCameraOther(object):
         self.error = False
         self.error_msg = ""
 
+        self.logging = logging.getLogger("cam-other")
+        self.logging.setLevel = birdhouse_loglevel
+        self.logging.info("Starting CAMERA support for '"+name+"/"+source+"' ...")
+
         if "/dev/" not in str(source):
             source = "/dev/video" + str(source)
 
-        logging.info("Initialize Camera Thread for " + name + ", source=" + source + " ...")
         self.stream = cv2.VideoCapture(source, cv2.CAP_V4L)
         try:
             ref, raw = self.stream.read()
         except cv2.error as e:
             self.error = True
             self.error_msg = str(e)
-            logging.warning("- Error connecting to camera '" + source + "' and reading first image")
+            self.logging.warning("- Error connecting to camera '" + source + "' and reading first image")
 
     def read(self):
         try:
@@ -1137,7 +1149,7 @@ class BirdhouseCameraOther(object):
             self.error = False
             return raw
         except cv2.error as e:
-            logging.warning("- Error connecting to camera '" + source + "' and reading first image")
+            self.logging.warning("- Error connecting to camera '" + source + "' and reading first image")
             self.error = True
             self.error_msg = str(e)
             return
@@ -1155,6 +1167,10 @@ class BirdhouseCamera(threading.Thread):
         self.config_cache = {}
         self.config_cache_size = 5
         self.config.update["camera_" + self.id] = False
+
+        self.logging = logging.getLogger("cam-image")
+        self.logging.setLevel = birdhouse_loglevel
+        self.logging.info("Starting CAMERA control for '"+self.id+"' ...")
 
         self.sensor = sensor
         self.param = self.config.param["devices"]["cameras"][self.id]
@@ -1191,7 +1207,7 @@ class BirdhouseCamera(threading.Thread):
         self.timezone = 0
         if "localization" in self.config.param and "timezone" in self.config.param["localization"]:
             self.timezone = float(self.config.param["localization"]["timezone"].replace("UTC", ""))
-            logging.info("Set Timezone: " + self.config.param["localization"]["timezone"] + " (" + str(self.timezone) + ")")
+            self.logging.info("Set Timezone: " + self.config.param["localization"]["timezone"] + " (" + str(self.timezone) + ")")
 
         self.image_size = [0, 0]
         self.image_size_lowres = [0, 0]
@@ -1208,19 +1224,19 @@ class BirdhouseCamera(threading.Thread):
         self.previous_image = None
         self.previous_stamp = "000000"
 
-        logging.info("Initializing camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
+        self.logging.info("Initializing camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
 
         self.image = BirdhouseImageProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param,
                                               time_zone=self.timezone)
         self.image.resolution = self.param["image"]["resolution"]
         self.video = BirdhouseVideoProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param,
                                               directory=self.config.directory("videos"), time_zone=self.timezone)
-        self.video.output = BirdhouseCameraOutput()
+        self.video.output = BirdhouseCameraOutput(self.id)
         self.camera = None
         self.cameraFPS = None
 
-        logging.debug("HOURS:   " + str(self.param["image_save"]["hours"]))
-        logging.debug("SECONDS: " + str(self.param["image_save"]["seconds"]))
+        self.logging.debug("HOURS:   " + str(self.param["image_save"]["hours"]))
+        self.logging.debug("SECONDS: " + str(self.param["image_save"]["seconds"]))
 
     def run(self):
         """
@@ -1240,22 +1256,22 @@ class BirdhouseCamera(threading.Thread):
 
             # if error reload from time to time
             if self.active and self.error and (reload_time + reload_time_error) < time.time():
-                logging.info("....... RELOAD Error: " + self.id + " - " +
-                             str(reload_time + reload_time_error) + " > " + str(time.time()))
+                self.logging.info("....... RELOAD Error: " + self.id + " - " +
+                                  str(reload_time + reload_time_error) + " > " + str(time.time()))
                 reload_time = time.time()
                 self.config_update = True
                 self.reload_camera = True
 
             # check if configuration shall be updated
             if self.config_update:
-                logging.info("....... RELOAD Update: " + self.id + " - " +
-                             str(reload_time + reload_time_error) + " > " + str(time.time()))
+                self.logging.info("....... RELOAD Update: " + self.id + " - " +
+                                  str(reload_time + reload_time_error) + " > " + str(time.time()))
                 self.update_main_config()
                 self.reload_camera = True
 
             # start or reload camera connection
             if self.reload_camera and self.active:
-                logging.info("- (Re)starting Camera (" + self.id + ") ...")
+                self.logging.info("- (Re)starting Camera (" + self.id + ") ...")
                 self.camera_start_default()
                 if not self.error and self.param["video"]["allow_recording"]:
                     self.camera_start_recording()
@@ -1266,7 +1282,7 @@ class BirdhouseCamera(threading.Thread):
                 count_paused = 0
             while self._paused and self.running:
                 if count_paused == 0:
-                    logging.info("Recording images with " + self.id + " paused ...")
+                    self.logging.info("Recording images with " + self.id + " paused ...")
                     count_paused += 1
                 time.sleep(0.5)
 
@@ -1285,18 +1301,18 @@ class BirdhouseCamera(threading.Thread):
                         self.image_size = self.image.size_raw(image)
                         self.video.image_size = self.image_size
 
-                    logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(
+                    self.logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(
                         current_time.strftime("%H:%M:%S")))
 
             # Image Recording (if not video recording)
             elif not self.error and self.param["active"] and self.param["active"] != "False":
                 time.sleep(0.3)
                 if self.record:
-                    logging.debug("Check if record ... " + str(hours) + "/*/" + str(seconds) + " ...")
+                    self.logging.debug("Check if record ... " + str(hours) + "/*/" + str(seconds) + " ...")
                     if (seconds in self.param["image_save"]["seconds"]) and \
                             (hours in self.param["image_save"]["hours"]):
 
-                        logging.debug(" ...... record now!")
+                        self.logging.debug(" ...... record now!")
                         # image = self.get_image_raw_buffered(max_age_seconds=1)    # does not work at the moment
                         image = self.get_image_raw()
 
@@ -1375,7 +1391,7 @@ class BirdhouseCamera(threading.Thread):
                                                        self.config.filename_image("lowres", stamp, self.id))
                             path_hires = os.path.join(self.config.directory("images"),
                                                       self.config.filename_image("hires", stamp, self.id))
-                            logging.debug("WRITE:" + path_lowres)
+                            self.logging.debug("WRITE:" + path_lowres)
                             self.write_image(filename=path_hires, image=image)
                             self.write_image(filename=path_lowres, image=image,
                                              scale_percent=self.param["image"]["preview_scale"])
@@ -1383,7 +1399,7 @@ class BirdhouseCamera(threading.Thread):
                         time.sleep(0.7)
                         self.previous_stamp = stamp
 
-        logging.info("Stopped camera (" + self.id + "/" + self.type + ").")
+        self.logging.info("Stopped camera (" + self.id + "/" + self.type + ").")
 
     def stop(self):
         """
@@ -1415,7 +1431,7 @@ class BirdhouseCamera(threading.Thread):
             self.image.raise_error(message)
         self.error_msg.append(message)
         self.error_time = time.time()
-        logging.error(self.id + ": " + message + " (" + str(self.error_time) + ")")
+        self.logging.error(self.id + ": " + message + " (" + str(self.error_time) + ")")
 
     def reset_error(self):
         """
@@ -1438,7 +1454,7 @@ class BirdhouseCamera(threading.Thread):
         try:
             self.camera.stream.release()
         except Exception as e:
-            logging.info("Ensure Stream is released ...")
+            self.logging.info("Ensure Stream is released ...")
 
         try:
             self.camera = BirdhouseCameraOther(self.source, self.id)
@@ -1464,7 +1480,7 @@ class BirdhouseCamera(threading.Thread):
                 else:
                     self.camera_resolution_usb(self.param["image"]["resolution"])
                     self.cameraFPS = FPS().start()
-                    logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
+                    self.logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
 
         except Exception as e:
             self.raise_error(True, "Starting camera '" + self.source + "' doesn't work: " + str(e))
@@ -1492,20 +1508,20 @@ class BirdhouseCamera(threading.Thread):
         try:
             current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
                        self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
-            logging.info("USB Current resolution: " + str(current))
+            self.logging.info("USB Current resolution: " + str(current))
         except Exception as e:
-            logging.warning("Could not get current resolution: " + self.id)
+            self.logging.warning("Could not get current resolution: " + self.id)
 
         high_value = 10000
         self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, high_value)
         self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, high_value)
         self.max_resolution = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
                                self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
-        logging.info(self.id + " Maximum resolution: " + str(self.max_resolution))
+        self.logging.info(self.id + " Maximum resolution: " + str(self.max_resolution))
 
         if "x" in resolution:
             dimensions = resolution.split("x")
-            logging.info(self.id + " Set resolution: " + str(dimensions))
+            self.logging.info(self.id + " Set resolution: " + str(dimensions))
             # self.camera.stream.set(3, int(resolution[0]))
             # self.camera.stream.set(4, int(resolution[1]))
             self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, float(dimensions[0]))
@@ -1520,11 +1536,11 @@ class BirdhouseCamera(threading.Thread):
             self.param["image"]["crop_area"] = self.image.crop_area_pixel(resolution=current,
                                                                           area=self.param["image"]["crop"],
                                                                           dimension=False)
-            logging.info(self.id + " New resolution: " + str(current))
-            logging.info(self.id + " New crop area:  " + str(self.param["image"]["crop"]) + " -> " +
+            self.logging.info(self.id + " New resolution: " + str(current))
+            self.logging.info(self.id + " New crop area:  " + str(self.param["image"]["crop"]) + " -> " +
                          str(self.param["image"]["crop_area"]))
         else:
-            logging.info("Resolution definition not supported: " + str(resolution))
+            self.logging.info("Resolution definition not supported: " + str(resolution))
 
         # potential source for errors ... errno=16 / device or resource is busy === >>
         # [ WARN:0@3.021] global /tmp/pip-wheel-8dvnqe62/opencv-python_7949e8065e824f1480edaa2d75fce534
@@ -1776,9 +1792,9 @@ class BirdhouseCamera(threading.Thread):
         """
         check if stream has to be killed
         """
-        logging.debug("get_image_stream_kill: " + str(stream_id))
+        self.logging.debug("get_image_stream_kill: " + str(stream_id))
         if stream_id in self.image_streams_to_kill:
-            logging.info("get_image_stream_kill - True: " + str(stream_id))
+            self.logging.info("get_image_stream_kill - True: " + str(stream_id))
             del self.image_streams_to_kill[stream_id]
             return True
         else:
@@ -1788,7 +1804,7 @@ class BirdhouseCamera(threading.Thread):
         """
         mark streams to be killed
         """
-        logging.info("set_image_stream_kill: " + stream_id)
+        self.logging.info("set_image_stream_kill: " + stream_id)
         self.image_streams_to_kill[stream_id] = datetime.now().timestamp()
 
     def get_camera_status(self):
@@ -1821,7 +1837,7 @@ class BirdhouseCamera(threading.Thread):
         """
         Draw a red rectangle into the image to show detection area / and a yellow to show the crop area
         """
-        logging.debug("-----------------" + self.id + "------- show area")
+        self.logging.debug("-----------------" + self.id + "------- show area")
         outer_area = self.param["image"]["crop"]
         inner_area = self.param["similarity"]["detection_area"]
         image = self.image.draw_area_raw(raw=image, area=outer_area, color=(0, 255, 255), thickness=4)
@@ -1840,7 +1856,7 @@ class BirdhouseCamera(threading.Thread):
         Scale image and write to file
         """
         image_path = os.path.join(self.config.main_directory, filename)
-        logging.debug("Write image: " + image_path)
+        self.logging.debug("Write image: " + image_path)
 
         try:
             if scale_percent != 100:
@@ -1855,7 +1871,7 @@ class BirdhouseCamera(threading.Thread):
             return ""
 
     def update_main_config(self):
-        logging.info("Update data from main configuration file for camera " + self.id)
+        self.logging.info("Update data from main configuration file for camera " + self.id)
         temp_data = self.config.read("main")
         self.param = temp_data["devices"]["cameras"][self.id]
         self.name = self.param["name"]

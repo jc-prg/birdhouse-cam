@@ -18,15 +18,13 @@ from urllib.parse import unquote
 from modules.backup import BirdhouseArchive
 from modules.camera import BirdhouseCamera
 from modules.config import BirdhouseConfig
-from modules.presets import birdhouse_preset, file_types
+from modules.presets import birdhouse_preset, file_types, birdhouse_loglevel
 from modules.views import BirdhouseViews
 from modules.sensors import BirdhouseSensor
 
+
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {
-    "name": "BirdhouseCAM",
-    "version": "v0.9.2"
-}
+api_description = {"name": "BirdhouseCAM", "version": "v0.9.2"}
 app_framework = "v0.9.4"
 
 
@@ -675,8 +673,12 @@ if __name__ == "__main__":
         logging.info('Started ...')
         logging.info('-------------------------------------------')
     else:
-        logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+        logging.basicConfig(format='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
+                            datefmt='%d.%m. %H:%M:%S',
+                            level=birdhouse_loglevel)
+        logging.info('-------------------------------------------')
         logging.info('Starting ...')
+        logging.info('-------------------------------------------')
 
     # set system signal handler
     signal.signal(signal.SIGINT, on_exit)
