@@ -35,12 +35,16 @@ birdhouse_directories = {
     "images": "images/",
     "weather": "images/",
     "backup": "images/",
+    "backup_info": "images/",
+    "favorites": "images/",
     "videos": "videos/",
     "videos_temp": "videos/images2video/"
 }
 birdhouse_files = {
     "main": "config.json",
     "backup": "config_images.json",
+    "backup_info": "config_backup.json",
+    "favorites": "config_favorites.json",
     "images": "config_images.json",
     "videos": "config_videos.json",
     "sensor": "config_sensor.json",
@@ -52,6 +56,8 @@ birdhouse_dir_to_database = {
     "images/config_images":         "today_images",
     "images/config_sensor":         "today_sensors",
     "images/config_weather":        "today_weather",
+    "images/config_backup":         "archive_images",
+    "images/config_favorites":      "favorites",
     "videos/config_videos":         "archive_videos",
     "images/<DATE>/config_images":  "archive_images",
     "images/<DATE>/config_sensors": "archive_sensors",

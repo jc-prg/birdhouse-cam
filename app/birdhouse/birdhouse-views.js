@@ -171,6 +171,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var active_page       = app_active_page;
 	var groups            = data["DATA"]["groups"];
 	var admin             = data["STATUS"]["admin_allowed"];
+	var server_status     = data["STATUS"]["server"];
 	var sensors           = data["DATA"]["devices"]["sensors"];
 	var video_short       = true;
 
@@ -255,8 +256,11 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 			                             video_short, same_img_size, max_image_size_LR);
 			count_groups += 1;
 			}
-			if (html == "") {
+			if (html == "" && server_status["view_favorite_loading"] == "done") {
     			html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;</center>";
+			}
+			else if (html == "") {
+    			html += "<center>&nbsp;<br/>"+lang("DATA_LOADING_TRY_AGAIN")+"<br/>&nbsp;</center>";
 			}
 		}
 	// today, backup, video
@@ -283,7 +287,12 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 		            }
 		        }
 		if (entries_available == false) {
-   			html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;</center>";
+		    if (server_status["view_favorite_loading"] == "done" && server_status["view_archive_loading"] == "done") {
+   			    html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;</center>";
+   			    }
+   			else {
+    			html += "<center>&nbsp;<br/>"+lang("DATA_LOADING_TRY_AGAIN")+"<br/>&nbsp;</center>";
+   			    }
 			}
 		}
 	setTextById(app_frame_content, html);

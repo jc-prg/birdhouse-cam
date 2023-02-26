@@ -143,7 +143,9 @@ class BirdhouseViews(threading.Thread):
         self.config = config
         self.which_cam = ""
         self.archive_views = {}
+        self.archive_loading = "started"
         self.favorite_views = {}
+        self.favorite_loading = "started"
         self.create_archive = True
         self.create_favorites = True
 
@@ -183,8 +185,12 @@ class BirdhouseViews(threading.Thread):
         """
         Check if administration is allowed based on the IP4 the request comes from
         """
+        if self.server is None:
+            return False
+
         self.logging.debug("Check if administration is allowed: " + self.server.address_string() + " / " + str(
             self.config.param["server"]["ip4_admin_deny"]))
+
         if self.server.address_string() in self.config.param["server"]["ip4_admin_deny"]:
             return False
         else:
@@ -448,9 +454,17 @@ class BirdhouseViews(threading.Thread):
         dir_count_cam = 0
         dir_count_data = 0
         dir_count_delete = 0
+        archive_info = {}
 
+        self.archive_loading = "in progress"
         self.logging.info("Create data for archive view from '" +
                           self.config.db_handler.directory(config="backup")+"' ...")
+
+        main_directory = self.config.db_handler.directory(config="backup")
+        self.logging.info("- Get archive directory information (" + self.config.db_handler.db_type + " | " +
+                          main_directory + ") ...")
+        dir_list = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
+        dir_list.sort(reverse=True)
 
         for cam in self.camera:
             content = {
@@ -464,12 +478,6 @@ class BirdhouseViews(threading.Thread):
                 }
             }
 
-            main_directory = self.config.db_handler.directory(config="backup")
-            self.logging.info("- Get archive directory information (" + self.config.db_handler.db_type + " | " +
-                              main_directory + ") ...")
-
-            dir_list = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
-            dir_list.sort(reverse=True)
             dir_total_size = 0
             files_total = 0
 
@@ -477,7 +485,7 @@ class BirdhouseViews(threading.Thread):
             image_today = self.config.filename_image(image_type="lowres", timestamp=image_title, camera=cam)
             image = os.path.join(self.config.db_handler.directory(config="images"), image_today)
 
-            self.logging.info("- Scan " + str(len(dir_list)) + " directories ...")
+            self.logging.info("- Scan " + str(len(dir_list)) + " directories for " + cam + " ...")
             for directory in dir_list:
                 group_name = directory[0:4] + "-" + directory[4:6]
                 self.logging.info("  -> Directory: " + directory + " | " + group_name)
@@ -499,21 +507,21 @@ class BirdhouseViews(threading.Thread):
 
                 file_data = {}
                 if available:
-                    self.logging.info("  -> read from DB")
+                    self.logging.debug("  -> read from DB")
                     file_data = self.config.db_handler.read_cache(config="backup", date=directory)
 
                 elif not available and config_available:
-                    self.logging.info("  -> read from file")
+                    self.logging.debug("  -> read from file")
                     file_data = self.config.db_handler.json.read(config_file)
                     if file_data != {}:
-                        self.logging.info("  -> write to DB: " + str(file_data.keys()))
-                        self.config.db_handler.write(config="backup", date=directory, data=file_data)
+                        self.logging.debug("  -> write to DB: " + str(file_data.keys()))
+                        self.config.db_handler.write(config="backup", date=directory, data=file_data, create=True)
                         available = True
                     else:
                         self.logging.error("  -> got empty data")
 
                 if available:
-                    self.logging.info("  -> Check CONFIG")
+                    self.logging.debug("  -> Check CONFIG")
                     content["groups"][group_name].append(directory)
 
                     # check if config file in correct format
@@ -521,7 +529,7 @@ class BirdhouseViews(threading.Thread):
                         if directory not in content["entries"]:
                             content["entries"][directory] = {}
                         content["entries"][directory]["error"] = True
-                        self.logging.info("  -> Read JSON: Wrong file format - " + config_file)
+                        self.logging.error("  -> Read JSON: Wrong file format - " + config_file)
 
                     else:
                         count = 0  # file_data["info"]["count"]
@@ -630,8 +638,14 @@ class BirdhouseViews(threading.Thread):
             content["view_count"] = []
             content["subtitle"] = presets.birdhouse_pages["backup"][0] + " (" + self.camera[cam].name + ")"
             content["chart_data"] = create_chart_data(content["entries"].copy(), self.config)
-            self.archive_views[cam] = content
+            self.archive_views[cam] = content.copy()
 
+            if self.config.db_handler.db_type == "couch":
+                del content["entries"]
+                archive_info[cam] = content.copy()
+
+        self.config.db_handler.write("backup_info", "", archive_info)
+        self.archive_loading = "done"
         self.logging.info("Create data for archive view done.")
 
     def archive_list_update(self):
@@ -745,6 +759,7 @@ class BirdhouseViews(threading.Thread):
         Page with pictures (and videos) marked as favorites and sorted by date
         """
         self.logging.info("Create data for favorite view  ...")
+        self.favorite_loading = "in Progress"
         content = {
             "active_cam": "none",
             "view": "favorits",
@@ -879,6 +894,8 @@ class BirdhouseViews(threading.Thread):
 
         self.favorite_views = content
         self.logging.info("Create data for favorite view done.")
+        self.config.db_handler.write("favorites", "", content)
+        self.favorite_loading = "done"
 
     def favorite_list_update(self):
         """

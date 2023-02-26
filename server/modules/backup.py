@@ -20,12 +20,12 @@ class BirdhouseArchive(threading.Thread):
         self.logging.setLevel = birdhouse_loglevel
         self.logging.info("Starting backup handler ...")
 
+        self._running = True
         self.config = config
         self.camera = camera
         self.views = views
         self.name = "Backup"
         self.processing = False
-        self._running = True
 
     def run(self):
         """

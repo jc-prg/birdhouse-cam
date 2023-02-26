@@ -445,7 +445,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "api-call": status,
                     "reload": False,
                     "system": get_system_data(),
-                    "server": {},
+                    "server": {
+                        "view_archive_loading": views.archive_loading,
+                        "view_favorite_loading": views.favorite_loading
+                    },
                     "devices": {
                         "cameras": {},
                         "sensors": {},

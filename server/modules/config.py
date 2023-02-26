@@ -23,6 +23,7 @@ class BirdhouseConfigCouchDB(object):
         self.changed_data = False
         self.basic_directory = base_dir
         self.db_url = "http://"+db_usr+":"+db_pwd+"@"+db_server+":"+str(db_port)+"/"
+        self.create_revisions = False
 
         self.logging = logging.getLogger("DB-couch")
         self.logging.setLevel = birdhouse_loglevel
@@ -120,16 +121,24 @@ class BirdhouseConfigCouchDB(object):
         database = ""
         filename = filename.replace(self.basic_directory, "")
         filename = filename.replace(".json", "")
+        self.logging.debug("filename2keys: " + filename)
 
         if filename in self.database_translation:
             database = self.database_translation[filename]
             date = ""
+            self.logging.debug("  -> " + database)
         else:
             parts1 = filename.split("/")
             parts2 = parts1[0]+"/<DATE>/"+parts1[2]
             if parts2 in self.database_translation:
                 database = self.database_translation[parts2]
                 date = parts1[1]
+                self.logging.debug("  -> " + database + " / " + date)
+
+        # experiment
+        if date != "":
+            database += "_" + date
+            date = ""
 
         return [database, date]
 
@@ -157,13 +166,16 @@ class BirdhouseConfigCouchDB(object):
             self.logging.error("CouchDB ERROR read (db_key): " + filename + " - " + db_key + "/" + date)
             return {}
 
-    def write(self, filename, data):
+    def write(self, filename, data, create=False):
         """
         read data from DB
         """
         [db_key, date] = self.filename2keys(filename)
         self.logging.debug("-----> WRITE: " + filename + " (" + self.basic_directory + ")")
         self.logging.debug("-----> WRITE DB: " + db_key + "/" + date)
+
+        if db_key not in self.database and create:
+            self.create(db_key)
 
         if db_key not in self.database:
             self.logging.error("CouchDB ERROR save: '" + db_key + "' not found, could not write data.")
@@ -186,12 +198,13 @@ class BirdhouseConfigCouchDB(object):
                 'data': doc_data
             }
         else:
-            doc["data"] = doc_data
+            doc['data'] = doc_data
             doc['time'] = time.time()
             doc['change'] = 'save changes'
 
         try:
             database.save(doc)
+            database.compact()
 
         except Exception as e:
             self.logging.error("CouchDB ERROR save: " + db_key + " " + str(e))
@@ -452,7 +465,7 @@ class BirdhouseConfigDBHandler(object):
         else:
             return self.config_cache[config][date].copy()
 
-    def write(self, config, date="", data=None):
+    def write(self, config, date="", data=None, create=False):
         """
         write data to DB
         """
@@ -460,13 +473,15 @@ class BirdhouseConfigDBHandler(object):
         if data is None:
             self.logging.error("Write: No data given ("+str(config)+"/"+str(date)+")")
             return
+        if create:
+            self.directory(config, date)
         filename = self.file_path(config, date)
         if self.db_type == "json":
             self.json.write(filename, data)
             self.write_cache(config, date, data)
         elif self.db_type == "couch":
             self.json.write(filename, data)
-            self.couch.write(filename, data)
+            self.couch.write(filename, data, create)
             self.write_cache(config, date, data)
         else:
             self.logging.error("Unknown DB type ("+str(self.db_type)+")")
@@ -715,7 +730,7 @@ class BirdhouseConfigQueue(threading.Thread):
         response = {}
         category = param[2]
         config_data = {}
-        self.db_handler.update_views["favorite"] = True
+        self.config.update_views["favorite"] = True
 
         if category == "current":
             entry_id = param[3]
