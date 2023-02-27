@@ -222,12 +222,12 @@ function birdhouseDevices_sensors(data) {
 }
 
 function birdhouseDevices_weather(data) {
-	var weather_config  = data["DATA"]["localization"];
+	var weather_config  = data["DATA"]["weather"];
 	var weather_data = data["WEATHER"];
-	var info_key = lang("WEATHER").toUpperCase()+": "+weather_config["weather_location"];
+	var info_key = lang("WEATHER").toUpperCase()+": "+weather_config["location"];
 	var index_info = {};
 	index_info[info_key] = {};
-    index_info[info_key]["active"] = weather_config["weather_active"];
+    index_info[info_key]["active"] = weather_config["active"];
     index_info[info_key]["group"] = "weather_settings";
     index_info[info_key]["id"] = "WEATHER";
 
@@ -244,9 +244,10 @@ function birdhouseDevices_weather(data) {
     html_entry += "<div class='camera_info_text'>";
 
     html_entry += tab.start();
-    html_entry += tab.row("Location:", birdhouse_edit_field(id="set_weather_location", field="localization:weather_location", type="input"));
+    html_entry += tab.row("Location:", birdhouse_edit_field(id="set_weather_location", field="weather:location", type="input"));
     html_entry += tab.row("GPS Position:", weather_data["info_position"].toString());
-    html_entry += tab.row("Active:", birdhouse_edit_field(id="set_weather_active", field="localization:weather_active", type="select", options="true,false", data_type="boolean"));
+    html_entry += tab.row("Active:", birdhouse_edit_field(id="set_weather_active", field="weather:active", type="select", options="true,false", data_type="boolean"));
+    html_entry += tab.row("Source:", weather_config["source"]);
     html_entry += tab.row("Last Update:", "<div id='weather_info_update'>Please wait ...</div>");
     html_entry += tab.end();
     html_entry += "<br/>";

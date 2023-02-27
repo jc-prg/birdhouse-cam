@@ -464,6 +464,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             # collect data for "DATA" section
             content["title"] = config.param["title"]
             content["backup"] = config.param["backup"]
+            content["weather"] = config.param["weather"]
             content["selected"] = which_cam
             content["active_page"] = command
 

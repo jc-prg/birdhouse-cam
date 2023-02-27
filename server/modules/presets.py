@@ -51,6 +51,29 @@ birdhouse_files = {
     "weather": "config_weather.json"
 }
 
+birdhouse_weather = {
+    "info_update": "none",
+    "info_update_stamp": "none",
+    "info_city": "",
+    "info_format": "",
+    "info_position": "",
+    "info_status": {"running": ""},
+    "current": {
+        "temperature": None,
+        "description": "",
+        "description_icon": "",
+        "wind_speed": None,
+        "uv_index": None,
+        "pressure": None,
+        "humidity": None,
+        "wind_direction": "",
+        "precipitation": None
+    },
+    "forecast": {
+        "today": {}
+    }
+}
+
 birdhouse_dir_to_database = {
     "config":                       "config",
     "images/config_images":         "today_images",
@@ -155,9 +178,14 @@ birdhouse_preset = {
     "title": "Our Birdhouse :-)",
     "localization": {
         "language": "EN",
-        "weather_location": "Munich",
-        "weather_active": True,
         "timezone": "UTC+1"
+    },
+    "weather": {
+        "active": True,
+        "location": "Munich",
+        "gps_location": [48.14, 11.58],
+        "source": "Open-Metheo",
+        "available_sources": ["Python-Weather", "Open-Metheo"]
     },
     "backup": {
         "preview":   "0700",               # HHMM
@@ -201,4 +229,11 @@ file_types = {
     '.gif': 'image/gif',
     '.jpg': 'image/jpg',
     '.jpeg': 'image/jpg',
+}
+
+interesting_icons = {
+    "other": "🌂 ☔ ❄ 🌈 🌬 🌡 ⚡ 🌞 ✨ ⭐ 🌟 💫 💦 🔅 🔆 ⛷ 🌍 🌎 🌏 🌐",
+    "moons": "🌑 🌒 🌓 🌔 🌕 🌖 🌗 🌘",
+    "weather": "🌤 🌦 🌧 🌨 🌩 🌪 ",
+    "clock": "🕐 🕒 🕓 🕔 🕕 🕖 🕗 🕘 🕙 🕚 🕛 🕜 🕝 🕞 🕟 🕠 🕡 🕢 🕣 🕤 🕥 🕦 🕧"
 }

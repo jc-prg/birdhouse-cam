@@ -972,7 +972,7 @@ class BirdhouseConfig(threading.Thread):
         self.param = self.db_handler.read("main")
         self.param["path"] = self.main_directory
 
-        self.weather = BirdhouseWeather(city=self.param["localization"]["weather_location"], time_zone=self.timezone)
+        self.weather = BirdhouseWeather(config=self, time_zone=self.timezone)
         self.weather.start()
 
         while self._running:

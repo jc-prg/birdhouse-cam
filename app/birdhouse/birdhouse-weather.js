@@ -36,14 +36,21 @@ function birdhouseWeather( title, data ) {
     var current_icon = "<center><font style='font-size:80px;'><big>" + weather_today["description_icon"] + "</big></font>"
                        + "<br/>" + weather_today["description"] + "</center>";
     var current_weather = tab.start();
-    current_weather += tab.row(lang("LOCATION") + ":",  weather["info_city"]);
+    if (weather["info_city"] != "") {
+        current_weather += tab.row(lang("LOCATION") + ":",  weather["info_city"]);
+        }
+    current_weather += tab.row(lang("GPS_POSITION")+":", "("+weather["info_position"].toString()+")");
     current_weather += tab.row(lang("SUNRISE") +":",    weather_3day["today"]["sunrise"]);
     current_weather += tab.row(lang("SUNSET")+":",      weather_3day["today"]["sunset"]);
     current_weather += tab.row(lang("TEMPERATURE")+":", weather_today["temperature"] +"°C");
     current_weather += tab.row(lang("HUMIDITY")+":",    weather_today["humidity"] +"%");
-    current_weather += tab.row(lang("WIND")+":",        weather_today["wind_speed"] + " km/h - " + weather_today["wind_direction"]);
-    current_weather += tab.row(lang("PRESSURE")+":",    weather_today["pressure"] + " hPa");
-    current_weather += tab.row(lang("UV_INDEX")+":",    weather_today["uv_index"]);
+    current_weather += tab.row(lang("WIND")+":",        weather_today["wind_speed"] + " km/h");
+    current_weather += tab.row(lang("STATUS")+":",      weather_today["time"]);
+    // current_weather += tab.row(lang("PRESSURE")+":",    weather_today["pressure"] + " hPa");
+    //current_weather += tab.row(lang("UV_INDEX")+":",    weather_today["uv_index"]);
+    if (weather["info_module"]["provider_link_required"]) {
+        current_weather += tab.row(lang("SOURCE")+":",  weather["info_module"]["provider_link"]);
+    }
     current_weather += tab.end();
 
     html_temp = tab.start();
@@ -69,14 +76,15 @@ function birdhouseWeather( title, data ) {
             var key_hour = key2.split(":")[0];
             var key_minute = key2.split(":")[1];
 
-            if (!today || (current_hour*1-3) < (key_hour*1)) {
+            if (!today || (current_hour*1) < (key_hour*1)) {
                 var forcast_hour = forecast_day["hourly"][key2];
                 var current_icon = "<center><font  style='font-size:40px;'>" + forcast_hour["description_icon"] + "</font></center>";
                 var current_weather = tab.start();
 
                 current_weather += tab.row(lang("TEMPERATURE")+":", forcast_hour["temperature"] +"°C");
-                current_weather += tab.row(lang("WIND")+":",        forcast_hour["wind_speed"] + " km/h - " + forcast_hour["wind_direction"]);
-                current_weather += tab.row(lang("PRESSURE")+":",    forcast_hour["pressure"] + " hPa");
+                current_weather += tab.row(lang("HUMIDITY")+":",    forcast_hour["humidity"] +"%");
+                current_weather += tab.row(lang("WIND")+":",        forcast_hour["wind_speed"] + " km/h");
+                // current_weather += tab.row(lang("PRESSURE")+":",    forcast_hour["pressure"] + " hPa");
                 current_weather += tab.end();
 
                 html_temp = "<div style='width:100%;text-align:right;'><b>"+key_hour+":"+key_minute+"</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div><hr style='width:95%;'/>";

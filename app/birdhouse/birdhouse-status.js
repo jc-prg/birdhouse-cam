@@ -88,7 +88,7 @@ function birdhouseStatus_print(data) {
     var weather_update = "N/A";
     var weather_error = "";
     if (data["WEATHER"]["current"] && data["WEATHER"]["current"]["description_icon"]) {
-        if (data["DATA"]["localization"]["weather_active"]) {
+        if (data["DATA"]["weather"]["active"]) {
             entry = data["WEATHER"]["info_city"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
             entry = "<big>" + data["WEATHER"]["current"]["description_icon"] + "</big> &nbsp; " + entry;
             weather_icon = data["WEATHER"]["current"]["description_icon"];
@@ -111,7 +111,7 @@ function birdhouseStatus_print(data) {
             setHeaderColor(header_id="weather_error", header_color="");
             setStatusColor(status_id="status_error_WEATHER", "green");
         }
-        if (data["DATA"]["localization"]["weather_active"] == true) {
+        if (data["DATA"]["weather"]["active"] == true) {
             setStatusColor(status_id="status_active_WEATHER", "white");
             }
         else{
