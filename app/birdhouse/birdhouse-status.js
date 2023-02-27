@@ -89,7 +89,15 @@ function birdhouseStatus_print(data) {
     var weather_error = "";
     if (data["WEATHER"]["current"] && data["WEATHER"]["current"]["description_icon"]) {
         if (data["DATA"]["weather"]["active"]) {
-            entry = data["WEATHER"]["info_city"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
+            if (data["WEATHER"]["info_city"] != "") {
+                entry = data["WEATHER"]["info_city"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
+                }
+            else if (data["WEATHER"]["info_module"]["name"]) {
+                entry = data["WEATHER"]["info_module"]["name"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
+            }
+            else  {
+                entry = "Internet: " + data["WEATHER"]["current"]["temperature"] + "°C";
+            }
             entry = "<big>" + data["WEATHER"]["current"]["description_icon"] + "</big> &nbsp; " + entry;
             weather_icon = data["WEATHER"]["current"]["description_icon"];
             weather_update = data["WEATHER"]["info_update"];
