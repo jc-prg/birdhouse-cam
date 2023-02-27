@@ -29,7 +29,7 @@ mark favorites ...).
   * Trim videos
 * Get, archive, and visualize **weather data**:
   * from sensors connected to the Raspberry Pi (DHT11/DHT22)
-  * via internet for a defined location (python_weather)
+  * via internet for a defined location (python_weather OR [Open Meteo](https://open-meteo.com/))
 * Connect to **audio stream** from microphone
   * under construction, currently browser only (no iPhone)
 * **Admin functionality** via app
@@ -44,7 +44,8 @@ mark favorites ...).
 * USB camera
 * Small USB Microphone
 * DHT11 / DHT22 Sensor
-* Python 3, PiCamera, CV2, imutils, JSON, Flask, python_weather, ...
+* Python 3, PiCamera, CV2, imutils, JSON, Flask
+* python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/)
 * HTML, CSS, JavaScript, Pinch-Zoom, ffmpeg 
 * jc://modules/, jc://app-framework/
 
@@ -118,6 +119,12 @@ When you run it the first time you'll be asked to check, change and save the set
 After that open the device settings, check and save them also.
 * NOTE: if you want to add devices at the moment you have to edit the config file directly. 
 It's stored as ./data/config.json.
+
+### Finalize database setup
+
+The default configuration of the database works without change but produces several error messages.
+To remove those open the admin tool via http://your-hostname:5100/_utils/ and login (default user:birdhouse, pwd:birdhouse).
+Go to the settings and create a single node.
 
 ### Add audio streaming (under construction, not running on iOS devices yet)
 
