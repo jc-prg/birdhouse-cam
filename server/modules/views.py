@@ -463,8 +463,17 @@ class BirdhouseViews(threading.Thread):
         main_directory = self.config.db_handler.directory(config="backup")
         self.logging.info("- Get archive directory information (" + self.config.db_handler.db_type + " | " +
                           main_directory + ") ...")
-        dir_list = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
-        dir_list.sort(reverse=True)
+
+        dir_list = []
+        file_list = os.listdir(main_directory)
+        for entry in file_list:
+            if "." not in entry:
+                if os.path.isdir(os.path.join(main_directory, entry)):
+                    dir_list.append(entry)
+        self.logging.info("- Found " + str(len(dir_list)) + " archive directories: " + str(dir_list))
+
+        # dir_list = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
+        # dir_list.sort(reverse=True)
 
         for cam in self.camera:
             content = {
@@ -488,7 +497,7 @@ class BirdhouseViews(threading.Thread):
             self.logging.info("- Scan " + str(len(dir_list)) + " directories for " + cam + " ...")
             for directory in dir_list:
                 group_name = directory[0:4] + "-" + directory[4:6]
-                self.logging.info("  -> Directory: " + directory + " | " + group_name)
+                self.logging.debug("  -> Directory: " + directory + " | " + group_name)
 
                 if "groups" not in content:
                     content["groups"] = {}

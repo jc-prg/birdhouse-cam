@@ -78,9 +78,12 @@ class BirdhouseArchive(threading.Thread):
                 for cam in self.camera:
                     files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
                 files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
+#                files_backup["info"]["size"] = sum(
+#                    os.path.getsize(os.path.join(directory, f)) for f in os.listdir(directory) if
+#                    os.path.isfile(os.path.join(directory, f)))
                 files_backup["info"]["size"] = sum(
                     os.path.getsize(os.path.join(directory, f)) for f in os.listdir(directory) if
-                    os.path.isfile(os.path.join(directory, f)))
+                    f.endswith(".jpeg") or f.endswith(".jpg") or f.endswith(".json"))
                 self.config.db_handler.write(config="backup", date=backup_date, config_data=files_backup)
 
         # if no directory exists, create directory, copy files and create a new config file (copy existing information)
@@ -187,9 +190,8 @@ class BirdhouseArchive(threading.Thread):
         path = self.config.db_handler.directory(config="videos")
         self.logging.info("Create video list for video directory ...")
         self.logging.debug("Reading files from path: " + path)
-
-        file_list = [f for f in os.listdir(path) if
-                     os.path.isfile(os.path.join(path, f)) and ".mp4" in f and not "short" in f]
+        file_list = [f for f in os.listdir(path) if f.endswith(".mp4") and "short" not in f and
+                     os.path.isfile(os.path.join(path, f))]
         file_list.sort(reverse=True)
         files = {}
         for file in file_list:
@@ -263,7 +265,11 @@ class BirdhouseArchive(threading.Thread):
         if recreate and os.path.isfile(path):
             self.logging.info("Remove existing image config file ...")
             os.remove(path)
-        file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and "_big" not in f]
+
+        # file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and "_big" not in f]
+        # file_list = [f for f in os.listdir(path) if "_big" not in f and os.path.isfile(os.path.join(path, f))]
+        file_list = [f for f in os.listdir(path) if "_big" not in f and (f.endswith(".jpg") or f.endswith("jpeg"))]
+
         file_list.sort(reverse=True)
         files = self.create_image_config_analyze(file_list=file_list, init=True, subdir=date)
         self.logging.info("Done.")
@@ -464,12 +470,9 @@ class BirdhouseArchive(threading.Thread):
         else:
             check_date = ""
 
-        self.logging.info(" - Prepare DELETE: Start to read data from "+directory)
+        self.logging.info(" - Prepare DELETE: Start to read data from " + directory)
         start_time = time.time()
-
-        # get files in directory, check which files shall be deleted -> NEEDS A LOT OF TIME?! Recursive not required
-        files_in_dir = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and ".json" not in f]
-
+        files_in_dir = [f for f in os.listdir(directory) if f.endswith(".jpg") or f.endswith(".jpeg")]
         self.logging.info(" - Prepare DELETE: Read " + str(len(files_in_dir)) + " files (" +
                           str(time.time() - start_time) + "s)")
 
