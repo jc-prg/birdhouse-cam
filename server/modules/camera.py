@@ -1753,7 +1753,8 @@ class BirdhouseCamera(threading.Thread):
             else:
                 image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "complete")
 
-            if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
+            if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"] \
+                    and stream_id in self.image_fps:
                 image_error = self.image.draw_text_raw(raw=image_error,
                                                        text=str(
                                                            round(self.image_fps[stream_id], 1)) + "fps   " + fps_rotate,
