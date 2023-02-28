@@ -367,6 +367,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         file_ending = self.path.split(".")
         file_ending = "." + file_ending[len(file_ending) - 1].lower()
 
+        if "+" in which_cam:
+            which_cam2 = which_cam.split("+")[1]
+            which_cam = which_cam.split("+")[0]
+        else:
+            which_cam2 = ""
+
+        logging.info("CAMERA(s) = "+which_cam+" "+which_cam2)
+
         config.html_replace["title"] = config.param["title"]
         config.html_replace["active_cam"] = which_cam
 
@@ -504,6 +512,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if key in camera:
                     api_response["STATUS"]["devices"]["cameras"][key] = camera[key].get_camera_status()
                     camera_data[key]["video"]["stream"] = "/stream.mjpg?" + key
+                    camera_data[key]["video"]["stream_lowres"] = "/lowres/stream.mjpg?" + key
                     camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
                     camera_data[key]["device"] = "camera"
                     camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
@@ -553,7 +562,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.stream_file(filetype='image/jpeg',
                              content=read_image(directory="", filename='image_' + which_cam + '.jpg'))
 
-        # show live streamss
+        # show live streams
         elif '/stream.mjpg' in self.path:
             if camera[which_cam].type != "pi" and camera[which_cam].type != "usb" and \
                     camera[which_cam].type != "default":
@@ -564,6 +573,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             self.stream_video_header()
 
+            stream_lowres = False
+            stream_pip = False
             stream_active = True
             stream_id_int = datetime.now().timestamp()
             stream_id_ext = "&".join(further_param)
@@ -572,16 +583,32 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             stream_wait_while_recording = 1
             stream_wait_while_streaming = 0.01
 
+            if '/lowres/stream.mjpg' in self.path:
+                stream_lowres = True
+            if '/pip/stream.mjpg' in self.path:
+                stream_pip = True
+
             while stream_active:
-                if config.update["camera_"+which_cam]:
-                    camera[which_cam].update_main_config()
+
                 if camera[which_cam].get_stream_kill(stream_id_ext):
                     stream_active = False
+                if config.update["camera_"+which_cam]:
+                    camera[which_cam].update_main_config()
 
                 if self.path.startswith("/detection/"):
-                    frame_raw = camera[which_cam].get_stream_raw(normalize=False, stream_id=stream_id_int)
+                    frame_raw = camera[which_cam].get_stream_raw(normalize=False, stream_id=stream_id_int,
+                                                                 lowres=stream_lowres)
+                elif stream_pip and which_cam2 != "":
+                    frame_raw = camera[which_cam].get_stream_raw(normalize=False, stream_id=stream_id_int,
+                                                                 lowres=False)
+                    if which_cam2 in camera:
+                        frame_raw2 = camera[which_cam2].get_stream_raw(normalize=False, stream_id=stream_id_int,
+                                                                       lowres=True)
+                        frame_raw = camera[which_cam].image.image_in_image_raw(frame_raw, frame_raw2)
+
                 else:
-                    frame_raw = camera[which_cam].get_stream_raw(normalize=True, stream_id=stream_id_int)
+                    frame_raw = camera[which_cam].get_stream_raw(normalize=True, stream_id=stream_id_int,
+                                                                 lowres=stream_lowres)
 
                 if not camera[which_cam].error and not camera[which_cam].image.error:
                     if self.path.startswith("/detection/"):
@@ -595,10 +622,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         frame_raw = camera[which_cam].show_areas_raw(image=frame_raw)
 
                     else:
-                        if camera[which_cam].param["image"]["date_time"]:
+                        if camera[which_cam].param["image"]["date_time"] and not stream_lowres:
                             frame_raw = camera[which_cam].image.draw_date_raw(frame_raw)
 
-                        if camera[which_cam].video.recording:
+                        if camera[which_cam].video.recording and not stream_lowres:
                             logging.debug("VIDEO RECORDING")
                             length = str(round(camera[which_cam].video.record_info()["length"]))
                             framerate = str(round(camera[which_cam].video.record_info()["framerate"]))
@@ -609,7 +636,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                                                               position=(200, y_position), color=(0, 0, 255),
                                                                               scale=0.5, thickness=1)
 
-                        if camera[which_cam].video.processing:
+                        if camera[which_cam].video.processing and not stream_lowres:
                             logging.debug("VIDEO PROCESSING")
                             length = str(round(camera[which_cam].video.record_info()["length"]))
                             image_size = str(camera[which_cam].video.record_info()["image_size"])

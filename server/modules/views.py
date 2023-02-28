@@ -202,6 +202,7 @@ class BirdhouseViews(threading.Thread):
         """
         which_cam = "cam1"
         further_param = ""
+        complete_cam = ""
 
         if check_path == "":
             path = self.server.path
@@ -211,7 +212,10 @@ class BirdhouseViews(threading.Thread):
         if "/api" in path and "/api/status" not in path and "/api/version" not in path:
             param = path.split("/")
             if len(param) > 3:
+                complete_cam = param[3]
                 which_cam = param[3]
+            if "+" in complete_cam:
+                which_cam = complete_cam.split("+")[0]
             if which_cam not in self.camera or len(param) <= 3:
                 self.logging.warning("Unknown camera requested (%s).", path)
                 which_cam = "cam1"
@@ -219,6 +223,9 @@ class BirdhouseViews(threading.Thread):
             param = path.split("?")
             param = param[1].split("&")
             which_cam = param[0]
+            complete_cam = param[0]
+            if "+" in complete_cam:
+                which_cam = complete_cam.split("+")[0]
             further_param = param
 
         self.active_cams = []
@@ -235,7 +242,7 @@ class BirdhouseViews(threading.Thread):
             self.logging.debug("Selected CAM = " + which_cam + " (" + check_path + ")")
 
         self.which_cam = which_cam
-        return path, which_cam, further_param
+        return path, complete_cam, further_param
 
     def index(self, server):
         """

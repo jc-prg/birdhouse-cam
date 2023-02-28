@@ -903,6 +903,29 @@ class BirdhouseImageProcessing(object):
             self.raise_error("Could not draw area into the image (" + str(e) + ")", warning=True)
             return raw
 
+    def image_in_image_raw(self, raw, raw2, position=4, distance=10):
+        """
+        add a smaller image in a larger image,
+        inspired by https://answers.opencv.org/question/231069/inserting-logo-in-an-image/
+        """
+        [w1, h1, ch1] = raw.shape
+        [w2, h2, ch2] = raw2.shape
+        self.logging.debug("Insert images into image: big="+str(w1)+","+str(h1)+" / small="+str(w2)+","+str(h2))
+        # top left
+        if position == 1:
+            raw[distance:w2+distance, distance:h2+distance] = raw2
+        # top right
+        if position == 2:
+            raw[distance:w2+distance, h1-(distance+h2):h1-distance] = raw2
+        # bottom left
+        if position == 3:
+            raw[w1-(distance+w2):w1-distance, distance:h2+distance] = raw2
+        # bottom right
+        if position == 4:
+            raw[w1-(distance+w2):w1-distance, h1-(distance+h2):h1-distance] = raw2
+
+        return raw
+
     def image_error_info_raw(self, error_msg, reload_time, info_type="complete"):
         """
         add error information to image
@@ -960,6 +983,9 @@ class BirdhouseImageProcessing(object):
             line_position += 40
             raw = self.draw_date_raw(raw=raw, overwrite_color=(0, 0, 255),
                                      overwrite_position=(20, line_position), timezone_info=self.timezone)
+
+        elif info_type == "empty":
+            raw = self.image_error_raw(image=self.img_camera_error_v3)
 
         else:
             raw = self.image_error_raw(image=self.img_camera_error_v3)
@@ -1099,6 +1125,19 @@ class BirdhouseImageProcessing(object):
             self.raise_error("Could not analyze image (" + str(e) + ")", warning=True)
             return [0, 0]
 
+    def resize_raw(self, raw, scale_percent=100, scale_size=None):
+        """
+        resize raw image
+        """
+        self.logging.debug("Resize image ("+str(scale_percent)+"% / "+str(scale_size)+")")
+        if scale_size is not None:
+            [width, height] = scale_size
+            raw = cv2.resize(raw, (width, height))
+        elif scale_percent != 100:
+            [width, height] = self.size_raw(raw, scale_percent=scale_percent)
+            raw = cv2.resize(raw, (width, height))
+        return raw
+
 
 class BirdhouseCameraOutput(object):
     """
@@ -1218,6 +1257,8 @@ class BirdhouseCamera(threading.Thread):
         self.image_last_raw = None
         self.image_last_raw_time = 0
         self.image_last_edited = None
+        self.image_last_edited_lowres = None
+        self.image_last_size_lowres = None
         self.image_count_empty = 0
         self.image_time_last = {}
         self.image_time_current = {}
@@ -1468,6 +1509,8 @@ class BirdhouseCamera(threading.Thread):
         self.image.reset_error()
         self.image_last_raw = None
         self.image_last_edited = None
+        self.image_last_edited_lowres = None
+        self.image_last_size_lowres = None
 
     def camera_start_default(self):
         """
@@ -1730,49 +1773,71 @@ class BirdhouseCamera(threading.Thread):
 
         return False
 
-    def get_stream_raw(self, normalize=False, stream_id=""):
+    def get_stream_raw(self, normalize=False, stream_id="", lowres=False):
         """
-        get image, if error show error message
-        -> IMPROVE: create possibility to stop stream via API Command (Cam-ID + external Stream-ID)
+        get image, if error return error message on image
         -> IMPROVE: reuse images, if multiple streams ... (define primary stream, others use copies ...)
-        ->          check if in device mode there are two streams of each camera?!
+                    check if in device mode there are two streams of each camera?!
+        -> IMPROVE: reuse error images (lower frame rate required)
         """
 
         image = self.get_image_raw()
         fps_rotate = self.get_stream_fps(stream_id=stream_id)
 
-        if not self.error and self.image.error and self.image.error_count < 10 and self.image_last_edited is not None:
-            image = self.image_last_edited
-            image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
-            return image
+        # grab existing images if less than 10 image errors
+        if not self.error and self.image.error and self.image.error_count < 10:
+            if not lowres and self.image_last_edited is not None:
+                image = self.image_last_edited
+                image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
+                return image
+            elif lowres and self.image_last_edited_lowres is not None:
+                image = self.image_last_edited_lowres
+                image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
+                return image
 
+        # if 10 or more image errors or a camera error return error msg as image
         elif self.error or self.image.error:
-            if normalize:
+            if lowres:
+                image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "empty")
+                image_error = self.image.normalize_error_raw(image_error)
+            elif normalize:
                 image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "reduced")
-                image_error = self.image.normalize_error_raw(image_error)  # ---> causes error after a while?
+                image_error = self.image.normalize_error_raw(image_error)
             else:
                 image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "complete")
 
             if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"] \
-                    and stream_id in self.image_fps:
+                    and stream_id in self.image_fps and not lowres:
                 image_error = self.image.draw_text_raw(raw=image_error,
-                                                       text=str(
-                                                           round(self.image_fps[stream_id], 1)) + "fps   " + fps_rotate,
-                                                       font=cv2.QT_FONT_NORMAL, color=(0, 0, 0),
+                                                       text=str(round(self.image_fps[stream_id], 1)) + "fps   " +
+                                                            fps_rotate, font=cv2.QT_FONT_NORMAL, color=(0, 0, 0),
                                                        position=(20, -20), scale=0.4, thickness=1)
+            if lowres:
+                if self.image_last_size_lowres is None:
+                    self.image_last_size_lowres = self.image.size_raw(raw=image_error, scale_percent=self.param["image"]["preview_scale"])
+                image_error = self.image.resize_raw(raw=image_error, scale_percent=100, scale_size=self.image_last_size_lowres)
+
             return image_error
 
+        # if no error create image for stream
         else:
             if normalize:
                 image = self.image.normalize_raw(image)
 
-            if not self.video.recording and not self.video.processing:
+            if not self.video.recording and not self.video.processing and not lowres:
                 if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
                     image = self.image.draw_text_raw(raw=image,
                                                      text=str(round(self.image_fps[stream_id], 1)) + "fps   "
                                                           + fps_rotate, font=cv2.QT_FONT_NORMAL,
                                                      position=(10, -20), scale=0.4, thickness=1)
-            self.image_last_edited = image
+            if lowres:
+                if self.image_last_size_lowres is None:
+                    self.image_last_size_lowres = self.image.size_raw(raw=image, scale_percent=self.param["image"]["preview_scale"])
+                image = self.image.resize_raw(raw=image, scale_percent=100, scale_size=self.image_last_size_lowres)
+                self.image_last_edited_lowres = image
+            else:
+                self.image_last_edited = image
+
             return image
 
     def get_stream_count(self):
