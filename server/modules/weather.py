@@ -1,12 +1,36 @@
 import threading
-import datetime
 import python_weather
 import asyncio
 import logging
 import time
 import requests
+from geopy.geocoders import Nominatim
 from datetime import datetime, timezone, timedelta
 from modules.presets import birdhouse_loglevel, birdhouse_weather
+
+
+def look_up_location(location):
+    """
+    look up location (https://pypi.org/project/geopy/)
+    """
+    geo_locator = Nominatim(user_agent="Weather App")
+    try:
+        geo_location = geo_locator.geocode(location)
+        return [geo_location.latitude, geo_location.longitude, geo_location.address]
+    except Exception as e:
+        return [0, 0, "Error location lookup ("+location+") -> " + str(e)]
+
+
+def look_up_gps(gps_coordinates):
+    """
+    look up location (https://pypi.org/project/geopy/)
+    """
+    geo_locator = Nominatim(user_agent="Weather App")
+    try:
+        geo_location = geo_locator.reverse(str(gps_coordinates[0]) + ", " + str(gps_coordinates[1]))
+        return [geo_location.latitude, geo_location.longitude, geo_location.address]
+    except Exception as e:
+        return [0, 0, "Error GPS lookup ("+str(gps_coordinates)+") -> " + str(e)]
 
 
 class BirdhouseWeatherPython(threading.Thread):
@@ -78,16 +102,17 @@ class BirdhouseWeatherPython(threading.Thread):
             if len(parts) > 1:
                 parts = parts[1].split("'")
                 return parts[0]
+                if " " in parts[1]:
+                    parts = parts[1].split(" ")
+                    return parts[0]
+                elif ">" in parts[1]:
+                    return parts[1].replace(">", "")
+                else:
+                    return parts[1]
             else:
                 parts = icon_string.split(icon_type + "=")
                 if len(parts) > 1:
-                    if " " in parts[1]:
-                        parts = parts[1].split(" ")
-                        return parts[0]
-                    elif ">" in parts[1]:
-                        return parts[1].replace(">", "")
-                    else:
-                        return parts[1]
+                    pass
                 else:
                     return "Error extracting icon: " + str(icon_object)
 
@@ -536,8 +561,14 @@ class BirdhouseWeather(threading.Thread):
         (re)connect to weather module
         """
         self.weather_source = param["source"]
-        self.weather_city = self.config.param["weather"]["location"],
-        self.weather_gps = self.config.param["weather"]["gps_location"],
+        self.weather_city = param["location"]
+        self.weather_gps = param["gps_location"]
+
+        if self.weather_city != "":
+            self.logging.debug("TEST GPS Address: " + str(look_up_location(self.weather_city)))
+        if self.weather_gps != "":
+            self.logging.debug("TEST GPS Coordinates: " + str(look_up_gps(self.weather_gps)))
+
         self.logging.info("(Re)connect weather module (source="+self.weather_source+")")
         if self.weather_source == "Open-Metheo":
             self.module = BirdhouseWeatherOpenMeteo(config=self.config,

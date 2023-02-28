@@ -10,3 +10,4 @@ couchdb
 requests
 python_weather
 suntime
+geopy

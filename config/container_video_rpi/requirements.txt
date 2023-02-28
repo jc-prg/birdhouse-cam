@@ -3,3 +3,4 @@ flask
 couchdb
 requests
 python_weather
+geopy

@@ -12,3 +12,4 @@ couchdb
 requests
 python_weather
 board
+geopy
