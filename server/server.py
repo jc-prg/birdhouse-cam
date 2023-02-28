@@ -599,10 +599,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     frame_raw = camera[which_cam].get_stream_raw(normalize=False, stream_id=stream_id_int,
                                                                  lowres=stream_lowres)
                 elif stream_pip and which_cam2 != "":
-                    frame_raw = camera[which_cam].get_stream_raw(normalize=False, stream_id=stream_id_int,
+                    frame_raw = camera[which_cam].get_stream_raw(normalize=True, stream_id=stream_id_int,
                                                                  lowres=False)
                     if which_cam2 in camera:
-                        frame_raw2 = camera[which_cam2].get_stream_raw(normalize=False, stream_id=stream_id_int,
+                        frame_raw2 = camera[which_cam2].get_stream_raw(normalize=True, stream_id=stream_id_int,
                                                                        lowres=True)
                         frame_raw = camera[which_cam].image.image_in_image_raw(frame_raw, frame_raw2)
 
