@@ -24,18 +24,18 @@ class BirdhouseWeatherPython(threading.Thread):
         self.logging.setLevel = birdhouse_loglevel
         self.logging.info("Starting weather process 'python_weather' ...")
 
-        self.error = False
-        self.error_msg = ""
-        self.update_interval = 60 * 30
-        self.update_settings = True
-        self.update_wait = 0
-
         self.weather_location = location
         self.weather_empty = birdhouse_weather.copy()
         self.weather_info = self.weather_empty.copy()
         self.weather_update = 0
         self.weather_update_rhythm = 60 * 60 * 3
         self.weather_raw_data = None
+
+        self.error = False
+        self.error_msg = ""
+        self.update_interval = self.weather_update_rhythm / 4
+        self.update_settings = True
+        self.update_wait = 0
 
         self.link_required = False
         self.link_provider = "<a href='https://pypi.org/project/python-weather/'>Python-Weather</a>"
@@ -55,8 +55,8 @@ class BirdhouseWeatherPython(threading.Thread):
                     self._convert_data()
 
             self.update_wait = (last_update + self.update_interval) - time.time()
-            self.logging.info(
-                "Wait to read weather data (" + str(self.update_interval) + ":" + str(self.update_wait) + "s) ...")
+            self.logging.info("Wait to read weather data (" + str(round(self.update_interval, 1)) + ":" +
+                              str(round(self.update_wait, 1)) + "s) ...")
             time.sleep(5)
 
         self.logging.info("Stopp weather thread.")
@@ -205,18 +205,18 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
         self.logging.setLevel = birdhouse_loglevel
         self.logging.info("Starting weather process 'Open-Metheo.com' for GPS="+str(gps_location)+" ...")
 
-        self.error = False
-        self.error_msg = ""
-        self.update_interval = 60 * 30
-        self.update_settings = True
-        self.update_wait = 0
-        self.timezone = time_zone
-
         self.weather_location = gps_location
         self.weather_empty = birdhouse_weather.copy()
         self.weather_info = self.weather_empty.copy()
         self.weather_update = 0
         self.weather_update_rhythm = 60 * 60
+
+        self.error = False
+        self.error_msg = ""
+        self.update_interval = self.weather_update_rhythm / 4
+        self.update_settings = True
+        self.update_wait = 0
+        self.timezone = time_zone
 
         self.link_required = True
         self.link_provider = "<a href='https://open-meteo.com/' target='_blank'>Weather by Open-Meteo.com</a>"
@@ -300,7 +300,8 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
                 self._convert_data()
 
             self.update_wait = (last_update + self.update_interval) - time.time()
-            self.logging.info("Wait to read weather data ("+str(self.update_interval)+":"+str(self.update_wait)+"s) ...")
+            self.logging.info("Wait to read weather data (" + str(round(self.update_interval, 1)) + ":" +
+                              str(round(self.update_wait, 1)) + "s) ...")
             time.sleep(5)
 
         self.logging.info("Stopp weather thread.")
@@ -507,7 +508,8 @@ class BirdhouseWeather(threading.Thread):
                 time.sleep(10)
 
             self.update_wait = (last_update + self.update_time) - time.time()
-            self.logging.info("Wait to read weather data ("+str(self.update_time)+":"+str(self.update_wait)+"s) ...")
+            self.logging.info("Wait to read weather data (" + str(round(self.update_time, 1)) + ":" +
+                              str(round(self.update_wait, 1)) + "s) ...")
             time.sleep(5)
 
     def stop(self):
