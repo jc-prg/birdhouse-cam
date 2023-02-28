@@ -382,6 +382,9 @@ class BirdhouseViews(threading.Thread):
             stamps = list(reversed(sorted(files_all.keys())))
             if not backup:
                 for stamp in stamps:
+                    if "datestamp" not in files_all[stamp]:
+                        self.logging.warning("Wrong entry format:" + str(files_all[stamp]))
+
                     if (int(stamp) >= int(time_now) and time_now != "000000") and "datestamp" in files_all[stamp] and \
                             files_all[stamp]["datestamp"] == date_yesterday:
 
@@ -799,7 +802,8 @@ class BirdhouseViews(threading.Thread):
 
         for stamp in files:
             stamp = str(stamp)
-            if "_" not in stamp and stamp in files and date_today == files[stamp]["datestamp"] and \
+            if "_" not in stamp and stamp in files and "datestamp" in files[stamp] and \
+                    date_today == files[stamp]["datestamp"] and \
                     "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
                 new = self.config.local_time().strftime("%Y%m%d") + "_" + stamp
                 favorites[new] = files[stamp]

@@ -84,7 +84,7 @@ class BirdhouseArchive(threading.Thread):
                 files_backup["info"]["size"] = sum(
                     os.path.getsize(os.path.join(directory, f)) for f in os.listdir(directory) if
                     f.endswith(".jpeg") or f.endswith(".jpg") or f.endswith(".json"))
-                self.config.db_handler.write(config="backup", date=backup_date, config_data=files_backup)
+                self.config.db_handler.write(config="backup", date=backup_date, data=files_backup, create=True)
 
         # if no directory exists, create directory, copy files and create a new config file (copy existing information)
         else:
@@ -116,8 +116,13 @@ class BirdhouseArchive(threading.Thread):
             for cam in self.camera:
                 for stamp in stamps:
                     # if files are to be archived
-                    if "_" not in stamp and stamp in files and \
+                    if "datestamp" not in files[stamp]:
+                        self.logging.warning("Wrong entry format:" + str(files[stamp]))
+
+                    if "_" not in stamp and stamp in files and "datestamp" in files[stamp] and \
                             files[stamp]["datestamp"] == backup_date and files[stamp]["camera"] == cam:
+
+                        # create copy of entry (to modify without damage in original data)
                         update_new = files[stamp].copy()
 
                         # if images are to archived
@@ -137,10 +142,10 @@ class BirdhouseArchive(threading.Thread):
                             update_new["directory"] = os.path.join(self.config.directories["images"], backup_date)
 
                             if os.path.isfile(os.path.join(dir_source, file_lowres)):
-                                update_new["size"] = (
-                                        os.path.getsize(os.path.join(dir_source, file_lowres)) + os.path.getsize(
-                                    os.path.join(dir_source, file_hires)))
+                                update_new["size"] = (os.path.getsize(os.path.join(dir_source, file_lowres)) +
+                                                      os.path.getsize(os.path.join(dir_source, file_hires)))
                                 backup_size += update_new["size"]
+
                                 os.popen('cp ' + os.path.join(dir_source, file_lowres) + ' ' + os.path.join(directory,
                                                                                                             file_lowres))
                                 os.popen('cp ' + os.path.join(dir_source, file_hires) + ' ' + os.path.join(directory,
@@ -181,7 +186,7 @@ class BirdhouseArchive(threading.Thread):
             for cam in self.camera:
                 files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
 
-            self.config.db_handler.write(config="backup", date=directory, config_data=files_backup)
+            self.config.db_handler.write(config="backup", date=directory, data=files_backup, create=True)
 
     def create_video_config(self):
         """
