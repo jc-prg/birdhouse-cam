@@ -145,7 +145,9 @@ class BirdhouseWeatherPython(threading.Thread):
             "pressure": current.pressure,
             "humidity": current.humidity,
             "wind_direction": current.wind_direction,
-            "precipitation": current.precipitation
+            "precipitation": current.precipitation,
+            "time": str(current.local_time.time()),
+            "date": str(current.local_time.date())
 
         }
         self.weather_info["forecast"] = {}
@@ -419,6 +421,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
         current_date = self.weather_info["current"]["time"].split("T")[0]
         current_time = self.weather_info["current"]["time"].split("T")[1]
         self.weather_info["current"]["time"] = self.weather_info["current"]["time"].split("T")[1]
+        self.weather_info["current"]["date"] = self.weather_info["current"]["time"].split("T")[0]
         self.weather_info["current"]["humidity"] = self.weather_info["forecast"][current_date]["hourly"][current_time]["humidity"]
 
     def set_location(self, settings):

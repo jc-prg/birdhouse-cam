@@ -66,18 +66,21 @@ function app_initialize(data) {
 function app_status(data) {
 	if (reload) { 
 		birdhousePrint_load("INDEX","cam1");
+		reload = false;
 		}
-		
-	if (data["DATA"]["last_answer"] != "") {
-		var msg = data["DATA"]["last_answer"];
-		appMsg.alert(lang(msg[0]));
-		if (msg[0] == "RANGE_DONE") { button_tooltip.hide("info"); }
-		birdhouseReloadView();
-		}
-	if (data["DATA"]["background_process"] == true)	{ setTextById("statusLED","<div id='blue'></div>"); }
-	else 							{ setTextById("statusLED","<div id='green'></div>"); }
+	else {
+        if (data["DATA"]["last_answer"] != "") {
+            var msg = data["DATA"]["last_answer"];
+            appMsg.alert(lang(msg[0]));
+            if (msg[0] == "RANGE_DONE") { button_tooltip.hide("info"); }
+            birdhouseReloadView();
+            }
 
-    birdhouseStatus_print(data);
+        if (data["DATA"]["background_process"] == true)	{ setTextById("statusLED","<div id='blue'></div>"); }
+        else 						                	{ setTextById("statusLED","<div id='green'></div>"); }
+        birdhouseStatus_print(data);
+        }
+
 	app_last_load = Date.now();
 	}
 	

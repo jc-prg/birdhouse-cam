@@ -45,7 +45,7 @@ function birdhouseWeather( title, data ) {
     current_weather += tab.row(lang("TEMPERATURE")+":", weather_today["temperature"] +"°C");
     current_weather += tab.row(lang("HUMIDITY")+":",    weather_today["humidity"] +"%");
     current_weather += tab.row(lang("WIND")+":",        weather_today["wind_speed"] + " km/h");
-    current_weather += tab.row(lang("STATUS")+":",      weather_today["time"]);
+    current_weather += tab.row(lang("STATUS")+":",      weather_today["date"] + " " + weather_today["time"]);
     // current_weather += tab.row(lang("PRESSURE")+":",    weather_today["pressure"] + " hPa");
     //current_weather += tab.row(lang("UV_INDEX")+":",    weather_today["uv_index"]);
     if (weather["info_module"]["provider_link_required"]) {
