@@ -1287,9 +1287,6 @@ class BirdhouseCamera(threading.Thread):
         self.camera = None
         self.cameraFPS = None
 
-        self.logging.debug("HOURS:   " + str(self.param["image_save"]["hours"]))
-        self.logging.debug("SECONDS: " + str(self.param["image_save"]["seconds"]))
-
     def run(self):
         """
         Start recording for livestream and save images every x seconds
