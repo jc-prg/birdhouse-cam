@@ -51,6 +51,19 @@ birdhouse_files = {
     "weather": "config_weather.json"
 }
 
+birdhouse_dir_to_database = {
+    "config":                       "config",
+    "images/config_images":         "today_images",
+    "images/config_sensor":         "today_sensors",
+    "images/config_weather":        "today_weather",
+    "images/config_backup":         "archive_images",
+    "images/config_favorites":      "favorites",
+    "videos/config_videos":         "archive_videos",
+    "images/<DATE>/config_images":  "archive_images",
+    "images/<DATE>/config_sensors": "archive_sensors",
+    "images/<DATE>/config_weather": "archive_weather"
+}
+
 birdhouse_weather = {
     "info_update": "none",
     "info_update_stamp": "none",
@@ -73,20 +86,6 @@ birdhouse_weather = {
         "today": {}
     }
 }
-
-birdhouse_dir_to_database = {
-    "config":                       "config",
-    "images/config_images":         "today_images",
-    "images/config_sensor":         "today_sensors",
-    "images/config_weather":        "today_weather",
-    "images/config_backup":         "archive_images",
-    "images/config_favorites":      "favorites",
-    "videos/config_videos":         "archive_videos",
-    "images/<DATE>/config_images":  "archive_images",
-    "images/<DATE>/config_sensors": "archive_sensors",
-    "images/<DATE>/config_weather": "archive_weather"
-}
-
 birdhouse_default_cam1 = {
     "type": "default",
     "name": "Inside",
@@ -183,7 +182,6 @@ birdhouse_default_sensor = {
         "humidity": "%"
     }
 }
-
 birdhouse_preset = {
     "title": "Our Birdhouse :-)",
     "localization": {

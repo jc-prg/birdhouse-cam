@@ -39,7 +39,8 @@ function birdhouseWeather( title, data ) {
     if (weather["info_city"] != "") {
         current_weather += tab.row(lang("LOCATION") + ":",  weather["info_city"]);
         }
-    current_weather += tab.row(lang("GPS_POSITION")+":", "("+weather["info_position"].toString()+")");
+    current_weather += tab.row(lang("GPS_LOCATION")+":", weather["info_position"][2]);
+    current_weather += tab.row(lang("GPS_POSITION")+":", "("+weather["info_position"][0]+", "+weather["info_position"][1]+")");
     current_weather += tab.row(lang("SUNRISE") +":",    weather_3day["today"]["sunrise"]);
     current_weather += tab.row(lang("SUNSET")+":",      weather_3day["today"]["sunset"]);
     current_weather += tab.row(lang("TEMPERATURE")+":", weather_today["temperature"] +"°C");

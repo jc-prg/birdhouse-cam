@@ -38,6 +38,9 @@ function birdhouseStatus_print(data) {
     setTextById("system_info_cpu_usage",        (Math.round(data["STATUS"]["system"]["cpu_usage"]*10)/10)+"%")
     setTextById("system_info_cpu_temperature",  (Math.round(data["STATUS"]["system"]["cpu_temperature"]*10)/10)+"°C")
 
+    coordinates = "(" + data["STATUS"]["devices"]["weather"]["gps_coordinates"].toString().replaceAll(",", ", ") + ")";
+    setTextById("gps_coordinates", coordinates);
+
     var cpu_details = "";
     for (var i=0;i<data["STATUS"]["system"]["cpu_usage_detail"].length;i++) {
         cpu_details += "cpu"+i+"="+Math.round(data["STATUS"]["system"]["cpu_usage_detail"][i])+"%, ";

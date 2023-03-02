@@ -9,28 +9,34 @@ from datetime import datetime, timezone, timedelta
 from modules.presets import birdhouse_loglevel, birdhouse_weather
 
 
-def look_up_location(location):
-    """
-    look up location (https://pypi.org/project/geopy/)
-    """
-    geo_locator = Nominatim(user_agent="Weather App")
-    try:
-        geo_location = geo_locator.geocode(location)
-        return [geo_location.latitude, geo_location.longitude, geo_location.address]
-    except Exception as e:
-        return [0, 0, "Error location lookup ("+location+") -> " + str(e)]
+class BirdhouseGPS(object):
 
+    def __init__(self):
+        return
 
-def look_up_gps(gps_coordinates):
-    """
-    look up location (https://pypi.org/project/geopy/)
-    """
-    geo_locator = Nominatim(user_agent="Weather App")
-    try:
-        geo_location = geo_locator.reverse(str(gps_coordinates[0]) + ", " + str(gps_coordinates[1]))
-        return [geo_location.latitude, geo_location.longitude, geo_location.address]
-    except Exception as e:
-        return [0, 0, "Error GPS lookup ("+str(gps_coordinates)+") -> " + str(e)]
+    @staticmethod
+    def look_up_location(location):
+        """
+        look up location (https://pypi.org/project/geopy/)
+        """
+        geo_locator = Nominatim(user_agent="Weather App")
+        try:
+            geo_location = geo_locator.geocode(location)
+            return [geo_location.latitude, geo_location.longitude, geo_location.address]
+        except Exception as e:
+            return [0, 0, "Error location lookup ("+location+") -> " + str(e)]
+
+    @staticmethod
+    def look_up_gps(gps_coordinates):
+        """
+        look up location (https://pypi.org/project/geopy/)
+        """
+        geo_locator = Nominatim(user_agent="Weather App")
+        try:
+            geo_location = geo_locator.reverse(str(gps_coordinates[0]) + ", " + str(gps_coordinates[1]))
+            return [geo_location.latitude, geo_location.longitude, geo_location.address]
+        except Exception as e:
+            return [0, 0, "Error GPS lookup ("+str(gps_coordinates)+") -> " + str(e)]
 
 
 class BirdhouseWeatherPython(threading.Thread):
@@ -173,8 +179,12 @@ class BirdhouseWeatherPython(threading.Thread):
             "precipitation": current.precipitation,
             "time": str(current.local_time.time()),
             "date": str(current.local_time.date())
-
         }
+
+        self.logging.info(" .... " + str(current.local_time.time()))
+        self.logging.info(" ..... " + str(current.local_time.date()))
+        self.logging.info(" ...... " + str(current.local_time.today()))
+
         self.weather_info["forecast"] = {}
 
         # get the weather forecast for a few days
@@ -445,8 +455,8 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
 
         current_date = self.weather_info["current"]["time"].split("T")[0]
         current_time = self.weather_info["current"]["time"].split("T")[1]
-        self.weather_info["current"]["time"] = self.weather_info["current"]["time"].split("T")[1]
-        self.weather_info["current"]["date"] = self.weather_info["current"]["time"].split("T")[0]
+        self.weather_info["current"]["time"] = current_time
+        self.weather_info["current"]["date"] = current_date
         self.weather_info["current"]["humidity"] = self.weather_info["forecast"][current_date]["hourly"][current_time]["humidity"]
 
     def set_location(self, settings):
@@ -492,14 +502,17 @@ class BirdhouseWeather(threading.Thread):
         self.weather_gps = None
         self.weather_info = {}
         self.weather_active = True
-        self.update_time = 60 * 15
-        self.update_wait = 0
-        self.timezone = time_zone
         self.weather_empty = birdhouse_weather.copy()
         self.weather_info = self.weather_empty.copy()
         self.weather_info["info_status"]["running"] = "started"
 
+        self.update = False
+        self.update_time = 60 * 15
+        self.update_wait = 0
+
+        self.timezone = time_zone
         self.module = None
+        self.gps = BirdhouseGPS()
         self.connect(self.config.param["weather"])
 
     def run(self):
@@ -510,6 +523,11 @@ class BirdhouseWeather(threading.Thread):
         time.sleep(5)
         last_update = 0
         while self._running:
+
+            if self.update:
+                self.error = False
+                self.update = False
+                self.connect(self.config.param["weather"])
 
             if self._paused:
                 self.weather_info = self.weather_empty.copy()
@@ -561,23 +579,21 @@ class BirdhouseWeather(threading.Thread):
         (re)connect to weather module
         """
         self.weather_source = param["source"]
-        self.weather_city = param["location"]
-        self.weather_gps = param["gps_location"]
-
-        if self.weather_city != "":
-            self.logging.debug("TEST GPS Address: " + str(look_up_location(self.weather_city)))
-        if self.weather_gps != "":
-            self.logging.debug("TEST GPS Coordinates: " + str(look_up_gps(self.weather_gps)))
-
         self.logging.info("(Re)connect weather module (source="+self.weather_source+")")
+
         if self.weather_source == "Open-Metheo":
+            self.weather_city = param["location"]
+            self.weather_gps = self.gps.look_up_location(self.weather_city)
             self.module = BirdhouseWeatherOpenMeteo(config=self.config,
-                                                    gps_location=param["gps_location"],
+                                                    gps_location=self.weather_gps,
                                                     time_zone=self.timezone)
             self.module.start()
+
         else:
+            self.weather_city = param["location"]
+            self.weather_gps = self.gps.look_up_location(self.weather_city)
             self.module = BirdhouseWeatherPython(config=self.config,
-                                                 location=param["location"],
+                                                 location=self.weather_city,
                                                  time_zone=self.timezone)
             self.module.start()
 
@@ -593,10 +609,15 @@ class BirdhouseWeather(threading.Thread):
             self.weather_info = self.weather_empty.copy()
 
         if info_type == "status":
-            return self.weather_info["info_status"]
+            status = self.weather_info["info_status"].copy()
+            status["gps_coordinates"] = self.weather_gps
+            status["gps_location"] = self.weather_city
+            return status
 
         if info_type == "current_small":
             weather_data = self.weather_info["current"]
+            if "humidity" not in weather_data:
+                weather_data["humidity"] = ""
             info = {
                 "description_icon": weather_data["description_icon"],
                 "description": weather_data["description"],

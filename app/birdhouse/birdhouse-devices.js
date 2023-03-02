@@ -249,7 +249,8 @@ function birdhouseDevices_weather(data) {
 
     html_entry += tab.start();
     html_entry += tab.row("Location:", birdhouse_edit_field(id="set_weather_location", field="weather:location", type="input"));
-    html_entry += tab.row("GPS Position:", birdhouse_edit_field(id="set_weather_gps", field="weather:gps_location", type="input", options="", data_type="json"));
+    // html_entry += tab.row("GPS Position:", birdhouse_edit_field(id="set_weather_gps", field="weather:gps_location", type="input", options="", data_type="json"));
+    html_entry += tab.row("GPS Position:", "<div id='gps_coordinates'>Please wait ...</div>");
     html_entry += tab.row("Active:", birdhouse_edit_field(id="set_weather_active", field="weather:active", type="select", options="true,false", data_type="boolean"));
     html_entry += tab.row("Source:", birdhouse_edit_field(id="set_weather_source", field="weather:source", type="select", options=weather_config["available_sources"].toString(), data_type="string"));
     html_entry += tab.row("Last Update:", "<div id='weather_info_update'>Please wait ...</div>");

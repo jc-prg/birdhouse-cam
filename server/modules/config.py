@@ -1059,6 +1059,7 @@ class BirdhouseConfig(threading.Thread):
             self.param = self.db_handler.read(config, date)
             for key in self.update:
                 self.update[key] = True
+            self.weather.update = True
 
     @staticmethod
     def filename_image(image_type, timestamp, camera=""):
