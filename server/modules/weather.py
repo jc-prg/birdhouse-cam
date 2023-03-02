@@ -108,17 +108,16 @@ class BirdhouseWeatherPython(threading.Thread):
             if len(parts) > 1:
                 parts = parts[1].split("'")
                 return parts[0]
-                if " " in parts[1]:
-                    parts = parts[1].split(" ")
-                    return parts[0]
-                elif ">" in parts[1]:
-                    return parts[1].replace(">", "")
-                else:
-                    return parts[1]
             else:
                 parts = icon_string.split(icon_type + "=")
                 if len(parts) > 1:
-                    pass
+                    if " " in parts[1]:
+                        parts = parts[1].split(" ")
+                        return parts[0]
+                    elif ">" in parts[1]:
+                        return parts[1].replace(">", "")
+                    else:
+                        return parts[1]
                 else:
                     return "Error extracting icon: " + str(icon_object)
 
@@ -488,6 +487,7 @@ class BirdhouseWeather(threading.Thread):
         self._running = True
         self._paused = False
         self.config = config
+        self.initial_date = self.config.local_time().strftime("%Y%m%d")
 
         self.logging = logging.getLogger("weather")
         self.logging.setLevel = birdhouse_loglevel
@@ -524,10 +524,11 @@ class BirdhouseWeather(threading.Thread):
         last_update = 0
         while self._running:
 
-            if self.update:
-                self.error = False
+            self.error = False
+            if self.update or self.initial_date != self.config.local_time().strftime("%Y%m%d"):
                 self.update = False
                 self.connect(self.config.param["weather"])
+                self.initial_date = self.config.local_time().strftime("%Y%m%d")
 
             if self._paused:
                 self.weather_info = self.weather_empty.copy()
