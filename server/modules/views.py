@@ -706,6 +706,9 @@ class BirdhouseViews(threading.Thread):
         date_today = self.config.local_time().strftime("%Y%m%d")
         date_yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
 
+        hours = list(["00", "01", "02", "03", "04", "05", "06", "07", "08", "09",
+                      "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
+                      "20", "21", "22", "23"])
         hours = list(self.camera[which_cam].param["image_save"]["hours"])
         hours.sort(reverse=True)
 
@@ -744,7 +747,6 @@ class BirdhouseViews(threading.Thread):
                                     content["max_image_size"]["hires"][0] = files_part[stamp]["hires_size"][0]
                                 if files_part[stamp]["lowres_size"][1] > content["max_image_size"]["hires"][1]:
                                     content["max_image_size"]["hires"][1] = files_all[stamp]["hires_size"][1]
-
 
             if len(files_part) > 0:
                 content["groups"][hour + ":00"] = []
