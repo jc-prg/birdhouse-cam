@@ -18,8 +18,8 @@
 @media only screen and
     (device-width : 375px) and (orientation : portrait) {
 
-        .livestream_main     { max-width : 320px; }
         .image_container.fixed_height { height  : 180px; }
+        .livestream_main     { max-width : 320px; }
         .separator_group     { width  : 328px; font-size : 11px; }
         .thumbnail           { width :  98%;  }
         .thumbnail_container { width : 80px; }
@@ -60,6 +60,8 @@
         .star_img        { width   : 20px;  height   : 20px; }
 
         .frame_column.wide { width : 695px; }
+
+        .weather_hide_if_small { display: block; }
     }
 
 /* ----------*/

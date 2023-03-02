@@ -354,3 +354,13 @@ h3 { margin : 4px; }
     color            : black;
     border           : 1px solid white;
 }
+
+/* weather fields */
+
+.weather_hide_if_small {
+    display: none;
+}
+
+.weather_show {
+    display: blocK;
+}

@@ -10,15 +10,18 @@
 
     .camera_info_image { width : 30%; max-height : 120px; }
     .camera_info_text  { width : 65%; }
+    .weather_hide_if_small { display: block; }
 }
 
 @media (min-width: 820px) {
 
     .thumbnail       { width : 125px; }
+    .weather_hide_if_small { display: block; }
 }
 
 @media (min-width: 1250px) {
 
     .livestream_main { max-width : 970px; }
+    .weather_hide_if_small { display: block; }
 }
 
