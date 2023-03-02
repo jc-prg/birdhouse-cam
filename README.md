@@ -1,12 +1,43 @@
 # Birdhouse Camera
 
-Raspberry Pi project to observe our birdhouse with multiple webcams (live stream, record images and videos, 
-mark favorites ...).
+Raspberry Pi project to observe our birdhouse with multiple webcams: live stream, record images, detect activity, record videos, 
+mark favorites, analyze weather data, ...
+
+1. [Birdhouse Construction](#birdhouse-construction)
+3. [Technology](#technology)
+2. [Main Software Features](#main-software-features)
+4. [Software Installation](#software-installation)
+   * [Clone sources to your project directory](#clone-sources-to-your-project-directory)
+   * [Install as Docker version](#install-as-docker-version)
+   * [Install directly](#install-directly)
+   * [First run and device configuration](#first-run-and-device-configuration)
+   * [Finalize database setup](#finalize-database-setup)
+   * [Add audio streaming](#add-audio-streaming)
+   * [Optimize system configuration (Ubuntu 22.04)](#optimize-system-configuration--ubuntu-)
+   * [Optimize system configuration (Raspbian / Raspberry OS)](#optimize-system-configuration--raspberry-os-)
+5. [Helping stuff](#helping-stuff)
+6. [Sources](#sources)
+7. [Impressions](#impressions)
+
 
 ## Birdhouse Construction
 
 * German instructions: [NABU - Nistkästen selber bauen](https://www.nabu.de/tiere-und-pflanzen/voegel/helfen/nistkaesten/index.html)
 * English instructions: [Simple birdhouse](https://suncatcherstudio.com/birds/birdhouse-plans-simple/)
+
+## Technology
+
+* Hardware
+  * Raspberry Pi 3B+ (or newer)
+  * Camera module for RPi / HD with IR sensor
+  * USB camera
+  * Small USB Microphone
+  * DHT11 / DHT22 Sensor
+* Software
+  * Python 3, CV2, imutils, JSON, Flask
+  * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
+  * HTML, CSS, JavaScript, Pinch-Zoom, ffmpeg 
+  * jc://modules/, jc://app-framework/
 
 ## Main Software Features
 
@@ -30,6 +61,7 @@ mark favorites ...).
 * Get, archive, and visualize **weather data**:
   * from sensors connected to the Raspberry Pi (DHT11/DHT22)
   * via internet for a defined location (python_weather OR [Open Meteo](https://open-meteo.com/))
+  * GPS lookup for cities or addresses via GeoPy
 * Connect to **audio stream** from microphone
   * under construction, currently browser only (no iPhone)
 * **Admin functionality** via app
@@ -37,19 +69,7 @@ mark favorites ...).
   * edit server settings
   * edit device settings (devices must be added via config file)
 
-## Technology
-
-* Raspberry Pi 3B+ (or newer)
-* Camera module for RPi / HD with IR sensor
-* USB camera
-* Small USB Microphone
-* DHT11 / DHT22 Sensor
-* Python 3, PiCamera, CV2, imutils, JSON, Flask
-* python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/)
-* HTML, CSS, JavaScript, Pinch-Zoom, ffmpeg 
-* jc://modules/, jc://app-framework/
-
-## Installation
+## Software Installation
 
 * Build a birdhouse incl. a Raspberry Pi or USB Camera inside the birdhouse (additional cameras and sensors are optional)
 * Prepare a Raspberry Pi 3B or newer
@@ -74,7 +94,7 @@ $ cd birdhouse-cam
 $ git submodule update --init --recursive
 ```
 
-### Install as Docker version (under construction)
+### Install as Docker version
 
 * Install docker and docker-compose
 ```bash
@@ -126,15 +146,16 @@ The default configuration of the database works without change but produces seve
 To remove those open the admin tool via http://your-hostname:5100/_utils/ and login (default user:birdhouse, pwd:birdhouse).
 Go to the settings and create a single node.
 
-### Add audio streaming (under construction, not running on iOS devices yet)
+### Add audio streaming
 
+* _under construction, not running on iOS devices yet_
 * To start the audio streaming edit and link the file [stream.service](config/install/stream.service) to the folder /etc/systemd/systems and start as root (see instructions in the file):
 
 ``` bash
 $ systemctl start stream.service
 ```
 
-### Optimize system configuration (Ubuntu 22.04)
+### Optimize system configuration (Ubuntu)
 
 * Update swap memory (see also [https://bitlaunch.io/](https://bitlaunch.io/blog/how-to-create-and-adjust-swap-space-in-ubuntu-20-04/))
 
@@ -147,7 +168,7 @@ swapon /swapfile
 free -h
 ```
 
-### Optimize system configuration (Raspbian / Raspberry OS)
+### Optimize system configuration (Raspberry OS)
 
 * Update swap memory (usually 100MiB is set as default)
 ```
@@ -160,7 +181,7 @@ CONF_SWAPFACTOR=2
 $ sudo systemctl restart dphys-swapfile
 ```
 
-### Helping stuff
+## Helping stuff
 
 * Check attached cameras
 
@@ -196,10 +217,13 @@ Thanks for your inspiration, code snippets, images:
 <br/><br/>
 <img src="info/images/birdcam_17.PNG" width="30%"><img src="info/images/birdcam_18.PNG" width="30%"><img src="info/images/birdcam_19.PNG" width="30%">
 <br/><br/>
-<img src="info/images/birdcam_07.PNG" width="30%"><img src="info/images/birdcam_08.PNG" width="30%"><img src="info/images/birdcam_06.PNG" width="30%">
-<img src="info/images/birdcam_01.PNG" width="30%"><img src="info/images/birdcam_02.PNG" width="30%"><img src="info/images/birdcam_03.PNG" width="30%">
-<img src="info/images/birdcam_11.PNG" width="30%"><img src="info/images/birdcam_12.PNG" width="30%"><img src="info/images/birdcam_13.PNG" width="30%">
-<img src="info/images/birdcam_15.PNG" width="30%"><img src="info/images/birdcam_16.PNG" width="30%">
-<img src="info/images/birdcam_23.PNG" width="30%"><img src="info/images/birdcam_22.PNG" width="30%">
+<img src="info/images/birdcam_08.PNG" width="30%"><img src="info/images/birdcam_06.PNG" width="30%"><img src="info/images/birdcam_11.PNG" width="30%">
+
+
+<img src="info/images/birdcam_12.PNG" width="30%"><img src="info/images/birdcam_13.PNG" width="30%"><img src="info/images/birdcam_22.PNG" width="30%">
+
+<img src="info/images/birdcam_23.PNG" width="30%"><img src="info/images/birdcam_15.PNG" width="30%"><img src="info/images/birdcam_16.PNG" width="30%">
+
+<img src="info/images/birdcam_01.PNG" width="30%"><img src="info/images/birdcam_02.PNG" width="30%">
 <br/><br/>
 <img src="info/images/birdcam_14.PNG" width="90%">
