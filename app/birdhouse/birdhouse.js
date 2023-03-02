@@ -157,21 +157,22 @@ function birdhouseSetMainVars(data) {
 	                                                            { app_available_micros.push(key) }}
 	    }
 
-	if (data["DATA"]["active_cam"] != undefined && data["DATA"]["active_cam"] != "")
-	                                                            { app_active_cam = data["DATA"]["active_cam"]; }
-	else                                                        { app_active_cam = app_available_cameras[0]; }
+    var status_view = data["STATUS"]["view"];
+
+	if (status_view["active_cam"] != undefined && status_view["active_cam"] != "")
+            { app_active_cam = status_view["active_cam"]; }
+	else    { app_active_cam = app_available_cameras[0]; }
 	app_active_mic = app_available_micros[0];
 
-	if (data["DATA"]["active_page"] != "" && data["DATA"]["active_page"] != undefined && data["DATA"]["active_page"] != "status")
-	                                                             { app_active_page = data["DATA"]["active_page"]; }
-	//else if (data["DATA"]["active_page"] == "" && initial_setup) { app_active_page = ""; }
-	else if (data["DATA"]["active_page"] != "status")            { app_active_page = "INDEX"; }
+	if (status_view["active_page"] != "" && status_view["active_page"] != undefined && status_view["active_page"] != "status")
+	                                                        { app_active_page = status_view["active_page"]; }
+	else if (status_view["active_page"] != "status")        { app_active_page = "INDEX"; }
 
-	if (data["DATA"]["active_date"] != "" && data["DATA"]["active_date"] != undefined)
-	                                                            { app_active_date = data["DATA"]["active_date"]; }
-	else                                                        { app_active_date = ""; }
+	if (status_view["active_date"] != "" && status_view["active_date"] != undefined)
+	                                                        { app_active_date = status_view["active_date"]; }
+	else                                                    { app_active_date = ""; }
 
-	if (data["STATUS"]["admin_allowed"] != undefined)           { app_admin_allowed = data["STATUS"]["admin_allowed"]; }
+	if (data["STATUS"]["admin_allowed"] != undefined)       { app_admin_allowed = data["STATUS"]["admin_allowed"]; }
 	}
 	
 function birdhouseHeaderFunctions() {

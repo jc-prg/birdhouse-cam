@@ -118,7 +118,28 @@ function birdhouseDevices_cameras(data) {
         html_entry += tab.end();
 
 		id_list += "set_resolution_"+camera+":set_rotation_"+camera+":set_show_framerate_"+camera+":set_crop_"+camera+":set_scale_"+camera+":set_black_white_"+camera+":";
-        html_temp += birdhouse_OtherGroup( camera+"_image", "Image/Video", html_entry, false );
+        html_temp += birdhouse_OtherGroup( camera+"_image", "Image / Video Settings", html_entry, false );
+
+        html_entry = tab.start();
+		html_entry += tab.row("- Record:", birdhouse_edit_field(id="set_record_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
+		html_entry += tab.row("- Rhythm:", "record every " + birdhouse_edit_field(id="set_record_rhythm_"+camera, field="devices:cameras:"+camera+":image_save:rhythm", type="select", options="05,10,15,20", data_type="string") + " s");
+		hours = "00,01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24";
+		html_entry += tab.row("- Record time:",
+		    "from " + birdhouse_edit_field(id="set_record_from_"+camera, field="devices:cameras:"+camera+":image_save:record_from", type="select", options="sunrise-1,"+hours, data_type="string") + " &nbsp; " +
+		    "to " + birdhouse_edit_field(id="set_record_to_"+camera, field="devices:cameras:"+camera+":image_save:record_to", type="select", options="sunset+1,"+hours, data_type="string"));
+		html_entry += tab.row("- Record offset:", birdhouse_edit_field(id="set_record_offset_"+camera, field="devices:cameras:"+camera+":image_save:rhythm_offset", type="select", options="0,3,6,12", data_type="string"));
+		html_entry += tab.end();
+
+		id_list += "set_record_"+camera+":set_record_rhythm_"+camera+":set_record_from_"+camera+":set_record_to_"+camera+":set_record_offset_"+camera+":";
+        html_temp += birdhouse_OtherGroup( camera+"_record", "Image / Video Recording", html_entry, false );
+
+        html_entry = tab.start();
+		html_entry += tab.row("- Area:", birdhouse_edit_field(id="set_area_"+camera, field="devices:cameras:"+camera+":similarity:detection_area", type="input", options="", data_type="json"));
+		html_entry += tab.row("- Threshold:", birdhouse_edit_field(id="set_threshold_"+camera, field="devices:cameras:"+camera+":similarity:threshold", type="input", options="", data_type="float") + " %");
+        html_entry += tab.end();
+
+		id_list += "set_area_"+camera+":set_threshold_"+camera+":";
+        html_temp += birdhouse_OtherGroup( camera+"_detect", "Image Similarity Detection", html_entry, false );
 
         html_entry = tab.start();
 		html_entry += tab.row("- Show Time:", birdhouse_edit_field(id="set_time_"+camera, field="devices:cameras:"+camera+":image:date_time", type="select", options="true,false", data_type="boolean"));
@@ -129,23 +150,6 @@ function birdhouseDevices_cameras(data) {
 
 		id_list += ":set_time_"+camera+":set_time_size_"+camera+":set_time_pos_"+camera+":set_time_color_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_time", "Time Information", html_entry, false );
-
-        html_entry = tab.start();
-		html_entry += tab.row("- Area:", birdhouse_edit_field(id="set_area_"+camera, field="devices:cameras:"+camera+":similarity:detection_area", type="input", options="", data_type="json"));
-		html_entry += tab.row("- Threshold:", birdhouse_edit_field(id="set_threshold_"+camera, field="devices:cameras:"+camera+":similarity:threshold", type="input", options="", data_type="float") + " %");
-        html_entry += tab.end();
-
-		id_list += "set_area_"+camera+":set_threshold_"+camera+":";
-        html_temp += birdhouse_OtherGroup( camera+"_detect", "Similarity Detection", html_entry, false );
-
-        html_entry = tab.start();
-		html_entry += tab.row("- Record:", birdhouse_edit_field(id="set_record_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
-		html_entry += tab.row("- Hours:", JSON.stringify(cameras[camera]["image_save"]["hours"]).replace(/,/g,", "));
-		html_entry += tab.row("- Seconds:", JSON.stringify(cameras[camera]["image_save"]["seconds"]).replace(/,/g,", "));
-        html_entry += tab.end();
-
-		id_list += "set_record_"+camera+":";
-        html_temp += birdhouse_OtherGroup( camera+"_record", "Record Images", html_entry, false );
 
         html_entry = tab.start();
         html_entry += tab.row("Last Recorded:", "<div id='last_image_recorded_"+camera+"'>please wait ...</div>");

@@ -70,11 +70,11 @@ function birdhouseChart_create (title, data, type="line", sort_keys=true) {
             data : data_var
             });
         }
-        		
+
 	load_chartJS();
 
       	html += "<div><canvas id=\"birdhouseChart\" style=\"height:200px;width:100%;\"></canvas></div>\n";
-      	
+
       	const chart_labels = data_keys;
       	const chart_data   = {
       		labels   : chart_labels,
@@ -85,7 +85,7 @@ function birdhouseChart_create (title, data, type="line", sort_keys=true) {
       		data : chart_data,
       		options : {
 			responsive: true,
-  	    		plugins: { 
+  	    		plugins: {
   	    			legend: {
   				position: "right",
   				align: "middle",
@@ -96,12 +96,47 @@ function birdhouseChart_create (title, data, type="line", sort_keys=true) {
 				}}
       			}
       		};
-      		
+
       	setTimeout(function(){
       		chartJS_chart = new Chart(document.getElementById('birdhouseChart'), chartJS_config );
 		}, 1000);
 
 	return html;
 	}
+
+function birdhouseChart_weatherOverview (entries) {
+    var html = "";
+    var count = 0;
+    var weather_data = {};
+    Object.keys(entries).forEach( key => {
+        if (key.substring(2,4) == "00" && entries[key]["weather"]) {
+            weather_data[key.substring(0,2)+":"+key.substring(2,4)] = entries[key]["weather"]["description_icon"];
+        }
+    });
+
+    // width -> 8 if small; 16 if middle; 24 if big
+
+    html_row1 = "<td></td>";
+    html_row2 = "<td>"+lang("WEATHER")+": &nbsp;</td>";
+    Object.keys(weather_data).sort().forEach(key => {
+        var td_class = "weather_hide_if_small";
+        if (Math.abs(count % 2) != 0) {
+             td_class = "weather_show";
+        }
+        if (count < 16) {
+            html_row1 += "<td class='"+td_class+"'>"+key+"<td>";
+            html_row2 += "<td class='"+td_class+"'><center>"+weather_data[key]+"<center><td>";
+        }
+        count += 1;
+    });
+    if (count == 0) { return ""; }
+    html += "<hr/><table border='0'>";
+    html += "<tr style='font-size:8px;'>" + html_row1 + "</tr>";
+    html += "<tr style='font-size:11px;'>" + html_row2 + "</tr>";
+    html +="</table>"
+    console.error(weather_data);
+    html += "&nbsp;<br/>&nbsp;";
+    return html;
+}
 
 

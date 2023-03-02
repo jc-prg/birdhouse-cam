@@ -27,7 +27,9 @@ function birdhouse_INDEX(data, camera) {
             else {
                 var other_cam  = {
                     "name"        : key,
-                    "stream"      : cameras[key]["video"]["stream"],
+                    "stream"      : cameras[key]["video"]["stream_lowres"],
+//                    "stream"      : cameras[key]["video"]["stream"],
+//                    "stream"      : cameras[key]["video"]["stream_pip"], // replace {2nd-camera-key}
                     "description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
                     }
                 other_cams.push(other_cam);
@@ -214,6 +216,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         }
         var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
         html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, true );
+
+        // Weather -> to be optimizes incl error check if no entries
+        html += birdhouseChart_weatherOverview(entries);
     }
 
     if (active_page != "FAVORITES" && app_active_page != "VIDEOS" && app_active_page != "ARCHIVE") {
@@ -239,30 +244,31 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	// today complete, favorites
 	if (groups != undefined && groups != {}) {
 		var count_groups = 0;
-		for (let group in groups) {
+
+        Object.keys(groups).reverse().forEach( group => {
 			var title = group;
 			var group_entries = {};
 			for (i=0;i<groups[group].length;i++) {
 				key                = groups[group][i];
 				group_entries[key] = entries[key];
-				}
+            }
 			if (active_page == "ARCHIVE") {
 				title = lang("ARCHIVE") + " &nbsp;(" + group + ")";
 				if (count_groups > 0) { header_open = false; }
 				//--> doesn't work if image names double across the different groups; image IDs have to be changed (e.g. group id to be added)
-				}
+            }
 			delete group_entries["999999"];
 			html += birdhouse_ImageGroup(title, group_entries, entry_count, entry_category, header_open, admin,
 			                             video_short, same_img_size, max_image_size_LR);
 			count_groups += 1;
-			}
-			if (html == "" && server_status["view_favorite_loading"] == "done") {
-    			html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;</center>";
-			}
-			else if (html == "") {
-    			html += "<center>&nbsp;<br/>"+lang("DATA_LOADING_TRY_AGAIN")+"<br/>&nbsp;</center>";
-			}
-		}
+        });
+        if (html == "" && server_status["view_favorite_loading"] == "done") {
+            html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;</center>";
+        }
+        else if (html == "") {
+            html += "<center>&nbsp;<br/>"+lang("DATA_LOADING_TRY_AGAIN")+"<br/>&nbsp;</center>";
+        }
+    }
 	// today, backup, video
 	else {
 		entries_available = false;
