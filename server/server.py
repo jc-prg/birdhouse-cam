@@ -373,8 +373,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         else:
             which_cam2 = ""
 
-        logging.info("CAMERA(s) = "+which_cam+" "+which_cam2)
-
         config.html_replace["title"] = config.param["title"]
         config.html_replace["active_cam"] = which_cam
 
@@ -437,12 +435,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 content = {}
                 status = "Error: command not found."
 
-            if "links_json" in content:
-                content["links"] = content["links_json"]
-            if "links_json" in content:
-                del content["links_json"]
-            if "file_list" in content:
-                del content["file_list"]
+            active_date = ""
+            if "active_date" in content:
+                active_date = content["active_date"]
 
             api_response = {
                 "STATUS": {
@@ -462,6 +457,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         "sensors": {},
                         "weather": config.weather.get_weather_info("status"),
                         "microphones": {}
+                    },
+                    "view": {
+                        "selected": which_cam,
+                        "active_cam": which_cam,
+                        "active_date": active_date,
+                        "active_page": command
                     }
                 },
                 "API": api_description,
@@ -473,8 +474,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content["title"] = config.param["title"]
             content["backup"] = config.param["backup"]
             content["weather"] = config.param["weather"]
-            content["selected"] = which_cam
-            content["active_page"] = command
+
+            # delete values not required in API response
+            if "links_json" in content:
+                content["links"] = content["links_json"]
+            if "links_json" in content:
+                del content["links_json"]
+            if "file_list" in content:
+                del content["file_list"]
+            if "active_date" in content:
+                del content["active_date"]
 
             # server configuration and status
             content["server"] = config.param["server"]
@@ -512,6 +521,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if key in camera:
                     api_response["STATUS"]["devices"]["cameras"][key] = camera[key].get_camera_status()
                     camera_data[key]["video"]["stream"] = "/stream.mjpg?" + key
+                    camera_data[key]["video"]["stream_pip"] = "/pip/stream.mjpg?" + key + "+{2nd-camera-key}"
                     camera_data[key]["video"]["stream_lowres"] = "/lowres/stream.mjpg?" + key
                     camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
                     camera_data[key]["device"] = "camera"
@@ -538,11 +548,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 else:
                     logging.debug("Sensor not available: "+key)
                     sensor_data[key]["status"] = sensor[key].get_status()
-
-                    #sensor_data[key]["status"] = {
-                    #    "error": True,
-                    #    "error_msg": "Sensor not available: "+key
-                    #}
 
             content["devices"] = {
                 "cameras": camera_data,

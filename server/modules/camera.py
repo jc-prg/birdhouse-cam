@@ -1217,7 +1217,10 @@ class BirdhouseCamera(threading.Thread):
 
         self.sensor = sensor
         self.param = self.config.param["devices"]["cameras"][self.id]
-        self.weather_active = self.config.param["localization"]["weather_active"]
+        self.weather_active = self.config.param["weather"]["active"]
+        # ------------------
+        self.weather_sunrise = None
+        self.weather_sunset = None
 
         self.name = self.param["name"]
         self.active = self.param["active"]
@@ -1299,8 +1302,6 @@ class BirdhouseCamera(threading.Thread):
 
         while self.running:
             current_time = self.config.local_time()
-            seconds = current_time.strftime('%S')
-            hours = current_time.strftime('%H')
             stamp = current_time.strftime('%H%M%S')
             self.config_update = self.config.update["camera_" + self.id]
 
@@ -1369,12 +1370,9 @@ class BirdhouseCamera(threading.Thread):
             elif not self.error and self.param["active"] and self.param["active"] != "False":
                 time.sleep(0.3)
                 if self.record:
-                    self.logging.debug("Check if record ... " + str(hours) + "/*/" + str(seconds) + " ...")
-                    if (seconds in self.param["image_save"]["seconds"]) and \
-                            (hours in self.param["image_save"]["hours"]):
+                    if self.image_recording_active(current_time=current_time):
 
                         self.logging.debug(" ...... record now!")
-                        # image = self.get_image_raw_buffered(max_age_seconds=1)    # does not work at the moment
                         image = self.get_image_raw()
 
                         if not self.image.error and len(image) > 0:
@@ -1732,6 +1730,93 @@ class BirdhouseCamera(threading.Thread):
 
         return self.get_image_raw()
 
+    def image_recording_active(self, current_time=-1):
+        """
+        check if image recording is active
+        """
+        if current_time == -1:
+            current_time = self.config.local_time()
+        second = current_time.strftime('%S')
+        minute = current_time.strftime('%M')
+        hour = current_time.strftime('%H')
+
+        self.logging.debug("Check if record ... " + str(hour) + "/" + str(minute) + "/" + str(second) + " ...")
+
+        record_from_hour = -1
+        record_from_minute = -1
+        record_to_hour = -1
+        record_to_minute = -1
+
+        if self.record and not self.error:
+            # old detection
+            if "record_from" not in self.param["image_save"] or "record_to" not in self.param["image_save"]:
+                if (second in self.param["image_save"]["seconds"]) and (hour in self.param["image_save"]["hours"]):
+                    self.logging.info(
+                        " -> RECORD TRUE "+self.id+" (" + str(record_from_hour) + ":" + str(record_from_minute) + "-" +
+                        str(record_to_hour) + ":" + str(record_to_minute) + ") " +
+                        str(hour) + "/" + str(minute) + "/" + str(second))
+                    return True
+
+            # new detection
+            if "record_from" in self.param["image_save"] and "record_to" in self.param["image_save"]:
+
+                if "today" in self.config.weather.weather_info["forecast"] and \
+                        "sunrise" in self.config.weather.weather_info["forecast"]["today"]:
+                    self.weather_sunrise = self.config.weather.weather_info["forecast"]["today"]["sunrise"]
+                    self.weather_sunset = self.config.weather.weather_info["forecast"]["today"]["sunset"]
+
+                record_from = self.param["image_save"]["record_from"]
+                record_to = self.param["image_save"]["record_to"]
+                record_rhythm = self.param["image_save"]["rhythm"]
+                record_rhythm_offset = self.param["image_save"]["rhythm_offset"]
+                record_seconds = []
+
+                start = int(record_rhythm_offset)
+                while start < 60:
+                    record_seconds.append(start)
+                    start += int(record_rhythm)
+
+                if ("sunrise" in record_from or "sunset" in record_to) and \
+                        self.weather_active and self.weather_sunrise is not None:
+                    if "sunrise" in record_from:
+                        record_from_hour = int(self.weather_sunrise.split(":")[0]) - 1
+                        record_from_minute = self.weather_sunrise.split(":")[1]
+                    if "sunset" in record_to:
+                        record_to_hour = int(self.weather_sunset.split(":")[0]) + 1
+                        record_to_minute = self.weather_sunset.split(":")[1]
+                else:
+                    if "sunrise" in record_from:
+                        record_from_hour = 7
+                        record_from_minute = 0
+                    if "sunset" in record_to:
+                        record_to_hour = 20
+                        record_to_minute = 0
+
+                if record_from_hour == -1:
+                    record_from_hour = record_from
+                    record_from_minute = 0
+                if record_to_hour == -1:
+                    record_to_hour = record_to
+                    record_to_minute = 59
+
+                self.logging.debug(" -> RECORD check " + self.id + "  (" + str(record_from_hour) + ":" +
+                                   str(record_from_minute) + "-" + str(record_to_hour) + ":" +
+                                   str(record_to_minute) + ") " + str(int(hour)) + "/" + str(int(minute)) + "/" +
+                                   str(int(second)) + " ... " + str(record_seconds))
+
+                if int(second) in record_seconds:
+                    if ((int(record_from_hour)*60)+int(record_from_minute)) <= ((int(hour)*60)+int(minute)) <= \
+                            ((int(record_to_hour)*60)+int(record_to_minute)):
+                        self.logging.debug(
+                            " -> RECORD TRUE "+self.id+"  (" + str(record_from_hour) + ":" + str(record_from_minute) + "-" +
+                            str(record_to_hour) + ":" + str(record_to_minute) + ") " +
+                            str(hour) + "/" + str(minute) + "/" + str(second) + "  < -----")
+                        return True
+
+        self.logging.debug(" -> RECORD FALSE "+self.id+" (" + str(record_from_hour) + ":" + str(record_from_minute) +
+                           "-" + str(record_to_hour) + ":" + str(record_to_minute) + ")")
+        return False
+
     def image_differs(self, file_info):
         """
         check if similarity is under threshold
@@ -1911,6 +1996,7 @@ class BirdhouseCamera(threading.Thread):
             "image_cache_size": self.config_cache_size,
             "record_image_error": self.record_image_error,
             "record_image_last": time.time() - self.record_image_last,
+            "record_image_active": self.image_recording_active(),
             "video_error": self.video.error,
             "video_error_msg": self.video.error_msg,
             "running": self.running

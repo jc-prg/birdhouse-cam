@@ -95,6 +95,7 @@ birdhouse_default_cam1 = {
     "record": True,
     "similarity": {
         "threshold": 90,
+        "detection_type": "max_quarter",
         "detection_area": (0.1, 0.1, 0.8, 0.8)
     },
     "image": {
@@ -113,6 +114,10 @@ birdhouse_default_cam1 = {
     "image_save": {
         "path": "images",
         "color": "ORIGINAL",
+        "rhythm": "20",
+        "rhythm_offset": "3",
+        "record_from": "06",
+        "record_to": "22",
         "seconds": ("00", "20", "40"),
         "hours": ("06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20")
     },
@@ -130,6 +135,7 @@ birdhouse_default_cam2 = {
     "record": True,
     "similarity": {
         "threshold": 90,
+        "detection_type": "average",
         "detection_area": (0.1, 0.1, 0.8, 0.8)
     },
     "image": {
@@ -148,6 +154,10 @@ birdhouse_default_cam2 = {
     "image_save": {
         "path": "images",
         "color": "ORIGINAL",
+        "rhythm": "10",
+        "rhythm_offset": "0",
+        "record_from": "sunrise-1",
+        "record_to": "sunset+1",
         "seconds": ("10", "30", "50"),
         "hours": ("06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20")
     },
