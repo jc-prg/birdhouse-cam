@@ -648,6 +648,22 @@ class BirdhouseImageProcessing(object):
 
         return round(score * 100, 1)
 
+    @staticmethod
+    def compare_raw_show(image_1st, image_2nd):
+        """
+        show in an image where the differences are
+        """
+        # image_1st = cv2.cvtColor(image_1st, cv2.COLOR_BGR2GRAY)
+        # image_2nd = cv2.cvtColor(image_2nd, cv2.COLOR_BGR2GRAY)
+        image_diff = cv2.subtract(image_1st, image_2nd)
+
+        # color the mask red
+        Conv_hsv_Gray = cv2.cvtColor(image_diff, cv2.COLOR_BGR2GRAY)
+        ret, mask = cv2.threshold(Conv_hsv_Gray, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
+        image_diff[mask != 255] = [0, 0, 255]
+
+        return image_diff
+
     def convert_from_raw(self, raw):
         """
         convert from raw image to image // untested
@@ -1641,27 +1657,9 @@ class BirdhouseCamera(threading.Thread):
         if self.error:
             return
 
-        if self.type == "pi":
-            try:
-                with self.video.output.condition:
-                    self.video.output.condition.wait()
-                    encoded = self.video.output.frame
-                self.image.reset_error()
-                return encoded
-            except Exception as e:
-                error_msg = "Can't grab image from piCamera '" + self.id + "': " + str(e)
-                self.raise_error(False, error_msg)
-                return ""
-
-        elif self.type == "usb" or self.type == "default":
-            raw = self.get_image_raw()
-            encoded = self.image.convert_from_raw(raw)
-            return encoded
-
-        else:
-            error_msg = "Camera type not supported (" + str(self.type) + ")."
-            self.raise_error(True, error_msg)
-            return ""
+        raw = self.get_image_raw()
+        encoded = self.image.convert_from_raw(raw)
+        return encoded
 
     def get_image_raw(self):
         """
@@ -1670,50 +1668,29 @@ class BirdhouseCamera(threading.Thread):
         if self.error:
             return ""
 
-        if self.type == "pi":
-            try:
-                with self.video.output.condition:
-                    self.video.output.condition.wait()
-                    encoded = self.video.output.frame
-                self.image.reset_error()
-                raw = self.image.convert_to_raw(encoded)
-                self.image_last_raw = raw
+        self.image.reset_error()
+        try:
+            raw = self.camera.read()
+            check = str(type(raw))
+            if self.camera.error:
+                self.raise_error(False, "Error reading image (source=" + str(self.source) + ", " +
+                                 self.camera.error_msg + ")")
+                return ""
+            elif "NoneType" in check or len(raw) == 0:
+                self.raise_error(False, "Got an empty image (source=" + str(self.source) + ")")
+                return ""
+            else:
+                if self.param["image"]["rotation"] != 0:
+                    raw = self.image.rotate_raw(raw, self.param["image"]["rotation"])
+            if len(raw) > 0 and not self.image.error:
+                self.image_last_raw = raw.copy()
                 self.image_last_raw_time = datetime.now().timestamp()
-                return raw
-            except Exception as e:
-                error_msg = "Can't grab image from piCamera '" + self.id + "': " + str(e)
-                self.raise_error(False, error_msg)
+                return raw.copy()
+            else:
                 return ""
-
-        elif self.type == "usb" or self.type == "default":
-            self.image.reset_error()
-            try:
-                raw = self.camera.read()
-                check = str(type(raw))
-                if self.camera.error:
-                    self.raise_error(False, "Error reading image (source=" + str(self.source) + ", " +
-                                     self.camera.error_msg + ")")
-                    return ""
-                elif "NoneType" in check or len(raw) == 0:
-                    self.raise_error(False, "Got an empty image (source=" + str(self.source) + ")")
-                    return ""
-                else:
-                    if self.param["image"]["rotation"] != 0:
-                        raw = self.image.rotate_raw(raw, self.param["image"]["rotation"])
-                if len(raw) > 0 and not self.image.error:
-                    self.image_last_raw = raw.copy()
-                    self.image_last_raw_time = datetime.now().timestamp()
-                    return raw.copy()
-                else:
-                    return ""
-            except Exception as e:
-                error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
-                self.raise_error(False, error_msg)
-                return ""
-
-        else:
-            error_msg = "Camera type not supported (" + str(self.type) + ")."
-            self.raise_error(True, error_msg)
+        except Exception as e:
+            error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
+            self.raise_error(False, error_msg)
             return ""
 
     def get_image_raw_buffered(self, max_age_seconds=1):
@@ -2046,6 +2023,23 @@ class BirdhouseCamera(threading.Thread):
 
         except Exception as e:
             error_msg = "Can't save image and/or create thumbnail '" + image_path + "': " + str(e)
+            self.raise_error(False, error_msg)
+            return ""
+
+    def read_image(self, filename):
+        """
+        read image with given filename
+        """
+        image_path = os.path.join(self.config.main_directory, filename)
+        self.logging.info("Read image: " + image_path)
+
+        try:
+            image = cv2.imread(image_path)
+            self.logging.info(" --> " + str(image.shape))
+            return image
+
+        except Exception as e:
+            error_msg = "Can't read image '" + image_path + "': " + str(e)
             self.raise_error(False, error_msg)
             return ""
 

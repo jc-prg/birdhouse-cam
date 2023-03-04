@@ -261,6 +261,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var dont_load   = "";
 	var edit        = false;
 	var category    = "";
+	var onclick_difference = "";
 
 	console.log(app_active_page);
 
@@ -278,8 +279,16 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 			description       = entry["date"]+" ("+hour+":"+minute+")";
         }
 
+
 		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
 		description     = description.replace(/\[br\/\]/g,"<br/>");
+        if (admin && entry["compare"][1] != "000000" && app_active_page == "TODAY_COMPLETE") {
+            var diff_image = "/compare/"+entry["compare"][0]+"/"+entry["compare"][1]+"/"+entry["similarity"]+"/image.jpg?"+entry["camera"];
+            onclick_diff   = "birdhouse_imageOverlay(\""+diff_image+"\",\"Difference Detection - "+description+"\");";
+            onclick_difference = entry["time"] +" (<u onclick='"+onclick_diff+"' style='cursor:pointer;'>";
+            onclick_difference += entry["similarity"] + "%</u>)";
+    		description     = onclick_difference;
+        }
 		edit            = true;
     }
 	else if (entry["type"] == "directory") {
