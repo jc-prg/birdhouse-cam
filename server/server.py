@@ -560,12 +560,43 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'),
                              no_cache=True)
 
-        # extract and show single image
-        elif '/image.jpg' in self.path:
-            # camera[which_cam].setText = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-            camera[which_cam].write_image('image_' + which_cam + '.jpg', camera[which_cam].get_image())
+        # show compared images
+        elif '/compare/' in self.path and '/image.jpg' in self.path:
+            logging.info("---------------------> compare")
+            filename = os.path.join(config.db_handler.directory("images"), "_image_diff_" + which_cam + ".jpg")
+            param = self.path.split("?")
+            param = param[0].split("/")
+            logging.info("---->" + param[2])
+            logging.info("---->" + param[3])
+
+            filename_1st = "image_" + which_cam + "_big_"+param[2]+".jpeg"
+            filename_2nd = "image_" + which_cam + "_big_"+param[3]+".jpeg"
+            filename_diff = "_image_diff_" + which_cam + ".jpg"
+            path_1st = os.path.join(config.db_handler.directory("images"), filename_1st)
+            path_2nd = os.path.join(config.db_handler.directory("images"), filename_2nd)
+            path_diff = os.path.join(config.db_handler.directory("images"), filename_diff)
+
+            image_1st = camera[which_cam].read_image(path_1st)
+            image_2nd = camera[which_cam].read_image(path_2nd)
+            image_diff = camera[which_cam].image.compare_raw_show(image_1st, image_2nd)
+            image_diff = camera[which_cam].image.draw_text_raw(image_diff, "-> " + param[2] + ":" + param[3] + ":" +
+                                                               param[4], position=(10, 20), scale=0.5, thickness=1)
+            camera[which_cam].write_image(path_diff, image_diff)
+
+            time.sleep(0.5)
             self.stream_file(filetype='image/jpeg',
-                             content=read_image(directory="", filename='image_' + which_cam + '.jpg'))
+                             content=read_image(directory="../data/images/", filename=filename_diff))
+
+            # ==============================> in progress
+
+        # extract and show single image (creates images with a longer delay ?)
+        elif '/image.jpg' in self.path:
+            filename = "_image_temp_" + which_cam + ".jpg"
+            path = os.path.join(config.db_handler.directory("images"), filename)
+            camera[which_cam].write_image(path, camera[which_cam].get_stream_raw())
+            time.sleep(2)
+            self.stream_file(filetype='image/jpeg',
+                             content=read_image(directory="../data/images/", filename=filename))
 
         # show live streams
         elif '/stream.mjpg' in self.path:
