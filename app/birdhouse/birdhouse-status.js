@@ -20,6 +20,29 @@ function setStatusColor(status_id, status_color) {
     setTextById(status_id, status);
 }
 
+function birdhouseStatus_connectionError() {
+    var cameras = app_data["DATA"]["devices"]["cameras"];
+    var microphones = app_data["DATA"]["devices"]["microphones"];
+    var sensors = app_data["DATA"]["devices"]["sensors"];
+
+    setTextById("system_info_connection", "<font color='red'><b>Connection lost!</b></font>");
+
+    for (let camera in cameras) {
+        setStatusColor(status_id="status_active_"+camera, "red");
+        setStatusColor(status_id="status_error_"+camera, "black");
+        setStatusColor(status_id="status_error_record_"+camera, "black");
+    }
+    for (let sensor in sensors) {
+        setStatusColor(status_id="status_active_"+sensor, "red");
+        setStatusColor(status_id="status_error_"+sensor, "black");
+    }
+    for (let micro in microphones) {
+        setStatusColor(status_id="status_active_"+micro, "red");
+    }
+    setStatusColor(status_id="status_active_WEATHER", "red");
+    setStatusColor(status_id="status_error_WEATHER", "black");
+}
+
 function birdhouseStatus_print(data) {
     console.debug("Update Status ...");
 
@@ -34,12 +57,9 @@ function birdhouseStatus_print(data) {
     percentage = (data["STATUS"]["system"]["mem_used"]/data["STATUS"]["system"]["mem_total"])*100
     setTextById("system_info_mem_total",        (Math.round(data["STATUS"]["system"]["mem_total"]*10)/10)+" MB")
     setTextById("system_info_mem_used",         (Math.round(data["STATUS"]["system"]["mem_used"]*10)/10)+" MB (" + Math.round(percentage) + "%)")
-
     setTextById("system_info_cpu_usage",        (Math.round(data["STATUS"]["system"]["cpu_usage"]*10)/10)+"%")
     setTextById("system_info_cpu_temperature",  (Math.round(data["STATUS"]["system"]["cpu_temperature"]*10)/10)+"°C")
-
-    coordinates = "(" + data["STATUS"]["devices"]["weather"]["gps_coordinates"].toString().replaceAll(",", ", ") + ")";
-    setTextById("gps_coordinates", coordinates);
+    setTextById("system_info_connection",       "Connected");
 
     var cpu_details = "";
     for (var i=0;i<data["STATUS"]["system"]["cpu_usage_detail"].length;i++) {
@@ -49,16 +69,18 @@ function birdhouseStatus_print(data) {
 
     // add camera information
     var cameras = data["DATA"]["devices"]["cameras"];
+    var camera_status = data["STATUS"]["devices"]["cameras"];
     var camera_streams = 0;
     for (let camera in cameras) {
         setTextById("show_stream_count_"+camera, cameras[camera]["image"]["current_streams"]);
         camera_streams += cameras[camera]["image"]["current_streams"];
-        setTextById("error_cam_"+camera, cameras[camera]["status"]["error_msg"]);
-        setTextById("error_img_"+camera, cameras[camera]["status"]["image_error_msg"]);
-        setTextById("last_image_recorded_"+camera, Math.round(cameras[camera]["status"]["record_image_last"]*10)/10 +
+        setTextById("error_cam_"+camera, camera_status[camera]["error_msg"]);
+        setTextById("error_img_"+camera, camera_status[camera]["image_error_msg"]);
+        setTextById("error_rec_"+camera, camera_status[camera]["record_image_error"]);
+        setTextById("last_image_recorded_"+camera, Math.round(camera_status[camera]["record_image_last"]*10)/10 +
                     "s (error=" + cameras[camera]["status"]["record_image_error"] + ")");
 
-        if (cameras[camera]["status"]["error"] || cameras[camera]["status"]["image_error"]) {
+        if (camera_status[camera]["error"] || camera_status[camera]["image_error"]) {
             setHeaderColor(header_id=camera+"_error", header_color=header_color_error);
             setHeaderColor(header_id=camera, header_color=header_color_error);
             setStatusColor(status_id="status_error_"+camera, "red");
@@ -68,12 +90,24 @@ function birdhouseStatus_print(data) {
             setHeaderColor(header_id=camera, header_color="");
             setStatusColor(status_id="status_error_"+camera, "green");
         }
+
+        if (camera_status[camera]["record_image_active"] && camera_status[camera]["record_image_error"]) {
+            setStatusColor(status_id="status_error_record_"+camera, "red");
+        }
+        else if (camera_status[camera]["record_image_active"]) {
+            setStatusColor(status_id="status_error_record_"+camera, "green");
+        }
+        else {
+            setStatusColor(status_id="status_error_record_"+camera, "black");
+        }
+
         if (cameras[camera]["active"]) {
             setStatusColor(status_id="status_active_"+camera, "white");
             }
         else {
             setStatusColor(status_id="status_active_"+camera, "black");
             setStatusColor(status_id="status_error_"+camera, "black");
+            setStatusColor(status_id="status_error_record_"+camera, "black");
             }
 
         if (cameras[camera]["image"]["crop_area"]) {
@@ -107,12 +141,12 @@ function birdhouseStatus_print(data) {
         }
         weather_error = "Running: " + data["WEATHER"]["info_status"]["running"] + "\n";
         if (data["WEATHER"]["info_status"]["error"]) {
-            weather_error += "Error: " + data["WEATHER"]["info_status"]["error"].toString() + "\n";
-            weather_error += "Message: " + data["WEATHER"]["info_status"]["error_msg"];
-            setHeaderColor(header_id="weather_error", header_color=header_color_error);
-            setHeaderColor(header_id="weather_settings", header_color=header_color_error);
-            setStatusColor(status_id="status_error_WEATHER", "red");
-        }
+        weather_error += "Error: " + data["WEATHER"]["info_status"]["error"].toString() + "\n";
+        weather_error += "Message: " + data["WEATHER"]["info_status"]["error_msg"];
+        setHeaderColor(header_id="weather_error", header_color=header_color_error);
+        setHeaderColor(header_id="weather_settings", header_color=header_color_error);
+        setStatusColor(status_id="status_error_WEATHER", "red");
+    }
         else if (data["WEATHER"]["info_status"]["running"].indexOf("paused") > -1) {
             setHeaderColor(header_id="weather_error", header_color=header_color_warning);
             setStatusColor(status_id="status_error_WEATHER", "black");
@@ -135,6 +169,9 @@ function birdhouseStatus_print(data) {
     setTextById("weather_info_update", weather_update);
     setTextById("weather_info_error", weather_error);
 
+    coordinates = "(" + data["STATUS"]["devices"]["weather"]["gps_coordinates"].toString().replaceAll(",", ", ") + ")";
+    setTextById("gps_coordinates", coordinates);
+
     // add sensor information
     var sensors = data["DATA"]["devices"]["sensors"];
     var keys = Object.keys(sensors);
@@ -153,6 +190,12 @@ function birdhouseStatus_print(data) {
             setTextById("error_sensor2_"+sensor, sensor_error_02);
             setTextById("status_sensor_"+sensor, status["running"]);
             setTextById("status_sensor_last_"+sensor, Math.round(status["last_read"]*10)/10 +"s");
+            if (status["running"] == "OK") {
+                setStatusColor(status_id="status_active_"+sensor, "white");
+            }
+            else {
+                setStatusColor(status_id="status_active_"+sensor, "black");
+            }
             if (status["error"] || status["error_module"] || status["connect"]) {
                 setHeaderColor(header_id=sensor+"_error", header_color=header_color_error);
                 setHeaderColor(header_id=sensor, header_color=header_color_error);

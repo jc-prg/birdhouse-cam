@@ -1729,7 +1729,7 @@ class BirdhouseCamera(threading.Thread):
 
         return self.get_image_raw()
 
-    def image_recording_active(self, current_time=-1):
+    def image_recording_active(self, current_time=-1, check_in_general=False):
         """
         check if image recording is active
         """
@@ -1803,7 +1803,7 @@ class BirdhouseCamera(threading.Thread):
                                    str(record_to_minute) + ") " + str(int(hour)) + "/" + str(int(minute)) + "/" +
                                    str(int(second)) + " ... " + str(self.record_seconds))
 
-                if int(second) in self.record_seconds:
+                if int(second) in self.record_seconds or check_in_general:
                     if ((int(record_from_hour)*60)+int(record_from_minute)) <= ((int(hour)*60)+int(minute)) <= \
                             ((int(record_to_hour)*60)+int(record_to_minute)):
                         self.logging.debug(
@@ -1842,10 +1842,6 @@ class BirdhouseCamera(threading.Thread):
 
             if "favorit" in file_info and int(file_info["favorit"]) == 1:
                 return True
-
-
-############ self.record_seconds -> auf 2 Stellen ausweiten
-            # oder ganz anders, weil sich der Wert ändern kann ... insofern erstes Bild mit minute = 00 ???
 
             elif timestamp[2:4] == "00" and timestamp[0:4] != self.image_to_select_last[0:4]:
                 self.image_to_select_last = timestamp
@@ -2000,7 +1996,7 @@ class BirdhouseCamera(threading.Thread):
             "image_cache_size": self.config_cache_size,
             "record_image_error": self.record_image_error,
             "record_image_last": time.time() - self.record_image_last,
-            "record_image_active": self.image_recording_active(),
+            "record_image_active": self.image_recording_active(current_time=-1, check_in_general=True),
             "video_error": self.video.error,
             "video_error_msg": self.video.error_msg,
             "running": self.running

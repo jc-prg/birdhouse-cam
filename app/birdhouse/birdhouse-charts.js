@@ -134,7 +134,7 @@ function birdhouseChart_weatherOverview (entries) {
     html += "<tr style='font-size:8px;'>" + html_row1 + "</tr>";
     html += "<tr style='font-size:11px;'>" + html_row2 + "</tr>";
     html +="</table>"
-    console.error(weather_data);
+    console.debug(weather_data);
     html += "&nbsp;<br/>&nbsp;";
     return html;
 }

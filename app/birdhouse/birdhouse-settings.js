@@ -26,6 +26,7 @@ function birdhouse_app_settings (name="Settings") {
 
         var open_settings = {
             "app_info_01" : true,
+            "device_info" : true,
             "server_info" : false,
             "api_calls"   : false,
             "app_info_02" : false,
@@ -35,6 +36,7 @@ function birdhouse_app_settings (name="Settings") {
         if (initial_setup) {
             open_settings["app_info_01"] = false;
             open_settings["server_info"] = false;
+            open_settings["device_info"] = false;
 
             var img = "<img src='"+app_loading_image+"' width='250'><br/>&nbsp;<br/>"
             appMsg.confirm(img + lang("INITIAL_SETUP"), "console.log('.');", 400);
@@ -45,6 +47,9 @@ function birdhouse_app_settings (name="Settings") {
 
         html_entry = this.app_information();
         html += birdhouse_OtherGroup( "app_info_01", "App Information (Version)", html_entry, open_settings["app_info_01"] );
+
+        html_entry = this.device_information();
+        html += birdhouse_OtherGroup( "device_info", "Device Information", html_entry, open_settings["device_info"] );
 
         html_entry = this.server_information();
         html += birdhouse_OtherGroup( "server_info", "Server Information", html_entry, open_settings["server_info"] );
@@ -184,6 +189,7 @@ function birdhouse_app_settings (name="Settings") {
 
 	this.server_information = function () {
         var html_entry = this.tab.start();
+    	html_entry += this.tab.row("Server Connection:",   "<div id='system_info_connection'>please wait ...</div>");
     	html_entry += this.tab.row("Active Streams:",      "<div id='system_active_streams'>please wait ...</div>");
     	html_entry += this.tab.row("Active Database:",     "<div id='system_info_database'>please wait ...</div>");
     	html_entry += this.tab.row("CPU Temperature:",     "<div id='system_info_cpu_temperature'>please wait ...</div>");
@@ -199,6 +205,7 @@ function birdhouse_app_settings (name="Settings") {
 	}
 
 	this.device_information = function () {
+	    return birdhouseDevices("", app_data, false);
 	}
 
 	this.toggle	= function (active=false) {

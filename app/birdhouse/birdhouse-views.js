@@ -27,8 +27,8 @@ function birdhouse_INDEX(data, camera) {
             else {
                 var other_cam  = {
                     "name"        : key,
-                    "stream"      : cameras[key]["video"]["stream_lowres"],
-//                    "stream"      : cameras[key]["video"]["stream"],
+                    "stream"      : cameras[key]["video"]["stream"],
+//                    "stream"      : cameras[key]["video"]["stream_lowres"],
 //                    "stream"      : cameras[key]["video"]["stream_pip"], // replace {2nd-camera-key}
                     "description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
                     }
@@ -161,7 +161,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var entries           = data["DATA"]["entries"];
 	var entries_yesterday = data["DATA"]["entries_yesterday"];
 	var entries_delete    = data["DATA"]["entries_delete"];
-	var active_date       = data["DATA"]["active_date"];
+	var active_date       = data["STATUS"]["view"]["active_date"];
 	if (data["DATA"]["max_image_size"]) {
         var max_image_size_LR  = data["DATA"]["max_image_size"]["lowres"];
         var max_image_size_HR  = data["DATA"]["max_image_size"]["hires"];
@@ -186,7 +186,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
     else if (active_page == "TODAY" && active_date != "")  { entry_category = [ "backup", active_date ]; }
 
     // create chart data
-    if (active_page == "TODAY_COMPLETE" || (active_page == "TODAY" && active_date != "")) {
+    if (active_page == "TODAY_COMPLETE" || (active_page == "TODAY" && active_date != "" && active_date != undefined)) {
         var chart_data = data["DATA"]["chart_data"];
         var chart_titles = [];
         for (var x=0;x<chart_data["titles"].length;x++) {
@@ -245,7 +245,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	if (groups != undefined && groups != {}) {
 		var count_groups = 0;
 
-        Object.keys(groups).reverse().forEach( group => {
+        Object.keys(groups).sort().reverse().forEach( group => {
 			var title = group;
 			var group_entries = {};
 			for (i=0;i<groups[group].length;i++) {

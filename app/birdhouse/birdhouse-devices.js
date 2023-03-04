@@ -10,11 +10,9 @@ function birdhouseDevices( title, data )
 
 var birdhouse_device_list = [];
 
-function birdhouseDevices( title, data ) {
+function birdhouseDevices( title, data, show_settings=true ) {
 	var html = "";
 	var index = [];
-	var tab     = new birdhouse_table();
-	tab.style_rows["height"] = "27px";
 
     var [settings, info] = birdhouseDevices_cameras(data);
     html += settings;
@@ -32,11 +30,30 @@ function birdhouseDevices( title, data ) {
     html += settings;
     index.push(info);
 
-    var html_index = "<div class='camera_info'>";
-    html_index += "<div class='camera_info_image'>&nbsp;<br/>";
-    html_index +=  "<div id='loading_img'><img src='"+app_loading_image+"' style='width:50%;'></div>";
-    html_index += "<br/>&nbsp;</div>";
-    html_index += "<div class='camera_info_text'>";
+    if (show_settings) {
+        var html_index = birdhouseDevices_status(index=index, show_button=true);
+        setTextById(app_frame_content, html_index + html);
+        setTextById(app_frame_header, "<center><h2>" + lang("DEVICES") + "</h2></center>");
+    }
+    else {
+        var html_index = birdhouseDevices_status(index=index, show_button=false);
+        return html_index;
+    }
+}
+
+function birdhouseDevices_status(index, show_button) {
+	var tab     = new birdhouse_table();
+	tab.style_rows["height"] = "27px";
+	tab.style_cells["width"] = "50%";
+
+    var html_index = "";
+    if (show_button) {
+        html_index += "<div class='camera_info'>";
+        html_index += "<div class='camera_info_image'>&nbsp;<br/>";
+        html_index +=  "<div id='loading_img'><img src='"+app_loading_image+"' style='width:50%;'></div>";
+        html_index += "<br/>&nbsp;</div>";
+        html_index += "<div class='camera_info_text'>";
+    }
 
     html_index += tab.start();
     birdhouse_device_list = [];
@@ -44,19 +61,25 @@ function birdhouseDevices( title, data ) {
         Object.keys(index[i]).forEach(key => {
             birdhouse_device_list.push(index[i][key]["group"]);
             var onclick = "birdhouseDevices_openOne('"+index[i][key]["group"]+"')";
-            var button = "<button onclick=\""+onclick+"\" class=\"button-video-edit\">&nbsp;"+lang("SHOW")+"&nbsp;</button>";
-            var action = "<div id='status_active_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>";
-            action    += "<div id='status_error_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>";
-            action    += "&nbsp;&nbsp;&nbsp;" + button;
+            var button = "";
+            var action = "<div style='float:left;'>";
+            if (show_button) {
+                button = "<button onclick=\""+onclick+"\" class=\"button-video-edit\">&nbsp;"+lang("SHOW")+"&nbsp;</button>";
+                action = "<div style='float:left;'>" + button + "&nbsp;&nbsp;&nbsp;</div><div style='float:left;'>";
+                }
+            for (var a=0; a<index[i][key]["status"].length;a++) {
+                action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>";
+            }
+            action += "</div>";
             html_index += tab.row(key, action);
         });
     }
     html_index += tab.end();
     html_index += "<br/>&nbsp;"
-    html_index += "</div></div>";
-
-	setTextById(app_frame_content, html_index + html);
-	setTextById(app_frame_header, "<center><h2>" + lang("DEVICES") + "</h2></center>");
+    if (show_button) {
+        html_index += "</div></div>";
+        }
+    return html_index;
 }
 
 function birdhouseDevices_cameras(data) {
@@ -83,6 +106,8 @@ function birdhouseDevices_cameras(data) {
 	    index_info[camera_name]["active"] = cameras[camera]["active"];
 	    index_info[camera_name]["group"] = camera;
 	    index_info[camera_name]["id"] = camera;
+	    index_info[camera_name]["type"] = "camera";
+	    index_info[camera_name]["status"] = ["active", "error", "error_record"];
 
 	    resolution_max = cameras[camera]["image"]["resolution_max"];
 	    resolution_act = cameras[camera]["image"]["resolution_current"];
@@ -187,6 +212,8 @@ function birdhouseDevices_sensors(data) {
 	    index_info[sensor_name]["active"] = sensors[sensor]["active"];
 	    index_info[sensor_name]["group"] = sensor;
 	    index_info[sensor_name]["id"] = sensor;
+	    index_info[sensor_name]["type"] = "sensor";
+	    index_info[sensor_name]["status"] = ["active", "error"];
 
 		if (sensors[sensor]["active"] == false) {
 		    open = false;
@@ -234,6 +261,8 @@ function birdhouseDevices_weather(data) {
     index_info[info_key]["active"] = weather_config["active"];
     index_info[info_key]["group"] = "weather_settings";
     index_info[info_key]["id"] = "WEATHER";
+    index_info[info_key]["type"] = "weather";
+    index_info[info_key]["status"] = ["active", "error"];
 
 	var admin = data["STATUS"]["admin_allowed"];
 	var html = "";
@@ -295,6 +324,8 @@ function birdhouseDevices_microphones(data) {
 	    index_info[micro_name]["active"] = micros[micro]["active"];
 	    index_info[micro_name]["group"] = micro;
         index_info[micro_name]["id"] = micro;
+	    index_info[micro_name]["type"] = "microphone";
+	    index_info[micro_name]["status"] = ["active"];
 
 		if (micros[micro]["active"] == false) {
 		    open = false;

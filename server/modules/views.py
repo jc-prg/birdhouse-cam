@@ -375,8 +375,8 @@ class BirdhouseViews(threading.Thread):
 
             if not backup:
                 files_today["999999"] = {
-                    "stream": "stream.mjpg?" + which_cam,
-                    "lowres": "stream.mjpg?" + which_cam,
+                    "stream": "lowres/stream.mjpg?" + which_cam,
+                    "lowres": "lowres/stream.mjpg?" + which_cam,
                     "hires": "index.html?" + which_cam,
                     "camera": which_cam,
                     "type": "addon",
@@ -934,7 +934,8 @@ class BirdhouseViews(threading.Thread):
         path, which_cam, further_param = self.selected_camera()
         content = {"active_cam": which_cam, "view": "list_videos"}
         param = server.path.split("/")
-        if "app-v1" in param: del param[1]
+        if "app-v1" in param:
+            del param[1]
 
         directory = self.config.db_handler.directory(config="videos")
         category = "/videos/"  # self.config.directories["videos"]
@@ -1005,7 +1006,8 @@ class BirdhouseViews(threading.Thread):
         path, which_cam, further_param = self.selected_camera()
         content = {"active_cam": which_cam, "view": "detail_video", "entries": {}}
         param = server.path.split("/")
-        if "app-v1" in param: del param[1]
+        if "app-v1" in param:
+            del param[1]
         count = 0
 
         if "api" in param:

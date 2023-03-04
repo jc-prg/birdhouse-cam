@@ -125,24 +125,25 @@ function app_screen_size_changed(width, height) {
 // add code when connection is lost
 //--------------------------------
 
-var app_connection_status = true;
+app_connection_error = true;
 function app_connection_lost(error=false) {
-    if (app_connection_status != error) {
+    if (app_connection_error != error) {
         if (error) {
             // code if lost connection
             elementVisible("video_stream_offline");
             elementHidden("video_stream_online");
-            app_connection_status = false;
+            birdhouseStatus_connectionError()
+            app_connection_error = true;
         }
         else {
             // code if got back connection
             elementVisible("video_stream_online");
             elementHidden("video_stream_offline");
+            app_connection_error = false;
             birdhouseReloadView();
-            app_connection_status = true;
         }
     }
-    app_connection_status = error;
+    app_connection_error = error;
 }
 
 
