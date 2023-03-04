@@ -1249,6 +1249,7 @@ class BirdhouseCamera(threading.Thread):
         self.source = self.param["source"]
         self.type = self.param["type"]
         self.record = self.param["record"]
+        self.record_seconds = []
 
         self.timezone = 0
         if "localization" in self.config.param and "timezone" in self.config.param["localization"]:
@@ -1269,6 +1270,7 @@ class BirdhouseCamera(threading.Thread):
         self.image_fps = {}
         self.image_streams = {}
         self.image_streams_to_kill = {}
+        self.image_to_select_last = "000000"
         self.previous_image = None
         self.previous_stamp = "000000"
         self.record_image_last = time.time()
@@ -1770,7 +1772,7 @@ class BirdhouseCamera(threading.Thread):
 
                 start = int(record_rhythm_offset)
                 while start < 60:
-                    record_seconds.append(start)
+                    self.record_seconds.append(start)
                     start += int(record_rhythm)
 
                 if ("sunrise" in record_from or "sunset" in record_to) and \
@@ -1799,9 +1801,9 @@ class BirdhouseCamera(threading.Thread):
                 self.logging.debug(" -> RECORD check " + self.id + "  (" + str(record_from_hour) + ":" +
                                    str(record_from_minute) + "-" + str(record_to_hour) + ":" +
                                    str(record_to_minute) + ") " + str(int(hour)) + "/" + str(int(minute)) + "/" +
-                                   str(int(second)) + " ... " + str(record_seconds))
+                                   str(int(second)) + " ... " + str(self.record_seconds))
 
-                if int(second) in record_seconds:
+                if int(second) in self.record_seconds:
                     if ((int(record_from_hour)*60)+int(record_from_minute)) <= ((int(hour)*60)+int(minute)) <= \
                             ((int(record_to_hour)*60)+int(record_to_minute)):
                         self.logging.debug(
@@ -1841,7 +1843,12 @@ class BirdhouseCamera(threading.Thread):
             if "favorit" in file_info and int(file_info["favorit"]) == 1:
                 return True
 
-            elif "00" + str(self.param["image_save"]["seconds"][0]) in timestamp:
+
+############ self.record_seconds -> auf 2 Stellen ausweiten
+            # oder ganz anders, weil sich der Wert ändern kann ... insofern erstes Bild mit minute = 00 ???
+
+            elif timestamp[2:4] == "00" and timestamp[0:4] != self.image_to_select_last[0:4]:
+                self.image_to_select_last = timestamp
                 return True
 
             elif check_similarity:
