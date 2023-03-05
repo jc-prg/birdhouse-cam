@@ -163,7 +163,7 @@ class BirdhouseSensor(threading.Thread):
         self.error = True
         error_message = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
         error_message += " - " + message
-        self.error_msg.append(message)
+        self.error_msg.append(error_message)
         if len(self.error_msg) >= 5:
             self.error_msg.pop()
         self.logging.error(message)

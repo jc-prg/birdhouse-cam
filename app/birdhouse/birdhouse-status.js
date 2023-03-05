@@ -186,7 +186,7 @@ function birdhouseStatus_print(data) {
         if (sensors[sensor]["status"]) {
             //var status = sensors[sensor]["status"];
             var status = sensor_status[sensor];
-            var sensor_error_01 = status["error_msg"];
+            var sensor_error_01 = status["error_msg"].join(",\n");
             var sensor_error_02 = "Error: " + status["error"].toString() + "\n\n";
             if (status["error_connect"]) {
                 sensor_error_02    += "Error Connect: " + status["error_connect"].toString() + "\n\n";
