@@ -9,10 +9,11 @@ from flask import Response, request
 app = Flask(__name__)
 
 
-config = BirdhouseConfig(param_init={}, main_directory=os.path.dirname(os.path.abspath(__file__)))
+config = BirdhouseConfig(param_init={"db_type": "json"}, main_directory=os.path.dirname(os.path.abspath(__file__)))
 config.start()
+
 media_path = config.db_handler.directory("videos")
-print("* Starting streaming for files in the directory '" + media_path + "' ...")
+logging.info("* Starting streaming for files in the directory '" + media_path + "' ...")
 
 
 def serve_ios(full_path):
