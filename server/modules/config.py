@@ -973,8 +973,11 @@ class BirdhouseConfig(threading.Thread):
         self.param = self.db_handler.read("main")
         self.param["path"] = self.main_directory
 
-        self.weather = BirdhouseWeather(config=self, time_zone=self.timezone)
-        self.weather.start()
+        if "weather" not in self.param_init or self.param_init["weather"] != False:
+            self.weather = BirdhouseWeather(config=self, time_zone=self.timezone)
+            self.weather.start()
+        else:
+            self.weather = False
 
         while self._running:
             time.sleep(1)
@@ -984,7 +987,8 @@ class BirdhouseConfig(threading.Thread):
                     count += 1
             elif not self._paused:
                 count = 0
-                self.weather.active(self.param["localization"]["weather_active"])
+                if self.weather is not False:
+                    self.weather.active(self.param["localization"]["weather_active"])
 
         self.logging.info("Stopped config handler.")
 
@@ -1060,7 +1064,9 @@ class BirdhouseConfig(threading.Thread):
             self.param = self.db_handler.read(config, date)
             for key in self.update:
                 self.update[key] = True
-            self.weather.update = True
+
+            if self.weather is not False:
+                self.weather.update = True
 
     @staticmethod
     def filename_image(image_type, timestamp, camera=""):
