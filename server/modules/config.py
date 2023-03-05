@@ -1067,8 +1067,11 @@ class BirdhouseConfig(threading.Thread):
             for key in self.update:
                 self.update[key] = True
 
-            if self.weather is not False:
+            if self.weather is not False and "weather:location" in config_data:
+                self.logging.info("Update weather config and lookup GPS data: '"+self.param["weather"]["location"]+"'.")
                 self.weather.update = True
+                self.param["weather"] = self.weather.get_gps_info(self.param["weather"])
+                self.db_handler.write(config, date, self.param)
 
     @staticmethod
     def filename_image(image_type, timestamp, camera=""):

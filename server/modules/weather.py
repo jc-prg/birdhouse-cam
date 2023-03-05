@@ -585,10 +585,17 @@ class BirdhouseWeather(threading.Thread):
         """
         self.weather_source = param["source"]
         self.logging.info("(Re)connect weather module (source="+self.weather_source+")")
+        update_gps = False
+        if self.update:
+            update_gps = True
 
         if self.weather_source == "Open-Metheo":
             self.weather_city = param["location"]
-            self.weather_gps = self.gps.look_up_location(self.weather_city)
+            if "gps_location" in param and param["gps_location"] != [0, 0] and len(param["gps_location"]) >= 2 \
+                    and not update_gps:
+                self.weather_gps = param["gps_location"]
+            else:
+                self.weather_gps = self.gps.look_up_location(self.weather_city)
             self.module = BirdhouseWeatherOpenMeteo(config=self.config,
                                                     gps_location=self.weather_gps,
                                                     time_zone=self.timezone)
@@ -596,11 +603,26 @@ class BirdhouseWeather(threading.Thread):
 
         else:
             self.weather_city = param["location"]
-            self.weather_gps = self.gps.look_up_location(self.weather_city)
+            if "gps_location" in param and param["gps_location"] != [0, 0] and len(param["gps_location"]) == 2 \
+                    and not update_gps:
+                self.weather_gps = param["gps_location"]
+            else:
+                self.weather_gps = self.gps.look_up_location(self.weather_city)
             self.module = BirdhouseWeatherPython(config=self.config,
                                                  location=self.weather_city,
                                                  time_zone=self.timezone)
             self.module.start()
+
+    def get_gps_info(self, param):
+        """
+        lookup GPS information to be saved in the main configuration
+        """
+        self.weather_city = param["location"]
+        self.weather_gps = self.gps.look_up_location(self.weather_city)
+        if self.weather_gps[0] != 0 and self.weather_gps[1] != 0:
+            param["gps_location"] = self.weather_gps
+            self.logging.info("Found GPS: '" + str(self.weather_gps) + "'.")
+        return param
 
     def get_weather_info(self, info_type="all"):
         """

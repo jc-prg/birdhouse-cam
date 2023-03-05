@@ -507,9 +507,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 }
             },
             "API": api_description,
-            "WEATHER": config.weather.get_weather_info("all"),
+            "WEATHER": {},
             "DATA": {}
         }
+
+        if config.weather is not None:
+            api_response["WEATHER"] = config.weather.get_weather_info("all")
 
         # collect data for "DATA" section
         content["title"] = config.param["title"]
