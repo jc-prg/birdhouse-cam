@@ -203,11 +203,14 @@ class BirdhouseVideoProcessing(threading.Thread):
             self.info["date_end"] = current_time.strftime('%Y%m%d_%H%M%S')
             self.info["stamp_end"] = current_time.timestamp()
             self.info["status"] = "processing"
-            self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 1)
+            self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 2)
             if float(self.info["length"]) > 1:
-                self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+                self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 2)
             else:
                 self.info["framerate"] = 0
+            self.logging.info("---------------------> Length: "+str(self.info["length"]))
+            self.logging.info("---------------------> Count: "+str(self.info["image_count"]))
+            self.logging.info("---------------------> FPS: "+str(self.info["framerate"]))
             self.create_video()
             self.info["status"] = "finished"
             self.config.queue.entry_add(config="videos", date="", key=self.info["date_start"], entry=self.info.copy())
@@ -312,6 +315,7 @@ class BirdhouseVideoProcessing(threading.Thread):
             self.logging.debug("Write  image '" + path + "')")
             return cv2.imwrite(path, image)
         except Exception as e:
+            self.info["image_count"] -= 1
             self._msg_error("Could not save image '" + filename + "': " + str(e))
 
     def create_video_day(self, filename, stamp, date):
@@ -1987,16 +1991,16 @@ class BirdhouseCamera(threading.Thread):
             "active_streams": self.get_stream_count(),
             "error": self.error,
             "error_warn": self.error_msg,
-            "error_msg": self.error_msg,
+            "error_msg": ",\n".join(self.error_msg),
             "image_error": self.image.error,
-            "image_error_msg": self.image.error_msg,
+            "image_error_msg": ",\n".join(self.image.error_msg),
             "image_cache_size": self.config_cache_size,
             "record_image_error": self.record_image_error,
             "record_image_last": time.time() - self.record_image_last,
             "record_image_active": self.image_recording_active(current_time=-1, check_in_general=True),
             "record_image_last_compare": self.record_image_last_compare,
             "video_error": self.video.error,
-            "video_error_msg": self.video.error_msg,
+            "video_error_msg": ",\n".join(self.video.error_msg),
             "running": self.running
             }
         return status
