@@ -407,184 +407,212 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.redirect(redirect_app)
         elif self.path == "/app" or self.path == "/app/":
             self.redirect(redirect_app)
-
-        # REST API call :  /api/<cmd>/<camera>/param1>/<param2>
         elif self.path.startswith("/api/"):
-
-            logging.debug("GET API request with '" + self.path + "'.")
-            param = self.path.split("/")
-            command = param[2]
-            status = "Success"
-            version = {}
-
-            if len(param) > 3:
-                which_cam = param[3]
-
-            if command == "INDEX":
-                content = views.index(server=self)
-            elif command == "FAVORITES":
-                content = views.favorite_list(camera=which_cam)
-            elif command == "TODAY":
-                content = views.list(server=self)
-            elif command == "TODAY_COMPLETE":
-                content = views.complete_list_today(server=self)
-            elif command == "ARCHIVE":
-                content = views.archive_list(camera=which_cam)
-            elif command == "VIDEOS":
-                content = views.video_list(server=self)
-            elif command == "VIDEO_DETAIL":
-                content = views.detail_view_video(server=self)
-            elif command == "DEVICES":
-                content = views.camera_list(server=self)
-            elif command == "status" or command == "version":
-                content = views.index(server=self)
-                if len(param) > 3 and param[2] == "version":
-                    version["Code"] = "800"
-                    version["Msg"] = "Version OK."
-                    if param[3] != app_framework:
-                        version["Code"] = "802"
-                        version["Msg"] = "Update required."
-                content["last_answer"] = ""
-                if len(config.async_answers) > 0:
-                    content["last_answer"] = config.async_answers.pop()
-                    content["background_process"] = config.async_running
+            self.do_GET_api(self.path, which_cam)
+        elif '/image.jpg' in self.path:
+            self.do_GET_image(self.path, which_cam)
+        elif '/stream.mjpg' in self.path:
+            self.do_GET_stream(self.path, which_cam, which_cam2, further_param)
+        elif self.path.endswith('favicon.ico'):
+            self.stream_file(filetype='image/ico', content=read_image(directory='../app', filename=self.path))
+        elif self.path.startswith("/app/index.html"):
+            self.stream_file(filetype=file_types[".html"], content=read_html(directory="../app", filename="index.html"))
+        elif file_ending in file_types:
+            if "/images/" in self.path or "/videos/" in self.path or "/archive/" in self.path:
+                file_path = config.directories["data"]
             else:
-                content = {}
-                status = "Error: command not found."
+                file_path = "../"
+            if "text" in file_types[file_ending]:
+                self.stream_file(filetype=file_types[file_ending], content=read_html(directory=file_path, filename=self.path))
+            elif "application" in file_types[file_ending]:
+                self.stream_file(filetype=file_types[file_ending], content=read_html(directory=file_path, filename=self.path))
+            else:
+                self.stream_file(filetype=file_types[file_ending], content=read_image(directory=file_path, filename=self.path))
+        else:
+            self.error_404()
 
-            active_date = ""
-            if "active_date" in content:
-                active_date = content["active_date"]
+    def do_GET_api(self, path, which_cam):
+        """
+        create API response
+        """
+        logging.debug("GET API request with '" + path + "'.")
+        param = path.split("/")
+        command = param[2]
+        status = "Success"
+        version = {}
 
-            api_response = {
-                "STATUS": {
-                    "start_time": api_start,
-                    "current_time": config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
-                    "admin_allowed": self.admin_allowed(),
-                    "check-version": version,
-                    "api-call": status,
-                    "reload": False,
-                    "system": get_system_data(),
-                    "server": {
-                        "view_archive_loading": views.archive_loading,
-                        "view_favorite_loading": views.favorite_loading
-                    },
-                    "devices": {
-                        "cameras": {},
-                        "sensors": {},
-                        "weather": config.weather.get_weather_info("status"),
-                        "microphones": {}
-                    },
-                    "view": {
-                        "selected": which_cam,
-                        "active_cam": which_cam,
-                        "active_date": active_date,
-                        "active_page": command
-                    }
+        if len(param) > 3:
+            which_cam = param[3]
+
+        if command == "INDEX":
+            content = views.index(server=self)
+        elif command == "FAVORITES":
+            content = views.favorite_list(camera=which_cam)
+        elif command == "TODAY":
+            content = views.list(server=self)
+        elif command == "TODAY_COMPLETE":
+            content = views.complete_list_today(server=self)
+        elif command == "ARCHIVE":
+            content = views.archive_list(camera=which_cam)
+        elif command == "VIDEOS":
+            content = views.video_list(server=self)
+        elif command == "VIDEO_DETAIL":
+            content = views.detail_view_video(server=self)
+        elif command == "DEVICES":
+            content = views.camera_list(server=self)
+        elif command == "status" or command == "version":
+            content = views.index(server=self)
+            if len(param) > 3 and param[2] == "version":
+                version["Code"] = "800"
+                version["Msg"] = "Version OK."
+                if param[3] != app_framework:
+                    version["Code"] = "802"
+                    version["Msg"] = "Update required."
+            content["last_answer"] = ""
+            if len(config.async_answers) > 0:
+                content["last_answer"] = config.async_answers.pop()
+                content["background_process"] = config.async_running
+        else:
+            content = {}
+            status = "Error: command not found."
+
+        active_date = ""
+        if "active_date" in content:
+            active_date = content["active_date"]
+
+        api_response = {
+            "STATUS": {
+                "start_time": api_start,
+                "current_time": config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
+                "admin_allowed": self.admin_allowed(),
+                "check-version": version,
+                "api-call": status,
+                "reload": False,
+                "system": get_system_data(),
+                "server": {
+                    "view_archive_loading": views.archive_loading,
+                    "view_favorite_loading": views.favorite_loading
                 },
-                "API": api_description,
-                "WEATHER": config.weather.get_weather_info("all"),
-                "DATA": {}
-            }
+                "devices": {
+                    "cameras": {},
+                    "sensors": {},
+                    "weather": config.weather.get_weather_info("status"),
+                    "microphones": {}
+                },
+                "view": {
+                    "selected": which_cam,
+                    "active_cam": which_cam,
+                    "active_date": active_date,
+                    "active_page": command
+                }
+            },
+            "API": api_description,
+            "WEATHER": config.weather.get_weather_info("all"),
+            "DATA": {}
+        }
 
-            # collect data for "DATA" section
-            content["title"] = config.param["title"]
-            content["backup"] = config.param["backup"]
-            content["weather"] = config.param["weather"]
+        # collect data for "DATA" section
+        content["title"] = config.param["title"]
+        content["backup"] = config.param["backup"]
+        content["weather"] = config.param["weather"]
 
-            # delete values not required in API response
-            if "links_json" in content:
-                content["links"] = content["links_json"]
-            if "links_json" in content:
-                del content["links_json"]
-            if "file_list" in content:
-                del content["file_list"]
-            if "active_date" in content:
-                del content["active_date"]
+        # delete values not required in API response
+        if "links_json" in content:
+            content["links"] = content["links_json"]
+        if "links_json" in content:
+            del content["links_json"]
+        if "file_list" in content:
+            del content["file_list"]
+        if "active_date" in content:
+            del content["active_date"]
 
-            # server configuration and status
-            content["server"] = config.param["server"]
-            if content["server"]["database_type"] == "couch":
-                if config.db_handler.couch is not None:
-                    content["server"]["database_couch_connect"] = config.db_handler.couch.connected
-                else:
-                    content["server"]["database_couch_connect"] = False
-                api_response["STATUS"]["server"]["database"] = {
-                    "connect": content["server"]["database_couch_connect"],
-                    "type": content["server"]["database_type"]
-                    }
-
-            # ensure localization data are available
-            if "localization" in config.param:
-                content["localization"] = config.param["localization"]
-                if "language" not in config.param["localization"]:
-                    content["localization"]["language"] = "EN"
+        # server configuration and status
+        content["server"] = config.param["server"]
+        if content["server"]["database_type"] == "couch":
+            if config.db_handler.couch is not None:
+                content["server"]["database_couch_connect"] = config.db_handler.couch.connected
             else:
-                content["localization"] = birdhouse_preset["localization"]
-
-            # get microphone data and create streaming information
-            micro_data = config.param["devices"]["microphones"].copy()
-            for key in micro_data:
-                api_response["STATUS"]["devices"]["microphones"][key] = {"status": "not implemented yet"}
-                if config.param["server"]["ip4_stream_audio"] == "":
-                    micro_data[key]["stream_server"] = config.param["server"]["ip4_address"]
-                else:
-                    micro_data[key]["stream_server"] = config.param["server"]["ip4_stream_audio"]
-                micro_data[key]["stream_server"] += ":" + str(micro_data[key]["port"])
-
-            # get camera data and create streaming information
-            camera_data = config.param["devices"]["cameras"].copy()
-            for key in camera_data:
-                if key in camera:
-                    api_response["STATUS"]["devices"]["cameras"][key] = camera[key].get_camera_status()
-                    camera_data[key]["video"]["stream"] = "/stream.mjpg?" + key
-                    camera_data[key]["video"]["stream_pip"] = "/pip/stream.mjpg?" + key + "+{2nd-camera-key}"
-                    camera_data[key]["video"]["stream_lowres"] = "/lowres/stream.mjpg?" + key
-                    camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
-                    camera_data[key]["device"] = "camera"
-                    camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
-                    camera_data[key]["image"]["current_streams"] = camera[key].get_stream_count()
-                    camera_data[key]["image"]["current_streams_detail"] = camera[key].image_streams
-                    camera_data[key]["status"] = camera[key].get_camera_status()
-                    if config.param["server"]["ip4_stream_video"] == "":
-                        camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_address"]
-                    else:
-                        camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_stream_video"]
-                    camera_data[key]["video"]["stream_server"] += ":" + str(config.param["server"]["port_video"])
-
-            # get sensor data
-            sensor_data = config.param["devices"]["sensors"].copy()
-            for key in sensor_data:
-                api_response["STATUS"]["devices"]["sensors"][key] = sensor[key].get_status()
-                sensor_data[key]["values"] = {}
-                sensor_data[key]["status"] = {"error": False}
-                if key in sensor and sensor[key].error:
-                    sensor_data[key]["status"] = sensor[key].get_status()
-                if key in sensor and sensor[key].running:
-                    sensor_data[key]["values"] = sensor[key].get_values()
-                else:
-                    logging.debug("Sensor not available: "+key)
-                    sensor_data[key]["status"] = sensor[key].get_status()
-
-            content["devices"] = {
-                "cameras": camera_data,
-                "sensors": sensor_data,
-                "microphones": micro_data
+                content["server"]["database_couch_connect"] = False
+            api_response["STATUS"]["server"]["database"] = {
+                "connect": content["server"]["database_couch_connect"],
+                "type": content["server"]["database_type"]
             }
 
-            api_response["DATA"] = content
+        # ensure localization data are available
+        if "localization" in config.param:
+            content["localization"] = config.param["localization"]
+            if "language" not in config.param["localization"]:
+                content["localization"]["language"] = "EN"
+        else:
+            content["localization"] = birdhouse_preset["localization"]
 
-            self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'),
-                             no_cache=True)
+        # get microphone data and create streaming information
+        micro_data = config.param["devices"]["microphones"].copy()
+        for key in micro_data:
+            api_response["STATUS"]["devices"]["microphones"][key] = {"status": "not implemented yet"}
+            if config.param["server"]["ip4_stream_audio"] == "":
+                micro_data[key]["stream_server"] = config.param["server"]["ip4_address"]
+            else:
+                micro_data[key]["stream_server"] = config.param["server"]["ip4_stream_audio"]
+            micro_data[key]["stream_server"] += ":" + str(micro_data[key]["port"])
 
+        # get camera data and create streaming information
+        camera_data = config.param["devices"]["cameras"].copy()
+        for key in camera_data:
+            if key in camera:
+                api_response["STATUS"]["devices"]["cameras"][key] = camera[key].get_camera_status()
+                camera_data[key]["video"]["stream"] = "/stream.mjpg?" + key
+                camera_data[key]["video"]["stream_pip"] = "/pip/stream.mjpg?" + key + "+{2nd-camera-key}"
+                camera_data[key]["video"]["stream_lowres"] = "/lowres/stream.mjpg?" + key
+                camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
+                camera_data[key]["device"] = "camera"
+                camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
+                camera_data[key]["image"]["current_streams"] = camera[key].get_stream_count()
+                camera_data[key]["image"]["current_streams_detail"] = camera[key].image_streams
+                camera_data[key]["status"] = camera[key].get_camera_status()
+                if config.param["server"]["ip4_stream_video"] == "":
+                    camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_address"]
+                else:
+                    camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_stream_video"]
+                camera_data[key]["video"]["stream_server"] += ":" + str(config.param["server"]["port_video"])
+
+        # get sensor data
+        sensor_data = config.param["devices"]["sensors"].copy()
+        for key in sensor_data:
+            api_response["STATUS"]["devices"]["sensors"][key] = sensor[key].get_status()
+            sensor_data[key]["values"] = {}
+            sensor_data[key]["status"] = {"error": False}
+            if key in sensor and sensor[key].error:
+                sensor_data[key]["status"] = sensor[key].get_status()
+            if key in sensor and sensor[key].running:
+                sensor_data[key]["values"] = sensor[key].get_values()
+            else:
+                logging.debug("Sensor not available: " + key)
+                sensor_data[key]["status"] = sensor[key].get_status()
+
+        content["devices"] = {
+            "cameras": camera_data,
+            "sensors": sensor_data,
+            "microphones": micro_data
+        }
+
+        api_response["DATA"] = content
+
+        self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'),
+                         no_cache=True)
+
+    def do_GET_image(self, path, which_cam):
+        """
+        create images as response
+        """
         # show compared images
-        elif '/compare/' in self.path and '/image.jpg' in self.path:
-            logging.info("---------------------> compare")
+        if '/compare/' in path and '/image.jpg' in path:
+            logging.debug("Compare: Create and return image that shows differences to the former image ...")
             filename = os.path.join(config.db_handler.directory("images"), "_image_diff_" + which_cam + ".jpg")
-            param = self.path.split("?")
+            param = path.split("?")
             param = param[0].split("/")
-            logging.info("---->" + param[2])
-            logging.info("---->" + param[3])
+            logging.debug("---->" + param[2])
+            logging.debug("---->" + param[3])
 
             filename_1st = "image_" + which_cam + "_big_"+param[2]+".jpeg"
             filename_2nd = "image_" + which_cam + "_big_"+param[3]+".jpeg"
@@ -604,8 +632,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.stream_file(filetype='image/jpeg',
                              content=read_image(directory="../data/images/", filename=filename_diff))
 
-            # ==============================> in progress
-
         # extract and show single image (creates images with a longer delay ?)
         elif '/image.jpg' in self.path:
             filename = "_image_temp_" + which_cam + ".jpg"
@@ -615,143 +641,132 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.stream_file(filetype='image/jpeg',
                              content=read_image(directory="../data/images/", filename=filename))
 
-        # show live streams
-        elif '/stream.mjpg' in self.path:
-            if camera[which_cam].type != "pi" and camera[which_cam].type != "usb" and \
-                    camera[which_cam].type != "default":
-                logging.warning("Unknown type of camera (" + camera[which_cam].type + "/" +
-                                camera[which_cam].name + ")")
-                self.error_404()
-                return
-
-            self.stream_video_header()
-
-            stream_lowres = False
-            stream_pip = False
-            stream_active = True
-            stream_id_int = datetime.now().timestamp()
-            stream_id_ext = "&".join(further_param)
-
-            stream_wait_while_error = 0.5
-            stream_wait_while_recording = 1
-            stream_wait_while_streaming = 0.01
-
-            if '/lowres/stream.mjpg' in self.path:
-                stream_lowres = True
-            if '/pip/stream.mjpg' in self.path:
-                stream_pip = True
-
-            while stream_active:
-
-                if camera[which_cam].get_stream_kill(stream_id_ext):
-                    stream_active = False
-                if config.update["camera_"+which_cam]:
-                    camera[which_cam].update_main_config()
-
-                if self.path.startswith("/detection/"):
-                    frame_raw = camera[which_cam].get_stream_raw(normalize=False, stream_id=stream_id_int,
-                                                                 lowres=stream_lowres)
-                elif stream_pip and which_cam2 != "":
-                    frame_raw = camera[which_cam].get_stream_raw(normalize=True, stream_id=stream_id_int,
-                                                                 lowres=False)
-                    if which_cam2 in camera:
-                        frame_raw2 = camera[which_cam2].get_stream_raw(normalize=True, stream_id=stream_id_int,
-                                                                       lowres=True)
-                        frame_raw = camera[which_cam].image.image_in_image_raw(frame_raw, frame_raw2)
-
-                else:
-                    frame_raw = camera[which_cam].get_stream_raw(normalize=True, stream_id=stream_id_int,
-                                                                 lowres=stream_lowres)
-
-                if not camera[which_cam].error and not camera[which_cam].image.error:
-                    if self.path.startswith("/detection/"):
-                        if "black_white" in camera[which_cam].param["image"] and \
-                                camera[which_cam].param["image"]["black_white"]:
-                            frame_raw = camera[which_cam].image.convert_to_gray_raw(frame_raw)
-                            frame_raw = camera[which_cam].image.convert_from_gray_raw(frame_raw)
-                        if camera[which_cam].param["image"]["date_time"]:
-                            frame_raw = camera[which_cam].image.draw_date_raw(raw=frame_raw,
-                                                                              offset=camera[which_cam].param["image"]["crop_area"])
-                        frame_raw = camera[which_cam].show_areas_raw(image=frame_raw)
-
-                    else:
-                        if camera[which_cam].param["image"]["date_time"] and not stream_lowres:
-                            frame_raw = camera[which_cam].image.draw_date_raw(frame_raw)
-
-                        if camera[which_cam].video.recording and not stream_lowres:
-                            logging.debug("VIDEO RECORDING")
-                            length = str(round(camera[which_cam].video.record_info()["length"]))
-                            framerate = str(round(camera[which_cam].video.record_info()["framerate"]))
-                            y_position = camera[which_cam].image_size[1] - 40
-                            frame_raw = camera[which_cam].image.draw_text_raw(frame_raw, "Recording", position=(20, y_position),
-                                                                              color=(0, 0, 255), scale=1, thickness=2)
-                            frame_raw = camera[which_cam].image.draw_text_raw(frame_raw, "(" + length + "s/" + framerate + "fps)",
-                                                                              position=(200, y_position), color=(0, 0, 255),
-                                                                              scale=0.5, thickness=1)
-
-                        if camera[which_cam].video.processing and not stream_lowres:
-                            logging.debug("VIDEO PROCESSING")
-                            length = str(round(camera[which_cam].video.record_info()["length"]))
-                            image_size = str(camera[which_cam].video.record_info()["image_size"])
-                            y_position = camera[which_cam].image_size[1] - 40
-                            frame_raw = camera[which_cam].image.draw_text_raw(frame_raw, "Processing", position=(20, y_position),
-                                                                              color=(0, 255, 255), scale=1, thickness=2)
-                            frame_raw = camera[which_cam].image.draw_text_raw(frame_raw, "(" + length + "s/" + image_size + ")",
-                                                                              position=(200, y_position), color=(0, 255, 255),
-                                                                              scale=0.5, thickness=1)
-
-                try:
-                    frame = camera[which_cam].image.convert_from_raw(frame_raw)
-                    camera[which_cam].camera_wait_recording()
-                    self.stream_video_frame(frame)
-                    if not stream_active:
-                        self.stream_video_end()
-                        logging.info("Closed streaming client: " + stream_id_ext)
-
-                except Exception as e:
-                    stream_active = False
-                    if "Errno 104" in str(e) or "Errno 32" in str(e):
-                        logging.debug('Removed streaming client %s: %s', self.client_address, str(e))
-                    else:
-                        logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
-
-                if camera[which_cam].error or camera[which_cam].image.error:
-                    time.sleep(stream_wait_while_error)
-                else:
-                    time.sleep(stream_wait_while_streaming)
-                    for key in camera:
-                        if not camera[key].error:
-                            if camera[key].video.processing:
-                                time.sleep(stream_wait_while_recording)
-                                break
-                            if camera[key].video.recording:
-                                time.sleep(stream_wait_while_recording)
-                                break
-
-        # favicon
-        elif self.path.endswith('favicon.ico'):
-            self.stream_file(filetype='image/ico', content=read_image(directory='../app', filename=self.path))
-
-        # main app
-        elif self.path.startswith("/app/index.html"):
-            self.stream_file(filetype=file_types[".html"], content=read_html(directory="../app", filename="index.html"))
-
-        # images, js, css, ...
-        elif file_ending in file_types:
-            if "/images/" in self.path or "/videos/" in self.path or "/archive/" in self.path:
-                file_path = config.directories["data"]
-            else:
-                file_path = "../"
-            if "text" in file_types[file_ending]:
-                self.stream_file(filetype=file_types[file_ending], content=read_html(directory=file_path, filename=self.path))
-            elif "application" in file_types[file_ending]:
-                self.stream_file(filetype=file_types[file_ending], content=read_html(directory=file_path, filename=self.path))
-            else:
-                self.stream_file(filetype=file_types[file_ending], content=read_image(directory=file_path, filename=self.path))
-
-        # request unknown
-        else:
+    def do_GET_stream(self, path, which_cam, which_cam2, further_param):
+        """
+        create stream
+        """
+        if camera[which_cam].type != "pi" and camera[which_cam].type != "usb" and \
+                camera[which_cam].type != "default":
+            logging.warning("Unknown type of camera (" + camera[which_cam].type + "/" +
+                            camera[which_cam].name + ")")
             self.error_404()
+            return
+
+        self.stream_video_header()
+
+        stream_lowres = False
+        stream_pip = False
+        stream_active = True
+        stream_id_int = datetime.now().timestamp()
+        stream_id_ext = "&".join(further_param)
+
+        stream_wait_while_error = 0.5
+        stream_wait_while_recording = 1
+        stream_wait_while_streaming = 0.01
+
+        if '/lowres/stream.mjpg' in path:
+            stream_lowres = True
+        if '/pip/stream.mjpg' in path:
+            stream_pip = True
+
+        while stream_active:
+
+            if camera[which_cam].get_stream_kill(stream_id_ext):
+                stream_active = False
+            if config.update["camera_" + which_cam]:
+                camera[which_cam].update_main_config()
+
+            if path.startswith("/detection/"):
+                frame_raw = camera[which_cam].get_stream_raw(normalize=False, stream_id=stream_id_int,
+                                                             lowres=stream_lowres)
+            elif stream_pip and which_cam2 != "":
+                frame_raw = camera[which_cam].get_stream_raw(normalize=True, stream_id=stream_id_int,
+                                                             lowres=False)
+                if which_cam2 in camera:
+                    frame_raw2 = camera[which_cam2].get_stream_raw(normalize=True, stream_id=stream_id_int,
+                                                                   lowres=True)
+                    frame_raw = camera[which_cam].image.image_in_image_raw(frame_raw, frame_raw2)
+
+            else:
+                frame_raw = camera[which_cam].get_stream_raw(normalize=True, stream_id=stream_id_int,
+                                                             lowres=stream_lowres)
+
+            if not camera[which_cam].error and not camera[which_cam].image.error:
+                if path.startswith("/detection/"):
+                    if "black_white" in camera[which_cam].param["image"] and \
+                            camera[which_cam].param["image"]["black_white"]:
+                        frame_raw = camera[which_cam].image.convert_to_gray_raw(frame_raw)
+                        frame_raw = camera[which_cam].image.convert_from_gray_raw(frame_raw)
+                    if camera[which_cam].param["image"]["date_time"]:
+                        frame_raw = camera[which_cam].image.draw_date_raw(raw=frame_raw,
+                                                                          offset=camera[which_cam].param["image"][
+                                                                              "crop_area"])
+                    frame_raw = camera[which_cam].show_areas_raw(image=frame_raw)
+
+                else:
+                    if camera[which_cam].param["image"]["date_time"] and not stream_lowres:
+                        frame_raw = camera[which_cam].image.draw_date_raw(frame_raw)
+
+                    if camera[which_cam].video.recording and not stream_lowres:
+                        logging.debug("VIDEO RECORDING")
+                        length = str(round(camera[which_cam].video.record_info()["length"]))
+                        framerate = str(round(camera[which_cam].video.record_info()["framerate"]))
+                        y_position = camera[which_cam].image_size[1] - 40
+                        frame_raw = camera[which_cam].image.draw_text_raw(frame_raw, "Recording",
+                                                                          position=(20, y_position),
+                                                                          color=(0, 0, 255), scale=1, thickness=2)
+                        frame_raw = camera[which_cam].image.draw_text_raw(frame_raw,
+                                                                          "(" + length + "s/" + framerate + "fps)",
+                                                                          position=(200, y_position), color=(0, 0, 255),
+                                                                          scale=0.5, thickness=1)
+
+                    if camera[which_cam].video.processing and not stream_lowres:
+                        logging.debug("VIDEO PROCESSING")
+                        length = str(round(camera[which_cam].video.record_info()["length"]))
+                        image_size = str(camera[which_cam].video.record_info()["image_size"])
+                        y_position = camera[which_cam].image_size[1] - 40
+                        frame_raw = camera[which_cam].image.draw_text_raw(frame_raw, "Processing",
+                                                                          position=(20, y_position),
+                                                                          color=(0, 255, 255), scale=1, thickness=2)
+                        frame_raw = camera[which_cam].image.draw_text_raw(frame_raw,
+                                                                          "(" + length + "s/" + image_size + ")",
+                                                                          position=(200, y_position),
+                                                                          color=(0, 255, 255),
+                                                                          scale=0.5, thickness=1)
+
+            try:
+                frame = camera[which_cam].image.convert_from_raw(frame_raw)
+                camera[which_cam].camera_wait_recording()
+                self.stream_video_frame(frame)
+                if not stream_active:
+                    self.stream_video_end()
+                    logging.info("Closed streaming client: " + stream_id_ext)
+
+            except Exception as e:
+                stream_active = False
+                if "Errno 104" in str(e) or "Errno 32" in str(e):
+                    logging.debug('Removed streaming client %s: %s', self.client_address, str(e))
+                else:
+                    logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
+
+            if camera[which_cam].error or camera[which_cam].image.error:
+                time.sleep(stream_wait_while_error)
+            else:
+                time.sleep(stream_wait_while_streaming)
+                for key in camera:
+                    if not camera[key].error:
+                        if camera[key].video.processing:
+                            time.sleep(stream_wait_while_recording)
+                            break
+                        if camera[key].video.recording:
+                            time.sleep(stream_wait_while_recording)
+                            break
+
+    def do_GET_files(self):
+        """
+        create API response
+        """
+        return
 
 
 if __name__ == "__main__":
