@@ -959,7 +959,7 @@ class BirdhouseConfig(threading.Thread):
 
         # set database type if not JSON
         self.db_type = self.param["server"]["database_type"]
-        if self.db_type != "json" and self.param_init["db_type"] != "json":
+        if self.db_type != "json" and ("db_type" not in self.param_init or self.param_init["db_type"] != "json"):
             self.db_handler = BirdhouseConfigDBHandler(self.db_type, main_directory)
 
         self.queue = BirdhouseConfigQueue(config=self, db_handler=self.db_handler)
