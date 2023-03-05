@@ -3,10 +3,7 @@
 //--------------------------------------
 // show and edit device information
 //--------------------------------------
-/* INDEX:
-function birdhouseDevices( title, data )
-*/
-//--------------------------------------
+
 
 function birdhouseWeather( title, data ) {
 
@@ -36,10 +33,12 @@ function birdhouseWeather( title, data ) {
     var current_icon = "<center><font style='font-size:80px;'><big>" + weather_today["description_icon"] + "</big></font>"
                        + "<br/>" + weather_today["description"] + "</center>";
     var current_weather = tab.start();
-    if (weather["info_city"] != "") {
-        current_weather += tab.row(lang("LOCATION") + ":",  weather["info_city"]);
+    if (weather["info_position"].length <= 2) {
+        current_weather += tab.row(lang("LOCATION") + ":",  data["STATUS"]["devices"]["weather"]["gps_location"]);
         }
-    current_weather += tab.row(lang("GPS_LOCATION")+":", weather["info_position"][2]);
+    else {
+        current_weather += tab.row(lang("GPS_LOCATION")+":", weather["info_position"][2]);
+        }
     current_weather += tab.row(lang("GPS_POSITION")+":", "("+weather["info_position"][0]+", "+weather["info_position"][1]+")");
     current_weather += tab.row(lang("SUNRISE") +":",    weather_3day["today"]["sunrise"]);
     current_weather += tab.row(lang("SUNSET")+":",      weather_3day["today"]["sunset"]);
@@ -108,5 +107,8 @@ function birdhouseWeather( title, data ) {
 
     html_weather += "<br/>&nbsp;<br/>";
 
+    var title = "<div id='status_error_WEATHER' style='float:left'><div id='black'></div></div>";
+    title += "<center><h2>" + lang("WEATHER") + "&nbsp;&nbsp;&nbsp;&nbsp;</h2></center>";
+    setTextById(app_frame_header, title);
 	setTextById(app_frame_content, html_weather);
 }

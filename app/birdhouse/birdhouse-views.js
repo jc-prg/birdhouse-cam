@@ -302,5 +302,12 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
    			    }
 			}
 		}
+
+    // Add Status Information
+    if (active_page == "TODAY_COMPLETE" || (active_page == "TODAY" && active_date == "")) {
+        title = getTextById(app_frame_header);
+        title = "<div id='status_error_record_"+app_active_cam+"' style='float:left;'><div id='black'></div></div>" + title;
+        setTextById(app_frame_header, title);
+    }
 	setTextById(app_frame_content, html);
 	}
