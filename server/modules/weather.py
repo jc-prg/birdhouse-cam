@@ -524,17 +524,24 @@ class BirdhouseWeather(threading.Thread):
         last_update = 0
         while self._running:
 
+            # if shutdown
+            if self.config.shut_down:
+                self.stop()
+
+            # if config update or new day
             self.error = False
             if self.update or self.initial_date != self.config.local_time().strftime("%Y%m%d"):
                 self.update = False
                 self.connect(self.config.param["weather"])
                 self.initial_date = self.config.local_time().strftime("%Y%m%d")
 
+            # if paused
             if self._paused:
                 self.weather_info = self.weather_empty.copy()
                 self.weather_info["info_status"]["running"] = "paused"
                 last_update = 0
 
+            # last update has been a while
             elif last_update + self.update_time < time.time():
                 self.logging.info("Read weather data ...")
                 last_update = time.time()
@@ -564,6 +571,7 @@ class BirdhouseWeather(threading.Thread):
         stop weather loop
         """
         self._running = False
+        self.module.stop()
 
     def active(self, active):
         """

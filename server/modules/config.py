@@ -905,6 +905,7 @@ class BirdhouseConfig(threading.Thread):
         self.queue = None
         self._running = True
         self._paused = False
+        self.shut_down = False
 
         self.logging = logging.getLogger("config")
         self.logging.setLevel = birdhouse_loglevel
@@ -1116,5 +1117,14 @@ class BirdhouseConfig(threading.Thread):
         """
         date_tz_info = timezone(timedelta(hours=self.timezone))
         return datetime.now(date_tz_info)
+
+    def force_shutdown(self):
+        """
+        shut down main services and then exit -> if docker, then restart will follow
+        Final kill is done in the server component -> StreamingHandler.do_GET
+        """
+        self.logging.info("STOPPING THE RUNNING THREADS ...")
+        self.shut_down = True
+        self.stop()
 
 

@@ -648,19 +648,21 @@ class BirdhouseImageProcessing(object):
 
         return round(score * 100, 1)
 
-    @staticmethod
-    def compare_raw_show(image_1st, image_2nd):
+    def compare_raw_show(self, image_1st, image_2nd):
         """
         show in an image where the differences are
         """
-        # image_1st = cv2.cvtColor(image_1st, cv2.COLOR_BGR2GRAY)
-        # image_2nd = cv2.cvtColor(image_2nd, cv2.COLOR_BGR2GRAY)
+        #image_1st = cv2.cvtColor(image_1st, cv2.COLOR_BGR2GRAY)
+        #image_2nd = cv2.cvtColor(image_2nd, cv2.COLOR_BGR2GRAY)
         image_diff = cv2.subtract(image_1st, image_2nd)
 
         # color the mask red
         Conv_hsv_Gray = cv2.cvtColor(image_diff, cv2.COLOR_BGR2GRAY)
         ret, mask = cv2.threshold(Conv_hsv_Gray, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
         image_diff[mask != 255] = [0, 0, 255]
+
+        image_diff = self.draw_area_raw(raw=image_diff, area=self.param["similarity"]["detection_area"],
+                                        color=(0, 255, 255))
 
         return image_diff
 
@@ -1291,6 +1293,7 @@ class BirdhouseCamera(threading.Thread):
         self.previous_stamp = "000000"
         self.record_image_last = time.time()
         self.record_image_last_string = ""
+        self.record_image_last_compare = ""
         self.record_image_error = False
 
         self.logging.info("Initializing camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
@@ -1320,6 +1323,10 @@ class BirdhouseCamera(threading.Thread):
             stamp = current_time.strftime('%H%M%S')
             self.config_update = self.config.update["camera_" + self.id]
 
+            # if shutdown
+            if self.config.shut_down:
+                self.stop()
+
             # if error reload from time to time
             if self.active and self.error and (reload_time + reload_time_error) < time.time():
                 self.logging.info("....... RELOAD Error: " + self.id + " - " +
@@ -1332,7 +1339,7 @@ class BirdhouseCamera(threading.Thread):
             if self.record and self.record_image_last > 0 and \
                     (self.record_image_last + reload_time_error_record) < time.time():
                 self.logging.info("....... RELOAD Record Error: " + self.id + " - " +
-                                  str(self.record_image_last + reload_time_error_record) + " > " +
+                                  str(self.record_image_last + reload_time_error_record) + " < " +
                                   str(time.time()))
                 self.record_image_last = time.time()
                 self.record_image_error = True
@@ -1484,7 +1491,6 @@ class BirdhouseCamera(threading.Thread):
         Stop recording
         """
         if not self.error and self.active:
-            self.camera.stop()
             self.cameraFPS.stop()
 
             if self.video:
@@ -1710,11 +1716,16 @@ class BirdhouseCamera(threading.Thread):
         """
         check if image recording is active
         """
+        is_active = False
+        if check_in_general:
+            self.record_image_last_compare = ""
+
         if current_time == -1:
             current_time = self.config.local_time()
         second = current_time.strftime('%S')
         minute = current_time.strftime('%M')
         hour = current_time.strftime('%H')
+        current_time_string = current_time.strftime("%Y-%m-%d_%H:%M:%S")
 
         self.logging.debug("Check if record ... " + str(hour) + "/" + str(minute) + "/" + str(second) + " ...")
 
@@ -1731,15 +1742,18 @@ class BirdhouseCamera(threading.Thread):
                         " -> RECORD TRUE "+self.id+" (" + str(record_from_hour) + ":" + str(record_from_minute) + "-" +
                         str(record_to_hour) + ":" + str(record_to_minute) + ") " +
                         str(hour) + "/" + str(minute) + "/" + str(second))
-                    return True
+                    if check_in_general:
+                        self.record_image_last_compare = "OLD|"
+                    is_active = True
 
             # new detection
-            if "record_from" in self.param["image_save"] and "record_to" in self.param["image_save"]:
+            elif "record_from" in self.param["image_save"] and "record_to" in self.param["image_save"]:
 
-                if "today" in self.config.weather.weather_info["forecast"] and \
-                        "sunrise" in self.config.weather.weather_info["forecast"]["today"]:
-                    self.weather_sunrise = self.config.weather.weather_info["forecast"]["today"]["sunrise"]
-                    self.weather_sunset = self.config.weather.weather_info["forecast"]["today"]["sunset"]
+                if self.config.weather is not None:
+                    if "today" in self.config.weather.weather_info["forecast"] and \
+                            "sunrise" in self.config.weather.weather_info["forecast"]["today"]:
+                        self.weather_sunrise = self.config.weather.weather_info["forecast"]["today"]["sunrise"]
+                        self.weather_sunset = self.config.weather.weather_info["forecast"]["today"]["sunset"]
 
                 record_from = self.param["image_save"]["record_from"]
                 record_to = self.param["image_save"]["record_to"]
@@ -1787,11 +1801,17 @@ class BirdhouseCamera(threading.Thread):
                             " -> RECORD TRUE "+self.id+"  (" + str(record_from_hour) + ":" + str(record_from_minute) + "-" +
                             str(record_to_hour) + ":" + str(record_to_minute) + ") " +
                             str(hour) + "/" + str(minute) + "/" + str(second) + "  < -----")
-                        return True
+                        is_active = True
 
         self.logging.debug(" -> RECORD FALSE "+self.id+" (" + str(record_from_hour) + ":" + str(record_from_minute) +
                            "-" + str(record_to_hour) + ":" + str(record_to_minute) + ")")
-        return False
+
+        if check_in_general:
+            self.record_image_last_compare += "[" +str(is_active) + "|" + current_time_string + "] [from=" + str(record_from_hour)
+            self.record_image_last_compare += ":" + str(record_from_minute) + "|to=" + str(record_to_hour) + ":"
+            self.record_image_last_compare += str(record_to_minute) + "]"
+
+        return is_active
 
     def image_differs(self, file_info):
         """
@@ -1974,6 +1994,7 @@ class BirdhouseCamera(threading.Thread):
             "record_image_error": self.record_image_error,
             "record_image_last": time.time() - self.record_image_last,
             "record_image_active": self.image_recording_active(current_time=-1, check_in_general=True),
+            "record_image_last_compare": self.record_image_last_compare,
             "video_error": self.video.error,
             "video_error_msg": self.video.error_msg,
             "running": self.running

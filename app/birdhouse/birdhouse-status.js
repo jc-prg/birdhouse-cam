@@ -60,6 +60,7 @@ function birdhouseStatus_print(data) {
     setTextById("system_info_cpu_usage",        (Math.round(data["STATUS"]["system"]["cpu_usage"]*10)/10)+"%")
     setTextById("system_info_cpu_temperature",  (Math.round(data["STATUS"]["system"]["cpu_temperature"]*10)/10)+"°C")
     setTextById("system_info_connection",       "Connected");
+    setTextById("system_info_start_time",       data["STATUS"]["start_time"]);
 
     var cpu_details = "";
     for (var i=0;i<data["STATUS"]["system"]["cpu_usage_detail"].length;i++) {
@@ -77,8 +78,10 @@ function birdhouseStatus_print(data) {
         setTextById("error_cam_"+camera, camera_status[camera]["error_msg"]);
         setTextById("error_img_"+camera, camera_status[camera]["image_error_msg"]);
         setTextById("error_rec_"+camera, camera_status[camera]["record_image_error"]);
-        setTextById("last_image_recorded_"+camera, Math.round(camera_status[camera]["record_image_last"]*10)/10 +
-                    "s (error=" + cameras[camera]["status"]["record_image_error"] + ")");
+        setTextById("last_image_recorded_"+camera, Math.round(camera_status[camera]["record_image_last"]*10)/10 + "s" +
+                    "<br/>(active=" + cameras[camera]["status"]["record_image_active"] + ";" +
+                    "error=" + cameras[camera]["status"]["record_image_error"] + ";" +
+                    "compare='" + cameras[camera]["status"]["record_image_last_compare"] + "')");
 
         if (camera_status[camera]["error"] || camera_status[camera]["image_error"]) {
             setHeaderColor(header_id=camera+"_error", header_color=header_color_error);

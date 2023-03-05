@@ -157,12 +157,17 @@ class BirdhouseViews(threading.Thread):
         count_rebuild = 60*5
         self.logging.info("Starting HTML views and REST API for GET ...")
         while self._running:
+            # if shutdown
+            if self.config.shut_down:
+                self.stop()
 
+            # if archive to be read again
             if self.create_archive or count > count_rebuild or self.config.update_views["archive"]:
                 self.archive_list_create()
                 self.create_archive = False
                 self.config.update_views["archive"] = False
 
+            # if favorites to be read again
             if self.create_favorites or count > count_rebuild or self.config.update_views["favorite"]:
                 self.favorite_list_create()
                 self.create_favorites = False

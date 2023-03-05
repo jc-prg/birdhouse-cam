@@ -134,6 +134,7 @@ function birdhouse_app_settings (name="Settings") {
         html_entry += this.tab.row("API Calls", api_call);
 
         api_call    = "<button onclick='birdhouse_forceBackup();' style='"+button_style+"';>Force Backup</button>";
+        api_call   += "<button onclick='birdhouse_forceRestart();' style='"+button_style+"';>Force Restart</button>";
         api_call   += "<button onclick='birdhouse_recreateImageConfig();' style='"+button_style+"';>NewImgCfg</button>";
         api_call   += "<button onclick='appFW.requestAPI(\"POST\",[\"check-timeout\"],\"\",\"\",\"\");' style='"+button_style+"';>Timeout</button>";
         html_entry += this.tab.row("API Commands", api_call);
@@ -153,7 +154,7 @@ function birdhouse_app_settings (name="Settings") {
 		html_entry += this.tab.row("App:",	"<a href='/app/index.html?INFO' target='_blank'>"+ app_title + "</a>");
 		html_entry += this.tab.row("Versions:",
 						"App: " 		+ app_version + "<br/>" +
-						"API: " 		+ app_api_version + "<br/>" +
+						"API: " 		+ app_data["API"]["version"] + "<br/>" +
 						"jcMsg: " 		+ appMsg.appVersion + "<br/>" +
 						"jcApp: "		+ appFW.appVersion);
 		html_entry += this.tab.row("Source:","<a href='https://github.com/jc-prg/birdhouse-cam/' target='_blank'>https://github.com/jc-prg/birdhouse-cam/</a>");
@@ -190,6 +191,7 @@ function birdhouse_app_settings (name="Settings") {
 	this.server_information = function () {
         var html_entry = this.tab.start();
     	html_entry += this.tab.row("Server Connection:",   "<div id='system_info_connection'>please wait ...</div>");
+    	html_entry += this.tab.row("Server start time:",   "<div id='system_info_start_time'>please wait ...</div>");
     	html_entry += this.tab.row("Active Streams:",      "<div id='system_active_streams'>please wait ...</div>");
     	html_entry += this.tab.row("Active Database:",     "<div id='system_info_database'>please wait ...</div>");
     	html_entry += this.tab.row("CPU Temperature:",     "<div id='system_info_cpu_temperature'>please wait ...</div>");

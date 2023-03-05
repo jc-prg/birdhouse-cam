@@ -74,6 +74,10 @@ class BirdhouseSensor(threading.Thread):
             p_count = 0
             count += 1
 
+            # if shutdown
+            if self.config.shut_down:
+                self.stop()
+
             # wait if paused
             while self._paused:
                 if p_count == 0:
@@ -143,6 +147,12 @@ class BirdhouseSensor(threading.Thread):
         # GPIO.cleanup()
         self.logging.info("Stopped sensor (" + self.id + "/"+self.param["type"]+").")
 
+    def stop(self):
+        """
+        Stop sensors
+        """
+        self.running = False
+
     def connect(self):
         """
         connect with sensor
@@ -208,12 +218,6 @@ class BirdhouseSensor(threading.Thread):
             self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
             self.error_msg += " - No sensor available: requires Raspberry Pi / activate 'rpi_active' in config file."
             self.logging.info(self.error_msg)
-
-    def stop(self):
-        """
-        Stop sensors
-        """
-        self.running = False
 
     def pause(self, value):
         """

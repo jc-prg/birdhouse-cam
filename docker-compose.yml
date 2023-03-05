@@ -33,7 +33,7 @@ services:
       - "${BIRDHOUSE_HTTP_PORT:-8000}:8000"
     depends_on:
       - birdhouse_db
-    restart: on-failure
+    restart: always
     networks:
       my-net:
         ipv4_address: 192.168.202.4

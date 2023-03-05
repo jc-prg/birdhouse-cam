@@ -35,6 +35,15 @@ function birdhouse_forceBackup(camera) {
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
 	}
 
+function birdhouse_forceRestart() {
+    appMsg.confirm("Restart Birdhouse-Server?", "birdhouse_forceRestart_exec();", 250);
+    }
+
+function birdhouse_forceRestart_exec() {
+	commands = ["force_restart"];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceRestart');
+	}
+
 function birdhouse_killStream(camera_id, stream_id) {
     console.log("birdhouse_killStream: "+stream_id);
 	commands = ["kill_stream", camera_id, stream_id];

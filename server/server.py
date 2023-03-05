@@ -34,7 +34,6 @@ def on_exit(signum, handler):
     All shutdown functions are defined in the "finally:" section in the end of this script
     """
     print('\nSTRG+C pressed! (Signal: %s)' % (signum,))
-    config.wait_if_locked("ALL")
     config.pause(True)
     for key in camera:
         camera[key].pause(True)
@@ -54,7 +53,8 @@ def on_exit(signum, handler):
                 camera[key].pause(False)
             for key in sensor:
                 sensor[key].pause(False)
-            config.wait_if_locked("ALL")
+            config.force_shutdown()
+            time.sleep(5)
             sys.exit()
         elif confirm == 'no':
             config.pause(False)
@@ -78,6 +78,9 @@ def on_kill(signum, handler):
     print('\nKILL command detected! (Signal: %s)' % (signum,))
     logging.warning('KILL command detected! (Signal: %s)' % (signum,))
     logging.info("Starting shutdown ...")
+    config.pause(True)
+    config.force_shutdown()
+    time.sleep(5)
     sys.exit()
 
 
@@ -322,6 +325,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = {}
             backup.backup_files()
             views.archive_list_update()
+        elif self.path.startswith('/force_restart/'):
+            response = {}
+            logging.info("-------------------------------------------")
+            logging.info("FORCED SHUT-DOWN OF BIRDHOUSE SERVER .... !")
+            logging.info("-------------------------------------------")
+            config.force_shutdown()
         elif self.path.startswith('/kill_stream/'):
             if "&" in which_cam:
                 stream_id_kill = which_cam
@@ -355,13 +364,21 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.error_404()
             return
 
-        self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'), no_cache=True)
+        self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'),
+                         no_cache=True)
 
     def do_GET(self):
         """
         check path and send requested content
         """
         global camera, sensor, config
+
+        if config.shut_down:
+            time.sleep(5)
+            config.shut_down = False
+            logging.info("FINALLY KILLING ALL PROCESSES NOW!")
+            server.server_close()
+            server.shutdown()
 
         path, which_cam, further_param = views.selected_camera(self.path)
         file_ending = self.path.split(".")
@@ -828,6 +845,7 @@ if __name__ == "__main__":
         server = StreamingServer(address, StreamingHandler)
         logging.info("Starting WebServer on port "+str(config.param["server"]["port"])+" ...")
         server.serve_forever()
+        logging.info("STOPPED SERVER.")
 
     except Exception as e:
         logging.error("Could not start WebServer: "+str(e))
