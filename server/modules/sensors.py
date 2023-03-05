@@ -41,7 +41,7 @@ class BirdhouseSensor(threading.Thread):
         self.error = False
         self.error_module = error_module
         self.error_connect = False
-        self.error_msg = ""
+        self.error_msg = []
         self.pin = self.param["pin"]
         self.values = {}
         self.last_read = 0
@@ -128,15 +128,11 @@ class BirdhouseSensor(threading.Thread):
                         self.logging.debug("Temperature: " + str(self.sensor.temperature))
                         self.logging.debug("Humidity:    " + str(self.sensor.humidity))
 
-                    self.error = False
-                    self.error_msg = ""
+                    self._reset_error()
 
                 except Exception as e:
                     if self.last_read_time + self.interval_reconnect < time.time():
-                        self.error = True
-                        self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-                        self.error_msg += " - Error reading data from sensor: " + str(e)
-                        self.logging.warning("Error reading data from sensor '" + self.id + "': "+str(e))
+                        self._raise_error(connect=False, message="Error reading data from sensor: " + str(e))
 
                 if not self.error:
                     self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
@@ -152,6 +148,28 @@ class BirdhouseSensor(threading.Thread):
         Stop sensors
         """
         self.running = False
+
+    def _raise_error(self, connect, message):
+        """
+        raise error
+        """
+        if connect:
+            self.error_connect = True
+        self.error = True
+        error_message = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+        error_message += " - " + message
+        self.error_msg.append(message)
+        if len(self.error_msg) >= 5:
+            self.error_msg.pop()
+        self.logging.error(message)
+
+    def _reset_error(self):
+        """
+        reset error values
+        """
+        self.error = False
+        self.error_connect = False
+        self.error_msg = []
 
     def connect(self):
         """
@@ -177,11 +195,8 @@ class BirdhouseSensor(threading.Thread):
                 else:
                     raise "Sensor type not supported"
             except Exception as e:
-                self.error = True
-                self.error_connect = True
-                self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-                self.error_msg += " - Could not load " + self.param["type"] + " sensor module: " + str(e)
-                self.logging.error(self.error_msg)
+                self._raise_error(connect=True, message="Could not load " + self.param["type"] +
+                                                        " sensor module: " + str(e))
                 return
 
             try:
@@ -197,15 +212,11 @@ class BirdhouseSensor(threading.Thread):
                     temperature_f = temperature_c * (9 / 5) + 32
                     humidity = self.sensor.humidity
                     temp = "Temp: {:.1f} F / {:.1f} C; Humidity: {}% ".format(temperature_f, temperature_c, humidity)
-                self.error = False
-                self.error_connect = False
-                self.error_msg = ""
+
+                self._reset_error()
 
             except Exception as e:
-                self.error = True
-                self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-                self.error_msg += " - Initial load "+self.param["type"]+" not OK: "+str(e)
-                self.logging.error(self.error_msg)
+                self._raise_error(connect=False, message="Initial load "+self.param["type"]+" not OK: "+str(e))
                 return
 
             if not self.error:
@@ -213,11 +224,8 @@ class BirdhouseSensor(threading.Thread):
                 self.logging.info("- Initial values: "+str(temp))
 
         else:
-            self.error = True
-            self.error_connect = True
-            self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-            self.error_msg += " - No sensor available: requires Raspberry Pi / activate 'rpi_active' in config file."
-            self.logging.info(self.error_msg)
+            self._raise_error(connect=True, message="No sensor available: requires Raspberry Pi / activate" +
+                                                    " 'rpi_active' in config file.")
 
     def pause(self, value):
         """

@@ -77,17 +77,18 @@ class BirdhouseVideoProcessing(threading.Thread):
             "status": "ready"
         }
 
-    def _msg_error(self, message):
+    def raise_error(self, message):
         """
         Report Error, set variables of modules, collect last 3 messages in var self.error_msg
         """
         self.logging.error("Video Processing (" + self.id + "): " + message)
         self.error = True
-        self.error_msg.append(message)
-        if len(self.error_msg) >= 3:
+        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+        self.error_msg.append(time_info + " - " + message)
+        if len(self.error_msg) >= 5:
             self.error_msg.pop()
 
-    def _msg_warning(self, message):
+    def raise_warning(self, message):
         """
         Report Error, set variables of modules
         """
@@ -271,7 +272,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 .run(capture_stdout=True, capture_stderr=False)
             )
         except ffmpeg.Error as e:
-            self._msg_error("Error during ffmpeg video creation: " + str(e))
+            self.raise_error("Error during ffmpeg video creation: " + str(e))
             self.processing = False
             return
 
@@ -292,7 +293,7 @@ class BirdhouseVideoProcessing(threading.Thread):
             self.logging.debug(message)
 
         except Exception as e:
-            self._msg_error("Error during video creation (thumbnail/cleanup): " + str(e))
+            self.raise_error("Error during video creation (thumbnail/cleanup): " + str(e))
             self.processing = False
             return
 
@@ -316,7 +317,7 @@ class BirdhouseVideoProcessing(threading.Thread):
             return cv2.imwrite(path, image)
         except Exception as e:
             self.info["image_count"] -= 1
-            self._msg_error("Could not save image '" + filename + "': " + str(e))
+            self.raise_error("Could not save image '" + filename + "': " + str(e))
 
     def create_video_day(self, filename, stamp, date):
         """
@@ -334,10 +335,10 @@ class BirdhouseVideoProcessing(threading.Thread):
             message = os.system(cmd_rm)
             if message != 0:
                 response = {"result": "error", "reason": "remove temp image files", "message": message}
-                self._msg_error("Error during day video creation: remove old temp image files.", warning=True)
+                self.raise_error("Error during day video creation: remove old temp image files.", warning=True)
                 # return response
         except Exception as e:
-            self._msg_error("Error during day video creation: " + str(e), warning=True)
+            self.raise_error("Error during day video creation: " + str(e), warning=True)
 
         try:
             cmd_copy = "cp " + self.config.db_handler.directory("images") + filename + "* " + \
@@ -346,10 +347,10 @@ class BirdhouseVideoProcessing(threading.Thread):
             message = os.system(cmd_copy)
             if message != 0:
                 response = {"result": "error", "reason": "copy temp image files", "message": message}
-                self._msg_error("Error during day video creation: copy temp image files.")
+                self.raise_error("Error during day video creation: copy temp image files.")
                 return response
         except Exception as e:
-            self._msg_error("Error during day video creation: " + str(e))
+            self.raise_error("Error during day video creation: " + str(e))
 
         cmd_filename = self.config.db_handler.directory("videos_temp") + cmd_tempfiles
         cmd_rename = "i=0; for fi in " + self.config.db_handler.directory("videos_temp") + "image_*; do mv \"$fi\" $(printf \""
@@ -359,10 +360,10 @@ class BirdhouseVideoProcessing(threading.Thread):
             message = os.system(cmd_rename)
             if message != 0:
                 response = {"result": "error", "reason": "rename temp image files", "message": message}
-                self._msg_error("Error during day video creation: rename temp image files.")
+                self.raise_error("Error during day video creation: rename temp image files.")
                 return response
         except Exception as e:
-            self._msg_error("Error during day video creation: " + str(e))
+            self.raise_error("Error during day video creation: " + str(e))
 
         amount = 0
         for root, dirs, files in os.walk(self.config.db_handler.directory("videos_temp")):
@@ -382,7 +383,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 .run(capture_stdout=True, capture_stderr=False)
             )
         except ffmpeg.Error as e:
-            self._msg_error("Error during ffmpeg video creation: " + str(e))
+            self.raise_error("Error during ffmpeg video creation: " + str(e))
             response = {"result": "error", "reason": "create video with ffmpeg", "message": str(e)}
             return response
 
@@ -392,7 +393,7 @@ class BirdhouseVideoProcessing(threading.Thread):
             message = os.system(cmd_thumb)
             if message != 0:
                 response = {"result": "error", "reason": "create thumbnail", "message": message}
-                self._msg_error("Error during day video creation: create thumbnails.")
+                self.raise_error("Error during day video creation: create thumbnails.")
                 return response
 
             cmd_rm2 = "rm " + self.config.db_handler.directory("videos_temp") + "*.jpg"
@@ -400,10 +401,10 @@ class BirdhouseVideoProcessing(threading.Thread):
             message = os.system(cmd_rm2)
             if message != 0:
                 response = {"result": "error", "reason": "remove temp image files", "message": message}
-                self._msg_error("Error during day video creation: remove temp image files.")
+                self.raise_error("Error during day video creation: remove temp image files.")
                 return response
         except Exception as e:
-            self._msg_error("Error during day video creation: " + str(e))
+            self.raise_error("Error during day video creation: " + str(e))
 
         length = (amount / framerate)
         video_data = {
@@ -503,7 +504,7 @@ class BirdhouseVideoProcessing(threading.Thread):
                 .run(capture_stdout=True, capture_stderr=False)
             )
         except ffmpeg.Error as e:
-            self._msg_error("Error during video trimming: " + str(e))
+            self.raise_error("Error during video trimming: " + str(e))
             return "Error"
 
         # try:
@@ -589,7 +590,8 @@ class BirdhouseImageProcessing(object):
         if not warning:
             self.logging.error("Image Processing (" + self.id + "): " + message)
             self.error = True
-            self.error_msg.append(message)
+            time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+            self.error_msg.append(time_info + " - " + message)
             self.error_count += 1
             if self.error_time == 0:
                 self.error_time = time.time()
@@ -1508,7 +1510,7 @@ class BirdhouseCamera(threading.Thread):
         """
         self._paused = command
 
-    def raise_error(self, cam_error, message):
+    def _raise_error(self, cam_error, message):
         """
         Report Error, set variables of modules
         """
@@ -1517,11 +1519,14 @@ class BirdhouseCamera(threading.Thread):
             self.image.error_camera = True
         else:
             self.image.raise_error(message)
-        self.error_msg.append(message)
+        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+        self.error_msg.append(time_info + " - " + message)
+        if len(self.error_msg) >= 10:
+            self.error_msg.pop()
         self.error_time = time.time()
         self.logging.error(self.id + ": " + message + " (" + str(self.error_time) + ")")
 
-    def reset_error(self):
+    def _reset_error(self):
         """
         remove all errors
         """
@@ -1539,7 +1544,7 @@ class BirdhouseCamera(threading.Thread):
         """
         Try out new
         """
-        self.reset_error()
+        self._reset_error()
         self.reload_time = time.time()
         try:
             self.camera.stream.release()
@@ -1550,22 +1555,22 @@ class BirdhouseCamera(threading.Thread):
             self.camera = BirdhouseCameraOther(self.source, self.id)
 
             if self.camera.error:
-                self.raise_error(True, "Can't connect to camera, check if '" + str(
+                self._raise_error(True, "Can't connect to camera, check if '" + str(
                     self.source) + "' is a valid source (" + self.camera.error_msg + ").")
                 self.camera.stream.release()
             elif not self.camera.stream.isOpened():
-                self.raise_error(True, "Can't connect to camera, check if '" + str(
+                self._raise_error(True, "Can't connect to camera, check if '" + str(
                     self.source) + "' is a valid source (could not open).")
                 self.camera.stream.release()
             elif self.camera.stream is None:
-                self.raise_error(True, "Can't connect to camera, check if '" + str(
+                self._raise_error(True, "Can't connect to camera, check if '" + str(
                     self.source) + "' is a valid source (empty image).")
                 self.camera.stream.release()
             else:
                 raw = self.get_image_raw()
                 check = str(type(raw))
                 if "NoneType" in check:
-                    self.raise_error(True,
+                    self._raise_error(True,
                                      "Source " + str(self.source) + " returned empty image, try type 'pi' or 'usb'.")
                 else:
                     self.camera_resolution_usb(self.param["image"]["resolution"])
@@ -1573,7 +1578,7 @@ class BirdhouseCamera(threading.Thread):
                     self.logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
 
         except Exception as e:
-            self.raise_error(True, "Starting camera '" + self.source + "' doesn't work: " + str(e))
+            self._raise_error(True, "Starting camera '" + self.source + "' doesn't work: " + str(e))
 
         return
 
@@ -1683,11 +1688,11 @@ class BirdhouseCamera(threading.Thread):
             raw = self.camera.read()
             check = str(type(raw))
             if self.camera.error:
-                self.raise_error(False, "Error reading image (source=" + str(self.source) + ", " +
-                                 self.camera.error_msg + ")")
+                self._raise_error(False, "Error reading image (source=" + str(self.source) + ", " +
+                                  self.camera.error_msg + ")")
                 return ""
             elif "NoneType" in check or len(raw) == 0:
-                self.raise_error(False, "Got an empty image (source=" + str(self.source) + ")")
+                self._raise_error(False, "Got an empty image (source=" + str(self.source) + ")")
                 return ""
             else:
                 if self.param["image"]["rotation"] != 0:
@@ -1700,7 +1705,7 @@ class BirdhouseCamera(threading.Thread):
                 return ""
         except Exception as e:
             error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
-            self.raise_error(False, error_msg)
+            self._raise_error(False, error_msg)
             return ""
 
     def get_image_raw_buffered(self, max_age_seconds=1):
@@ -2048,7 +2053,7 @@ class BirdhouseCamera(threading.Thread):
 
         except Exception as e:
             error_msg = "Can't save image and/or create thumbnail '" + image_path + "': " + str(e)
-            self.raise_error(False, error_msg)
+            self._raise_error(False, error_msg)
             return ""
 
     def read_image(self, filename):
@@ -2065,7 +2070,7 @@ class BirdhouseCamera(threading.Thread):
 
         except Exception as e:
             error_msg = "Can't read image '" + image_path + "': " + str(e)
-            self.raise_error(False, error_msg)
+            self._raise_error(False, error_msg)
             return ""
 
     def update_main_config(self):
