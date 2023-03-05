@@ -136,6 +136,9 @@ class BirdhouseSensor(threading.Thread):
                     if self.last_read_time + self.interval_reconnect < time.time():
                         self._raise_error(connect=False, message="Error reading data from sensor: " + str(e))
 
+                if self.values == {}:
+                    self._raise_error(connect=False, message="Returned empty values.")
+
                 if not self.error:
                     self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
                     self.last_read_time = time.time()
