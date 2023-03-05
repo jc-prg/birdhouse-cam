@@ -54,11 +54,17 @@ function birdhouseStatus_print(data) {
     setTextById("system_info_database",         db_info);
 
     // add system information
-    percentage = (data["STATUS"]["system"]["mem_used"]/data["STATUS"]["system"]["mem_total"])*100
-    setTextById("system_info_mem_total",        (Math.round(data["STATUS"]["system"]["mem_total"]*10)/10)+" MB")
-    setTextById("system_info_mem_used",         (Math.round(data["STATUS"]["system"]["mem_used"]*10)/10)+" MB (" + Math.round(percentage) + "%)")
-    setTextById("system_info_cpu_usage",        (Math.round(data["STATUS"]["system"]["cpu_usage"]*10)/10)+"%")
-    setTextById("system_info_cpu_temperature",  (Math.round(data["STATUS"]["system"]["cpu_temperature"]*10)/10)+"°C")
+    percentage_1 = (data["STATUS"]["system"]["mem_used"]/data["STATUS"]["system"]["mem_total"])*100;
+    percentage_2 = (data["STATUS"]["system"]["hdd_used"]/data["STATUS"]["system"]["hdd_total"])*100;
+    setTextById("system_info_mem_total",        (Math.round(data["STATUS"]["system"]["mem_total"]*10)/10)+" MB");
+    setTextById("system_info_mem_used",         (Math.round(data["STATUS"]["system"]["mem_used"]*10)/10)+" MB (" + Math.round(percentage_1) + "%)");
+    setTextById("system_info_cpu_usage",        (Math.round(data["STATUS"]["system"]["cpu_usage"]*10)/10)+"%");
+    setTextById("system_info_cpu_temperature",  (Math.round(data["STATUS"]["system"]["cpu_temperature"]*10)/10)+"°C");
+    setTextById("system_info_hdd_used",         (Math.round(data["STATUS"]["system"]["hdd_used"]*10)/10)+" GB (" + Math.round(percentage_2) + "%)");
+    setTextById("system_info_hdd_total",        (Math.round(data["STATUS"]["system"]["hdd_total"]*10)/10)+" GB");
+
+    app_data["STATUS"]["system"]["hdd_used"]
+
     setTextById("system_info_connection",       "Connected");
     setTextById("system_info_start_time",       data["STATUS"]["start_time"]);
 

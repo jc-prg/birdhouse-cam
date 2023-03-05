@@ -190,17 +190,17 @@ function birdhouse_app_settings (name="Settings") {
 
 	this.server_information = function () {
         var html_entry = this.tab.start();
-    	html_entry += this.tab.row("Server Connection:",   "<div id='system_info_connection'>please wait ...</div>");
-    	html_entry += this.tab.row("Server start time:",   "<div id='system_info_start_time'>please wait ...</div>");
-    	html_entry += this.tab.row("Active Streams:",      "<div id='system_active_streams'>please wait ...</div>");
-    	html_entry += this.tab.row("Active Database:",     "<div id='system_info_database'>please wait ...</div>");
-    	html_entry += this.tab.row("CPU Temperature:",     "<div id='system_info_cpu_temperature'>please wait ...</div>");
-    	html_entry += this.tab.row("CPU Usage:",           "<div id='system_info_cpu_usage'>please wait ...</div>");
-    	html_entry += this.tab.row("CPU Usage (Details):", "<div id='system_info_cpu_usage_detail'>please wait ...</div>");
-    	html_entry += this.tab.row("Memory Total:",        "<div id='system_info_mem_total'>please wait ...</div>");
-    	html_entry += this.tab.row("Memory Used:",         "<div id='system_info_mem_used'>please wait ...</div>");
-    	html_entry += this.tab.row("HDD used:",            Math.round(app_data["STATUS"]["system"]["hdd_used"]*10)/10 + " GB");
-    	html_entry += this.tab.row("HDD total:",           Math.round(app_data["STATUS"]["system"]["hdd_total"]*10)/10 + " GB");
+    	html_entry += this.tab.row("Server Connection:",   "<div id='system_info_connection'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("Server start time:",   "<div id='system_info_start_time'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("Active Streams:",      "<div id='system_active_streams'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("Active Database:",     "<div id='system_info_database'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("CPU Temperature:",     "<div id='system_info_cpu_temperature'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("CPU Usage:",           "<div id='system_info_cpu_usage'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("CPU Usage (Details):", "<div id='system_info_cpu_usage_detail'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("Memory Used:",         "<div id='system_info_mem_used'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("Memory Total:",        "<div id='system_info_mem_total'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("HDD used:",            "<div id='system_info_hdd_used'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("HDD total:",           "<div id='system_info_hdd_total'>"+lang("PLEASE_WAIT")+"..</div>");
         html_entry += this.tab.row("&nbsp;");
         html_entry += this.tab.end();
         return html_entry;

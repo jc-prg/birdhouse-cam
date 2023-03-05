@@ -137,7 +137,7 @@ function birdhouseDevices_cameras(data) {
 		html_entry += tab.row("- Rotation:", birdhouse_edit_field(id="set_rotation_"+camera, field="devices:cameras:"+camera+":image:rotation", type="select", options="0,90,180,270", data_type="integer"));
 		html_entry += tab.row("- Black&White:", birdhouse_edit_field(id="set_black_white_"+camera, field="devices:cameras:"+camera+":image:black_white", type="select", options="false,true", data_type="boolean"));
 		html_entry += tab.row("- Crop (relative):", birdhouse_edit_field(id="set_crop_"+camera, field="devices:cameras:"+camera+":image:crop", type="input", options="", data_type="json"));
-		html_entry += tab.row("- Crop (absolute):", "<div id='get_crop_area_"+camera+"'>Please wait ...</div>");
+		html_entry += tab.row("- Crop (absolute):", "<div id='get_crop_area_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
 		html_entry += tab.row("- Preview Scale:", birdhouse_edit_field(id="set_scale_"+camera, field="devices:cameras:"+camera+":image:preview_scale", type="input", options="", data_type="integer") + " %");
 		html_entry += tab.row("- Show Framerate:", birdhouse_edit_field(id="set_show_framerate_"+camera, field="devices:cameras:"+camera+":image:show_framerate", type="select", options="true,false", data_type="boolean") + " fps");
         html_entry += tab.end();
@@ -177,8 +177,8 @@ function birdhouseDevices_cameras(data) {
         html_temp += birdhouse_OtherGroup( camera+"_time", "Time Information", html_entry, false );
 
         html_entry = tab.start();
-        html_entry += tab.row("Last Recorded:", "<div id='last_image_recorded_"+camera+"'>please wait ...</div>");
-		html_entry += tab.row("Current Streams:", "<div id='show_stream_count_"+camera+"'>Please wait ...</div>");
+        html_entry += tab.row("Last Recorded:", "<div id='last_image_recorded_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
+		html_entry += tab.row("Current Streams:", "<div id='show_stream_count_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
         html_entry += tab.row("Error Camera:", "<textarea id='error_cam_"+camera+"' class='settings_error_msg'></textarea>");
         html_entry += tab.row("Error Image:", "<textarea id='error_img_"+camera+"' class='settings_error_msg'></textarea>");
         html_entry += tab.end();
@@ -233,8 +233,8 @@ function birdhouseDevices_sensors(data) {
         html_entry += tab.end();
 
         var html_temp = tab.start();
-        html_temp += tab.row("Last Recorded:", "<div id='status_sensor_last_"+sensor+"'>please wait ...</div>");
-		html_temp += tab.row("Running:",       "<div id='status_sensor_"+sensor+"'>Please wait ...</div>");
+        html_temp += tab.row("Last Recorded:", "<div id='status_sensor_last_"+sensor+"'>"+lang("PLEASE_WAIT")+"..</div>");
+		html_temp += tab.row("Running:",       "<div id='status_sensor_"+sensor+"'>"+lang("PLEASE_WAIT")+"..</div>");
         html_temp += tab.row("Error Sensor:",  "<textarea id='error_sensor1_"+sensor+"' class='settings_error_msg'></textarea>");
         html_temp += tab.row("Error Message:", "<textarea id='error_sensor2_"+sensor+"' class='settings_error_msg'></textarea>");
         html_temp += tab.end();
@@ -279,10 +279,10 @@ function birdhouseDevices_weather(data) {
     html_entry += tab.start();
     html_entry += tab.row("Location:", birdhouse_edit_field(id="set_weather_location", field="weather:location", type="input"));
     // html_entry += tab.row("GPS Position:", birdhouse_edit_field(id="set_weather_gps", field="weather:gps_location", type="input", options="", data_type="json"));
-    html_entry += tab.row("GPS Position:", "<div id='gps_coordinates'>Please wait ...</div>");
+    html_entry += tab.row("GPS Position:", "<div id='gps_coordinates'>"+lang("PLEASE_WAIT")+"..</div>");
     html_entry += tab.row("Active:", birdhouse_edit_field(id="set_weather_active", field="weather:active", type="select", options="true,false", data_type="boolean"));
     html_entry += tab.row("Source:", birdhouse_edit_field(id="set_weather_source", field="weather:source", type="select", options=weather_config["available_sources"].toString(), data_type="string"));
-    html_entry += tab.row("Last Update:", "<div id='weather_info_update'>Please wait ...</div>");
+    html_entry += tab.row("Last Update:", "<div id='weather_info_update'>"+lang("PLEASE_WAIT")+"..</div>");
     html_entry += tab.end();
     html_entry += "<br/>";
 
