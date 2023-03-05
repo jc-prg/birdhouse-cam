@@ -180,10 +180,6 @@ class BirdhouseWeatherPython(threading.Thread):
             "date": str(current.local_time.date())
         }
 
-        self.logging.info(" .... " + str(current.local_time.time()))
-        self.logging.info(" ..... " + str(current.local_time.date()))
-        self.logging.info(" ...... " + str(current.local_time.today()))
-
         self.weather_info["forecast"] = {}
 
         # get the weather forecast for a few days
@@ -562,8 +558,8 @@ class BirdhouseWeather(threading.Thread):
                 time.sleep(10)
 
             self.update_wait = (last_update + self.update_time) - time.time()
-            self.logging.info("Wait to read weather data (" + str(round(self.update_time, 1)) + ":" +
-                              str(round(self.update_wait, 1)) + "s) ...")
+            self.logging.debug("Wait to read weather data (" + str(round(self.update_time, 1)) + ":" +
+                               str(round(self.update_wait, 1)) + "s) ...")
             time.sleep(5)
 
     def stop(self):
