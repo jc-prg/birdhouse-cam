@@ -30,7 +30,8 @@ function birdhouse_app_settings (name="Settings") {
             "server_info" : false,
             "api_calls"   : false,
             "app_info_02" : false,
-            "display_info": false
+            "display_info": false,
+            "app_under_construction": false
             }
 
         if (initial_setup) {
@@ -63,6 +64,9 @@ function birdhouse_app_settings (name="Settings") {
 
             html_entry = this.app_information_detail();
             html += birdhouse_OtherGroup( "app_info_02", "App Information (Cookie, Reload)", html_entry, open_settings["app_info_02"] );
+
+            html_entry = this.app_under_construction();
+            html += birdhouse_OtherGroup( "app_under_construction", "UNDER CONSTRUCTION", html_entry, open_settings["app_under_construction"] );
             }
 
         if (type == "INFO_ONLY") {
@@ -207,7 +211,23 @@ function birdhouse_app_settings (name="Settings") {
 	}
 
 	this.device_information = function () {
+
 	    return birdhouseDevices("", app_data, false);
+	}
+
+	this.app_under_construction = function() {
+		var html_entry = this.tab.start();
+		link = RESTurl + "stream.mjpg?cam1";
+		html_entry += this.tab.row("Stream:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+		link = RESTurl + "lowres/stream.mjpg?cam1";
+		html_entry += this.tab.row("Stream LowRes:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+		link = RESTurl + "detection/stream.mjpg?cam1";
+		html_entry += this.tab.row("Stream Detection:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+		link = RESTurl + "pip/stream.mjpg?cam1+cam2";
+		html_entry += this.tab.row("Stream Picture-in-Picture:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+		html_entry += this.tab.row("&nbsp;");
+		html_entry += this.tab.end();
+        return html_entry;
 	}
 
 	this.toggle	= function (active=false) {
