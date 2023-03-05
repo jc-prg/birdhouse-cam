@@ -119,6 +119,8 @@ class BirdhouseSensor(threading.Thread):
                             self.logging.debug("Humidity:    " + str(indoor.humidity))
                         else:
                             raise Exception("Not valid ("+str(indoor.is_valid())+")")
+                        if self.values == {}:
+                            raise Exception("Returned empty values.")
 
                     elif self.param["type"] == "dht22":
                         self.values["temperature"] = self.sensor.temperature
