@@ -269,6 +269,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             html += "<center>&nbsp;<br/>"+lang("DATA_LOADING_TRY_AGAIN")+"<br/>&nbsp;</center>";
         }
     }
+
 	// today, backup, video
 	else {
 		entries_available = false;

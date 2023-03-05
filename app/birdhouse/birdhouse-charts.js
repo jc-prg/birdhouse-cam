@@ -120,7 +120,7 @@ function birdhouseChart_weatherOverview (entries) {
     html_row2 = "<td>"+lang("WEATHER")+": &nbsp;</td>";
     Object.keys(weather_data).sort().forEach(key => {
         var td_class = "weather_hide_if_small";
-        if (Math.abs(count % 2) != 0) {
+        if (Math.abs(count % 2) != 0 || Object.keys(weather_data).length <= 8) {
              td_class = "weather_show";
         }
         if (count < 16) {
