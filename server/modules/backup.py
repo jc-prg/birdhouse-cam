@@ -423,6 +423,8 @@ class BirdhouseArchive(threading.Thread):
         set / unset recycling
         """
         self.logging.debug(path)
+        date = ""
+        config = ""
         param = path.split("/")
         response = {"command": ["delete files that are marked as 'to_be_deleted'", param]}
 
@@ -433,17 +435,24 @@ class BirdhouseArchive(threading.Thread):
 
         if param[2] == "backup":
             self.logging.info("Delete marked files: BACKUP ("+path+")")
-            response = self.delete_marked_files_exec(config="images", date=param[3], delete_not_used=delete_not_used)
+            date = param[3]
+            config = "images"
         elif param[2] == "today":
             self.logging.info("Delete marked files: TODAY ("+path+")")
-            response = self.delete_marked_files_exec(config="images", date="", delete_not_used=delete_not_used)
+            date = ""
+            config = "images"
         elif param[2] == "video":
             self.logging.info("Delete marked files: VIDEO ("+path+")")
-            response = self.delete_marked_files_exec(config="videos", date="", delete_not_used=delete_not_used)
+            date = ""
+            config = "videos"
         else:
             self.logging.error("Delete marked files: Not clear what to be deleted ("+path+")")
             response["error"] = "not clear, which files shall be deleted"
 
+        if "error" not in response:
+            response = self.delete_marked_files_exec(config=config, date=date, delete_not_used=delete_not_used)
+            self.config.queue.add_to_status_queue(config=config, date=date, key="end",
+                                                  change_status="DELETE_RANGE_END", status=0)
         return response
 
     def delete_marked_files_exec(self, config="images", date="", delete_not_used=False):
@@ -549,6 +558,7 @@ class BirdhouseArchive(threading.Thread):
         response["deleted_keys"] = delete_keys
         response["files_not_used"] = len(files_in_dir) - len(files_in_config)
         response["files_used"] = len(files_in_config)
+
         self.logging.info(" -> Deleted " + str(count_del_entry) + " marked files in " + directory + ".")
         return response
 

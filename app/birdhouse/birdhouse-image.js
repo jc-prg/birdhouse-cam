@@ -180,10 +180,11 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
 
 	if (title == lang("RECYCLE")) {
 		var command  = "";
-		if (entry_category.length == 1)	{ command = ",#"+entry_category[0]+"#"; }
-		if (entry_category.length == 2)	{ command = ",#"+entry_category[0]+"#,#"+entry_category[1]+"#"; }
+		if (entry_category.length == 1)	{ command = "#"+entry_category[0]+"#,##"; }
+		if (entry_category.length == 2)	{ command = "#"+entry_category[0]+"#,#"+entry_category[1]+"#"; }
 		if (command != "") {
-			var del_command = "appFW.requestAPI(#POST#,[#remove#"+command+"],##,birdhouse_AnswerDelete,##,#birdhouse_ImageGroup#);";
+			var del_command = "birdhouse_deleteMarkedFiles("+command+");";
+			//var del_command = "appFW.requestAPI(#POST#,[#remove#"+command+"],##,birdhouse_AnswerDelete,##,#birdhouse_ImageGroup#);";
 			var onclick     = "appMsg.confirm(\""+lang("DELETE_SURE")+"\",\""+del_command+"\");";
 			html    += "<div id='group_intro_recycle' class='separator' style='display: block;'><center><br/>";
 			html    += "<a onclick='"+onclick+"' style='cursor:pointer;'>" + lang("RECYCLE_DELETE") + "</a>";

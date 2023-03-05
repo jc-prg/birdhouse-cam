@@ -654,6 +654,8 @@ class BirdhouseConfigQueue(threading.Thread):
 
                             if change_status == "RANGE_END":
                                 self.config.async_answers.append(["RANGE_DONE"])
+                            elif change_status == "DELETE_RANGE_END":
+                                self.config.async_answers.append(["DELETE_RANGE_DONE"])
                             elif key in entries:
                                 entries[key][change_status] = status
 

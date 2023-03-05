@@ -50,6 +50,11 @@ function birdhouse_killStream(camera_id, stream_id) {
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_killStream');
     }
 
+function birdhouse_deleteMarkedFiles(param1,param2) {
+	commands = ["remove", param1, param2];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerDeleteRequest,'','birdhouse_deleteMarkedFiles');
+    }
+
 function birdhouse_recreateImageConfig() {
 	commands = ["recreate-image-config"];
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerRecreateImageConfig,'','birdhouse_recreateImageConfig');
@@ -154,6 +159,12 @@ function birdhouse_setFavoritShow(command, param) {
 function birdhouse_AnswerDelete(data) {
 	//console.log(data);
 	appMsg.alert(lang("DELETE_DONE") + "<br/>(" + data["deleted_count"] + " " + lang("FILES")+")","");
+	birdhouseReloadView();
+	}
+
+function birdhouse_AnswerDeleteRequest(data) {
+	//console.log(data);
+	appMsg.alert(lang("DELETE_REQUESTED"),"");
 	birdhouseReloadView();
 	}
 
