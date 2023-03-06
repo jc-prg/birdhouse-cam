@@ -86,8 +86,8 @@ class BirdhouseWeatherPython(threading.Thread):
                     self._convert_data()
 
             self.update_wait = (last_update + self.update_interval) - time.time()
-            self.logging.info("Wait to read weather data (" + str(round(self.update_interval, 1)) + ":" +
-                              str(round(self.update_wait, 1)) + "s) ...")
+            self.logging.debug("Wait to read weather data (" + str(round(self.update_interval, 1)) + ":" +
+                               str(round(self.update_wait, 1)) + "s) ...")
             time.sleep(5)
 
         self.logging.info("Stopp weather thread.")
