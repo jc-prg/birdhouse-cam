@@ -12,7 +12,7 @@ from imutils.video import FPS, WebcamVideoStream
 from skimage.metrics import structural_similarity as ssim
 from threading import Condition
 from datetime import datetime, timezone, timedelta
-from modules.presets import birdhouse_loglevel
+from modules.presets import *
 
 
 # https://learn.circuit.rocks/introduction-to-opencv-using-the-raspberry-pi
@@ -37,7 +37,8 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.timezone = time_zone
 
         self.logging = logging.getLogger("cam-video")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting VIDEO processing for '"+self.id+"' ...")
 
         self.queue_create = []
@@ -560,7 +561,8 @@ class BirdhouseImageProcessing(object):
         self.param = param
 
         self.logging = logging.getLogger("cam-image")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting IMAGE processing for '"+self.id+"' ...")
 
         self.text_default_position = (30, 40)
@@ -1174,7 +1176,8 @@ class BirdhouseCameraOutput(object):
         self.condition = Condition()
 
         self.logging = logging.getLogger("cam-output")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting CAMERA output for '"+camera+"' ...")
 
     def write(self, buf):
@@ -1196,7 +1199,8 @@ class BirdhouseCameraOther(object):
         self.error_msg = ""
 
         self.logging = logging.getLogger("cam-other")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting CAMERA support for '"+name+"/"+source+"' ...")
 
         if "/dev/" not in str(source):
@@ -1236,7 +1240,8 @@ class BirdhouseCamera(threading.Thread):
         self.config.update["camera_" + self.id] = False
 
         self.logging = logging.getLogger("cam-image")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting CAMERA control for '"+self.id+"' ...")
 
         self.sensor = sensor

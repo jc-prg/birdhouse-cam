@@ -3,12 +3,14 @@
 import os
 import threading
 import time
-import logging
 import json
 import signal
 import sys
 import psutil
 import subprocess
+
+import logging
+from logging.handlers import RotatingFileHandler
 
 import socketserver
 from http import server
@@ -18,7 +20,7 @@ from urllib.parse import unquote
 from modules.backup import BirdhouseArchive
 from modules.camera import BirdhouseCamera
 from modules.config import BirdhouseConfig
-from modules.presets import birdhouse_preset, file_types, birdhouse_loglevel
+from modules.presets import *
 from modules.views import BirdhouseViews
 from modules.sensors import BirdhouseSensor
 
@@ -76,8 +78,8 @@ def on_kill(signum, handler):
     All shutdown functions are defined in the "finally:" section in the end of this script
     """
     print('\nKILL command detected! (Signal: %s)' % (signum,))
-    logging.warning('KILL command detected! (Signal: %s)' % (signum,))
-    logging.info("Starting shutdown ...")
+    srv_logging.warning('KILL command detected! (Signal: %s)' % (signum,))
+    srv_logging.info("Starting shutdown ...")
     config.pause(True)
     config.force_shutdown()
     time.sleep(5)
@@ -95,7 +97,7 @@ def read_html(directory, filename, content=""):
     file = os.path.join(config.main_directory, directory, filename)
 
     if not os.path.isfile(file):
-        logging.warning("File '" + file + "' does not exist!")
+        srv_logging.warning("File '" + file + "' does not exist!")
         return ""
 
     with open(file, "r") as page:
@@ -122,7 +124,7 @@ def read_image(directory, filename):
     file = file.replace("backup/", "")
 
     if not os.path.isfile(file):
-        logging.warning("Image '" + file + "' does not exist!")
+        srv_logging.warning("Image '" + file + "' does not exist!")
         return ""
 
     with open(file, "rb") as image:
@@ -195,7 +197,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         Redirect to other file / URL
         """
-        logging.debug("Redirect: " + file)
+        srv_logging.debug("Redirect: " + file)
         self.send_response(301)
         self.send_header('Location', file)
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -264,7 +266,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         Check if administration is allowed based on the IP4 the request comes from
         """
-        logging.debug("Check if administration is allowed: " + self.address_string() + " / " + str(
+        srv_logging.debug("Check if administration is allowed: " + self.address_string() + " / " + str(
             config.param["server"]["ip4_admin_deny"]))
         if self.address_string() in config.param["server"]["ip4_admin_deny"]:
             return False
@@ -283,7 +285,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         REST API for javascript commands e.g. to change values in runtime
         """
-        logging.debug("POST API request with '" + self.path + "'.")
+        srv_logging.debug("POST API request with '" + self.path + "'.")
         response = {}
 
         if not self.admin_allowed():
@@ -327,9 +329,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             views.archive_list_update()
         elif self.path.startswith('/force_restart/'):
             response = {}
-            logging.info("-------------------------------------------")
-            logging.info("FORCED SHUT-DOWN OF BIRDHOUSE SERVER .... !")
-            logging.info("-------------------------------------------")
+            srv_logging.info("-------------------------------------------")
+            srv_logging.info("FORCED SHUT-DOWN OF BIRDHOUSE SERVER .... !")
+            srv_logging.info("-------------------------------------------")
             config.force_shutdown()
         elif self.path.startswith('/kill_stream/'):
             if "&" in which_cam:
@@ -376,7 +378,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if config.shut_down:
             time.sleep(5)
             config.shut_down = False
-            logging.info("FINALLY KILLING ALL PROCESSES NOW!")
+            srv_logging.info("FINALLY KILLING ALL PROCESSES NOW!")
             server.server_close()
             server.shutdown()
 
@@ -435,7 +437,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         create API response
         """
-        logging.debug("GET API request with '" + path + "'.")
+        srv_logging.debug("GET API request with '" + path + "'.")
         param = path.split("/")
         command = param[2]
         status = "Success"
@@ -590,7 +592,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if key in sensor and sensor[key].running:
                 sensor_data[key]["values"] = sensor[key].get_values()
             else:
-                logging.debug("Sensor not available: " + key)
+                srv_logging.debug("Sensor not available: " + key)
                 sensor_data[key]["status"] = sensor[key].get_status()
 
         content["devices"] = {
@@ -610,12 +612,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         # show compared images
         if '/compare/' in path and '/image.jpg' in path:
-            logging.debug("Compare: Create and return image that shows differences to the former image ...")
+            srv_logging.debug("Compare: Create and return image that shows differences to the former image ...")
             filename = os.path.join(config.db_handler.directory("images"), "_image_diff_" + which_cam + ".jpg")
             param = path.split("?")
             param = param[0].split("/")
-            logging.debug("---->" + param[2])
-            logging.debug("---->" + param[3])
+            srv_logging.debug("---->" + param[2])
+            srv_logging.debug("---->" + param[3])
 
             filename_1st = "image_" + which_cam + "_big_"+param[2]+".jpeg"
             filename_2nd = "image_" + which_cam + "_big_"+param[3]+".jpeg"
@@ -650,7 +652,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         if camera[which_cam].type != "pi" and camera[which_cam].type != "usb" and \
                 camera[which_cam].type != "default":
-            logging.warning("Unknown type of camera (" + camera[which_cam].type + "/" +
+            srv_logging.warning("Unknown type of camera (" + camera[which_cam].type + "/" +
                             camera[which_cam].name + ")")
             self.error_404()
             return
@@ -711,7 +713,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         frame_raw = camera[which_cam].image.draw_date_raw(frame_raw)
 
                     if camera[which_cam].video.recording and not stream_lowres:
-                        logging.debug("VIDEO RECORDING")
+                        srv_logging.debug("VIDEO RECORDING")
                         length = str(round(camera[which_cam].video.record_info()["length"]))
                         framerate = str(round(camera[which_cam].video.record_info()["framerate"]))
                         y_position = camera[which_cam].image_size[1] - 40
@@ -724,7 +726,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                                                           scale=0.5, thickness=1)
 
                     if camera[which_cam].video.processing and not stream_lowres:
-                        logging.debug("VIDEO PROCESSING")
+                        srv_logging.debug("VIDEO PROCESSING")
                         length = str(round(camera[which_cam].video.record_info()["length"]))
                         image_size = str(camera[which_cam].video.record_info()["image_size"])
                         y_position = camera[which_cam].image_size[1] - 40
@@ -743,14 +745,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 self.stream_video_frame(frame)
                 if not stream_active:
                     self.stream_video_end()
-                    logging.info("Closed streaming client: " + stream_id_ext)
+                    srv_logging.info("Closed streaming client: " + stream_id_ext)
 
             except Exception as e:
                 stream_active = False
                 if "Errno 104" in str(e) or "Errno 32" in str(e):
-                    logging.debug('Removed streaming client %s: %s', self.client_address, str(e))
+                    srv_logging.debug('Removed streaming client %s: %s', self.client_address, str(e))
                 else:
-                    logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
+                    srv_logging.warning('Removed streaming client %s: %s', self.client_address, str(e))
 
             if camera[which_cam].error or camera[which_cam].image.error:
                 time.sleep(stream_wait_while_error)
@@ -781,23 +783,23 @@ if __name__ == "__main__":
         print("--backup     Start backup directly (current date, delete directory before)")
         exit()
 
+    log_into_file = True
+
     # set logging
-    if len(sys.argv) > 0 and "--logfile" in sys.argv:
-        logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), "stream.log"),
-                            filemode='a',
-                            format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-                            datefmt='%d.%m.%y %H:%M:%S',
-                            level=logging.INFO)
-        logging.info('-------------------------------------------')
-        logging.info('Started ...')
-        logging.info('-------------------------------------------')
+    if len(sys.argv) > 0 and "--logfile" in sys.argv or birdhouse_log_into_file:
+
+        srv_logging = logging.getLogger('root')
+        srv_logging.setLevel(birdhouse_loglevel)
+        srv_logging.addHandler(birdhouse_loghandler)
     else:
         logging.basicConfig(format='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
                             datefmt='%m/%d %H:%M:%S',
                             level=birdhouse_loglevel)
-        logging.info('-------------------------------------------')
-        logging.info('Starting ...')
-        logging.info('-------------------------------------------')
+        srv_logging = logging.getLogger('root')
+
+    srv_logging.info('-------------------------------------------')
+    srv_logging.info('Starting ...')
+    srv_logging.info('-------------------------------------------')
 
     # set system signal handler
     signal.signal(signal.SIGINT, on_exit)
@@ -861,12 +863,12 @@ if __name__ == "__main__":
     try:
         address = ('0.0.0.0', config.param["server"]["port"])
         server = StreamingServer(address, StreamingHandler)
-        logging.info("Starting WebServer on port "+str(config.param["server"]["port"])+" ...")
+        srv_logging.info("Starting WebServer on port "+str(config.param["server"]["port"])+" ...")
         server.serve_forever()
-        logging.info("STOPPED SERVER.")
+        srv_logging.info("STOPPED SERVER.")
 
     except Exception as e:
-        logging.error("Could not start WebServer: "+str(e))
+        srv_logging.error("Could not start WebServer: "+str(e))
 
     # Stop all processes to stop
     finally:
@@ -880,4 +882,4 @@ if __name__ == "__main__":
 
         server.server_close()
         server.shutdown()
-        logging.info("Stopped WebServer.")
+        srv_logging.info("Stopped WebServer.")

@@ -5,7 +5,7 @@ import cv2
 import threading
 from tqdm import tqdm
 from datetime import datetime
-from modules.presets import birdhouse_loglevel
+from modules.presets import *
 
 
 class BirdhouseArchive(threading.Thread):
@@ -17,7 +17,8 @@ class BirdhouseArchive(threading.Thread):
         threading.Thread.__init__(self)
 
         self.logging = logging.getLogger("backup")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting backup handler ...")
 
         self._running = True

@@ -5,9 +5,12 @@ import threading
 from sys import getsizeof
 from datetime import datetime, timedelta
 import modules.presets as presets
+from modules.presets import *
+
 
 view_logging = logging.getLogger("view-header")
-view_logging.setLevel = presets.birdhouse_loglevel
+view_logging.setLevel(birdhouse_loglevel)
+view_logging.addHandler(birdhouse_loghandler)
 
 
 def read_html(filename, content=None):
@@ -132,7 +135,8 @@ class BirdhouseViews(threading.Thread):
         threading.Thread.__init__(self)
 
         self.logging = logging.getLogger("views")
-        self.logging.setLevel = presets.birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting views thread ...")
 
         self.server = None

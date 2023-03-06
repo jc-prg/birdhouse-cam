@@ -7,6 +7,7 @@ import codecs
 import threading
 import couchdb
 import requests
+
 from datetime import datetime, timezone, timedelta
 from modules.weather import BirdhouseWeather
 from modules.presets import *
@@ -26,7 +27,8 @@ class BirdhouseConfigCouchDB(object):
         self.create_revisions = False
 
         self.logging = logging.getLogger("DB-couch")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting DB handler CouchDB ("+self.db_url+") ...")
 
         connects2db = 0
@@ -243,7 +245,8 @@ class BirdhouseConfigJSON(object):
         self.locked = {}
 
         self.logging = logging.getLogger("DB-json")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting DB handler JSON ...")
 
     def lock(self, filename):
@@ -326,7 +329,8 @@ class BirdhouseConfigDBHandler(object):
 
     def __init__(self, db_type="json", main_directory=""):
         self.logging = logging.getLogger("DB-handler")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting DB handler ("+db_type+"|"+main_directory+") ...")
 
         self.db_usr = "birdhouse"
@@ -535,7 +539,8 @@ class BirdhouseConfigQueue(threading.Thread):
         threading.Thread.__init__(self)
 
         self.logging = logging.getLogger("config-Q")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting config queue ...")
 
         self.queue_count = None
@@ -910,7 +915,8 @@ class BirdhouseConfig(threading.Thread):
         self.shut_down = False
 
         self.logging = logging.getLogger("config")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting configuration handler ("+main_directory+") ...")
 
         self.config = None
@@ -953,6 +959,7 @@ class BirdhouseConfig(threading.Thread):
 
         self.param = self.db_handler.read("main")
         self.timezone = float(self.param["localization"]["timezone"].replace("UTC", ""))
+        self.current_day = self.local_time().strftime("%Y%m%d")
         self.html_replace = {
             "start_date": self.local_time().strftime("%d.%m.%Y %H:%M:%S")
         }
@@ -1073,6 +1080,36 @@ class BirdhouseConfig(threading.Thread):
                 self.param["weather"] = self.weather.get_gps_info(self.param["weather"])
                 self.db_handler.write(config, date, self.param)
 
+    def local_time(self):
+        """
+        return time that includes the current timezone
+        """
+        date_tz_info = timezone(timedelta(hours=self.timezone))
+        return datetime.now(date_tz_info)
+
+    def force_shutdown(self):
+        """
+        shut down main services and then exit -> if docker, then restart will follow
+        Final kill is done in the server component -> StreamingHandler.do_GET
+        """
+        self.logging.info("STOPPING THE RUNNING THREADS ...")
+        self.shut_down = True
+        self.stop()
+
+    def if_new_day(self) -> bool:
+        """
+        check if it's a new day
+        """
+        check_day = self.local_time().strftime("%Y%m%d")
+        if check_day != self.current_day:
+            self.logging.info("-----------------------------------------------------------")
+            self.logging.info(" NEW DAY STARTED: " + self.current_day + " -> " + check_day)
+            self.logging.info("-----------------------------------------------------------")
+            self.current_day = self.local_time().strftime("%Y%m%d")
+            return True
+        else:
+            return False
+
     @staticmethod
     def filename_image(image_type, timestamp, camera=""):
         """
@@ -1121,21 +1158,3 @@ class BirdhouseConfig(threading.Thread):
             info["type"] = "hires"
             info["stamp"] = parts[3]
         return info
-
-    def local_time(self):
-        """
-        return time that includes the current timezone
-        """
-        date_tz_info = timezone(timedelta(hours=self.timezone))
-        return datetime.now(date_tz_info)
-
-    def force_shutdown(self):
-        """
-        shut down main services and then exit -> if docker, then restart will follow
-        Final kill is done in the server component -> StreamingHandler.do_GET
-        """
-        self.logging.info("STOPPING THE RUNNING THREADS ...")
-        self.shut_down = True
-        self.stop()
-
-

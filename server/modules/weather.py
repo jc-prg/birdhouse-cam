@@ -6,7 +6,7 @@ import time
 import requests
 from geopy.geocoders import Nominatim
 from datetime import datetime, timezone, timedelta
-from modules.presets import birdhouse_loglevel, birdhouse_weather
+from modules.presets import *
 
 
 class BirdhouseGPS(object):
@@ -51,7 +51,8 @@ class BirdhouseWeatherPython(threading.Thread):
         self.config = config
 
         self.logging = logging.getLogger("weather-py")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting weather process 'python_weather' ...")
 
         self.weather_location = location
@@ -234,7 +235,8 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
         self.config = config
 
         self.logging = logging.getLogger("weather-om")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting weather process 'Open-Metheo.com' for GPS="+str(gps_location)+" ...")
 
         self.weather_location = gps_location
@@ -486,7 +488,8 @@ class BirdhouseWeather(threading.Thread):
         self.initial_date = self.config.local_time().strftime("%Y%m%d")
 
         self.logging = logging.getLogger("weather")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting weather process ...")
 
         self.error = False

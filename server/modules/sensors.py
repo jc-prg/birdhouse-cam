@@ -2,7 +2,7 @@ import time
 import threading
 import logging
 from datetime import datetime
-from modules.presets import birdhouse_loglevel
+from modules.presets import *
 
 
 try:
@@ -26,7 +26,8 @@ class BirdhouseSensor(threading.Thread):
         self.config = config
 
         self.logging = logging.getLogger("weather")
-        self.logging.setLevel = birdhouse_loglevel
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting sensor control for '"+sensor_id+"' ...")
 
         self.config.update["sensor_"+self.id] = False
