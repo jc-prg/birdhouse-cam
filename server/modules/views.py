@@ -638,8 +638,8 @@ class BirdhouseViews(threading.Thread):
                         dir_total_size += dir_size
                         files_total += count
 
-                        self.logging.info("  -> dir_size: "+str(dir_size)+" / cam: "+str(dir_size_cam)+" / " +
-                                          str(round(dir_total_size, 1))+" ("+directory+"/"+cam+")")
+                        self.logging.info("  -> Archive " + directory + ": " + str(round(dir_total_size, 1)) +
+                                          " MB / " + cam + ": " + str(dir_size_cam) + " MB in " + str(count) + " files")
 
                         image = os.path.join(self.config.directories["backup"], image)
                         image_file = image.replace(directory + "/", "")

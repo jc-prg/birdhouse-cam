@@ -88,6 +88,7 @@ class BirdhouseSensor(threading.Thread):
 
             # check if configuration update
             if self.config.update["sensor_"+self.id]:
+                self.logging.info("....... RELOAD Update: Reread coonfiguration sensor: " + self.id)
                 self.param = self.config.param["devices"]["sensors"][self.id]
                 self.config.update["sensor_"+self.id] = False
                 self.active = self.param["active"]
@@ -96,7 +97,7 @@ class BirdhouseSensor(threading.Thread):
             if self.error_connect and self.param["active"]:
                 retry += 1
                 if retry > retry_wait:
-                    self.logging.info("Retry starting sensor: "+self.id)
+                    self.logging.info("....... RELOAD Error: Retry starting sensor: "+self.id)
                     self.connect()
                     retry = 0
 
