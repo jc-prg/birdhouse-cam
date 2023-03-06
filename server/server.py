@@ -885,5 +885,6 @@ if __name__ == "__main__":
 
         server.server_close()
         server.shutdown()
+        time.sleep(5)
         srv_logging.info("Stopped WebServer.")
         srv_logging.info("-------------------------------------------")

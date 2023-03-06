@@ -1843,8 +1843,9 @@ class BirdhouseCamera(threading.Thread):
 
         if check_in_general:
             self.record_image_last_compare += "[" + str(is_active) + " | " + current_time_string + "] [from " + \
-                                              str(record_from_hour) + ":" + str(record_from_minute) + " | to " + \
-                                              str(record_to_hour) + ":" + str(record_to_minute) + "]"
+                                              str(int(record_from_hour)) + ":" + str(int(record_from_minute)) + \
+                                              " | to " + str(int(record_to_hour)) + ":" + str(int(record_to_minute)) + \
+                                              "]"
 
         return is_active
 
@@ -2092,7 +2093,7 @@ class BirdhouseCamera(threading.Thread):
 
         try:
             image = cv2.imread(image_path)
-            self.logging.info(" --> " + str(image.shape))
+            self.logging.debug(" --> " + str(image.shape))
             return image
 
         except Exception as e:
