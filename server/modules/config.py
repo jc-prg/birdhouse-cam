@@ -937,6 +937,9 @@ class BirdhouseConfig(threading.Thread):
         self.files = birdhouse_files
         self.weather = None
 
+        self.user_active = False
+        self.user_activity_last = 0
+
         # read main config file
         self.db_handler = BirdhouseConfigDBHandler("json", main_directory)
         self.main_directory = main_directory
@@ -1109,6 +1112,21 @@ class BirdhouseConfig(threading.Thread):
             return True
         else:
             return False
+
+    def user_activity(self, cmd="get"):
+        """
+        set user activity
+        """
+        if cmd == "set":
+            self.user_activity_last = self.local_time().timestamp()
+            self.user_active = True
+            return True
+
+        elif cmd == "get" and self.user_activity_last + 60 > self.local_time().timestamp():
+            return True
+
+        self.user_active = False
+        return False
 
     @staticmethod
     def filename_image(image_type, timestamp, camera=""):

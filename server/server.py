@@ -286,6 +286,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         REST API for javascript commands e.g. to change values in runtime
         """
         srv_logging.debug("POST API request with '" + self.path + "'.")
+        config.user_activity("set")
         response = {}
 
         if not self.admin_allowed():
@@ -381,7 +382,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_logging.info("FINALLY KILLING ALL PROCESSES NOW!")
             server.server_close()
             server.shutdown()
+            return
 
+        config.user_activity("set")
         path, which_cam, further_param = views.selected_camera(self.path)
         file_ending = self.path.split(".")
         file_ending = "." + file_ending[len(file_ending) - 1].lower()

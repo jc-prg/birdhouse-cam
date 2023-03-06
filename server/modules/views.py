@@ -165,13 +165,13 @@ class BirdhouseViews(threading.Thread):
             if self.config.shut_down:
                 self.stop()
 
-            # if archive to be read again
+            # if archive to be read again (from time to time and depending on user activity)
             if self.create_archive or count > count_rebuild or self.config.update_views["archive"]:
                 self.archive_list_create()
                 self.create_archive = False
                 self.config.update_views["archive"] = False
 
-            # if favorites to be read again
+            # if favorites to be read again (from time to time and depending on user activity)
             if self.create_favorites or count > count_rebuild or self.config.update_views["favorite"]:
                 self.favorite_list_create()
                 self.create_favorites = False
@@ -180,7 +180,9 @@ class BirdhouseViews(threading.Thread):
             if count > count_rebuild:
                 count = 0
 
-            count += 1
+            if self.config.user_activity():
+                count += 1
+
             time.sleep(1)
         self.logging.info("Stopped HTML views and REST API for GET.")
 
@@ -531,8 +533,9 @@ class BirdhouseViews(threading.Thread):
                     available = self.config.db_handler.exists(config="backup", date=directory)
                     config_file = self.config.db_handler.file_path(config="backup", date=directory)
                     config_available = os.path.isfile(config_file)
-                    self.logging.info("  -> Check CouchDB: available=" + str(available))
-                    self.logging.info("  -> Check JSON: config_file=" + str(config_available))
+                    if not available or not config_available:
+                        self.logging.info("  -> Check CouchDB: available=" + str(available))
+                        self.logging.info("  -> Check JSON: config_file=" + str(config_available))
 
                 file_data = {}
                 if available:
