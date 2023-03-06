@@ -95,6 +95,13 @@ class BirdhouseVideoProcessing(threading.Thread):
         """
         self.logging.warning("Video Processing (" + self.id + "): " + message)
 
+    def reset_error(self):
+        """
+        reset all error values
+        """
+        self.error = False
+        self.error_msg = []
+
     def run(self):
         """
         Initialize, set initial values
@@ -610,6 +617,7 @@ class BirdhouseImageProcessing(object):
         self.error_msg = []
         self.error_count = 0
         self.error_time = 0
+        self.error_camera = False
 
     def compare(self, image_1st, image_2nd, detection_area=None):
         """
@@ -1303,6 +1311,7 @@ class BirdhouseCamera(threading.Thread):
         self.previous_image = None
         self.previous_stamp = "000000"
         self.record_image_last = time.time()
+        self.record_image_reload = time.time()
         self.record_image_last_string = ""
         self.record_image_last_compare = ""
         self.record_image_error = False
@@ -1347,13 +1356,13 @@ class BirdhouseCamera(threading.Thread):
                 self.reload_camera = True
 
             # if record and images not recorded for while reload
-            if self.record and self.record_image_last > 0 and \
-                    (self.record_image_last + reload_time_error_record) < time.time():
+            if self.record and self.record_image_error and \
+                    (self.record_image_reload + reload_time_error_record) < time.time():
+
                 self.logging.info("....... RELOAD Record Error: " + self.id + " - " +
                                   str(self.record_image_last + reload_time_error_record) + " < " +
                                   str(time.time()))
-                self.record_image_last = time.time()
-                self.record_image_error = True
+                self.record_image_reload = time.time()
                 self.config_update = True
                 self.reload_camera = True
 
@@ -1408,6 +1417,12 @@ class BirdhouseCamera(threading.Thread):
                         self.logging.debug(" ...... record now!")
                         image = self.get_image_raw()
 
+                        # retry once if image could not be read
+                        if self.image.error or len(image) == 0:
+                            self.image.error = False
+                            image = self.get_image_raw()
+
+                        # if no error format and analyze image
                         if not self.image.error and len(image) > 0:
                             image = self.image.normalize_raw(image)
                             image_compare = self.image.convert_to_gray_raw(image)
@@ -1446,7 +1461,12 @@ class BirdhouseCamera(threading.Thread):
                                 "weather": {}
                             }
                             self.previous_image = image_compare
+                            sensor_data = {"activity": round(100 - float(similarity), 1)}
+
+                        # else if error save at least sensor data
                         else:
+                            self.record_image_error = True
+                            sensor_data = {}
                             image_info = {
                                 "camera": self.id,
                                 "hires": "",
@@ -1462,7 +1482,6 @@ class BirdhouseCamera(threading.Thread):
                                 "error": self.error_msg[len(self.error_msg) - 1]
                             }
 
-                        sensor_data = {"activity": round(100 - float(similarity), 1)}
                         for key in self.sensor:
                             if self.sensor[key].running:
                                 sensor_data[key] = self.sensor[key].get_values()
@@ -1478,7 +1497,8 @@ class BirdhouseCamera(threading.Thread):
                         self.config.queue.entry_add(config="sensor", date="", key=stamp, entry=sensor_data)
                         self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
 
-                        if not self.error:
+                        # if no error save image files
+                        if not self.error and not self.image.error:
                             path_lowres = os.path.join(self.config.db_handler.directory("images"),
                                                        self.config.filename_image("lowres", stamp, self.id))
                             path_hires = os.path.join(self.config.db_handler.directory("images"),
@@ -1490,6 +1510,7 @@ class BirdhouseCamera(threading.Thread):
 
                             self.record_image_error = False
                             self.record_image_last = time.time()
+                            self.record_image_reload = time.time()
                             self.record_image_last_string = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
                         time.sleep(0.7)
@@ -1538,7 +1559,7 @@ class BirdhouseCamera(threading.Thread):
         self.error = False
         self.error_msg = []
         self.error_time = 0
-        self.image.error_camera = False
+        self.video.reset_error()
         self.image.reset_error()
         self.image_last_raw = None
         self.image_last_edited = None
@@ -1821,9 +1842,9 @@ class BirdhouseCamera(threading.Thread):
                            "-" + str(record_to_hour) + ":" + str(record_to_minute) + ")")
 
         if check_in_general:
-            self.record_image_last_compare += "[" +str(is_active) + "|" + current_time_string + "] [from=" + str(record_from_hour)
-            self.record_image_last_compare += ":" + str(record_from_minute) + "|to=" + str(record_to_hour) + ":"
-            self.record_image_last_compare += str(record_to_minute) + "]"
+            self.record_image_last_compare += "[" + str(is_active) + " | " + current_time_string + "] [from " + \
+                                              str(record_from_hour) + ":" + str(record_from_minute) + " | to " + \
+                                              str(record_to_hour) + ":" + str(record_to_minute) + "]"
 
         return is_active
 
@@ -2007,6 +2028,7 @@ class BirdhouseCamera(threading.Thread):
             "image_cache_size": self.config_cache_size,
             "record_image_error": self.record_image_error,
             "record_image_last": time.time() - self.record_image_last,
+            "record_image_reload": time.time() - self.record_image_reload,
             "record_image_active": self.image_recording_active(current_time=-1, check_in_general=True),
             "record_image_last_compare": self.record_image_last_compare,
             "video_error": self.video.error,

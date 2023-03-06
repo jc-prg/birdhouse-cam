@@ -5,7 +5,6 @@ import logging
 import time
 import requests
 from geopy.geocoders import Nominatim
-from datetime import datetime, timezone, timedelta
 from modules.presets import *
 
 
@@ -78,6 +77,8 @@ class BirdhouseWeatherPython(threading.Thread):
         """
         last_update = 0
         while self._running:
+
+            # if last update is over since update interval or settings have been updated -> request new data
             if last_update + self.update_interval < time.time() or self.update_settings:
                 self.logging.info("Read weather data ...")
                 last_update = time.time()
@@ -246,7 +247,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
         self.weather_update_rhythm = 60 * 60
 
         self.error = False
-        self.error_msg = ""
+        self.error_msg = []
         self.update_interval = self.weather_update_rhythm / 4
         self.update_settings = True
         self.update_wait = 0
@@ -256,67 +257,8 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
         self.link_provider = "<a href='https://open-meteo.com/' target='_blank'>Weather by Open-Meteo.com</a>"
         self.link_gps_lookup = "https://open-meteo.com/en/docs"
 
-        self.weather_descriptions = {
-            "0": "clear sky",
-            "1": "clear",
-            "2": "partly cloudy",
-            "3": "overcast",
-            "45": "fog",
-            "48": "depositing rime fog",
-            "51": "light drizzle",
-            "53": "moderate drizzle",
-            "55": "dense intensity drizzle",
-            "56": "light freezing drizzle",
-            "57": "dense intensity freezing drizzle",
-            "61": "slight rain",
-            "63": "moderate rain",
-            "65": "heavy rain",
-            "66": "light freezing rain",
-            "67": "heavy freezing rain",
-            "71": "slight snow fall",
-            "73": "moderate snow fall",
-            "75": "heavy snow fall",
-            "77": "snow grains",
-            "80": "slight rain showers",
-            "81": "moderate rain showers",
-            "82": "violent rain showers",
-            "85": "slight snow showers",
-            "86": "heavy snow showers",
-            "95": "slight or moderate thunderstorms",
-            "96": "thunderstorms with slight hail",
-            "99": "thunderstorms with heavy hail"
-        }
-        self.weather_icons = {
-            "0": "☀️",
-            "1": "☀️",
-            "2": "⛅️",
-            "3": "☁️",
-            "45": "🌫",
-            "48": "🌫",
-            "51": "🌦",
-            "53": "🌦",
-            "55": "🌧",
-            "56": "🌨",
-            "57": "️❄️",
-            "61": "🌦",
-            "63": "🌧",
-            "65": "🌧",
-            "66": "🌨",
-            "67": "❄️",
-            "71": "🌨",
-            "73": "🌨",
-            "75": "❄️",
-            "77": "❄️",
-            "80": "🌦",
-            "81": "🌦",
-            "82": "🌧",
-            "85": "🌨",
-            "86": "❄️",
-            "95": "🌩",
-            "96": "⛈",
-            "99": "⛈",
-            "100": "✨"
-        }
+        self.weather_descriptions = birdhouse_weather_descriptions
+        self.weather_icons = birdhouse_weather_icons
 
     def run(self):
         """
@@ -324,6 +266,8 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
         """
         last_update = 0
         while self._running:
+
+            # if last update is over since update interval or settings have been updated -> request new data
             if last_update + self.update_interval < time.time() or self.update_settings:
                 self.logging.info("Read weather data ...")
                 last_update = time.time()
@@ -331,11 +275,12 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
                     self._create_url()
                     self.update_settings = False
                 self._request_data()
-                self._convert_data()
+                if not self.error:
+                    self._convert_data()
 
             self.update_wait = (last_update + self.update_interval) - time.time()
             self.logging.debug("Wait to read weather data (" + str(round(self.update_interval, 1)) + ":" +
-                              str(round(self.update_wait, 1)) + "s) ...")
+                               str(round(self.update_wait, 1)) + "s) ...")
             time.sleep(5)
 
         self.logging.info("Stopp weather thread.")
@@ -345,6 +290,24 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
         stop thread loop
         """
         self._running = False
+
+    def raise_error(self, message):
+        """
+        raise error message
+        """
+        self.error = True
+        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+        self.error_msg.append(time_info + " - " + message)
+        if len(self.error_msg) >= 10:
+            self.error_msg.pop()
+        self.logging.error(message)
+
+    def reset_error(self):
+        """
+        reset all error vars
+        """
+        self.error = False
+        self.error_msg = []
 
     def _weather_descriptions(self, weather_code):
         """
@@ -386,9 +349,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
             self.weather_update = self.config.local_time()
             self.error = False
         except Exception as e:
-            self.error = True
-            self.error_msg = "Could not read weather from open-metheo.com: "+str(e)
-            self.logging.warning(self.error_msg)
+            self.raise_error("Could not read weather from open-metheo.com: " + str(e))
 
     def _convert_data(self):
         """
@@ -545,15 +506,14 @@ class BirdhouseWeather(threading.Thread):
                 self.logging.info("Read weather data ...")
                 last_update = time.time()
                 self.weather_info = self.module.get_data()
-                # asyncio.run(self.get_weather())
-                if not self.error:
+                if not self.error and not self.module.error:
                     self.weather_info["info_status"]["running"] = "OK"
 
             if "current" not in self.weather_info:
-                self.error = True
+                self._raise_error("Weather data not correct (missing 'current').")
                 self.weather_info = self.weather_empty.copy()
 
-            if self.error:
+            if self.error or self.module.error:
                 self.weather_info["info_status"]["running"] = "error"
 
             if "info_status" in self.weather_info and "running" in self.weather_info["info_status"] \
@@ -564,6 +524,24 @@ class BirdhouseWeather(threading.Thread):
             self.logging.debug("Wait to read weather data (" + str(round(self.update_time, 1)) + ":" +
                                str(round(self.update_wait, 1)) + "s) ...")
             time.sleep(5)
+
+    def _raise_error(self, message):
+        """
+        raise error message
+        """
+        self.error = True
+        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+        self.error_msg.append(time_info + " - " + message)
+        if len(self.error_msg) >= 10:
+            self.error_msg.pop()
+        self.logging.error(message)
+
+    def _reset_error(self):
+        """
+        reset all error vars
+        """
+        self.error = False
+        self.error_msg = []
 
     def stop(self):
         """
@@ -625,6 +603,8 @@ class BirdhouseWeather(threading.Thread):
         if self.weather_gps[0] != 0 and self.weather_gps[1] != 0:
             param["gps_location"] = self.weather_gps
             self.logging.info("Found GPS: '" + str(self.weather_gps) + "'.")
+        else:
+            self.logging.warning("Could not get GPS data: " + str(self.weather_gps))
         return param
 
     def get_weather_info(self, info_type="all"):
@@ -632,9 +612,7 @@ class BirdhouseWeather(threading.Thread):
         return information with different level of detail
         """
         if "current" not in self.weather_info:
-            self.error = True
-            self.error_msg = "Weather data not correct (get_weather_info)"
-            self.logging.error(self.error_msg)
+            self._raise_error("Weather data not correct (get_weather_info)")
             self.logging.error(str(self.weather_info))
             self.weather_info = self.weather_empty.copy()
 

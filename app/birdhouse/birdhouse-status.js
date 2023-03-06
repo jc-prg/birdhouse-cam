@@ -81,11 +81,17 @@ function birdhouseStatus_print(data) {
         setTextById("error_cam_"+camera, camera_status[camera]["error_msg"]);
         setTextById("error_img_"+camera, camera_status[camera]["image_error_msg"]);
         setTextById("error_rec_"+camera, camera_status[camera]["record_image_error"]);
-        setTextById("last_image_recorded_"+camera, Math.round(camera_status[camera]["record_image_last"]*10)/10 + "s" +
-                    "<br/>(active=" + cameras[camera]["status"]["record_image_active"] + ";" +
-                    "error=" + cameras[camera]["status"]["record_image_error"] + ";" +
-                    "compare='" + cameras[camera]["status"]["record_image_last_compare"] + "')");
-
+        if (camera_status[camera]["error"]) {
+            setTextById("last_image_recorded_"+camera, "Recording inactive due to camera error.");
+        }
+        else {
+            if (!cameras[camera]["status"]["record_image_active"]) { var record_image_reload = "INACTIVE"; }
+            else                                                   { var record_image_reload = Math.round(camera_status[camera]["record_image_reload"]*10)/10 + "s"; }
+            setTextById("last_image_recorded_"+camera,
+                        "last_recorded=" + Math.round(camera_status[camera]["record_image_last"]*10)/10 + "s" + "; last_reload=" + record_image_reload +
+                        "<br/>active=" + cameras[camera]["status"]["record_image_active"] + "; " + "error=" + cameras[camera]["status"]["record_image_error"] + ";" +
+                        "<br/>compare=" + cameras[camera]["status"]["record_image_last_compare"].replace("] [","]<br/>active_time=["));
+        }
         if (camera_status[camera]["error"] || camera_status[camera]["image_error"]) {
             setHeaderColor(header_id=camera+"_error", header_color=header_color_error);
             setHeaderColor(header_id=camera, header_color=header_color_error);
@@ -186,7 +192,7 @@ function birdhouseStatus_print(data) {
         if (sensors[sensor]["status"]) {
             //var status = sensors[sensor]["status"];
             var status = sensor_status[sensor];
-            var sensor_error_01 = status["error_msg"].join(",\n");
+            var sensor_error_01 = status["error_msg"]; //.join(",\n");
             var sensor_error_02 = "Error: " + status["error"].toString() + "\n\n";
             if (status["error_connect"]) {
                 sensor_error_02    += "Error Connect: " + status["error_connect"].toString() + "\n\n";
