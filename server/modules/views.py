@@ -148,6 +148,8 @@ class BirdhouseViews(threading.Thread):
         self.which_cam = ""
         self.archive_views = {}
         self.archive_loading = "started"
+        self.archive_dir_size = 0
+        self.today_dir_size = 0             # not implemented yet
         self.favorite_views = {}
         self.favorite_loading = "started"
         self.create_archive = True
@@ -158,7 +160,8 @@ class BirdhouseViews(threading.Thread):
         Do nothing at the moment
         """
         count = 0
-        count_rebuild = 60*5
+        count_rebuild = 60*15   # rebuild every 15 min, should be triggerd by relevant events already
+
         self.logging.info("Starting HTML views and REST API for GET ...")
         while self._running:
             # if shutdown
@@ -167,12 +170,14 @@ class BirdhouseViews(threading.Thread):
 
             # if archive to be read again (from time to time and depending on user activity)
             if self.create_archive or count > count_rebuild or self.config.update_views["archive"]:
+                time.sleep(10)
                 self.archive_list_create()
                 self.create_archive = False
                 self.config.update_views["archive"] = False
 
             # if favorites to be read again (from time to time and depending on user activity)
             if self.create_favorites or count > count_rebuild or self.config.update_views["favorite"]:
+                time.sleep(10)
                 self.favorite_list_create()
                 self.create_favorites = False
                 self.config.update_views["favorite"] = False
@@ -471,11 +476,12 @@ class BirdhouseViews(threading.Thread):
         count = 0
         dir_size = 0
         dir_size_cam = 0
-        dir_count = 0
+        dir_size_total = 0
         dir_count_cam = 0
         dir_count_data = 0
         dir_count_delete = 0
         archive_info = {}
+        start_time = time.time()
 
         self.archive_loading = "in progress"
         self.logging.info("Create data for archive view from '" +
@@ -676,9 +682,12 @@ class BirdhouseViews(threading.Thread):
                 del content["entries"]
                 archive_info[cam] = content.copy()
 
+            dir_size_total += dir_total_size
+
+        self.archive_dir_size = dir_size_total
         self.config.db_handler.write("backup_info", "", archive_info)
         self.archive_loading = "done"
-        self.logging.info("Create data for archive view done.")
+        self.logging.info("Create data for archive view done ("+str(round(time.time()-start_time, 1))+"s)")
 
     def archive_list_update(self):
         """
@@ -792,6 +801,7 @@ class BirdhouseViews(threading.Thread):
         """
         Page with pictures (and videos) marked as favorites and sorted by date
         """
+        start_time = time.time()
         self.logging.info("Create data for favorite view  ...")
         self.favorite_loading = "in Progress"
         content = {
@@ -928,7 +938,7 @@ class BirdhouseViews(threading.Thread):
         content["subtitle"] = presets.birdhouse_pages["favorit"][0]
 
         self.favorite_views = content
-        self.logging.info("Create data for favorite view done.")
+        self.logging.info("Create data for favorite view done ("+str(round(time.time()-start_time, 1))+"s)")
         self.config.db_handler.write("favorites", "", content)
         self.favorite_loading = "done"
 

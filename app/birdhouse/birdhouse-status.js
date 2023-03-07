@@ -61,6 +61,7 @@ function birdhouseStatus_print(data) {
     setTextById("system_info_cpu_usage",        (Math.round(data["STATUS"]["system"]["cpu_usage"]*10)/10)+"%");
     setTextById("system_info_cpu_temperature",  (Math.round(data["STATUS"]["system"]["cpu_temperature"]*10)/10)+"°C");
     setTextById("system_info_hdd_used",         (Math.round(data["STATUS"]["system"]["hdd_used"]*10)/10)+" GB (" + Math.round(percentage_2) + "%)");
+    setTextById("system_info_hdd_archive",      (Math.round(data["STATUS"]["system"]["hdd_archive"]*10)/10)+" GB");
     setTextById("system_info_hdd_total",        (Math.round(data["STATUS"]["system"]["hdd_total"]*10)/10)+" GB");
     setTextById("system_info_connection",       "Connected");
     setTextById("system_info_start_time",       data["STATUS"]["start_time"]);

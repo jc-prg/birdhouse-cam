@@ -660,6 +660,7 @@ class BirdhouseConfigQueue(threading.Thread):
 
         self.queue_count = None
         self.config = config
+        self.views = None
         self.db_handler = db_handler
         self._running = True
         self.edit_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": []}
@@ -698,13 +699,16 @@ class BirdhouseConfigQueue(threading.Thread):
                         self.db_handler.lock(config_file)
 
                         count_files += 1
+                        count_edit = 0
                         while len(self.edit_queue[config_file]) > 0:
                             [key, entry, command] = self.edit_queue[config_file].pop()
                             count_entries += 1
                             if command == "add" or command == "edit":
                                 entries[key] = entry
+                                count_edit += 1
                             elif command == "delete" and key in entries:
                                 del entries[key]
+                                count_edit += 1
                             elif command == "keep_data":
                                 entries[key]["type"] = "data"
                                 if "hires" in entries[key]:
@@ -719,6 +723,9 @@ class BirdhouseConfigQueue(threading.Thread):
                                     del entries[key]["favorit"]
                                 if "to_be_deleted" in entries[key]:
                                     del entries[key]["to_be_deleted"]
+
+                        if count_edit > 0 and self.views is not None:
+                            self.views.favorite_list_update()
 
                         self.db_handler.unlock(config_file)
                         self.db_handler.write(config_file, "", entries)
@@ -735,6 +742,7 @@ class BirdhouseConfigQueue(threading.Thread):
                             elif date not in self.edit_queue[config_file]:
                                 self.edit_queue[config_file][date] = []
 
+                            count_edit = 0
                             while len(self.edit_queue[config_file][date]) > 0:
                                 [key, entry, command] = self.edit_queue[config_file][date].pop()
                                 count_entries += 1
@@ -743,8 +751,10 @@ class BirdhouseConfigQueue(threading.Thread):
 
                                 if command == "add" or command == "edit":
                                     entries[key] = entry
+                                    count_edit += 1
                                 elif command == "delete" and key in entries:
                                     del entries[key]
+                                    count_edit += 1
                                 elif command == "keep_data":
                                     entries[key]["type"] = "data"
                                     if "hires" in entries[key]:
@@ -763,6 +773,9 @@ class BirdhouseConfigQueue(threading.Thread):
                                         del entries[key]["favorit"]
                                     if "to_be_deleted" in entries[key]:
                                         del entries[key]["to_be_deleted"]
+
+                            if count_edit > 0 and self.views is not None:
+                                self.views.favorite_list_update()
 
                             entry_data["files"] = entries
                             self.db_handler.unlock(config_file, date)
@@ -1042,6 +1055,7 @@ class BirdhouseConfig(threading.Thread):
 
         self.config = None
         self.config_cache = {}
+        self.views = None
         self.db_handler = None
 
         self.update = {}
@@ -1260,6 +1274,13 @@ class BirdhouseConfig(threading.Thread):
         return DB status
         """
         return self.db_handler.get_db_status()
+
+    def set_views(self, views):
+        """
+        set handler for views
+        """
+        self.views = views
+        self.queue.views = views
 
     @staticmethod
     def filename_image(image_type, timestamp, camera=""):

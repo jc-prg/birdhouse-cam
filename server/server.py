@@ -305,7 +305,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         if self.path.startswith("/favorit/"):
             response = config.queue.set_status_favorite(self.path)
-            views.favorite_list_update()
         elif self.path.startswith("/recycle/"):
             response = config.queue.set_status_recycle(self.path)
         elif self.path.startswith("/recycle-range/"):
@@ -519,6 +518,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         if config.weather is not None:
             api_response["WEATHER"] = config.weather.get_weather_info("all")
+        api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
 
         # collect data for "DATA" section
         content["title"] = config.param["title"]
@@ -835,6 +835,7 @@ if __name__ == "__main__":
     # start views and commands
     views = BirdhouseViews(config=config, camera=camera)
     views.start()
+    config.set_views(views)
 
     # start backups
     time.sleep(1)
