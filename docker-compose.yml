@@ -17,6 +17,7 @@ services:
     environment:
       - 'COUCHDB_USER=birdhouse'
       - 'COUCHDB_PASSWORD=birdhouse'
+    restart: always
     networks:
       my-net:
         ipv4_address: 192.168.202.3

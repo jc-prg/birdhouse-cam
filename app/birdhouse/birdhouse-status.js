@@ -65,6 +65,12 @@ function birdhouseStatus_print(data) {
     setTextById("system_info_connection",       "Connected");
     setTextById("system_info_start_time",       data["STATUS"]["start_time"]);
 
+    setTextById("system_info_db_connection",    "Connected=" + data["STATUS"]["database"]["db_connected"] + " (" + data["STATUS"]["database"]["type"] + ")");
+    setTextById("system_info_db_handler",       "Error=" + data["STATUS"]["database"]["handler_error"] + " " + data["STATUS"]["database"]["handler_error_msg"].toString());
+    setTextById("system_info_db_error",         "Error=" + data["STATUS"]["database"]["db_error"] + " " + data["STATUS"]["database"]["db_error_msg"].toString());
+
+
+
     var cpu_details = "";
     for (var i=0;i<data["STATUS"]["system"]["cpu_usage_detail"].length;i++) {
         cpu_details += "cpu"+i+"="+Math.round(data["STATUS"]["system"]["cpu_usage_detail"][i])+"%, ";

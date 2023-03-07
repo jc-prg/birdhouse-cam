@@ -509,7 +509,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "active_cam": which_cam,
                     "active_date": active_date,
                     "active_page": command
-                }
+                },
+                "database": config.db_status()
             },
             "API": api_description,
             "WEATHER": {},

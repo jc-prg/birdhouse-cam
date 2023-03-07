@@ -17,6 +17,7 @@ function birdhouse_app_settings (name="Settings") {
         this.tab.style_cells["width"] = "40%";
         var tab = this.tab;
 
+        var html = "";
         var initial_setup   = app_data["DATA"]["server"]["initial_setup"];
 
         var current_url     = window.location.href;
@@ -43,8 +44,10 @@ function birdhouse_app_settings (name="Settings") {
             appMsg.confirm(img + lang("INITIAL_SETUP"), "console.log('.');", 400);
             }
 
-        html  = "<h2>Information</h2>";
-		html += "<hr style='border:1px solid gray;'>"
+        if (type != "INFO_ONLY") {
+            html  = "<h2>Information</h2>";
+            html += "<hr style='border:1px solid gray;'>"
+        }
 
         html_entry = this.app_information();
         html += birdhouse_OtherGroup( "app_info_01", "App Information (Version)", html_entry, open_settings["app_info_01"] );
@@ -70,10 +73,17 @@ function birdhouse_app_settings (name="Settings") {
             }
 
         if (type == "INFO_ONLY") {
+            setTextById(app_frame_header, "<center><h2>" + lang("INFORMATION")) + "</h2></center>";
             setTextById("frame2", html)
             }
+        else if (type == "SETTINGS") {
+            html += "<br/>&nbsp<br/>";
+            html += this.settings();
 
-        if (type == "SETTINGS") {
+            setTextById(app_frame_header, "<center><h2>" + lang("SETTINGS")) + "</h2></center>";
+            setTextById(app_frame_content, html);
+
+            /*
             setTextById("setting1", html);
             setTextById("setting2", "");
             setTextById("setting3", "");
@@ -82,6 +92,7 @@ function birdhouse_app_settings (name="Settings") {
 
             setTextById("setting2", html);
     		this.toggle();
+    		*/
             }
 		}
 
@@ -108,6 +119,12 @@ function birdhouse_app_settings (name="Settings") {
         html += this.tab.row("RPi Active:&nbsp;", birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false", data_type="boolean") );
         html += this.tab.row("<hr/>");
 
+/*
+        html += this.tab.row("Index View:&nbsp;", birdhouse_edit_field(id="set_index_view", field="views:index:type", type="select", options="default,overlay,picture-in-picture", data_type="string") );
+        html += this.tab.row("LowRes Position:&nbsp;", birdhouse_edit_field(id="set_index_lowres", field="views:index:lowres_position", type="select", options="1,2,3,4", data_type="integer") );
+        html += this.tab.row("<hr/>");
+*/
+
         html += this.tab.row("DB Server:&nbsp;", birdhouse_edit_field(id="set_db_server", field="server:database_server", type="input", options="", data_type="string") );
         html += this.tab.row("DB Type:&nbsp;", birdhouse_edit_field(id="set_db_type", field="server:database_type", type="select", options="json,couch,both", data_type="string") );
         html += this.tab.row("DB Link:","<a href='"+link+"' target='_blank'>"+link+"</a>");
@@ -121,7 +138,7 @@ function birdhouse_app_settings (name="Settings") {
         html += this.tab.row("Deny admin from IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_deny", field="server:ip4_admin_deny", type="input", options="true,false", data_type="json") );
         html += this.tab.row("<hr>");
 
-        html += this.tab.row("", birdhouse_edit_save("set_main","set_db_server:set_db_type:set_weather_location:set_initial_setup:set_language:set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port") );
+        html += this.tab.row("", birdhouse_edit_save("set_main","set_db_server:set_db_type:set_weather_location:set_initial_setup:set_language:set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port:set_index_lowres:set_index_view") );
         html += this.tab.row("&nbsp;");
         html += this.tab.end();
         return html;
@@ -197,10 +214,15 @@ function birdhouse_app_settings (name="Settings") {
     	html_entry += this.tab.row("Server Connection:",   "<div id='system_info_connection'>"+lang("PLEASE_WAIT")+"..</div>");
     	html_entry += this.tab.row("Server start time:",   "<div id='system_info_start_time'>"+lang("PLEASE_WAIT")+"..</div>");
     	html_entry += this.tab.row("Active Streams:",      "<div id='system_active_streams'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("Active Database:",     "<div id='system_info_database'>"+lang("PLEASE_WAIT")+"..</div>");
+        html_entry += this.tab.row("<hr/>");
+    	html_entry += this.tab.row("DB Connection:",       "<div id='system_info_db_connection'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("DB Handler Error:",    "<div id='system_info_db_handler'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("DB Error:",            "<div id='system_info_db_error'>"+lang("PLEASE_WAIT")+"..</div>");
+        html_entry += this.tab.row("<hr/>");
     	html_entry += this.tab.row("CPU Temperature:",     "<div id='system_info_cpu_temperature'>"+lang("PLEASE_WAIT")+"..</div>");
     	html_entry += this.tab.row("CPU Usage:",           "<div id='system_info_cpu_usage'>"+lang("PLEASE_WAIT")+"..</div>");
     	html_entry += this.tab.row("CPU Usage (Details):", "<div id='system_info_cpu_usage_detail'>"+lang("PLEASE_WAIT")+"..</div>");
+        html_entry += this.tab.row("<hr/>");
     	html_entry += this.tab.row("Memory Used:",         "<div id='system_info_mem_used'>"+lang("PLEASE_WAIT")+"..</div>");
     	html_entry += this.tab.row("Memory Total:",        "<div id='system_info_mem_total'>"+lang("PLEASE_WAIT")+"..</div>");
     	html_entry += this.tab.row("HDD used:",            "<div id='system_info_hdd_used'>"+lang("PLEASE_WAIT")+"..</div>");
