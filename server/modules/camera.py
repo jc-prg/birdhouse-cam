@@ -1803,10 +1803,22 @@ class BirdhouseCamera(threading.Thread):
 
                 if ("sunrise" in record_from or "sunset" in record_to) and \
                         self.weather_active and self.weather_sunrise is not None:
-                    if "sunrise" in record_from:
+                    if "sunrise-1" in record_from:
                         record_from_hour = int(self.weather_sunrise.split(":")[0]) - 1
                         record_from_minute = self.weather_sunrise.split(":")[1]
-                    if "sunset" in record_to:
+                    elif "sunrise+0" in record_from:
+                        record_from_hour = int(self.weather_sunrise.split(":")[0])
+                        record_from_minute = self.weather_sunrise.split(":")[1]
+                    elif "sunrise+1" in record_from:
+                        record_from_hour = int(self.weather_sunrise.split(":")[0]) + 1
+                        record_from_minute = self.weather_sunrise.split(":")[1]
+                    if "sunset-1" in record_to:
+                        record_to_hour = int(self.weather_sunset.split(":")[0]) - 1
+                        record_to_minute = self.weather_sunset.split(":")[1]
+                    elif "sunset+0" in record_to:
+                        record_to_hour = int(self.weather_sunset.split(":")[0])
+                        record_to_minute = self.weather_sunset.split(":")[1]
+                    elif "sunset+1" in record_to:
                         record_to_hour = int(self.weather_sunset.split(":")[0]) + 1
                         record_to_minute = self.weather_sunset.split(":")[1]
                 else:
