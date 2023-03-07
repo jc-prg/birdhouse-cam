@@ -1130,7 +1130,8 @@ class BirdhouseConfig(threading.Thread):
             time.sleep(1)
 
             connected = self.db_handler.get_db_status()["db_connected"]
-            if not connected:
+            messages = len(self.db_handler.get_db_status()["db_error_msg"])
+            if not connected or messages >= 5:
                 time.sleep(5)
                 self.db_handler.connect()
 
