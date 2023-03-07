@@ -670,7 +670,7 @@ class BirdhouseImageProcessing(object):
         """
         #image_1st = cv2.cvtColor(image_1st, cv2.COLOR_BGR2GRAY)
         #image_2nd = cv2.cvtColor(image_2nd, cv2.COLOR_BGR2GRAY)
-        image_diff = cv2.subtract(image_1st, image_2nd)
+        image_diff = cv2.subtract(image_2nd, image_1st)
 
         # color the mask red
         Conv_hsv_Gray = cv2.cvtColor(image_diff, cv2.COLOR_BGR2GRAY)
