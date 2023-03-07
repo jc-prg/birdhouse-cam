@@ -78,10 +78,13 @@ class BirdhouseVideoProcessing(threading.Thread):
             "status": "ready"
         }
 
-    def raise_error(self, message):
+    def raise_error(self, message, warning=False):
         """
         Report Error, set variables of modules, collect last 3 messages in var self.error_msg
         """
+        if warning:
+            self.raise_warning(message)
+            return
         self.logging.error("Video Processing (" + self.id + "): " + message)
         self.error = True
         time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
@@ -863,7 +866,7 @@ class BirdhouseImageProcessing(object):
         try:
             raw = cv2.putText(raw, text, tuple(position), font, scale, color, thickness, cv2.LINE_AA)
         except Exception as e:
-            self.raise_error("Could not draw text into image (" + str(e) + ")", warning=True)
+            self.raise_error("Could not draw text into image (" + str(e) + ")")
             self.logging.warning(" ... " + param)
 
         return raw
