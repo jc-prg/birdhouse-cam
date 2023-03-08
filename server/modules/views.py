@@ -66,62 +66,66 @@ def create_chart_data(data, config=None):
     used_keys = []
     used_cameras = []
     weather_data_in_chart = ["temperature", "humidity", "wind"]
+    weather_data_interval = 5
 
     if data == {} or "dict" not in str(type(data)):
         view_logging.error("Could not create chart data (empty)!")
 
     # get categories / titles
     for key in data:
+        print_minute = key[2:4]
         print_key = key[0:2]+":"+key[2:4]
+        if int(print_minute) % weather_data_interval == 0:
 
-        if "camera" in data[key] and data[key]["camera"] not in used_cameras:
-            used_cameras.append(data[key]["camera"])
+            if "camera" in data[key] and data[key]["camera"] not in used_cameras:
+                used_cameras.append(data[key]["camera"])
 
-        if "similarity" in data[key]:
-            if round(float(data[key]["similarity"])) == 0:
-                data[key]["similarity"] = 100
-            chart["data"][print_key] = [100-float(data[key]["similarity"])]
+            if "similarity" in data[key]:
+                if round(float(data[key]["similarity"])) == 0:
+                    data[key]["similarity"] = 100
+                chart["data"][print_key] = [100-float(data[key]["similarity"])]
 
-        if "sensor" in data[key]:
-            for sensor in data[key]["sensor"]:
-                for sensor_key in data[key]["sensor"][sensor]:
-                    if sensor_key != "date":
-                        sensor_title = sensor + ":" + sensor_key
-                        if sensor_title not in chart["titles"]:
-                            chart["titles"].append(sensor_title)
+            if "sensor" in data[key]:
+                for sensor in data[key]["sensor"]:
+                    for sensor_key in data[key]["sensor"][sensor]:
+                        if sensor_key != "date":
+                            sensor_title = sensor + ":" + sensor_key
+                            if sensor_title not in chart["titles"]:
+                                chart["titles"].append(sensor_title)
 
-        if "weather" in data[key]:
-            if "location" in data[key]["weather"]:
-                location = data[key]["weather"]["location"]
-            elif config is not None:
-                location = config.param["localization"]["weather_location"]
-            else:
-                location = ""
-            for weather_category in weather_data_in_chart:
-                weather_title = "WEATHER/" + location + ":" + weather_category
-                if weather_title not in chart["titles"]:
-                    chart["titles"].append(weather_title)
+            if "weather" in data[key]:
+                if "location" in data[key]["weather"]:
+                    location = data[key]["weather"]["location"]
+                elif config is not None:
+                    location = config.param["localization"]["weather_location"]
+                else:
+                    location = ""
+                for weather_category in weather_data_in_chart:
+                    weather_title = "WEATHER/" + location + ":" + weather_category
+                    if weather_title not in chart["titles"]:
+                        chart["titles"].append(weather_title)
 
     # get data
     for key in data:
+        print_minute = key[2:4]
         print_key = key[0:2] + ":" + key[2:4]
-        if print_key not in used_keys and \
-                used_cameras[0] == data[key]["camera"]:
-            used_keys.append(print_key)
-            for title in chart["titles"]:
+        if int(print_minute) % weather_data_interval == 0:
+            if print_key not in used_keys and used_cameras[0] == data[key]["camera"]:
+                used_keys.append(print_key)
+                for title in chart["titles"]:
 
-                if title != "Activity" and print_key in chart["data"]:
-                    sensor = title.split(":")
+                    if title != "Activity" and print_key in chart["data"]:
+                        sensor = title.split(":")
 
-                    if "sensor" in data[key] and sensor[0] in data[key]["sensor"] and \
-                            sensor[1] in data[key]["sensor"][sensor[0]]:
-                        chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
+                        if "sensor" in data[key] and sensor[0] in data[key]["sensor"] and \
+                                sensor[1] in data[key]["sensor"][sensor[0]]:
+                            chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
 
-                    elif "weather" in data[key] and sensor[1] in data[key]["weather"]:
-                        chart["data"][print_key].append(data[key]["weather"][sensor[1]])
+                        elif "weather" in data[key] and sensor[1] in data[key]["weather"]:
+                            chart["data"][print_key].append(data[key]["weather"][sensor[1]])
 
-                    else:
-                        chart["data"][print_key].append("")
+                        else:
+                            chart["data"][print_key].append("")
 
     return chart
 
@@ -286,6 +290,8 @@ class BirdhouseViews(threading.Thread):
         check_similarity = True
         backup = False
         category = ""
+        files_today = {}
+        files_images = {}
 
         if param[1] != "api":
             if len(param) > 2:
@@ -348,7 +354,6 @@ class BirdhouseViews(threading.Thread):
         if files_all != {}:
 
             # Today or backup
-            files_today = {}
             stamps = list(reversed(sorted(files_all.keys())))
 
             for stamp in stamps:
@@ -387,6 +392,13 @@ class BirdhouseViews(threading.Thread):
                                 if "type" in files_today[stamp] and files_today[stamp]["type"] != "data":
                                     count += 1
 
+                                if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
+                                    files_images[stamp] = files_today[stamp].copy()
+                                    if "weather" in files_images[stamp]:
+                                        del files_images[stamp]["weather"]
+                                    if "sensor" in files_images[stamp]:
+                                        del files_images[stamp]["sensor"]
+
             if not backup:
                 files_today["999999"] = {
                     "stream": "lowres/stream.mjpg?" + which_cam,
@@ -396,30 +408,31 @@ class BirdhouseViews(threading.Thread):
                     "type": "addon",
                     "title": "Live-Stream"
                 }
-            content["entries"] = files_today
+            content["entries"] = files_images
 
             # Yesterday
             files_yesterday = {}
             stamps = list(reversed(sorted(files_all.keys())))
             if not backup:
                 for stamp in stamps:
-                    if "datestamp" not in files_all[stamp]:
-                        self.logging.warning("Wrong entry format:" + str(files_all[stamp]))
+                    if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
+                        if "datestamp" not in files_all[stamp]:
+                            self.logging.warning("Wrong entry format:" + str(files_all[stamp]))
 
-                    if (int(stamp) >= int(time_now) and time_now != "000000") and "datestamp" in files_all[stamp] and \
-                            files_all[stamp]["datestamp"] == date_yesterday:
+                        if (int(stamp) >= int(time_now) and time_now != "000000") and "datestamp" in files_all[stamp] and \
+                                files_all[stamp]["datestamp"] == date_yesterday:
 
-                        if self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp],
-                                                                  check_similarity=check_similarity):
-                            files_yesterday[stamp] = files_all[stamp]
-                            if "type" not in files_yesterday[stamp]:
-                                files_yesterday[stamp]["type"] = "image"
-                            files_yesterday[stamp]["category"] = category + stamp
-                            files_yesterday[stamp]["detect"] = self.camera[which_cam].image_differs(
-                                file_info=files_yesterday[stamp])
-                            files_yesterday[stamp]["directory"] = "/" + self.config.directories["images"]
-                            if "type" in files_yesterday[stamp] and files_yesterday[stamp]["type"] != "data":
-                                count += 1
+                            if self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp],
+                                                                      check_similarity=check_similarity):
+                                files_yesterday[stamp] = files_all[stamp]
+                                if "type" not in files_yesterday[stamp]:
+                                    files_yesterday[stamp]["type"] = "image"
+                                files_yesterday[stamp]["category"] = category + stamp
+                                files_yesterday[stamp]["detect"] = self.camera[which_cam].image_differs(
+                                    file_info=files_yesterday[stamp])
+                                files_yesterday[stamp]["directory"] = "/" + self.config.directories["images"]
+                                if "type" in files_yesterday[stamp] and files_yesterday[stamp]["type"] != "data":
+                                    count += 1
 
             if len(files_yesterday) > 0:
                 content["entries_yesterday"] = files_yesterday
@@ -428,15 +441,16 @@ class BirdhouseViews(threading.Thread):
             files_recycle = {}
             if self.admin_allowed():
                 for stamp in stamps:
-                    if "to_be_deleted" in files_all[stamp] and int(files_all[stamp]["to_be_deleted"]) == 1:
-                        if files_all[stamp]["camera"] == which_cam:
-                            files_recycle[stamp] = files_all[stamp]
-                            if "type" not in files_recycle[stamp]:
-                                files_recycle[stamp]["type"] = "image"
-                            files_recycle[stamp]["category"] = category + stamp
-                            files_recycle[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
-                            if "type" in files_recycle[stamp] and files_recycle[stamp]["type"] != "data":
-                                count += 1
+                    if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
+                        if "to_be_deleted" in files_all[stamp] and int(files_all[stamp]["to_be_deleted"]) == 1:
+                            if files_all[stamp]["camera"] == which_cam:
+                                files_recycle[stamp] = files_all[stamp]
+                                if "type" not in files_recycle[stamp]:
+                                    files_recycle[stamp]["type"] = "image"
+                                files_recycle[stamp]["category"] = category + stamp
+                                files_recycle[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
+                                if "type" in files_recycle[stamp] and files_recycle[stamp]["type"] != "data":
+                                    count += 1
 
             if len(files_recycle) > 0:
                 if backup:
@@ -449,7 +463,8 @@ class BirdhouseViews(threading.Thread):
                 content["entries_delete"] = files_recycle
 
         content["subtitle"] += " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
-        content["chart_data"] = create_chart_data(content["entries"].copy(), self.config)
+        content["chart_data"] = create_chart_data(files_today.copy(), self.config)
+        content["entries_total"] = len(files_today)
         content["view_count"] = ["all", "star", "detect", "data"]
         return content
 
