@@ -871,7 +871,6 @@ class BirdhouseConfigQueue(threading.Thread):
         response = {}
         category = param[2]
         config_data = {}
-        self.config.update_views["favorite"] = True
 
         if category == "current":
             entry_id = param[3]
@@ -915,7 +914,6 @@ class BirdhouseConfigQueue(threading.Thread):
         response = {}
         category = param[2]
         config_data = {}
-        self.config.update_views["favorite"] = True
 
         if category == "current":
             entry_id = param[3]
@@ -958,7 +956,6 @@ class BirdhouseConfigQueue(threading.Thread):
         response = {}
         category = param[2]
         config_data = {}
-        self.config.update_views["favorite"] = True
 
         if category == "current":
             entry_from = param[3]

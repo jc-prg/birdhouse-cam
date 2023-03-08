@@ -160,7 +160,7 @@ class BirdhouseViews(threading.Thread):
         Do nothing at the moment
         """
         count = 0
-        count_rebuild = 60*15   # rebuild every 15 min, should be triggerd by relevant events already
+        count_rebuild = 60*5   # rebuild when triggerd by relevant events already - max once every 5 minutes
 
         self.logging.info("Starting HTML views and REST API for GET ...")
         while self._running:
@@ -169,18 +169,16 @@ class BirdhouseViews(threading.Thread):
                 self.stop()
 
             # if archive to be read again (from time to time and depending on user activity)
-            if self.create_archive or count > count_rebuild or self.config.update_views["archive"]:
+            if self.create_archive and count > count_rebuild:
                 time.sleep(10)
                 self.archive_list_create()
                 self.create_archive = False
-                self.config.update_views["archive"] = False
 
             # if favorites to be read again (from time to time and depending on user activity)
-            if self.create_favorites or count > count_rebuild or self.config.update_views["favorite"]:
+            if self.create_favorites and count > count_rebuild:
                 time.sleep(10)
                 self.favorite_list_create()
                 self.create_favorites = False
-                self.config.update_views["favorite"] = False
 
             if count > count_rebuild:
                 count = 0
