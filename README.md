@@ -224,6 +224,8 @@ Thanks for your inspiration, code snippets, images:
 
 <img src="info/images/birdcam_23.PNG" width="30%"><img src="info/images/birdcam_15.PNG" width="30%"><img src="info/images/birdcam_16.PNG" width="30%">
 
-<img src="info/images/birdcam_01.PNG" width="30%"><img src="info/images/birdcam_02.PNG" width="30%">
+<img src="info/images/birdcam_01.PNG" width="30%"><img src="info/images/birdcam_02.PNG" width="30%"><img src="info/images/birdcam_24.PNG" width="30%">
+<img src="info/images/birdcam_25.PNG" width="30%">
+
 <br/><br/>
 <img src="info/images/birdcam_14.PNG" width="90%">
