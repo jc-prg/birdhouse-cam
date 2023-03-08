@@ -524,6 +524,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         content["title"] = config.param["title"]
         content["backup"] = config.param["backup"]
         content["weather"] = config.param["weather"]
+        content["views"] = config.param["views"]
 
         # delete values not required in API response
         if "links_json" in content:

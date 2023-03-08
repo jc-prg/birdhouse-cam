@@ -194,6 +194,7 @@ birdhouse_default_sensor = {
         "humidity": "%"
     }
 }
+
 birdhouse_preset = {
     "title": "Our Birdhouse :-)",
     "localization": {
@@ -224,6 +225,12 @@ birdhouse_preset = {
         "database_server":  "",
         "initial_setup":    True
     },
+    "views": {
+        "index": {
+            "type": "default",
+            "lowres_position": 1
+        }
+    },
     "devices": {
         "cameras": {
             "cam1": birdhouse_default_cam1,
@@ -249,13 +256,6 @@ file_types = {
     '.gif': 'image/gif',
     '.jpg': 'image/jpg',
     '.jpeg': 'image/jpg',
-}
-
-interesting_icons = {
-    "other": "🌂 ☔ ❄ 🌈 🌬 🌡 ⚡ 🌞 ✨ ⭐ 🌟 💫 💦 🔅 🔆 ⛷ 🌍 🌎 🌏 🌐",
-    "moons": "🌑 🌒 🌓 🌔 🌕 🌖 🌗 🌘",
-    "weather": "🌤 🌦 🌧 🌨 🌩 🌪 ",
-    "clock": "🕐 🕒 🕓 🕔 🕕 🕖 🕗 🕘 🕙 🕚 🕛 🕜 🕝 🕞 🕟 🕠 🕡 🕢 🕣 🕤 🕥 🕦 🕧"
 }
 
 birdhouse_weather_descriptions = {
@@ -288,7 +288,6 @@ birdhouse_weather_descriptions = {
     "96": "thunderstorms with slight hail",
     "99": "thunderstorms with heavy hail"
 }
-
 birdhouse_weather_icons = {
     "0": "☀️",
     "1": "☀️",
@@ -319,5 +318,12 @@ birdhouse_weather_icons = {
     "96": "⛈",
     "99": "⛈",
     "100": "✨"
+}
+
+interesting_icons = {
+    "other": "🌂 ☔ ❄ 🌈 🌬 🌡 ⚡ 🌞 ✨ ⭐ 🌟 💫 💦 🔅 🔆 ⛷ 🌍 🌎 🌏 🌐",
+    "moons": "🌑 🌒 🌓 🌔 🌕 🌖 🌗 🌘",
+    "weather": "🌤 🌦 🌧 🌨 🌩 🌪 ",
+    "clock": "🕐 🕒 🕓 🕔 🕕 🕖 🕗 🕘 🕙 🕚 🕛 🕜 🕝 🕞 🕟 🕠 🕡 🕢 🕣 🕤 🕥 🕦 🕧"
 }
 
