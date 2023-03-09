@@ -675,7 +675,6 @@ class BirdhouseConfigQueue(threading.Thread):
         start_time = time.time()
         while self._running:
             if start_time + self.queue_wait < time.time():
-                start_time = time.time()
                 self.logging.debug("... Check Queue")
 
                 count_entries = 0
@@ -693,6 +692,7 @@ class BirdhouseConfigQueue(threading.Thread):
                                 entries_available = True
 
                 if entries_available:
+                    start_time = time.time()
                     self.logging.info("... Entries available in the queue (" +
                                       str(round(time.time()-start_time, 2)) + "s)")
                     for config_file in config_files:
