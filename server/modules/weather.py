@@ -504,7 +504,8 @@ class BirdhouseWeather(threading.Thread):
 
             # last update has been a while
             elif last_update + self.update_time < time.time():
-                self.logging.info("Read weather data (every "+str(self.update_time)+"s/"+self.id+") ...")
+                self.logging.info("Read weather data (every " + str(self.update_time) + "s/" + self.id + "/" +
+                                  self.weather_source + ") ...")
                 last_update = time.time()
                 self.weather_info = self.module.get_data()
                 if not self.error and not self.module.error:
