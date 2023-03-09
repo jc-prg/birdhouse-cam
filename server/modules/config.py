@@ -378,9 +378,13 @@ class BirdhouseConfigJSON(object):
             self.raise_error("Could not write JSON file: " + filename + " - " +str(e))
 
 
-class BirdhouseConfigDBHandler(object):
+class BirdhouseConfigDBHandler(threading.Thread):
 
     def __init__(self, config, db_type="json", main_directory=""):
+        threading.Thread.__init__(self)
+        self._running = True
+        self._paused = False
+
         self.config = config
         self.error = False
         self.error_msg = []
@@ -397,6 +401,7 @@ class BirdhouseConfigDBHandler(object):
         self.db_port_internal = 5984
         self.db_basedir = "/usr/src/app/data/"
 
+        self.backup_interval = 60*15
         self.directories = birdhouse_directories
         self.files = birdhouse_files
         self.main_directory = main_directory
@@ -405,8 +410,18 @@ class BirdhouseConfigDBHandler(object):
         self.couch = None
         self.db_type = None
         self.set_db_type(db_type)
-        self.paused = False
         self.config_cache = {}
+
+    def run(self):
+        """
+        if db_type == json, create a backup regularly
+        """
+        update_time = time.time()
+        while self._running:
+            if self.db_type == "couch" and update_time + self.backup_interval < time.time():
+                update_time = time.time()
+                self.write_cache_to_json()
+            time.sleep(10)
 
     def connect(self, db_type=None):
         """
@@ -429,7 +444,7 @@ class BirdhouseConfigDBHandler(object):
         if self.db_type == "json":
             self.logging.info("  -> database handler - db_type=" + self.db_type + ".")
             return True
-        elif self.db_type == "couch":
+        elif self.db_type == "couch" or self.db_type == "both":
             if self.couch is None or not self.couch.connected:
                 self.couch = BirdhouseConfigCouchDB(self.config, self.db_usr, self.db_pwd, self.db_server,
                                                     self.db_port_internal, self.db_basedir)
@@ -452,8 +467,8 @@ class BirdhouseConfigDBHandler(object):
                 "db_connected": self.json.connected,
                 "db_error": self.json.error,
                 "db_error_msg": self.json.error_msg,
-                "handler_error": self.json.error,
-                "handler_error_msg": self.json.error_msg
+                "handler_error": self.error,
+                "handler_error_msg": self.error_msg
             }
         elif self.db_type == "couch":
             db_info = {
@@ -461,8 +476,17 @@ class BirdhouseConfigDBHandler(object):
                 "db_connected": self.couch.connected,
                 "db_error": self.couch.error,
                 "db_error_msg": self.couch.error_msg,
-                "handler_error": self.json.error,
-                "handler_error_msg": self.json.error_msg
+                "handler_error": self.error,
+                "handler_error_msg": self.error_msg
+            }
+        elif self.db_type == "both":
+            db_info = {
+                "type": self.db_type,
+                "db_connected": "couch=" + str(self.couch.connected) + " / json=" + str(self.json.connected),
+                "db_error": "couch=" + str(self.couch.error) + " / json=" + str(self.json.error),
+                "db_error_msg": [*self.couch.error_msg, *self.json.error_msg],
+                "handler_error": self.error,
+                "handler_error_msg": self.error_msg
             }
         return db_info
 
@@ -493,7 +517,7 @@ class BirdhouseConfigDBHandler(object):
         """
         wait if paused to avoid loss of data
         """
-        while self.paused:
+        while self._paused:
             time.sleep(0.2)
 
     def file_path(self, config, date=""):
@@ -551,6 +575,7 @@ class BirdhouseConfigDBHandler(object):
         self.logging.debug("-----> Check DB exists: " + str(if_exists) + " (" + self.db_type + " | " + filename +")")
         return if_exists
 
+    # -> check if DB couch exists
     def read(self, config, date=""):
         """
         read data from DB
@@ -561,8 +586,10 @@ class BirdhouseConfigDBHandler(object):
             result = self.json.read(filename)
         elif "config.json" in filename:
             result = self.json.read(filename)
-        elif self.db_type == "couch":
+        elif self.db_type == "couch" or self.db_type == "both":
             result = self.couch.read(filename)
+            if result == {}:
+                result = self.json.read(filename)
         else:
             self.raise_error("Unknown DB type ("+str(self.db_type)+")")
         return result.copy()
@@ -588,6 +615,7 @@ class BirdhouseConfigDBHandler(object):
         """
         write data to DB
         """
+        self.logging.info("Write: " + config + " / " + date + " / " + self.db_type)
         self.wait_if_paused()
         if data is None:
             self.logging.error("Write: No data given ("+str(config)+"/"+str(date)+")")
@@ -598,7 +626,14 @@ class BirdhouseConfigDBHandler(object):
         if self.db_type == "json":
             self.json.write(filename, data)
             self.write_cache(config, date, data)
+        elif self.db_type == "couch" and "config.json" in filename:
+            self.couch.write(filename, data, create)
+            self.json.write(filename, data)
+            self.write_cache(config, date, data)
         elif self.db_type == "couch":
+            self.couch.write(filename, data, create)
+            self.write_cache(config, date, data)
+        elif self.db_type == "both":
             self.json.write(filename, data)
             self.couch.write(filename, data, create)
             self.write_cache(config, date, data)
@@ -609,7 +644,7 @@ class BirdhouseConfigDBHandler(object):
         """
         create a copy of a complete config file
         """
-        if self.db_type == "json":
+        if self.db_type == "json" or self.db_type == "both":
             config_file = self.file_path(config, date)
             content = self.read(config_file)
             self.write(config_file + "." + add, content)
@@ -627,6 +662,22 @@ class BirdhouseConfigDBHandler(object):
         else:
             self.config_cache[config] = {}
             self.config_cache[config][date] = data
+
+    def write_cache_to_json(self):
+        """
+        create a backup of all data in the cache to JSON files (backup if db_type == couch)
+        """
+        start_time = time.time()
+        self.logging.info("Create backup from cached data ...")
+        for config in self.config_cache:
+            if config != "backup":
+                self.json.write(config=config, date="", data=self.config_cache[config])
+                self.logging.info("   -> backup: " + config + " (" + str(round(time.time()-start_time, 1)) + "s)")
+            else:
+                for date in self.config_cache[config]:
+                    self.json.write(config=config, date=date, data=self.config_cache[config][date])
+                    self.logging.info("   -> backup: " + config + " / " + date +
+                                      " (" + str(round(time.time()-start_time, 1)) + "s)")
 
     def lock(self, config, date=""):
         """
@@ -665,7 +716,7 @@ class BirdhouseConfigQueue(threading.Thread):
         self._running = True
         self.edit_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": []}
         self.status_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": []}
-        self.queue_wait = 3
+        self.queue_wait = 5
 
     def run(self):
         """
@@ -853,6 +904,14 @@ class BirdhouseConfigQueue(threading.Thread):
                     self.logging.info("Queue: wrote "+str(count_entries)+" entries to "+str(count_files) +
                                       " config files ("+str(round(time.time()-start_time, 2))+"s/" +
                                       str(round(time.time()))+")")
+
+                    duration = time.time() - start_time
+                    if self.queue_wait < duration:
+                        self.logging.warning("Writing entries from queue takes longer than expected. " +
+                                             "Check DB configuration!")
+                        if self.queue_wait < 20:
+                            self.queue_wait += 3
+                            self.logging.warning("-> extended waiting time: " + str(self.queue_wait) + "s")
 
             time.sleep(1)
 
@@ -1097,6 +1156,7 @@ class BirdhouseConfig(threading.Thread):
 
         # read main config file
         self.db_handler = BirdhouseConfigDBHandler(self, "json", main_directory)
+        self.db_handler.start()
         self.main_directory = main_directory
         if self.db_handler.exists("main"):
             self.param = self.db_handler.read("main")
@@ -1128,6 +1188,7 @@ class BirdhouseConfig(threading.Thread):
         self.db_type = self.param["server"]["database_type"]
         if self.db_type != "json" and ("db_type" not in self.param_init or self.param_init["db_type"] != "json"):
             self.db_handler = BirdhouseConfigDBHandler(self, self.db_type, main_directory)
+            self.db_handler.start()
 
         self.queue = BirdhouseConfigQueue(config=self, db_handler=self.db_handler)
         self.queue.start()
@@ -1143,6 +1204,9 @@ class BirdhouseConfig(threading.Thread):
         if "weather" not in self.param_init or self.param_init["weather"] is not False:
             self.weather = BirdhouseWeather(config=self, time_zone=self.timezone)
             self.weather.start()
+        elif not self.weather and self.weather is not None:
+            self.weather.stop()
+            self.weather = False
         else:
             self.weather = False
 
@@ -1236,6 +1300,8 @@ class BirdhouseConfig(threading.Thread):
 
         if config == "main":
             self.param = self.db_handler.read(config, date)
+            self.db_handler.set_db_type(db_type=self.param["server"]["database_type"])
+
             for key in self.update:
                 self.update[key] = True
 
