@@ -686,8 +686,9 @@ class BirdhouseConfigQueue(threading.Thread):
 
                     # show entries in queue
                     if len(self.edit_queue[config_file]) > 0:
-                        self.logging.debug("    - " + config_file + ": " +
-                                           str(len(self.edit_queue[config_file])) + " entries")
+                        self.logging.info("    -> Queue: " + config_file + ": " +
+                                          str(len(self.edit_queue[config_file])) + " entries" +
+                                          " (" + str(round(time.time()-start_time, 2)) + "s)")
 
                     # Check if DB connection
                     while not self.db_handler.get_db_status()["db_connected"]:
@@ -803,9 +804,11 @@ class BirdhouseConfigQueue(threading.Thread):
                         self.db_handler.unlock(config_file)
                         self.db_handler.write(config_file, "", entries)
 
-                    # STATUS QUEUE: backup (with date)
+                    # STATUS QUEUE: backup (with date) ###
+                    # ----------------------> check if read is required before check length
                     elif config_file == "backup":
                         for date in self.status_queue[config_file]:
+
                             entry_data = self.db_handler.read_cache(config_file, date)
                             entries = entry_data["files"]
                             self.db_handler.lock(config_file, date)
@@ -827,6 +830,10 @@ class BirdhouseConfigQueue(threading.Thread):
                             entry_data["files"] = entries
                             self.db_handler.unlock(config_file, date)
                             self.db_handler.write(config_file, date, entry_data)
+
+                    self.logging.info("    -> Queue: " + config_file + ": " +
+                                      str(len(self.edit_queue[config_file])) + " entries" +
+                                      " (" + str(round(time.time() - start_time, 2)) + "s)")
 
                 if count_entries > 0:
                     self.logging.info("Queue: wrote "+str(count_entries)+" entries to "+str(count_files) +
