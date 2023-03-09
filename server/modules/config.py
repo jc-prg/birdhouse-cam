@@ -760,10 +760,10 @@ class BirdhouseConfigQueue(threading.Thread):
 
                         # EDIT QUEUE: today, video (without date)
                         if config_file != "backup" and len(self.edit_queue[config_file]) > 0:
-                            self.logging.info("       .start (" + str(round(time.time()-file_start_time, 2)) + "s)")
+                            self.logging.debug("       .start (" + str(round(time.time()-file_start_time, 2)) + "s)")
                             entries = self.db_handler.read_cache(config_file)
                             self.db_handler.lock(config_file)
-                            self.logging.info("       .read (" + str(round(time.time()-file_start_time, 2)) + "s)")
+                            self.logging.debug("       .read (" + str(round(time.time()-file_start_time, 2)) + "s)")
 
                             count_files += 1
                             count_edit = 0
@@ -791,11 +791,11 @@ class BirdhouseConfigQueue(threading.Thread):
                                     if "to_be_deleted" in entries[key]:
                                         del entries[key]["to_be_deleted"]
 
-                            self.logging.info("       .edit (" + str(round(time.time()-file_start_time, 2)) + "s)")
+                            self.logging.debug("       .edit (" + str(round(time.time()-file_start_time, 2)) + "s)")
                             self.db_handler.unlock(config_file)
                             self.db_handler.write(config_file, "", entries)
-                            self.logging.info("       .write (" + str(round(time.time()-file_start_time, 2)) + "s / " +
-                                              str(round(sys.getsizeof(entries)/1024, 1)) + "kB)")
+                            self.logging.debug("       .write (" + str(round(time.time()-file_start_time, 2)) + "s / " +
+                                               str(round(sys.getsizeof(entries)/1024, 1)) + "kB)")
 
                             if count_edit > 0 and self.views is not None:
                                 self.views.favorite_list_update()
@@ -871,8 +871,7 @@ class BirdhouseConfigQueue(threading.Thread):
                             self.db_handler.unlock(config_file)
                             self.db_handler.write(config_file, "", entries)
 
-                        # STATUS QUEUE: backup (with date) ###
-                        # ----------------------> check if read is required before check length
+                        # STATUS QUEUE: backup (with date)
                         elif config_file == "backup":
                             for date in self.status_queue[config_file]:
 
