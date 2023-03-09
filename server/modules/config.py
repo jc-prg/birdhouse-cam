@@ -841,8 +841,7 @@ class BirdhouseConfigQueue(threading.Thread):
                                 self.db_handler.unlock(config_file, date)
                                 self.db_handler.write(config_file, date, entry_data)
 
-                        self.logging.info("    -> Queue: " + config_file + ": " +
-                                          str(len(self.edit_queue[config_file])) + " entries" +
+                        self.logging.info("    -> Queue: " + config_file + " done. " +
                                           " (" + str(round(time.time() - start_time, 2)) + "s)")
 
                     self.logging.info("Queue: wrote "+str(count_entries)+" entries to "+str(count_files) +
