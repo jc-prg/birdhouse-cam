@@ -708,8 +708,10 @@ class BirdhouseConfigQueue(threading.Thread):
 
                         # EDIT QUEUE: today, video (without date)
                         if config_file != "backup" and len(self.edit_queue[config_file]) > 0:
+                            self.logging.info("       .start (" + str(round(time.time()-start_time, 2)) + "s)")
                             entries = self.db_handler.read_cache(config_file)
                             self.db_handler.lock(config_file)
+                            self.logging.info("       .read (" + str(round(time.time()-start_time, 2)) + "s)")
 
                             count_files += 1
                             count_edit = 0
@@ -737,11 +739,13 @@ class BirdhouseConfigQueue(threading.Thread):
                                     if "to_be_deleted" in entries[key]:
                                         del entries[key]["to_be_deleted"]
 
-                            if count_edit > 0 and self.views is not None:
-                                self.views.favorite_list_update()
-
+                            self.logging.info("       .edit (" + str(round(time.time()-start_time, 2)) + "s)")
                             self.db_handler.unlock(config_file)
                             self.db_handler.write(config_file, "", entries)
+                            self.logging.info("       .write (" + str(round(time.time()-start_time, 2)) + "s)")
+
+                            if count_edit > 0 and self.views is not None:
+                                self.views.favorite_list_update()
 
                         # EDIT QUEUE: backup (with date)
                         elif config_file == "backup":
