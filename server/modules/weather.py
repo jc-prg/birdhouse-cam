@@ -447,6 +447,7 @@ class BirdhouseWeather(threading.Thread):
         self._paused = False
         self.config = config
         self.initial_date = self.config.local_time().strftime("%Y%m%d")
+        self.id = self.config.local_time().strftime("%H%M%S")
 
         self.logging = logging.getLogger("weather")
         self.logging.setLevel(birdhouse_loglevel)
@@ -503,7 +504,7 @@ class BirdhouseWeather(threading.Thread):
 
             # last update has been a while
             elif last_update + self.update_time < time.time():
-                self.logging.info("Read weather data ...")
+                self.logging.info("Read weather data (every "+str(self.update_time)+"s/"+self.id+") ...")
                 last_update = time.time()
                 self.weather_info = self.module.get_data()
                 if not self.error and not self.module.error:
