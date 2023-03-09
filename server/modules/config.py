@@ -693,6 +693,7 @@ class BirdhouseConfigQueue(threading.Thread):
                                 entries_available = True
 
                 if entries_available:
+                    self.logging.info("... Entries available in the queue")
                     for config_file in config_files:
                         self.logging.info("    -> Queue: "+config_file+" ... (" +
                                           str(len(self.edit_queue[config_file])) + " entries / " +
