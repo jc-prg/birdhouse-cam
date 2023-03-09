@@ -742,7 +742,8 @@ class BirdhouseConfigQueue(threading.Thread):
                             self.logging.info("       .edit (" + str(round(time.time()-start_time, 2)) + "s)")
                             self.db_handler.unlock(config_file)
                             self.db_handler.write(config_file, "", entries)
-                            self.logging.info("       .write (" + str(round(time.time()-start_time, 2)) + "s)")
+                            self.logging.info("       .write (" + str(round(time.time()-start_time, 2)) + "s / " +
+                                              str(round(sys.getsizeof(entries)/1024, 1)) + "kB)")
 
                             if count_edit > 0 and self.views is not None:
                                 self.views.favorite_list_update()
