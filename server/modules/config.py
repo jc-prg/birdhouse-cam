@@ -696,6 +696,7 @@ class BirdhouseConfigQueue(threading.Thread):
                     self.logging.info("... Entries available in the queue (" +
                                       str(round(time.time()-start_time, 2)) + "s)")
                     for config_file in config_files:
+                        file_start_time = time.time()
                         self.logging.info("    -> Queue: "+config_file+" ... (" +
                                           str(len(self.edit_queue[config_file])) + " entries / " +
                                           str(round(time.time()-start_time, 2)) + "s)")
@@ -708,10 +709,10 @@ class BirdhouseConfigQueue(threading.Thread):
 
                         # EDIT QUEUE: today, video (without date)
                         if config_file != "backup" and len(self.edit_queue[config_file]) > 0:
-                            self.logging.info("       .start (" + str(round(time.time()-start_time, 2)) + "s)")
+                            self.logging.info("       .start (" + str(round(time.time()-file_start_time, 2)) + "s)")
                             entries = self.db_handler.read_cache(config_file)
                             self.db_handler.lock(config_file)
-                            self.logging.info("       .read (" + str(round(time.time()-start_time, 2)) + "s)")
+                            self.logging.info("       .read (" + str(round(time.time()-file_start_time, 2)) + "s)")
 
                             count_files += 1
                             count_edit = 0
@@ -739,10 +740,10 @@ class BirdhouseConfigQueue(threading.Thread):
                                     if "to_be_deleted" in entries[key]:
                                         del entries[key]["to_be_deleted"]
 
-                            self.logging.info("       .edit (" + str(round(time.time()-start_time, 2)) + "s)")
+                            self.logging.info("       .edit (" + str(round(time.time()-file_start_time, 2)) + "s)")
                             self.db_handler.unlock(config_file)
                             self.db_handler.write(config_file, "", entries)
-                            self.logging.info("       .write (" + str(round(time.time()-start_time, 2)) + "s / " +
+                            self.logging.info("       .write (" + str(round(time.time()-file_start_time, 2)) + "s / " +
                                               str(round(sys.getsizeof(entries)/1024, 1)) + "kB)")
 
                             if count_edit > 0 and self.views is not None:
