@@ -336,7 +336,8 @@ class BirdhouseViews(threading.Thread):
             content["subtitle"] = presets.birdhouse_pages["backup"][0] + " " + files_data["info"]["date"]
             content["links"] = print_links_json(link_list=("live", "today", "backup", "favorit"), cam=which_cam)
 
-        elif os.path.isfile(self.config.db_handler.file_path(config="images")):
+        elif self.config.db_handler.exists(config="images"):
+            # elif os.path.isfile(self.config.db_handler.file_path(config="images")):
             backup = False
             files_all = self.config.db_handler.read_cache(config="images")
             time_now = self.config.local_time().strftime('%H%M%S')
