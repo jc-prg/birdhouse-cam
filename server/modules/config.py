@@ -576,7 +576,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
             if not if_exists:
                 if_exists = os.path.isfile(filename)
 
-        self.logging.info("-----> Check DB exists: " + str(if_exists) + " (" + self.db_type + " | " + filename + ")")
+        self.logging.debug("-----> Check DB exists: " + str(if_exists) + " (" + self.db_type + " | " + filename + ")")
         return if_exists
 
     # -> check if DB couch exists
@@ -586,16 +586,21 @@ class BirdhouseConfigDBHandler(threading.Thread):
         """
         result = {}
         filename = self.file_path(config, date)
+
         if self.db_type == "json":
             result = self.json.read(filename)
+
         elif "config.json" in filename:
             result = self.json.read(filename)
+
         elif self.db_type == "couch" or self.db_type == "both":
             result = self.couch.read(filename)
             if result == {}:
                 result = self.json.read(filename)
+
         else:
             self.raise_error("Unknown DB type ("+str(self.db_type)+")")
+
         return result.copy()
 
     def read_cache(self, config, date=""):
@@ -604,9 +609,11 @@ class BirdhouseConfigDBHandler(threading.Thread):
         """
         if config not in self.config_cache and date == "":
             self.config_cache[config] = self.read(config=config, date="")
+
         elif config not in self.config_cache and date != "":
             self.config_cache[config] = {}
             self.config_cache[config][date] = self.read(config=config, date=date)
+
         elif date not in self.config_cache[config] and date != "":
             self.config_cache[config][date] = self.read(config=config, date=date)
 
