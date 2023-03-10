@@ -732,7 +732,7 @@ class BirdhouseConfigQueue(threading.Thread):
 
     def run(self):
         """
-        create videos and process queue
+        create videos and process queue.
         """
         config_files = ["images", "videos", "backup", "sensor", "weather"]
         start_time = time.time()
