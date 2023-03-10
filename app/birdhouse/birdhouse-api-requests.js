@@ -55,6 +55,15 @@ function birdhouse_deleteMarkedFiles(param1,param2) {
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerDeleteRequest,'','birdhouse_deleteMarkedFiles');
     }
 
+function birdhouse_removeDataToday() {
+    appMsg.confirm("Remove all the data from today?", "birdhouse_removeDataToday_exec();", 250);
+}
+
+function birdhouse_removeDataToday_exec() {
+	commands = ["clean_data_today"];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_removeDataToday');
+}
+
 function birdhouse_recreateImageConfig() {
 	commands = ["recreate-image-config"];
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerRecreateImageConfig,'','birdhouse_recreateImageConfig');

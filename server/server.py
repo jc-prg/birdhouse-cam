@@ -323,6 +323,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = camera[which_cam].camera_reconnect()
         elif self.path.startswith('/remove/'):
             response = backup.delete_marked_files_api(self.path)
+        elif self.path.startswith('/clean_data_today/'):
+            config.db_handler.clean_all_data("images")
+            config.db_handler.clean_all_data("weather")
+            config.db_handler.clean_all_data("sensor")
+            response = {"cleanup": "done"}
         elif self.path.startswith('/force_backup/'):
             response = {}
             backup.backup_files()

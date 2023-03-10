@@ -689,6 +689,14 @@ class BirdhouseConfigDBHandler(threading.Thread):
                     self.logging.info("   -> backup: " + config + " / " + date +
                                       " (" + str(round(time.time()-start_time, 1)) + "s)")
 
+    def clean_all_data(self, config, date=""):
+        """
+        remove all entries from a database
+        """
+        self.logging.info("Clean all data from database " + config + " " + date)
+        self.write(config=config, date=date, data={})
+        self.write_cache(config=config, date=date, data={})
+
     def lock(self, config, date=""):
         """
         lock file if JSON
