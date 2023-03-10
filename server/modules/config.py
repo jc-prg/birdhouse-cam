@@ -619,7 +619,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         """
         write data to DB
         """
-        self.logging.info("Write: " + config + " / " + date + " / " + self.db_type)
+        self.logging.debug("Write: " + config + " / " + date + " / " + self.db_type)
         self.wait_if_paused()
         if data is None:
             self.logging.error("Write: No data given ("+str(config)+"/"+str(date)+")")
@@ -754,7 +754,6 @@ class BirdhouseConfigQueue(threading.Thread):
                                       str(round(time.time()-start_time, 2)) + "s)")
                     for config_file in config_files:
                         file_start_time = time.time()
-                        active_files.append(config_file)
                         self.logging.debug("    -> Queue: "+config_file+" ... (" +
                                            str(len(self.edit_queue[config_file])) + " entries / " +
                                            str(round(time.time()-start_time, 2)) + "s)")
@@ -768,6 +767,7 @@ class BirdhouseConfigQueue(threading.Thread):
                         # EDIT QUEUE: today, video (without date)
                         if config_file != "backup" and len(self.edit_queue[config_file]) > 0:
                             self.logging.debug("       .start (" + str(round(time.time()-file_start_time, 2)) + "s)")
+                            active_files.append(config_file)
                             entries = self.db_handler.read_cache(config_file)
                             self.db_handler.lock(config_file)
                             self.logging.debug("       .read (" + str(round(time.time()-file_start_time, 2)) + "s)")
@@ -810,6 +810,8 @@ class BirdhouseConfigQueue(threading.Thread):
                         # EDIT QUEUE: backup (with date)
                         elif config_file == "backup":
                             for date in self.edit_queue[config_file]:
+                                if "backup" not in active_files:
+                                    active_files.append(config_file)
                                 entry_data = self.db_handler.read_cache(config_file, date)
                                 entries = entry_data["files"]
                                 self.db_handler.lock(config_file, date)
