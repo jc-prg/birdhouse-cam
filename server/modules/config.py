@@ -579,7 +579,6 @@ class BirdhouseConfigDBHandler(threading.Thread):
         self.logging.debug("-----> Check DB exists: " + str(if_exists) + " (" + self.db_type + " | " + filename + ")")
         return if_exists
 
-    # -> check if DB couch exists
     def read(self, config, date=""):
         """
         read data from DB
@@ -728,6 +727,7 @@ class BirdhouseConfigQueue(threading.Thread):
         self.edit_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": []}
         self.status_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": []}
         self.queue_wait = 5
+        self.queue_wait_max = 30
         self.queue_wait_duration = 0
 
     def run(self):
@@ -926,10 +926,10 @@ class BirdhouseConfigQueue(threading.Thread):
 
                     self.queue_wait_duration = time.time() - start_time
                     if self.queue_wait < self.queue_wait_duration:
-                        self.logging.warning("Writing entries from queue takes longer than expected. " +
-                                             "Check DB configuration!")
-                        if self.queue_wait < 20:
+                        if self.queue_wait < self.queue_wait_max:
                             self.queue_wait += 3
+                            self.logging.warning("Writing entries from queue takes longer than expected. " +
+                                                 "Check DB configuration!")
                             self.logging.warning("-> extended waiting time: " + str(self.queue_wait) + "s")
                         else:
                             self.logging.error("Writing entries from queue takes MUCH longer than expected. " +

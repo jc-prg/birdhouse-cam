@@ -330,7 +330,10 @@ class BirdhouseViews(threading.Thread):
             path = self.config.db_handler.directory(config="backup", date=date_backup)
             files_data = self.config.db_handler.read_cache(config="backup", date=date_backup)
             files_all = files_data["files"]
-            self.logging.info("BACKUP/" + date_backup + ": found " + str(len(files_data)) + " entries")
+            self.logging.info("BACKUP/" + date_backup + ": found " + str(len(files_all)) + " entries")
+
+            if "chart_data" in files_data:
+                content["chart_data"] = files_data["chart_data"]
 
             check_similarity = False
             category = "/backup/" + date_backup + "/"
@@ -342,7 +345,6 @@ class BirdhouseViews(threading.Thread):
 
         # else read files from current day and create vars, links ...
         elif self.config.db_handler.exists(config="images"):
-            # elif os.path.isfile(self.config.db_handler.file_path(config="images")):
             backup = False
             files_all = self.config.db_handler.read_cache(config="images")
             self.logging.info("TODAY: found " + str(len(files_all)) + " entries")
@@ -374,45 +376,48 @@ class BirdhouseViews(threading.Thread):
                 if "date" not in files_all[stamp]:
                     files_all[stamp]["date"] = date_backup[6:8] + "." + date_backup[4:6] + "." + date_backup[0:4]
 
-                if "lowres_size" in files_all[stamp]:
-                    if files_all[stamp]["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
-                        content["max_image_size"]["lowres"][0] = files_all[stamp]["lowres_size"][0]
-                    if files_all[stamp]["lowres_size"][1] > content["max_image_size"]["lowres"][1]:
-                        content["max_image_size"]["lowres"][1] = files_all[stamp]["lowres_size"][1]
+                if ((int(stamp) < int(time_now) or time_now == "000000")
+                        and files_all[stamp]["datestamp"] == date_today) or backup:
 
-                if "hires_size" in files_all[stamp]:
-                    if files_all[stamp]["hires_size"][0] > content["max_image_size"]["hires"][0]:
-                        content["max_image_size"]["hires"][0] = files_all[stamp]["hires_size"][0]
-                    if files_all[stamp]["lowres_size"][1] > content["max_image_size"]["hires"][1]:
-                        content["max_image_size"]["hires"][1] = files_all[stamp]["hires_size"][1]
+                    show_image = self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp],
+                                                                        check_similarity=check_similarity)
 
-                select_image = self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp],
-                                                                      check_similarity=check_similarity)
-                if ((int(stamp) < int(time_now) or time_now == "000000") and
-                        files_all[stamp]["datestamp"] == date_today) or files_all[stamp]["datestamp"] == date_backup:
-                    if "camera" not in files_all[stamp] or select_image or \
-                            (backup and files_all[stamp]["camera"] == which_cam):
+                    if show_image and ("camera" not in files_all[stamp] or files_all[stamp]["camera"] == which_cam):
+                        if "to_be_deleted" not in files_all[stamp] or int(files_all[stamp]["to_be_deleted"]) != 1:
 
-                        if files_all[stamp]["datestamp"] == date_today or backup:
-                            if "to_be_deleted" not in files_all[stamp] or int(files_all[stamp]["to_be_deleted"]) != 1:
-                                files_today[stamp] = files_all[stamp].copy()
-                                if "type" not in files_today[stamp]:
-                                    files_today[stamp]["type"] = "image"
-                                files_today[stamp]["category"] = category + stamp
-                                files_today[stamp]["detect"] = self.camera[which_cam].image_differs(file_info=files_today[stamp])
-                                files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
-                                if "type" in files_today[stamp] and files_today[stamp]["type"] != "data":
-                                    count += 1
+                            # check maximum image size
+                            if "lowres_size" in files_all[stamp]:
+                                if files_all[stamp]["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
+                                    content["max_image_size"]["lowres"][0] = files_all[stamp]["lowres_size"][0]
+                                if files_all[stamp]["lowres_size"][1] > content["max_image_size"]["lowres"][1]:
+                                    content["max_image_size"]["lowres"][1] = files_all[stamp]["lowres_size"][1]
+                            if "hires_size" in files_all[stamp]:
+                                if files_all[stamp]["hires_size"][0] > content["max_image_size"]["hires"][0]:
+                                    content["max_image_size"]["hires"][0] = files_all[stamp]["hires_size"][0]
+                                if files_all[stamp]["lowres_size"][1] > content["max_image_size"]["hires"][1]:
+                                    content["max_image_size"]["hires"][1] = files_all[stamp]["hires_size"][1]
 
-                                if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
-                                    files_images[stamp] = files_today[stamp].copy()
-                                    if "weather" in files_images[stamp]:
-                                        del files_images[stamp]["weather"]
-                                    if "sensor" in files_images[stamp]:
-                                        del files_images[stamp]["sensor"]
+                            # copy data to new dict (select relevant data only)
+                            files_today[stamp] = files_all[stamp].copy()
+
+                            # prepare further metadata
+                            if "type" not in files_today[stamp]:
+                                files_today[stamp]["type"] = "image"
+                            files_today[stamp]["category"] = category + stamp
+                            files_today[stamp]["detect"] = self.camera[which_cam].image_differs(file_info=files_today[stamp])
+                            files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
+                            if "type" in files_today[stamp] and files_today[stamp]["type"] != "data":
+                                count += 1
+
+                            if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
+                                files_images[stamp] = files_today[stamp].copy()
+                                if "weather" in files_images[stamp]:
+                                    del files_images[stamp]["weather"]
+                                if "sensor" in files_images[stamp]:
+                                    del files_images[stamp]["sensor"]
 
             if not backup:
-                files_today["999999"] = {
+                files_images["999999"] = {
                     "stream": "lowres/stream.mjpg?" + which_cam,
                     "lowres": "lowres/stream.mjpg?" + which_cam,
                     "hires": "index.html?" + which_cam,
@@ -420,6 +425,7 @@ class BirdhouseViews(threading.Thread):
                     "type": "addon",
                     "title": "Live-Stream"
                 }
+
             content["entries"] = files_images
 
             # Yesterday
@@ -475,9 +481,12 @@ class BirdhouseViews(threading.Thread):
                 content["entries_delete"] = files_recycle
 
         content["subtitle"] += " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
-        content["chart_data"] = create_chart_data(files_today.copy(), self.config)
         content["entries_total"] = len(files_today)
         content["view_count"] = ["all", "star", "detect", "data"]
+
+        if "chart_data" not in content:
+            content["chart_data"] = create_chart_data(files_today.copy(), self.config)
+
         return content
 
     def archive_list(self, camera):
