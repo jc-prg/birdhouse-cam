@@ -6,6 +6,7 @@ import threading
 from tqdm import tqdm
 from datetime import datetime
 from modules.presets import *
+from modules.views import create_chart_data
 
 
 class BirdhouseArchive(threading.Thread):
@@ -76,7 +77,11 @@ class BirdhouseArchive(threading.Thread):
 
             if not os.path.isfile(self.config.db_handler.file_path(config="backup", date=backup_date)):
                 files = self.create_image_config(date=backup_date)
-                files_backup = {"files": files, "info": {}}
+                files_backup = {
+                    "files": files,
+                    "chart_data": create_chart_data(data=files, config=self.config),
+                    "info": {}
+                }
                 files_backup["info"]["count"] = len(files)
                 files_backup["info"]["threshold"] = {}
                 for cam in self.camera:
@@ -96,7 +101,7 @@ class BirdhouseArchive(threading.Thread):
 
             self.config.db_handler.directory_create(config="images", date=backup_date)
             files = self.config.db_handler.read_cache(config="images")
-            files_backup = {"files": {}, "info": {}}
+            files_backup = {"files": {}, "chart_data": {}, "info": {}}
 
             file_sensor = self.config.db_handler.file_path(config="sensor")
             file_sensor_copy = os.path.join(self.config.db_handler.directory(config="images", date=backup_date),
@@ -183,6 +188,7 @@ class BirdhouseArchive(threading.Thread):
                 self.logging.info(cam + ": " + str(count_data) + " Data entries")
                 self.logging.info(cam + ": " + str(count_other_date) + " not saved (other date)")
 
+            files_backup["chart_data"] = create_chart_data(data=files_backup["files"], config=self.config)
             files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
             files_backup["info"]["count"] = count
             files_backup["info"]["size"] = backup_size

@@ -269,7 +269,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
 
             # if last update is over since update interval or settings have been updated -> request new data
             if last_update + self.update_interval < time.time() or self.update_settings:
-                self.logging.info("Read weather data ...")
+                self.logging.info("Read weather data (every " + str(self.update_time) + "s) ...")
                 last_update = time.time()
                 if self.update_settings:
                     self._create_url()
@@ -468,7 +468,7 @@ class BirdhouseWeather(threading.Thread):
         self.weather_info["info_status"]["running"] = "started"
 
         self.update = False
-        self.update_time = 60 * 15
+        self.update_time = 60 * 5
         self.update_wait = 0
 
         self.timezone = time_zone
@@ -504,8 +504,8 @@ class BirdhouseWeather(threading.Thread):
 
             # last update has been a while
             elif last_update + self.update_time < time.time():
-                self.logging.info("Read weather data (every " + str(self.update_time) + "s/" + self.id + "/" +
-                                  self.weather_source + ") ...")
+                self.logging.debug("Get weather data from module (every " + str(self.update_time) + "s/" +
+                                   self.weather_source + ") ...")
                 last_update = time.time()
                 self.weather_info = self.module.get_data()
                 if not self.error and not self.module.error:

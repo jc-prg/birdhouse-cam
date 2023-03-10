@@ -571,6 +571,8 @@ class BirdhouseConfigDBHandler(threading.Thread):
             if_exists = os.path.isfile(filename)
         elif self.db_type == "couch":
             if_exists = self.couch.exists(filename)
+        elif self.db_type == "both":
+            if_exists = self.couch.exists(filename) and os.path.isfile(filename)
 
         self.logging.debug("-----> Check DB exists: " + str(if_exists) + " (" + self.db_type + " | " + filename +")")
         return if_exists

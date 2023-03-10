@@ -322,6 +322,7 @@ class BirdhouseViews(threading.Thread):
         date_today = self.config.local_time().strftime("%Y%m%d")
         date_yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y%m%d")
 
+        # if backup entry read from respective DB and create vars, links ...
         if date_backup != "":
             backup = True
             path = self.config.db_handler.directory(config="backup", date=date_backup)
@@ -336,6 +337,7 @@ class BirdhouseViews(threading.Thread):
             content["subtitle"] = presets.birdhouse_pages["backup"][0] + " " + files_data["info"]["date"]
             content["links"] = print_links_json(link_list=("live", "today", "backup", "favorit"), cam=which_cam)
 
+        # else read files from current day and create vars, links ...
         elif self.config.db_handler.exists(config="images"):
             # elif os.path.isfile(self.config.db_handler.file_path(config="images")):
             backup = False
@@ -351,6 +353,14 @@ class BirdhouseViews(threading.Thread):
                     link_list=("live", "favorit", "today_complete", "videos", "backup"), cam=which_cam)
             else:
                 content["links"] = print_links_json(link_list=("live", "favorit", "videos", "backup"), cam=which_cam)
+
+        # else something went wrong ... ?
+        else:
+            self.logging.warning("LIST: Could not read data ... " + str(param) + " date=" + date_backup +
+                                 "; path=" + path + "; cam=" + which_cam + "; further_param=" + further_param)
+
+        if "subtitle" not in content:
+            content["subtitle"] = ""
 
         if files_all != {}:
 
