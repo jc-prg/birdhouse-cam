@@ -311,6 +311,8 @@ class BirdhouseViews(threading.Thread):
             "entries": {},
             "entries_delete": {},
             "entries_yesterday": {},
+            "links": {},
+            "subtitle": "",
             "max_image_size": {
                 "lowres": [0, 0],
                 "hires": [0, 0]
@@ -334,7 +336,6 @@ class BirdhouseViews(threading.Thread):
             category = "/backup/" + date_backup + "/"
             subdirectory = date_backup + "/"
             time_now = "000000"
-            first_title = ""
 
             content["subtitle"] = presets.birdhouse_pages["backup"][0] + " " + files_data["info"]["date"]
             content["links"] = print_links_json(link_list=("live", "today", "backup", "favorit"), cam=which_cam)
@@ -349,7 +350,6 @@ class BirdhouseViews(threading.Thread):
             time_now = self.config.local_time().strftime('%H%M%S')
             category = "/current/"
             subdirectory = ""
-            first_title = "Heute &nbsp; "
 
             content["subtitle"] = presets.birdhouse_pages["today"][0]
             if self.admin_allowed():
@@ -362,9 +362,6 @@ class BirdhouseViews(threading.Thread):
         else:
             self.logging.warning("LIST: Could not read data ... " + str(param) + " date=" + date_backup +
                                  "; path=" + path + "; cam=" + which_cam + "; further_param=" + further_param)
-
-        if "subtitle" not in content:
-            content["subtitle"] = ""
 
         if files_all != {}:
 

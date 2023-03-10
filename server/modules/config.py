@@ -645,8 +645,8 @@ class BirdhouseConfigDBHandler(threading.Thread):
             self.couch.write(filename, data, create)
             self.write_cache(config, date, data)
         elif self.db_type == "both":
-            self.json.write(filename, data)
             self.couch.write(filename, data, create)
+            self.json.write(filename, data)
             self.write_cache(config, date, data)
         else:
             self.raise_error("Unknown DB type ("+str(self.db_type)+")")
@@ -766,9 +766,13 @@ class BirdhouseConfigQueue(threading.Thread):
                                            str(round(time.time()-start_time, 2)) + "s)")
 
                         # Check if DB connection
+                        wait_for_db = 0
                         while not self.db_handler.get_db_status()["db_connected"]:
                             self.logging.warning("Waiting for DB Connection (" +
                                                  str(len(self.edit_queue[config_file])) + " entries in the Queue)")
+                            wait_for_db += 1
+                            if wait_for_db > 6:
+                                self.db_handler.connect(self.db_handler.db_type)
                             time.sleep(5)
 
                         # EDIT QUEUE: today, video (without date)
