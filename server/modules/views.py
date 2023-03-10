@@ -347,7 +347,11 @@ class BirdhouseViews(threading.Thread):
         elif self.config.db_handler.exists(config="images"):
             backup = False
             files_all = self.config.db_handler.read_cache(config="images")
-            self.logging.info("TODAY: found " + str(len(files_all)) + " entries")
+            file_weather = self.config.db_handler.read_cache(config="weather")
+            file_sensor = self.config.db_handler.read_cache(config="sensor")
+            self.logging.info("TODAY: found " + str(len(files_all)) + " entries; " +
+                              str(len(file_weather)) + " weather entries; " +
+                              str(len(file_sensor)) + " sensor entries")
 
             time_now = self.config.local_time().strftime('%H%M%S')
             category = "/current/"
