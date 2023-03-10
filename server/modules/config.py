@@ -757,8 +757,8 @@ class BirdhouseConfigQueue(threading.Thread):
 
                 if entries_available:
                     start_time = time.time()
-                    self.logging.info("... Entries available in the queue (" +
-                                      str(round(time.time()-start_time, 2)) + "s)")
+                    self.logging.debug("... Entries available in the queue (" +
+                                       str(round(time.time()-start_time, 2)) + "s)")
                     for config_file in config_files:
                         file_start_time = time.time()
                         self.logging.debug("    -> Queue: "+config_file+" ... (" +
