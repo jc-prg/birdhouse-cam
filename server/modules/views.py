@@ -328,6 +328,8 @@ class BirdhouseViews(threading.Thread):
             path = self.config.db_handler.directory(config="backup", date=date_backup)
             files_data = self.config.db_handler.read_cache(config="backup", date=date_backup)
             files_all = files_data["files"]
+            self.logging.info("BACKUP/" + date_backup + ": found " + str(len(files_data)) + " entries")
+
             check_similarity = False
             category = "/backup/" + date_backup + "/"
             subdirectory = date_backup + "/"
@@ -342,6 +344,8 @@ class BirdhouseViews(threading.Thread):
             # elif os.path.isfile(self.config.db_handler.file_path(config="images")):
             backup = False
             files_all = self.config.db_handler.read_cache(config="images")
+            self.logging.info("TODAY: found " + str(len(files_all)) + " entries")
+
             time_now = self.config.local_time().strftime('%H%M%S')
             category = "/current/"
             subdirectory = ""
@@ -745,7 +749,9 @@ class BirdhouseViews(threading.Thread):
         category = "/current/"
         path = self.config.db_handler.directory(config="images")
         files_all = self.config.db_handler.read_cache(config="images")
-        # files_all = self.config.db_handler.read(config="images")
+        weather_all = self.config.db_handler.read_cache(config="weather")
+
+        self.logging.info("TODAY_COMPLETE: found " + str(len(files_all)) + " entries")
 
         time_now = self.config.local_time().strftime('%H%M%S')
         date_today = self.config.local_time().strftime("%Y%m%d")
@@ -754,7 +760,6 @@ class BirdhouseViews(threading.Thread):
         hours = list(["00", "01", "02", "03", "04", "05", "06", "07", "08", "09",
                       "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
                       "20", "21", "22", "23"])
-        # hours = list(self.camera[which_cam].param["image_save"]["hours"])
         hours.sort(reverse=True)
 
         # Today
