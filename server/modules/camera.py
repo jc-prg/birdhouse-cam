@@ -1340,6 +1340,7 @@ class BirdhouseCamera(threading.Thread):
         reload_time = time.time()
         reload_time_error = 60
         reload_time_error_record = 120
+        sensor_last = ""
 
         while self.running:
             current_time = self.config.local_time()
@@ -1485,20 +1486,22 @@ class BirdhouseCamera(threading.Thread):
                                 "error": self.error_msg[len(self.error_msg) - 1]
                             }
 
+                        if self.weather_active:
+                            image_info["weather"] = self.config.weather.get_weather_info("current_small")
+
                         for key in self.sensor:
                             if self.sensor[key].running:
                                 sensor_data[key] = self.sensor[key].get_values()
                                 sensor_data[key]["date"] = current_time.strftime("%d.%m.%Y")
                                 image_info["sensor"][key] = sensor_data[key]
 
-                        if self.weather_active:
-                            weather_data = self.config.weather.get_weather_info("current")
-                            weather_stamp = self.config.weather.get_weather_info("all")["info_update_stamp"]
-                            image_info["weather"] = self.config.weather.get_weather_info("current_small")
-                            self.config.queue.entry_add(config="weather", date="", key=weather_stamp, entry=weather_data)
-
-                        self.config.queue.entry_add(config="sensor", date="", key=stamp, entry=sensor_data)
+                        sensor_stamp = current_time.strftime("%H%M") + "00"
                         self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
+
+                        if int(self.config.local_time().strftime("%M")) % 5 == 0 and sensor_stamp != sensor_last:
+                            sensor_last = sensor_stamp
+                            self.logging.info("Write sensor data to file ...")
+                            self.config.queue.entry_add(config="sensor", date="", key=sensor_stamp, entry=sensor_data)
 
                         # if no error save image files
                         if not self.error and not self.image.error:

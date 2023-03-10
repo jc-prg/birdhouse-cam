@@ -269,7 +269,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
 
             # if last update is over since update interval or settings have been updated -> request new data
             if last_update + self.update_interval < time.time() or self.update_settings:
-                self.logging.info("Read weather data (every " + str(self.update_time) + "s) ...")
+                self.logging.info("Read weather data (every " + str(self.update_interval) + "s) ...")
                 last_update = time.time()
                 if self.update_settings:
                     self._create_url()
@@ -504,20 +504,31 @@ class BirdhouseWeather(threading.Thread):
 
             # last update has been a while
             elif last_update + self.update_time < time.time():
-                self.logging.debug("Get weather data from module (every " + str(self.update_time) + "s/" +
-                                   self.weather_source + ") ...")
+                self.logging.info("Get weather data from module (every " + str(self.update_time) + "s/" +
+                                self.weather_source + ") ...")
                 last_update = time.time()
                 self.weather_info = self.module.get_data()
                 if not self.error and not self.module.error:
                     self.weather_info["info_status"]["running"] = "OK"
 
+            # write weather data to file once every five minutes
+            if int(self.config.local_time().strftime("%M")) % 5 == 0:
+                self.logging.info("Write weather data to file ...")
+                weather_data = self.get_weather_info("current")
+                weather_stamp = self.config.local_time().strftime("%H%M")+"00"
+                self.config.queue.entry_add(config="weather", date="", key=weather_stamp, entry=weather_data)
+                time.sleep(60)
+
+            # check if data are correct
             if "current" not in self.weather_info:
                 self._raise_error("Weather data not correct (missing 'current').")
                 self.weather_info = self.weather_empty.copy()
 
+            # move errors to status info
             if self.error or self.module.error:
                 self.weather_info["info_status"]["running"] = "error"
 
+            # if error wait longer for next action
             if "info_status" in self.weather_info and "running" in self.weather_info["info_status"] \
                     and self.weather_info["info_status"]["running"] == "error":
                 time.sleep(10)
