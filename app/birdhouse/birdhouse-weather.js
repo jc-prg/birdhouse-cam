@@ -6,7 +6,11 @@
 
 
 function birdhouseWeather( title, data ) {
+	commands = ["status"];
+	appFW.requestAPI('GET', commands, '', birdhouseWeather_exec,'','birdhouseWeather');
+}
 
+function birdhouseWeather_exec( data ) {
     if (data["DATA"]["localization"]["weather_active"] == false) {
         setTextById(app_frame_content, "&nbsp;<br/><center>" + lang("NO_WEATHER_CHANGE_SETTINGS") + "</center><br/>&nbsp;");
         return;

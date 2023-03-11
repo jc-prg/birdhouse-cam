@@ -58,76 +58,256 @@ def print_links_json(link_list, cam=""):
     return json
 
 
-def create_chart_data(data, config=None):
-    chart = {
-        "titles": ["Activity"],
-        "data": {}
-    }
-    used_keys = []
-    used_cameras = []
-    weather_data_in_chart = ["temperature", "humidity", "wind"]
-    weather_data_interval = 5
+class BirdhouseViewCreate(object):
 
-    if data == {} or "dict" not in str(type(data)):
-        view_logging.error("Could not create chart data (empty)!")
+    def __init__(self):
+        self.logging = logging.getLogger("view-creat")
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
+        self.logging.info("Starting backup handler ...")
 
-    # get categories / titles
-    for key in data:
-        print_minute = key[2:4]
-        print_key = key[0:2]+":"+key[2:4]
-        if int(print_minute) % weather_data_interval == 0:
+    def chart_data_new(self, data_image, data_sensor=None, data_weather=None, config=None):
+        """
+        create chart data based on sensor, weather and activity data
+        """
+        self.logging.debug("create_chart_data_new")
+        hours = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10",
+                 "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"]
+        minutes = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"]
+        chart = {"titles": ["Activity"], "data": {}}
 
-            if "camera" in data[key] and data[key]["camera"] not in used_cameras:
-                used_cameras.append(data[key]["camera"])
+        # Calculate image activity
+        activity_dict = {}
+        for key in data_image:
+            this_hour = key[0:2]
+            this_minute = key[2:4]
+            minute_to = str(int(this_minute) + (5 - (int(this_minute) % 5))).zfill(2)
+            hour_to = this_hour
+            if int(minute_to) > 59:
+                hour_to = str(int(hour_to)+1).zfill(2)
+            if int(hour_to) > 23:
+                hour_to = "00"
 
-            if "similarity" in data[key]:
-                if round(float(data[key]["similarity"])) == 0:
-                    data[key]["similarity"] = 100
-                chart["data"][print_key] = [100-float(data[key]["similarity"])]
+            stamp = hour_to + minute_to + "00"
+            if stamp not in activity_dict:
+                activity_dict[stamp] = []
+            activity_dict[stamp].append(key)
 
-            if "sensor" in data[key]:
-                for sensor in data[key]["sensor"]:
-                    for sensor_key in data[key]["sensor"][sensor]:
-                        if sensor_key != "date":
-                            sensor_title = sensor + ":" + sensor_key
-                            if sensor_title not in chart["titles"]:
-                                chart["titles"].append(sensor_title)
+        data_activity = {}
+        for key in activity_dict:
+            activity_sum = 0
+            activity_count = 0
+            for stamp in activity_dict[key]:
+                if "similarity" in data_image[stamp]:
+                    activity_sum += float(data_image[stamp]["similarity"])
+                    activity_count += 1
+            data_activity[key] = 100 - (activity_sum / activity_count)
 
-            if "weather" in data[key]:
-                if "location" in data[key]["weather"]:
-                    location = data[key]["weather"]["location"]
-                elif config is not None:
-                    location = config.param["localization"]["weather_location"]
-                else:
-                    location = ""
-                for weather_category in weather_data_in_chart:
-                    weather_title = "WEATHER/" + location + ":" + weather_category
-                    if weather_title not in chart["titles"]:
-                        chart["titles"].append(weather_title)
+        # get categories weather
+        weather_data_in_chart = ["temperature", "humidity", "wind_speed"]
+        weather_location = config.param["weather"]["location"]
+        if data_weather is not None:
+            for weather_category in weather_data_in_chart:
+                weather_title = "WEATHER/" + weather_location + ":" + weather_category
+                if weather_title not in chart["titles"]:
+                    chart["titles"].append(weather_title)
 
-    # get data
-    for key in data:
-        print_minute = key[2:4]
-        print_key = key[0:2] + ":" + key[2:4]
-        if int(print_minute) % weather_data_interval == 0:
-            if print_key not in used_keys and used_cameras[0] == data[key]["camera"]:
-                used_keys.append(print_key)
-                for title in chart["titles"]:
+        # get categories sensor
+        sensor_list = []
+        sensor_key_list = []
+        if data_sensor is not None:
+            for stamp in data_sensor:
+                for sensor in data_sensor[stamp]:
+                    if sensor != "activity" and sensor != "date":
+                        if sensor not in sensor_list:
+                            sensor_list.append(sensor)
+                        for sensor_key in data_sensor[stamp][sensor]:
+                            if sensor_key != "date" and sensor_key != "activity":
+                                sensor_title = sensor + ":" + sensor_key
+                                if sensor_key not in sensor_key_list:
+                                    sensor_key_list.append(sensor_key)
+                                if sensor_title not in chart["titles"]:
+                                    chart["titles"].append(sensor_title)
 
-                    if title != "Activity" and print_key in chart["data"]:
-                        sensor = title.split(":")
+        # create chart data
+        for hour in hours:
+            for minute in minutes:
+                chart_stamp = hour + ":" + minute
+                stamp = hour + minute + "00"
 
-                        if "sensor" in data[key] and sensor[0] in data[key]["sensor"] and \
-                                sensor[1] in data[key]["sensor"][sensor[0]]:
-                            chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
+                # check if a value exists
+                stamp_exists = False
+                if stamp in data_activity or stamp in data_sensor or stamp in data_weather:
+                    stamp_exists = True
+                    chart["data"][chart_stamp] = []
 
-                        elif "weather" in data[key] and sensor[1] in data[key]["weather"]:
-                            chart["data"][print_key].append(data[key]["weather"][sensor[1]])
+                # Activity
+                if stamp in data_activity:
+                    chart["data"][chart_stamp].append(data_activity[stamp])
+                elif stamp_exists:
+                    chart["data"][chart_stamp].append(None)
 
-                        else:
-                            chart["data"][print_key].append("")
+                # Weather data
+                if data_weather is not None:
+                    if stamp in data_weather:
+                        for value in weather_data_in_chart:
+                            if value in data_weather[stamp]:
+                                chart["data"][chart_stamp].append(data_weather[stamp][value])
+                            else:
+                                chart["data"][chart_stamp].append(None)
+                    elif stamp_exists:
+                        for value in weather_data_in_chart:
+                            chart["data"][chart_stamp].append(None)
 
-    return chart
+                # Sensor data
+                if data_sensor is not None:
+                    if stamp in data_sensor:
+                        for sensor in sensor_list:
+                            for sensor_key in sensor_key_list:
+                                if sensor in data_sensor[stamp] and sensor_key in data_sensor[stamp][sensor]:
+                                    chart["data"][chart_stamp].append(data_sensor[stamp][sensor][sensor_key])
+                                else:
+                                    chart["data"][chart_stamp].append(None)
+
+        return chart
+
+    def chart_data(self, data, config=None):
+        self.logging.debug("create_chart_data")
+        chart = {
+            "titles": ["Activity"],
+            "data": {}
+        }
+        used_keys = []
+        used_cameras = []
+        weather_data_in_chart = ["temperature", "humidity", "wind"]
+        weather_data_interval = 5
+
+        if data == {} or "dict" not in str(type(data)):
+            self.logging.error("Could not create chart data (empty)!")
+
+        # get categories / titles
+        for key in data:
+            print_minute = key[2:4]
+            print_key = key[0:2]+":"+key[2:4]
+            if int(print_minute) % weather_data_interval == 0:
+
+                if "camera" in data[key] and data[key]["camera"] not in used_cameras:
+                    used_cameras.append(data[key]["camera"])
+
+                if "similarity" in data[key]:
+                    if round(float(data[key]["similarity"])) == 0:
+                        data[key]["similarity"] = 100
+                    chart["data"][print_key] = [100-float(data[key]["similarity"])]
+
+                if "sensor" in data[key]:
+                    for sensor in data[key]["sensor"]:
+                        for sensor_key in data[key]["sensor"][sensor]:
+                            if sensor_key != "date":
+                                sensor_title = sensor + ":" + sensor_key
+                                if sensor_title not in chart["titles"]:
+                                    chart["titles"].append(sensor_title)
+
+                if "weather" in data[key]:
+                    if "location" in data[key]["weather"]:
+                        location = data[key]["weather"]["location"]
+                    elif config is not None:
+                        location = config.param["localization"]["weather_location"]
+                    else:
+                        location = ""
+                    for weather_category in weather_data_in_chart:
+                        weather_title = "WEATHER/" + location + ":" + weather_category
+                        if weather_title not in chart["titles"]:
+                            chart["titles"].append(weather_title)
+
+        # get data
+        for key in data:
+            print_minute = key[2:4]
+            print_key = key[0:2] + ":" + key[2:4]
+            if int(print_minute) % weather_data_interval == 0:
+                if print_key not in used_keys and used_cameras[0] == data[key]["camera"]:
+                    used_keys.append(print_key)
+                    for title in chart["titles"]:
+
+                        if title != "Activity" and print_key in chart["data"]:
+                            sensor = title.split(":")
+
+                            if "sensor" in data[key] and sensor[0] in data[key]["sensor"] and \
+                                    sensor[1] in data[key]["sensor"][sensor[0]]:
+                                chart["data"][print_key].append(data[key]["sensor"][sensor[0]][sensor[1]])
+
+                            elif "weather" in data[key] and sensor[1] in data[key]["weather"]:
+                                chart["data"][print_key].append(data[key]["weather"][sensor[1]])
+
+                            else:
+                                chart["data"][print_key].append("")
+
+        return chart
+
+    def weather_data_new(self, data_weather, config=None):
+        """
+        create hourly weather data for API
+        """
+        self.logging.debug("create_weather_data_new")
+        if data_weather is None:
+            return {}
+
+        hours = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10",
+                 "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"]
+        weather = {}
+
+        for hour in hours:
+            stamp = hour + "0000"
+            if stamp in data_weather:
+                weather[stamp] = data_weather[stamp]
+                weather[stamp]["time"] = hour + ":00"
+
+        for hour in hours:
+            stamp = hour + "0000"
+            if stamp not in weather:
+                for key in data_weather:
+                    this_hour = key[0:2]
+                    if this_hour == hour:
+                        if this_hour + ":00" == data_weather[key]["time"]:
+                            weather[stamp] = data_weather[key]
+                            weather[stamp]["time"] = this_hour + ":00"
+                            continue
+
+        return weather
+
+    def weather_data(self, data, config=None):
+        """
+        create hourly weather data for API
+        """
+        self.logging.debug("create_weather_data")
+        if data is None:
+            return {}
+
+        data_weather = {}
+        for stamp in data:
+            if "weather" in data[stamp]:
+                data_weather[stamp] = data[stamp]["weather"]
+
+        hours = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10",
+                 "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"]
+        weather = {}
+
+        for hour in hours:
+            stamp = hour + "0000"
+            if stamp in data_weather:
+                weather[stamp] = data_weather[stamp]
+                weather[stamp]["time"] = hour + ":00"
+
+        for hour in hours:
+            stamp = hour + "0000"
+            if stamp not in weather:
+                for key in data_weather:
+                    this_time = key[0:4]
+                    if this_time == hour + "00":
+                        weather[stamp] = data_weather[key]
+                        weather[stamp]["time"] = key[0:2] + ":00"
+                        continue
+
+        return weather
 
 
 class BirdhouseViews(threading.Thread):
@@ -158,13 +338,14 @@ class BirdhouseViews(threading.Thread):
         self.favorite_loading = "started"
         self.create_archive = True
         self.create_favorites = True
+        self.create = BirdhouseViewCreate()
 
     def run(self):
         """
         Do nothing at the moment
         """
-        count = 0
         count_rebuild = 60*5   # rebuild when triggerd by relevant events already - max once every 5 minutes
+        count = count_rebuild + 1
 
         self.logging.info("Starting HTML views and REST API for GET ...")
         while self._running:
@@ -290,8 +471,11 @@ class BirdhouseViews(threading.Thread):
         check_similarity = True
         backup = False
         category = ""
+        subdirectory = ""
         files_today = {}
         files_images = {}
+        files_weather = None
+        files_sensor = None
 
         if param[1] != "api":
             if len(param) > 2:
@@ -329,11 +513,17 @@ class BirdhouseViews(threading.Thread):
             backup = True
             path = self.config.db_handler.directory(config="backup", date=date_backup)
             files_data = self.config.db_handler.read_cache(config="backup", date=date_backup)
-            files_all = files_data["files"]
-            self.logging.info("BACKUP/" + date_backup + ": found " + str(len(files_all)) + " entries")
+            if "files" in files_data:
+                files_all = files_data["files"].copy()
+                self.logging.info("BACKUP/" + date_backup + ": found " + str(len(files_all)) + " entries")
+            else:
+                self.logging.info("BACKUP/" + date_backup + ": no data found")
+                return content
 
             if "chart_data" in files_data:
-                content["chart_data"] = files_data["chart_data"]
+                content["chart_data"] = files_data["chart_data"].copy()
+            if "weather_data" in files_data:
+                content["weather_data"] = files_data["weather_data"].copy()
 
             check_similarity = False
             category = "/backup/" + date_backup + "/"
@@ -347,11 +537,11 @@ class BirdhouseViews(threading.Thread):
         elif self.config.db_handler.exists(config="images"):
             backup = False
             files_all = self.config.db_handler.read_cache(config="images")
-            file_weather = self.config.db_handler.read_cache(config="weather")
-            file_sensor = self.config.db_handler.read_cache(config="sensor")
+            files_weather = self.config.db_handler.read_cache(config="weather")
+            files_sensor = self.config.db_handler.read_cache(config="sensor")
             self.logging.info("TODAY: found " + str(len(files_all)) + " entries; " +
-                              str(len(file_weather)) + " weather entries; " +
-                              str(len(file_sensor)) + " sensor entries")
+                              str(len(files_weather)) + " weather entries; " +
+                              str(len(files_sensor)) + " sensor entries")
 
             time_now = self.config.local_time().strftime('%H%M%S')
             category = "/current/"
@@ -408,8 +598,9 @@ class BirdhouseViews(threading.Thread):
                             if "type" not in files_today[stamp]:
                                 files_today[stamp]["type"] = "image"
                             files_today[stamp]["category"] = category + stamp
-                            files_today[stamp]["detect"] = self.camera[which_cam].image_differs(file_info=files_today[stamp])
+                            files_today[stamp]["detect"] = self.camera[which_cam].image_differs(files_today[stamp])
                             files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
+
                             if "type" in files_today[stamp] and files_today[stamp]["type"] != "data":
                                 count += 1
 
@@ -435,7 +626,7 @@ class BirdhouseViews(threading.Thread):
             # Yesterday
             files_yesterday = {}
             stamps = list(reversed(sorted(files_all.keys())))
-            if not backup:
+            if not backup and not self.config.param["server"]["daily_clean_up"]:
                 for stamp in stamps:
                     if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
                         if "datestamp" not in files_all[stamp]:
@@ -470,26 +661,33 @@ class BirdhouseViews(threading.Thread):
                                 if "type" not in files_recycle[stamp]:
                                     files_recycle[stamp]["type"] = "image"
                                 files_recycle[stamp]["category"] = category + stamp
-                                files_recycle[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
+                                files_recycle[stamp]["directory"] = "/" + self.config.directories["images"] + \
+                                                                    subdirectory
                                 if "type" in files_recycle[stamp] and files_recycle[stamp]["type"] != "data":
                                     count += 1
 
-            if len(files_recycle) > 0:
-                if backup:
-                    url = "/remove/backup/" + date_backup
-                else:
-                    url = "/remove/today"
-
-                intro = "<a onclick='removeFiles(\"" + url + \
-                        "\");' style='cursor:pointer;'>Delete all files marked for recycling ...</a>"
-                content["entries_delete"] = files_recycle
+                if len(files_recycle) > 0:
+                    content["entries_delete"] = files_recycle
 
         content["subtitle"] += " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
         content["entries_total"] = len(files_today)
         content["view_count"] = ["all", "star", "detect", "data"]
 
-        if "chart_data" not in content:
-            content["chart_data"] = create_chart_data(files_today.copy(), self.config)
+        if backup:
+            if "chart_data" not in content:
+                content["chart_data"] = self.create.chart_data(data=files_all.copy(), config=self.config)
+            if "weather_data" not in content:
+                content["weather_data"] = self.create.weather_data(data=files_all.copy(), config=self.config)
+
+        else:
+            if "chart_data" not in content:
+                content["chart_data"] = self.create.chart_data_new(data_image=files_today.copy(),
+                                                              data_sensor=files_sensor.copy(),
+                                                              data_weather=files_weather.copy(),
+                                                              config=self.config)
+            if "weather_data" not in content:
+                content["weather_data"] = self.create.weather_data_new(data_weather=files_weather.copy(),
+                                                                       config=self.config)
 
         return content
 
@@ -573,13 +771,18 @@ class BirdhouseViews(threading.Thread):
                 available = False
                 config_file = ""
                 config_available = False
-                if self.config.db_handler.db_type == "couch":
+                if self.config.db_handler.db_type == "couch" or self.config.db_handler.db_type == "both":
                     available = self.config.db_handler.exists(config="backup", date=directory)
                     config_file = self.config.db_handler.file_path(config="backup", date=directory)
                     config_available = os.path.isfile(config_file)
                     if not available or not config_available:
-                        self.logging.info("  -> Check CouchDB: available=" + str(available))
-                        self.logging.info("  -> Check JSON: config_file=" + str(config_available))
+                        self.logging.warning("  -> Check CouchDB: available=" + str(available))
+                        self.logging.warning("  -> Check JSON: config_file=" + str(config_available))
+
+                elif self.config.db_handler.db_type == "json":
+                    available = self.config.db_handler.exists(config="backup", date=directory)
+                    if not available:
+                        self.logging.error("  -> Check JSON: config_file=" + str(config_available))
 
                 file_data = {}
                 if available:
@@ -713,7 +916,7 @@ class BirdhouseViews(threading.Thread):
 
             content["view_count"] = []
             content["subtitle"] = presets.birdhouse_pages["backup"][0] + " (" + self.camera[cam].name + ")"
-            content["chart_data"] = create_chart_data(content["entries"].copy(), self.config)
+            content["chart_data"] = self.create.chart_data(content["entries"].copy(), self.config)
             self.archive_views[cam] = content.copy()
 
             if self.config.db_handler.db_type == "couch":
@@ -759,7 +962,8 @@ class BirdhouseViews(threading.Thread):
         category = "/current/"
         path = self.config.db_handler.directory(config="images")
         files_all = self.config.db_handler.read_cache(config="images")
-        weather_all = self.config.db_handler.read_cache(config="weather")
+        data_weather = self.config.db_handler.read_cache(config="weather")
+        data_sensor = self.config.db_handler.read_cache(config="sensor")
 
         self.logging.info("TODAY_COMPLETE: found " + str(len(files_all)) + " entries")
 
@@ -817,10 +1021,16 @@ class BirdhouseViews(threading.Thread):
         content["view_count"] = ["all", "star", "detect", "recycle", "data"]
         content["subtitle"] = presets.birdhouse_pages["today_complete"][0] + " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
         content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"), cam=which_cam)
-        content["chart_data"] = create_chart_data(content["entries"].copy(), self.config)
+        # content["chart_data"] = self.create.chart_data(content["entries"].copy(), self.config)
+        content["chart_data"] = self.create.chart_data_new(data_image=content["entries"].copy(),
+                                                           data_sensor=data_sensor,
+                                                           data_weather=data_weather,
+                                                           config=self.config)
+        content["weather_data"] = self.create.weather_data_new(data_weather=data_weather, config=self.config)
 
         length = getsizeof(content)/1024
-        self.logging.debug("CompleteListToday: End - "+self.config.local_time().strftime("%H:%M:%S")+" ("+str(length)+" kB)")
+        self.logging.debug("CompleteListToday: End - " + self.config.local_time().strftime("%H:%M:%S") +
+                           " (" + str(length) + " kB)")
         return content
 
     def favorite_list(self, camera):

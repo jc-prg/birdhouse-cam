@@ -96,6 +96,8 @@ function birdhousePrint(data) {
 	console.log("Request->Print "+app_active_page+" / "+camera+" / "+date);	
 
 	birdhouseSetMainVars(data);
+    // ----------------> sollte perspectives entfernt werden, führt jedoch zu Fehler!!!!
+	birdhouseSetMainStatus(data);
 	birdhousePrintTitle(data, app_active_page, camera);
     setTextById("headerRight", birdhouseHeaderFunctions() );
 
@@ -120,8 +122,6 @@ function birdhousePrint(data) {
 
 	if (app_active_page == "INDEX" && initial_setup) { birdhouse_settings.create(); }
 
-	birdhouseStatus_print(data);
-
 	scroll(0,0);
 	}
 
@@ -132,13 +132,12 @@ function birdhousePrintTitle(data, active_page="", camera="") {
 	if (data["DATA"]["subtitle"] != undefined)      { setTextById(app_frame_header, "<center><h2>" + data["DATA"]["subtitle"] + "</h2></center>"); }
 	else                                            { setTextById(app_frame_header, "<center><h2>" + data["DATA"]["title"] + "</h2></center>"); }
 	if (data["DATA"]["links"] != undefined)         { setTextById(app_frame_index, "<center>" + birdhouse_Links(data["DATA"]["links"]) + "</center>"); }
-	if (data["STATUS"]["start_time"] != undefined)  { setTextById("frame5", "<center><small>" + lang( "STARTTIME") + ": " + data["STATUS"]["start_time"] + "</small></center>"); }
-	else                                            { setTextById("frame5", ""); }
+	setTextById("frame5", "<center><small><div id='server_start_time'>" + lang("PLEASE_WAIT") + "</div></small></center>");
 	}
 
 
 function birdhouseSetMainVars(data) {
-
+    //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
     var initial_setup = data["DATA"]["server"]["initial_setup"];
 
 	if (data["DATA"]["devices"]["cameras"] != undefined) {
@@ -156,7 +155,9 @@ function birdhouseSetMainVars(data) {
 	        if (data["DATA"]["devices"]["microphones"][key]["active"])
 	                                                            { app_available_micros.push(key) }}
 	    }
+    }
 
+function birdhouseSetMainStatus(data) {
     var status_view = data["STATUS"]["view"];
 
 	if (status_view["active_cam"] != undefined && status_view["active_cam"] != "")
@@ -216,7 +217,7 @@ function birdhouseReloadView() {
 	app_recycle_range = {};
 	birdhouse_overlayHide();
 	setTextById("headerRight", birdhouseHeaderFunctions() );
-	
+
 	if (app_active_page == "INDEX") {
 		for (let key in app_camera_source) {
 			var image = document.getElementById("stream_"+key);

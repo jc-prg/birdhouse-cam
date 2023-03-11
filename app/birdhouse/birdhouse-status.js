@@ -44,6 +44,7 @@ function birdhouseStatus_connectionError() {
 }
 
 function birdhouseStatus_print(data) {
+    //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
     console.debug("Update Status ...");
 
     // add database information
@@ -70,7 +71,7 @@ function birdhouseStatus_print(data) {
     setTextById("system_info_db_handler",       "Error=" + data["STATUS"]["database"]["handler_error"] + " " + data["STATUS"]["database"]["handler_error_msg"].toString());
     setTextById("system_info_db_error",         "Error=" + data["STATUS"]["database"]["db_error"] + " " + data["STATUS"]["database"]["db_error_msg"].toString());
 
-
+    setTextById("server_start_time",            lang("STARTTIME") + ": " + data["STATUS"]["start_time"]);
 
     var cpu_details = "";
     for (var i=0;i<data["STATUS"]["system"]["cpu_usage_detail"].length;i++) {

@@ -108,10 +108,14 @@ function birdhouseChart_weatherOverview (entries) {
     var html = "";
     var count = 0;
     var weather_data = {};
+
     Object.keys(entries).forEach( key => {
+        weather_data[entries[key]["time"]] = entries[key]["description_icon"];
+        /*
         if (key.substring(2,4) == "00" && entries[key]["weather"]) {
             weather_data[key.substring(0,2)+":"+key.substring(2,4)] = entries[key]["weather"]["description_icon"];
         }
+        */
     });
 
     // width -> 8 if small; 16 if middle; 24 if big

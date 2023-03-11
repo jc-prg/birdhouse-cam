@@ -1452,16 +1452,17 @@ class BirdhouseCamera(threading.Thread):
 
                             image_info = {
                                 "camera": self.id,
+                                "compare": (stamp, self.previous_stamp),
+                                "date": current_time.strftime("%d.%m.%Y"),
+                                "datestamp": current_time.strftime("%Y%m%d"),
                                 "hires": self.config.filename_image("hires", stamp, self.id),
                                 "hires_size": self.image_size,
                                 "lowres": self.config.filename_image("lowres", stamp, self.id),
                                 "lowres_size": self.image_size_lowres,
-                                "compare": (stamp, self.previous_stamp),
-                                "datestamp": current_time.strftime("%Y%m%d"),
-                                "date": current_time.strftime("%d.%m.%Y"),
-                                "time": current_time.strftime("%H:%M:%S"),
                                 "similarity": similarity,
                                 "sensor": {},
+                                "time": current_time.strftime("%H:%M:%S"),
+                                "type": "image",
                                 "weather": {}
                             }
                             self.previous_image = image_compare
@@ -1473,17 +1474,18 @@ class BirdhouseCamera(threading.Thread):
                             sensor_data = {}
                             image_info = {
                                 "camera": self.id,
+                                "compare": (stamp, self.previous_stamp),
+                                "date": current_time.strftime("%d.%m.%Y"),
+                                "datestamp": current_time.strftime("%Y%m%d"),
+                                "error": self.error_msg[len(self.error_msg) - 1],
                                 "hires": "",
                                 "lowres": "",
-                                "compare": (stamp, self.previous_stamp),
-                                "datestamp": current_time.strftime("%Y%m%d"),
-                                "date": current_time.strftime("%d.%m.%Y"),
-                                "time": current_time.strftime("%H:%M:%S"),
                                 "similarity": 0,
                                 "sensor": {},
-                                "weather": {},
                                 "size": self.image_size,
-                                "error": self.error_msg[len(self.error_msg) - 1]
+                                "time": current_time.strftime("%H:%M:%S"),
+                                "type": "data",
+                                "weather": {}
                             }
 
                         if self.weather_active:

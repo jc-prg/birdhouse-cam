@@ -330,8 +330,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = {"cleanup": "done"}
         elif self.path.startswith('/force_backup/'):
             response = {}
-            backup.backup_files()
-            views.archive_list_update()
+            backup.start_backup()
         elif self.path.startswith('/force_restart/'):
             response = {}
             srv_logging.info("-------------------------------------------")
@@ -445,6 +444,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         create API response
         """
         srv_logging.debug("GET API request with '" + path + "'.")
+        request_start = time.time()
         param = path.split("/")
         command = param[2]
         status = "Success"
@@ -452,6 +452,39 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         if len(param) > 3:
             which_cam = param[3]
+
+        api_response = {
+            "STATUS": {
+                "start_time": api_start,
+                "current_time": config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
+                "admin_allowed": self.admin_allowed(),
+                "check-version": version,
+                "api-call": status,
+                "reload": False,
+                "system": {},
+                "server": {
+                    "view_archive_loading": views.archive_loading,
+                    "view_favorite_loading": views.favorite_loading,
+                    "backup_process_running": backup.backup_running
+                },
+                "devices": {
+                    "cameras": {},
+                    "sensors": {},
+                    "weather": {},
+                    "microphones": {}
+                },
+                "view": {
+                    "selected": which_cam,
+                    "active_cam": which_cam,
+                    "active_date": "",
+                    "active_page": command
+                },
+                "database": {}
+            },
+            "API": api_description,
+            "WEATHER": {},
+            "DATA": {}
+        }
 
         if command == "INDEX":
             content = views.index(server=self)
@@ -469,8 +502,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content = views.detail_view_video(server=self)
         elif command == "DEVICES":
             content = views.camera_list(server=self)
-        elif command == "status" or command == "version":
+        elif command == "status" or command == "version" or command == "list":
             content = views.index(server=self)
+
             if len(param) > 3 and param[2] == "version":
                 version["Code"] = "800"
                 version["Msg"] = "Version OK."
@@ -478,52 +512,25 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     version["Code"] = "802"
                     version["Msg"] = "Update required."
             content["last_answer"] = ""
+
             if len(config.async_answers) > 0:
                 content["last_answer"] = config.async_answers.pop()
                 content["background_process"] = config.async_running
+
+            if config.weather is not None:
+                api_response["WEATHER"] = config.weather.get_weather_info("all")
+                api_response["STATUS"]["devices"]["weather"] = config.weather.get_weather_info("status")
+
+            api_response["STATUS"]["database"] = config.db_status()
+            api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
+            api_response["STATUS"]["system"] = get_system_data()
+
         else:
             content = {}
             status = "Error: command not found."
 
-        active_date = ""
         if "active_date" in content:
             active_date = content["active_date"]
-
-        api_response = {
-            "STATUS": {
-                "start_time": api_start,
-                "current_time": config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
-                "admin_allowed": self.admin_allowed(),
-                "check-version": version,
-                "api-call": status,
-                "reload": False,
-                "system": get_system_data(),
-                "server": {
-                    "view_archive_loading": views.archive_loading,
-                    "view_favorite_loading": views.favorite_loading
-                },
-                "devices": {
-                    "cameras": {},
-                    "sensors": {},
-                    "weather": config.weather.get_weather_info("status"),
-                    "microphones": {}
-                },
-                "view": {
-                    "selected": which_cam,
-                    "active_cam": which_cam,
-                    "active_date": active_date,
-                    "active_page": command
-                },
-                "database": config.db_status()
-            },
-            "API": api_description,
-            "WEATHER": {},
-            "DATA": {}
-        }
-
-        if config.weather is not None:
-            api_response["WEATHER"] = config.weather.get_weather_info("all")
-        api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
 
         # collect data for "DATA" section
         param_to_publish = ["title", "backup", "weather", "views", "info"]
@@ -540,6 +547,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if "active_date" in content:
             del content["active_date"]
 
+        # ensure localization data are available
+        if "localization" in config.param:
+            content["localization"] = config.param["localization"]
+            if "language" not in config.param["localization"]:
+                content["localization"]["language"] = "EN"
+        else:
+            content["localization"] = birdhouse_preset["localization"]
+
         # server configuration and status
         content["server"] = config.param["server"]
         if content["server"]["database_type"] == "couch":
@@ -551,14 +566,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "connect": content["server"]["database_couch_connect"],
                 "type": content["server"]["database_type"]
             }
-
-        # ensure localization data are available
-        if "localization" in config.param:
-            content["localization"] = config.param["localization"]
-            if "language" not in config.param["localization"]:
-                content["localization"]["language"] = "EN"
-        else:
-            content["localization"] = birdhouse_preset["localization"]
 
         # get microphone data and create streaming information
         micro_data = config.param["devices"]["microphones"].copy()
@@ -611,6 +618,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         }
 
         api_response["DATA"] = content
+        api_response["API"]["request_time"] = round(time.time() - request_start, 2)
+
+        if command != "status" and command != "list":
+            del api_response["WEATHER"]
+            # del api_response["STATUS"]
 
         self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'),
                          no_cache=True)

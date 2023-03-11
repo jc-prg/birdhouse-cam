@@ -172,9 +172,11 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         }
 	var active_page       = app_active_page;
 	var groups            = data["DATA"]["groups"];
+	var sensors           = data["DATA"]["devices"]["sensors"];
+	var weather_data      = data["DATA"]["weather_data"];
+
 	var admin             = data["STATUS"]["admin_allowed"];
 	var server_status     = data["STATUS"]["server"];
-	var sensors           = data["DATA"]["devices"]["sensors"];
 	var video_short       = true;
 
 	if (active_page == "VIDEOS")                           { entry_category = [ "video" ]; }
@@ -218,7 +220,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, true );
 
         // Weather -> to be optimizes incl error check if no entries
-        html += birdhouseChart_weatherOverview(entries);
+        html += birdhouseChart_weatherOverview(weather_data);
     }
 
     if (active_page != "FAVORITES" && app_active_page != "VIDEOS" && app_active_page != "ARCHIVE") {

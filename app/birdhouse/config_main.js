@@ -64,8 +64,12 @@ function app_initialize(data) {
 
 
 function app_status(data) {
+	//birdhouseSetMainVars(data);
+    birdhouseSetMainStatus(data);
+
 	if (reload) { 
 		birdhousePrint_load("INDEX","cam1");
+		app_active_cam = "cam1";
 		reload = false;
 		}
 	else {
@@ -75,6 +79,8 @@ function app_status(data) {
             if (msg[0] == "RANGE_DONE") { button_tooltip.hide("info"); }
             birdhouseReloadView();
             }
+        if (data["DATA"]["active_cam"] && data["DATA"]["active_cam"] != "") { app_active_cam = data["DATA"]["active_cam"]; }
+        else { app_active_cam = "cam1"; }
 
         if (data["DATA"]["background_process"] == true)	{ setTextById("statusLED","<div id='blue'></div>"); }
         else 						                	{ setTextById("statusLED","<div id='green'></div>"); }
