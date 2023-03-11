@@ -697,6 +697,20 @@ class BirdhouseConfigDBHandler(threading.Thread):
         self.write(config=config, date=date, data={})
         self.write_cache(config=config, date=date, data={})
 
+        jpg_files_01 = os.path.join(self.config.db_handler.directory(config=config, date=date), "*.jpg")
+        jpg_files_02 = os.path.join(self.config.db_handler.directory(config=config, date=date), "*.jpeg")
+
+        try:
+            self.logging.info("- delete images: " + jpg_files_01)
+            message = os.system("rm " + jpg_files_01)
+            self.logging.info("- delete images: " + jpg_files_02)
+            message = os.system("rm " + jpg_files_02)
+            self.logging.debug(message)
+
+        except Exception as e:
+            self.raise_error("Could not delete image files from " +
+                             self.config.db_handler.directory(config=config, date=date) + " (" + str(e) + ")")
+
     def lock(self, config, date=""):
         """
         lock file if JSON
@@ -1173,46 +1187,43 @@ class BirdhouseConfig(threading.Thread):
         self.async_running = False
         self.locked = {}
         self.param_init = param_init
+        self.param_default = birdhouse_preset
         self.timezone = 0
-        self.html_replace = {
-            "start_date": datetime.now().strftime("%d.%m.%Y %H:%M:%S")
-        }
+        self.html_replace = {"start_date": datetime.now().strftime("%d.%m.%Y %H:%M:%S")}
         self.directories = birdhouse_directories
         self.files = birdhouse_files
         self.weather = None
-
         self.user_active = False
         self.user_activity_last = 0
+        self.last_start = ""
 
-        # read main config file
+        # read or create main config file
         self.db_handler = BirdhouseConfigDBHandler(self, "json", main_directory)
         self.db_handler.start()
         self.main_directory = main_directory
         if self.db_handler.exists("main"):
             self.param = self.db_handler.read("main")
         if not self.db_handler.exists("main") or self.param == {}:
-            directory = os.path.join(self.main_directory, self.directories["data"])
-            filename = os.path.join(directory, self.files["main"])
-            self.logging.info("Create main config file (" + filename + ") ...")
-            self.db_handler.unlock("main")
-            self.db_handler.write("main", "", self.param_init)
-            time.sleep(1)
-            self.param = self.db_handler.read("main")
-            if self.param != {}:
-                self.logging.info("OK.")
-            else:
-                self.logging.error("Could not create main config file, check if directory '" +
-                                   directory + "' is writable.")
-                sys.exit()
+            self.main_config_create()
 
-        self.param = self.db_handler.read("main")
+        # read main config, modify status info
+        self.param = self.db_handler.read(config="main")
         self.timezone = float(self.param["localization"]["timezone"].replace("UTC", ""))
         self.current_day = self.local_time().strftime("%Y%m%d")
-        self.html_replace = {
-            "start_date": self.local_time().strftime("%d.%m.%Y %H:%M:%S")
-        }
+        self.html_replace = {"start_date": self.local_time().strftime("%d.%m.%Y %H:%M:%S")}
         self.logging.info("Read configuration from '" + self.db_handler.file_path("main") +
                           "' (timezone="+str(self.timezone)+") ...")
+
+        # check main status information
+        if "info" in self.param and "last_day_running" in self.param["info"]:
+            self.last_day_running = self.param["info"]["last_day_running"]
+        elif "info" not in self.param:
+            self.param["info"] = {}
+            self.last_day_running = self.local_time().strftime("%Y-%m-%d")
+            self.param["info"]["last_day_running"] = self.last_day_running
+        self.param["info"]["last_start_date"] = self.local_time().strftime("%Y-%m-%d")
+        self.param["info"]["last_start_time"] = self.local_time().strftime("%H:%M:%S")
+        self.db_handler.write(config="main", data=self.param)
 
         # set database type if not JSON
         self.db_type = self.param["server"]["database_type"]
@@ -1243,12 +1254,23 @@ class BirdhouseConfig(threading.Thread):
         while self._running:
             time.sleep(1)
 
+            # check if data has change and old data shall be removed
+            if self.param["server"]["daily_clean_up"]:
+                date_today = self.local_time().strftime("%Y-%m-%d")
+                if date_today != self.last_day_running:
+                    self.param["info"]["last_day_running"] = date_today
+                    self.db_handler.clean_all_data(config="images")
+                    self.db_handler.write(config="main", date="", data=self.param)
+                    time.sleep(2)
+
+            # check if DB reconnect ist required
             connected = self.db_handler.get_db_status()["db_connected"]
             messages = len(self.db_handler.get_db_status()["db_error_msg"])
             if not connected or messages >= 5:
                 time.sleep(5)
                 self.db_handler.connect()
 
+            # check if system is paused
             if self._paused and count == 0:
                 if count == 0:
                     self.logging.info("Writing config files is paused ...")
@@ -1340,6 +1362,26 @@ class BirdhouseConfig(threading.Thread):
                 self.weather.update = True
                 self.param["weather"] = self.weather.get_gps_info(self.param["weather"])
                 self.db_handler.write(config, date, self.param)
+
+    def main_config_create(self):
+        """
+        create a new main config file if not exists
+        """
+        directory = os.path.join(self.main_directory, self.directories["data"])
+        filename = os.path.join(directory, self.files["main"])
+
+        self.logging.info("Create main config file (" + filename + ") ...")
+        self.db_handler.unlock("main")
+        self.db_handler.write("main", "", self.param_default)
+
+        time.sleep(1)
+        self.param = self.db_handler.read("main")
+        if self.param != {}:
+            self.logging.info("OK.")
+        else:
+            self.logging.error("Could not create main config file, check if directory '" +
+                               directory + "' is writable.")
+            sys.exit('Error creating main config file')
 
     def local_time(self):
         """

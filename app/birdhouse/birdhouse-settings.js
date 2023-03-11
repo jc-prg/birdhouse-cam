@@ -125,7 +125,8 @@ function birdhouse_app_settings (name="Settings") {
 
         html += this.tab.row("DB Server:&nbsp;", birdhouse_edit_field(id="set_db_server", field="server:database_server", type="input", options="", data_type="string") );
         html += this.tab.row("DB Type:&nbsp;", birdhouse_edit_field(id="set_db_type", field="server:database_type", type="select", options="json,couch,both", data_type="string") );
-        html += this.tab.row("DB Link:","<a href='"+link+"' target='_blank'>"+link+"</a>");
+        html += this.tab.row("DB Daily Clean Up:&nbsp;", birdhouse_edit_field(id="set_db_clean_up", field="server:daily_clean_up", type="select", options="true,false", data_type="boolean") );
+        html += this.tab.row("DB Admin:","<a href='"+link+"' target='_blank'>"+link+"</a>");
         html += this.tab.row("<hr/>");
 
         html += this.tab.row("HTTP Server:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
@@ -136,7 +137,7 @@ function birdhouse_app_settings (name="Settings") {
         html += this.tab.row("Deny admin from IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_deny", field="server:ip4_admin_deny", type="input", options="true,false", data_type="json") );
         html += this.tab.row("<hr>");
 
-        html += this.tab.row("", birdhouse_edit_save("set_main","set_db_server:set_db_type:set_weather_location:set_initial_setup:set_language:set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port:set_index_lowres:set_index_view") );
+        html += this.tab.row("", birdhouse_edit_save("set_main","set_db_clean_up:set_db_server:set_db_type:set_weather_location:set_initial_setup:set_language:set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port:set_index_lowres:set_index_view") );
         html += this.tab.row("&nbsp;");
         html += this.tab.end();
         return html;

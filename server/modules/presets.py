@@ -196,40 +196,9 @@ birdhouse_default_sensor = {
 }
 
 birdhouse_preset = {
-    "title": "Our Birdhouse :-)",
-    "localization": {
-        "language": "EN",
-        "timezone": "UTC+1"
-    },
-    "weather": {
-        "active": True,
-        "location": "Munich",
-        "gps_location": [48.14, 11.58],
-        "source": "Open-Metheo",
-        "available_sources": ["Python-Weather", "Open-Metheo"]
-    },
     "backup": {
         "preview":   "0700",               # HHMM
         "time":      "2000"
-    },
-    "server": {
-        "ip4_admin_deny":   ["192.168.1.31"],  # put in the IP address of your proxy or router if you don't want to allow edits from outside
-        "ip4_address":      "192.168.1.20",
-        "ip4_stream_audio": "",
-        "ip4_stream_video": "",
-        "rpi_active":       False,
-        "port":             8000,              # http-port
-        "port_video":       8008,
-        "database_type":    "json",             # can be "json" or "couchdb"
-        "database_port":    5100,
-        "database_server":  "",
-        "initial_setup":    True
-    },
-    "views": {
-        "index": {
-            "type": "default",
-            "lowres_position": 1
-        }
     },
     "devices": {
         "cameras": {
@@ -242,6 +211,39 @@ birdhouse_preset = {
         "sensors": {
             "sensor1": birdhouse_default_sensor
         }
+    },
+    "info": {},
+    "localization": {
+        "language": "EN",
+        "timezone": "UTC+1"
+    },
+    "server": {
+        "ip4_admin_deny":   ["192.168.1.31"],  # put in the IP address of your proxy or router if you don't want to allow edits from outside
+        "ip4_address":      "192.168.1.20",
+        "ip4_stream_audio": "",
+        "ip4_stream_video": "",
+        "rpi_active":       False,
+        "port":             8000,              # http-port
+        "port_video":       8008,
+        "database_type":    "json",             # can be "json" or "couchdb"
+        "database_port":    5100,
+        "database_server":  "",
+        "daily_clean_up":   True,
+        "initial_setup":    True
+    },
+    "title": "jc://birdhouse/",
+    "views": {
+        "index": {
+            "type": "default",
+            "lowres_position": 1
+        }
+    },
+    "weather": {
+        "active": True,
+        "location": "Munich",
+        "gps_location": [48.14, 11.58],
+        "source": "Open-Metheo",
+        "available_sources": ["Python-Weather", "Open-Metheo"]
     }
 }
 

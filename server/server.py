@@ -162,8 +162,8 @@ def get_system_data():
     system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
 
     # threading information
-    system["threads_active"] = str(threading.active_count())
-    system["threads_info"] = str(threading.enumerate())
+    # system["threads_active"] = str(threading.active_count())
+    # system["threads_info"] = str(threading.enumerate())
 
     # read camera information
     process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
@@ -526,10 +526,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
 
         # collect data for "DATA" section
-        content["title"] = config.param["title"]
-        content["backup"] = config.param["backup"]
-        content["weather"] = config.param["weather"]
-        content["views"] = config.param["views"]
+        param_to_publish = ["title", "backup", "weather", "views", "info"]
+        for param in param_to_publish:
+            content[param] = config.param[param]
 
         # delete values not required in API response
         if "links_json" in content:
