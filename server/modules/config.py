@@ -423,8 +423,14 @@ class BirdhouseConfigDBHandler(threading.Thread):
                 update_time = time.time()
                 self.write_cache_to_json()
             else:
-                self.logging.info("Wait to write cache to JSON ... " + str(self.backup_interval))
-            time.sleep(30)
+                self.logging.debug("Wait to write cache to JSON ... " + str(self.backup_interval))
+            if self.config.shut_down:
+                self.stop()
+            time.sleep(1)
+        self.logging.info("Stopped DB handler.")
+
+    def stop(self):
+        self._running = False
 
     def connect(self, db_type=None):
         """
