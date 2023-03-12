@@ -170,7 +170,6 @@ function birdhouseSetMainStatus(data) {
 
 	if (status_view["active_cam"] != undefined && status_view["active_cam"] != "")
             { app_active_cam = status_view["active_cam"]; }
-	//else    { app_active_cam = app_available_cameras[0]; }
 	app_active_mic = app_available_micros[0];
 
 	if (status_view["active_page"] != "" && status_view["active_page"] != undefined && status_view["active_page"] != "status")

@@ -597,33 +597,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if key in content:
                 api_response["STATUS"]["server"][key] = content[key]
 
-        # delete values not required in API response
-        #if "links_json" in content:
-        #    content["links"] = content["links_json"]
-        #if "links_json" in content:
-        #    del content["links_json"]
-        #if "file_list" in content:
-        #    del content["file_list"]
-        #if "active_date" in content:
-        #    del content["active_date"]
-
         # ensure localization data are available
         if "localization" in api_data["settings"]:
             if "language" not in api_data["settings"]["localization"]:
                 api_data["settings"]["localization"]["language"] = "EN"
         else:
             api_data["settings"]["localization"] = birdhouse_preset["localization"]
-
-        # server configuration and status
-        #if content["server"]["database_type"] == "couch":
-        #    if config.db_handler.couch is not None:
-        #        content["server"]["database_couch_connect"] = config.db_handler.couch.connected
-        #    else:
-        #        content["server"]["database_couch_connect"] = False
-        #    api_response["STATUS"]["server"]["database"] = {
-        #        "connect": content["server"][],
-        #        "type": content["server"]["database_type"]
-        #    }
 
         # get microphone data and create streaming information
         micro_data = config.param["devices"]["microphones"].copy()
@@ -660,14 +639,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         for key in sensor_data:
             api_response["STATUS"]["devices"]["sensors"][key] = sensor[key].get_status()
             sensor_data[key]["values"] = {}
-            #sensor_data[key]["status"] = {"error": False}
-            #if key in sensor and sensor[key].error:
-            #    sensor_data[key]["status"] = sensor[key].get_status()
             if key in sensor and sensor[key].running:
                 sensor_data[key]["values"] = sensor[key].get_values()
-            #else:
-            #    srv_logging.debug("Sensor not available: " + key)
-            #    sensor_data[key]["status"] = sensor[key].get_status()
 
         api_data["settings"]["devices"] = {
             "cameras": camera_data,
