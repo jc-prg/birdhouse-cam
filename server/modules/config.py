@@ -419,8 +419,11 @@ class BirdhouseConfigDBHandler(threading.Thread):
         update_time = time.time()
         while self._running:
             if self.db_type == "couch" and update_time + self.backup_interval < time.time():
+                self.logging.info("Write cache to JSON ... " + str(self.backup_interval))
                 update_time = time.time()
                 self.write_cache_to_json()
+            else:
+                self.logging.info("Wait to write cache to JSON ... " + str(self.backup_interval))
             time.sleep(10)
 
     def connect(self, db_type=None):
@@ -685,11 +688,13 @@ class BirdhouseConfigDBHandler(threading.Thread):
         self.logging.info("Create backup from cached data ...")
         for config in self.config_cache:
             if config != "backup":
-                self.json.write(config=config, date="", data=self.config_cache[config])
+                filename = self.file_path(config=config, date="")
+                self.json.write(filename=filename, data=self.config_cache[config])
                 self.logging.info("   -> backup: " + config + " (" + str(round(time.time()-start_time, 1)) + "s)")
             else:
                 for date in self.config_cache[config]:
-                    self.json.write(config=config, date=date, data=self.config_cache[config][date])
+                    filename = self.file_path(config=config, date=date)
+                    self.json.write(filename=filename, data=self.config_cache[config][date])
                     self.logging.info("   -> backup: " + config + " / " + date +
                                       " (" + str(round(time.time()-start_time, 1)) + "s)")
 
