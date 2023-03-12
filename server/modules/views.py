@@ -206,17 +206,6 @@ class BirdhouseViewCreate(object):
                         for value in data_sensor_keys:
                             chart["data"][chart_stamp].append(None)
 
-#                    if stamp in data_sensor_tmp:
-#                        for sensor in sensor_list:
-#                            for sensor_key in sensor_key_list:
-#                                if sensor in data_sensor_tmp[stamp] and sensor_key in data_sensor_tmp[stamp][sensor]:
-#                                    chart["data"][chart_stamp].append(data_sensor_tmp[stamp][sensor][sensor_key])
-#                                else:
-#                                    chart["data"][chart_stamp].append(None)
-#                    elif stamp_exists:
-#                        for value in sensor_key_list:
-#                            chart["data"][chart_stamp].append(None)
-
         return chart
 
     def chart_data(self, data):
@@ -1070,7 +1059,8 @@ class BirdhouseViews(threading.Thread):
         # content["chart_data"] = self.create.chart_data(content["entries"].copy(), self.config)
         content["chart_data"] = self.create.chart_data_new(data_image=content["entries"].copy(),
                                                            data_sensor=data_sensor,
-                                                           data_weather=data_weather)
+                                                           data_weather=data_weather,
+                                                           date=self.config.local_time().strftime("%Y%m%s"))
         content["weather_data"] = self.create.weather_data_new(data_weather=data_weather)
 
         length = getsizeof(content)/1024
