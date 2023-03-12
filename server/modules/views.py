@@ -156,6 +156,8 @@ class BirdhouseViewCreate(object):
         self.logging.info("Chart - Sensor-Output:" + str(data_sensor_tmp.keys()))
         keys = list(data_sensor_tmp.keys())
         self.logging.info("Chart - Sensor-Output:" + str(data_sensor_tmp[keys[0]]))
+        self.logging.info("Chart - Sensor-Output:" + str(sensor_list))
+        self.logging.info("Chart - Sensor-Output:" + str(sensor_key_list))
 
         # create chart data
         for hour in hours:
