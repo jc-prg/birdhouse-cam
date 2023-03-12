@@ -86,7 +86,7 @@ function app_status(data) {
             birdhouseReloadView();
             }
         if (active["active_cam"] && active["active_cam"] != "")   { app_active_cam = active["active_cam"]; }
-        else                                                      { app_active_cam = "cam1"; }
+        //else                                                      { app_active_cam = "cam1"; }
 
         if (status["background_process"] == true)	{ setTextById("statusLED","<div id='blue'></div>"); }
         else 					                	{ setTextById("statusLED","<div id='green'></div>"); }
