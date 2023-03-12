@@ -71,12 +71,14 @@ class BirdhouseViewCreate(object):
         """
         create chart data based on sensor, weather and activity data
         """
-        if date is None:
-            date = self.config.local_time().strftime("%Y%m%d")
-
-        datestamp = date
-        date_us = date[4:8] + "-" + date[2:4] + "-" + date[0:2]
-        date_eu = date[0:2] + "-" + date[2:4] + "." + date[4:8]
+        if date is not None:
+            datestamp = date
+            date_us = date[4:8] + "-" + date[2:4] + "-" + date[0:2]
+            date_eu = date[0:2] + "-" + date[2:4] + "." + date[4:8]
+        else:
+            datestamp = ""
+            date_eu = ""
+            date_us = ""
 
         self.logging.debug("create_chart_data_new")
         hours = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10",
@@ -87,7 +89,7 @@ class BirdhouseViewCreate(object):
         # Calculate image activity
         activity_dict = {}
         for key in data_image:
-            if date and "datestamp" in data_image[key] and data_image[key]["datestamp"] != datestamp:
+            if date is not None and "datestamp" in data_image[key] and data_image[key]["datestamp"] != datestamp:
                 continue
             this_hour = key[0:2]
             this_minute = key[2:4]
@@ -141,9 +143,9 @@ class BirdhouseViewCreate(object):
                                 if sensor_title not in chart["titles"]:
                                     chart["titles"].append(sensor_title)
 
-                if data_sensor[stamp][sensor_list[0]]["date"] != date_eu:
+                if date is not None and data_sensor[stamp][sensor_list[0]]["date"] != date_eu:
                     continue
-                reduced_stamp = stamp[0:4] + "00"
+                reduced_stamp = stamp[0:2] + str(int(stamp[2:4]) - (stamp[2:4] % 5)).zfill(2) + "00"
                 if reduced_stamp not in data_sensor_tmp:
                     data_sensor_tmp[reduced_stamp] = data_sensor[stamp]
 
@@ -180,7 +182,7 @@ class BirdhouseViewCreate(object):
                             chart["data"][chart_stamp].append(None)
 
                 # Sensor data
-                if data_sensor_tmp is not None:
+                if data_sensor is not None:
                     if stamp in data_sensor_tmp:
                         for sensor in sensor_list:
                             for sensor_key in sensor_key_list:
@@ -188,6 +190,9 @@ class BirdhouseViewCreate(object):
                                     chart["data"][chart_stamp].append(data_sensor_tmp[stamp][sensor][sensor_key])
                                 else:
                                     chart["data"][chart_stamp].append(None)
+                    elif stamp_exists:
+                        for value in sensor_key_list:
+                            chart["data"][chart_stamp].append(None)
 
         return chart
 
