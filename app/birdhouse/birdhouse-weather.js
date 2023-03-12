@@ -11,7 +11,10 @@ function birdhouseWeather( title, data ) {
 }
 
 function birdhouseWeather_exec( data ) {
-    if (data["DATA"]["localization"]["weather_active"] == false) {
+    var settings = data["DATA"]["settings"];
+    var status   = data["STATUS"];
+
+    if (settings["localization"]["weather_active"] == false) {
         setTextById(app_frame_content, "&nbsp;<br/><center>" + lang("NO_WEATHER_CHANGE_SETTINGS") + "</center><br/>&nbsp;");
         return;
     }
@@ -38,7 +41,7 @@ function birdhouseWeather_exec( data ) {
                        + "<br/>" + weather_today["description"] + "</center>";
     var current_weather = tab.start();
     if (weather["info_position"].length <= 2) {
-        current_weather += tab.row(lang("LOCATION") + ":",  data["STATUS"]["devices"]["weather"]["gps_location"]);
+        current_weather += tab.row(lang("LOCATION") + ":",  status["devices"]["weather"]["gps_location"]);
         }
     else {
         current_weather += tab.row(lang("GPS_LOCATION")+":", weather["info_position"][2]);

@@ -21,9 +21,10 @@ function setStatusColor(status_id, status_color) {
 }
 
 function birdhouseStatus_connectionError() {
-    var cameras = app_data["DATA"]["devices"]["cameras"];
-    var microphones = app_data["DATA"]["devices"]["microphones"];
-    var sensors = app_data["DATA"]["devices"]["sensors"];
+    var settings    = app_data["DATA"]["settings"];
+    var cameras     = settings["devices"]["cameras"];
+    var microphones = settings["devices"]["microphones"];
+    var sensors     = settings["devices"]["sensors"];
 
     setTextById("system_info_connection", "<font color='red'><b>Connection lost!</b></font>");
 
@@ -47,41 +48,46 @@ function birdhouseStatus_print(data) {
     //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
     console.debug("Update Status ...");
 
+    var settings   = data["DATA"]["settings"];
+    var weather    = data["WEATHER"];
+    var status_sys = data["STATUS"]["system"];
+    var status_db  = data["STATUS"]["database"];
+    var status_dev = data["STATUS"]["devices"];
+    var start_time = data["STATUS"]["start_time"];
+
     // add database information
-    var db_info = "type=" + data["DATA"]["server"]["database_type"]+"; ";
-    if (data["DATA"]["server"]["database_type"] == "couch") {
-        db_info += "connected=" + data["DATA"]["server"]["database_couch_connect"];
-    }
-    setTextById("system_info_database",         db_info);
+    var db_info = "type=" + settings["server"]["database_type"]+"; ";
+    if (settings["server"]["database_type"] == "couch") { db_info += "connected=" + status_db["db_connected_couch"]; }
+    setTextById("system_info_database", db_info);
 
     // add system information
-    percentage_1 = (data["STATUS"]["system"]["mem_used"]/data["STATUS"]["system"]["mem_total"])*100;
-    percentage_2 = (data["STATUS"]["system"]["hdd_used"]/data["STATUS"]["system"]["hdd_total"])*100;
-    setTextById("system_info_mem_total",        (Math.round(data["STATUS"]["system"]["mem_total"]*10)/10)+" MB");
-    setTextById("system_info_mem_used",         (Math.round(data["STATUS"]["system"]["mem_used"]*10)/10)+" MB (" + Math.round(percentage_1) + "%)");
-    setTextById("system_info_cpu_usage",        (Math.round(data["STATUS"]["system"]["cpu_usage"]*10)/10)+"%");
-    setTextById("system_info_cpu_temperature",  (Math.round(data["STATUS"]["system"]["cpu_temperature"]*10)/10)+"°C");
-    setTextById("system_info_hdd_used",         (Math.round(data["STATUS"]["system"]["hdd_used"]*10)/10)+" GB (" + Math.round(percentage_2) + "%)");
-    setTextById("system_info_hdd_archive",      (Math.round(data["STATUS"]["system"]["hdd_archive"]*10)/10)+" GB");
-    setTextById("system_info_hdd_total",        (Math.round(data["STATUS"]["system"]["hdd_total"]*10)/10)+" GB");
+    percentage_1 = (status_sys["mem_used"]/status_sys["mem_total"])*100;
+    percentage_2 = (status_sys["hdd_used"]/status_sys["hdd_total"])*100;
+    setTextById("system_info_mem_total",        (Math.round(status_sys["mem_total"]*10)/10)+" MB");
+    setTextById("system_info_mem_used",         (Math.round(status_sys["mem_used"]*10)/10)+" MB (" + Math.round(percentage_1) + "%)");
+    setTextById("system_info_cpu_usage",        (Math.round(status_sys["cpu_usage"]*10)/10)+"%");
+    setTextById("system_info_cpu_temperature",  (Math.round(status_sys["cpu_temperature"]*10)/10)+"°C");
+    setTextById("system_info_hdd_used",         (Math.round(status_sys["hdd_used"]*10)/10)+" GB (" + Math.round(percentage_2) + "%)");
+    setTextById("system_info_hdd_archive",      (Math.round(status_sys["hdd_archive"]*10)/10)+" GB");
+    setTextById("system_info_hdd_total",        (Math.round(status_sys["hdd_total"]*10)/10)+" GB");
     setTextById("system_info_connection",       "Connected");
-    setTextById("system_info_start_time",       data["STATUS"]["start_time"]);
+    setTextById("system_info_start_time",       start_time);
 
-    setTextById("system_info_db_connection",    "Connected=" + data["STATUS"]["database"]["db_connected"] + " (" + data["STATUS"]["database"]["type"] + ")");
-    setTextById("system_info_db_handler",       "Error=" + data["STATUS"]["database"]["handler_error"] + " " + data["STATUS"]["database"]["handler_error_msg"].toString());
-    setTextById("system_info_db_error",         "Error=" + data["STATUS"]["database"]["db_error"] + " " + data["STATUS"]["database"]["db_error_msg"].toString());
+    setTextById("system_info_db_connection",    "Connected=" + status_db["db_connected"] + " (" + status_db["type"] + ")");
+    setTextById("system_info_db_handler",       "Error=" + status_db["handler_error"] + " " + status_db["handler_error_msg"].toString());
+    setTextById("system_info_db_error",         "Error=" + status_db["db_error"] + " " + status_db["db_error_msg"].toString());
 
-    setTextById("server_start_time",            lang("STARTTIME") + ": " + data["STATUS"]["start_time"]);
+    setTextById("server_start_time",            lang("STARTTIME") + ": " + start_time);
 
     var cpu_details = "";
-    for (var i=0;i<data["STATUS"]["system"]["cpu_usage_detail"].length;i++) {
-        cpu_details += "cpu"+i+"="+Math.round(data["STATUS"]["system"]["cpu_usage_detail"][i])+"%, ";
+    for (var i=0;i<status_sys["cpu_usage_detail"].length;i++) {
+        cpu_details += "cpu"+i+"="+Math.round(status_sys["cpu_usage_detail"][i])+"%, ";
         }
     setTextById("system_info_cpu_usage_detail", cpu_details);
 
     // add camera information
-    var cameras = data["DATA"]["devices"]["cameras"];
-    var camera_status = data["STATUS"]["devices"]["cameras"];
+    var cameras       = settings["devices"]["cameras"];
+    var camera_status = status_dev["cameras"];
     var camera_streams = 0;
     for (let camera in cameras) {
         setTextById("show_stream_count_"+camera, cameras[camera]["image"]["current_streams"]);
@@ -95,7 +101,7 @@ function birdhouseStatus_print(data) {
         else {
             if (!cameras[camera]["status"]["record_image_active"]) { var record_image_reload = "INACTIVE"; }
             else                                                   { var record_image_reload = Math.round(camera_status[camera]["record_image_reload"]*10)/10 + "s"; }
-            setTextById("last_image_recorded_"+camera,
+            setTextById("last_image_recorded_" + camera,
                         "last_recorded=" + Math.round(camera_status[camera]["record_image_last"]*10)/10 + "s" + "; last_reload=" + record_image_reload +
                         "<br/>active=" + cameras[camera]["status"]["record_image_active"] + "; " + "error=" + cameras[camera]["status"]["record_image_error"] + ";" +
                         "<br/>compare=" + cameras[camera]["status"]["record_image_last_compare"].replace("] [","]<br/>active_time=["));
@@ -144,30 +150,30 @@ function birdhouseStatus_print(data) {
     var weather_icon = "<small>N/A</small>";
     var weather_update = "N/A";
     var weather_error = "";
-    if (data["WEATHER"]["current"] && data["WEATHER"]["current"]["description_icon"]) {
-        if (data["DATA"]["weather"]["active"]) {
-            if (data["WEATHER"]["info_city"] != "") {
-                entry = data["WEATHER"]["info_city"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
+    if (weather["current"] && weather["current"]["description_icon"]) {
+        if (settings["weather"]["active"]) {
+            if (weather["info_city"] != "") {
+                entry = weather["info_city"] + ": " + weather["current"]["temperature"] + "°C";
                 }
-            else if (data["WEATHER"]["info_module"]["name"]) {
-                entry = data["WEATHER"]["info_module"]["name"] + ": " + data["WEATHER"]["current"]["temperature"] + "°C";
+            else if (weather["info_module"]["name"]) {
+                entry = weather["info_module"]["name"] + ": " + weather["current"]["temperature"] + "°C";
             }
             else  {
-                entry = "Internet: " + data["WEATHER"]["current"]["temperature"] + "°C";
+                entry = "Internet: " + weather["current"]["temperature"] + "°C";
             }
-            entry = "<big>" + data["WEATHER"]["current"]["description_icon"] + "</big> &nbsp; " + entry;
-            weather_icon = data["WEATHER"]["current"]["description_icon"];
-            weather_update = data["WEATHER"]["info_update"];
+            entry = "<big>" + weather["current"]["description_icon"] + "</big> &nbsp; " + entry;
+            weather_icon = weather["current"]["description_icon"];
+            weather_update = weather["info_update"];
         }
-        weather_error = "Running: " + data["WEATHER"]["info_status"]["running"] + "\n";
-        if (data["WEATHER"]["info_status"]["error"]) {
-        weather_error += "Error: " + data["WEATHER"]["info_status"]["error"].toString() + "\n";
-        weather_error += "Message: " + data["WEATHER"]["info_status"]["error_msg"];
+        weather_error = "Running: " + weather["info_status"]["running"] + "\n";
+        if (weather["info_status"]["error"]) {
+        weather_error += "Error: " + weather["info_status"]["error"].toString() + "\n";
+        weather_error += "Message: " + weather["info_status"]["error_msg"];
         setHeaderColor(header_id="weather_error", header_color=header_color_error);
         setHeaderColor(header_id="weather_settings", header_color=header_color_error);
         setStatusColor(status_id="status_error_WEATHER", "red");
     }
-        else if (data["WEATHER"]["info_status"]["running"].indexOf("paused") > -1) {
+        else if (weather["info_status"]["running"].indexOf("paused") > -1) {
             setHeaderColor(header_id="weather_error", header_color=header_color_warning);
             setStatusColor(status_id="status_error_WEATHER", "black");
         }
@@ -176,7 +182,7 @@ function birdhouseStatus_print(data) {
             setHeaderColor(header_id="weather_error", header_color="");
             setStatusColor(status_id="status_error_WEATHER", "green");
         }
-        if (data["DATA"]["weather"]["active"] == true) {
+        if (settings["weather"]["active"] == true) {
             setStatusColor(status_id="status_active_WEATHER", "white");
             }
         else{
@@ -189,12 +195,12 @@ function birdhouseStatus_print(data) {
     setTextById("weather_info_update", weather_update);
     setTextById("weather_info_error", weather_error);
 
-    coordinates = "(" + data["STATUS"]["devices"]["weather"]["gps_coordinates"].toString().replaceAll(",", ", ") + ")";
+    coordinates = "(" + status_dev["weather"]["gps_coordinates"].toString().replaceAll(",", ", ") + ")";
     setTextById("gps_coordinates", coordinates);
 
     // add sensor information
-    var sensors = data["DATA"]["devices"]["sensors"];
-    var sensor_status = data["STATUS"]["devices"]["sensors"];
+    var sensors = settings["devices"]["sensors"];
+    var sensor_status = status_dev["sensors"];
     var keys = Object.keys(sensors);
     for (let sensor in sensors) {
         if (sensors[sensor]["status"]) {
@@ -253,7 +259,7 @@ function birdhouseStatus_print(data) {
     }
 
     // add micro information
-    var microphones = data["DATA"]["devices"]["microphones"];
+    var microphones = settings["devices"]["microphones"];
     var keys = Object.keys(microphones);
     for (let micro in microphones) {
         if (microphones[micro]["active"]) {

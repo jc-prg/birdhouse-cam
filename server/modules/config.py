@@ -483,6 +483,8 @@ class BirdhouseConfigDBHandler(threading.Thread):
             db_info = {
                 "type": self.db_type,
                 "db_connected": "couch=" + str(self.couch.connected) + " / json=" + str(self.json.connected),
+                "db_connected_couch": self.couch.connected,
+                "db_connected_json": self.json.connected,
                 "db_error": "couch=" + str(self.couch.error) + " / json=" + str(self.json.error),
                 "db_error_msg": [*self.couch.error_msg, *self.json.error_msg],
                 "handler_error": self.error,
@@ -697,19 +699,26 @@ class BirdhouseConfigDBHandler(threading.Thread):
         self.write(config=config, date=date, data={})
         self.write_cache(config=config, date=date, data={})
 
-        jpg_files_01 = os.path.join(self.config.db_handler.directory(config=config, date=date), "*.jpg")
-        jpg_files_02 = os.path.join(self.config.db_handler.directory(config=config, date=date), "*.jpeg")
+        if config == "images" and date == "":
 
-        try:
-            self.logging.info("- delete images: " + jpg_files_01)
-            message = os.system("rm " + jpg_files_01)
-            self.logging.info("- delete images: " + jpg_files_02)
-            message = os.system("rm " + jpg_files_02)
-            self.logging.debug(message)
+            jpg_files_01 = os.path.join(self.config.db_handler.directory(config=config, date=date), "*.jpg")
+            jpg_files_02 = os.path.join(self.config.db_handler.directory(config=config, date=date), "*.jpeg")
 
-        except Exception as e:
-            self.raise_error("Could not delete image files from " +
-                             self.config.db_handler.directory(config=config, date=date) + " (" + str(e) + ")")
+            try:
+                self.logging.info("- delete images: " + jpg_files_01)
+                message = os.system("rm " + jpg_files_01)
+                self.logging.debug(message)
+            except Exception as e:
+                self.raise_error("Could not delete image files from " +
+                                 self.config.db_handler.directory(config=config, date=date) + " (" + str(e) + ")")
+
+            try:
+                self.logging.info("- delete images: " + jpg_files_02)
+                message = os.system("rm " + jpg_files_02)
+                self.logging.debug(message)
+            except Exception as e:
+                self.raise_error("Could not delete image files from " +
+                                 self.config.db_handler.directory(config=config, date=date) + " (" + str(e) + ")")
 
     def lock(self, config, date=""):
         """
@@ -1260,6 +1269,8 @@ class BirdhouseConfig(threading.Thread):
                 if date_today != self.last_day_running:
                     self.param["info"]["last_day_running"] = date_today
                     self.db_handler.clean_all_data(config="images")
+                    self.db_handler.clean_all_data(config="sensor")
+                    self.db_handler.clean_all_data(config="weather")
                     self.db_handler.write(config="main", date="", data=self.param)
                     time.sleep(2)
 

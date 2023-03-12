@@ -25,7 +25,7 @@ var app_unique_stream_id  = new Date().getTime();     // new ID per App-Start
 
 function app_menu_entries(data) {
 	var hideSettings = "birdhouse_settings.toggle(true);";
-	var weather_active = data["DATA"]["localization"]["weather_active"];
+	var weather_active = data["DATA"]["settings"]["localization"]["weather_active"];
 	var app_menu = [
 		[lang("LIVESTREAM"),   "script", hideSettings+"birdhousePrint_load('INDEX',   '"+app_active_cam+"');"],
 		[lang("FAVORITES"),    "script", hideSettings+"birdhousePrint_load('FAVORITES','"+app_active_cam+"');"],
@@ -55,7 +55,9 @@ function app_menu_entries(data) {
 function app_initialize(data) {
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 	app_api_version = data["API"]["version"];
-    if (data["DATA"]["localization"]["language"]) { LANG = data["DATA"]["localization"]["language"]; }
+
+	var settings = data["DATA"]["settings"];
+    if (settings["localization"]["language"]) { LANG = settings["localization"]["language"]; }
 	}
 
 //--------------------------------
@@ -65,6 +67,10 @@ function app_initialize(data) {
 
 function app_status(data) {
 	//birdhouseSetMainVars(data);
+	var active = data["DATA"]["active"];
+	var status = data["STATUS"]["server"] ;
+    app_data = data;
+
     birdhouseSetMainStatus(data);
 
 	if (reload) { 
@@ -73,17 +79,17 @@ function app_status(data) {
 		reload = false;
 		}
 	else {
-        if (data["DATA"]["last_answer"] != "") {
-            var msg = data["DATA"]["last_answer"];
+        if (status["last_answer"] != "") {
+            var msg = status["last_answer"];
             appMsg.alert(lang(msg[0]));
             if (msg[0] == "RANGE_DONE") { button_tooltip.hide("info"); }
             birdhouseReloadView();
             }
-        if (data["DATA"]["active_cam"] && data["DATA"]["active_cam"] != "") { app_active_cam = data["DATA"]["active_cam"]; }
-        else { app_active_cam = "cam1"; }
+        if (active["active_cam"] && active["active_cam"] != "")   { app_active_cam = active["active_cam"]; }
+        else                                                      { app_active_cam = "cam1"; }
 
-        if (data["DATA"]["background_process"] == true)	{ setTextById("statusLED","<div id='blue'></div>"); }
-        else 						                	{ setTextById("statusLED","<div id='green'></div>"); }
+        if (status["background_process"] == true)	{ setTextById("statusLED","<div id='blue'></div>"); }
+        else 					                	{ setTextById("statusLED","<div id='green'></div>"); }
         birdhouseStatus_print(data);
         }
 

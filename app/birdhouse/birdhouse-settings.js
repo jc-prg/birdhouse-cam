@@ -18,7 +18,7 @@ function birdhouse_app_settings (name="Settings") {
         var tab = this.tab;
 
         var html = "";
-        var initial_setup   = app_data["DATA"]["server"]["initial_setup"];
+        var initial_setup   = app_data["DATA"]["settings"]["server"]["initial_setup"];
 
         var current_url     = window.location.href;
         var current_server  = current_url.split("//")[1];
@@ -98,10 +98,12 @@ function birdhouse_app_settings (name="Settings") {
 
     this.settings = function () {
         var tab = new birdhouse_table();
+        var settings = app_data["DATA"]["settings"];
+
         var timezones = "UTC-12,UTC-11,UTC-10,UTC-9,UTC-8,UTC-7,UTC-6,UTC-5,UTC-4,UTC-3,UTC-2,UTC-1,UTC+0,UTC+1,UTC+2,UTC+3,UTC+4,UTC+5,UTC+6,UTC+7,UTC+8,UTC+9,UTC+10,UTC+11,UTC+12"
 
-        if (app_data["DATA"]["server"]["database_server"] && app_data["DATA"]["server"]["database_server"] != "") {
-            var link = "http://"+app_data["DATA"]["server"]["database_server"]+":5100/_utils/";
+        if (settings["server"]["database_server"] && settings["server"]["database_server"] != "") {
+            var link = "http://"+settings["server"]["database_server"]+":5100/_utils/";
         }
         else {
             var link = "http://"+this.current_server+":5100/_utils/";
@@ -145,7 +147,7 @@ function birdhouse_app_settings (name="Settings") {
 
 	this.api_calls = function () {
 	    var api_call       = "";
-        var cameras         = app_data["DATA"]["devices"]["cameras"];
+        var cameras         = app_data["DATA"]["settings"]["devices"]["cameras"];
         var button_style    = "background-color:lightgray;color:black;width:90px;margin:3px;";
         var html_entry = this.tab.start();
 

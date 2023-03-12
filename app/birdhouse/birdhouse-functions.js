@@ -6,16 +6,17 @@
 
 function birdhouse_edit_field(id, field, type="input", options="", data_type="string") {
     var fields = field.split(":");
+    var settings = app_data["DATA"]["settings"];
     var data   = "";
     var html   = "";
     var style  = "";
 
-    if (fields.length == 1) { data = app_data["DATA"][fields[0]]; }
-    else if (fields.length == 2) { data = app_data["DATA"][fields[0]][fields[1]]; }
-    else if (fields.length == 3) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]]; }
-    else if (fields.length == 4) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]][fields[3]]; }
-    else if (fields.length == 5) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]][fields[3]][fields[4]]; }
-    else if (fields.length == 6) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]][fields[3]][fields[4]][fields[5]]; }
+    if (fields.length == 1) { data = settings[fields[0]]; }
+    else if (fields.length == 2) { data = settings[fields[0]][fields[1]]; }
+    else if (fields.length == 3) { data = settings[fields[0]][fields[1]][fields[2]]; }
+    else if (fields.length == 4) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]]; }
+    else if (fields.length == 5) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]][fields[4]]; }
+    else if (fields.length == 6) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]][fields[4]][fields[5]]; }
 
     if (data_type == "json") { data = JSON.stringify(data); }
     if (data_type == "integer" || data_type == "float") { style += "width:60px;" }
@@ -129,7 +130,7 @@ function birdhouse_edit_send(id_list) {
 
 function birdhouse_edit_done(data) {
 
-    appMsg.alert("Done");
+    appMsg.alert(lang("DONE"));
 }
 
 

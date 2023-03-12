@@ -263,6 +263,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var edit        = false;
 	var category    = "";
 	var onclick_difference = "";
+	var settings    = app_data["DATA"]["settings"];
 
 	console.log(app_active_page);
 
@@ -326,15 +327,15 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 				note = "*";
         }	}
         var stream_server = "";
-        if (app_data["DATA"]["server"]["ip4_stream_video"] && app_data["DATA"]["server"]["ip4_stream_video"] != "") {
-            stream_server = app_data["DATA"]["server"]["ip4_stream_video"] + ":" + app_data["DATA"]["server"]["port_video"];
+        if (settings["server"]["ip4_stream_video"] && settings["server"]["ip4_stream_video"] != "") {
+            stream_server = settings["server"]["ip4_stream_video"] + ":" + settings["server"]["port_video"];
         }
         else {
             var this_server = window.location.href;
             this_server     = this_server.split("//")[1];
             this_server     = this_server.split("/")[0];
             this_server     = this_server.split(":")[0];
-            stream_server   = this_server + ":" + app_data["DATA"]["server"]["port_video"];
+            stream_server   = this_server + ":" + settings["server"]["port_video"];
         }
 
         var streaming_url = "http://"+stream_server+"/";

@@ -453,6 +453,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if len(param) > 3:
             which_cam = param[3]
 
+        # prepare API response
         api_response = {
             "STATUS": {
                 "start_time": api_start,
@@ -465,7 +466,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "server": {
                     "view_archive_loading": views.archive_loading,
                     "view_favorite_loading": views.favorite_loading,
-                    "backup_process_running": backup.backup_running
+                    "backup_process_running": backup.backup_running,
+                    "last_answer": ""
                 },
                 "devices": {
                     "cameras": {},
@@ -486,6 +488,22 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             "DATA": {}
         }
 
+        # prepare DATA section
+        api_data = {
+            "active": {
+                "active_cam": which_cam,
+                "active_path": path,
+                "active_page": command,
+                "active_date": ""
+            },
+            "data": {},
+            "settings": {},
+            "view": {}
+        }
+        if len(param) >= 5 and command == "TODAY":
+            api_data["active"]["active_date"] = param[4]
+
+        # execute API commands
         if command == "INDEX":
             content = views.index(server=self)
         elif command == "FAVORITES":
@@ -529,43 +547,61 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content = {}
             status = "Error: command not found."
 
-        if "active_date" in content:
-            active_date = content["active_date"]
+        # collect data for new DATA section
+        param_to_publish = ["backup", "devices", "info", "localization", "server", "title", "views", "weather"]
+        for key in param_to_publish:
+            if key in config.param:
+                api_data["settings"][key] = config.param[key]
+
+        param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups", "chart_data", "weather_data"]
+        for key in param_to_publish:
+            if key in content:
+                api_data["data"][key] = content[key]
+
+        param_to_publish = ["view", "view_count", "links", "subtitle", "max_image_size"]
+        for key in param_to_publish:
+            if key in content:
+                api_data["view"][key] = content[key]
 
         # collect data for "DATA" section
         param_to_publish = ["title", "backup", "weather", "views", "info"]
-        for param in param_to_publish:
-            content[param] = config.param[param]
+        for key in param_to_publish:
+            if key in content:
+                content[key] = config.param[key]
+
+        # collect data for STATUS section
+        param_to_publish = ["last_answer", "background_process"]
+        for key in param_to_publish:
+            if key in content:
+                api_response["STATUS"]["server"][key] = content[key]
 
         # delete values not required in API response
-        if "links_json" in content:
-            content["links"] = content["links_json"]
-        if "links_json" in content:
-            del content["links_json"]
-        if "file_list" in content:
-            del content["file_list"]
-        if "active_date" in content:
-            del content["active_date"]
+        #if "links_json" in content:
+        #    content["links"] = content["links_json"]
+        #if "links_json" in content:
+        #    del content["links_json"]
+        #if "file_list" in content:
+        #    del content["file_list"]
+        #if "active_date" in content:
+        #    del content["active_date"]
 
         # ensure localization data are available
-        if "localization" in config.param:
-            content["localization"] = config.param["localization"]
-            if "language" not in config.param["localization"]:
-                content["localization"]["language"] = "EN"
+        if "localization" in api_data["settings"]:
+            if "language" not in api_data["settings"]["localization"]:
+                api_data["settings"]["localization"]["language"] = "EN"
         else:
-            content["localization"] = birdhouse_preset["localization"]
+            api_data["settings"]["localization"] = birdhouse_preset["localization"]
 
         # server configuration and status
-        content["server"] = config.param["server"]
-        if content["server"]["database_type"] == "couch":
-            if config.db_handler.couch is not None:
-                content["server"]["database_couch_connect"] = config.db_handler.couch.connected
-            else:
-                content["server"]["database_couch_connect"] = False
-            api_response["STATUS"]["server"]["database"] = {
-                "connect": content["server"]["database_couch_connect"],
-                "type": content["server"]["database_type"]
-            }
+        #if content["server"]["database_type"] == "couch":
+        #    if config.db_handler.couch is not None:
+        #        content["server"]["database_couch_connect"] = config.db_handler.couch.connected
+        #    else:
+        #        content["server"]["database_couch_connect"] = False
+        #    api_response["STATUS"]["server"]["database"] = {
+        #        "connect": content["server"][],
+        #        "type": content["server"]["database_type"]
+        #    }
 
         # get microphone data and create streaming information
         micro_data = config.param["devices"]["microphones"].copy()
@@ -590,7 +626,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
                 camera_data[key]["image"]["current_streams"] = camera[key].get_stream_count()
                 camera_data[key]["image"]["current_streams_detail"] = camera[key].image_streams
-                camera_data[key]["status"] = camera[key].get_camera_status()
+                #camera_data[key]["status"] = camera[key].get_camera_status()
                 if config.param["server"]["ip4_stream_video"] == "":
                     camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_address"]
                 else:
@@ -602,22 +638,22 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         for key in sensor_data:
             api_response["STATUS"]["devices"]["sensors"][key] = sensor[key].get_status()
             sensor_data[key]["values"] = {}
-            sensor_data[key]["status"] = {"error": False}
-            if key in sensor and sensor[key].error:
-                sensor_data[key]["status"] = sensor[key].get_status()
+            #sensor_data[key]["status"] = {"error": False}
+            #if key in sensor and sensor[key].error:
+            #    sensor_data[key]["status"] = sensor[key].get_status()
             if key in sensor and sensor[key].running:
                 sensor_data[key]["values"] = sensor[key].get_values()
-            else:
-                srv_logging.debug("Sensor not available: " + key)
-                sensor_data[key]["status"] = sensor[key].get_status()
+            #else:
+            #    srv_logging.debug("Sensor not available: " + key)
+            #    sensor_data[key]["status"] = sensor[key].get_status()
 
-        content["devices"] = {
+        api_data["settings"]["devices"] = {
             "cameras": camera_data,
             "sensors": sensor_data,
             "microphones": micro_data
         }
 
-        api_response["DATA"] = content
+        api_response["DATA"] = api_data
         api_response["API"]["request_time"] = round(time.time() - request_start, 2)
 
         if command != "status" and command != "list":
@@ -674,7 +710,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if camera[which_cam].type != "pi" and camera[which_cam].type != "usb" and \
                 camera[which_cam].type != "default":
             srv_logging.warning("Unknown type of camera (" + camera[which_cam].type + "/" +
-                            camera[which_cam].name + ")")
+                                camera[which_cam].name + ")")
             self.error_404()
             return
 
