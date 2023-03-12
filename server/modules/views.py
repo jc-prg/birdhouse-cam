@@ -128,6 +128,9 @@ class BirdhouseViewCreate(object):
         sensor_list = []
         sensor_key_list = []
         data_sensor_tmp = {}
+
+        self.logging.info("Chart - Sensor-Input:" + str(len(data_sensor)))
+
         if data_sensor is not None:
             for stamp in data_sensor:
                 for sensor in data_sensor[stamp]:
@@ -148,6 +151,9 @@ class BirdhouseViewCreate(object):
                 reduced_stamp = stamp[0:2] + str(int(stamp[2:4]) - (int(stamp[2:4]) % 5)).zfill(2) + "00"
                 if reduced_stamp not in data_sensor_tmp:
                     data_sensor_tmp[reduced_stamp] = data_sensor[stamp]
+
+        self.logging.info("Chart - Sensor-Output:" + str(len(data_sensor_tmp)))
+        self.logging.info("Chart - Sensor-Output:" + str(data_sensor_tmp.keys()))
 
         # create chart data
         for hour in hours:
