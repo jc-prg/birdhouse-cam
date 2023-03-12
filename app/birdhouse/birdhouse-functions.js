@@ -141,7 +141,7 @@ function birdhouse_initTooltip() {
 	tooltip_offset_height	= 42;
 	tooltip_offset_width	= -180;
 
-	button_tooltip = new jcTooltip("button_tooltip") ;
+	button_tooltip = new jcTooltip("button_tooltip");
 	button_tooltip.settings( tooltip_mode, tooltip_width, tooltip_height, tooltip_offset_height, tooltip_offset_width );	
 	}
 

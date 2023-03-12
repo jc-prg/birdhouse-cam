@@ -542,6 +542,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content = views.detail_view_video(server=self)
         elif command == "DEVICES":
             content = views.camera_list(server=self)
+            api_response["STATUS"]["system"] = sys_info.get()
+            api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
+
         elif command == "status" or command == "version" or command == "list":
             content = views.index(server=self)
 
@@ -562,8 +565,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 api_response["STATUS"]["devices"]["weather"] = config.weather.get_weather_info("status")
 
             api_response["STATUS"]["database"] = config.db_status()
-            api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
             api_response["STATUS"]["system"] = sys_info.get()
+            api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
 
         else:
             content = {}
