@@ -185,12 +185,18 @@ class BirdhouseViewCreate(object):
                 if data_weather is not None:
                     # add date check ... in the following line and the elif statement
                     if stamp in data_weather:
+                        if date is not None and "date" in data_weather[stamp] \
+                                and data_weather[stamp]["date"] != date_us:
+                            continue
                         for value in weather_data_in_chart:
                             if value in data_weather[stamp]:
                                 chart["data"][chart_stamp].append(data_weather[stamp][value])
                             else:
                                 chart["data"][chart_stamp].append(None)
                     elif stamp_exists:
+                        if date is not None and "date" in data_weather[stamp] \
+                                and data_weather[stamp]["date"] != date_us:
+                            continue
                         for value in weather_data_in_chart:
                             chart["data"][chart_stamp].append(None)
 
