@@ -328,6 +328,8 @@ class BirdhouseViewCreate(object):
             stamp = hour + "0000"
             if stamp not in weather:
                 for key in data_weather:
+                    if key == "none" or "date" not in data_weather[key]:
+                        continue
                     if date is not None and data_weather[key]["date"] != date_us:
                         continue
                     this_hour = key[0:2]
