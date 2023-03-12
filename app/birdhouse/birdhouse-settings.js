@@ -109,7 +109,7 @@ function birdhouse_app_settings (name="Settings") {
             var link = "http://"+this.current_server+":5100/_utils/";
         }
 
-        var html = "<h2>"+lang("SETTINGS")+"</h2>";
+        var html = "&nbsp;<br/><h2>&nbsp;<br/>"+lang("SETTINGS")+"</h2>";
         html += "<hr style='border:1px solid gray;'>"
         html += "<div style='display:none'>Edit initial setup: "+birdhouse_edit_field(id="set_initial_setup", field="server:initial_setup", type="select", options="false", data_type="boolean")+"</div>";
         html += this.tab.start();
