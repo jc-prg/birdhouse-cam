@@ -127,6 +127,7 @@ class BirdhouseViewCreate(object):
         # get categories sensor
         sensor_list = []
         sensor_key_list = []
+        data_sensor_keys = []
         data_sensor_tmp = {}
 
         self.logging.info("Chart - Sensor-Input:" + str(len(data_sensor)))
@@ -145,6 +146,7 @@ class BirdhouseViewCreate(object):
                                     sensor_key_list.append(sensor_key)
                                 if sensor_title not in chart["titles"]:
                                     chart["titles"].append(sensor_title)
+                                    data_sensor_keys.append(sensor_title)
 
                 if date is not None and data_sensor[stamp][sensor_list[0]]["date"] != date_eu:
                     continue
@@ -194,15 +196,26 @@ class BirdhouseViewCreate(object):
                 # Sensor data
                 if data_sensor is not None:
                     if stamp in data_sensor_tmp:
-                        for sensor in sensor_list:
-                            for sensor_key in sensor_key_list:
-                                if sensor in data_sensor_tmp[stamp] and sensor_key in data_sensor_tmp[stamp][sensor]:
-                                    chart["data"][chart_stamp].append(data_sensor_tmp[stamp][sensor][sensor_key])
-                                else:
-                                    chart["data"][chart_stamp].append(None)
+                        for key in data_sensor_keys:
+                            sensor, sensor_key = key.split(":")
+                            if sensor in data_sensor_tmp[stamp] and sensor_key in data_sensor_tmp[stamp][sensor]:
+                                chart["data"][chart_stamp].append(data_sensor_tmp[stamp][sensor][sensor_key])
+                            else:
+                                chart["data"][chart_stamp].append(None)
                     elif stamp_exists:
-                        for value in sensor_key_list:
+                        for value in data_sensor_keys:
                             chart["data"][chart_stamp].append(None)
+
+#                    if stamp in data_sensor_tmp:
+#                        for sensor in sensor_list:
+#                            for sensor_key in sensor_key_list:
+#                                if sensor in data_sensor_tmp[stamp] and sensor_key in data_sensor_tmp[stamp][sensor]:
+#                                    chart["data"][chart_stamp].append(data_sensor_tmp[stamp][sensor][sensor_key])
+#                                else:
+#                                    chart["data"][chart_stamp].append(None)
+#                    elif stamp_exists:
+#                        for value in sensor_key_list:
+#                            chart["data"][chart_stamp].append(None)
 
         return chart
 
