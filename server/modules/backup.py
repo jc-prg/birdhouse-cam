@@ -112,7 +112,8 @@ class BirdhouseArchive(threading.Thread):
                 files_backup["info"]["size"] = sum(
                     os.path.getsize(os.path.join(directory, f)) for f in os.listdir(directory) if
                     f.endswith(".jpeg") or f.endswith(".jpg") or f.endswith(".json"))
-                self.config.db_handler.write(config="backup", date=backup_date, data=files_backup, create=True)
+                self.config.db_handler.write(config="backup", date=backup_date, data=files_backup,
+                                             create=True, save_json=True)
 
         # if no directory exists, create directory, copy files and create a new config file (copy existing information)
         else:
@@ -241,7 +242,8 @@ class BirdhouseArchive(threading.Thread):
             for cam in self.camera:
                 files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
 
-            self.config.db_handler.write(config="backup", date=directory, data=files_backup, create=True)
+            self.config.db_handler.write(config="backup", date=directory, data=files_backup,
+                                         create=True, save_json=True)
 
         self.backup_running = False
 

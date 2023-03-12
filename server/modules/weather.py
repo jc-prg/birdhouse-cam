@@ -505,17 +505,17 @@ class BirdhouseWeather(threading.Thread):
             # last update has been a while
             elif last_update + self.update_time < time.time():
                 self.logging.info("Get weather data from module (every " + str(self.update_time) + "s/" +
-                                self.weather_source + ") ...")
+                                  self.weather_source + ") ...")
                 last_update = time.time()
                 self.weather_info = self.module.get_data()
                 if not self.error and not self.module.error:
                     self.weather_info["info_status"]["running"] = "OK"
 
             # write weather data to file once every five minutes
+            weather_stamp = self.config.local_time().strftime("%H%M")+"00"
             if int(self.config.local_time().strftime("%M")) % 5 == 0:
                 self.logging.info("Write weather data to file ...")
                 weather_data = self.get_weather_info("current")
-                weather_stamp = self.config.local_time().strftime("%H%M")+"00"
                 self.config.queue.entry_add(config="weather", date="", key=weather_stamp, entry=weather_data)
                 time.sleep(60)
 

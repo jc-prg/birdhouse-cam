@@ -623,7 +623,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         else:
             return self.config_cache[config][date].copy()
 
-    def write(self, config, date="", data=None, create=False):
+    def write(self, config, date="", data=None, create=False, save_json=False):
         """
         write data to DB
         """
@@ -644,6 +644,8 @@ class BirdhouseConfigDBHandler(threading.Thread):
             self.write_cache(config, date, data)
         elif self.db_type == "couch":
             self.couch.write(filename, data, create)
+            if save_json:
+                self.json.write(filename, data)
             self.write_cache(config, date, data)
         elif self.db_type == "both":
             self.couch.write(filename, data, create)

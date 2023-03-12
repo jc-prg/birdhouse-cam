@@ -148,7 +148,7 @@ class BirdhouseViewCreate(object):
                                     chart["titles"].append(sensor_title)
                                     data_sensor_keys.append(sensor_title)
 
-                if date is not None and data_sensor[stamp][sensor_list[0]]["date"] != date_eu:
+                if date is not None and len(sensor_list) > 0 and data_sensor[stamp][sensor_list[0]]["date"] != date_eu:
                     continue
 
                 reduced_stamp = stamp[0:2] + str(int(stamp[2:4]) - (int(stamp[2:4]) % 5)).zfill(2) + "00"
@@ -175,9 +175,10 @@ class BirdhouseViewCreate(object):
                     stamp_exists_activity = True
 
                 if stamp in data_sensor_tmp:
-                    if date is not None and data_sensor_tmp[stamp][sensor_list[0]]["date"] == date_eu:
+                    if date is not None and len(sensor_list) > 0 \
+                            and data_sensor_tmp[stamp][sensor_list[0]]["date"] == date_eu:
                         stamp_exists_sensor = True
-                    elif date is None:
+                    elif date is None and len(sensor_list) > 0:
                         stamp_exists_sensor = True
 
                 if stamp in data_weather:
@@ -327,6 +328,8 @@ class BirdhouseViewCreate(object):
             stamp = hour + "0000"
             if stamp not in weather:
                 for key in data_weather:
+                    if date is not None and data_weather[key]["date"] != date_us:
+                        continue
                     this_hour = key[0:2]
                     if this_hour == hour:
                         if this_hour + ":00" == data_weather[key]["time"]:
