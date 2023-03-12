@@ -132,58 +132,80 @@ def read_image(directory, filename):
     return f
 
 
-def get_system_data():
-    """
-    """
-    system = {}
-    # Initialize the result.
-    result = 0.0
-    # The first line in this file holds the CPU temperature as an integer times 1000.
-    # Read the first line and remove the newline character at the end of the string.
-    if os.path.isfile('/sys/class/thermal/thermal_zone0/temp'):
-        with open('/sys/class/thermal/thermal_zone0/temp') as f:
-            line = f.readline().strip()
-        # Test if the string is an integer as expected.
-        if line.isdigit():
-            # Convert the string with the CPU temperature to a float in degrees Celsius.
-            result = float(line) / 1000
-    # Give the result back to the caller.
-    system["cpu_temperature"] = result
+class ServerInformation(threading.Thread):
 
-    # cpu information
-    system["cpu_usage"] = psutil.cpu_percent(interval=1, percpu=False)
-    system["cpu_usage_detail"] = psutil.cpu_percent(interval=1, percpu=True)
-    system["mem_total"] = psutil.virtual_memory().total / 1024 / 1024
-    system["mem_used"] = psutil.virtual_memory().used / 1024 / 1024
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self._running = True
+        self._system_status = {}
+        self._interval = 5
 
-    # diskusage
-    hdd = psutil.disk_usage("/")
-    system["hdd_used"] = hdd.used / 1024 / 1024 / 1024
-    system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
+        self.logging = logging.getLogger("srv-info")
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
+        self.logging.info("Starting Server Information ...")
 
-    # threading information
-    # system["threads_active"] = str(threading.active_count())
-    # system["threads_info"] = str(threading.enumerate())
+    def run(self) -> None:
+        while self._running:
+            self.read()
+            time.sleep(self._interval)
 
-    # read camera information
-    process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
-    output = process.communicate()[0]
-    output = output.decode()
-    output_2 = output.split("\n")
-    last_key = "none"
-    system["video_devices"] = {}
-    system["video_devices_02"] = {}
-    for value in output_2:
-        if ":" in value:
-            system["video_devices"][value] = []
-            last_key = value
-        elif value != "":
-            value = value.replace("\t", "")
-            system["video_devices"][last_key].append(value)
-            info = last_key.split(":")
-            system["video_devices_02"][value] = value + " (" + info[0] + ")"
+    def stop(self):
+        self._running = False
 
-    return system
+    def read(self):
+        system = {}
+        # Initialize the result.
+        result = 0.0
+        # The first line in this file holds the CPU temperature as an integer times 1000.
+        # Read the first line and remove the newline character at the end of the string.
+        if os.path.isfile('/sys/class/thermal/thermal_zone0/temp'):
+            with open('/sys/class/thermal/thermal_zone0/temp') as f:
+                line = f.readline().strip()
+            # Test if the string is an integer as expected.
+            if line.isdigit():
+                # Convert the string with the CPU temperature to a float in degrees Celsius.
+                result = float(line) / 1000
+        # Give the result back to the caller.
+        system["cpu_temperature"] = result
+
+        # cpu information
+        system["cpu_usage"] = psutil.cpu_percent(interval=1, percpu=False)
+        system["cpu_usage_detail"] = psutil.cpu_percent(interval=1, percpu=True)
+        system["mem_total"] = psutil.virtual_memory().total / 1024 / 1024
+        system["mem_used"] = psutil.virtual_memory().used / 1024 / 1024
+
+        # diskusage
+        hdd = psutil.disk_usage("/")
+        system["hdd_used"] = hdd.used / 1024 / 1024 / 1024
+        system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
+
+        # threading information
+        # system["threads_active"] = str(threading.active_count())
+        # system["threads_info"] = str(threading.enumerate())
+
+        # read camera information
+        process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
+        output = process.communicate()[0]
+        output = output.decode()
+        output_2 = output.split("\n")
+        last_key = "none"
+        system["video_devices"] = {}
+        system["video_devices_02"] = {}
+        for value in output_2:
+            if ":" in value:
+                system["video_devices"][value] = []
+                last_key = value
+            elif value != "":
+                value = value.replace("\t", "")
+                system["video_devices"][last_key].append(value)
+                info = last_key.split(":")
+                system["video_devices_02"][value] = value + " (" + info[0] + ")"
+
+        self._system_status = system.copy()
+
+    def get(self):
+        return self._system_status
 
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
@@ -541,7 +563,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             api_response["STATUS"]["database"] = config.db_status()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
-            api_response["STATUS"]["system"] = get_system_data()
+            api_response["STATUS"]["system"] = sys_info.get()
 
         else:
             content = {}
@@ -862,6 +884,10 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, on_exit)
     signal.signal(signal.SIGTERM, on_kill)
 
+    # system information
+    sys_info = ServerInformation()
+    sys_info.start()
+
     # start config    
     config = BirdhouseConfig(param_init=birdhouse_preset, main_directory=os.path.dirname(os.path.abspath(__file__)))
     config.start()
@@ -931,6 +957,7 @@ if __name__ == "__main__":
     # Stop all processes to stop
     finally:
         config.stop()
+        sys_info.stop()
         backup.stop()
         for cam in camera:
             camera[cam].stop()
