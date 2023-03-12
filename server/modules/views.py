@@ -74,7 +74,7 @@ class BirdhouseViewCreate(object):
         if date is not None:
             datestamp = date
             date_us = date[4:8] + "-" + date[2:4] + "-" + date[0:2]
-            date_eu = date[0:2] + "-" + date[2:4] + "." + date[4:8]
+            date_eu = date[0:2] + "." + date[2:4] + "." + date[4:8]
         else:
             datestamp = ""
             date_eu = ""
@@ -157,7 +157,8 @@ class BirdhouseViewCreate(object):
         self.logging.info("Chart - Sensor-Output:" + str(len(data_sensor_tmp)))
         self.logging.info("Chart - Sensor-Output:" + str(data_sensor_tmp.keys()))
         keys = list(data_sensor_tmp.keys())
-        self.logging.info("Chart - Sensor-Output:" + str(data_sensor_tmp[keys[0]]))
+        if len(keys) > 0:
+            self.logging.info("Chart - Sensor-Output:" + str(data_sensor_tmp[keys[0]]))
         self.logging.info("Chart - Sensor-Output:" + str(sensor_list))
         self.logging.info("Chart - Sensor-Output:" + str(sensor_key_list))
 
