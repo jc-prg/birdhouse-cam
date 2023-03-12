@@ -73,6 +73,7 @@ class BirdhouseViewCreate(object):
         """
         if date is None:
             date = self.config.local_time().strftime("%Y%m%d")
+
         datestamp = date
         date_us = date[4:8] + "-" + date[2:4] + "-" + date[0:2]
         date_eu = date[0:2] + "-" + date[2:4] + "." + date[4:8]
