@@ -298,10 +298,15 @@ class BirdhouseViewCreate(object):
 
         return chart
 
-    def weather_data_new(self, data_weather):
+    def weather_data_new(self, data_weather, date=None):
         """
         create hourly weather data for API
         """
+        if date is not None:
+            date_us = date[0:4] + "-" + date[4:6] + "-" + date[6:8]
+        else:
+            date_us = ""
+
         self.logging.debug("create_weather_data_new")
         if data_weather is None:
             return {}
@@ -313,6 +318,8 @@ class BirdhouseViewCreate(object):
         for hour in hours:
             stamp = hour + "0000"
             if stamp in data_weather:
+                if date is not None and data_weather[stamp]["date"] != date_us:
+                    continue
                 weather[stamp] = data_weather[stamp]
                 weather[stamp]["time"] = hour + ":00"
 
@@ -731,16 +738,19 @@ class BirdhouseViews(threading.Thread):
         if backup:
             if "chart_data" not in content:
                 content["chart_data"] = self.create.chart_data(data=files_all.copy())
+            content["weather_data"] = self.create.weather_data(data=files_all.copy())
             if "weather_data" not in content:
-                content["weather_data"] = self.create.weather_data(data=files_all.copy())
+                pass
 
         else:
             if "chart_data" not in content:
                 content["chart_data"] = self.create.chart_data_new(data_image=files_today.copy(),
                                                                    data_sensor=files_sensor.copy(),
-                                                                   data_weather=files_weather.copy())
+                                                                   data_weather=files_weather.copy(),
+                                                                   date=self.config.local_time().strftime("%Y%m%d"))
             if "weather_data" not in content:
-                content["weather_data"] = self.create.weather_data_new(data_weather=files_weather.copy())
+                content["weather_data"] = self.create.weather_data_new(data_weather=files_weather.copy(),
+                                                                       date=self.config.local_time().strftime("%Y%m%d"))
 
         return content
 
@@ -1079,7 +1089,8 @@ class BirdhouseViews(threading.Thread):
                                                            data_sensor=data_sensor,
                                                            data_weather=data_weather,
                                                            date=self.config.local_time().strftime("%Y%m%d"))
-        content["weather_data"] = self.create.weather_data_new(data_weather=data_weather)
+        content["weather_data"] = self.create.weather_data_new(data_weather=data_weather,
+                                                               date=self.config.local_time().strftime("%Y%m%d"))
 
         length = getsizeof(content)/1024
         self.logging.debug("CompleteListToday: End - " + self.config.local_time().strftime("%H:%M:%S") +

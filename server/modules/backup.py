@@ -95,8 +95,10 @@ class BirdhouseArchive(threading.Thread):
                 files_backup = {
                     "files": files,
                     "info": {},
-                    "chart_data": self.views.create.chart_data_new(data_image=files, data_sensor=data_sensor,
-                                                                   data_weather=data_weather, config=self.config),
+                    "chart_data": self.views.create.chart_data_new(data_image=files,
+                                                                   data_sensor=data_sensor,
+                                                                   data_weather=data_weather,
+                                                                   date=backup_date),
                     "weather_data": self.views.create.weather_data_new(data_weather=data_weather)
                 }
                 files_backup["info"]["count"] = len(files)
@@ -226,8 +228,11 @@ class BirdhouseArchive(threading.Thread):
             files_backup["chart_data"] = self.views.create.chart_data_new(data_image=files_backup["files"],
                                                                           data_sensor=data_sensor,
                                                                           data_weather=data_weather,
-                                                                          config=self.config)
-            files_backup["weather_data"] = self.views.create.weather_data_new(data_weather=data_weather)
+                                                                          date=self.config.local_time().strftime(
+                                                                              "%Y%m%d"))
+            files_backup["weather_data"] = self.views.create.weather_data_new(data_weather=data_weather,
+                                                                              date=self.config.local_time().strftime(
+                                                                                  "%Y%m%d"))
 
             files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
             files_backup["info"]["count"] = count
