@@ -60,16 +60,21 @@ def print_links_json(link_list, cam=""):
 
 class BirdhouseViewCreate(object):
 
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
         self.logging = logging.getLogger("view-creat")
         self.logging.setLevel(birdhouse_loglevel)
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting backup handler ...")
 
-    def chart_data_new(self, data_image, data_sensor=None, data_weather=None, config=None):
+    def chart_data_new(self, data_image, data_sensor=None, data_weather=None, date=None):
         """
         create chart data based on sensor, weather and activity data
         """
+        datestamp = date
+        date_us = date[4:8] + "-" + date[2:4] + "-" + date[0:2]
+        date_eu = date[0:2] + "-" + date[2:4] + "." + date[4:8]
+
         self.logging.debug("create_chart_data_new")
         hours = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10",
                  "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"]
@@ -79,6 +84,8 @@ class BirdhouseViewCreate(object):
         # Calculate image activity
         activity_dict = {}
         for key in data_image:
+            if date and "datestamp" in data_image[key] and data_image[key]["datestamp"] != datestamp:
+                continue
             this_hour = key[0:2]
             this_minute = key[2:4]
             minute_to = str(int(this_minute) + (5 - (int(this_minute) % 5))).zfill(2)
@@ -101,11 +108,11 @@ class BirdhouseViewCreate(object):
                 if "similarity" in data_image[stamp]:
                     activity_sum += float(data_image[stamp]["similarity"])
                     activity_count += 1
-            data_activity[key] = 100 - (activity_sum / activity_count)
+            data_activity[key] = round(100 - (activity_sum / activity_count), 2)
 
         # get categories weather
         weather_data_in_chart = ["temperature", "humidity", "wind_speed"]
-        weather_location = config.param["weather"]["location"]
+        weather_location = self.config.param["weather"]["location"]
         if data_weather is not None:
             for weather_category in weather_data_in_chart:
                 weather_title = "WEATHER/" + weather_location + ":" + weather_category
@@ -115,9 +122,11 @@ class BirdhouseViewCreate(object):
         # get categories sensor
         sensor_list = []
         sensor_key_list = []
+        data_sensor_tmp = {}
         if data_sensor is not None:
             for stamp in data_sensor:
                 for sensor in data_sensor[stamp]:
+                    # add date check ... here
                     if sensor != "activity" and sensor != "date":
                         if sensor not in sensor_list:
                             sensor_list.append(sensor)
@@ -129,6 +138,12 @@ class BirdhouseViewCreate(object):
                                 if sensor_title not in chart["titles"]:
                                     chart["titles"].append(sensor_title)
 
+                if data_sensor[stamp][sensor_list[0]]["date"] != date_eu:
+                    continue
+                reduced_stamp = stamp[0:4] + "00"
+                if reduced_stamp not in data_sensor_tmp:
+                    data_sensor_tmp[reduced_stamp] = data_sensor[stamp]
+
         # create chart data
         for hour in hours:
             for minute in minutes:
@@ -138,6 +153,7 @@ class BirdhouseViewCreate(object):
                 # check if a value exists
                 stamp_exists = False
                 if stamp in data_activity or stamp in data_sensor or stamp in data_weather:
+                    # check if date check required here
                     stamp_exists = True
                     chart["data"][chart_stamp] = []
 
@@ -149,6 +165,7 @@ class BirdhouseViewCreate(object):
 
                 # Weather data
                 if data_weather is not None:
+                    # add date check ... in the following line and the elif statement
                     if stamp in data_weather:
                         for value in weather_data_in_chart:
                             if value in data_weather[stamp]:
@@ -160,18 +177,18 @@ class BirdhouseViewCreate(object):
                             chart["data"][chart_stamp].append(None)
 
                 # Sensor data
-                if data_sensor is not None:
-                    if stamp in data_sensor:
+                if data_sensor_tmp is not None:
+                    if stamp in data_sensor_tmp:
                         for sensor in sensor_list:
                             for sensor_key in sensor_key_list:
-                                if sensor in data_sensor[stamp] and sensor_key in data_sensor[stamp][sensor]:
-                                    chart["data"][chart_stamp].append(data_sensor[stamp][sensor][sensor_key])
+                                if sensor in data_sensor_tmp[stamp] and sensor_key in data_sensor_tmp[stamp][sensor]:
+                                    chart["data"][chart_stamp].append(data_sensor_tmp[stamp][sensor][sensor_key])
                                 else:
                                     chart["data"][chart_stamp].append(None)
 
         return chart
 
-    def chart_data(self, data, config=None):
+    def chart_data(self, data):
         self.logging.debug("create_chart_data")
         chart = {
             "titles": ["Activity"],
@@ -210,8 +227,8 @@ class BirdhouseViewCreate(object):
                 if "weather" in data[key]:
                     if "location" in data[key]["weather"]:
                         location = data[key]["weather"]["location"]
-                    elif config is not None:
-                        location = config.param["localization"]["weather_location"]
+                    elif self.config is not None:
+                        location = self.config.param["localization"]["weather_location"]
                     else:
                         location = ""
                     for weather_category in weather_data_in_chart:
@@ -243,7 +260,7 @@ class BirdhouseViewCreate(object):
 
         return chart
 
-    def weather_data_new(self, data_weather, config=None):
+    def weather_data_new(self, data_weather):
         """
         create hourly weather data for API
         """
@@ -274,7 +291,7 @@ class BirdhouseViewCreate(object):
 
         return weather
 
-    def weather_data(self, data, config=None):
+    def weather_data(self, data):
         """
         create hourly weather data for API
         """
@@ -338,7 +355,7 @@ class BirdhouseViews(threading.Thread):
         self.favorite_loading = "started"
         self.create_archive = True
         self.create_favorites = True
-        self.create = BirdhouseViewCreate()
+        self.create = BirdhouseViewCreate(config)
 
     def run(self):
         """
@@ -675,19 +692,17 @@ class BirdhouseViews(threading.Thread):
 
         if backup:
             if "chart_data" not in content:
-                content["chart_data"] = self.create.chart_data(data=files_all.copy(), config=self.config)
+                content["chart_data"] = self.create.chart_data(data=files_all.copy())
             if "weather_data" not in content:
-                content["weather_data"] = self.create.weather_data(data=files_all.copy(), config=self.config)
+                content["weather_data"] = self.create.weather_data(data=files_all.copy())
 
         else:
             if "chart_data" not in content:
                 content["chart_data"] = self.create.chart_data_new(data_image=files_today.copy(),
-                                                              data_sensor=files_sensor.copy(),
-                                                              data_weather=files_weather.copy(),
-                                                              config=self.config)
+                                                                   data_sensor=files_sensor.copy(),
+                                                                   data_weather=files_weather.copy())
             if "weather_data" not in content:
-                content["weather_data"] = self.create.weather_data_new(data_weather=files_weather.copy(),
-                                                                       config=self.config)
+                content["weather_data"] = self.create.weather_data_new(data_weather=files_weather.copy())
 
         return content
 
@@ -916,7 +931,7 @@ class BirdhouseViews(threading.Thread):
 
             content["view_count"] = []
             content["subtitle"] = presets.birdhouse_pages["backup"][0] + " (" + self.camera[cam].name + ")"
-            content["chart_data"] = self.create.chart_data(content["entries"].copy(), self.config)
+            content["chart_data"] = self.create.chart_data(content["entries"].copy())
             self.archive_views[cam] = content.copy()
 
             if self.config.db_handler.db_type == "couch":
@@ -1024,9 +1039,8 @@ class BirdhouseViews(threading.Thread):
         # content["chart_data"] = self.create.chart_data(content["entries"].copy(), self.config)
         content["chart_data"] = self.create.chart_data_new(data_image=content["entries"].copy(),
                                                            data_sensor=data_sensor,
-                                                           data_weather=data_weather,
-                                                           config=self.config)
-        content["weather_data"] = self.create.weather_data_new(data_weather=data_weather, config=self.config)
+                                                           data_weather=data_weather)
+        content["weather_data"] = self.create.weather_data_new(data_weather=data_weather)
 
         length = getsizeof(content)/1024
         self.logging.debug("CompleteListToday: End - " + self.config.local_time().strftime("%H:%M:%S") +
