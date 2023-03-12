@@ -145,7 +145,7 @@ class BirdhouseViewCreate(object):
 
                 if date is not None and data_sensor[stamp][sensor_list[0]]["date"] != date_eu:
                     continue
-                reduced_stamp = stamp[0:2] + str(int(stamp[2:4]) - (stamp[2:4] % 5)).zfill(2) + "00"
+                reduced_stamp = stamp[0:2] + str(int(stamp[2:4]) - (int(stamp[2:4]) % 5)).zfill(2) + "00"
                 if reduced_stamp not in data_sensor_tmp:
                     data_sensor_tmp[reduced_stamp] = data_sensor[stamp]
 
