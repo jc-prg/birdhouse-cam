@@ -115,7 +115,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 		html += lang("CAMERA")     + ": " + video[key]["camera"].toUpperCase() + " - " + video[key]["camera_name"] + "<br/>";
 		html += lang("LENGTH")     + ": " + Math.round(video[key]["length"]*10)/10 + " s<br/>";
 		html += lang("FRAMERATE")  + ": " + video[key]["framerate"]   + " fps<br/>";
-		html += lang("FRAMECOUNT") + ": " + video[key]["image_count"] + "<br/>";
+		html += lang("FRAME_COUNT") + ": " + video[key]["image_count"] + "<br/>";
 		html += lang("IMAGESIZE")  + ": " + video[key]["image_size"]  + "<br/>";
 //		html += lang("FILES")  + ": " + video[key]["video_file"]  + "<br/>";
 		if (short) {
