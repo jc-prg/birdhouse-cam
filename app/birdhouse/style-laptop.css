@@ -10,7 +10,10 @@
 
     .camera_info_image { width : 30%; max-height : 120px; }
     .camera_info_image.video_edit { max-height : none; }
-    .camera_info_image.image_container img { min-width: none; }
+    .camera_info_image.video_edit .image_container img {
+        min-height  : none;
+        max-height  : none;
+    }
     .camera_info_text  { width : 65%; }
     .weather_hide_if_small { display: block; }
 }

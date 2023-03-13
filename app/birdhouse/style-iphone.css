@@ -39,6 +39,10 @@
             max-height  : 250px;
         }
 
+        .camera_info_image.video_edit .image_container img {
+            min-height  : none;
+            max-height  : none;
+        }
 }
 
 /* iPhone XS: landscape */
