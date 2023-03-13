@@ -1363,9 +1363,15 @@ class BirdhouseViews(threading.Thread):
             description = ""
 
             if self.admin_allowed():
+                if self.config.param["server"]["ip4_stream_video"] != "":
+                    video_server = self.config.param["server"]["ip4_stream_video"]
+                elif self.config.param["server"]["ip4_server"] != "":
+                    video_server = self.config.param["server"]["ip4_server"]
+                else:
+                    video_server = "<!--CURRENT_SERVER-->"
                 files = {
                     # "VIDEOFILE": self.camera[which_cam].param["video"]["streaming_server"] + data["video_file"],
-                    "VIDEOFILE": "http://"+self.config.param["server"]["ip4_stream_video"]+":"+str(self.config.param["server"]["port_video"])+"/",
+                    "VIDEOFILE": "http://"+video_server+":"+str(self.config.param["server"]["port_video"])+"/",
                     "THUMBNAIL": data["thumbnail"],
                     "LENGTH": str(data["length"]),
                     "VIDEOID": video_id,
