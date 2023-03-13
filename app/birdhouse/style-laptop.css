@@ -9,6 +9,7 @@
     .image_container.fixed_height { height : 215px; }
 
     .camera_info_image { width : 30%; max-height : 120px; }
+    .camera_info_image.video_edit { max-height : auto; }
     .camera_info_text  { width : 65%; }
     .weather_hide_if_small { display: block; }
 }

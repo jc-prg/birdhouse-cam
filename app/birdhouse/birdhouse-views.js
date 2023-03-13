@@ -102,8 +102,8 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 		console.log(video_stream);
 		console.log(video_stream_short);
 
-		html += "<div class='camera_info'>";
-		html += "<div class='camera_info_image'>";
+		html += "<div class='camera_info' style='height:auto;'>";
+		html += "<div class='camera_info_image video_edit'>";
 		html += video_stream;
 		if (short) {
 			html += video_stream_short;
