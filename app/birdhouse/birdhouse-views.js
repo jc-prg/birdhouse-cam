@@ -134,18 +134,14 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 
 			loadJS(videoplayer_script, "", document.body);
 
-			var video_stream_server;
-			if (server_info["ip4_video_stream"] != "") {
-			    video_stream_server = server_info["ip4_video_stream"];
-			    }
-			else if (server_info["ip4_address"] != "") {
-			    video_stream_server = server_info["ip4_address"];
-			    }
-			else {
-			    video_stream_server = RESTurl;
-			}
+            var video_stream_server = RESTurl;
+            if (server_info["ip4_stream_video"] != "") {
+                video_stream_server = server_info["ip4_stream_video"];
+                }
+            else if (server_info["ip4_address"] != "") {
+                video_stream_server = server_info["ip4_address"];
+                }
 			video_stream_server = "http://" + video_stream_server + ":" + server_info["port_video"] + "/";
-
 
 			video_values = {};
 			video_values["VIDEOID"]    = key;
