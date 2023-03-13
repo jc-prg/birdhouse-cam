@@ -1280,10 +1280,11 @@ class BirdhouseConfig(threading.Thread):
             if self.param["server"]["daily_clean_up"]:
                 date_today = self.local_time().strftime("%Y-%m-%d")
                 if date_today != self.last_day_running:
-                    self.param["info"]["last_day_running"] = date_today
                     self.db_handler.clean_all_data(config="images")
                     self.db_handler.clean_all_data(config="sensor")
                     self.db_handler.clean_all_data(config="weather")
+                    self.param["info"]["last_day_running"] = date_today
+                    self.last_day_running = date_today
                     self.db_handler.write(config="main", date="", data=self.param)
                     time.sleep(2)
 
