@@ -79,6 +79,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 	var html = "";
 	var video = data["DATA"]["data"]["entries"];
 	var admin = data["STATUS"]["admin_allowed"];
+	var server_info = data["DATA"]["settings"]["server"];
 
 	for (let key in video) {
 		app_active_date         = key;
@@ -133,12 +134,26 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 
 			loadJS(videoplayer_script, "", document.body);
 
+			var video_stream_server;
+			if (server_info["ip4_video_stream"] != "") {
+			    video_stream_server = server_info["ip4_video_stream"];
+			    }
+			else if (server_info["ip4_address"] != "") {
+			    video_stream_server = server_info["ip4_address"];
+			    }
+			else {
+			    video_stream_server = RESTurl;
+			}
+			video_stream_server = "http://" + video_stream_server + ":" + server_info["port_video"] + "/";
+
+
 			video_values = {};
 			video_values["VIDEOID"]    = key;
 			video_values["ACTIVE"]     = app_active_cam;
 			video_values["LENGTH"]     = video[key]["length"];
 			video_values["THUMBNAIL"]  = "";
-			video_values["VIDEOFILE"]  = video[key]["directory"] + video[key]["video_file"];
+			// video_values["VIDEOFILE"]  = video[key]["directory"] + video[key]["video_file"];
+			video_values["VIDEOFILE"]  = video_stream_server + video[key]["video_file"];
 			video_values["JAVASCRIPT"] = trim_command;
 			videoplayer  = videoplayer_template;
 			for (let key in video_values) {
