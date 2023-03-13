@@ -1366,7 +1366,7 @@ class BirdhouseViews(threading.Thread):
                 if self.config.param["server"]["ip4_stream_video"] != "":
                     video_server = self.config.param["server"]["ip4_stream_video"]
                 elif self.config.param["server"]["ip4_server"] != "":
-                    video_server = self.config.param["server"]["ip4_server"]
+                    video_server = self.config.param["server"]["ip4_address"]
                 else:
                     video_server = "<!--CURRENT_SERVER-->"
                 files = {
