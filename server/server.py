@@ -139,7 +139,7 @@ class ServerCheckThreads(threading.Thread):
         self._running = True
         self._interval = 60*5
         self._initial = True
-        self._min_live_time = 10
+        self._min_live_time = 65
         self._thread_info = {}
 
         self.logging = logging.getLogger("srv-check")
@@ -149,8 +149,8 @@ class ServerCheckThreads(threading.Thread):
 
     def run(self):
         last_update = time.time()
+        count = 0
         while self._running:
-            count = 0
             if last_update + self._interval < time.time():
                 self.logging.info("Health check ...")
                 last_update = time.time()
