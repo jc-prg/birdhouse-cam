@@ -384,6 +384,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         threading.Thread.__init__(self)
         self._running = True
         self._paused = False
+        self.health_check = time.time()
 
         self.config = config
         self.error = False
@@ -426,6 +427,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
                 self.logging.debug("Wait to write cache to JSON ... " + str(self.backup_interval))
             if self.config.shut_down:
                 self.stop()
+            self.health_check = time.time()
             time.sleep(1)
         self.logging.info("Stopped DB handler.")
 
@@ -757,6 +759,7 @@ class BirdhouseConfigQueue(threading.Thread):
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
+        self.health_check = time.time()
 
         self.logging = logging.getLogger("config-Q")
         self.logging.setLevel(birdhouse_loglevel)
@@ -981,6 +984,9 @@ class BirdhouseConfigQueue(threading.Thread):
 
                         time.sleep(1)
 
+            self.health_check = time.time()
+            time.sleep(1)
+
         self.logging.info("Stopped Config Queue.")
 
     def stop(self):
@@ -1192,6 +1198,7 @@ class BirdhouseConfig(threading.Thread):
         self._running = True
         self._paused = False
         self.shut_down = False
+        self.health_check = time.time()
 
         self.logging = logging.getLogger("config")
         self.logging.setLevel(birdhouse_loglevel)
@@ -1304,6 +1311,8 @@ class BirdhouseConfig(threading.Thread):
                 count = 0
                 if self.weather is not False:
                     self.weather.active(self.param["localization"]["weather_active"])
+
+            self.health_check = time.time()
 
         self.logging.info("Stopped config handler.")
 

@@ -35,6 +35,7 @@ class BirdhouseSensor(threading.Thread):
         self.active = self.param["active"]
         self.running = True
         self._paused = False
+        self.health_check = time.time()
 
         self.GPIO = None
         self.sensor = None
@@ -145,6 +146,7 @@ class BirdhouseSensor(threading.Thread):
                     self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
                     self.last_read_time = time.time()
 
+            self.health_check = time.time()
             time.sleep(1)
 
         # GPIO.cleanup()

@@ -393,6 +393,7 @@ class BirdhouseViews(threading.Thread):
         self.server = None
         self.active_cams = None
         self._running = True
+        self.health_check = time.time()
         self.name = "Views"
         self.camera = camera
         self.config = config
@@ -438,6 +439,7 @@ class BirdhouseViews(threading.Thread):
             if self.config.user_activity():
                 count += 1
 
+            self.health_check = time.time()
             time.sleep(1)
         self.logging.info("Stopped HTML views and REST API for GET.")
 

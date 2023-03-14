@@ -48,6 +48,7 @@ class BirdhouseWeatherPython(threading.Thread):
         self._running = True
         self._paused = False
         self.config = config
+        self.health_check = time.time()
 
         self.logging = logging.getLogger("weather-py")
         self.logging.setLevel(birdhouse_loglevel)
@@ -89,7 +90,10 @@ class BirdhouseWeatherPython(threading.Thread):
             self.update_wait = (last_update + self.update_interval) - time.time()
             self.logging.debug("Wait to read weather data (" + str(round(self.update_interval, 1)) + ":" +
                                str(round(self.update_wait, 1)) + "s) ...")
+
+            self.health_check = time.time()
             time.sleep(5)
+
         self.logging.info("Weather thread PYTHON stopped.")
 
     def stop(self):
@@ -233,6 +237,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
         self._running = True
         self._paused = False
         self.config = config
+        self.health_check = time.time()
 
         self.logging = logging.getLogger("weather-om")
         self.logging.setLevel(birdhouse_loglevel)
@@ -280,7 +285,10 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
             self.update_wait = (last_update + self.update_interval) - time.time()
             self.logging.debug("Wait to read weather data (" + str(round(self.update_interval, 1)) + ":" +
                                str(round(self.update_wait, 1)) + "s) ...")
+
+            self.health_check = time.time()
             time.sleep(5)
+
         self.logging.info("Weather thread OPEN-METEO stopped.")
 
     def stop(self):
@@ -446,6 +454,7 @@ class BirdhouseWeather(threading.Thread):
         self.config = config
         self.initial_date = self.config.local_time().strftime("%Y%m%d")
         self.id = self.config.local_time().strftime("%H%M%S")
+        self.health_check = time.time()
 
         self.logging = logging.getLogger("weather")
         self.logging.setLevel(birdhouse_loglevel)
@@ -534,7 +543,10 @@ class BirdhouseWeather(threading.Thread):
             self.update_wait = (last_update + self.update_time) - time.time()
             self.logging.debug("Wait to read weather data (" + str(round(self.update_time, 1)) + ":" +
                                str(round(self.update_wait, 1)) + "s) ...")
+
+            self.health_check = time.time()
             time.sleep(5)
+
         self.logging.info("Weather module stopped.")
 
     def _raise_error(self, message):

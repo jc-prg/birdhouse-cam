@@ -30,6 +30,7 @@ class BirdhouseArchive(threading.Thread):
         self.archive_data = False
         self.backup_start = False
         self.backup_running = False
+        self.health_check = time.time()
 
     def run(self):
         """
@@ -57,6 +58,7 @@ class BirdhouseArchive(threading.Thread):
                 self.logging.info("Backup DONE.")
             else:
                 backup_started = False
+            self.health_check = time.time()
             time.sleep(0.5)
         self.logging.info("Stopped backup process.")
 

@@ -1249,6 +1249,7 @@ class BirdhouseCamera(threading.Thread):
         self.config_cache = {}
         self.config_cache_size = 5
         self.config.update["camera_" + self.id] = False
+        self.health_check = time.time()
 
         self.logging = logging.getLogger("cam-image")
         self.logging.setLevel(birdhouse_loglevel)
@@ -1523,6 +1524,8 @@ class BirdhouseCamera(threading.Thread):
 
                         time.sleep(0.7)
                         self.previous_stamp = stamp
+
+            self.health_check = time.time()
 
         self.logging.info("Stopped camera (" + self.id + "/" + self.type + ").")
 

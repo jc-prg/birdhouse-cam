@@ -132,6 +132,68 @@ def read_image(directory, filename):
     return f
 
 
+class ServerCheckThreads(threading.Thread):
+
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self._running = True
+        self._interval = 60*5
+        self._initial = True
+        self._min_live_time = 10
+        self._thread_info = {}
+
+        self.logging = logging.getLogger("srv-check")
+        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.addHandler(birdhouse_loghandler)
+        self.logging.info("Starting Server Health Check ...")
+
+    def run(self):
+        last_update = time.time()
+        while self._running:
+            count = 0
+            if last_update + self._interval < time.time():
+                self.logging.info("Health check ...")
+                last_update = time.time()
+                count += 1
+
+                self._thread_info = {
+                    "views": time.time() - views.health_check,
+                    "weather": time.time() - config.weather.health_check,
+                    "weather-module": time.time() - config.weather.module.health_check,
+                    "srv-info": time.time() - sys_info.health_check,
+                    "config": time.time() - config.health_check,
+                    "config-Q": time.time() - config.queue.health_check,
+                    "DB-handler": time.time() - config.db_handler.health_check,
+                    "backup": time.time() - backup.health_check
+                }
+                for sensor_id in sensor:
+                    self._thread_info["sensor_"+sensor_id] = time.time() - sensor[sensor_id].health_check
+                for camera_id in camera:
+                    self._thread_info["camera_"+camera_id] = time.time() - camera[camera_id].health_check
+
+                if self._initial:
+                    self._initial = False
+                    self.logging.info("... checking the following threads: " + str(self._thread_info.keys()))
+
+                problem = []
+                for key in self._thread_info:
+                    if self._thread_info[key] > self._min_live_time:
+                        problem.append(key + " (" + str(round(self._thread_info[key],1)) + "s)")
+
+                if len(problem) > 0:
+                    self.logging.warning("Not all threads are running as expected (<" + str(self._interval) + "s): ")
+                    self.logging.warning("  -> " + ", ".join(problem))
+
+            if count == 4:
+                count = 0
+                self.logging.info("Live sign health check!")
+
+        self.logging.info("Stopped Server Health Check.")
+
+    def stop(self):
+        self._running = False
+
+
 class ServerInformation(threading.Thread):
 
     def __init__(self):
@@ -139,6 +201,7 @@ class ServerInformation(threading.Thread):
         self._running = True
         self._system_status = {}
         self._interval = 5
+        self.health_check = time.time()
 
         self.logging = logging.getLogger("srv-info")
         self.logging.setLevel(birdhouse_loglevel)
@@ -148,6 +211,7 @@ class ServerInformation(threading.Thread):
     def run(self) -> None:
         while self._running:
             self.read()
+            self.health_check = time.time()
             time.sleep(self._interval)
 
     def stop(self):
@@ -919,6 +983,10 @@ if __name__ == "__main__":
         if test_config == {}:
             backup.create_video_config()
 
+    # start health check
+    health_check = ServerCheckThreads()
+    health_check.start()
+
     # Start Webserver
     try:
         address = ('0.0.0.0', config.param["server"]["port"])
@@ -932,6 +1000,7 @@ if __name__ == "__main__":
 
     # Stop all processes to stop
     finally:
+        health_check.stop()
         config.stop()
         sys_info.stop()
         backup.stop()
