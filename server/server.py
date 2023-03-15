@@ -701,7 +701,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if key in camera:
                 api_response["STATUS"]["devices"]["cameras"][key] = camera[key].get_camera_status()
                 camera_data[key]["video"]["stream"] = "/stream.mjpg?" + key
-                camera_data[key]["video"]["stream_pip"] = "/pip/stream.mjpg?" + key + "+{2nd-camera-key}"
+                camera_data[key]["video"]["stream_pip"] = "/pip/stream.mjpg?" + key + \
+                                                          "+{2nd-camera-key}:{2nd-camera-pos}"
                 camera_data[key]["video"]["stream_lowres"] = "/lowres/stream.mjpg?" + key
                 camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
                 camera_data[key]["device"] = "camera"
@@ -794,6 +795,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.error_404()
             return
 
+        if ":" in which_cam2:
+            which_cam2, cam2_pos = which_cam2.split(":")
+        else:
+            cam2_pos = 4
+
         self.stream_video_header()
 
         stream_lowres = False
@@ -827,7 +833,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if which_cam2 in camera:
                     frame_raw2 = camera[which_cam2].get_stream_raw(normalize=True, stream_id=stream_id_int,
                                                                    lowres=True)
-                    frame_raw = camera[which_cam].image.image_in_image_raw(frame_raw, frame_raw2)
+                    frame_raw = camera[which_cam].image.image_in_image_raw(raw=frame_raw, raw2=frame_raw2,
+                                                                           position=int(cam2_pos))
 
             else:
                 frame_raw = camera[which_cam].get_stream_raw(normalize=True, stream_id=stream_id_int,

@@ -122,9 +122,10 @@ function birdhouseDevices_cameras(data) {
 		html_temp += tab.row("Name:", birdhouse_edit_field(id="set_name_"+camera, field="devices:cameras:"+camera+":name", type="input"));
         var options = app_data["STATUS"]["system"]["video_devices_02"];
         html_temp += tab.row("Source:", birdhouse_edit_field(id="set_source_"+camera, field="devices:cameras:"+camera+":source", type="select_dict", options=options, data_type="string"));
+        html_temp += tab.row("Active:", birdhouse_edit_field(id="set_active_"+camera, field="devices:cameras:"+camera+":active", type="select", options="true,false", data_type="boolean"));
 		html_temp += tab.end();
 		html_temp += "&nbsp;<br/>";
-		id_list += "set_name_"+camera+":set_type_"+camera+":set_active_"+camera+":set_source_"+camera+":";
+		id_list += "set_name_"+camera+":set_active_"+camera+":set_source_"+camera+":";
 
         html_entry = tab.start();
 		html_entry += tab.row("- Set Resolution:", birdhouse_edit_field(id="set_resolution_"+camera, field="devices:cameras:"+camera+":image:resolution", type="input", options="", data_type="string"));

@@ -11,6 +11,7 @@ function birdhouse_INDEX(data, camera) {
 	var cameras       = data["DATA"]["settings"]["devices"]["cameras"];
 	var title         = data["DATA"]["settings"]["title"];
 	var admin_allowed = data["STATUS"]["admin_allowed"];
+	var index_view    = data["DATA"]["settings"]["views"]["index"];
 	var stream_server = RESTurl;
 	var active_cam    = {};
 	var other_cams    = [];
@@ -19,26 +20,15 @@ function birdhouse_INDEX(data, camera) {
 	    if (cameras[key]["active"] ) { //&& cameras[key]["status"]["error"] == false) {
     	    if (active_camera == undefined) { active_camera = key; }
             if (key == active_camera) {
-                active_cam  = {
-                    "name"        : key,
-                    "stream"      : cameras[key]["video"]["stream"],
-                    "description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
-                    }
+                active_cam  = { "name" : key };
                 }
             else {
-                var other_cam  = {
-                    "name"        : key,
-                    "stream"      : cameras[key]["video"]["stream"],
-//                    "stream"      : cameras[key]["video"]["stream_lowres"],
-//                    "stream"      : cameras[key]["video"]["stream_pip"], // replace {2nd-camera-key}
-                    "description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
-                    }
+                var other_cam  = { "name" : key };
                 other_cams.push(other_cam);
                 }
             }
 		}
 	if (active_cam == {} && other_cams != []) { active_cam = other_cams[0]; other_cams.shift(); }
-
 	if (Object.keys(cameras).length == 0 || active_cam == {}) {
 	    html += lang("NO_ENTRIES");
 	}
@@ -46,29 +36,31 @@ function birdhouse_INDEX(data, camera) {
 	console.log(active_cam);
 	console.log(active_camera);
 
-    html += "<div id='video_stream_online' style='display:block;'>";
-	if (Object.keys(cameras).length == 1 || other_cams.length == 0) {
-		var onclick  = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
-		html += birdhouse_Camera(main=true, view="cam1", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed);
-		html += "<br/>&nbsp;<br/>";
-		app_camera_source[active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream"];
-		//app_camera_source[active_cam["name"]] = birdhouse_StreamURL(active_cam["name"], cameras[active_cam["name"]]["video"]["stream"], "stream_in_list");
-    }
-	else {
-		var onclick  = "birdhousePrint_load(view=\"INDEX\", camera=\""+other_cams[0]["name"]+"\");";
-		html += birdhouse_Camera(main=false, view="cam1cam2", onclick=onclick, camera=other_cams[0], stream_server=stream_server, admin_allowed=admin_allowed);
-		app_camera_source[other_cams[0]["name"]] = stream_server + cameras[other_cams[0]["name"]]["video"]["stream"];
-		//app_camera_source[other_cams[0]["name"]] = birdhouse_StreamURL(other_cams[0]["name"], cameras[other_cams[0]["name"]]["video"]["stream"], "stream_in_list_2");
+	var replace_tags = {};
+	replace_tags["OFFLINE_URL"]     = app_error_connect_image;
+    replace_tags["CAM1_ID"]         = active_camera;
+    replace_tags["CAM1_URL"]        = stream_server + cameras[active_cam["name"]]["video"]["stream"];
+    replace_tags["CAM1_LOWRES_URL"] = stream_server + cameras[active_cam["name"]]["video"]["stream_lowres"];
+    replace_tags["CAM1_PIP_URL"]    = stream_server + cameras[active_cam["name"]]["video"]["stream_pip"];
+    replace_tags["CAM1_PIP_URL"]    = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-key}", other_cams[0]["name"]);
+    replace_tags["CAM1_PIP_URL"]    = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-pos}", index_view["lowres_position"]);
+    replace_tags["CAM2_ID"]         = other_cams[0]["name"];
+    replace_tags["CAM2_URL"]        = stream_server + cameras[other_cams[0]["name"]]["video"]["stream"];
+    replace_tags["CAM2_LOWRES_URL"] = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_lowres"];
+    replace_tags["CAM2_LOWRES_POS"] = index_lowres_position[index_view["lowres_position"].toString()];
 
-		onclick = "birdhousePrint_load(view=\"TODAY\", camera=\""+active_camera+"\");";
-		html += birdhouse_Camera(main=true, view="cam1cam2", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed);
-		app_camera_source[active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream"];
-		//app_camera_source[active_cam["name"]] = birdhouse_StreamURL(active_cam["name"], cameras[active_cam["name"]]["video"]["stream"], "stream_in_list_3");
-	}
-    html += "</div>";
-    html += "<div id='video_stream_offline' style='display:none;'><center>&nbsp;<br/>&nbsp;<br/>";
-    html += "<img src='"+app_error_connect_image+"' style='width:80%;border:1px solid white;'>";
-    html += "<br/>&nbsp;<br/>&nbsp;</center></div>";
+    var selected_view = "";
+	if (Object.keys(cameras).length == 1 || other_cams.length == 0)         { selected_view = "single"; }
+    else if (index_template[index_view["type"]])                            { selected_view = index_view["type"]; }
+	else                                                                    { selected_view = "default"; }
+    if (admin_allowed && index_template[selected_view+"_admin"])            { selected_view += "_admin"; }
+
+    html += index_template[selected_view];
+    html += index_template["offline"];
+
+    Object.keys(replace_tags).forEach( key => {
+        html = html.replaceAll("<!--"+key+"-->", replace_tags[key]);
+    });
 
 	setTextById(app_frame_content, html);
 	setTextById(app_frame_header, "<center><h2>" + title + "</h2></center>");
