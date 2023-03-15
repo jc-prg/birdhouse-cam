@@ -413,6 +413,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         self.db_type = None
         self.set_db_type(db_type)
         self.config_cache = {}
+        self.config_cache_changed = {}
 
     def run(self):
         """
@@ -434,6 +435,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
 
     def stop(self):
         self._running = False
+        self._process_running = False
 
     def connect(self, db_type=None):
         """
@@ -443,6 +445,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
             db_type = self.db_type
         self.logging.info(" -> (Re)Connecting to database(s) '"+db_type+"' ...")
         self.reset_error()
+        self._process_running = False
         self.set_db_type(db_type)
 
     def set_db_type(self, db_type):
@@ -629,13 +632,16 @@ class BirdhouseConfigDBHandler(threading.Thread):
         """
         if config not in self.config_cache and date == "":
             self.config_cache[config] = self.read(config=config, date="")
+            self.config_cache_changed[config] = False
 
         elif config not in self.config_cache and date != "":
             self.config_cache[config] = {}
             self.config_cache[config][date] = self.read(config=config, date=date)
+            self.config_cache_changed[config+"_"+date] = False
 
         elif date not in self.config_cache[config] and date != "":
             self.config_cache[config][date] = self.read(config=config, date=date)
+            self.config_cache_changed[config+"_"+date] = False
 
         if date == "":
             return self.config_cache[config].copy()
@@ -646,8 +652,6 @@ class BirdhouseConfigDBHandler(threading.Thread):
         """
         write data to DB
         """
-        self.wait_if_process_running()
-
         self.logging.debug("Write: " + config + " / " + date + " / " + self.db_type)
         self.wait_if_paused()
         if data is None:
@@ -679,8 +683,6 @@ class BirdhouseConfigDBHandler(threading.Thread):
         """
         create a copy of a complete config file
         """
-        self.wait_if_process_running()
-
         if self.db_type == "json" or self.db_type == "both":
             config_file = self.file_path(config, date)
             content = self.read(config_file)
@@ -690,17 +692,18 @@ class BirdhouseConfigDBHandler(threading.Thread):
         """
         add / update date in cache
         """
-        self.wait_if_process_running()
-
         if data is None:
             return
         if date == "":
             self.config_cache[config] = data
+            self.config_cache_changed[config] = True
         elif config in self.config_cache:
             self.config_cache[config][date] = data
+            self.config_cache_changed[config+"_"+date] = True
         else:
             self.config_cache[config] = {}
             self.config_cache[config][date] = data
+            self.config_cache_changed[config+"_"+date] = True
 
     def write_cache_to_json(self):
         """
@@ -713,15 +716,19 @@ class BirdhouseConfigDBHandler(threading.Thread):
         self.logging.info("Create backup from cached data ...")
         for config in self.config_cache:
             if config != "backup":
-                filename = self.file_path(config=config, date="")
-                self.json.write(filename=filename, data=self.config_cache[config])
-                self.logging.info("   -> backup: " + config + " (" + str(round(time.time()-start_time, 1)) + "s)")
+                if self.config_cache_changed[config]:
+                    filename = self.file_path(config=config, date="")
+                    self.json.write(filename=filename, data=self.config_cache[config])
+                    self.logging.info("   -> backup: " + config + " (" + str(round(time.time()-start_time, 1)) + "s)")
+                    self.config_cache_changed[config] = False
             else:
                 for date in self.config_cache[config]:
-                    filename = self.file_path(config=config, date=date)
-                    self.json.write(filename=filename, data=self.config_cache[config][date])
-                    self.logging.info("   -> backup: " + config + " / " + date +
-                                      " (" + str(round(time.time()-start_time, 1)) + "s)")
+                    if self.config_cache_changed[config+"_"+date]:
+                        filename = self.file_path(config=config, date=date)
+                        self.json.write(filename=filename, data=self.config_cache[config][date])
+                        self.logging.info("   -> backup: " + config + " / " + date +
+                                          " (" + str(round(time.time()-start_time, 1)) + "s)")
+                        self.config_cache_changed[config + "_" + date] = False
         self._process_running = False
 
     def clean_all_data(self, config, date=""):
