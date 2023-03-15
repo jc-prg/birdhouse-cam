@@ -260,6 +260,7 @@ file_types = {
     '.jpeg': 'image/jpg',
 }
 
+# http://codes.wmo.int/bufr4/codeflag/_0-20-003 (parts used by open-meteo.com)
 birdhouse_weather_descriptions = {
     "0": "clear sky",
     "1": "clear",

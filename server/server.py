@@ -132,7 +132,7 @@ def read_image(directory, filename):
     return f
 
 
-class ServerCheckThreads(threading.Thread):
+class ServerHealthCheck(threading.Thread):
 
     def __init__(self):
         threading.Thread.__init__(self)
@@ -181,8 +181,10 @@ class ServerCheckThreads(threading.Thread):
                         problem.append(key + " (" + str(round(self._thread_info[key],1)) + "s)")
 
                 if len(problem) > 0:
-                    self.logging.warning("Not all threads are running as expected (<" + str(self._interval) + "s): ")
+                    self.logging.warning("... not all threads are running as expected (<" + str(self._interval) + "s): ")
                     self.logging.warning("  -> " + ", ".join(problem))
+                else:
+                    self.logging.info("... OK.")
 
             if count == 4:
                 count = 0
@@ -202,6 +204,7 @@ class ServerInformation(threading.Thread):
         self._system_status = {}
         self._interval = 5
         self.health_check = time.time()
+        self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
         self.logging = logging.getLogger("srv-info")
         self.logging.setLevel(birdhouse_loglevel)
@@ -240,9 +243,20 @@ class ServerInformation(threading.Thread):
         system["mem_used"] = psutil.virtual_memory().used / 1024 / 1024
 
         # diskusage
+        cmd_data = ["du", "-hs", os.path.join(self.main_dir, "data")]
         hdd = psutil.disk_usage("/")
         system["hdd_used"] = hdd.used / 1024 / 1024 / 1024
         system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
+
+        system["hdd_data"] = str(subprocess.check_output(cmd_data))
+        system["hdd_data"] = system["hdd_data"].replace("b'", "")
+        system["hdd_data"] = system["hdd_data"].split("\\t")[0]
+        if "k" in system["hdd_data"]:
+            system["hdd_data"] = float(system["hdd_data"].replace("k", "")) / 1024 / 1024
+        elif "M" in system["hdd_data"]:
+            system["hdd_data"] = float(system["hdd_data"].replace("M", "")) / 1024
+        elif "G" in system["hdd_data"]:
+            system["hdd_data"] = float(system["hdd_data"].replace("G", ""))
 
         # threading information
         # system["threads_active"] = str(threading.active_count())
@@ -984,7 +998,7 @@ if __name__ == "__main__":
             backup.create_video_config()
 
     # start health check
-    health_check = ServerCheckThreads()
+    health_check = ServerHealthCheck()
     health_check.start()
 
     # Start Webserver
