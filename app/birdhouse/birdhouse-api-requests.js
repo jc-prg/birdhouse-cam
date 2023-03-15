@@ -4,6 +4,11 @@
 // additional functions 
 //--------------------------------------
 
+function birdhouse_loadSettings() {
+    commands = ["status"];
+	appFW.requestAPI('GET', commands, '', birdhouseLoadSettings,'','birdhouse_loadSettings');
+}
+
 function birdhouse_createShortVideo() {
         video_id = document.getElementById("video-id");
         if (video_id != null) {

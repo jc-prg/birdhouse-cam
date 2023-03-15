@@ -55,6 +55,7 @@ function app_menu_entries(data) {
 function app_initialize(data) {
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 	app_api_version = data["API"]["version"];
+	app_data = data;
 
 	var settings = data["DATA"]["settings"];
     if (settings["localization"]["language"]) { LANG = settings["localization"]["language"]; }
@@ -67,18 +68,16 @@ function app_initialize(data) {
 
 function app_status(data) {
 	//birdhouseSetMainVars(data);
-	var active = data["DATA"]["active"];
-	var status = data["STATUS"]["server"] ;
-    app_data = data;
-
-    birdhouseSetMainStatus(data);
-
-	if (reload) { 
+	if (reload) {
+        birdhouse_loadSettings();
 		birdhousePrint_load("INDEX","cam1");
 		app_active_cam = "cam1";
 		reload = false;
 		}
 	else {
+        var active = data["DATA"]["active"];
+        var status = data["STATUS"]["server"] ;
+
         if (status["last_answer"] != "") {
             var msg = status["last_answer"];
             appMsg.alert(lang(msg[0]));

@@ -35,7 +35,6 @@ var app_frame_index     = "frame4";
 var app_first_load      = true;
 var app_2nd_load        = true;
 
-
 function birdhousePrint_load(view="INDEX", camera="", date="") {
 
 	if (app_first_load || app_2nd_load) {
@@ -98,7 +97,6 @@ function birdhousePrint(data) {
 	
 	console.log("Request->Print "+app_active_page+" / "+camera+" / "+date);	
 
-	birdhouseSetMainVars(data);
     // ----------------> sollte perspectives entfernt werden, führt jedoch zu Fehler!!!!
 	birdhouseSetMainStatus(data);
 	birdhousePrintTitle(data, app_active_page, camera);
@@ -142,6 +140,10 @@ function birdhousePrintTitle(data, active_page="", camera="") {
 	setTextById("frame5", "<center><small><div id='server_start_time'>" + lang("PLEASE_WAIT") + "</div></small></center>");
 	}
 
+function birdhouseLoadSettings(data) {
+    app_data = data;
+    birdhouseSetMainStatus(data);
+}
 
 function birdhouseSetMainVars(data) {
     //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
@@ -166,7 +168,8 @@ function birdhouseSetMainVars(data) {
     }
 
 function birdhouseSetMainStatus(data) {
-    var status_view = data["STATUS"]["view"];
+    var status_view  = data["STATUS"]["view"];
+    var status_admin = data["STATUS"]["admin_allowed"];
 
 	if (status_view["active_cam"] != undefined && status_view["active_cam"] != "")
             { app_active_cam = status_view["active_cam"]; }
@@ -180,7 +183,7 @@ function birdhouseSetMainStatus(data) {
 	                                                        { app_active_date = status_view["active_date"]; }
 	else                                                    { app_active_date = ""; }
 
-	if (data["STATUS"]["admin_allowed"] != undefined)       { app_admin_allowed = data["STATUS"]["admin_allowed"]; }
+	if (status_admin != undefined)       { app_admin_allowed = status_admin; }
 	}
 	
 function birdhouseHeaderFunctions() {

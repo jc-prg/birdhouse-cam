@@ -555,6 +555,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # prepare API response
         api_response = {
+            "API": api_description,
             "STATUS": {
                 "start_time": api_start,
                 "current_time": config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
@@ -583,7 +584,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 },
                 "database": {}
             },
-            "API": api_description,
             "WEATHER": {},
             "DATA": {}
         }
@@ -732,9 +732,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         api_response["DATA"] = api_data
         api_response["API"]["request_time"] = round(time.time() - request_start, 2)
 
-        if command != "status" and command != "list":
+        if command != "status" and command != "list" and command != "version":
             del api_response["WEATHER"]
-            # del api_response["STATUS"]
+            del api_response["STATUS"]["server"]
+            del api_response["STATUS"]["system"]
+            del api_response["STATUS"]["devices"]
+            del api_response["STATUS"]["database"]
+            del api_response["STATUS"]["check-version"]
 
         self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'),
                          no_cache=True)
