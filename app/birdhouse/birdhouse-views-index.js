@@ -76,6 +76,30 @@ index_template["overlay"] = `
     </div>
 `
 
+index_template["overlay_admin"] = `
+    <div id="video_stream_online" style="display:block;">
+        <center>
+        <div style="position:relative;margin:10px;">
+
+            <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
+                <img src="<!--CAM1_URL-->" id="stream_cam2" class="" style="width:100%;height:auto;border:white solid 1px;">
+            </a>
+
+            <div style="position:absolute;<!--CAM2_LOWRES_POS-->;width:25%;">
+                <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM2_ID-->');" style="cursor:pointer;">
+                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_cam1" class=""  style="width:100%;height:auto;border:white solid 1px;">
+                </a>
+            </div>
+        </div>
+        <div class="livestream_record cam1" style="height:80px;">
+            <button onclick="appFW.requestAPI('POST',['start','recording','<!--CAM1_ID-->'],'','','','birdhouse_INDEX');" class="button-video-record">Record (<!--CAM1_ID-->)</button>
+            &nbsp;
+            <button onclick="appFW.requestAPI('POST',['stop', 'recording','<!--CAM1_ID-->'],'','','','birdhouse_INDEX');" class="button-video-record">Stop (<!--CAM1_ID-->)</button>
+        </div>
+        </center>
+    </div>
+`
+
 //-------------------------------------------------
 
 index_template["default"] = `
