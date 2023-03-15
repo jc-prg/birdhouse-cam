@@ -62,6 +62,7 @@ function birdhousePrint(data) {
     // app_data = data;
 	console.debug("Request->Print ...");
 
+    birdhouseSetMainVars(data);
 	var data_settings = data["DATA"]["settings"];
 	var data_active   = data["DATA"]["active"];
 

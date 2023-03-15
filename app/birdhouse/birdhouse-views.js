@@ -20,34 +20,47 @@ function birdhouse_INDEX(data, camera) {
 	    if (cameras[key]["active"] ) { //&& cameras[key]["status"]["error"] == false) {
     	    if (active_camera == undefined) { active_camera = key; }
             if (key == active_camera) {
-                active_cam  = { "name" : key };
+                active_cam  = {
+                    "name"        : key,
+                    "stream"      : cameras[key]["video"]["stream"],
+                    "description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
+                    }
                 }
             else {
-                var other_cam  = { "name" : key };
+                var other_cam  = {
+                    "name"        : key,
+                    "stream"      : cameras[key]["video"]["stream"],
+                    "description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
+                    }
                 other_cams.push(other_cam);
                 }
             }
 		}
 	if (active_cam == {} && other_cams != []) { active_cam = other_cams[0]; other_cams.shift(); }
-	if (Object.keys(cameras).length == 0 || active_cam == {}) {
-	    html += lang("NO_ENTRIES");
-	}
+	if (Object.keys(cameras).length == 0 || active_cam == {}) { html += lang("NO_ENTRIES"); }
+
+    console.log(index_view);
 	console.log(cameras);
 	console.log(active_cam);
 	console.log(active_camera);
+	console.log(other_cams);
 
 	var replace_tags = {};
 	replace_tags["OFFLINE_URL"]     = app_error_connect_image;
     replace_tags["CAM1_ID"]         = active_camera;
     replace_tags["CAM1_URL"]        = stream_server + cameras[active_cam["name"]]["video"]["stream"];
-    replace_tags["CAM1_LOWRES_URL"] = stream_server + cameras[active_cam["name"]]["video"]["stream_lowres"];
-    replace_tags["CAM1_PIP_URL"]    = stream_server + cameras[active_cam["name"]]["video"]["stream_pip"];
-    replace_tags["CAM1_PIP_URL"]    = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-key}", other_cams[0]["name"]);
-    replace_tags["CAM1_PIP_URL"]    = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-pos}", index_view["lowres_position"]);
-    replace_tags["CAM2_ID"]         = other_cams[0]["name"];
-    replace_tags["CAM2_URL"]        = stream_server + cameras[other_cams[0]["name"]]["video"]["stream"];
-    replace_tags["CAM2_LOWRES_URL"] = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_lowres"];
-    replace_tags["CAM2_LOWRES_POS"] = index_lowres_position[index_view["lowres_position"].toString()];
+    replace_tags["CAM1_LOWRES_URL"] = birdhouse_StreamURL(active_cam["name"], stream_server + cameras[active_cam["name"]]["video"]["stream_lowres"], "main_lowres", true);
+    replace_tags["CAM1_URL"]        = birdhouse_StreamURL(active_cam["name"], stream_server + cameras[active_cam["name"]]["video"]["stream"], "main", true);
+
+    if (other_cams.length > 0) {
+        replace_tags["CAM1_PIP_URL"]    = birdhouse_StreamURL(active_cam["name"], stream_server + cameras[active_cam["name"]]["video"]["stream_pip"], "main_pip", true);
+        replace_tags["CAM1_PIP_URL"]    = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-key}", other_cams[0]["name"]);
+        replace_tags["CAM1_PIP_URL"]    = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-pos}", index_view["lowres_position"]);
+        replace_tags["CAM2_ID"]         = other_cams[0]["name"];
+        replace_tags["CAM2_URL"]        = birdhouse_StreamURL(active_cam["name"], stream_server + cameras[other_cams[0]["name"]]["video"]["stream"], "2nd", true);
+        replace_tags["CAM2_LOWRES_URL"] = birdhouse_StreamURL(active_cam["name"], stream_server + cameras[other_cams[0]["name"]]["video"]["stream_lowres"], "2nd_lowres", true);
+        replace_tags["CAM2_LOWRES_POS"] = index_lowres_position[index_view["lowres_position"].toString()];
+    }
 
     var selected_view = "";
 	if (Object.keys(cameras).length == 1 || other_cams.length == 0)         { selected_view = "single"; }
