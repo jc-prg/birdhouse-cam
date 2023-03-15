@@ -37,8 +37,14 @@ function birdhouseWeather_exec( data ) {
     var html_temp = "";
     var html_entry = "";
 
-    var current_icon = "<center><font style='font-size:80px;'><big>" + weather_today["description_icon"] + "</big></font>"
-                       + "<br/>" + weather_today["description"] + "</center>";
+    if (weather_today["weathercode"]) {
+        var current_icon = "<center><font style='font-size:80px;'><big>" + weather_today["description_icon"] + "</big></font>"
+                           + "<br/>" + lang("WEATHER_" + weather_today["weathercode"]) + "</center>";
+    }
+    else {
+        var current_icon = "<center><font style='font-size:80px;'><big>" + weather_today["description_icon"] + "</big></font>"
+                           + "<br/>" + weather_today["description"] + "</center>";
+    }
     var current_weather = tab.start();
     if (weather["info_position"].length <= 2) {
         current_weather += tab.row(lang("LOCATION") + ":",  status["devices"]["weather"]["gps_location"]);
