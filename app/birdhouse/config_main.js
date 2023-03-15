@@ -67,7 +67,7 @@ function app_initialize(data) {
 
 
 function app_status(data) {
-	//birdhouseSetMainVars(data);
+
 	if (reload) {
         birdhouse_loadSettings();
 		birdhousePrint_load("INDEX","cam1");

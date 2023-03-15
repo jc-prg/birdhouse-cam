@@ -143,7 +143,6 @@ function birdhousePrintTitle(data, active_page="", camera="") {
 
 function birdhouseLoadSettings(data) {
     app_data = data;
-    birdhouseSetMainStatus(data);
 }
 
 function birdhouseSetMainVars(data) {

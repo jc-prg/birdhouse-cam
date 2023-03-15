@@ -602,6 +602,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         }
         if len(param) >= 5 and command == "TODAY":
             api_data["active"]["active_date"] = param[4]
+            api_response["STATUS"]["view"]["active_date"] = param[4]
 
         # execute API commands
         if command == "INDEX":
