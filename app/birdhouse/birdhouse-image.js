@@ -300,7 +300,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
     }
 	else if (entry["type"] == "addon") {
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["lowres"]);
-		var lowres      = birdhouse_StreamURL(app_active_cam, entry["stream"], "stream_list_5");
+		var lowres      = birdhouse_StreamURL(app_active_cam, entry["stream"], "stream_list_5", true);
 		var onclick     = "birdhousePrint_load(view=\"INDEX\", camera = \""+entry["camera"]+"\");";
 		var description = lang("LIVESTREAM");
     }
@@ -363,8 +363,13 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var recycle     = "";
 
 	var img_id2 = "";
-	img_id2 += entry["directory"] + entry["lowres"];
-	img_id2 = img_id2.replaceAll( "/", "_");
+    if (entry["type"] == "addon") {
+        img_id2 = "stream_lowres_" + app_active_cam;
+    }
+    else {
+        img_id2 += entry["directory"] + entry["lowres"];
+        img_id2 = img_id2.replaceAll( "/", "_");
+    }
 
 	if (entry["detect"] == 1)                                           { style = "border: 1px solid "+color_code["detect"]+";"; }
 	if (entry["to_be_deleted"] == 1 || entry["to_be_deleted"] == "1")   { style = "border: 1px solid "+color_code["recycle"]+";"; }
@@ -389,6 +394,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 
     var height = "";
     var container_style = "";
+    var addon_id = "";
 
     if (!same_img_size) {
         height = " fixed_height";
@@ -397,11 +403,14 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
         container_width  = lowres_size["container_width"];
         container_height = lowres_size["container_height"];
         thumbnail_width  = lowres_size["thumbnail_width"];
+        thumbnail_height  = lowres_size["thumbnail_height"];
         style           += "width:" + thumbnail_width + "px";
         container_style += "width:" + container_width + "px;height:" + container_height +"px;";
         }
 
-	html += "<div class='image_container"+height+"' style='" + container_style + "'>";
+    if (entry["type"] == "addon") { addon_id = "id='lowres_today'"; }
+
+	html += "<div "+addon_id+" class='image_container"+height+"' style='" + container_style + "'>";
 	html += "  <div class='star'>"+star+"</div>";
 	html += "  <div class='recycle'>"+recycle+"</div>";
 	html += "  <div class='thumbnail_container'>";
@@ -410,6 +419,17 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	html += "    <br/><center><small>"+description+"</small></center>";
 	html += "  </div>";
 	html += "</div>";
+
+	if (entry["type"] == "addon") {
+        html += "<div id='lowres_today_error' class='image_container"+height+"' style='" + container_style + ";display:none;'>";
+        html += "  <div class='star'></div>";
+        html += "  <div class='recycle'></div>";
+        html += "  <div class='thumbnail_container'>";
+        html += "     <div style='border:#AA0000 1px solid;background:#AAAAAA;text-align:center;vertical-align:middle;color:#AA0000;width:" + thumbnail_width + "px;height:" + thumbnail_height + "px;'>&nbsp;<br/>&nbsp;<br/>"+lang("CONNECTION_ERROR")+"</div>"
+        html += "    <br/>";
+        html += "  </div>";
+        html += "</div>";
+	}
 
 	return html;
 }

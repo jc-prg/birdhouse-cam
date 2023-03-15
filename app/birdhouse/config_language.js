@@ -110,6 +110,7 @@ var language_app = {
 		"CREATE_DAY_DONE"       : "Created video from the day.",
 		"CREATE_DAY_ERROR"      : "Error while creating the video.",
 		"CREATE_DAY_STARTED"    : "Started to create a video of the day.",
+		"CONNECTION_ERROR"      : "Connection Error",
 		"DATA_LOADING_TRY_AGAIN": "Server loads data at the moment. Try again later.",
 		"DELETE_SURE"           : "Do you want to delete all files?",
 		"DELETE_DONE"           : "Files deleted.",

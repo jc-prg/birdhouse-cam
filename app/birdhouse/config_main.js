@@ -141,6 +141,8 @@ function app_connection_lost(error=false) {
             // code if lost connection
             elementVisible("video_stream_offline");
             elementHidden("video_stream_online");
+            elementVisible("lowres_today_error");
+            elementHidden("lowres_today");
             birdhouseStatus_connectionError()
             app_connection_error = true;
         }
@@ -148,6 +150,8 @@ function app_connection_lost(error=false) {
             // code if got back connection
             elementVisible("video_stream_online");
             elementHidden("video_stream_offline");
+            elementVisible("lowres_today");
+            elementHidden("lowres_today_error");
             app_connection_error = false;
             birdhouseReloadView();
         }
