@@ -601,6 +601,9 @@ class BirdhouseWeather(threading.Thread):
                 self.weather_gps = param["gps_location"]
             else:
                 self.weather_gps = self.gps.look_up_location(self.weather_city)
+
+            if self.module is not None:
+                self.module.stop()
             self.module = BirdhouseWeatherOpenMeteo(config=self.config,
                                                     gps_location=self.weather_gps,
                                                     time_zone=self.timezone)

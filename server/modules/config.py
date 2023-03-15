@@ -384,6 +384,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         threading.Thread.__init__(self)
         self._running = True
         self._paused = False
+        self._process_running = False
         self.health_check = time.time()
 
         self.config = config
@@ -533,6 +534,13 @@ class BirdhouseConfigDBHandler(threading.Thread):
         while self._paused:
             time.sleep(0.2)
 
+    def wait_if_process_running(self):
+        """
+        wait if paused to avoid loss of data
+        """
+        while self._process_running:
+            time.sleep(0.2)
+
     def file_path(self, config, date=""):
         """
         return complete path of config file
@@ -638,6 +646,8 @@ class BirdhouseConfigDBHandler(threading.Thread):
         """
         write data to DB
         """
+        self.wait_if_process_running()
+
         self.logging.debug("Write: " + config + " / " + date + " / " + self.db_type)
         self.wait_if_paused()
         if data is None:
@@ -669,6 +679,8 @@ class BirdhouseConfigDBHandler(threading.Thread):
         """
         create a copy of a complete config file
         """
+        self.wait_if_process_running()
+
         if self.db_type == "json" or self.db_type == "both":
             config_file = self.file_path(config, date)
             content = self.read(config_file)
@@ -678,6 +690,8 @@ class BirdhouseConfigDBHandler(threading.Thread):
         """
         add / update date in cache
         """
+        self.wait_if_process_running()
+
         if data is None:
             return
         if date == "":
@@ -692,6 +706,9 @@ class BirdhouseConfigDBHandler(threading.Thread):
         """
         create a backup of all data in the cache to JSON files (backup if db_type == couch)
         """
+        self.wait_if_process_running()
+        self._process_running = True
+
         start_time = time.time()
         self.logging.info("Create backup from cached data ...")
         for config in self.config_cache:
@@ -705,11 +722,15 @@ class BirdhouseConfigDBHandler(threading.Thread):
                     self.json.write(filename=filename, data=self.config_cache[config][date])
                     self.logging.info("   -> backup: " + config + " / " + date +
                                       " (" + str(round(time.time()-start_time, 1)) + "s)")
+        self._process_running = False
 
     def clean_all_data(self, config, date=""):
         """
         remove all entries from a database
         """
+        self.wait_if_process_running()
+        self._process_running = True
+
         self.logging.info("Clean all data from database " + config + " " + date)
         self.write(config=config, date=date, data={})
         self.write_cache(config=config, date=date, data={})
@@ -734,6 +755,8 @@ class BirdhouseConfigDBHandler(threading.Thread):
             except Exception as e:
                 self.raise_error("Could not delete image files from " +
                                  self.config.db_handler.directory(config=config, date=date) + " (" + str(e) + ")")
+
+        self._process_running = False
 
     def lock(self, config, date=""):
         """
@@ -1193,22 +1216,21 @@ class BirdhouseConfig(threading.Thread):
         """
         threading.Thread.__init__(self)
         self.name = "Config"
-        self.param = None
-        self.queue = None
         self._running = True
         self._paused = False
         self.shut_down = False
         self.health_check = time.time()
+        self.param = None
+        self.config = None
+        self.config_cache = {}
+        self.views = None
+        self.queue = None
+        self.db_handler = None
 
         self.logging = logging.getLogger("config")
         self.logging.setLevel(birdhouse_loglevel)
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting configuration handler ("+main_directory+") ...")
-
-        self.config = None
-        self.config_cache = {}
-        self.views = None
-        self.db_handler = None
 
         self.update = {}
         self.update_views = {"favorite": False, "archive": False}
@@ -1257,6 +1279,8 @@ class BirdhouseConfig(threading.Thread):
         # set database type if not JSON
         self.db_type = self.param["server"]["database_type"]
         if self.db_type != "json" and ("db_type" not in self.param_init or self.param_init["db_type"] != "json"):
+            if self.db_handler is not None:
+                self.db_handler.stop()
             self.db_handler = BirdhouseConfigDBHandler(self, self.db_type, main_directory)
             self.db_handler.start()
 
