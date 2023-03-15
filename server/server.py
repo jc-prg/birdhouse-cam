@@ -736,7 +736,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         if command != "status" and command != "list" and command != "version":
             del api_response["WEATHER"]
-            del api_response["STATUS"]["server"]
+            #del api_response["STATUS"]["server"]
             del api_response["STATUS"]["system"]
             del api_response["STATUS"]["devices"]
             del api_response["STATUS"]["database"]
