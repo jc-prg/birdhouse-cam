@@ -134,7 +134,7 @@ function app_screen_size_changed(width, height) {
 // add code when connection is lost
 //--------------------------------
 
-app_connection_error = true;
+app_connection_error = false;
 function app_connection_lost(error=false) {
     if (app_connection_error != error) {
         if (error) {
