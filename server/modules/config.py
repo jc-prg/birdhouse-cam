@@ -805,6 +805,7 @@ class BirdhouseConfigQueue(threading.Thread):
         self.status_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": []}
         self.queue_wait = 5
         self.queue_wait_max = 30
+        self.queue_wait_min = 5
         self.queue_wait_duration = 0
 
     def run(self):
@@ -1014,6 +1015,10 @@ class BirdhouseConfigQueue(threading.Thread):
                         else:
                             self.logging.error("Writing entries from queue takes MUCH longer than expected. " +
                                                "The queue may be is blocked and server is slowed down!")
+
+                    elif self.queue_wait - 3 > self.queue_wait_duration:
+                        if self.queue_wait + 3 < self.queue_wait_min:
+                            self.queue_wait -= 3
 
                         time.sleep(1)
 
