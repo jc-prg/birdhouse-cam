@@ -1009,8 +1009,8 @@ class BirdhouseConfigQueue(threading.Thread):
                     if self.queue_wait < self.queue_wait_duration:
                         if self.queue_wait < self.queue_wait_max:
                             self.queue_wait += 3
-                            self.logging.warning("Writing entries from queue takes longer than expected. " +
-                                                 "Check DB configuration!")
+                            self.logging.warning("Writing entries from queue takes longer than expected: " +
+                                                 str(self.queue_wait_duration) + "s. Check DB configuration!")
                             self.logging.warning("-> extended waiting time: " + str(self.queue_wait) + "s")
                         else:
                             self.logging.error("Writing entries from queue takes MUCH longer than expected. " +
