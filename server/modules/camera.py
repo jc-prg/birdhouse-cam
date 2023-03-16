@@ -1650,7 +1650,7 @@ class BirdhouseCamera(threading.Thread):
         self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, high_value)
         self.max_resolution = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
                                self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
-        self.logging.info(self.id + " Maximum resolution: " + str(self.max_resolution))
+        self.logging.debug(self.id + " Maximum resolution: " + str(self.max_resolution))
 
         if "x" in resolution:
             dimensions = resolution.split("x")
