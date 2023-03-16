@@ -40,7 +40,13 @@ function birdhouse_forceBackup(camera) {
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
 	}
 
+function birdhouse_forceUpdateViews() {
+	commands = ["update_views"];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceUpdateViews');
+	}
+
 function birdhouse_forceRestart() {
+
     appMsg.confirm("Restart Birdhouse-Server?", "birdhouse_forceRestart_exec();", 250);
     }
 

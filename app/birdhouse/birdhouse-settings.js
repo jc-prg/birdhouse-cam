@@ -156,6 +156,7 @@ function birdhouse_app_settings (name="Settings") {
 
         api_call    = "<button onclick='birdhouse_forceBackup();' style='"+button_style+"';>Force Backup</button>";
         api_call   += "<button onclick='birdhouse_forceRestart();' style='"+button_style+"';>Force Restart</button>";
+        api_call   += "<button onclick='birdhouse_forceUpdateViews();' style='"+button_style+"';>Update Views</button>";
         api_call   += "<button onclick='birdhouse_recreateImageConfig();' style='"+button_style+"';>NewImgCfg</button>";
         api_call   += "<button onclick='birdhouse_removeDataToday();' style='"+button_style+"';>CleanAllToday</button>";
         api_call   += "<button onclick='appFW.requestAPI(\"POST\",[\"check-timeout\"],\"\",\"\",\"\");' style='"+button_style+"';>Timeout</button>";

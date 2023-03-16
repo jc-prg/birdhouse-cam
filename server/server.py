@@ -431,6 +431,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             config.db_handler.clean_all_data("weather")
             config.db_handler.clean_all_data("sensor")
             response = {"cleanup": "done"}
+        elif self.path.startswith('/update_views/'):
+            response = {}
+            views.archive_list_create()
+            views.favorite_list_create()
         elif self.path.startswith('/force_backup/'):
             response = {}
             backup.start_backup()
