@@ -441,7 +441,7 @@ class BirdhouseViews(threading.Thread):
 
             self.health_check = time.time()
             time.sleep(1)
-        self.logging.info("Stopped HTML views and REST API for GET.")
+            self.logging.info("Stopped HTML views and REST API for GET.")
 
     def stop(self):
         """
@@ -889,20 +889,41 @@ class BirdhouseViews(threading.Thread):
                         dir_count_delete = 0
                         dir_count_data = 0
 
-                        # select preview image
-                        if image_title in file_data["files"] and "lowres" in file_data["files"][image_title]:
-                            image = os.path.join(directory, file_data["files"][image_title]["lowres"])
-
-                        # or take first image as title image
-                        else:
+                        # first favorit as image or ...
+                        if "preview_fav" in self.config.param["backup"] and self.config.param["backup"]["preview_fav"]:
                             for file in list(sorted(file_data["files"].keys())):
-                                if "camera" in file_data["files"][file] and file_data["files"][file]["camera"] == cam \
-                                        and ("type" not in file_data["files"][file] or
-                                             file_data["files"][file]["type"] == "image"):
+                                entry = file_data["files"][file]
+                                if "camera" in entry and entry["camera"] == cam and "favorit" in entry \
+                                        and int(entry["favorit"]) == 1 and "lowres" in entry:
                                     first_img = file
                                     break
-                            if first_img != "" and "lowres" in file_data["files"][first_img]:
-                                image = os.path.join(directory, file_data["files"][first_img]["lowres"])
+
+                        # select preview image
+                        if first_img == "":
+                            for file in list(sorted(file_data["files"].keys())):
+                                entry = file_data["files"][file]
+                                if image_title[0:4] == file[0:4] and "camera" in entry and entry["camera"] == cam \
+                                        and "lowres" in entry:
+                                    first_img = file
+                                    break
+
+                        # select preview image
+                        if first_img == "" and image_title in file_data["files"] \
+                                and "lowres" in file_data["files"][image_title]:
+                            first_img = image_title
+
+                        # or take first image as title image
+                        if first_img == "":
+                            for file in list(sorted(file_data["files"].keys())):
+                                entry = file_data["files"][file]
+                                if "camera" in entry and entry["camera"] == cam and "lowres" in entry:
+                                    first_img = file
+                                    break
+
+                        if first_img in file_data["files"]:
+                            image = os.path.join(directory, file_data["files"][first_img]["lowres"])
+                        else:
+                            image = ""
 
                     if "files" in file_data:
                         for file in file_data["files"]:

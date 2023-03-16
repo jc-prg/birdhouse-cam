@@ -90,17 +90,6 @@ function birdhouse_app_settings (name="Settings") {
 
             setTextById(app_frame_header, "<center><h2>" + lang("SETTINGS")) + "</h2></center>";
             setTextById(app_frame_content, html);
-
-            /*
-            setTextById("setting1", html);
-            setTextById("setting2", "");
-            setTextById("setting3", "");
-
-            html = this.settings();
-
-            setTextById("setting2", html);
-    		this.toggle();
-    		*/
             }
 		}
 
@@ -124,9 +113,11 @@ function birdhouse_app_settings (name="Settings") {
         html += this.tab.row("Title:&nbsp;", birdhouse_edit_field(id="set_title", field="title", type="input") );
         html += this.tab.row("Language:&nbsp;", birdhouse_edit_field(id="set_language", field="localization:language", type="select", options="EN,DE") );
         html += this.tab.row("Timezone:&nbsp;", birdhouse_edit_field(id="set_timezone", field="localization:timezone", type="select", options=timezones, data_type="string") );
-        html += this.tab.row("Backup-Time:&nbsp;", birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
-        html += this.tab.row("Backup-Preview:&nbsp;", birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
         html += this.tab.row("RPi Active:&nbsp;", birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false", data_type="boolean") );
+        html += this.tab.row("<hr/>");
+        html += this.tab.row("Backup-Time:&nbsp;", birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
+        html += this.tab.row("BU Index Favorite:&nbsp;", birdhouse_edit_field(id="set_preview_fav", field="backup:preview_fav", type="select", options="true,false", data_type="boolean") );
+        html += this.tab.row("BU Index Time:&nbsp;", birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
         html += this.tab.row("<hr/>");
 
         html += this.tab.row("Index View:&nbsp;", birdhouse_edit_field(id="set_index_view", field="views:index:type", type="select", options="default,overlay,picture-in-picture", data_type="string") );
@@ -147,7 +138,7 @@ function birdhouse_app_settings (name="Settings") {
         html += this.tab.row("Deny admin from IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_deny", field="server:ip4_admin_deny", type="input", options="true,false", data_type="json") );
         html += this.tab.row("<hr>");
 
-        html += this.tab.row("", birdhouse_edit_save("set_main","set_db_clean_up:set_db_server:set_db_type:set_weather_location:set_initial_setup:set_language:set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port:set_index_lowres:set_index_view") );
+        html += this.tab.row("", birdhouse_edit_save("set_main","set_preview_fav:set_db_clean_up:set_db_server:set_db_type:set_weather_location:set_initial_setup:set_language:set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port:set_index_lowres:set_index_view") );
         html += this.tab.row("&nbsp;");
         html += this.tab.end();
         return html;

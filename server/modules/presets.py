@@ -197,8 +197,9 @@ birdhouse_default_sensor = {
 
 birdhouse_preset = {
     "backup": {
-        "preview":   "0700",               # HHMM
-        "time":      "2000"
+        "preview": "0700",               # HHMM
+        "preview_fav": True,               # HHMM
+        "time": "2000"
     },
     "devices": {
         "cameras": {
