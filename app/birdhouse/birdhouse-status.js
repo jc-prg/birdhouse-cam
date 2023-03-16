@@ -78,11 +78,9 @@ function birdhouseStatus_print(data) {
     setTextById("system_info_hdd_total",        (Math.round(status_sys["hdd_total"]*10)/10)+" GB");
     setTextById("system_info_connection",       "Connected");
     setTextById("system_info_start_time",       start_time);
-
     setTextById("system_info_db_connection",    "Connected=" + status_db["db_connected"] + " (" + status_db["type"] + ")");
     setTextById("system_info_db_handler",       "Error=" + status_db["handler_error"] + " " + status_db["handler_error_msg"].toString());
     setTextById("system_info_db_error",         "Error=" + status_db["db_error"] + " " + status_db["db_error_msg"].toString());
-
     setTextById("server_start_time",            lang("STARTTIME") + ": " + start_time);
 
     var cpu_details = "";
@@ -172,13 +170,13 @@ function birdhouseStatus_print(data) {
             weather_update = weather["info_update"];
         }
         weather_error = "Running: " + weather["info_status"]["running"] + "\n";
-        if (weather["info_status"]["error"]) {
-        weather_error += "Error: " + weather["info_status"]["error"].toString() + "\n";
-        weather_error += "Message: " + weather["info_status"]["error_msg"];
-        setHeaderColor(header_id="weather_error", header_color=header_color_error);
-        setHeaderColor(header_id="weather_settings", header_color=header_color_error);
-        setStatusColor(status_id="status_error_WEATHER", "red");
-    }
+        if (weather["info_status"]["error"] || weather["info_status"]["running"] == "error") {
+            weather_error += "Error: " + weather["info_status"]["error"].toString() + "\n";
+            weather_error += "Message: " + weather["info_status"]["error_msg"];
+            setHeaderColor(header_id="weather_error", header_color=header_color_error);
+            setHeaderColor(header_id="weather_settings", header_color=header_color_error);
+            setStatusColor(status_id="status_error_WEATHER", "red");
+        }
         else if (weather["info_status"]["running"].indexOf("paused") > -1) {
             setHeaderColor(header_id="weather_error", header_color=header_color_warning);
             setStatusColor(status_id="status_error_WEATHER", "black");

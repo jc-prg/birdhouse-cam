@@ -13,16 +13,12 @@ function birdhouseWeather( title, data ) {
 function birdhouseWeather_exec( data ) {
     var settings = data["DATA"]["settings"];
     var status   = data["STATUS"];
+	var weather	= data["WEATHER"];
 
     if (settings["localization"]["weather_active"] == false) {
         setTextById(app_frame_content, "&nbsp;<br/><center>" + lang("NO_WEATHER_CHANGE_SETTINGS") + "</center><br/>&nbsp;");
         return;
     }
-
-	var weather	= data["WEATHER"];
-	var weather_today = weather["current"];
-	var weather_3day  = weather["forecast"];
-
     if (!weather["forecast"] || !weather["current"] || !weather["forecast"]["today"] || weather["info_status"]["running"] == "error") {
         setTextById(app_frame_content, "&nbsp;<br/><center><font color='red'><b>" + lang("WEATHER_DATA_ERROR") + "</b></font></center><br/>&nbsp;");
         console.warn("Error with weather data!")
@@ -33,6 +29,8 @@ function birdhouseWeather_exec( data ) {
 	var tab     = new birdhouse_table();
 	tab.style_rows["height"] = "18px";
 
+	var weather_today = weather["current"];
+	var weather_3day  = weather["forecast"];
     var html_weather = "";
     var html_temp = "";
     var html_entry = "";
