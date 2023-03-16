@@ -36,7 +36,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.directory = directory
         self.timezone = time_zone
 
-        self.logging = logging.getLogger("cam-video")
+        self.logging = logging.getLogger(self.id + "-video")
         self.logging.setLevel(birdhouse_loglevel)
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting VIDEO processing for '"+self.id+"' ...")
@@ -570,7 +570,7 @@ class BirdhouseImageProcessing(object):
         self.config = config
         self.param = param
 
-        self.logging = logging.getLogger("cam-image")
+        self.logging = logging.getLogger(self.id + "-img")
         self.logging.setLevel(birdhouse_loglevel)
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting IMAGE processing for '"+self.id+"' ...")
@@ -1186,7 +1186,7 @@ class BirdhouseCameraOutput(object):
         self.buffer = io.BytesIO()
         self.condition = Condition()
 
-        self.logging = logging.getLogger("cam-output")
+        self.logging = logging.getLogger(camera + "-out")
         self.logging.setLevel(birdhouse_loglevel)
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting CAMERA output for '"+camera+"' ...")
@@ -1209,7 +1209,7 @@ class BirdhouseCameraOther(object):
         self.error = False
         self.error_msg = ""
 
-        self.logging = logging.getLogger("cam-other")
+        self.logging = logging.getLogger(name + "-other")
         self.logging.setLevel(birdhouse_loglevel)
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting CAMERA support for '"+name+"/"+source+"' ...")
@@ -1251,7 +1251,7 @@ class BirdhouseCamera(threading.Thread):
         self.config.update["camera_" + self.id] = False
         self.health_check = time.time()
 
-        self.logging = logging.getLogger("cam-image")
+        self.logging = logging.getLogger(self.id+"-main")
         self.logging.setLevel(birdhouse_loglevel)
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting CAMERA control for '"+self.id+"' ...")
@@ -1295,7 +1295,8 @@ class BirdhouseCamera(threading.Thread):
         self.timezone = 0
         if "localization" in self.config.param and "timezone" in self.config.param["localization"]:
             self.timezone = float(self.config.param["localization"]["timezone"].replace("UTC", ""))
-            self.logging.info("Set Timezone: " + self.config.param["localization"]["timezone"] + " (" + str(self.timezone) + ")")
+            self.logging.info("Set Timezone: " + self.config.param["localization"]["timezone"] +
+                              " (" + str(self.timezone) + " / " + self.config.local_time().strftime("%H:%M") + ")")
 
         self.image_size = [0, 0]
         self.image_size_lowres = [0, 0]
@@ -1339,8 +1340,8 @@ class BirdhouseCamera(threading.Thread):
         similarity = 0
         count_paused = 0
         reload_time = time.time()
-        reload_time_error = 60
-        reload_time_error_record = 120
+        reload_time_error = 60*3
+        reload_time_error_record = 60*3
         sensor_last = ""
 
         while self.running:
@@ -1653,7 +1654,7 @@ class BirdhouseCamera(threading.Thread):
 
         if "x" in resolution:
             dimensions = resolution.split("x")
-            self.logging.info(self.id + " Set resolution: " + str(dimensions))
+            self.logging.debug(self.id + " Set resolution: " + str(dimensions))
             # self.camera.stream.set(3, int(resolution[0]))
             # self.camera.stream.set(4, int(resolution[1]))
             self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, float(dimensions[0]))
@@ -1669,8 +1670,8 @@ class BirdhouseCamera(threading.Thread):
                                                                           area=self.param["image"]["crop"],
                                                                           dimension=False)
             self.logging.info(self.id + " New resolution: " + str(current))
-            self.logging.info(self.id + " New crop area:  " + str(self.param["image"]["crop"]) + " -> " +
-                         str(self.param["image"]["crop_area"]))
+            self.logging.debug(self.id + " New crop area:  " + str(self.param["image"]["crop"]) + " -> " +
+                               str(self.param["image"]["crop_area"]))
         else:
             self.logging.info("Resolution definition not supported: " + str(resolution))
 
