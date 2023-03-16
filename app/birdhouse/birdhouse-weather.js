@@ -23,8 +23,8 @@ function birdhouseWeather_exec( data ) {
 	var weather_today = weather["current"];
 	var weather_3day  = weather["forecast"];
 
-    if (!weather["forecast"] || !weather["current"] || !weather["forecast"]["today"]) {
-        setTextById(app_frame_content, "&nbsp;<br/><center>" + lang("WEATHER_DATA_ERROR") + "</center><br/>&nbsp;");
+    if (!weather["forecast"] || !weather["current"] || !weather["forecast"]["today"] || weather["info_status"]["running"] == "error") {
+        setTextById(app_frame_content, "&nbsp;<br/><center><font color='red'><b>" + lang("WEATHER_DATA_ERROR") + "</b></font></center><br/>&nbsp;");
         console.warn("Error with weather data!")
         console.warn(weather);
         return;
