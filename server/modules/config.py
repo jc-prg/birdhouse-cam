@@ -813,6 +813,7 @@ class BirdhouseConfigQueue(threading.Thread):
         """
         config_files = ["images", "videos", "backup", "sensor", "weather"]
         start_time = time.time()
+        start_time_2 = time.time()
         check_count_entries = 0
         while self._running:
             if start_time + self.queue_wait < time.time():
@@ -1016,10 +1017,11 @@ class BirdhouseConfigQueue(threading.Thread):
 
                         time.sleep(1)
 
-            if start_time + self.queue_wait_max*10 < time.time():
+            if start_time_2 + self.queue_wait_max*6 < time.time():
                 self.logging.info("Queue: wrote " + str(check_count_entries) + " entries since the last " +
-                                  str(int(check_count*self.queue_wait)) + "s.")
+                                  str(self.queue_wait_max*6) + "s.")
                 check_count_entries = 0
+                start_time_2 = time.time()
 
             self.health_check = time.time()
             time.sleep(1)
