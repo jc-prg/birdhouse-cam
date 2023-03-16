@@ -63,7 +63,7 @@ class BirdhouseWeatherPython(threading.Thread):
         self.weather_raw_data = None
 
         self.error = False
-        self.error_msg = ""
+        self.error_msg = []
         self.update_interval = self.weather_update_rhythm / 4
         self.update_settings = True
         self.update_wait = 0
@@ -102,8 +102,25 @@ class BirdhouseWeatherPython(threading.Thread):
         """
         self._running = False
 
-    @staticmethod
-    def _extract_icon(icon_type, icon_object):
+    def raise_error(self, message):
+        """
+        raise error message
+        """
+        self.error = True
+        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+        self.error_msg.append(time_info + " - " + message)
+        if len(self.error_msg) >= 10:
+            self.error_msg.pop()
+        self.logging.error(message)
+
+    def reset_error(self):
+        """
+        reset all error vars
+        """
+        self.error = False
+        self.error_msg = []
+
+    def _extract_icon(self, icon_type, icon_object):
         """
         extract icons
         """
@@ -124,10 +141,14 @@ class BirdhouseWeatherPython(threading.Thread):
                     else:
                         return parts[1]
                 else:
-                    return "Error extracting icon: " + str(icon_object)
+                    message = "Error extracting icon: " + str(icon_object)
+                    self.raise_error(message)
+                    return message
 
         else:
-            return "Error extracting icon: " + str(icon_object)
+            message = "Error extracting icon: " + str(icon_object)
+            self.raise_error(message)
+            return message
 
     async def _get_weather(self):
         """
@@ -143,14 +164,14 @@ class BirdhouseWeatherPython(threading.Thread):
                 self.weather = await client.get(self.weather_location)
 
             except Exception as e:
-                self.error = True
-                self.error_msg = "Could not load weather data: " + str(e)
+                error_msg = "Could not load weather data: " + str(e)
+                self.raise_error(error_msg)
+
                 self.weather_info = self.weather_empty.copy()
                 self.weather_info["info_status"]["running"] = "error"
                 self.weather_info["info_status"]["error"] = self.error
                 self.weather_info["info_status"]["error_msg"] = self.error_msg
                 self.weather_info["info_status"]["error_time"] = self.config.local_time().strftime("%d.%m.%Y %H:%M:%S")
-                return
 
     def _convert_data(self):
         """
@@ -462,7 +483,7 @@ class BirdhouseWeather(threading.Thread):
         self.logging.info("Starting weather process ...")
 
         self.error = False
-        self.error_msg = ""
+        self.error_msg = []
 
         self.weather = None
         self.weather_source = None
@@ -473,6 +494,9 @@ class BirdhouseWeather(threading.Thread):
         self.weather_empty = birdhouse_weather.copy()
         self.weather_info = self.weather_empty.copy()
         self.weather_info["info_status"]["running"] = "started"
+
+        self.sunset_today = None
+        self.sunrise_today = None
 
         self.update = False
         self.update_time = 60 * 5
@@ -517,6 +541,9 @@ class BirdhouseWeather(threading.Thread):
                 self.weather_info = self.module.get_data()
                 if not self.error and not self.module.error:
                     self.weather_info["info_status"]["running"] = "OK"
+                    if "forecast" in self.weather_info and "today" in self.weather_info["forecast"]:
+                        self.sunrise_today = self.weather_info["forecast"]["today"]["sunrise"]
+                        self.sunset_today = self.weather_info["forecast"]["today"]["sunset"]
 
             # write weather data to file once every five minutes
             weather_stamp = self.config.local_time().strftime("%H%M")+"00"
@@ -566,6 +593,7 @@ class BirdhouseWeather(threading.Thread):
         """
         self.error = False
         self.error_msg = []
+        self.module.reset_error()
 
     def stop(self):
         """
@@ -667,3 +695,9 @@ class BirdhouseWeather(threading.Thread):
             return self.weather_info["current"]
 
         return self.weather_info
+
+    def get_sunrise(self):
+        return self.sunrise_today
+
+    def get_sunset(self):
+        return self.sunset_today

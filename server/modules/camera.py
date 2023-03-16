@@ -1796,11 +1796,8 @@ class BirdhouseCamera(threading.Thread):
             # new detection
             elif "record_from" in self.param["image_save"] and "record_to" in self.param["image_save"]:
 
-                if self.config.weather is not None:
-                    if "today" in self.config.weather.weather_info["forecast"] and \
-                            "sunrise" in self.config.weather.weather_info["forecast"]["today"]:
-                        self.weather_sunrise = self.config.weather.weather_info["forecast"]["today"]["sunrise"]
-                        self.weather_sunset = self.config.weather.weather_info["forecast"]["today"]["sunset"]
+                self.weather_sunrise = self.config.weather.get_sunrise()
+                self.weather_sunset = self.config.weather.get_sunset()
 
                 record_from = self.param["image_save"]["record_from"]
                 record_to = self.param["image_save"]["record_to"]

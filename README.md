@@ -196,7 +196,10 @@ $ vcgencmd get_camera
 $ arecord -l
 
 # set audio level
-amixer -c 2 -q set 'Mic',0 100%
+$ amixer -c 2 -q set 'Mic',0 100%
+
+# continuously watch logfile (2s, 40 lines)
+$ watch 'head -n 2 server/server.log | tail -n 40 server/server.log'
 ```
 
 
