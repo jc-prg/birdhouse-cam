@@ -899,19 +899,28 @@ class BirdhouseViews(threading.Thread):
                                     first_img = file
                                     break
 
+                            # or take first image with detected image
+                            if first_img == "":
+                                for file in list(sorted(file_data["files"].keys())):
+                                    entry = file_data["files"][file]
+                                    if "camera" in entry and entry["camera"] == cam and "lowres" in entry \
+                                            and "detect" in entry and int(entry["detect"]) == 1:
+                                        first_img = file
+                                        break
+
                         # select preview image
-                        if first_img == "":
+                        first_img_temp = ""
+                        if "preview_fav" not in self.config.param["backup"] \
+                                or ("preview_fav" in self.config.param["backup"]
+                                    and not self.config.param["backup"]["preview_fav"]):
                             for file in list(sorted(file_data["files"].keys())):
                                 entry = file_data["files"][file]
                                 if image_title[0:4] == file[0:4] and "camera" in entry and entry["camera"] == cam \
                                         and "lowres" in entry:
-                                    first_img = file
+                                    first_img_temp = file
                                     break
-
-                        # select preview image
-                        if first_img == "" and image_title in file_data["files"] \
-                                and "lowres" in file_data["files"][image_title]:
-                            first_img = image_title
+                            if first_img_temp != "":
+                                first_img = first_img_temp
 
                         # or take first image as title image
                         if first_img == "":
