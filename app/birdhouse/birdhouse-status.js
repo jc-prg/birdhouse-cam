@@ -44,10 +44,15 @@ function birdhouseStatus_connectionError() {
     setStatusColor(status_id="status_error_WEATHER", "black");
 }
 
+function birdhouseStatus_load(data) {
+    appFW.requestAPI('GET', ["status"], '', birdhouseStatus_print,'','birdhouseStatus_load');
+}
+
 function birdhouseStatus_print(data) {
     //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
     console.debug("Update Status ...");
 
+    app_data       = data;
     var settings   = data["DATA"]["settings"];
     var weather    = data["WEATHER"];
     var status_sys = data["STATUS"]["system"];

@@ -4,16 +4,23 @@ import os
 import re
 import logging
 from modules.config import BirdhouseConfig
+from modules.presets import *
 from flask import Flask
 from flask import Response, request
 app = Flask(__name__)
 
+directories = birdhouse_directories
+main_directory = os.path.dirname(os.path.abspath(__file__))
+media_path = os.path.join(main_directory, directories["data"], directories["videos"])
 
-config = BirdhouseConfig(param_init={"db_type": "json"}, main_directory=os.path.dirname(os.path.abspath(__file__)))
-config.start()
+# config = BirdhouseConfig(param_init={"db_type": "json"}, main_directory=os.path.dirname(os.path.abspath(__file__)))
+# config.start()
+# media_path = config.db_handler.directory("videos")
 
-media_path = config.db_handler.directory("videos")
-logging.info("* Starting streaming for files in the directory '" + media_path + "' ...")
+video_logging = logging.getLogger("video-srv")
+video_logging.setLevel(birdhouse_loglevel)
+video_logging.addHandler(birdhouse_loghandler)
+video_logging.info("Starting Streaming Server (directory: '" + media_path + "') ...")
 
 
 def serve_ios(full_path):
@@ -50,6 +57,7 @@ def serve_ios(full_path):
 
 @app.route('/<vid_name>')
 def serve(vid_name):
+    video_logging.info("... start video-streaming")
     vid_path = os.path.join(media_path, vid_name)
     return serve_ios(vid_path)
 

@@ -243,20 +243,23 @@ class ServerInformation(threading.Thread):
         system["mem_used"] = psutil.virtual_memory().used / 1024 / 1024
 
         # diskusage
-        cmd_data = ["du", "-hs", os.path.join(self.main_dir, "data")]
         hdd = psutil.disk_usage("/")
         system["hdd_used"] = hdd.used / 1024 / 1024 / 1024
         system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
 
-        system["hdd_data"] = str(subprocess.check_output(cmd_data))
-        system["hdd_data"] = system["hdd_data"].replace("b'", "")
-        system["hdd_data"] = system["hdd_data"].split("\\t")[0]
-        if "k" in system["hdd_data"]:
-            system["hdd_data"] = float(system["hdd_data"].replace("k", "")) / 1024 / 1024
-        elif "M" in system["hdd_data"]:
-            system["hdd_data"] = float(system["hdd_data"].replace("M", "")) / 1024
-        elif "G" in system["hdd_data"]:
-            system["hdd_data"] = float(system["hdd_data"].replace("G", ""))
+        try:
+            cmd_data = ["du", "-hs", os.path.join(self.main_dir, "data")]
+            system["hdd_data"] = str(subprocess.check_output(cmd_data))
+            system["hdd_data"] = system["hdd_data"].replace("b'", "")
+            system["hdd_data"] = system["hdd_data"].split("\\t")[0]
+            if "k" in system["hdd_data"]:
+                system["hdd_data"] = float(system["hdd_data"].replace("k", "")) / 1024 / 1024
+            elif "M" in system["hdd_data"]:
+                system["hdd_data"] = float(system["hdd_data"].replace("M", "")) / 1024
+            elif "G" in system["hdd_data"]:
+                system["hdd_data"] = float(system["hdd_data"].replace("G", ""))
+        except Exception as e:
+            self.logging.warning("Was not able to get size of data dir: " + (str(cmd_data)) + " - " + str(e))
 
         # threading information
         # system["threads_active"] = str(threading.active_count())

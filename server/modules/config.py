@@ -1318,6 +1318,9 @@ class BirdhouseConfig(threading.Thread):
             if self.param["server"]["daily_clean_up"]:
                 date_today = self.local_time().strftime("%Y-%m-%d")
                 if date_today != self.last_day_running:
+                    self.logging.info("-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.")
+                    self.logging.info("Date changed: " + self.last_day_running + " -> " + date_today)
+                    self.logging.info("-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.")
                     self.db_handler.clean_all_data(config="images")
                     self.db_handler.clean_all_data(config="sensor")
                     self.db_handler.clean_all_data(config="weather")
@@ -1427,6 +1430,8 @@ class BirdhouseConfig(threading.Thread):
                 self.weather.update = True
                 self.param["weather"] = self.weather.get_gps_info(self.param["weather"])
                 self.db_handler.write(config, date, self.param)
+
+        self.timezone = float(self.param["localization"]["timezone"].replace("UTC", ""))
 
     def main_config_create(self):
         """

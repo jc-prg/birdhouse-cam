@@ -10,7 +10,15 @@ var birdhouse_settings  = new birdhouse_app_settings();
 
 function birdhouse_app_settings (name="Settings") {
 
-	this.create	= function (type="SETTINGS") {
+    this.create = function (type="SETTINGS") {
+        this.setting_type = type;
+        birdhouseStatus_load();
+      	setTimeout(function(){
+      	    birdhouse_settings.create_exec();
+		}, 2000);
+    }
+
+	this.create_exec = function () {
 
         this.tab = new birdhouse_table();
         this.tab.style_rows["height"] = "27px";
@@ -27,7 +35,7 @@ function birdhouse_app_settings (name="Settings") {
 
         var open_settings = {
             "app_info_01" : true,
-            "device_info" : true,
+            "device_info" : false,
             "server_info" : false,
             "api_calls"   : false,
             "app_info_02" : false,
@@ -44,7 +52,7 @@ function birdhouse_app_settings (name="Settings") {
             appMsg.confirm(img + lang("INITIAL_SETUP"), "console.log('.');", 400);
             }
 
-        if (type != "INFO_ONLY") {
+        if (this.setting_type != "INFO_ONLY") {
             html  = "<h2>Information</h2>";
             html += "<hr style='border:1px solid gray;'>"
         }
@@ -58,7 +66,7 @@ function birdhouse_app_settings (name="Settings") {
         html_entry = this.server_information();
         html += birdhouse_OtherGroup( "server_info", "Server Information", html_entry, open_settings["server_info"] );
 
-        if (type == "SETTINGS") {
+        if (this.setting_type == "SETTINGS") {
             html_entry = this.api_calls();
             html += birdhouse_OtherGroup( "api_calls", "API Calls", html_entry, open_settings["api_calls"] );
 
@@ -72,11 +80,11 @@ function birdhouse_app_settings (name="Settings") {
             html += birdhouse_OtherGroup( "app_under_construction", "UNDER CONSTRUCTION", html_entry, open_settings["app_under_construction"] );
             }
 
-        if (type == "INFO_ONLY") {
+        if (this.setting_type == "INFO_ONLY") {
             setTextById(app_frame_header, "<center><h2>" + lang("INFORMATION")) + "</h2></center>";
             setTextById("frame2", html)
             }
-        else if (type == "SETTINGS") {
+        else if (this.setting_type == "SETTINGS") {
             html += "<br/>&nbsp<br/>";
             html += this.settings();
 
