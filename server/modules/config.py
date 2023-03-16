@@ -813,6 +813,7 @@ class BirdhouseConfigQueue(threading.Thread):
         """
         config_files = ["images", "videos", "backup", "sensor", "weather"]
         start_time = time.time()
+        check_count_entries = 0
         while self._running:
             if start_time + self.queue_wait < time.time():
                 self.logging.debug("... Check Queue")
@@ -997,9 +998,10 @@ class BirdhouseConfigQueue(threading.Thread):
                         self.logging.debug("    -> Queue: " + config_file + " done. " +
                                            " (" + str(round(time.time() - start_time, 2)) + "s)")
 
-                    self.logging.info("Queue: wrote " + str(count_entries) + " entries to " + str(count_files) +
-                                      " config files (" + str(round(time.time()-start_time, 2)) + "s/" +
-                                      ",".join(active_files) + ")")
+                    check_count_entries += count_entries
+                    self.logging.debug("Queue: wrote " + str(count_entries) + " entries to " + str(count_files) +
+                                       " config files (" + str(round(time.time()-start_time, 2)) + "s/" +
+                                       ",".join(active_files) + ")")
 
                     self.queue_wait_duration = time.time() - start_time
                     if self.queue_wait < self.queue_wait_duration:
@@ -1013,6 +1015,11 @@ class BirdhouseConfigQueue(threading.Thread):
                                                "The queue may be is blocked and server is slowed down!")
 
                         time.sleep(1)
+
+            if start_time + self.queue_wait_max*10 < time.time():
+                self.logging.info("Queue: wrote " + str(check_count_entries) + " entries since the last " +
+                                  str(int(check_count*self.queue_wait)) + "s.")
+                check_count_entries = 0
 
             self.health_check = time.time()
             time.sleep(1)
