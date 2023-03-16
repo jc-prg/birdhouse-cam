@@ -13,6 +13,14 @@
     .camera_info_image.video_edit .image_container img {
         min-height  : none;
         max-height  : none;
+        min-width  : none;
+        max-width  : none;
+    }
+    .camera_info_image .image_container .play_button {
+        min-height  : 60px;
+        max-height  : 60px;
+        min-width   : 60px;
+        max-width   : 60px;
     }
     .camera_info_text  { width : 65%; }
     .weather_hide_if_small { display: block; }
