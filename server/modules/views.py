@@ -441,7 +441,8 @@ class BirdhouseViews(threading.Thread):
 
             self.health_check = time.time()
             time.sleep(1)
-            self.logging.info("Stopped HTML views and REST API for GET.")
+
+        self.logging.info("Stopped HTML views and REST API for GET.")
 
     def stop(self):
         """
