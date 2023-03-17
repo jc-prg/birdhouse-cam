@@ -182,7 +182,7 @@ class BirdhouseViewCreate(object):
                         stamp_exists_sensor = True
 
                 if stamp in data_weather:
-                    if date is not None and data_weather[stamp]["date"] == date_us:
+                    if date is not None and "data" in data_weather[stamp] and data_weather[stamp]["date"] == date_us:
                         stamp_exists_weather = True
                     elif date is None:
                         stamp_exists_weather = True
