@@ -313,11 +313,21 @@ class BirdhouseViewCreate(object):
         if data_weather is None:
             return {}
 
+        weather = {}
         hours = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10",
                  "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"]
-        weather = {}
+        sunrise_hour = self.config.weather.get_sunrise()
+        sunset_hour = self.config.weather.get_sunrise()
+        if sunset_hour is not None and sunrise_hour is not None:
+            sunset_hour = sunset_hour.split(":")[0]
+            sunrise_hour = sunrise_hour.split(":")[0]
+        else:
+            sunset_hour = 24
+            sunrise_hour = 0
 
         for hour in hours:
+            if int(hour) < int(sunrise_hour) or int(hour) > int(sunset_hour):
+                continue
             stamp = hour + "0000"
             if stamp in data_weather:
                 if date is not None and data_weather[stamp]["date"] != date_us:
