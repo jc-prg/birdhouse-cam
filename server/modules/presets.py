@@ -8,7 +8,7 @@ birdhouse_loglevel = logging.INFO
 
 log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
                                datefmt='%m/%d %H:%M:%S')
-log_file_name = str(os.path.join(os.path.dirname(__file__), "../server.log"))
+log_file_name = str(os.path.join(os.path.dirname(__file__), "../../log", "server.log"))
 birdhouse_loghandler = RotatingFileHandler(filename=log_file_name, mode='a', maxBytes=int(2.5 * 1024 * 1024),
                                            backupCount=2, encoding=None, delay=False)
 birdhouse_loghandler.setFormatter(log_format)
