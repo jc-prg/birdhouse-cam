@@ -317,7 +317,7 @@ class BirdhouseViewCreate(object):
         hours = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10",
                  "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"]
         sunrise_hour = self.config.weather.get_sunrise()
-        sunset_hour = self.config.weather.get_sunrise()
+        sunset_hour = self.config.weather.get_sunset()
         if sunset_hour is not None and sunrise_hour is not None:
             sunset_hour = sunset_hour.split(":")[0]
             sunrise_hour = sunrise_hour.split(":")[0]
