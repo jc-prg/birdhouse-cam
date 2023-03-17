@@ -325,6 +325,8 @@ class BirdhouseViewCreate(object):
             sunset_hour = 24
             sunrise_hour = 0
 
+        self.logging.info("... Weather - sunrise=" + str(sunrise_hour) + "; sunset=" + str(sunset_hour))
+
         for hour in hours:
             if int(sunrise_hour) < int(hour) < int(sunset_hour):
                 stamp = hour + "0000"
