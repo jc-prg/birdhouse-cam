@@ -135,9 +135,11 @@ function birdhousePrintTitle(data, active_page="", camera="") {
 
 	if (title.innerHTML == "..." && data_settings["title"] != undefined)
 	                                             { setNavTitle(data_settings["title"]); setTextById("title",data_settings["title"]); }
-	if (data_view["subtitle"] != undefined)      { setTextById(app_frame_header, "<center><h2>" + data_view["subtitle"] + "</h2></center>"); }
-	else                                         { setTextById(app_frame_header, "<center><h2>" + data_settings["title"] + "</h2></center>"); }
-	if (data_view["links"] != undefined)         { setTextById(app_frame_index, "<center>" + birdhouse_Links(data_view["links"]) + "</center>"); }
+
+	if (data_view["subtitle"] != undefined)      { birdhouse_frameHeader(data_view["subtitle"]); }
+	else                                         { birdhouse_frameHeader(data_view["title"]); }
+	if (data_view["links"] != undefined)         { birdhouse_frameFooter(birdhouse_Links(data_view["links"])); }
+
 	setTextById("frame5", "<center><small><div id='server_start_time'>" + lang("PLEASE_WAIT") + "</div></small></center>");
 	}
 

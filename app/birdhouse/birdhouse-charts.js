@@ -129,7 +129,7 @@ function birdhouseChart_weatherOverview (entries) {
         }
         if (count < 16) {
             html_row1 += "<td class='"+td_class+"'>"+key+"<td>";
-            html_row2 += "<td class='"+td_class+"'><center>"+weather_data[key]+"<center><td>";
+            html_row2 += "<td class='"+td_class+"' style='font-size:14px;'><center>"+weather_data[key]+"<center><td>";
         }
         count += 1;
     });

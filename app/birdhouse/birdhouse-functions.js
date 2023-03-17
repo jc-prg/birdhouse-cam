@@ -145,6 +145,19 @@ function birdhouse_tooltip( tooltip_element, tooltip_content, name, left="" ) {
 	}
 
 
+function birdhouse_frameHeader(title, status_id="") {
+    if (status_id != "") {
+        title = "<div id='"+status_id+"' style='float:left;'><div id='black'></div></div>" + title;
+    }
+    setTextById(app_frame_header, "<center><h2>" + title + "</h2></center>");
+}
+
+function birdhouse_frameFooter(content) {
+
+    setTextById(app_frame_index, "<center>" + content + "</center>");
+}
+
+
 function birdhouse_table () {
 
     this.style_table_string = "";

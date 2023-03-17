@@ -113,7 +113,8 @@ class BirdhouseViewCreate(object):
                 if "similarity" in data_image[stamp] and float(data_image[stamp]["similarity"]) > 0:
                     activity_sum += float(data_image[stamp]["similarity"])
                     activity_count += 1
-            data_activity[key] = round(100 - (activity_sum / activity_count), 2)
+            if activity_count > 0:
+                data_activity[key] = round(100 - (activity_sum / activity_count), 2)
 
         # get categories weather
         weather_data_in_chart = ["temperature", "humidity", "wind_speed"]
@@ -325,7 +326,7 @@ class BirdhouseViewCreate(object):
             sunset_hour = 24
             sunrise_hour = 0
 
-        self.logging.info("... Weather - sunrise=" + str(sunrise_hour) + "; sunset=" + str(sunset_hour))
+        self.logging.debug("... Weather - sunrise=" + str(sunrise_hour) + "; sunset=" + str(sunset_hour))
 
         for hour in hours:
             if int(sunrise_hour) < int(hour) < int(sunset_hour):

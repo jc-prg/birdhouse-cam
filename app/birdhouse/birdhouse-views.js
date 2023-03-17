@@ -194,6 +194,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var weather_data      = data_list["data"]["weather_data"];
 	var chart_data        = data_list["data"]["chart_data"];
 	var entry_count       = data_list["view"]["view_count"];
+	var camera_settings   = data["DATA"]["settings"]["devices"]["cameras"];
 
 	if (data_list["view"]["max_image_size"]) {
         var max_image_size_LR  = data_list["view"]["max_image_size"]["lowres"];
@@ -211,14 +212,12 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var admin             = data["STATUS"]["admin_allowed"];
 	var server_status     = data["STATUS"]["server"];
 	var video_short       = true;
+	var page_title        = "";
+	var page_status       = "";
 
 	if (active_page == "VIDEOS")                           { entry_category = [ "video" ]; }
 	else if (active_page == "TODAY" && active_date == "")  { entry_category = [ "today" ]; }
 	else if (active_page == "TODAY" && active_date != "")  { entry_category = [ "backup", active_date ]; }
-
-    if (active_page == "VIDEOS")                           { entry_category = [ "video" ]; }
-    else if (active_page == "TODAY" && active_date == "")  { entry_category = [ "today" ]; }
-    else if (active_page == "TODAY" && active_date != "")  { entry_category = [ "backup", active_date ]; }
 
     // create chart data
     if (active_page == "TODAY_COMPLETE" || (active_page == "TODAY" && active_date != "" && active_date != undefined)) {
@@ -249,10 +248,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             chart_titles.push(title_s);
         }
         var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
-        html += birdhouse_OtherGroup( "chart", lang("ANALYTICS"), chart, true );
-
-        // Weather -> to be optimizes incl error check if no entries
-        html += birdhouseChart_weatherOverview(weather_data);
+        chart    += birdhouseChart_weatherOverview(weather_data);
+        html += birdhouse_OtherGroup( "chart", lang("WEATHER"), chart, true );
     }
 
     if (active_page != "FAVORITES" && app_active_page != "VIDEOS" && app_active_page != "ARCHIVE") {
@@ -337,11 +334,18 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 			}
 		}
 
-    // Add Status Information
-    if (active_page == "TODAY_COMPLETE" || (active_page == "TODAY" && active_date == "")) {
-        title = getTextById(app_frame_header);
-        title = "<div id='status_error_record_"+app_active_cam+"' style='float:left;'><div id='black'></div></div>" + title;
-        setTextById(app_frame_header, title);
-    }
+	// Set title
+	if (active_page == "TODAY" && active_date != "")    {
+	    var archive_title =  "<span style='cursor:pointer' onclick='app_active_page=\"ARCHIVE\";birdhouseReloadView();'>";
+	    archive_title    += "<u>" + lang("ARCHIVE") + "</u>";
+	    archive_title    += "</span>";
+	    page_title        = archive_title + " " + active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4);
+	    }
+	else                                                { page_title = lang(active_page); }
+	if (active_page == "TODAY" && active_date == "")    { page_status = "status_error_record_" + app_active_cam; }
+	if (active_page == "TODAY_COMPLETE")                { page_status = "status_error_record_" + app_active_cam; }
+	if (active_page != "FAVORITES")                     { page_title += "  (" + camera_settings[app_active_cam]["name"] + ")"; }
+
+	birdhouse_frameHeader(page_title, page_status);
 	setTextById(app_frame_content, html);
 	}
