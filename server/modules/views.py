@@ -182,7 +182,7 @@ class BirdhouseViewCreate(object):
                         stamp_exists_sensor = True
 
                 if stamp in data_weather:
-                    if date is not None and "data" in data_weather[stamp] and data_weather[stamp]["date"] == date_us:
+                    if date is not None and "date" in data_weather[stamp] and data_weather[stamp]["date"] == date_us:
                         stamp_exists_weather = True
                     elif date is None:
                         stamp_exists_weather = True
@@ -200,6 +200,7 @@ class BirdhouseViewCreate(object):
                 # Weather data
                 if stamp_exists_weather:
                     for value in weather_data_in_chart:
+                        self.logging.debug(" ....: " + value)
                         if value in data_weather[stamp]:
                             chart["data"][chart_stamp].append(data_weather[stamp][value])
                         else:
@@ -955,7 +956,7 @@ class BirdhouseViews(threading.Thread):
                                                                    directory, file_info["lowres"])
                                         if os.path.isfile(lowres_file):
                                             dir_size_cam += os.path.getsize(lowres_file)
-                                            self.logging.debug("lowres size: "+str(os.path.getsize(lowres_file)))
+                                            # self.logging.debug("lowres size: "+str(os.path.getsize(lowres_file)))
                                         if "lowres_size" in file_info:
                                             if file_info["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
                                                 content["max_image_size"]["lowres"][0] = file_info["lowres_size"][0]
@@ -967,7 +968,7 @@ class BirdhouseViews(threading.Thread):
                                                                       directory, file_info["hires"])
                                             if os.path.isfile(hires_file):
                                                 dir_size_cam += os.path.getsize(hires_file)
-                                                self.logging.debug("hires size: " + str(os.path.getsize(hires_file)))
+                                                # self.logging.debug("hires size: " + str(os.path.getsize(hires_file)))
                                         if "hires_size" in file_info:
                                             if file_info["hires_size"][0] > content["max_image_size"]["hires"][0]:
                                                 content["max_image_size"]["hires"][0] = file_info["hires_size"][0]

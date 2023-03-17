@@ -37,7 +37,6 @@ birdhouse_log_filename = str(os.path.join(os.path.dirname(__file__), "../../log"
 birdhouse_loghandler = RotatingFileHandler(filename=birdhouse_log_filename, mode='a', maxBytes=int(2.5 * 1024 * 1024),
                                            backupCount=2, encoding=None, delay=False)
 birdhouse_loghandler.setFormatter(birdhouse_log_format)
-birdhouse_loghandler.setLevel(birdhouse_loglevel)
 
 
 birdhouse_pages = {
