@@ -8,8 +8,8 @@ import modules.presets as presets
 from modules.presets import *
 
 
-view_logging = logging.getLogger("view-header")
-view_logging.setLevel(birdhouse_loglevel)
+view_logging = logging.getLogger("view-head")
+view_logging.setLevel(birdhouse_loglevel_module["view-head"])
 view_logging.addHandler(birdhouse_loghandler)
 
 
@@ -63,7 +63,7 @@ class BirdhouseViewCreate(object):
     def __init__(self, config):
         self.config = config
         self.logging = logging.getLogger("view-creat")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["view-creat"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting backup handler ...")
 
@@ -386,7 +386,7 @@ class BirdhouseViews(threading.Thread):
         threading.Thread.__init__(self)
 
         self.logging = logging.getLogger("views")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["views"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting views thread ...")
 

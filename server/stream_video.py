@@ -18,7 +18,7 @@ media_path = os.path.join(main_directory, directories["data"], directories["vide
 # media_path = config.db_handler.directory("videos")
 
 video_logging = logging.getLogger("video-srv")
-video_logging.setLevel(birdhouse_loglevel)
+video_logging.setLevel(birdhouse_loglevel_module["video-srv"])
 video_logging.addHandler(birdhouse_loghandler)
 video_logging.info("Starting Streaming Server (directory: '" + media_path + "') ...")
 

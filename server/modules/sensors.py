@@ -26,7 +26,7 @@ class BirdhouseSensor(threading.Thread):
         self.config = config
 
         self.logging = logging.getLogger("sensors")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["sensors"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting sensor control for '"+sensor_id+"' ...")
 

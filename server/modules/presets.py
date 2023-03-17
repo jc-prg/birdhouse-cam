@@ -5,13 +5,38 @@ from logging.handlers import RotatingFileHandler
 
 birdhouse_log_into_file = True
 birdhouse_loglevel = logging.INFO
+birdhouse_loglevel_module = {
+    "backup": birdhouse_loglevel,
+    "cam-main": birdhouse_loglevel,
+    "cam-img": birdhouse_loglevel,
+    "cam-video": birdhouse_loglevel,
+    "cam-out": birdhouse_loglevel,
+    "cam-other": birdhouse_loglevel,
+    "config": birdhouse_loglevel,
+    "config-Q": birdhouse_loglevel,
+    "DB-json": birdhouse_loglevel,
+    "DB-couch": birdhouse_loglevel,
+    "DB-handler": birdhouse_loglevel,
+    "sensors": birdhouse_loglevel,
+    "server": birdhouse_loglevel,
+    "srv-info": birdhouse_loglevel,
+    "srv-health": birdhouse_loglevel,
+    "video-srv": birdhouse_loglevel,
+    "views": birdhouse_loglevel,
+    "view-head": birdhouse_loglevel,
+    "view-creat": birdhouse_loglevel,
+    "weather": birdhouse_loglevel,
+    "weather-py": birdhouse_loglevel,
+    "weather-om": birdhouse_loglevel,
+}
 
-log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
-                               datefmt='%m/%d %H:%M:%S')
-log_file_name = str(os.path.join(os.path.dirname(__file__), "../../log", "server.log"))
-birdhouse_loghandler = RotatingFileHandler(filename=log_file_name, mode='a', maxBytes=int(2.5 * 1024 * 1024),
+
+birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
+                                         datefmt='%m/%d %H:%M:%S')
+birdhouse_log_filename = str(os.path.join(os.path.dirname(__file__), "../../log", "server.log"))
+birdhouse_loghandler = RotatingFileHandler(filename=birdhouse_log_filename, mode='a', maxBytes=int(2.5 * 1024 * 1024),
                                            backupCount=2, encoding=None, delay=False)
-birdhouse_loghandler.setFormatter(log_format)
+birdhouse_loghandler.setFormatter(birdhouse_log_format)
 birdhouse_loghandler.setLevel(birdhouse_loglevel)
 
 
@@ -26,7 +51,6 @@ birdhouse_pages = {
     "videos":           ("Videos",      "/videos.html",      "VIDEOS"),
     "save":             ("Speichern",   "/image.jpg",        "")
 }
-
 birdhouse_databases = {
     "config": {},
     "favorites": {},
@@ -38,7 +62,6 @@ birdhouse_databases = {
     "archive_weather": {},
     "archive_videos": {}
 }
-
 birdhouse_directories = {
     "html": "../app/",
     "data": "../data/",
@@ -62,7 +85,6 @@ birdhouse_files = {
     "sensor": "config_sensor.json",
     "weather": "config_weather.json"
 }
-
 birdhouse_dir_to_database = {
     "config":                       "config",
     "images/config_images":         "today_images",
@@ -75,6 +97,7 @@ birdhouse_dir_to_database = {
     "images/<DATE>/config_sensors": "archive_sensors",
     "images/<DATE>/config_weather": "archive_weather"
 }
+
 
 birdhouse_weather = {
     "info_update": "none",
@@ -194,7 +217,6 @@ birdhouse_default_sensor = {
         "humidity": "%"
     }
 }
-
 birdhouse_preset = {
     "backup": {
         "preview": "0700",               # HHMM
@@ -247,6 +269,7 @@ birdhouse_preset = {
         "available_sources": ["Python-Weather", "Open-Metheo"]
     }
 }
+
 
 file_types = {
     '.css': 'text/css',

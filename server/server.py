@@ -142,8 +142,8 @@ class ServerHealthCheck(threading.Thread):
         self._min_live_time = 65
         self._thread_info = {}
 
-        self.logging = logging.getLogger("srv-check")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging = logging.getLogger("srv-health")
+        self.logging.setLevel(birdhouse_loglevel_module["srv-health"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting Server Health Check ...")
 
@@ -207,7 +207,7 @@ class ServerInformation(threading.Thread):
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
         self.logging = logging.getLogger("srv-info")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["srv-info"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting Server Information ...")
 
@@ -951,7 +951,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 0 and "--logfile" in sys.argv or birdhouse_log_into_file:
 
         srv_logging = logging.getLogger('root')
-        srv_logging.setLevel(birdhouse_loglevel)
+        srv_logging.setLevel(birdhouse_loglevel_module["server"])
         srv_logging.addHandler(birdhouse_loghandler)
     else:
         logging.basicConfig(format='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',

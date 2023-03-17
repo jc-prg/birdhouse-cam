@@ -17,7 +17,7 @@ class BirdhouseArchive(threading.Thread):
         threading.Thread.__init__(self)
 
         self.logging = logging.getLogger("backup")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["backup"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting backup handler ...")
 

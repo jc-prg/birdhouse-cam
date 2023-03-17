@@ -37,7 +37,7 @@ class BirdhouseVideoProcessing(threading.Thread):
         self.timezone = time_zone
 
         self.logging = logging.getLogger(self.id + "-video")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["cam-video"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting VIDEO processing for '"+self.id+"' ...")
 
@@ -571,7 +571,7 @@ class BirdhouseImageProcessing(object):
         self.param = param
 
         self.logging = logging.getLogger(self.id + "-img")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["cam-img"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting IMAGE processing for '"+self.id+"' ...")
 
@@ -1187,7 +1187,7 @@ class BirdhouseCameraOutput(object):
         self.condition = Condition()
 
         self.logging = logging.getLogger(camera + "-out")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["cam-out"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting CAMERA output for '"+camera+"' ...")
 
@@ -1210,7 +1210,7 @@ class BirdhouseCameraOther(object):
         self.error_msg = ""
 
         self.logging = logging.getLogger(name + "-other")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["cam-other"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting CAMERA support for '"+name+"/"+source+"' ...")
 
@@ -1252,7 +1252,7 @@ class BirdhouseCamera(threading.Thread):
         self.health_check = time.time()
 
         self.logging = logging.getLogger(self.id+"-main")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["cam-main"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting CAMERA control for '"+self.id+"' ...")
 

@@ -29,7 +29,7 @@ class BirdhouseConfigCouchDB(object):
         self.create_revisions = False
 
         self.logging = logging.getLogger("DB-couch")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["DB-couch"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting DB handler CouchDB ("+self.db_url+") ...")
 
@@ -280,7 +280,7 @@ class BirdhouseConfigJSON(object):
         self.error_msg = []
 
         self.logging = logging.getLogger("DB-json")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["DB-json"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting DB handler JSON ...")
 
@@ -392,7 +392,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         self.error_msg = []
 
         self.logging = logging.getLogger("DB-handler")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["DB-handler"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting DB handler ("+db_type+"|"+main_directory+") ...")
 
@@ -426,7 +426,11 @@ class BirdhouseConfigDBHandler(threading.Thread):
                 update_time = time.time()
                 self.write_cache_to_json()
             else:
-                self.logging.debug("Wait to write cache to JSON ... " + str(self.backup_interval))
+                wait = round(update_time + self.backup_interval - time.time())
+                self.logging.debug("Wait to write cache to JSON ... " +
+                                   str(wait) + "s")
+                if wait > 20:
+                    time.sleep(10)
             if self.config.shut_down:
                 self.stop()
             self.health_check = time.time()
@@ -555,7 +559,6 @@ class BirdhouseConfigDBHandler(threading.Thread):
         return directory of config file
         """
         path = os.path.join(self.main_directory, self.directories["data"], self.directories[config], date)
-        self.logging.debug("Directory: " + self.main_directory + " | " + path)
         if ".." in path:
             elements = path.split("/")
             path_new = []
@@ -792,7 +795,7 @@ class BirdhouseConfigQueue(threading.Thread):
         self.health_check = time.time()
 
         self.logging = logging.getLogger("config-Q")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["config-Q"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting config queue ...")
 
@@ -1249,7 +1252,7 @@ class BirdhouseConfig(threading.Thread):
         self.db_handler = None
 
         self.logging = logging.getLogger("config")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["config"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting configuration handler ("+main_directory+") ...")
 

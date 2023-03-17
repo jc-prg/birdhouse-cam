@@ -51,7 +51,7 @@ class BirdhouseWeatherPython(threading.Thread):
         self.health_check = time.time()
 
         self.logging = logging.getLogger("weather-py")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["weather-py"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting weather process 'python_weather' ...")
 
@@ -261,7 +261,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
         self.health_check = time.time()
 
         self.logging = logging.getLogger("weather-om")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["weather-om"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting weather process 'Open-Metheo.com' for GPS="+str(gps_location)+" ...")
 
@@ -478,7 +478,7 @@ class BirdhouseWeather(threading.Thread):
         self.health_check = time.time()
 
         self.logging = logging.getLogger("weather")
-        self.logging.setLevel(birdhouse_loglevel)
+        self.logging.setLevel(birdhouse_loglevel_module["weather"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting weather process ...")
 
