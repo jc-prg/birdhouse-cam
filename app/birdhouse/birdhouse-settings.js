@@ -101,10 +101,10 @@ function birdhouse_app_settings (name="Settings") {
         var timezones = "UTC-12,UTC-11,UTC-10,UTC-9,UTC-8,UTC-7,UTC-6,UTC-5,UTC-4,UTC-3,UTC-2,UTC-1,UTC+0,UTC+1,UTC+2,UTC+3,UTC+4,UTC+5,UTC+6,UTC+7,UTC+8,UTC+9,UTC+10,UTC+11,UTC+12"
 
         if (settings["server"]["database_server"] && settings["server"]["database_server"] != "") {
-            var link = "http://"+settings["server"]["database_server"]+":5100/_utils/";
+            var link = "http://"+settings["server"]["database_server"]+":"+settings["server"]["database_port"]+"/_utils/";
         }
         else {
-            var link = "http://"+this.current_server+":5100/_utils/";
+            var link = "http://"+this.current_server+":"+settings["server"]["database_port"]+"/_utils/";
         }
 
         var html = "&nbsp;<br/><h2>&nbsp;<br/>"+lang("SETTINGS")+"</h2>";
@@ -132,10 +132,13 @@ function birdhouse_app_settings (name="Settings") {
         html += this.tab.row("<hr/>");
 
         html += this.tab.row("HTTP Server:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
-        html += this.tab.row("HTTP Port:&nbsp;", birdhouse_edit_field(id="set_port", field="server:port", type="input", options="true,false", data_type="integer") );
-        html += this.tab.row("Videostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_video", field="server:ip4_stream_video", type="input", options="true,false", data_type="string") );
-        html += this.tab.row("Videostream Port:&nbsp;", birdhouse_edit_field(id="set_ip4_video_port", field="server:port_video", type="input", data_type="integer") );
-        html += this.tab.row("Audiostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_audio", field="server:ip4_stream_audio", type="input", options="true,false", data_type="string") );
+        // html += this.tab.row("HTTP Port:&nbsp;", birdhouse_edit_field(id="set_port", field="server:port", type="input", options="true,false", data_type="integer") );
+        html += this.tab.row("HTTP Port:&nbsp;", settings["server"]["port"] + " (edit .env)");
+        //html += this.tab.row("Videostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_video", field="server:ip4_stream_video", type="input", options="true,false", data_type="string") );
+        //html += this.tab.row("Videostream Port:&nbsp;", birdhouse_edit_field(id="set_ip4_video_port", field="server:port_video", type="input", data_type="integer") );
+        html += this.tab.row("Videostream Port:&nbsp;", settings["server"]["port_video"] + " (edit .env)");
+        //html += this.tab.row("Audiostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_audio", field="server:ip4_stream_audio", type="input", options="true,false", data_type="string") );
+        html += this.tab.row("Audiostream Port:&nbsp;", settings["server"]["port_audio"] + " (edit .env)");
         html += this.tab.row("Deny admin from IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_deny", field="server:ip4_admin_deny", type="input", options="true,false", data_type="json") );
         html += this.tab.row("<hr>");
 

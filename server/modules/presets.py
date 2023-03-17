@@ -1,6 +1,27 @@
 import os
 import logging
+from dotenv import load_dotenv
 from logging.handlers import RotatingFileHandler
+
+
+def get_env(var_name):
+    return os.environ.get(var_name)
+
+
+path = os.path.join(os.path.dirname(__file__), "../../.env")
+load_dotenv(path)
+
+
+birdhouse_env = {
+    "couchdb_user": get_env("COUCHDB_USER"),
+    "couchdb_password": get_env("COUCHDB_PASSWORD"),
+    "couchdb_port": get_env("COUCHDB_PORT"),
+    "port_http": get_env("BIRDHOUSE_HTTP_PORT"),
+    "port_video": get_env("BIRDHOUSE_VIDEO_PORT"),
+    "port_audio": get_env("BIRDHOUSE_AUDIO_PORT"),
+    "dir_project": get_env("BIRDHOUSE_DIR_PROJECT"),
+    "dir_logging": get_env("BIRDHOUSE_DIR_LOGGING")
+}
 
 
 birdhouse_log_into_file = True
@@ -29,12 +50,11 @@ birdhouse_loglevel_module = {
     "weather-py": birdhouse_loglevel,
     "weather-om": birdhouse_loglevel,
 }
-
-
 birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
                                          datefmt='%m/%d %H:%M:%S')
 birdhouse_log_filename = str(os.path.join(os.path.dirname(__file__), "../../log", "server.log"))
-birdhouse_loghandler = RotatingFileHandler(filename=birdhouse_log_filename, mode='a', maxBytes=int(2.5 * 1024 * 1024),
+birdhouse_loghandler = RotatingFileHandler(filename=birdhouse_log_filename, mode='a',
+                                           maxBytes=int(2.5 * 1024 * 1024),
                                            backupCount=2, encoding=None, delay=False)
 birdhouse_loghandler.setFormatter(birdhouse_log_format)
 
@@ -353,4 +373,3 @@ interesting_icons = {
     "weather": "🌤 🌦 🌧 🌨 🌩 🌪 ",
     "clock": "🕐 🕒 🕓 🕔 🕕 🕖 🕗 🕘 🕙 🕚 🕛 🕜 🕝 🕞 🕟 🕠 🕡 🕢 🕣 🕤 🕥 🕦 🕧"
 }
-

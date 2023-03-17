@@ -396,8 +396,8 @@ class BirdhouseConfigDBHandler(threading.Thread):
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting DB handler ("+db_type+"|"+main_directory+") ...")
 
-        self.db_usr = "birdhouse"
-        self.db_pwd = "birdhouse"
+        self.db_usr = birdhouse_env["couchdb_user"]
+        self.db_pwd = birdhouse_env["couchdb_password"]
         self.db_server = "192.168.202.3"
         self.db_server = "birdhouse_db"
         self.db_port_internal = 5984

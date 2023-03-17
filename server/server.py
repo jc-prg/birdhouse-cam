@@ -749,11 +749,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         }
 
         api_response["DATA"] = api_data
+        api_response["DATA"]["settings"]["server"]["port"] = birdhouse_env["port_http"]
+        api_response["DATA"]["settings"]["server"]["port_video"] = birdhouse_env["port_video"]
+        api_response["DATA"]["settings"]["server"]["port_audio"] = birdhouse_env["port_audio"]
+        api_response["DATA"]["settings"]["server"]["database_port"] = birdhouse_env["couchdb_port"]
         api_response["API"]["request_time"] = round(time.time() - request_start, 2)
 
         if command != "status" and command != "list" and command != "version":
             del api_response["WEATHER"]
-            #del api_response["STATUS"]["server"]
             del api_response["STATUS"]["system"]
             del api_response["STATUS"]["devices"]
             del api_response["STATUS"]["database"]
