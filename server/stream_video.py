@@ -2,20 +2,15 @@
 
 import os
 import re
-import logging
-from modules.config import BirdhouseConfig
 from modules.presets import *
 from flask import Flask
 from flask import Response, request
 app = Flask(__name__)
 
+
 directories = birdhouse_directories
 main_directory = os.path.dirname(os.path.abspath(__file__))
 media_path = os.path.join(main_directory, directories["data"], directories["videos"])
-
-# config = BirdhouseConfig(param_init={"db_type": "json"}, main_directory=os.path.dirname(os.path.abspath(__file__)))
-# config.start()
-# media_path = config.db_handler.directory("videos")
 
 video_logging = logging.getLogger("video-srv")
 video_logging.setLevel(birdhouse_loglevel_module["video-srv"])
