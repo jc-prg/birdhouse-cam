@@ -110,7 +110,7 @@ class BirdhouseViewCreate(object):
             activity_sum = 0
             activity_count = 0
             for stamp in activity_dict[key]:
-                if "similarity" in data_image[stamp]:
+                if "similarity" in data_image[stamp] and float(data_image[stamp]["similarity"]) < 100:
                     activity_sum += float(data_image[stamp]["similarity"])
                     activity_count += 1
             data_activity[key] = round(100 - (activity_sum / activity_count), 2)
