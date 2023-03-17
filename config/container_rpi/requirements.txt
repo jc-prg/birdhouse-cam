@@ -1,5 +1,4 @@
 numpy
-picamera
 imutils
 flask
 tqdm
@@ -13,3 +12,4 @@ requests
 python_weather
 board
 geopy
+python-dotenv

@@ -4,3 +4,4 @@ couchdb
 requests
 python_weather
 geopy
+python-dotenv
