@@ -4,6 +4,11 @@
 // additional functions 
 //--------------------------------------
 
+function birdhouse_genericApiRequest(method, commands, return_cmd) {
+
+	appFW.requestAPI(method, commands, '', return_cmd,'','birdhouse_genericApiRequest');
+}
+
 function birdhouse_loadSettings() {
     commands = ["status"];
 	appFW.requestAPI('GET', commands, '', birdhouseLoadSettings,'','birdhouse_loadSettings');
@@ -34,6 +39,26 @@ function birdhouse_reconnectCamera(camera) {
 	commands = ["reconnect_camera",camera];
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_reconnectCamera');
 	}
+
+function birdhouse_checkTimeout() {
+	commands = ["check_timeout"];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_checkTimeout');
+	}
+
+function birdhouse_editData(data) {
+    commands = ["edit_presets", data];
+    appFW.requestAPI('POST',commands,"",birdhouse_AnswerOther,"","birdhouse_editData");
+}
+
+function birdhouse_recordStart(camera) {
+    commands = ["start", "recording", camera];
+    appFW.requestAPI('POST',commands,"","","","birdhouse_recordStart");
+}
+
+function birdhouse_recordStop(camera) {
+    commands = ["stop", "recording", camera];
+    appFW.requestAPI('POST',commands,"","","","birdhouse_recordStop");
+}
 
 function birdhouse_forceBackup(camera) {
 	commands = ["force_backup",camera];
@@ -67,6 +92,7 @@ function birdhouse_deleteMarkedFiles(param1,param2) {
     }
 
 function birdhouse_removeDataToday() {
+
     appMsg.confirm("Remove all the data from today?", "birdhouse_removeDataToday_exec();", 250);
 }
 
@@ -176,9 +202,14 @@ function birdhouse_setFavoritShow(command, param) {
         document.getElementById(img_id).style.borderColor = color;
 	}
 
+function birdhouse_showWeather() {
+	commands = ["status"];
+	appFW.requestAPI('GET', commands, '', birdhouseWeather,'','birdhouseWeather');
+}
+
 function birdhouse_AnswerDelete(data) {
 	//console.log(data);
-	appMsg.alert(lang("DELETE_DONE") + "<br/>(" + data["deleted_count"] + " " + lang("FILES")+")","");
+	appMsg.alert(lang("DELETE_DONE") + "<br/>(" + data["STATUS"]["deleted_count"] + " " + lang("FILES")+")","");
 	birdhouseReloadView();
 	}
 
@@ -199,6 +230,7 @@ function birdhouse_AnswerCreateDay(data) {
 	appMsg.alert(lang("CREATE_DAY_STARTED"));
 	birdhouseReloadView();
 	}
+
 function birdhouse_AnswerOther(data) {
 	//console.log(data);
 	appMsg.alert(lang("DONE"));

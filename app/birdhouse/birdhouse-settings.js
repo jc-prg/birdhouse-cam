@@ -12,7 +12,7 @@ function birdhouse_app_settings (name="Settings") {
 
     this.create = function (type="SETTINGS") {
         this.setting_type = type;
-        birdhouseStatus_load();
+        birdhouse_genericApiRequest("GET", ["status"], birdhouseStatus_print);
       	setTimeout(function(){
       	    birdhouse_settings.create_exec();
 		}, 2000);
@@ -53,6 +53,7 @@ function birdhouse_app_settings (name="Settings") {
             }
 
         if (this.setting_type != "INFO_ONLY") {
+            open_settings["device_info"] = true;
             html  = "<h2>Information</h2>";
             html += "<hr style='border:1px solid gray;'>"
         }
@@ -159,7 +160,7 @@ function birdhouse_app_settings (name="Settings") {
         api_call   += "<button onclick='birdhouse_forceUpdateViews();' style='"+button_style+"';>Update Views</button>";
         api_call   += "<button onclick='birdhouse_recreateImageConfig();' style='"+button_style+"';>NewImgCfg</button>";
         api_call   += "<button onclick='birdhouse_removeDataToday();' style='"+button_style+"';>CleanAllToday</button>";
-        api_call   += "<button onclick='appFW.requestAPI(\"POST\",[\"check-timeout\"],\"\",\"\",\"\");' style='"+button_style+"';>Timeout</button>";
+        api_call   += "<button onclick='birdhouse_checkTimeout();' style='"+button_style+"';>Timeout</button>";
         html_entry += this.tab.row("API Commands", api_call);
 
 	    for (let camera in cameras) {

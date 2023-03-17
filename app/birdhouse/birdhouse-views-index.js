@@ -30,9 +30,9 @@ index_template["single_admin"] = `
                     <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="livestream_main">
                 </a>
                 <div class="livestream_record cam1">
-                    <button onclick="appFW.requestAPI('POST',['start','recording','<!--CAM1_ID-->'],'','','','birdhouse_INDEX');" class="button-video-record">Record (<!--CAM1_ID-->)</button>
+                    <button onclick="birdhouse_recordStart('<!--CAM1_ID-->');" class="button-video-record">Record (<!--CAM1_ID-->)</button>
                     &nbsp;
-                    <button onclick="appFW.requestAPI('POST',['stop', 'recording','<!--CAM1_ID-->'],'','','','birdhouse_INDEX');" class="button-video-record">Stop (<!--CAM1_ID-->)</button>
+                    <button onclick="birdhouse_recordStop('<!--CAM1_ID-->');" class="button-video-record">Stop (<!--CAM1_ID-->)</button>
                 </div>
             </div>
         </center>
@@ -92,9 +92,9 @@ index_template["overlay_admin"] = `
             </div>
         </div>
         <div class="livestream_record cam1" style="height:80px;">
-            <button onclick="appFW.requestAPI('POST',['start','recording','<!--CAM1_ID-->'],'','','','birdhouse_INDEX');" class="button-video-record">Record (<!--CAM1_ID-->)</button>
-            &nbsp;
-            <button onclick="appFW.requestAPI('POST',['stop', 'recording','<!--CAM1_ID-->'],'','','','birdhouse_INDEX');" class="button-video-record">Stop (<!--CAM1_ID-->)</button>
+                    <button onclick="birdhouse_recordStart('<!--CAM1_ID-->');" class="button-video-record">Record (<!--CAM1_ID-->)</button>
+                    &nbsp;
+                    <button onclick="birdhouse_recordStop('<!--CAM1_ID-->');" class="button-video-record">Stop (<!--CAM1_ID-->)</button>
         </div>
         </center>
     </div>
@@ -136,9 +136,9 @@ index_template["default_admin"] = `
                     <img src="<!--CAM1_URL-->" id="stream_<!--CAM2_ID-->" class="livestream_main">
                 </a>
                 <div class="livestream_record cam1cam2">
-                    <button onclick="appFW.requestAPI('POST',['start','recording','<!--CAM1_ID-->'],'','','','birdhouse_INDEX');" class="button-video-record">Record (<!--CAM1_ID-->)</button>
+                    <button onclick="birdhouse_recordStart('<!--CAM1_ID-->');" class="button-video-record">Record (<!--CAM1_ID-->)</button>
                     &nbsp;
-                    <button onclick="appFW.requestAPI('POST',['stop', 'recording','<!--CAM1_ID-->'],'','','','birdhouse_INDEX');" class="button-video-record">Stop (<!--CAM1_ID-->)</button>
+                    <button onclick="birdhouse_recordStop('<!--CAM1_ID-->');" class="button-video-record">Stop (<!--CAM1_ID-->)</button>
                 </div>
             </div>
         </center>

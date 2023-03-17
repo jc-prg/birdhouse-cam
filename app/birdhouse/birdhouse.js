@@ -54,8 +54,8 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 	else if (camera != "")          { commands.push(camera); }
 	else                            { commands.push(app_active_cam); }
 	
-	console.debug("Request "+view+" / "+camera+" / "+date);	
-	appFW.requestAPI('GET',commands,"",birdhousePrint,"","birdhousePrint_load");
+	console.debug("Request "+view+" / "+camera+" / "+date);
+	birdhouse_genericApiRequest("GET", commands, birdhousePrint);
 	}
 	
 function birdhousePrint(data) {
@@ -110,7 +110,7 @@ function birdhousePrint(data) {
 
 	if (app_active_page == "INDEX")                 { birdhouse_INDEX(data, camera); }
 	else if (app_active_page == "DEVICES")          { birdhouseDevices(lang("DEVICES"), data, camera); }
-	else if (app_active_page == "WEATHER")          { birdhouseWeather(lang("WEATHER"), data); }
+	else if (app_active_page == "WEATHER")          { birdhouse_showWeather(); }
 	else if (app_active_page == "FAVORITES")        { birdhouse_LIST(lang("FAVORITES"),  data, camera); }
 	else if (app_active_page == "ARCHIVE")          { birdhouse_LIST(lang("ARCHIVE"), data, camera); }
 	else if (app_active_page == "TODAY")            { birdhouse_LIST(lang("TODAY"), data, camera); }

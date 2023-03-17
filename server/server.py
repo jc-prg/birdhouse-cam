@@ -390,6 +390,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         srv_logging.debug("POST API request with '" + self.path + "'.")
         config.user_activity("set")
+
+        api_response = {
+            "API": api_description,
+            "STATUS": {},
+            "WEATHER": {},
+            "DATA": {}
+        }
         response = {}
 
         if not self.admin_allowed():
@@ -432,18 +439,18 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             config.db_handler.clean_all_data("sensor")
             response = {"cleanup": "done"}
         elif self.path.startswith('/update_views/'):
-            response = {}
-            views.archive_list_create()
-            views.favorite_list_create()
+            views.archive_list_update()
+            views.favorite_list_update()
+            response = {"update_view": "started"}
         elif self.path.startswith('/force_backup/'):
-            response = {}
             backup.start_backup()
+            response = {"backup": "started"}
         elif self.path.startswith('/force_restart/'):
-            response = {}
             srv_logging.info("-------------------------------------------")
             srv_logging.info("FORCED SHUT-DOWN OF BIRDHOUSE SERVER .... !")
             srv_logging.info("-------------------------------------------")
             config.force_shutdown()
+            response = {"shutdown": "started"}
         elif self.path.startswith('/kill_stream/'):
             if "&" in which_cam:
                 stream_id_kill = which_cam
@@ -476,6 +483,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         else:
             self.error_404()
             return
+
+        api_response["STATUS"] = response
 
         self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'),
                          no_cache=True)
@@ -630,8 +639,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content = views.camera_list(server=self)
             api_response["STATUS"]["system"] = sys_info.get()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
-
-        elif command == "status" or command == "version" or command == "list":
+        elif command == "status" or command == "version" or command == "list" or command == "reload":
             content = views.index(server=self)
 
             if len(param) > 3 and param[2] == "version":
@@ -654,6 +662,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             api_response["STATUS"]["system"] = sys_info.get()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
 
+            if command == "reload":
+                api_response["STATUS"]["reload"] = True
         else:
             content = {}
             status = "Error: command not found."

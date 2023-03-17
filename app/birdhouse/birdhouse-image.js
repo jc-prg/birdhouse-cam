@@ -52,8 +52,8 @@ function birdhouse_Camera( main, view, onclick, camera, stream_server, admin_all
 
     var stream_link    = birdhouse_StreamURL(camera["name"], camera["stream"], "stream_main", true);
 	var livestream     = "<img src='"+stream_link+"' id='stream_"+camera["name"]+"' class='livestream_"+container+"'/>";
-	var command_record = "appFW.requestAPI(\"POST\",[\"start\",\"recording\",\""+camera["name"]+"\"],\"\",\"\",\"\",\"birdhouse_INDEX\");"; //requestAPI(\"/start/recording/cam2\");
-	var command_stop   = "appFW.requestAPI(\"POST\",[\"stop\", \"recording\",\""+camera["name"]+"\"],\"\",\"\",\"\",\"birdhouse_INDEX\");"; //requestAPI(\"/stop/recording/cam2\");
+	var command_record = "birdhouse_recordStart(\""+camera["name"]+"\");"; //requestAPI(\"/stop/recording/cam2\");
+	var command_stop   = "birdhouse_recordStop(\""+camera["name"]+"\");"; //requestAPI(\"/stop/recording/cam2\");
 
 	html     += "<center><div class='livestream_"+container+"_container "+view+"'>";
 	html     += "  <a onclick='"+onclick+"' style='cursor:pointer;'>" + livestream + "</a>";
@@ -184,7 +184,6 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
 		if (entry_category.length == 2)	{ command = "#"+entry_category[0]+"#,#"+entry_category[1]+"#"; }
 		if (command != "") {
 			var del_command = "birdhouse_deleteMarkedFiles("+command+");";
-			//var del_command = "appFW.requestAPI(#POST#,[#remove#"+command+"],##,birdhouse_AnswerDelete,##,#birdhouse_ImageGroup#);";
 			var onclick     = "appMsg.confirm(\""+lang("DELETE_SURE")+"\",\""+del_command+"\");";
 			html    += "<div id='group_intro_recycle' class='separator' style='display: block;'><center><br/>";
 			html    += "<a onclick='"+onclick+"' style='cursor:pointer;'>" + lang("RECYCLE_DELETE") + "</a>";

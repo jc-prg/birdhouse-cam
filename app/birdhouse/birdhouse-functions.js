@@ -125,14 +125,8 @@ function birdhouse_edit_send(id_list) {
         }
     }
     if (error) { alert(error_msg); }
-    else { appFW.requestAPI('POST',[ "edit_presets", info ],"",birdhouse_edit_done,"",""); }
+    else { birdhouse_editData(info); }
 }
-
-function birdhouse_edit_done(data) {
-
-    appMsg.alert(lang("DONE"));
-}
-
 
 function birdhouse_initTooltip() {
 	tooltip_mode     	= "other";

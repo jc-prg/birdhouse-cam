@@ -5,12 +5,7 @@
 //--------------------------------------
 
 
-function birdhouseWeather( title, data ) {
-	commands = ["status"];
-	appFW.requestAPI('GET', commands, '', birdhouseWeather_exec,'','birdhouseWeather');
-}
-
-function birdhouseWeather_exec( data ) {
+function birdhouseWeather( data ) {
     var settings = data["DATA"]["settings"];
     var status   = data["STATUS"];
 	var weather	= data["WEATHER"];
