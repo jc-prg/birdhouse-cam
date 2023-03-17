@@ -53,9 +53,11 @@ function birdhouse_app_settings (name="Settings") {
             }
 
         if (this.setting_type != "INFO_ONLY") {
-            open_settings["device_info"] = true;
             html  = "<h2>Information</h2>";
             html += "<hr style='border:1px solid gray;'>"
+        }
+        else {
+            open_settings["device_info"] = true;
         }
 
         html_entry = this.app_information();

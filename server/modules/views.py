@@ -760,7 +760,8 @@ class BirdhouseViews(threading.Thread):
         if backup:
             if "chart_data" not in content:
                 content["chart_data"] = self.create.chart_data(data=files_all.copy())
-            content["weather_data"] = self.create.weather_data(data=files_all.copy())
+            if "weather_data" not in content:
+                content["weather_data"] = self.create.weather_data(data=files_all.copy())
             if "weather_data" not in content:
                 pass
 
