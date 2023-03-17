@@ -237,7 +237,8 @@ birdhouse_preset = {
     "info": {},
     "localization": {
         "language": "EN",
-        "timezone": "UTC+1"
+        "timezone": "UTC+1",
+        "weather_active": True
     },
     "server": {
         "ip4_admin_deny":   ["192.168.1.31"],  # put in the IP address of your proxy or router if you don't want to allow edits from outside
