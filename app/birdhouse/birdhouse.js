@@ -105,6 +105,8 @@ function birdhousePrint(data) {
 
 	// check if admin allowed! -> create respective menu
 
+	window.scrollTo(0,0);
+
 	if (app_active_page != app_last_active_page)    { birdhouse_KillActiveStreams(); }
 	if (app_active_page == "INDEX")                 { birdhouse_KillActiveStreams(); }
 
@@ -123,8 +125,6 @@ function birdhousePrint(data) {
 	app_last_active_page = app_active_page;
 
 	if (app_active_page == "INDEX" && initial_setup) { birdhouse_settings.create(); }
-
-	scroll(0,0);
 	}
 
 function birdhousePrintTitle(data, active_page="", camera="") {

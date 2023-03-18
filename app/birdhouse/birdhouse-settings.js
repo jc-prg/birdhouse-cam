@@ -16,6 +16,7 @@ function birdhouse_app_settings (name="Settings") {
       	setTimeout(function(){
       	    birdhouse_settings.create_exec();
 		}, 2000);
+    	window.scrollTo(0,0);
     }
 
 	this.create_exec = function () {
