@@ -226,15 +226,16 @@ function birdhouseSwitchCam() {
 }
 
 function birdhouseReloadView() {
-	console.log("birdhouseReloadView: "+app_active_page+"/"+app_active_cam+"/"+app_active_date);
+	console.log("---> birdhouseReloadView: "+app_active_page+"/"+app_active_cam+"/"+app_active_date);
 	app_recycle_range = {};
 	birdhouse_overlayHide();
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 
-	if (app_active_page == "INDEX") {
+	if (app_active_page == "INDEX" || app_active_page == "TODAY" || app_active_page == "DEVICES") {
 		for (let key in app_camera_source) {
 			var image = document.getElementById("stream_"+key);
 			if (image) {
+			    console.info("---> birdhouseReloadView: Restart streaming image: " + key + " / " + app_camera_source[key]);
                 image.src = "";
                 app_camera_source[key] = app_camera_source[key].replaceAll("//","/");
                 app_camera_source[key] = app_camera_source[key].replace(":/","://");

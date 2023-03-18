@@ -215,7 +215,7 @@ function birdhouse_Links(link_list) {
 	}
 
 
-function birdhouse_imageOverlay(filename, description="", favorite="", to_be_deleted="") {
+function birdhouse_imageOverlay(filename, description="", favorite="", to_be_deleted="", image_id="overlay_image") {
 
         var overlay = "<div id=\"overlay_content\" class=\"overlay_content\" onclick=\"birdhouse_overlayHide();\"><!--overlay--></div>";
         setTextById("overlay_content",overlay);
@@ -227,7 +227,7 @@ function birdhouse_imageOverlay(filename, description="", favorite="", to_be_del
         html  = "";
         html += "<div id=\"overlay_image_container\">";
         html += "<div id=\"overlay_close\" onclick='birdhouse_overlayHide();'>[X]</div>";
-        html += "<img id='overlay_image' src='"+filename+"'>";
+        html += "<img id='"+image_id+"' src='"+filename+"'>";
         html += "<br/>&nbsp;<br/>"+description+"</div>";
         document.getElementById("overlay_content").innerHTML = html;
         

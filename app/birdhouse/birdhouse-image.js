@@ -315,7 +315,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		//var lowres      = entry["video"]["stream_detect"];
 		var lowres      = birdhouse_StreamURL(entry["id"], entry["video"]["stream_detect"], "image_stream_detect");
 		var hires       = lowres;
-		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
+		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\", \"\", \"\", \"stream_overlay_"+entry["id"]+"\");";
     }
 	else if (entry["type"] == "video") {
 		var note        = "";
@@ -364,6 +364,9 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var img_id2 = "";
     if (entry["type"] == "addon") {
         img_id2 = "stream_lowres_" + app_active_cam;
+    }
+    else if (entry["type"] == "detection") {
+        img_id2 = "stream_detect_" + entry["id"];
     }
     else {
         img_id2 += entry["directory"] + entry["lowres"];

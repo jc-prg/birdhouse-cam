@@ -143,10 +143,11 @@ function app_connection_lost(error=false) {
             elementHidden("video_stream_online");
             elementVisible("lowres_today_error");
             elementHidden("lowres_today");
-            birdhouseStatus_connectionError()
+            birdhouseStatus_connectionError();
             app_connection_error = true;
         }
         else {
+            app_unique_stream_id  = new Date().getTime();
             // code if got back connection
             elementVisible("video_stream_online");
             elementHidden("video_stream_offline");

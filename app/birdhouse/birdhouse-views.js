@@ -56,7 +56,8 @@ function birdhouse_INDEX(data, camera) {
     app_camera_source[active_cam["name"]]             = stream_server + cameras[active_cam["name"]]["video"]["stream"];
     app_camera_source["lowres_" + active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream_lowres"];
     app_camera_source["pip_" + active_cam["name"]]    = stream_server + cameras[active_cam["name"]]["video"]["stream_pip"];
-
+    app_camera_source["detect_" + active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream_detect"];
+    app_camera_source["overlay_" + active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream_detect"];
 
     if (other_cams.length > 0) {
         replace_tags["CAM1_PIP_URL"]    = birdhouse_StreamURL(active_cam["name"], stream_server + cameras[active_cam["name"]]["video"]["stream_pip"], "main_pip", true);
@@ -70,6 +71,8 @@ function birdhouse_INDEX(data, camera) {
         app_camera_source[other_cams[0]["name"]]             = stream_server + cameras[other_cams[0]["name"]]["video"]["stream"];
         app_camera_source["lowres_" + other_cams[0]["name"]] = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_lowres"];
         app_camera_source["pip_" + other_cams[0]["name"]]    = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_pip"];
+        app_camera_source["detect_" + other_cams[0]["name"]] = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_detect"];
+        app_camera_source["overlay_" + other_cams[0]["name"]] = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_detect"];
     }
 
     var selected_view = "";
