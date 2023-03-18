@@ -1035,7 +1035,7 @@ if __name__ == "__main__":
 
     # Start Webserver
     try:
-        address = ('0.0.0.0', config.param["server"]["port"])
+        address = ('0.0.0.0', int(config.param["server"]["port"]))
         server = StreamingServer(address, StreamingHandler)
         srv_logging.info("Starting WebServer on port "+str(config.param["server"]["port"])+" ...")
         server.serve_forever()
