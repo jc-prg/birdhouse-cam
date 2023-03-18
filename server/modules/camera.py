@@ -1274,6 +1274,7 @@ class BirdhouseCamera(threading.Thread):
         self.image = None
         self.running = True
         self._paused = False
+        self._interval = 0.5
         self.error = False
         self.error_msg = []
         self.error_time = 0
@@ -1394,7 +1395,7 @@ class BirdhouseCamera(threading.Thread):
                 if count_paused == 0:
                     self.logging.info("Recording images with " + self.id + " paused ...")
                     count_paused += 1
-                time.sleep(0.5)
+                time.sleep(1)
 
             # Video Recording
             if not self.error and self.video.recording:
@@ -1416,7 +1417,7 @@ class BirdhouseCamera(threading.Thread):
 
             # Image Recording (if not video recording)
             elif not self.error and self.param["active"] and self.param["active"] != "False":
-                time.sleep(0.3)
+                time.sleep(self._interval/2)
                 if self.record:
                     if self.image_recording_active(current_time=current_time):
 
@@ -1523,7 +1524,7 @@ class BirdhouseCamera(threading.Thread):
                             self.record_image_reload = time.time()
                             self.record_image_last_string = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
-                        time.sleep(0.7)
+                        time.sleep(self._interval/2)
                         self.previous_stamp = stamp
 
             self.health_check = time.time()

@@ -22,6 +22,7 @@ class BirdhouseArchive(threading.Thread):
         self.logging.info("Starting backup handler ...")
 
         self._running = True
+        self._interval = 5
         self.config = config
         self.camera = camera
         self.views = views
@@ -59,7 +60,7 @@ class BirdhouseArchive(threading.Thread):
             else:
                 backup_started = False
             self.health_check = time.time()
-            time.sleep(0.5)
+            time.sleep(self._interval)
         self.logging.info("Stopped backup process.")
 
     def stop(self):

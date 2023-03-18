@@ -137,7 +137,8 @@ class ServerHealthCheck(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self._running = True
-        self._interval = 60*5
+        self._interval = 5
+        self._interval_check = 60*5
         self._initial = True
         self._min_live_time = 65
         self._thread_info = {}
@@ -151,7 +152,8 @@ class ServerHealthCheck(threading.Thread):
         last_update = time.time()
         count = 0
         while self._running:
-            if last_update + self._interval < time.time():
+            time.sleep(self._interval)
+            if last_update + self._interval_check < time.time():
                 self.logging.info("Health check ...")
                 last_update = time.time()
                 count += 1

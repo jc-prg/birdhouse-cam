@@ -85,7 +85,7 @@ class BirdhouseSensor(threading.Thread):
                 if p_count == 0:
                     self.logging.info("Pause sensor "+self.id+" ...")
                     p_count += 1
-                time.sleep(0.5)
+                time.sleep(1)
 
             # check if configuration update
             if self.config.update["sensor_"+self.id]:
