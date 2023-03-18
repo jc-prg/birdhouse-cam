@@ -215,6 +215,8 @@ class ServerInformation(threading.Thread):
         while self._running:
             self.read()
             self.health_check = time.time()
+            if config.shut_down:
+                self.stop()
             time.sleep(self._interval)
 
     def stop(self):

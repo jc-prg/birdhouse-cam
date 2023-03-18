@@ -1373,6 +1373,7 @@ class BirdhouseConfig(threading.Thread):
         Core function (not clear what to do yet)
         """
         self.queue.stop()
+        self.db_handler.stop()
         self._running = False
 
         return
@@ -1483,9 +1484,10 @@ class BirdhouseConfig(threading.Thread):
         shut down main services and then exit -> if docker, then restart will follow
         Final kill is done in the server component -> StreamingHandler.do_GET
         """
-        self.logging.info("STOPPING THE RUNNING THREADS ...")
-        self.shut_down = True
-        self.stop()
+        if self._running:
+            self.logging.info("STOPPING THE RUNNING THREADS ...")
+            self.shut_down = True
+            self.stop()
 
     def if_new_day(self) -> bool:
         """
