@@ -330,7 +330,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 self.send_header("Pragma", "no-cache")
                 self.send_header("Expires", "0")
             self.end_headers()
-            self.wfile.write(content)
+            try:
+                self.wfile.write(content)
+            except Exception as err:
+                srv_logging.error("Error streaming file ("+filetype+"): " + str(err))
         else:
             self.error_404()
 
@@ -352,12 +355,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         send header and frame inside a MJPEG video stream
         """
-        self.wfile.write(b'--FRAME\r\n')
-        self.send_header('Content-Type', 'image/jpeg')
-        self.send_header('Content-Length', str(len(str(frame))))
-        self.end_headers()
-        self.wfile.write(frame)
-        self.wfile.write(b'\r\n')
+        try:
+            self.wfile.write(b'--FRAME\r\n')
+            self.send_header('Content-Type', 'image/jpeg')
+            self.send_header('Content-Length', str(len(str(frame))))
+            self.end_headers()
+            self.wfile.write(frame)
+            self.wfile.write(b'\r\n')
+        except Exception as err:
+            srv_logging.error("Error streaming video frame: " + str(err))
 
     def stream_video_end(self):
         """
@@ -840,8 +846,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         while stream_active:
 
-            if camera[which_cam].get_stream_kill(stream_id_ext):
+            if camera[which_cam].get_stream_kill(stream_id_ext) or config.shut_down:
                 stream_active = False
+
             if config.update["camera_" + which_cam]:
                 camera[which_cam].update_main_config()
 
