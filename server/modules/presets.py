@@ -140,23 +140,21 @@ birdhouse_weather = {
         "today": {}
     }
 }
-birdhouse_default_cam1 = {
+birdhouse_default_cam = {
     "type": "default",
-    "name": "Inside",
+    "name": "NAME",
     "source": "/dev/video0",
     "active": True,
     "record": True,
-    "similarity": {
-        "threshold": 90,
-        "detection_type": "max_quarter",
-        "detection_area": (0.1, 0.1, 0.8, 0.8)
-    },
     "image": {
         "crop": (0.1, 0.0, 0.85, 1.0),
         "resolution": "800x600",
         "show_framerate": True,
-        "framerate": "not implemented",
-        "saturation": "not implemented",
+        "framerate": 15,
+        "saturation": 50,
+        "brightness": -1,
+        "contrast": -1,
+        "exposure": -1,
         "rotation": 0,
         "reconnect_to_calibrate": False,
         "preview_scale": 18,
@@ -169,59 +167,34 @@ birdhouse_default_cam1 = {
         "path": "images",
         "color": "ORIGINAL",
         "rhythm": "20",
-        "rhythm_offset": "3",
+        "rhythm_offset": "0",
         "record_from": "06",
-        "record_to": "22",
+        "record_to": "20",
         "seconds": ("00", "20", "40"),
         "hours": ("06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20")
     },
-    "video": {
-        "allow_recording": True,
-        "max_length": 180,
-        "stream_port": 8008
-    }
-}
-birdhouse_default_cam2 = {
-    "type": "default",
-    "name": "Outside",
-    "source": "/dev/video1",
-    "active": True,
-    "record": True,
     "similarity": {
-        "threshold": 90,
-        "detection_type": "average",
+        "threshold": 95,
         "detection_area": (0.1, 0.1, 0.8, 0.8)
     },
-    "image": {
-        "crop": (0.1, 0.0, 0.85, 1.0),
-        "resolution": "800x600",
-        "show_framerate": True,
-        "framerate": "not implemented",
-        "saturation": "not implemented",
-        "reconnect_to_calibrate": False,
-        "rotation": 0,
-        "preview_scale": 18,
-        "date_time": True,
-        "date_time_position": (10, 20),
-        "date_time_color": (255, 255, 255),
-        "date_time_size": 0.4
-    },
-    "image_save": {
-        "path": "images",
-        "color": "ORIGINAL",
-        "rhythm": "10",
-        "rhythm_offset": "0",
-        "record_from": "sunrise-1",
-        "record_to": "sunset+1",
-        "seconds": ("10", "30", "50"),
-        "hours": ("06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20")
-    },
     "video": {
         "allow_recording": True,
         "max_length": 180,
         "stream_port": 8008
     }
 }
+
+birdhouse_default_cam1 = birdhouse_default_cam.copy()
+birdhouse_default_cam1["name"] = "Inside"
+birdhouse_default_cam1["source"] = "/dev/video0"
+
+birdhouse_default_cam2 = birdhouse_default_cam.copy()
+birdhouse_default_cam2["name"] = "Outside"
+birdhouse_default_cam2["source"] = "/dev/video1"
+birdhouse_default_cam2["image_save"]["offset"] = "5"
+birdhouse_default_cam2["image_save"]["record_from"] = "sunrise-0"
+birdhouse_default_cam2["image_save"]["record_to"] = "sunset+0"
+
 birdhouse_default_micro = {
     "active": True,
     "name": "Inside",

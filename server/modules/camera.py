@@ -1205,16 +1205,19 @@ class BirdhouseCameraOutput(object):
 
 class BirdhouseCameraHandler(object):
 
-    def __init__(self, source, name):
+    def __init__(self, config, source, name):
         self.error = False
-        self.error_msg = ""
+        self.error_msg = []
+        self.error_time = None
 
         if "/dev/" not in str(source):
             source = "/dev/video" + str(source)
 
+        self.config = config
         self.source = source
         self.name = name
         self.stream = None
+        self.property_keys = None
 
         self.logging = logging.getLogger(name + "-ctrl")
         self.logging.setLevel(birdhouse_loglevel_module["cam-other"])
@@ -1223,15 +1226,35 @@ class BirdhouseCameraHandler(object):
 
         self.connect()
 
+    def _raise_error(self, message):
+        """
+        Report Error, set variables of modules
+        """
+        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+        self.error_msg.append(time_info + " - " + message)
+        if len(self.error_msg) >= 10:
+            self.error_msg.pop()
+        self.error_time = time.time()
+        self.logging.error(message)
+
+    def _reset_error(self):
+        """
+        remove all errors
+        """
+        self.error = False
+        self.error_msg = []
+        self.error_time = 0
+
     def read(self):
         try:
             ref, raw = self.stream.read()
             self.error = False
             return raw
-        except cv2.error as e:
+        except cv2.error as err:
             self.error = True
-            self.error_msg = str(e)
-            self.logging.warning("- Error connecting to camera '" + self.source + "' and reading first image: " + str(e))
+            self.error_msg = str(err)
+            self.logging.warning("- Error connecting to camera '" + self.source +
+                                 "' and reading first image: " + str(err))
             return
 
     def connect(self):
@@ -1246,12 +1269,12 @@ class BirdhouseCameraHandler(object):
         if self.stream is not None:
             try:
                 self.stream.release()
-            except Exception as e:
-                self.logging.debug("- Release of camera did not work: " + str(e))
+            except cv2.error as err:
+                self.logging.debug("- Release of camera did not work: " + str(err))
         else:
             self.logging.debug("- Camera not yet connected.")
 
-    def set_properties(self):
+    def set_properties(self, key, value):
         """
         set camera parameter ...
         -----------------------------
@@ -1270,36 +1293,104 @@ class BirdhouseCameraHandler(object):
         12. CV_CAP_PROP_SATURATION Saturation of the image (only for cameras). [0..255]
         13. CV_CAP_PROP_HUE Hue of the image (only for cameras).
         14. CV_CAP_PROP_GAIN Gain of the image (only for cameras). [0..127]
-        15. CV_CAP_PROP_EXPOSURE Exposure (only for cameras). [-7..-1]
+        15. CV_CAP_PROP_EXPOSURE Exposure (only for cameras). [-7..-1] ... tbc.
         16. CV_CAP_PROP_CONVERT_RGB Boolean flags indicating whether images should be converted to RGB.
         17. CV_CAP_PROP_WHITE_BALANCE Currently unsupported [4000..7000]
         """
-        return
+        try:
+            if key == "saturation":
+                self.stream.set(cv2.CAP_PROP_SATURATION, int(value))
+            elif key == "brightness":
+                self.stream.set(cv2.CAP_PROP_BRIGHTNESS, int(value))
+            elif key == "contrast":
+                self.stream.set(cv2.CAP_PROP_CONTRAST, int(value))
+            elif key == "framerate":
+                self.stream.set(cv2.CAP_PROP_FPS, float(value))
+            elif key == "exposure":
+                self.stream.set(cv2.CAP_PROP_EXPOSURE, value)
+            elif key == "hue":
+                self.stream.set(cv2.CAP_PROP_HUE, value)
+            elif key == "auto_white_balance":
+                self.stream.set(cv2.CAP_PROP_AUTO_WB, value)
+            elif key == "auto_exposure":
+                self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, value)
+        except cv2.error as err:
+            self._raise_error("Could not change camera setting '" + key + "': " + str(err))
+
+    def get_property_keys(self):
+        """
+        return keys for all properties that are implemented at the moment
+        """
+        self.property_keys = ["saturation", "brightness", "contrast", "fps", "exposure", "hue"]
+        return self.property_keys
 
     def get_properties(self):
         """
         get properties from camera
         """
-        properties = {
+        properties_not_used = {
             "CAP_PROP_POS_MSEC": self.stream.get(cv2.CAP_PROP_POS_MSEC),
             "CAP_PROP_POS_FRAMES": self.stream.get(cv2.CAP_PROP_POS_FRAMES),
             "CAP_PROP_POS_AVI_RATIO": self.stream.get(cv2.CAP_PROP_POS_AVI_RATIO),
-            "CAP_PROP_FRAME_WIDTH": self.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
-            "CAP_PROP_FRAME_HEIGHT": self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT),
-            "CAP_PROP_FPS": self.stream.get(cv2.CAP_PROP_FPS),
+            "CAP_PROP_CONVERT_RGB": self.stream.get(cv2.CAP_PROP_CONVERT_RGB),
             "CAP_PROP_FOURCC": self.stream.get(cv2.CAP_PROP_FOURCC),
-            "CAP_PROP_FRAME_COUNT": self.stream.get(cv2.CAP_PROP_FRAME_COUNT),
             "CAP_PROP_FORMAT": self.stream.get(cv2.CAP_PROP_FORMAT),
             "CAP_PROP_MODE": self.stream.get(cv2.CAP_PROP_MODE),
+            "CAP_PROP_FRAME_COUNT": self.stream.get(cv2.CAP_PROP_FRAME_COUNT)
+        }
+        properties = {
+            "CAP_PROP_FRAME_WIDTH": self.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
+            "CAP_PROP_FRAME_HEIGHT": self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT),
             "CAP_PROP_BRIGHTNESS": self.stream.get(cv2.CAP_PROP_BRIGHTNESS),
             "CAP_PROP_CONTRAST": self.stream.get(cv2.CAP_PROP_CONTRAST),
             "CAP_PROP_SATURATION": self.stream.get(cv2.CAP_PROP_SATURATION),
             "CAP_PROP_HUE": self.stream.get(cv2.CAP_PROP_HUE),
             "CAP_PROP_GAIN": self.stream.get(cv2.CAP_PROP_GAIN),
             "CAP_PROP_EXPOSURE": self.stream.get(cv2.CAP_PROP_EXPOSURE),
-            "CAP_PROP_CONVERT_RGB": self.stream.get(cv2.CAP_PROP_CONVERT_RGB)
+            "CAP_PROP_AUTO_EXPOSURE": self.stream.get(cv2.CAP_PROP_AUTO_EXPOSURE),
+            "CAP_PROP_AUTO_WB": self.stream.get(cv2.CAP_PROP_AUTO_WB),
+            "CAP_PROP_WB_TEMPERATURE": self.stream.get(cv2.CAP_PROP_WB_TEMPERATURE),
+            "CAP_PROP_TEMPERATURE": self.stream.get(cv2.CAP_PROP_TEMPERATURE),
+            "CAP_PROP_FPS": self.stream.get(cv2.CAP_PROP_FPS),
+            "CAP_PROP_FOCUS": self.stream.get(cv2.CAP_PROP_FOCUS),
+            "CAP_PROP_AUTOFOCUS": self.stream.get(cv2.CAP_PROP_AUTOFOCUS),
+            "CAP_PROP_ZOOM": self.stream.get(cv2.CAP_PROP_ZOOM)
         }
         return properties
+
+    def set_black_white(self):
+        """
+        set saturation to 0
+        """
+        try:
+            self.stream.set(cv2.CAP_PROP_SATURATION, 0)
+            return True
+        except cv2.error as err:
+            self._raise_error("Could not set to black and white: " + str(err))
+            return False
+
+    def set_resolution(self, width, height):
+        """
+        set camera resolution
+        """
+        try:
+            self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+            return True
+        except cv2.error as err:
+            self._raise_error("Could not set resolution: " + str(err))
+            return False
+
+    def get_resolution(self, maximum=False):
+        """
+        get camera resolution
+        """
+        if maximum:
+            high_value = 10000
+            self.set_resolution(width=high_value, height=high_value)
+        width = self.stream.get(cv2.CAP_PROP_FRAME_WIDTH)
+        height = self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        return [width, height]
 
 
 class BirdhouseCamera(threading.Thread):
@@ -1397,8 +1488,8 @@ class BirdhouseCamera(threading.Thread):
                                               time_zone=self.timezone)
         self.video.output = BirdhouseCameraOutput(self.id)
         self.camera = None
-        self.cameraFPS = None
-        self.camera_start_default()
+        #self.cameraFPS = None
+        self.camera_start()
 
     def run(self):
         """
@@ -1610,7 +1701,7 @@ class BirdhouseCamera(threading.Thread):
         Stop recording
         """
         if not self.error and self.active:
-            self.cameraFPS.stop()
+            #self.cameraFPS.stop()
 
             if self.video:
                 self.video.stop()
@@ -1653,7 +1744,7 @@ class BirdhouseCamera(threading.Thread):
         self.image_last_edited_lowres = None
         self.image_last_size_lowres = None
 
-    def camera_start_default(self):
+    def camera_start(self):
         """
         Try out new
         """
@@ -1665,7 +1756,7 @@ class BirdhouseCamera(threading.Thread):
             self.logging.info("Ensure Stream is released ...")
 
         try:
-            self.camera = BirdhouseCameraHandler(self.source, self.id)
+            self.camera = BirdhouseCameraHandler(self.config, self.source, self.id)
 
             if self.camera.error:
                 self._raise_error(True, "Can't connect to camera, check if '" + str(
@@ -1686,8 +1777,8 @@ class BirdhouseCamera(threading.Thread):
                     self._raise_error(True,
                                      "Source " + str(self.source) + " returned empty image, try type 'pi' or 'usb'.")
                 else:
-                    self.camera_resolution_usb(self.param["image"]["resolution"])
-                    self.cameraFPS = FPS().start()
+                    self.camera_initialize(self.param["image"]["resolution"])
+                    #self.cameraFPS = FPS().start()
                     self.logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
 
         except Exception as e:
@@ -1707,42 +1798,36 @@ class BirdhouseCamera(threading.Thread):
         response = {"command": ["reconnect camera"], "camera": self.id}
         return response
 
-    def camera_resolution_usb(self, resolution):
+    def camera_initialize(self, resolution):
         """
         set resolution for USB
         """
-        if self.type != "usb" and self.type != "default":
-            return
         if self.camera is None:
             return
 
-        try:
-            current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
-                       self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
-            self.logging.info("USB Current resolution: " + str(current))
-        except Exception as e:
-            self.logging.warning("Could not get current resolution: " + self.id)
+        # set saturation, contrast, brightness
+        available_settings = self.camera.get_property_keys()
+        for key in available_settings:
+            if key in self.param["image"] and float(self.param["image"][key]) != -1:
+                self.camera.set_properties(key, float(self.param["image"][key]))
 
-        high_value = 10000
-        self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, high_value)
-        self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, high_value)
-        self.max_resolution = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
-                               self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+        # set resolutions, define grop area
+        current = self.camera.get_resolution()
+        self.logging.info("USB Current resolution: " + str(current))
+
+        self.max_resolution = self.camera.get_resolution(maximum=True)
         self.logging.debug(self.id + " Maximum resolution: " + str(self.max_resolution))
 
-        if "x" in resolution:
-            dimensions = resolution.split("x")
+        if "x" in self.param["image"]["resolution"]:
+            dimensions = self.param["image"]["resolution"].split("x")
             self.logging.debug(self.id + " Set resolution: " + str(dimensions))
-            # self.camera.stream.set(3, int(resolution[0]))
-            # self.camera.stream.set(4, int(resolution[1]))
-            self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, float(dimensions[0]))
-            self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, float(dimensions[1]))
-            current = [self.camera.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
-                       self.camera.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+            self.camera.set_resolution(width=float(dimensions[0]), height=float(dimensions[1]))
+            current = self.camera.get_resolution()
 
             if current == [0, 0]:
                 current = [int(dimensions[0]), int(dimensions[1])]
 
+            self.param["image"]["resolution_max"] = self.max_resolution
             self.param["image"]["resolution_current"] = current
             self.param["image"]["crop_area"] = self.image.crop_area_pixel(resolution=current,
                                                                           area=self.param["image"]["crop"],
@@ -1751,18 +1836,10 @@ class BirdhouseCamera(threading.Thread):
             self.logging.debug(self.id + " New crop area:  " + str(self.param["image"]["crop"]) + " -> " +
                                str(self.param["image"]["crop_area"]))
         else:
-            self.logging.info("Resolution definition not supported: " + str(resolution))
+            self.logging.info("Resolution definition not supported (e.g. '800x600'): " + str(resolution))
 
-        # potential source for errors ... errno=16 / device or resource is busy === >>
-        # [ WARN:0@3.021] global /tmp/pip-wheel-8dvnqe62/opencv-python_7949e8065e824f1480edaa2d75fce534
-        # /opencv/modules/videoio/src/cap_v4l.cpp (801) requestBuffers VIDEOIO(V4L2:/dev/video1):
-        # failed VIDIOC_REQBUFS: errno=16 (Device or resource busy)
-        # ---
-        # cale OpenCV(4.5.5) :-1: error: (-5:Bad argument) in function 'cvtColor'
-        # > Overload resolution failed:
-        # >  - src is not a numpy array, neither a scalar
-        # >  - Expected Ptr<cv::UMat> for argument 'src'
-        # )
+        # return properties as values
+        self.param["camera"] = self.camera.get_properties()
 
     def camera_start_recording(self):
         """
@@ -2230,4 +2307,4 @@ class BirdhouseCamera(threading.Thread):
         self.previous_image = None
         self.previous_stamp = "000000"
 
-        self.camera_resolution_usb(self.param["image"]["resolution"])
+        self.camera_initialize(self.param["image"]["resolution"])
