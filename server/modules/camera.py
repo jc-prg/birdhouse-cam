@@ -1236,7 +1236,6 @@ class BirdhouseCameraHandler(object):
 
     def connect(self):
         self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
-        self.stream.set(cv2.CAP_PROP_EXPOSURE, -6)
         self.read()
 
     def reconnect(self):
@@ -1252,7 +1251,7 @@ class BirdhouseCameraHandler(object):
         else:
             self.logging.debug("- Camera not yet connected.")
 
-    def set_parameter(self):
+    def set_properties(self):
         """
         set camera parameter ...
         -----------------------------
@@ -1276,6 +1275,31 @@ class BirdhouseCameraHandler(object):
         17. CV_CAP_PROP_WHITE_BALANCE Currently unsupported [4000..7000]
         """
         return
+
+    def get_properties(self):
+        """
+        get properties from camera
+        """
+        properties = {
+            "CAP_PROP_POS_MSEC": self.stream.get(cv2.CAP_PROP_POS_MSEC),
+            "CAP_PROP_POS_FRAMES": self.stream.get(cv2.CAP_PROP_POS_FRAMES),
+            "CAP_PROP_POS_AVI_RATIO": self.stream.get(cv2.CAP_PROP_POS_AVI_RATIO),
+            "CAP_PROP_FRAME_WIDTH": self.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
+            "CAP_PROP_FRAME_HEIGHT": self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT),
+            "CAP_PROP_FPS": self.stream.get(cv2.CAP_PROP_FPS),
+            "CAP_PROP_FOURCC": self.stream.get(cv2.CAP_PROP_FOURCC),
+            "CAP_PROP_FRAME_COUNT": self.stream.get(cv2.CAP_PROP_FRAME_COUNT),
+            "CAP_PROP_FORMAT": self.stream.get(cv2.CAP_PROP_FORMAT),
+            "CAP_PROP_MODE": self.stream.get(cv2.CAP_PROP_MODE),
+            "CAP_PROP_BRIGHTNESS": self.stream.get(cv2.CAP_PROP_BRIGHTNESS),
+            "CAP_PROP_CONTRAST": self.stream.get(cv2.CAP_PROP_CONTRAST),
+            "CAP_PROP_SATURATION": self.stream.get(cv2.CAP_PROP_SATURATION),
+            "CAP_PROP_HUE": self.stream.get(cv2.CAP_PROP_HUE),
+            "CAP_PROP_GAIN": self.stream.get(cv2.CAP_PROP_GAIN),
+            "CAP_PROP_EXPOSURE": self.stream.get(cv2.CAP_PROP_EXPOSURE),
+            "CAP_PROP_CONVERT_RGB": self.stream.get(cv2.CAP_PROP_CONVERT_RGB)
+        }
+        return properties
 
 
 class BirdhouseCamera(threading.Thread):
@@ -2109,7 +2133,8 @@ class BirdhouseCamera(threading.Thread):
             "record_image_last_compare": self.record_image_last_compare,
             "video_error": self.video.error,
             "video_error_msg": ",\n".join(self.video.error_msg),
-            "running": self.running
+            "running": self.running,
+            "properties": self.camera.get_properties()
             }
         return status
 
