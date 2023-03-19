@@ -135,10 +135,11 @@ function birdhouseDevices_cameras(data) {
 		html_entry += tab.row("- Crop (relative):", birdhouse_edit_field(id="set_crop_"+camera, field="devices:cameras:"+camera+":image:crop", type="input", options="", data_type="json"));
 		html_entry += tab.row("- Crop (absolute):", "<div id='get_crop_area_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
 		html_entry += tab.row("- Preview Scale:", birdhouse_edit_field(id="set_scale_"+camera, field="devices:cameras:"+camera+":image:preview_scale", type="input", options="", data_type="integer") + " %");
-		html_entry += tab.row("- Show Framerate:", birdhouse_edit_field(id="set_show_framerate_"+camera, field="devices:cameras:"+camera+":image:show_framerate", type="select", options="true,false", data_type="boolean") + " fps");
+		html_entry += tab.row("- Show Framerate:", birdhouse_edit_field(id="set_show_framerate_"+camera, field="devices:cameras:"+camera+":image:show_framerate", type="select", options="true,false", data_type="boolean"));
+		html_entry += tab.row("- Reconnect to calibrate:", birdhouse_edit_field(id="set_reconnect_"+camera, field="devices:cameras:"+camera+":image:reconnect_to_calibrate", type="select", options="false,true", data_type="boolean"));
         html_entry += tab.end();
 
-		id_list += "set_resolution_"+camera+":set_rotation_"+camera+":set_show_framerate_"+camera+":set_crop_"+camera+":set_scale_"+camera+":set_black_white_"+camera+":";
+		id_list += "set_reconnect_"+camera+":set_resolution_"+camera+":set_rotation_"+camera+":set_show_framerate_"+camera+":set_crop_"+camera+":set_scale_"+camera+":set_black_white_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_image", "Image / Video Settings", html_entry, false );
 
         html_entry = tab.start();

@@ -1203,27 +1203,25 @@ class BirdhouseCameraOutput(object):
         return self.buffer.write(buf)
 
 
-class BirdhouseCameraOther(object):
+class BirdhouseCameraHandler(object):
 
     def __init__(self, source, name):
         self.error = False
         self.error_msg = ""
 
-        self.logging = logging.getLogger(name + "-other")
+        if "/dev/" not in str(source):
+            source = "/dev/video" + str(source)
+
+        self.source = source
+        self.name = name
+        self.stream = None
+
+        self.logging = logging.getLogger(name + "-ctrl")
         self.logging.setLevel(birdhouse_loglevel_module["cam-other"])
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting CAMERA support for '"+name+"/"+source+"' ...")
 
-        if "/dev/" not in str(source):
-            source = "/dev/video" + str(source)
-
-        self.stream = cv2.VideoCapture(source, cv2.CAP_V4L)
-        try:
-            ref, raw = self.stream.read()
-        except cv2.error as e:
-            self.error = True
-            self.error_msg = str(e)
-            self.logging.warning("- Error connecting to camera '" + source + "' and reading first image")
+        self.connect()
 
     def read(self):
         try:
@@ -1231,10 +1229,27 @@ class BirdhouseCameraOther(object):
             self.error = False
             return raw
         except cv2.error as e:
-            self.logging.warning("- Error connecting to camera '" + source + "' and reading first image")
             self.error = True
             self.error_msg = str(e)
+            self.logging.warning("- Error connecting to camera '" + self.source + "' and reading first image: " + str(e))
             return
+
+    def connect(self):
+        self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
+        self.read()
+
+    def reconnect(self):
+        self.disconnect()
+        self.connect()
+
+    def disconnect(self):
+        if self.stream is not None:
+            try:
+                self.stream.release()
+            except Exception as e:
+                self.logging.debug("- Release of camera did not work: " + str(e))
+        else:
+            self.logging.debug("- Camera not yet connected.")
 
 
 class BirdhouseCamera(threading.Thread):
@@ -1333,6 +1348,7 @@ class BirdhouseCamera(threading.Thread):
         self.video.output = BirdhouseCameraOutput(self.id)
         self.camera = None
         self.cameraFPS = None
+        self.camera_start_default()
 
     def run(self):
         """
@@ -1383,7 +1399,7 @@ class BirdhouseCamera(threading.Thread):
             # start or reload camera connection
             if self.reload_camera and self.active:
                 self.logging.info("- (Re)starting Camera (" + self.id + ") ...")
-                self.camera_start_default()
+                self.camera_reconnect(directly=False)
                 if not self.error and self.param["video"]["allow_recording"]:
                     self.camera_start_recording()
                 self.reload_camera = False
@@ -1527,6 +1543,10 @@ class BirdhouseCamera(threading.Thread):
                         time.sleep(self._interval/2)
                         self.previous_stamp = stamp
 
+                if "reconnect_to_calibrate" in self.param["image"] and self.param["image"]["reconnect_to_calibrate"] \
+                        and self.get_stream_count() == 0:
+                    self.camera_reconnect(directly=True)
+
             self.health_check = time.time()
 
         self.logging.info("Stopped camera (" + self.id + "/" + self.type + ").")
@@ -1591,20 +1611,20 @@ class BirdhouseCamera(threading.Thread):
             self.logging.info("Ensure Stream is released ...")
 
         try:
-            self.camera = BirdhouseCameraOther(self.source, self.id)
+            self.camera = BirdhouseCameraHandler(self.source, self.id)
 
             if self.camera.error:
                 self._raise_error(True, "Can't connect to camera, check if '" + str(
                     self.source) + "' is a valid source (" + self.camera.error_msg + ").")
-                self.camera.stream.release()
+                self.camera.disconnect()
             elif not self.camera.stream.isOpened():
                 self._raise_error(True, "Can't connect to camera, check if '" + str(
                     self.source) + "' is a valid source (could not open).")
-                self.camera.stream.release()
+                self.camera.disconnect()
             elif self.camera.stream is None:
                 self._raise_error(True, "Can't connect to camera, check if '" + str(
                     self.source) + "' is a valid source (empty image).")
-                self.camera.stream.release()
+                self.camera.disconnect()
             else:
                 raw = self.get_image_raw()
                 check = str(type(raw))
@@ -1621,13 +1641,16 @@ class BirdhouseCamera(threading.Thread):
 
         return
 
-    def camera_reconnect(self):
+    def camera_reconnect(self, directly=False):
         """
         Reconnect after API call
         """
+        if directly and self.camera is not None:
+            self.camera.reconnect()
+        else:
+            self.reload_camera = True
+            self.config_update = True
         response = {"command": ["reconnect camera"], "camera": self.id}
-        self.reload_camera = True
-        self.config_update = True
         return response
 
     def camera_resolution_usb(self, resolution):
