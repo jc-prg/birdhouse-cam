@@ -1356,6 +1356,7 @@ class BirdhouseCamera(threading.Thread):
         """
         similarity = 0
         count_paused = 0
+        count_reconnect = 0
         reload_time = time.time()
         reload_time_error = 60*3
         reload_time_error_record = 60*3
@@ -1545,7 +1546,10 @@ class BirdhouseCamera(threading.Thread):
 
                 if "reconnect_to_calibrate" in self.param["image"] and self.param["image"]["reconnect_to_calibrate"] \
                         and self.get_stream_count() == 0:
-                    self.camera_reconnect(directly=True)
+                    count_reconnect += 1
+                    if count_reconnect > 9:
+                        self.camera_reconnect(directly=True)
+                        count_reconnect = 0
 
             self.health_check = time.time()
 
