@@ -244,7 +244,7 @@ function birdhouseReloadView() {
                 }
 			}
 		}
-	else {
+	if (app_active_page != "INDEX") {
 		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
 		}
 	}	
