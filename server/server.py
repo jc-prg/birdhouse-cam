@@ -355,19 +355,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.end_headers()
 
-    def stream_video_frame(self, frame):
+    def stream_video_frame(self, frame, which_cam):
         """
         send header and frame inside a MJPEG video stream
         """
-        try:
-            self.wfile.write(b'--FRAME\r\n')
-            self.send_header('Content-Type', 'image/jpeg')
-            self.send_header('Content-Length', str(len(str(frame))))
-            self.end_headers()
-            self.wfile.write(frame)
-            self.wfile.write(b'\r\n')
-        except Exception as err:
-            srv_logging.error("Error streaming video frame: " + str(err))
+        #try:
+        self.wfile.write(b'--FRAME\r\n')
+        self.send_header('Content-Type', 'image/jpeg')
+        self.send_header('Content-Length', str(len(str(frame))))
+        self.end_headers()
+        self.wfile.write(frame)
+        self.wfile.write(b'\r\n')
+        #except Exception as err:
+        #    srv_logging.error("Error streaming video frame (" + which_cam + "): " + str(err))
 
     def stream_video_end(self):
         """
@@ -918,7 +918,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             try:
                 frame = camera[which_cam].image.convert_from_raw(frame_raw)
                 camera[which_cam].camera_wait_recording()
-                self.stream_video_frame(frame)
+                self.stream_video_frame(frame, which_cam)
                 if not stream_active:
                     self.stream_video_end()
                     srv_logging.info("Closed streaming client: " + stream_id_ext)
