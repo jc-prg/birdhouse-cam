@@ -441,6 +441,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = backup.create_image_config_api(self.path)
         elif self.path.startswith('/reconnect_camera/'):
             response = camera[which_cam].camera_reconnect()
+        elif self.path.startswith('/camera_settings/'):
+            response = camera[which_cam].camera_settings(self.path)
         elif self.path.startswith('/remove/'):
             response = backup.delete_marked_files_api(self.path)
         elif self.path.startswith('/clean_data_today/'):
@@ -981,11 +983,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, on_exit)
     signal.signal(signal.SIGTERM, on_kill)
 
-    # system information
-    sys_info = ServerInformation()
-    sys_info.start()
-
-    # start config    
+    # start config
     config = BirdhouseConfig(param_init=birdhouse_preset, main_directory=os.path.dirname(os.path.abspath(__file__)))
     config.start()
     config.db_handler.directory_create("data")
@@ -993,6 +991,10 @@ if __name__ == "__main__":
     config.db_handler.directory_create("videos")
     config.db_handler.directory_create("videos_temp")
     time.sleep(0.5)
+
+    # system information
+    sys_info = ServerInformation()
+    sys_info.start()
 
     # start sensors
     sensor = {}

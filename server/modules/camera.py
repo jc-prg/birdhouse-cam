@@ -1218,6 +1218,9 @@ class BirdhouseCameraHandler(object):
         self.name = name
         self.stream = None
         self.property_keys = None
+        self.properties_get = None
+        self.properties_not_used = None
+        self.properties_set = None
 
         self.logging = logging.getLogger(name + "-ctrl")
         self.logging.setLevel(birdhouse_loglevel_module["cam-other"])
@@ -1225,6 +1228,8 @@ class BirdhouseCameraHandler(object):
         self.logging.info("Starting CAMERA support for '"+name+"/"+source+"' ...")
 
         self.connect()
+        self.get_properties()
+        self.set_properties(key="init")
 
     def _raise_error(self, message):
         """
@@ -1274,7 +1279,7 @@ class BirdhouseCameraHandler(object):
         else:
             self.logging.debug("- Camera not yet connected.")
 
-    def set_properties(self, key, value):
+    def set_properties(self, key, value=""):
         """
         set camera parameter ...
         -----------------------------
@@ -1297,17 +1302,22 @@ class BirdhouseCameraHandler(object):
         16. CV_CAP_PROP_CONVERT_RGB Boolean flags indicating whether images should be converted to RGB.
         17. CV_CAP_PROP_WHITE_BALANCE Currently unsupported [4000..7000]
         """
+        self.properties_set = ["saturation", "brightness", "contrast", "framerate", "exposure",
+                               "hue", "auto_white_balance", "auto_exposure"]
+        if key == "init":
+            return
+
         try:
             if key == "saturation":
-                self.stream.set(cv2.CAP_PROP_SATURATION, int(value))
+                self.stream.set(cv2.CAP_PROP_SATURATION, float(value))
             elif key == "brightness":
-                self.stream.set(cv2.CAP_PROP_BRIGHTNESS, int(value))
+                self.stream.set(cv2.CAP_PROP_BRIGHTNESS, float(value))
             elif key == "contrast":
-                self.stream.set(cv2.CAP_PROP_CONTRAST, int(value))
+                self.stream.set(cv2.CAP_PROP_CONTRAST, float(value))
             elif key == "framerate":
                 self.stream.set(cv2.CAP_PROP_FPS, float(value))
             elif key == "exposure":
-                self.stream.set(cv2.CAP_PROP_EXPOSURE, value)
+                self.stream.set(cv2.CAP_PROP_EXPOSURE, float(value))
             elif key == "hue":
                 self.stream.set(cv2.CAP_PROP_HUE, value)
             elif key == "auto_white_balance":
@@ -1317,18 +1327,21 @@ class BirdhouseCameraHandler(object):
         except cv2.error as err:
             self._raise_error("Could not change camera setting '" + key + "': " + str(err))
 
-    def get_property_keys(self):
+    def get_properties_available(self, keys="get"):
         """
         return keys for all properties that are implemented at the moment
         """
-        self.property_keys = ["saturation", "brightness", "contrast", "fps", "exposure", "hue"]
+        if keys == "get":
+            return list(self.properties_get.keys())
+        elif keys == "set":
+            return self.properties_set
         return self.property_keys
 
     def get_properties(self):
         """
         get properties from camera
         """
-        properties_not_used = {
+        self.properties_not_used = {
             "CAP_PROP_POS_MSEC": self.stream.get(cv2.CAP_PROP_POS_MSEC),
             "CAP_PROP_POS_FRAMES": self.stream.get(cv2.CAP_PROP_POS_FRAMES),
             "CAP_PROP_POS_AVI_RATIO": self.stream.get(cv2.CAP_PROP_POS_AVI_RATIO),
@@ -1338,25 +1351,59 @@ class BirdhouseCameraHandler(object):
             "CAP_PROP_MODE": self.stream.get(cv2.CAP_PROP_MODE),
             "CAP_PROP_FRAME_COUNT": self.stream.get(cv2.CAP_PROP_FRAME_COUNT)
         }
-        properties = {
-            "CAP_PROP_FRAME_WIDTH": self.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
-            "CAP_PROP_FRAME_HEIGHT": self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT),
-            "CAP_PROP_BRIGHTNESS": self.stream.get(cv2.CAP_PROP_BRIGHTNESS),
-            "CAP_PROP_CONTRAST": self.stream.get(cv2.CAP_PROP_CONTRAST),
-            "CAP_PROP_SATURATION": self.stream.get(cv2.CAP_PROP_SATURATION),
-            "CAP_PROP_HUE": self.stream.get(cv2.CAP_PROP_HUE),
-            "CAP_PROP_GAIN": self.stream.get(cv2.CAP_PROP_GAIN),
-            "CAP_PROP_EXPOSURE": self.stream.get(cv2.CAP_PROP_EXPOSURE),
-            "CAP_PROP_AUTO_EXPOSURE": self.stream.get(cv2.CAP_PROP_AUTO_EXPOSURE),
-            "CAP_PROP_AUTO_WB": self.stream.get(cv2.CAP_PROP_AUTO_WB),
-            "CAP_PROP_WB_TEMPERATURE": self.stream.get(cv2.CAP_PROP_WB_TEMPERATURE),
-            "CAP_PROP_TEMPERATURE": self.stream.get(cv2.CAP_PROP_TEMPERATURE),
-            "CAP_PROP_FPS": self.stream.get(cv2.CAP_PROP_FPS),
-            "CAP_PROP_FOCUS": self.stream.get(cv2.CAP_PROP_FOCUS),
-            "CAP_PROP_AUTOFOCUS": self.stream.get(cv2.CAP_PROP_AUTOFOCUS),
-            "CAP_PROP_ZOOM": self.stream.get(cv2.CAP_PROP_ZOOM)
+        self.properties_get = {
+            "frame_width": self.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
+            "frame_height": self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT),
+            "brightness": self.stream.get(cv2.CAP_PROP_BRIGHTNESS),
+            "contrast": self.stream.get(cv2.CAP_PROP_CONTRAST),
+            "saturation": self.stream.get(cv2.CAP_PROP_SATURATION),
+            "hue": self.stream.get(cv2.CAP_PROP_HUE),
+            "gain": self.stream.get(cv2.CAP_PROP_GAIN),
+            "exposure": self.stream.get(cv2.CAP_PROP_EXPOSURE),
+            "auto_exposure": self.stream.get(cv2.CAP_PROP_AUTO_EXPOSURE),
+            "auto_wb": self.stream.get(cv2.CAP_PROP_AUTO_WB),
+            "wb_temperature": self.stream.get(cv2.CAP_PROP_WB_TEMPERATURE),
+            "temperature": self.stream.get(cv2.CAP_PROP_TEMPERATURE),
+            "fps": self.stream.get(cv2.CAP_PROP_FPS),
+            "focus": self.stream.get(cv2.CAP_PROP_FOCUS),
+            "autofocus": self.stream.get(cv2.CAP_PROP_AUTOFOCUS),
+            "zoom": self.stream.get(cv2.CAP_PROP_ZOOM)
         }
-        return properties
+        return self.properties_get
+
+    def get_properties_image(self):
+        """
+        read image and get properties (-> fuer Regelkreislauf)
+        """
+        image_properties = {}
+        raw = self.read()
+
+        if raw is None:
+            return image_properties
+
+        if len(raw.shape) > 2:
+            gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = raw
+
+        try:
+            cols, rows = gray.shape
+            image_properties["brightness"] = np.sum(gray) / (255 * cols * rows)
+        except cv2.error as err:
+            self._raise_error("Could not measure brightness: " + str(err))
+
+        try:
+            image_properties["contrast"] = gray.std()
+        except cv2.error as err:
+            self._raise_error("Could not measure contrast: " + str(err))
+
+        try:
+            img_hsv = cv2.cvtColor(raw, cv2.COLOR_BGR2HSV)
+            image_properties["saturation"] = img_hsv[:, :, 1].mean()
+        except cv2.error as err:
+            self._raise_error("Could not measure saturation: " + str(err))
+
+        return image_properties
 
     def set_black_white(self):
         """
@@ -1806,7 +1853,7 @@ class BirdhouseCamera(threading.Thread):
             return
 
         # set saturation, contrast, brightness
-        available_settings = self.camera.get_property_keys()
+        available_settings = self.camera.get_properties_available()
         for key in available_settings:
             if key in self.param["image"] and float(self.param["image"][key]) != -1:
                 self.camera.set_properties(key, float(self.param["image"][key]))
@@ -1857,6 +1904,26 @@ class BirdhouseCamera(threading.Thread):
             self.camera.wait_recording(0.1)
         if self.type == "usb" or self.type == "default":
             return
+
+    def camera_settings(self, path):
+        """
+        change camera settings
+        """
+        response = {}
+        parameters = path.split("/")
+        setting_key = parameters[2]
+        setting_value = parameters[3]
+        available_settings = self.camera.get_properties_available("set")
+
+        if setting_key in available_settings:
+            self.camera.set_properties(key=setting_key, value=setting_value)
+        else:
+            self._raise_error(False,
+                              "Error during change of camera settings: given key '"+setting_key+"' is not supported.")
+
+        self.logging.info("Camera settings: " + str(parameters))
+        self.logging.info("   -> available: " + str(available_settings))
+        return response
 
     def get_image(self):
         """
@@ -2211,8 +2278,12 @@ class BirdhouseCamera(threading.Thread):
             "video_error": self.video.error,
             "video_error_msg": ",\n".join(self.video.error_msg),
             "running": self.running,
-            "properties": self.camera.get_properties()
+            "properties": {},
+            "properties_image": {}
             }
+        if self.camera is not None:
+            status["properties"] = self.camera.get_properties()
+            status["properties_image"] = self.camera.get_properties_image()
         return status
 
     def show_areas(self, image):

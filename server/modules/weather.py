@@ -542,8 +542,10 @@ class BirdhouseWeather(threading.Thread):
                 if not self.error and not self.module.error:
                     self.weather_info["info_status"]["running"] = "OK"
                     if "forecast" in self.weather_info and "today" in self.weather_info["forecast"]:
-                        self.sunrise_today = self.weather_info["forecast"]["today"]["sunrise"]
-                        self.sunset_today = self.weather_info["forecast"]["today"]["sunset"]
+                        if "sunrise" in self.weather_info["forecast"]["today"]:
+                            self.sunrise_today = self.weather_info["forecast"]["today"]["sunrise"]
+                        if "sunset" in self.weather_info["forecast"]["today"]:
+                            self.sunset_today = self.weather_info["forecast"]["today"]["sunset"]
 
             # write weather data to file once every five minutes
             weather_stamp = self.config.local_time().strftime("%H%M")+"00"

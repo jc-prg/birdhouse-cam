@@ -40,6 +40,11 @@ function birdhouse_reconnectCamera(camera) {
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_reconnectCamera');
 	}
 
+function birdhouse_cameraSettings(camera, key, value) {
+	commands = ["camera_settings", key, value, camera];
+	appFW.requestAPI('POST', commands, '', '','','birdhouse_cameraSettings');
+}
+
 function birdhouse_checkTimeout() {
 	commands = ["check_timeout"];
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_checkTimeout');

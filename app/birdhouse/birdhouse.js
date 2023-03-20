@@ -41,7 +41,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 	    if (app_first_load) { app_first_load = false; }
 	    else                { app_2nd_load = false; }
 	    var param = window.location.href.split("?");
-	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "TODAY", "INFO", "WEATHER"];
+	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "TODAY", "INFO", "WEATHER", "CAMERA_SETTINGS"];
 	    if (options.includes(param[1])) {
 	        view = param[1];
 	        app_active_page = param[1];
@@ -120,6 +120,7 @@ function birdhousePrint(data) {
 	else if (app_active_page == "VIDEOS")           { birdhouse_LIST(lang("VIDEOS"), data, camera); }
 	else if (app_active_page == "VIDEO_DETAIL")	    { birdhouse_VIDEO_DETAIL(lang("VIDEOS"), data, camera); }
 	else if (app_active_page == "INFO") 	        { birdhouse_settings.create("INFO_ONLY"); }
+	else if (app_active_page == "CAMERA_SETTINGS")  { birdhouseDevices_cameraSettings(data); }
 	else { setTextById(app_frame_content,lang("ERROR") + ": "+app_active_page); }
 
 	app_last_active_page = app_active_page;

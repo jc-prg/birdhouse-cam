@@ -95,6 +95,21 @@ function birdhouseStatus_print(data) {
         setTextById("error_cam_"+camera, camera_status[camera]["error_msg"]);
         setTextById("error_img_"+camera, camera_status[camera]["image_error_msg"]);
         setTextById("error_rec_"+camera, camera_status[camera]["record_image_error"]);
+
+        // settings
+        if (camera_status[camera]["properties"]) {
+            for (let key in camera_status[camera]["properties"]) {
+                setTextById("prop_" + key + "_" + camera, camera_status[camera]["properties"][key]);
+                //console.error(key + ":" + camera_status[camera]["properties"][key].toString());
+            }
+            for (let key in camera_status[camera]["properties_image"]) {
+                setTextById("img_" + key + "_" + camera, Math.round(camera_status[camera]["properties_image"][key]*100)/100);
+                //console.error(key + ":" + camera_status[camera]["properties"][key].toString());
+            }
+        }
+
+
+        // error
         if (camera_status[camera]["error"]) {
             setTextById("last_image_recorded_"+camera, "Recording inactive due to camera error.");
         }
