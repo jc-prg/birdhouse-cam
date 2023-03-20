@@ -1361,12 +1361,13 @@ class BirdhouseCameraHandler(object):
         if key == "init":
             for prop_key in properties_get_array:
                 # evaluate minimum
-                self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), -100000.0)
-                value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
-                if value > 0:
-                    self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 0.0)
+                if not prop_key.startswith("frame_"):
+                    self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), -100000.0)
                     value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
-                self.properties_get[prop_key][1] = value
+                    if value > 0:
+                        self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 0.0)
+                        value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
+                    self.properties_get[prop_key][1] = value
 
                 # evaluate maximum
                 self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 100000.0)
