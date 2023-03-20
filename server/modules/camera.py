@@ -1342,8 +1342,8 @@ class BirdhouseCameraHandler(object):
         get properties from camera
         """
         properties_not_used = ["pos_msec", "pos_frames", "pos_avi_ratio", "convert_rgb", "fourcc", "format", "mode",
-                               "frame_count"]
-        properties_get_array = ["frame_width", "frame_height", "brightness", "saturation", "contrast", "hue",
+                               "frame_count", "frame_width", "frame_height"]
+        properties_get_array = ["brightness", "saturation", "contrast", "hue",
                                 "gain", "exposure", "auto_exposure", "auto_wb", "wb_temperature", "temperature",
                                 "fps", "focus", "autofocus", "zoom"]
 
