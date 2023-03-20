@@ -1228,7 +1228,7 @@ class BirdhouseCameraHandler(object):
         self.logging.info("Starting CAMERA support for '"+name+"/"+source+"' ...")
 
         self.connect()
-        self.get_properties()
+        self.get_properties(key="init")
         self.set_properties(key="init")
 
     def _raise_error(self, message):
@@ -1337,38 +1337,45 @@ class BirdhouseCameraHandler(object):
             return self.properties_set
         return self.property_keys
 
-    def get_properties(self):
+    def get_properties(self, key=""):
         """
         get properties from camera
         """
-        self.properties_not_used = {
-            "CAP_PROP_POS_MSEC": self.stream.get(cv2.CAP_PROP_POS_MSEC),
-            "CAP_PROP_POS_FRAMES": self.stream.get(cv2.CAP_PROP_POS_FRAMES),
-            "CAP_PROP_POS_AVI_RATIO": self.stream.get(cv2.CAP_PROP_POS_AVI_RATIO),
-            "CAP_PROP_CONVERT_RGB": self.stream.get(cv2.CAP_PROP_CONVERT_RGB),
-            "CAP_PROP_FOURCC": self.stream.get(cv2.CAP_PROP_FOURCC),
-            "CAP_PROP_FORMAT": self.stream.get(cv2.CAP_PROP_FORMAT),
-            "CAP_PROP_MODE": self.stream.get(cv2.CAP_PROP_MODE),
-            "CAP_PROP_FRAME_COUNT": self.stream.get(cv2.CAP_PROP_FRAME_COUNT)
-        }
-        self.properties_get = {
-            "frame_width": self.stream.get(cv2.CAP_PROP_FRAME_WIDTH),
-            "frame_height": self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT),
-            "brightness": self.stream.get(cv2.CAP_PROP_BRIGHTNESS),
-            "contrast": self.stream.get(cv2.CAP_PROP_CONTRAST),
-            "saturation": self.stream.get(cv2.CAP_PROP_SATURATION),
-            "hue": self.stream.get(cv2.CAP_PROP_HUE),
-            "gain": self.stream.get(cv2.CAP_PROP_GAIN),
-            "exposure": self.stream.get(cv2.CAP_PROP_EXPOSURE),
-            "auto_exposure": self.stream.get(cv2.CAP_PROP_AUTO_EXPOSURE),
-            "auto_wb": self.stream.get(cv2.CAP_PROP_AUTO_WB),
-            "wb_temperature": self.stream.get(cv2.CAP_PROP_WB_TEMPERATURE),
-            "temperature": self.stream.get(cv2.CAP_PROP_TEMPERATURE),
-            "fps": self.stream.get(cv2.CAP_PROP_FPS),
-            "focus": self.stream.get(cv2.CAP_PROP_FOCUS),
-            "autofocus": self.stream.get(cv2.CAP_PROP_AUTOFOCUS),
-            "zoom": self.stream.get(cv2.CAP_PROP_ZOOM)
-        }
+        properties_not_used = ["pos_msec", "pos_frames", "pos_avi_ratio", "convert_rgb", "fourcc", "format", "mode",
+                               "frame_count"]
+        properties_get_array = ["frame_width", "frame_height", "brightness", "saturation", "contrast", "hue",
+                                "gain", "exposure", "auto_exposure", "auto_wb", "wb_temperature", "temperature",
+                                "fps", "focus", "autofocus", "zoom"]
+
+        if key == "init":
+            self.properties_get = {}
+
+        for prop_key in properties_get_array:
+            command = "self.stream.get(cv2.CAP_PROP_" + prop_key.upper() + ")"
+            value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
+            if prop_key not in self.properties_get:
+                self.properties_get[prop_key] = [value, -1, -1]
+            else:
+                self.properties_get[prop_key][0] = value
+
+        if key == "init":
+            for prop_key in properties_get_array:
+                # evaluate minimum
+                self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), -100000.0)
+                value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
+                if value > 0:
+                    self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 0.0)
+                    value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
+                self.properties_get[prop_key][1] = value
+
+                # evaluate maximum
+                self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 100000.0)
+                value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
+                self.properties_get[prop_key][2] = value
+
+                # set again current value
+                self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), self.properties_get[prop_key][0])
+
         return self.properties_get
 
     def get_properties_image(self):

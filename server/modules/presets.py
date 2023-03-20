@@ -265,7 +265,6 @@ birdhouse_preset = {
     }
 }
 
-
 file_types = {
     '.css': 'text/css',
     '.html': 'text/html',
