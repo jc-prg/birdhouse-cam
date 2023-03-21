@@ -567,14 +567,14 @@ class BirdhouseWeather(threading.Thread):
             # if error wait longer for next action
             if "info_status" in self.weather_info and "running" in self.weather_info["info_status"] \
                     and self.weather_info["info_status"]["running"] == "error":
-                time.sleep(10)
+                time.sleep(1)
 
             self.update_wait = (last_update + self.update_time) - time.time()
             self.logging.debug("Wait to read weather data (" + str(round(self.update_time, 1)) + ":" +
                                str(round(self.update_wait, 1)) + "s) ...")
 
             self.health_check = time.time()
-            time.sleep(5)
+            time.sleep(1)
 
         self.logging.info("Weather module stopped.")
 

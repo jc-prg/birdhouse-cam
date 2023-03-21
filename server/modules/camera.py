@@ -1343,8 +1343,8 @@ class BirdhouseCameraHandler(object):
         """
         properties_not_used = ["pos_msec", "pos_frames", "pos_avi_ratio", "convert_rgb", "fourcc", "format", "mode",
                                "frame_count", "frame_width", "frame_height"]
-        properties_get_array = ["brightness", "saturation", "contrast", "hue",
-                                "gain", "exposure", "auto_exposure", "auto_wb", "wb_temperature", "temperature",
+        properties_get_array = ["brightness", "saturation", "contrast", "hue", "gain", "gamma",
+                                "exposure", "auto_exposure", "auto_wb", "wb_temperature", "temperature",
                                 "fps", "focus", "autofocus", "zoom"]
 
         if key == "init":
