@@ -39,11 +39,7 @@ function birdhouse_INDEX(data, camera) {
 	if (active_cam == {} && other_cams != []) { active_cam = other_cams[0]; other_cams.shift(); }
 	if (Object.keys(cameras).length == 0 || active_cam == {}) { html += lang("NO_ENTRIES"); }
 
-    console.log(index_view);
-	console.log(cameras);
-	console.log(active_cam);
-	console.log(active_camera);
-	console.log(other_cams);
+    console.log("---> birdhouse_INDEX: " + camera);
 
 	var replace_tags = {};
 	replace_tags["OFFLINE_URL"]     = app_error_connect_image;

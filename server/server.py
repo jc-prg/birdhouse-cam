@@ -453,7 +453,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.startswith('/update_views/'):
             views.archive_list_update()
             views.favorite_list_update()
-            response = {"update_view": "started"}
+            response = {"update_views": "started"}
         elif self.path.startswith('/force_backup/'):
             backup.start_backup()
             response = {"backup": "started"}
@@ -468,7 +468,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 stream_id_kill = which_cam
                 further_param = which_cam.split("&")
                 which_cam = further_param[0]
-                response = camera[which_cam].set_stream_kill(stream_id_kill)
+                camera[which_cam].set_stream_kill(stream_id_kill)
+                response = {"kill_stream": which_cam}
 
         elif self.path.startswith("/edit_presets/"):
             param_string = self.path.replace("/edit_presets/", "")
@@ -770,7 +771,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if command != "status" and command != "list" and command != "version":
             del api_response["WEATHER"]
             del api_response["STATUS"]["system"]
-            del api_response["STATUS"]["devices"]
             del api_response["STATUS"]["database"]
             del api_response["STATUS"]["check-version"]
 

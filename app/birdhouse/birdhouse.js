@@ -79,7 +79,7 @@ function birdhousePrint(data) {
         this_server     = this_server.split("//")[1];
         this_server     = this_server.split("/")[0];
         this_server     = this_server.split(":")[0];
-        server_link = this_server;
+        server_link     = this_server;
     }
     else {
         server_link = data_settings["server"]["ip4_address"];
@@ -88,30 +88,27 @@ function birdhousePrint(data) {
 	birdhouseCameras     = data_settings["devices"]["cameras"];
 	birdhouseMicrophones = data_settings["devices"]["microphones"];
 	birdhouseStream_load(server_link, birdhouseMicrophones);
-	//setTimeout(function(){  },2000);
 
     var initial_setup   = data_settings["server"]["initial_setup"];
 	var date            = data_active["active_date"];
 	var camera          = data_active["active_cam"];
 	if (camera == "") 	{ camera = app_active_cam; }
 	else			    { app_active_cam = camera; }
-	
-	console.log("Request->Print "+app_active_page+" / "+camera+" / "+date);	
 
-    // ----------------> sollte perspectives entfernt werden, führt jedoch zu Fehler!!!!
 	birdhouseSetMainStatus(data);
 	birdhousePrintTitle(data, app_active_page, camera);
     setTextById("headerRight", birdhouseHeaderFunctions() );
+	console.log("---> birdhousePrint: "+app_active_page+" / "+camera+" / "+date);
 
 	// check if admin allowed! -> create respective menu
 
 	window.scrollTo(0,0);
 
-	if (app_active_page != app_last_active_page)    { birdhouse_KillActiveStreams(); }
-	if (app_active_page == "INDEX")                 { birdhouse_KillActiveStreams(); }
+	if (app_active_page == "INDEX" && initial_setup) { birdhouse_settings.create(); return; }
+	if (app_active_page != app_last_active_page)     { birdhouse_KillActiveStreams(); }
+	if (app_active_page == "INDEX")                  { birdhouse_KillActiveStreams(); }
 
 	if (app_active_page == "INDEX")                 { birdhouse_INDEX(data, camera); }
-	else if (app_active_page == "DEVICES")          { birdhouseDevices(lang("DEVICES"), data, camera); }
 	else if (app_active_page == "WEATHER")          { birdhouse_showWeather(); }
 	else if (app_active_page == "FAVORITES")        { birdhouse_LIST(lang("FAVORITES"),  data, camera); }
 	else if (app_active_page == "ARCHIVE")          { birdhouse_LIST(lang("ARCHIVE"), data, camera); }
@@ -120,25 +117,25 @@ function birdhousePrint(data) {
 	else if (app_active_page == "VIDEOS")           { birdhouse_LIST(lang("VIDEOS"), data, camera); }
 	else if (app_active_page == "VIDEO_DETAIL")	    { birdhouse_VIDEO_DETAIL(lang("VIDEOS"), data, camera); }
 	else if (app_active_page == "INFO") 	        { birdhouse_settings.create("INFO_ONLY"); }
+	else if (app_active_page == "DEVICES")          { birdhouseDevices(lang("DEVICES"), data, camera); }
 	else if (app_active_page == "CAMERA_SETTINGS")  { birdhouseDevices_cameraSettings(data); }
 	else { setTextById(app_frame_content,lang("ERROR") + ": "+app_active_page); }
 
 	app_last_active_page = app_active_page;
-
-	if (app_active_page == "INDEX" && initial_setup) { birdhouse_settings.create(); }
 	}
 
 function birdhousePrintTitle(data, active_page="", camera="") {
 
-	var title = document.getElementById("navTitle");
-	var data_view = data["DATA"]["view"];
+	var title         = document.getElementById("navTitle");
+	var data_view     = data["DATA"]["view"];
 	var data_settings = data["DATA"]["settings"];
 
 	if (title.innerHTML == "..." && data_settings["title"] != undefined)
 	                                             { setNavTitle(data_settings["title"]); setTextById("title",data_settings["title"]); }
 
 	if (data_view["subtitle"] != undefined)      { birdhouse_frameHeader(data_view["subtitle"]); }
-	else                                         { birdhouse_frameHeader(data_view["title"]); }
+	else if (data_view["title"] != undefined)    { birdhouse_frameHeader(data_view["title"]); }
+
 	if (data_view["links"] != undefined)         { birdhouse_frameFooter(birdhouse_Links(data_view["links"])); }
 
 	setTextById("frame5", "<center><small><div id='server_start_time'>" + lang("PLEASE_WAIT") + "</div></small></center>");
@@ -176,7 +173,7 @@ function birdhouseSetMainStatus(data) {
     var status_admin = data["STATUS"]["admin_allowed"];
 
 	if (status_view["active_cam"] != undefined && status_view["active_cam"] != "")
-            { app_active_cam = status_view["active_cam"]; }
+	                                                        { app_active_cam = status_view["active_cam"]; }
 	app_active_mic = app_available_micros[0];
 
 	if (status_view["active_page"] != "" && status_view["active_page"] != undefined && status_view["active_page"] != "status")
@@ -232,7 +229,11 @@ function birdhouseReloadView() {
 	birdhouse_overlayHide();
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 
-	if (app_active_page == "INDEX" || app_active_page == "TODAY" || app_active_page == "DEVICES") {
+	if (app_active_page != "INDEX" && app_active_page != "CAMERA_SETTINGS") {
+		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
+		}
+	// if (app_active_page == "INDEX" || app_active_page == "TODAY" || app_active_page == "DEVICES") {
+	else {
 		for (let key in app_camera_source) {
 			var image = document.getElementById("stream_"+key);
 			if (image) {
@@ -245,9 +246,5 @@ function birdhouseReloadView() {
                 }
 			}
 		}
-	if (app_active_page != "INDEX") {
-	    /// !!!!!!!!!!!!!!!!!!!!
-		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
-		}
-	}	
+	}
 

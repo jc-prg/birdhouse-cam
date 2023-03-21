@@ -88,7 +88,7 @@ function birdhouse_forceRestart_exec() {
 function birdhouse_killStream(camera_id, stream_id) {
     console.log("birdhouse_killStream: "+stream_id);
 	commands = ["kill_stream", camera_id, stream_id];
-	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_killStream');
+	appFW.requestAPI('POST', commands, '', '','','birdhouse_killStream');
     }
 
 function birdhouse_deleteMarkedFiles(param1,param2) {
