@@ -1303,7 +1303,7 @@ class BirdhouseCameraHandler(object):
         17. CV_CAP_PROP_WHITE_BALANCE Currently unsupported [4000..7000]
         """
         self.properties_set = ["saturation", "brightness", "contrast", "framerate", "exposure",
-                               "hue", "auto_white_balance", "auto_exposure"]
+                               "hue", "auto_white_balance", "auto_exposure", "gamma", "gain"]
         if key == "init":
             return
 
