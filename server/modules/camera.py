@@ -1308,22 +1308,26 @@ class BirdhouseCameraHandler(object):
             return
 
         try:
-            if key == "saturation":
-                self.stream.set(cv2.CAP_PROP_SATURATION, float(value))
+            if key == "auto_exposure":
+                self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, float(value))
+            elif key == "auto_white_balance":
+                self.stream.set(cv2.CAP_PROP_AUTO_WB, float(value))
             elif key == "brightness":
                 self.stream.set(cv2.CAP_PROP_BRIGHTNESS, float(value))
             elif key == "contrast":
                 self.stream.set(cv2.CAP_PROP_CONTRAST, float(value))
-            elif key == "framerate":
-                self.stream.set(cv2.CAP_PROP_FPS, float(value))
             elif key == "exposure":
                 self.stream.set(cv2.CAP_PROP_EXPOSURE, float(value))
+            elif key == "fps":
+                self.stream.set(cv2.CAP_PROP_FPS, float(value))
+            elif key == "gain":
+                self.stream.set(cv2.CAP_PROP_GAIN, float(value))
+            elif key == "gamma":
+                self.stream.set(cv2.CAP_PROP_GAMMA, float(value))
             elif key == "hue":
-                self.stream.set(cv2.CAP_PROP_HUE, value)
-            elif key == "auto_white_balance":
-                self.stream.set(cv2.CAP_PROP_AUTO_WB, value)
-            elif key == "auto_exposure":
-                self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, value)
+                self.stream.set(cv2.CAP_PROP_HUE, float(value))
+            elif key == "saturation":
+                self.stream.set(cv2.CAP_PROP_SATURATION, float(value))
         except cv2.error as err:
             self._raise_error("Could not change camera setting '" + key + "': " + str(err))
 
