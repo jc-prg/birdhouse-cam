@@ -52,6 +52,7 @@ function birdhouseStatus_print(data) {
     var settings   = data["DATA"]["settings"];
     var weather    = data["WEATHER"];
     var status_sys = data["STATUS"]["system"];
+    var status_srv = data["STATUS"]["server"];
     var status_db  = data["STATUS"]["database"];
     var status_dev = data["STATUS"]["devices"];
     var start_time = data["STATUS"]["start_time"];
@@ -78,6 +79,7 @@ function birdhouseStatus_print(data) {
     setTextById("system_info_db_handler",       "Error=" + status_db["handler_error"] + " " + status_db["handler_error_msg"].toString());
     setTextById("system_info_db_error",         "Error=" + status_db["db_error"] + " " + status_db["db_error_msg"].toString());
     setTextById("server_start_time",            lang("STARTTIME") + ": " + start_time);
+    setTextById("system_queue_wait",            (Math.round(status_srv["queue_waiting_time"]*10)/10) + "s");
 
     var cpu_details = "";
     for (var i=0;i<status_sys["cpu_usage_detail"].length;i++) {

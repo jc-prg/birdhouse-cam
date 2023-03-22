@@ -597,6 +597,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "view_archive_loading": views.archive_loading,
                     "view_favorite_loading": views.favorite_loading,
                     "backup_process_running": backup.backup_running,
+                    "queue_waiting_time": config.queue.queue_wait,
                     "last_answer": ""
                 },
                 "devices": {
