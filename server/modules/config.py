@@ -1157,6 +1157,7 @@ class BirdhouseConfigQueue(threading.Thread):
         response = {}
         category = param[2]
         config_data = {}
+        self.logging.info("Start to identify RECYCLE range ...")
 
         if category == "current":
             entry_from = param[3]
@@ -1198,21 +1199,24 @@ class BirdhouseConfigQueue(threading.Thread):
                 else:
                     dont_delete = False
 
-                if relevant and config_data[entry_id]["camera"] == camera and \
-                        ("type" not in config_data[entry_id] or config_data[entry_id]["type"] != "data") and \
-                        ("to_be_deleted" not in config_data[entry_id] or
-                         int(config_data[entry_id]["to_be_deleted"]) != 1) and not dont_delete:
+                if relevant and not dont_delete:
+                    if config_data[entry_id]["camera"] == camera and \
+                            ("type" not in config_data[entry_id] or config_data[entry_id]["type"] != "data") and \
+                            ("to_be_deleted" not in config_data[entry_id] or
+                             int(config_data[entry_id]["to_be_deleted"]) != 1):
 
-                    self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
-                                             change_status="to_be_deleted", status=1)
-                    self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
-                                             change_status="favorit", status=0)
+                        self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
+                                                 change_status="to_be_deleted", status=1)
+                        self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
+                                                 change_status="favorit", status=0)
                 if entry_id == entry_to:
                     relevant = False
         else:
             response["error"] = "no entry found with stamp " + entry_from + "/" + entry_to
 
         self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="RANGE_END", status=0)
+
+        self.logging.info("Send RECYCLE range to queue ...")
         return response
 
     def entry_add(self, config, date, key, entry):
