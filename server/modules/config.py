@@ -823,6 +823,7 @@ class BirdhouseConfigQueue(threading.Thread):
             if start_time + self.queue_wait < time.time():
                 self.logging.debug("... Check Queue (" + str(self.queue_wait) + "s)")
                 self.logging.debug("    ... " + str(self.edit_queue))
+                self.logging.debug("    ... " + str(self.status_queue))
 
                 start_time = time.time()
                 count_entries = 0
@@ -838,7 +839,10 @@ class BirdhouseConfigQueue(threading.Thread):
                             entries_available = True
                     elif not entries_available:
                         for date in self.edit_queue["backup"]:
-                            if len(self.edit_queue["backup"][date]) > 0 or len(self.status_queue["backup"][date]) > 0:
+                            if len(self.edit_queue["backup"][date]) > 0:
+                                entries_available = True
+                        for date in self.status_queue["backup"]:
+                            if len(self.status_queue["backup"][date]) > 0:
                                 entries_available = True
 
                 if entries_available:
