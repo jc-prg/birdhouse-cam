@@ -53,6 +53,7 @@ function birdhouse_INDEX(data, camera) {
     app_camera_source["lowres_" + active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream_lowres"];
     app_camera_source["pip_" + active_cam["name"]]    = stream_server + cameras[active_cam["name"]]["video"]["stream_pip"];
     app_camera_source["detect_" + active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream_detect"];
+    app_camera_source["detect_" + active_cam["name"] + "_img"] = stream_server + cameras[active_cam["name"]]["video"]["stream_detect"];
     app_camera_source["overlay_" + active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream_detect"];
 
     if (other_cams.length > 0) {
@@ -68,6 +69,7 @@ function birdhouse_INDEX(data, camera) {
         app_camera_source["lowres_" + other_cams[0]["name"]] = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_lowres"];
         app_camera_source["pip_" + other_cams[0]["name"]]    = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_pip"];
         app_camera_source["detect_" + other_cams[0]["name"]] = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_detect"];
+        app_camera_source["detect_" + other_cams[0]["name"] + "_img"] = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_detect"];
         app_camera_source["overlay_" + other_cams[0]["name"]] = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_detect"];
     }
 
@@ -148,12 +150,17 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 
 			loadJS(videoplayer_script, "", document.body);
 
-            var video_stream_server = RESTurl;
+            var video_stream_server = "";
             if (server_info["ip4_stream_video"] != "") {
                 video_stream_server = server_info["ip4_stream_video"];
                 }
             else if (server_info["ip4_address"] != "") {
                 video_stream_server = server_info["ip4_address"];
+                }
+            else {
+                video_stream_server = window.location.href.split("//")[1];
+                video_stream_server = video_stream_server.split("/")[0];
+                video_stream_server = video_stream_server.split(":")[0];
                 }
 			video_stream_server = "http://" + video_stream_server + ":" + server_info["port_video"] + "/";
 
