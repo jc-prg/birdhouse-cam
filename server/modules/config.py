@@ -821,8 +821,10 @@ class BirdhouseConfigQueue(threading.Thread):
         check_count_entries = 0
         while self._running:
             if start_time + self.queue_wait < time.time():
-                self.logging.debug("... Check Queue")
+                self.logging.debug("... Check Queue (" + str(self.queue_wait) + "s)")
+                self.logging.debug("    ... " + str(self.edit_queue))
 
+                start_time = time.time()
                 count_entries = 0
                 count_files = 0
                 active_files = []
@@ -831,15 +833,15 @@ class BirdhouseConfigQueue(threading.Thread):
                 entries_available = False
                 for config_file in config_files:
                     if config_file != "backup" and not entries_available:
-                        if config_file in self.edit_queue and len(self.edit_queue[config_file]) > 0:
+                        if (config_file in self.edit_queue and len(self.edit_queue[config_file]) > 0) or \
+                                (config_file in self.status_queue and len(self.status_queue[config_file]) > 0):
                             entries_available = True
                     elif not entries_available:
                         for date in self.edit_queue["backup"]:
-                            if len(self.edit_queue["backup"][date]) > 0:
+                            if len(self.edit_queue["backup"][date]) > 0 or len(self.status_queue["backup"][date]) > 0:
                                 entries_available = True
 
                 if entries_available:
-                    start_time = time.time()
                     self.logging.debug("... Entries available in the queue (" +
                                        str(round(time.time()-start_time, 2)) + "s)")
                     for config_file in config_files:
@@ -1204,6 +1206,8 @@ class BirdhouseConfigQueue(threading.Thread):
                             ("type" not in config_data[entry_id] or config_data[entry_id]["type"] != "data") and \
                             ("to_be_deleted" not in config_data[entry_id] or
                              int(config_data[entry_id]["to_be_deleted"]) != 1):
+
+                        self.logging.debug("   ... add to queue: " + entry_id)
 
                         self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
                                                  change_status="to_be_deleted", status=1)
