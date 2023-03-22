@@ -131,33 +131,17 @@ function birdhouseDevices_cameras(data) {
 		html_entry += tab.row("- Resolution:",              birdhouse_edit_field(id="set_resolution_"+camera, field="devices:cameras:"+camera+":image:resolution", type="input", options="", data_type="string"));
 		html_entry += tab.row("&nbsp;",                     "current=(" + resolution_act + "), max=(" + resolution_max + ")");
 		html_entry += tab.row("- Black &amp; White:",       birdhouse_edit_field(id="set_black_white_"+camera, field="devices:cameras:"+camera+":image:black_white", type="select", options="false,true", data_type="boolean"));
-
-		html_entry += tab.row("- Brightness:",              birdhouse_edit_field(id="set1_brightness_"+camera, field="devices:cameras:"+camera+":image:brightness", type="input", options="", data_type="float") +
-		                                                    " <span id='prop_brightness_"+camera+"'></span> / <span id='img_brightness_"+camera+"'></span>");
-		html_entry += tab.row("- Saturation:",              birdhouse_edit_field(id="set1_saturation_"+camera, field="devices:cameras:"+camera+":image:saturation", type="input", options="", data_type="float") +
-		                                                    " <span id='prop_saturation_"+camera+"'></span> / <span id='img_saturation_"+camera+"'></span>");
-		html_entry += tab.row("- Contrast:",                birdhouse_edit_field(id="set1_contrast_"+camera, field="devices:cameras:"+camera+":image:contrast", type="input", options="", data_type="float") +
-		                                                    " <span id='prop_contrast_"+camera+"'></span> / <span id='img_contrast_"+camera+"'></span>");
-		html_entry += tab.row("- Exposure:",                birdhouse_edit_field(id="set1_exposure_"+camera, field="devices:cameras:"+camera+":image:exposure", type="input", options="", data_type="float") +
-		                                                    " <span id='prop_exposure_"+camera+"'></span>");
-
-		html_entry += tab.row("- Reconnect to calibrate:",  birdhouse_edit_field(id="set_reconnect_"+camera, field="devices:cameras:"+camera+":image:reconnect_to_calibrate", type="select", options="false,true", data_type="boolean"));
-        html_entry += tab.end();
-
-		id_list += "set_reconnect_"+camera+":set_resolution_"+camera+":set_black_white_"+camera+":";
-		id_list += "set1_brightness_"+camera+":set1_saturation_"+camera+":set1_contrast_"+camera+":set1_exposure_"+camera+":";
-        html_temp += birdhouse_OtherGroup( camera+"_camera", "Image / Camera Settings", html_entry, false );
-
-        html_entry = tab.start();
 		html_entry += tab.row("- Rotation:",                birdhouse_edit_field(id="set_rotation_"+camera, field="devices:cameras:"+camera+":image:rotation", type="select", options="0,90,180,270", data_type="integer"));
 		html_entry += tab.row("- Crop (relative):",         birdhouse_edit_field(id="set_crop_"+camera, field="devices:cameras:"+camera+":image:crop", type="input", options="", data_type="json"));
 		html_entry += tab.row("- Crop (absolute):",         "<div id='get_crop_area_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
 		html_entry += tab.row("- Preview Scale:",           birdhouse_edit_field(id="set_scale_"+camera, field="devices:cameras:"+camera+":image:preview_scale", type="input", options="", data_type="integer") + " %");
 		html_entry += tab.row("- Show Framerate:",          birdhouse_edit_field(id="set_show_framerate_"+camera, field="devices:cameras:"+camera+":image:show_framerate", type="select", options="true,false", data_type="boolean"));
+		html_entry += tab.row("- Image Manipulation:",      "<a href='index.html?CAMERA_SETTINGS'>"+lang("CAMERA")+"-"+lang("SETTINGS")+"</a>");
         html_entry += tab.end();
 
+		id_list += "set_resolution_"+camera+":set_black_white_"+camera+":";
 		id_list += "set_rotation_"+camera+":set_show_framerate_"+camera+":set_crop_"+camera+":set_scale_"+camera+":";
-        html_temp += birdhouse_OtherGroup( camera+"_image", "Image / Video Manipulation", html_entry, false );
+        html_temp += birdhouse_OtherGroup( camera+"_image", "Image / Video Settings", html_entry, false );
 
         html_entry = tab.start();
 		html_entry += tab.row("- Record:", birdhouse_edit_field(id="set_record_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
@@ -229,9 +213,17 @@ function birdhouseDevices_cameraSettings (data) {
         info = {};
 	    Object.assign(info, camera_settings[camera]);
 	    info["type"]  = "detection";
-	    info["id"]    = camera;
+	    info["id"]    = camera + "_img";
 	    camera_name   = camera.toUpperCase() + ": " + camera_settings[camera]["name"];
 	    camera_stream = birdhouse_Image(camera_name, info);
+
+	    if (camera_properties[camera]["error"] || camera_settings[camera]["active"] == false) {
+	        html += "&nbsp;<br/><center>";
+	        html += "Camera " + camera.toUpperCase() + " is not available at the moment.<br/>";
+	        html += "<a href='index.html?DEVICES'>See device settings for details.</a>";
+	        html += "<br/>&nbsp;</center><hr/>";
+	        continue;
+	    }
 
 	    html += "<div class='camera_info'><div class='camera_info_image'>";
 	    if (camera_settings[camera]["active"])
@@ -241,7 +233,8 @@ function birdhouseDevices_cameraSettings (data) {
 		html += "<div class='camera_info_text'>";
 
         var count = 0;
-        html_entry = tab.start();
+        html_entry = "&nbsp;<br/>";
+        html_entry += tab.start();
         for (var i=0;i<camera_settings_write.length;i++) {
             var value = camera_settings_write[i].toLowerCase();
             var key   = camera_settings_write[i].replaceAll("_", " ");
@@ -287,13 +280,14 @@ function birdhouseDevices_cameraSettings (data) {
         html += "&nbsp;<br/>";
         html += "<hr/>";
 	}
+    html += "&nbsp;<br/>";
     setTextById(app_frame_content, html);
     setTextById(app_frame_header, "<center><h2>" + lang("CAMERA") + "-" + lang("SETTINGS") + "</h2></center>");
 }
 
 function birdhouseDevices_cameraSettingsButton (camera, key, field_id, description) {
     var onclick = "var cam_value=document.getElementById('"+field_id+"').value; birdhouse_cameraSettings(camera='"+camera+"', key='"+key+"', value=cam_value);"
-    var button = "<button onclick=\""+onclick+"\"  class=\"button-video-edit\">"+description+"</button>";
+    var button = "<button onclick=\""+onclick+"\"  class=\"bh-slider-button\">"+description+"</button>";
     return button;
 }
 
