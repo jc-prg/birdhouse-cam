@@ -1692,30 +1692,30 @@ class BirdhouseCamera(threading.Thread):
                         else:
                             self.record_image_error = True
                             sensor_data = {}
-                            image_info = {
-                                "camera": self.id,
-                                "compare": (stamp, self.previous_stamp),
-                                "date": current_time.strftime("%d.%m.%Y"),
-                                "datestamp": current_time.strftime("%Y%m%d"),
-                                "error": self.error_msg[len(self.error_msg) - 1],
-                                "hires": "",
-                                "lowres": "",
-                                "similarity": 0,
-                                "sensor": {},
-                                "size": self.image_size,
-                                "time": current_time.strftime("%H:%M:%S"),
-                                "type": "data",
-                                "weather": {}
-                            }
+                        #    image_info = {
+                        #        "camera": self.id,
+                        #        "compare": (stamp, self.previous_stamp),
+                        #        "date": current_time.strftime("%d.%m.%Y"),
+                        #        "datestamp": current_time.strftime("%Y%m%d"),
+                        #        "error": self.error_msg[len(self.error_msg) - 1],
+                        #        "hires": "",
+                        #        "lowres": "",
+                        #        "similarity": 0,
+                        #        "sensor": {},
+                        #        "size": self.image_size,
+                        #        "time": current_time.strftime("%H:%M:%S"),
+                        #        "type": "data",
+                        #        "weather": {}
+                        #    }
 
-                        if self.weather_active:
-                            image_info["weather"] = self.config.weather.get_weather_info("current_small")
+                        #if self.weather_active:
+                        #    image_info["weather"] = self.config.weather.get_weather_info("current_small")
 
                         for key in self.sensor:
                             if self.sensor[key].running:
                                 sensor_data[key] = self.sensor[key].get_values()
                                 sensor_data[key]["date"] = current_time.strftime("%d.%m.%Y")
-                                image_info["sensor"][key] = sensor_data[key]
+                                #image_info["sensor"][key] = sensor_data[key]
 
                         sensor_stamp = current_time.strftime("%H%M") + "00"
                         self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
