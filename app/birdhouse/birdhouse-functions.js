@@ -41,9 +41,20 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
             else { data_str = data; }
             if (data_str == values[i])  { html += "<option selected='selected'>"+values[i]+"</option>"; }
             else                        { html += "<option>"+values[i]+"</option>"; }
-        }
+            }
         html += "</select>";
-    }
+        }
+    else if (type == "range") {
+        range = options.split(":");
+        style = "width:120px";
+        if (range[0] == 0 && range[1] == 1) { style = "width:40px;"; }
+        onset    = "document.getElementById(\""+id+"\").value = this.value;";
+        onvalue  = "document.getElementById(\""+id+"_range\").value = this.value;";
+        html += "<input id='"+id+"_range' type='range' name='' min='"+range[0]+"' max='"+range[1]+"' style='"+style+"' onchange='"+onset+"'>";
+        html += "&nbsp;&nbsp;";
+        html += "<input id='"+id+"' style='width:30px;' onchange='"+onvalue+"'>";
+        html += "&nbsp;";
+        }
     html += "<input id='"+id+"_data' style='display:none' value='"+field+"'>\n";
     html += "<input id='"+id+"_data_type' style='display:none' value='"+data_type+"'>\n";
     return html;
@@ -127,6 +138,7 @@ function birdhouse_edit_send(id_list) {
     if (error) { alert(error_msg); }
     else { birdhouse_editData(info); }
 }
+
 
 function birdhouse_initTooltip() {
 	tooltip_mode     	= "other";

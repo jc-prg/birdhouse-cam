@@ -240,22 +240,32 @@ function birdhouseDevices_cameraSettings (data) {
 		html += "</div>";
 		html += "<div class='camera_info_text'>";
 
+        var count = 0;
         html_entry = tab.start();
         for (var i=0;i<camera_settings_write.length;i++) {
             var value = camera_settings_write[i].toLowerCase();
             var key   = camera_settings_write[i].replaceAll("_", " ");
 
-            var prop  = "property=<span id='prop_"+value+"_"+camera+"'></span>";
-            if (camera_settings_measure.indexOf(camera_settings_write[i]) > -1) { prop += " / image=<span id='img_"+value+"_"+camera+"'></span>"; }
-            html_entry += tab.row(key + ":", prop);
 
             if (camera_properties[camera]["properties"][value][1] != camera_properties[camera]["properties"][value][2]) {
-                html_entry += tab.row("",        birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image:"+value, type="input", options="", data_type="float") +
-                                                 " " + birdhouseDevices_cameraSettingsButton (camera, value, "set_"+value+"_"+camera, "change"));
+                var range = camera_properties[camera]["properties"][value][1] + ":" + camera_properties[camera]["properties"][value][2];
+                var range_text = "[" + camera_properties[camera]["properties"][value][1] + ".." + camera_properties[camera]["properties"][value][2] + "]";
+                var prop  = "";
+                if (camera_settings_measure.indexOf(camera_settings_write[i]) > -1) { prop += "<i>(image=<span id='img_"+value+"_"+camera+"'></span>)</i>"; }
+
+                html_entry += tab.row("<b>" + key + ":</b>",   birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image:"+value, type="range", options=range, data_type="float") +
+                                                    " " + birdhouseDevices_cameraSettingsButton (camera, value, "set_"+value+"_"+camera, "change"));
+                html_entry += tab.row(range_text,   prop);
+
                 id_list += "set_"+value+"_"+camera+":";
+                count += 1;
+                }
+            else {
+                camera_settings_read.push(camera_settings_write[i]);
                 }
             }
         html_entry += tab.end();
+        if (count == 0) {html_entry += "<center>No entries to edit.</center>"; }
         html_entry += "&nbsp;<br/>";
         html += birdhouse_OtherGroup( camera+"_camera_1", camera.toUpperCase() + " - Camera Settings", html_entry, true );
 
@@ -286,7 +296,6 @@ function birdhouseDevices_cameraSettingsButton (camera, key, field_id, descripti
     var button = "<button onclick=\""+onclick+"\"  class=\"button-video-edit\">"+description+"</button>";
     return button;
 }
-
 
 function birdhouseDevices_sensors(data) {
 	var sensors = data["DATA"]["settings"]["devices"]["sensors"];

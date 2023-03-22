@@ -335,7 +335,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
 	// Set title
 	if (active_page == "TODAY" && active_date != "")    {
-	    var archive_title =  "<span style='cursor:pointer' onclick='app_active_page=\"ARCHIVE\";birdhouseReloadView();'>";
+	    var archive_title = "<span style='cursor:pointer' onclick='app_active_page=\"ARCHIVE\";birdhouseReloadView();'>";
 	    archive_title    += "<u>" + lang("ARCHIVE") + "</u>";
 	    archive_title    += "</span>";
 	    page_title        = archive_title + " " + active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4);

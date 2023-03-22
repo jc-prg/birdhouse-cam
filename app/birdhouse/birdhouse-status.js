@@ -100,11 +100,14 @@ function birdhouseStatus_print(data) {
         if (camera_status[camera]["properties"]) {
             for (let key in camera_status[camera]["properties"]) {
                 var prop_text = camera_status[camera]["properties"][key][0];
-                if (camera_status[camera]["properties"][key][1] != camera_status[camera]["properties"][key][2]) {
-                    prop_text += " [" + camera_status[camera]["properties"][key][1] + ".." + camera_status[camera]["properties"][key][2] + "]";
-                }
+                //if (camera_status[camera]["properties"][key][1] != camera_status[camera]["properties"][key][2]) {
+                //    prop_text += " [" + camera_status[camera]["properties"][key][1] + ".." + camera_status[camera]["properties"][key][2] + "]";
+                //}
                 setTextById("prop_" + key + "_" + camera, prop_text);
-                setValueById("set_" + key + "_" + camera, camera_status[camera]["properties"][key][0]);
+                if (document.activeElement != document.getElementById("set_" + key + "_" + camera) && document.activeElement != document.getElementById("set_" + key + "_" + camera + "_range")) {
+                    setValueById("set_" + key + "_" + camera, camera_status[camera]["properties"][key][0]);
+                    setValueById("set_" + key + "_" + camera + "_range", camera_status[camera]["properties"][key][0]);
+                    }
                 //console.error(key + ":" + camera_status[camera]["properties"][key].toString());
             }
             for (let key in camera_status[camera]["properties_image"]) {
