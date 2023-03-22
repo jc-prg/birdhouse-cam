@@ -106,7 +106,7 @@ function birdhousePrint(data) {
 
 	if (app_active_page == "INDEX" && initial_setup) { birdhouse_settings.create(); return; }
 	if (app_active_page != app_last_active_page)     { birdhouse_KillActiveStreams(); }
-	else if (app_active_page == "INDEX" || active_page == "DEVICES" || active_page == "CAMERA_SETTINGS" || active_page == "TODAY") {
+	else if (app_active_page == "INDEX" || app_active_page == "DEVICES" || app_active_page == "CAMERA_SETTINGS" || app_active_page == "TODAY") {
 	    birdhouse_KillActiveStreams();
 	    }
 

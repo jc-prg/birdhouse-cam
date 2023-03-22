@@ -2146,6 +2146,19 @@ class BirdhouseCamera(threading.Thread):
 
         return False
 
+    def image_to_select_full_hour(self, timestamp):
+        """
+        check image properties to decide if image is a selected one (for backup and view with selected images)
+        """
+        if ("camera" in file_info and file_info["camera"] == self.id) or (
+                "camera" not in file_info and self.id == "cam1"):
+
+            if timestamp[2:4] == "00" and timestamp[0:4] != self.image_to_select_last[0:4]:
+                self.image_to_select_last = timestamp
+                return True
+
+        return False
+
     def get_stream_raw(self, normalize=False, stream_id="", lowres=False):
         """
         get image, if error return error message on image

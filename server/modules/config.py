@@ -1182,6 +1182,7 @@ class BirdhouseConfigQueue(threading.Thread):
         elif category == "videos":
             config_data = self.db_handler.read_cache(config="videos")
 
+        last_stamp = ""
         response["command"] = ["mark/unmark for deletion", entry_from, entry_to]
         if entry_from in config_data and entry_to in config_data:
             relevant = False
@@ -1190,8 +1191,18 @@ class BirdhouseConfigQueue(threading.Thread):
             for entry_id in stamps:
                 if entry_id == entry_from:
                     relevant = True
+
+                if entry_id[2:4] == "00" and entry_id[0:4] != last_stamp[0:4]:
+                    last_stamp = entry_id
+                    dont_delete = True
+                else:
+                    dont_delete = False
+
                 if relevant and config_data[entry_id]["camera"] == camera and \
-                        ("type" not in config_data[entry_id] or config_data[entry_id]["type"] != "data"):
+                        ("type" not in config_data[entry_id] or config_data[entry_id]["type"] != "data") and \
+                        ("to_be_deleted" not in config_data[entry_id] or
+                         int(config_data[entry_id]["to_be_deleted"]) != 1) and not dont_delete:
+
                     self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
                                              change_status="to_be_deleted", status=1)
                     self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
