@@ -384,8 +384,8 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		var img_star    = entry["favorit"];
 		var img_recycle = entry["to_be_deleted"];
 		var img_dir     = "birdhouse/img/";
-		if (img_star == undefined)       { img_star = 0; }
-		if (img_recycle == undefined)    { img_recycle = 0; }
+		if (img_star == undefined || img_star == -1)          { img_star = 0; }
+		if (img_recycle == undefined || img_recycle == -1)    { img_recycle = 0; }
 		if (parseInt(img_star) == 0)     { img_star_r = 1; }    else { img_star_r = 0; }
 		if (parseInt(img_recycle) == 0)  { img_recycle_r = 1; } else { img_recycle_r = 0; }
 		var onclick_star    = "birdhouse_setFavorit(index=\""+img_id+"\",status=document.getElementById(\"s_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\",img_id=\""+img_id2+"\");";

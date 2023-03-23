@@ -2145,6 +2145,15 @@ class BirdhouseCamera(threading.Thread):
             else:
                 select = True  # to be checked !!!
 
+        if "camera" not in file_info:
+            file_info["camera"] = -1
+        if "to_be_deleted" not in file_info:
+            file_info["to_be_deleted"] = -1
+        if "favorit" not in file_info:
+            file_info["favorit"] = -1
+        if "similarity" not in file_info:
+            file_info["similarity"] = -1
+
         self.logging.debug("Image to select: delete=" + str(file_info["to_be_deleted"]) +
                            "; cam=" + file_info["camera"] + "|" + self.id + "; favorite=" + str(file_info["favorit"]) +
                            "; stamp=" + timestamp + "|" + self.image_to_select_last +
