@@ -2119,45 +2119,39 @@ class BirdhouseCamera(threading.Thread):
         """
         check image properties to decide if image is a selected one (for backup and view with selected images)
         """
+        select = False
         if "similarity" not in file_info:
-            return False
+            select = False
 
         elif "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
-            return False
+            select = False
 
         elif ("camera" in file_info and file_info["camera"] == self.id) or (
                 "camera" not in file_info and self.id == "cam1"):
 
             if "favorit" in file_info and int(file_info["favorit"]) == 1:
-                return True
+                select = True
 
             elif timestamp[2:4] == "00" and timestamp[0:4] != self.image_to_select_last[0:4]:
                 self.image_to_select_last = timestamp
-                return True
+                select = True
 
             elif check_similarity:
                 threshold = float(self.param["similarity"]["threshold"])
                 similarity = float(file_info["similarity"])
                 if similarity != 0 and similarity < threshold:
-                    return True
+                    select = True
 
             else:
-                return True  # to be checked !!!
+                select = True  # to be checked !!!
 
-        return False
+        self.logging.debug("Image to select: delete=" + str(file_info["to_be_deleted"]) +
+                           "; cam=" + file_info["camera"] + "|" + self.id + "; favorite=" + str(file_info["favorit"]) +
+                           "; stamp=" + timestamp + "|" + self.image_to_select_last +
+                           "; similarity=" + str(file_info["similarity"]) + "<" + str(self.param["similarity"]["threshold"]) +
+                           " -> " + str(select))
 
-    def image_to_select_full_hour(self, timestamp):
-        """
-        check image properties to decide if image is a selected one (for backup and view with selected images)
-        """
-        if ("camera" in file_info and file_info["camera"] == self.id) or (
-                "camera" not in file_info and self.id == "cam1"):
-
-            if timestamp[2:4] == "00" and timestamp[0:4] != self.image_to_select_last[0:4]:
-                self.image_to_select_last = timestamp
-                return True
-
-        return False
+        return select
 
     def get_stream_raw(self, normalize=False, stream_id="", lowres=False):
         """
