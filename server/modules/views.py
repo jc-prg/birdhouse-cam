@@ -835,9 +835,11 @@ class BirdhouseViews(threading.Thread):
                     "hires": [0, 0]
                 }
             }
-
             dir_total_size = 0
             files_total = 0
+
+            if self.config.shut_down:
+                break
 
             image_title = str(self.config.param["backup"]["preview"])
             # + str(self.camera[cam].param["image_save"]["seconds"][0])
@@ -848,6 +850,9 @@ class BirdhouseViews(threading.Thread):
             for directory in dir_list:
                 group_name = directory[0:4] + "-" + directory[4:6]
                 self.logging.debug("  -> Directory: " + directory + " | " + group_name)
+
+                if self.config.shut_down:
+                    break
 
                 if "groups" not in content:
                     content["groups"] = {}
@@ -1256,6 +1261,9 @@ class BirdhouseViews(threading.Thread):
             date = ""
             category = "/backup/" + directory + "/"
             favorites[directory] = {}
+
+            if self.config.shut_down:
+                break
 
             if self.config.db_handler.exists(config="backup", date=directory):
                 files_data = self.config.db_handler.read_cache(config="backup", date=directory)
