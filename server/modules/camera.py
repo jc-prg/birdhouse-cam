@@ -1534,7 +1534,7 @@ class BirdhouseCamera(threading.Thread):
         self.image_fps = {}
         self.image_streams = {}
         self.image_streams_to_kill = {}
-        self.image_to_select_last = "000000"
+        self.image_to_select_last = "xxxxxx"
         self.previous_image = None
         self.previous_stamp = "000000"
         self.record_image_last = time.time()
@@ -2135,11 +2135,11 @@ class BirdhouseCamera(threading.Thread):
         elif ("camera" in file_info and file_info["camera"] == self.id) or (
                 "camera" not in file_info and self.id == "cam1"):
 
-            if "favorit" in file_info and int(file_info["favorit"]) == 1:
+            if timestamp[2:4] == "00" and timestamp[0:4] != self.image_to_select_last[0:4]:
+                self.image_to_select_last = timestamp
                 select = True
 
-            elif timestamp[2:4] == "00" and timestamp[0:4] != self.image_to_select_last[0:4]:
-                self.image_to_select_last = timestamp
+            elif "favorit" in file_info and int(file_info["favorit"]) == 1:
                 select = True
 
             elif check_similarity:
