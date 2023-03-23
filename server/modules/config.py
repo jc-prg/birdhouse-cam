@@ -1317,7 +1317,7 @@ class BirdhouseConfig(threading.Thread):
             self.last_day_running = self.param["info"]["last_day_running"]
         elif "info" not in self.param:
             self.param["info"] = {}
-        if "last_day_running" not in self.param:
+        if "last_day_running" not in self.param["info"]:
             self.last_day_running = self.local_time().strftime("%Y-%m-%d")
             self.param["info"]["last_day_running"] = self.last_day_running
         self.param["info"]["last_start_date"] = self.local_time().strftime("%Y-%m-%d")
