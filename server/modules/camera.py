@@ -155,6 +155,12 @@ class BirdhouseVideoProcessing(threading.Thread):
         """
         ending functions (nothing at the moment)
         """
+        if self.recording:
+            self.record_stop()
+            while self.recording:
+                self.logging.info("Stopped recording for shut down. Please wait ...")
+                time.sleep(1)
+
         self.running = False
         return
 
@@ -211,7 +217,6 @@ class BirdhouseVideoProcessing(threading.Thread):
         if self.camera.active and not self.camera.error and self.recording:
             self.logging.info("Stopping video recording (" + self.id + ") ...")
             current_time = self.config.local_time()
-            self.recording = False
             self.info["date_end"] = current_time.strftime('%Y%m%d_%H%M%S')
             self.info["stamp_end"] = current_time.timestamp()
             self.info["status"] = "processing"
@@ -226,6 +231,7 @@ class BirdhouseVideoProcessing(threading.Thread):
             self.create_video()
             self.info["status"] = "finished"
             self.config.queue.entry_add(config="videos", date="", key=self.info["date_start"], entry=self.info.copy())
+            self.recording = False
         elif not self.camera.active:
             response["error"] = "camera is not active " + self.camera.id
         elif not self.recording:

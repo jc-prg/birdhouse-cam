@@ -437,15 +437,17 @@ class BirdhouseViews(threading.Thread):
 
             # if archive to be read again (from time to time and depending on user activity)
             if self.create_archive and count > count_rebuild:
-                time.sleep(10)
-                self.archive_list_create()
-                self.create_archive = False
+                time.sleep(1)
+                if not self.config.shut_down:
+                    self.archive_list_create()
+                    self.create_archive = False
 
             # if favorites to be read again (from time to time and depending on user activity)
             if self.create_favorites and count > count_rebuild:
-                time.sleep(10)
-                self.favorite_list_create()
-                self.create_favorites = False
+                time.sleep(1)
+                if not self.config.shut_down:
+                    self.favorite_list_create()
+                    self.create_favorites = False
 
             if count > count_rebuild:
                 count = 0
@@ -839,7 +841,8 @@ class BirdhouseViews(threading.Thread):
             files_total = 0
 
             if self.config.shut_down:
-                break
+                self.logging.info("Interrupt create favorite list.")
+                return
 
             image_title = str(self.config.param["backup"]["preview"])
             # + str(self.camera[cam].param["image_save"]["seconds"][0])
@@ -852,7 +855,8 @@ class BirdhouseViews(threading.Thread):
                 self.logging.debug("  -> Directory: " + directory + " | " + group_name)
 
                 if self.config.shut_down:
-                    break
+                    self.logging.info("Interrupt create favorite list.")
+                    return
 
                 if "groups" not in content:
                     content["groups"] = {}
@@ -1263,7 +1267,8 @@ class BirdhouseViews(threading.Thread):
             favorites[directory] = {}
 
             if self.config.shut_down:
-                break
+                self.logging.info("Interrupt create favorite list.")
+                return
 
             if self.config.db_handler.exists(config="backup", date=directory):
                 files_data = self.config.db_handler.read_cache(config="backup", date=directory)

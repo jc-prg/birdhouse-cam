@@ -145,9 +145,14 @@ class BirdhouseArchive(threading.Thread):
             if os.path.isfile(file_weather):
                 os.popen("cp "+file_weather+" "+file_weather_copy)
 
+            info = True
             for cam in self.camera:
                 for stamp in stamps:
                     save_entry = False
+
+                    if self.config.shut_down and info:
+                        self.logging.info("Backup process is running, shut down may take a bit longer ...")
+                        info = False
 
                     # if files are to be archived
                     if "datestamp" not in files[stamp]:
