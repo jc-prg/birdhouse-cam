@@ -80,6 +80,7 @@ function birdhouseStatus_print(data) {
     setTextById("system_info_db_error",         "Error=" + status_db["db_error"] + " " + status_db["db_error_msg"].toString());
     setTextById("server_start_time",            lang("STARTTIME") + ": " + start_time);
     setTextById("system_queue_wait",            (Math.round(status_srv["queue_waiting_time"]*10)/10) + "s");
+    setTextById("system_health_check",           status_srv["health_check"]);
 
     var cpu_details = "";
     for (var i=0;i<status_sys["cpu_usage_detail"].length;i++) {

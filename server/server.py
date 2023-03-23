@@ -142,6 +142,7 @@ class ServerHealthCheck(threading.Thread):
         self._initial = True
         self._min_live_time = 65
         self._thread_info = {}
+        self._health_status = None
 
         self.logging = logging.getLogger("srv-health")
         self.logging.setLevel(birdhouse_loglevel_module["srv-health"])
@@ -185,14 +186,19 @@ class ServerHealthCheck(threading.Thread):
                 if len(problem) > 0:
                     self.logging.warning("... not all threads are running as expected (<" + str(self._interval) + "s): ")
                     self.logging.warning("  -> " + ", ".join(problem))
+                    self._health_status = "NOT RUNNING: " + join(problem)
                 else:
                     self.logging.info("... OK.")
+                    self._health_status = "OK"
 
             if count == 4:
                 count = 0
                 self.logging.info("Live sign health check!")
 
         self.logging.info("Stopped Server Health Check.")
+
+    def status(self):
+        return self._health_status
 
     def stop(self):
         self._running = False
@@ -598,6 +604,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "view_favorite_loading": views.favorite_loading,
                     "backup_process_running": backup.backup_running,
                     "queue_waiting_time": config.queue.queue_wait,
+                    "health_check": health_check.status(),
                     "last_answer": ""
                 },
                 "devices": {
