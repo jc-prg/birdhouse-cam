@@ -941,6 +941,7 @@ class BirdhouseViews(threading.Thread):
                         dir_count_cam = 0
                         dir_count_delete = 0
                         dir_count_data = 0
+                        first_img_temp = ""
 
                         # first favorit as image or ...
                         if "preview_fav" in self.config.param["backup"] and self.config.param["backup"]["preview_fav"]:
@@ -950,6 +951,15 @@ class BirdhouseViews(threading.Thread):
                                         and int(entry["favorit"]) == 1 and "lowres" in entry:
                                     first_img = file
                                     break
+
+                            # or take first image with detected image, not full hour
+                            if first_img == "":
+                                for file in list(sorted(file_data["files"].keys())):
+                                    entry = file_data["files"][file]
+                                    if "camera" in entry and entry["camera"] == cam and "lowres" in entry \
+                                            and "detect" in entry and int(entry["detect"]) == 1 and file[2:4] != "00":
+                                        first_img = file
+                                        break
 
                             # or take first image with detected image
                             if first_img == "":
@@ -961,10 +971,10 @@ class BirdhouseViews(threading.Thread):
                                         break
 
                         # select preview image
-                        first_img_temp = ""
-                        if "preview_fav" not in self.config.param["backup"] \
+                        elif "preview_fav" not in self.config.param["backup"] \
                                 or ("preview_fav" in self.config.param["backup"]
                                     and not self.config.param["backup"]["preview_fav"]):
+
                             for file in list(sorted(file_data["files"].keys())):
                                 entry = file_data["files"][file]
                                 if image_title[0:4] == file[0:4] and "camera" in entry and entry["camera"] == cam \
