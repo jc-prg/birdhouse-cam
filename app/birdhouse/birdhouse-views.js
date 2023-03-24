@@ -336,6 +336,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
    			    }
    			else {
     			html += "<center>&nbsp;<br/>"+lang("DATA_LOADING_TRY_AGAIN")+"<br/>&nbsp;</center>";
+    			appMsg.alert(lang("DATA_LOADING_TRY_AGAIN"));
    			    }
 			}
 		}
