@@ -85,6 +85,10 @@ class BirdhouseArchive(threading.Thread):
         else:
             backup_date = other_date
 
+        camera_list = []
+        for cam in self.camera:
+            camera_list.append(cam)
+
         directory = self.config.db_handler.directory(config="images", date=backup_date)
         data_weather = self.config.db_handler.read(config="weather")
         data_sensor = self.config.db_handler.read(config="sensor")
@@ -101,7 +105,8 @@ class BirdhouseArchive(threading.Thread):
                     "chart_data": self.views.create.chart_data_new(data_image=files,
                                                                    data_sensor=data_sensor,
                                                                    data_weather=data_weather,
-                                                                   date=backup_date),
+                                                                   date=backup_date,
+                                                                   cameras=camera_list),
                     "weather_data": self.views.create.weather_data_new(data_weather=data_weather)
                 }
                 files_backup["info"]["count"] = len(files)
@@ -240,7 +245,7 @@ class BirdhouseArchive(threading.Thread):
                                                                           data_weather=data_weather,
                                                                           date=self.config.local_time().strftime(
                                                                               "%Y%m%d"),
-                                                                          cameras=list(self.camera.keys()))
+                                                                          cameras=camera_list)
             files_backup["weather_data"] = self.views.create.weather_data_new(data_weather=data_weather,
                                                                               date=self.config.local_time().strftime(
                                                                                   "%Y%m%d"))
