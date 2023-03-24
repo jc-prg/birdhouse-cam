@@ -105,7 +105,7 @@ class BirdhouseViewCreate(object):
             for key in data_image:
                 if date is not None and "datestamp" in data_image[key] and data_image[key]["datestamp"] != datestamp:
                     continue
-                if len(cameras) > 1 and data_image[key]["camera"] != cam
+                if len(cameras) > 1 and data_image[key]["camera"] != cam:
                     continue
                 this_hour = key[0:2]
                 this_minute = key[2:4]
