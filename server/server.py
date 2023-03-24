@@ -26,8 +26,8 @@ from modules.sensors import BirdhouseSensor
 
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v0.9.5"}
-app_framework = "v0.9.5"
+api_description = {"name": "BirdhouseCAM", "version": "v0.9.6"}
+app_framework = "v0.9.6"
 
 
 def on_exit(signum, handler):

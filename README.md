@@ -42,12 +42,13 @@ mark favorites, analyze weather data, ...
 ## Main Software Features
 
 * Use as web-app on an iPhones or in a browser
-* Watch **live stream** with 1-2 cameras 
+* Watch **live stream** with 1 or 2 cameras 
   * via Raspberry Pi camera
   * USB web cam (e.g. RPi cam inside and USB web cam outside)
 * **Record photos**
-  * e.g. every 20 seconds (configurable in data/config.json)
-  * Similarity detection, filter photos with movement in a defined area
+  * e.g. every 20 seconds from sunrise to 20:00 local time (configurable in the device settings)
+  * Similarity detection, filter photos with movement in a defined area (visualize differences)
+  * camera and image settings configurable (brightness, contrast, ...)
 * **Manage photos**
   * Mark photos and videos as favorites and to be deleted
   * Mark a range of photos between two marked photos as to be deleted
@@ -61,13 +62,14 @@ mark favorites, analyze weather data, ...
 * Get, archive, and visualize **weather data**:
   * from sensors connected to the Raspberry Pi (DHT11/DHT22)
   * via internet for a defined location (python_weather OR [Open Meteo](https://open-meteo.com/))
-  * GPS lookup for cities or addresses via GeoPy
+  * GPS lookup for cities or addresses via GeoPy to set weather location
 * Connect to **audio stream** from microphone
   * under construction, currently browser only (no iPhone)
 * **Admin functionality** via app
   * Deny recording and admin functionality for specific IP addresses (e.g. router or proxy, to deny for access from the internet)
-  * edit server settings
+  * edit server settings (partly, other settings define in file .env)
   * edit device settings (devices must be added via config file)
+  * edit camera and image settings
 
 ## Software Installation
 
@@ -199,7 +201,7 @@ $ arecord -l
 $ amixer -c 2 -q set 'Mic',0 100%
 
 # continuously watch logfile (2s, 40 lines)
-$ watch 'head -n 2 server/server.log | tail -n 40 server/server.log'
+$ watch 'head -n 2 log/server.log | tail -n 40 log/server.log'
 ```
 
 
