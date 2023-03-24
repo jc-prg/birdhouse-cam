@@ -86,6 +86,13 @@ def on_kill(signum, handler):
     sys.exit()
 
 
+def on_exception(type, value, tb):
+    """
+    grab all exceptions and write them to the logfile (if active)
+    """
+    srv_logging.exception("Uncaught exception: {0}".format(str(value)))
+
+
 def read_html(directory, filename, content=""):
     """
     read html file, replace placeholders and return for stream via webserver
@@ -986,6 +993,8 @@ if __name__ == "__main__":
     srv_logging.info('-------------------------------------------')
     srv_logging.info('Starting ...')
     srv_logging.info('-------------------------------------------')
+
+    sys.excepthook = on_exception
 
     # set system signal handler
     signal.signal(signal.SIGINT, on_exit)
