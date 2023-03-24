@@ -466,6 +466,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.startswith('/update_views/'):
             views.archive_list_update()
             views.favorite_list_update()
+            views.force_reload = True
             response = {"update_views": "started"}
         elif self.path.startswith('/force_backup/'):
             backup.start_backup()

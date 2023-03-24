@@ -420,6 +420,7 @@ class BirdhouseViews(threading.Thread):
         self.favorite_loading = "started"
         self.create_archive = True
         self.create_favorites = True
+        self.force_reload = False
         self.create = BirdhouseViewCreate(config)
 
     def run(self):
@@ -436,14 +437,14 @@ class BirdhouseViews(threading.Thread):
                 self.stop()
 
             # if archive to be read again (from time to time and depending on user activity)
-            if self.create_archive and count > count_rebuild:
+            if self.create_archive and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
                 if not self.config.shut_down:
                     self.archive_list_create()
                     self.create_archive = False
 
             # if favorites to be read again (from time to time and depending on user activity)
-            if self.create_favorites and count > count_rebuild:
+            if self.create_favorites and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
                 if not self.config.shut_down:
                     self.favorite_list_create()
