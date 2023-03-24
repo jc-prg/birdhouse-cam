@@ -846,7 +846,8 @@ class BirdhouseViews(threading.Thread):
             if "." not in entry:
                 if os.path.isdir(os.path.join(main_directory, entry)):
                     dir_list.append(entry)
-        self.logging.info("- Found " + str(len(dir_list)) + " archive directories: " + str(dir_list))
+        self.logging.info("- Found " + str(len(dir_list)) + " archive directories.")
+        self.logging.debug("  -> " + str(dir_list))
 
         # dir_list = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
         # dir_list.sort(reverse=True)
