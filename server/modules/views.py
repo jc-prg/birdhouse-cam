@@ -67,7 +67,7 @@ class BirdhouseViewCreate(object):
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting backup handler ...")
 
-    def chart_data_new(self, data_image, data_sensor=None, data_weather=None, date=None):
+    def chart_data_new(self, data_image, data_sensor=None, data_weather=None, date=None, cameras=None):
         """
         create chart data based on sensor, weather and activity data
         """
@@ -84,37 +84,54 @@ class BirdhouseViewCreate(object):
         hours = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10",
                  "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"]
         minutes = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"]
-        chart = {"titles": ["Activity"], "data": {}}
+        chart = {"titles": [], "data": {}}
+
+        activity_dict = {}
+        data_activity = {}
+
+        if cameras is None:
+            chart["titles"].append("Activity")
+            activity_dict["cam1"] = {}
+            data_activity["cam1"] = {}
+            cameras = ["cam1"]
+        else:
+            for cam in cameras:
+                chart["titles"].append("Activity " + cam.upper())
+                data_activity[cam] = {}
+                activity_dict[cam] = {}
 
         # Calculate image activity
-        activity_dict = {}
-        for key in data_image:
-            if date is not None and "datestamp" in data_image[key] and data_image[key]["datestamp"] != datestamp:
-                continue
-            this_hour = key[0:2]
-            this_minute = key[2:4]
-            minute_to = str(int(this_minute) + (5 - (int(this_minute) % 5))).zfill(2)
-            hour_to = this_hour
-            if int(minute_to) > 59:
-                hour_to = str(int(hour_to)+1).zfill(2)
-            if int(hour_to) > 23:
-                hour_to = "00"
+        for cam in cameras:
+            for key in data_image:
+                if date is not None and "datestamp" in data_image[key] and data_image[key]["datestamp"] != datestamp:
+                    continue
+                if len(cameras) > 1 and data_image[key]["camera"] != cam
+                    continue
+                this_hour = key[0:2]
+                this_minute = key[2:4]
+                minute_to = str(int(this_minute) + (5 - (int(this_minute) % 5))).zfill(2)
+                hour_to = this_hour
+                if int(minute_to) > 59:
+                    hour_to = str(int(hour_to)+1).zfill(2)
+                if int(hour_to) > 23:
+                    hour_to = "00"
 
-            stamp = hour_to + minute_to + "00"
-            if stamp not in activity_dict:
-                activity_dict[stamp] = []
-            activity_dict[stamp].append(key)
+                stamp = hour_to + minute_to + "00"
+                if stamp not in activity_dict:
+                    activity_dict[cam][stamp] = []
+                activity_dict[cam][stamp].append(key)
 
-        data_activity = {}
-        for key in activity_dict:
-            activity_sum = 0
-            activity_count = 0
-            for stamp in activity_dict[key]:
-                if "similarity" in data_image[stamp] and float(data_image[stamp]["similarity"]) > 0:
-                    activity_sum += float(data_image[stamp]["similarity"])
-                    activity_count += 1
-            if activity_count > 0:
-                data_activity[key] = round(100 - (activity_sum / activity_count), 2)
+        # create data structure activity
+        for cam in cameras:
+            for key in activity_dict[cam]:
+                activity_sum = 0
+                activity_count = 0
+                for stamp in activity_dict[cam][key]:
+                    if "similarity" in data_image[stamp] and float(data_image[stamp]["similarity"]) > 0:
+                        activity_sum += float(data_image[stamp]["similarity"])
+                        activity_count += 1
+                if activity_count > 0:
+                    data_activity[cam][key] = round(100 - (activity_sum / activity_count), 2)
 
         # get categories weather
         weather_data_in_chart = ["temperature", "humidity", "wind_speed"]
@@ -160,6 +177,7 @@ class BirdhouseViewCreate(object):
         self.logging.debug("Chart - Sensor-Output:" + str(data_sensor_tmp.keys()))
 
         # create chart data
+        stamp_exists_activity = {}
         for hour in hours:
             for minute in minutes:
                 chart_stamp = hour + ":" + minute
@@ -167,13 +185,15 @@ class BirdhouseViewCreate(object):
 
                 # check if a value exists
                 stamp_exists = False
-                stamp_exists_activity = False
                 stamp_exists_sensor = False
                 stamp_exists_weather = False
+                for cam in cameras:
+                    stamp_exists_activity[cam] = False
 
                 # Check if exists and date is correct
-                if stamp in data_activity:
-                    stamp_exists_activity = True
+                for cam in cameras:
+                    if stamp in data_activity[cam]:
+                        stamp_exists_activity[cam] = True
 
                 if stamp in data_sensor_tmp:
                     if date is not None and len(sensor_list) > 0 \
@@ -193,10 +213,11 @@ class BirdhouseViewCreate(object):
                     chart["data"][chart_stamp] = []
 
                 # Activity
-                if stamp_exists_activity:
-                    chart["data"][chart_stamp].append(data_activity[stamp])
-                elif stamp_exists:
-                    chart["data"][chart_stamp].append(None)
+                for cam in cameras:
+                    if stamp_exists_activity[cam]:
+                        chart["data"][chart_stamp].append(data_activity[cam][stamp])
+                    elif stamp_exists:
+                        chart["data"][chart_stamp].append(None)
 
                 # Weather data
                 if stamp_exists_weather:
