@@ -124,6 +124,7 @@ class BirdhouseArchive(threading.Thread):
 
             self.config.db_handler.directory_create(config="images", date=backup_date)
             files = self.config.db_handler.read_cache(config="images")
+            files_chart = files.copy()
             files_backup = {"files": {}, "chart_data": {}, "info": {}}
 
             file_sensor = self.config.db_handler.file_path(config="sensor")
@@ -234,7 +235,7 @@ class BirdhouseArchive(threading.Thread):
                 self.logging.info(cam + ": " + str(count_other_date) + " not saved (other date)")
 
             # files_backup["chart_data"] = self.views.create.chart_data(data=files_backup["files"], config=self.config)
-            files_backup["chart_data"] = self.views.create.chart_data_new(data_image=files_backup["files"],
+            files_backup["chart_data"] = self.views.create.chart_data_new(data_image=files_chart,
                                                                           data_sensor=data_sensor,
                                                                           data_weather=data_weather,
                                                                           date=self.config.local_time().strftime(
