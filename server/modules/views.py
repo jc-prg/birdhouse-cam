@@ -942,32 +942,37 @@ class BirdhouseViews(threading.Thread):
                         dir_count_delete = 0
                         dir_count_data = 0
                         first_img_temp = ""
+                        sorted_file_keys = list(sorted(file_data["files"].keys()))
 
                         # first favorit as image or ...
                         if "preview_fav" in self.config.param["backup"] and self.config.param["backup"]["preview_fav"]:
-                            for file in list(sorted(file_data["files"].keys())):
+                            self.logging.info(" ......... Preview-FAVORITE: ")
+                            for file in sorted_file_keys:
                                 entry = file_data["files"][file]
                                 if "camera" in entry and entry["camera"] == cam and "favorit" in entry \
                                         and int(entry["favorit"]) == 1 and "lowres" in entry:
                                     first_img = file
+                                    self.logging.info(" ......... 1=" + first_img)
                                     break
 
                             # or take first image with detected image, not full hour
                             if first_img == "":
-                                for file in list(sorted(file_data["files"].keys())):
+                                for file in sorted_file_keys:
                                     entry = file_data["files"][file]
                                     if "camera" in entry and entry["camera"] == cam and "lowres" in entry \
                                             and "detect" in entry and int(entry["detect"]) == 1 and file[2:4] != "00":
                                         first_img = file
+                                        self.logging.info(" ......... 2=" + first_img)
                                         break
 
                             # or take first image with detected image
                             if first_img == "":
-                                for file in list(sorted(file_data["files"].keys())):
+                                for file in sorted_file_keys:
                                     entry = file_data["files"][file]
                                     if "camera" in entry and entry["camera"] == cam and "lowres" in entry \
                                             and "detect" in entry and int(entry["detect"]) == 1:
                                         first_img = file
+                                        self.logging.info(" ......... 3=" + first_img)
                                         break
 
                         # select preview image
@@ -975,7 +980,7 @@ class BirdhouseViews(threading.Thread):
                                 or ("preview_fav" in self.config.param["backup"]
                                     and not self.config.param["backup"]["preview_fav"]):
 
-                            for file in list(sorted(file_data["files"].keys())):
+                            for file in sorted_file_keys:
                                 entry = file_data["files"][file]
                                 if image_title[0:4] == file[0:4] and "camera" in entry and entry["camera"] == cam \
                                         and "lowres" in entry:
@@ -986,7 +991,7 @@ class BirdhouseViews(threading.Thread):
 
                         # or take first image as title image
                         if first_img == "":
-                            for file in list(sorted(file_data["files"].keys())):
+                            for file in sorted_file_keys:
                                 entry = file_data["files"][file]
                                 if "camera" in entry and entry["camera"] == cam and "lowres" in entry:
                                     first_img = file
