@@ -80,7 +80,6 @@ class BirdhouseViewCreate(object):
             date_eu = ""
             date_us = ""
 
-        self.logging.info("create_chart_data_new: " + datestamp + " / " + date_eu + " / " + date_us)
         hours = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10",
                  "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"]
         minutes = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"]
@@ -99,6 +98,9 @@ class BirdhouseViewCreate(object):
                 chart["titles"].append("Activity " + cam.upper())
                 data_activity[cam] = {}
                 activity_dict[cam] = {}
+
+        self.logging.info("create_chart_data_new: " + datestamp + " / " + date_eu + " / " + date_us +
+                          " for cam: " + str(cameras))
 
         # Calculate image activity
         for cam in cameras:
