@@ -239,7 +239,8 @@ class BirdhouseArchive(threading.Thread):
                                                                           data_sensor=data_sensor,
                                                                           data_weather=data_weather,
                                                                           date=self.config.local_time().strftime(
-                                                                              "%Y%m%d"))
+                                                                              "%Y%m%d"),
+                                                                          cameras=list(self.camera.keys()))
             files_backup["weather_data"] = self.views.create.weather_data_new(data_weather=data_weather,
                                                                               date=self.config.local_time().strftime(
                                                                                   "%Y%m%d"))
