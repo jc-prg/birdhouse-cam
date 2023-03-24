@@ -50,8 +50,8 @@ class BirdhouseArchive(threading.Thread):
                 else:
                     self.logging.info("Starting daily backup ...")
                 self.backup_files()
-                self.views.archive_list_update()
-                self.views.favorite_list_update()
+                self.views.archive_list_update(force=True)
+                self.views.favorite_list_update(force=True)
                 count = 0
                 while self._running and count < 60:
                     time.sleep(1)

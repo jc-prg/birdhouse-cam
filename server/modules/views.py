@@ -450,6 +450,9 @@ class BirdhouseViews(threading.Thread):
                     self.favorite_list_create()
                     self.create_favorites = False
 
+            if self.force_reload:
+                self.force_reload = False
+
             if count > count_rebuild:
                 count = 0
 
@@ -1056,11 +1059,13 @@ class BirdhouseViews(threading.Thread):
         self.archive_loading = "done"
         self.logging.info("Create data for archive view done ("+str(round(time.time()-start_time, 1))+"s)")
 
-    def archive_list_update(self):
+    def archive_list_update(self, force=False):
         """
         Trigger recreation of the archive list
         """
         self.create_archive = True
+        if force:
+            self.force_reload = True
 
     def complete_list_today(self, server):
         """
@@ -1322,11 +1327,13 @@ class BirdhouseViews(threading.Thread):
         self.config.db_handler.write("favorites", "", content)
         self.favorite_loading = "done"
 
-    def favorite_list_update(self):
+    def favorite_list_update(self, force=False):
         """
         Trigger recreation of the favorit list
         """
         self.create_favorites = True
+        if force:
+            self.force_reload = True
 
     def video_list(self, server):
         """

@@ -464,9 +464,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             config.db_handler.clean_all_data("sensor")
             response = {"cleanup": "done"}
         elif self.path.startswith('/update_views/'):
-            views.archive_list_update()
-            views.favorite_list_update()
-            views.force_reload = True
+            views.archive_list_update(force=True)
+            views.favorite_list_update(force=True)
             response = {"update_views": "started"}
         elif self.path.startswith('/force_backup/'):
             backup.start_backup()
