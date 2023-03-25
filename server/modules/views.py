@@ -686,9 +686,10 @@ class BirdhouseViews(threading.Thread):
                 if ((int(stamp) < int(time_now) or time_now == "000000")
                         and files_all[stamp]["datestamp"] == date_today) or backup:
 
-                    if self.camera[which_cam].image_to_select(timestamp=stamp,
-                                                              file_info=files_all[stamp].copy(),
-                                                              check_similarity=check_similarity):
+                    show_img = self.camera[which_cam].image_to_select(timestamp=stamp,
+                                                                      file_info=files_all[stamp].copy(),
+                                                                      check_similarity=check_similarity)
+                    if show_img:
                         # check maximum image size
                         if "lowres_size" in files_all[stamp]:
                             if files_all[stamp]["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
