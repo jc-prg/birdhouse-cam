@@ -123,8 +123,7 @@ class BirdhouseViewCreate(object):
                     activity_dict[cam][stamp] = []
                 activity_dict[cam][stamp].append(key)
 
-        # create data structure activity
-        for cam in cameras:
+            # create data structure activity
             for key in activity_dict[cam]:
                 activity_sum = 0
                 activity_count = 0
@@ -179,7 +178,6 @@ class BirdhouseViewCreate(object):
         self.logging.debug("Chart - Sensor-Output:" + str(data_sensor_tmp.keys()))
 
         # create chart data
-        stamp_exists_activity = {}
         for hour in hours:
             for minute in minutes:
                 chart_stamp = hour + ":" + minute
@@ -189,14 +187,15 @@ class BirdhouseViewCreate(object):
                 stamp_exists = False
                 stamp_exists_sensor = False
                 stamp_exists_weather = False
-                for cam in cameras:
-                    stamp_exists_activity[cam] = False
+                stamp_exists_activity = {}
 
                 # Check if exists and date is correct
                 for cam in cameras:
                     if stamp in data_activity[cam]:
                         stamp_exists_activity[cam] = True
                         stamp_exists = True
+                    else:
+                        stamp_exists_activity[cam] = False
 
                 if stamp in data_sensor_tmp:
                     if date is not None and len(sensor_list) > 0 \
