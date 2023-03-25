@@ -2156,7 +2156,8 @@ class BirdhouseCamera(threading.Thread):
             if value not in info:
                 info[value] = -1
         self.logging.debug("Image to select: delete=" + str(float(info["to_be_deleted"])) +
-                           "; cam=" + str(info["camera"]) + "|" + self.id + "; favorite=" + str(float(info["favorit"])) +
+                           "; cam=" + str(info["camera"]) + "|" + self.id +
+                           "; favorite=" + str(float(info["favorit"])) +
                            "; stamp=" + timestamp + "|" + self.image_to_select_last +
                            "; similarity=" + str(float(info["similarity"])) + "<" +
                            str(self.param["similarity"]["threshold"]) +
