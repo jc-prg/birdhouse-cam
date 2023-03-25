@@ -279,7 +279,10 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 			[hour,minute,sec] = entry["time"].split(":");
 			description       = entry["date"]+" ("+hour+":"+minute+")";
         }
-
+        else if (app_active_page == "TODAY") {
+			[hour,minute,sec] = entry["time"].split(":");
+		    description = hour + ":" + minute + " (" + entry["similarity"] + "%)";
+        }
 
 		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
 		description     = description.replace(/\[br\/\]/g,"<br/>");
