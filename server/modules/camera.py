@@ -2154,10 +2154,10 @@ class BirdhouseCamera(threading.Thread):
         info = file_info.copy()
         for value in ["camera", "to_be_deleted", "favorit", "similarity"]:
             info[value] = -1
-        self.logging.debug("Image to select: delete=" + str(info["to_be_deleted"]) +
-                           "; cam=" + info["camera"] + "|" + self.id + "; favorite=" + str(info["favorit"]) +
+        self.logging.debug("Image to select: delete=" + str(float(info["to_be_deleted"])) +
+                           "; cam=" + info["camera"] + "|" + self.id + "; favorite=" + str(float(info["favorit"])) +
                            "; stamp=" + timestamp + "|" + self.image_to_select_last +
-                           "; similarity=" + str(info["similarity"]) + "<" +
+                           "; similarity=" + str(float(info["similarity"])) + "<" +
                            str(self.param["similarity"]["threshold"]) +
                            " -> " + str(select))
         return select
