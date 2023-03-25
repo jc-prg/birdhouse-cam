@@ -196,22 +196,26 @@ class BirdhouseViewCreate(object):
                 for cam in cameras:
                     if stamp in data_activity[cam]:
                         stamp_exists_activity[cam] = True
+                        stamp_exists = True
 
                 if stamp in data_sensor_tmp:
                     if date is not None and len(sensor_list) > 0 \
                             and data_sensor_tmp[stamp][sensor_list[0]]["date"] == date_eu:
                         stamp_exists_sensor = True
+                        stamp_exists = True
                     elif date is None and len(sensor_list) > 0:
                         stamp_exists_sensor = True
+                        stamp_exists = True
 
                 if stamp in data_weather:
                     if date is not None and "date" in data_weather[stamp] and data_weather[stamp]["date"] == date_us:
                         stamp_exists_weather = True
+                        stamp_exists = True
                     elif date is None:
                         stamp_exists_weather = True
+                        stamp_exists = True
 
-                if stamp_exists_weather or stamp_exists_sensor or stamp_exists_activity:
-                    stamp_exists = True
+                if stamp_exists:
                     chart["data"][chart_stamp] = []
 
                 # Activity
