@@ -2129,7 +2129,7 @@ class BirdhouseCamera(threading.Thread):
         if "similarity" not in file_info:
             select = False
 
-        elif "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
+        elif "to_be_deleted" in file_info and float(file_info["to_be_deleted"]) == 1:
             select = False
 
         elif ("camera" in file_info and file_info["camera"] == self.id) or (
@@ -2139,7 +2139,7 @@ class BirdhouseCamera(threading.Thread):
                 self.image_to_select_last = timestamp
                 select = True
 
-            elif "favorit" in file_info and int(file_info["favorit"]) == 1:
+            elif "favorit" in file_info and float(file_info["favorit"]) == 1:
                 select = True
 
             elif check_similarity:
