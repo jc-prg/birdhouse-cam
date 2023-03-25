@@ -686,43 +686,41 @@ class BirdhouseViews(threading.Thread):
                 if ((int(stamp) < int(time_now) or time_now == "000000")
                         and files_all[stamp]["datestamp"] == date_today) or backup:
 
-                    show_image = self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp],
+                    show_image = self.camera[which_cam].image_to_select(timestamp=stamp,
+                                                                        file_info=files_all[stamp].copy(),
                                                                         check_similarity=check_similarity)
+                    if show_image:
+                        # check maximum image size
+                        if "lowres_size" in files_all[stamp]:
+                            if files_all[stamp]["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
+                                content["max_image_size"]["lowres"][0] = files_all[stamp]["lowres_size"][0]
+                            if files_all[stamp]["lowres_size"][1] > content["max_image_size"]["lowres"][1]:
+                                content["max_image_size"]["lowres"][1] = files_all[stamp]["lowres_size"][1]
+                        if "hires_size" in files_all[stamp]:
+                            if files_all[stamp]["hires_size"][0] > content["max_image_size"]["hires"][0]:
+                                content["max_image_size"]["hires"][0] = files_all[stamp]["hires_size"][0]
+                            if files_all[stamp]["lowres_size"][1] > content["max_image_size"]["hires"][1]:
+                                content["max_image_size"]["hires"][1] = files_all[stamp]["hires_size"][1]
 
-                    if show_image and ("camera" not in files_all[stamp] or files_all[stamp]["camera"] == which_cam):
-                        if "to_be_deleted" not in files_all[stamp] or int(files_all[stamp]["to_be_deleted"]) != 1:
+                        # copy data to new dict (select relevant data only)
+                        files_today[stamp] = files_all[stamp].copy()
 
-                            # check maximum image size
-                            if "lowres_size" in files_all[stamp]:
-                                if files_all[stamp]["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
-                                    content["max_image_size"]["lowres"][0] = files_all[stamp]["lowres_size"][0]
-                                if files_all[stamp]["lowres_size"][1] > content["max_image_size"]["lowres"][1]:
-                                    content["max_image_size"]["lowres"][1] = files_all[stamp]["lowres_size"][1]
-                            if "hires_size" in files_all[stamp]:
-                                if files_all[stamp]["hires_size"][0] > content["max_image_size"]["hires"][0]:
-                                    content["max_image_size"]["hires"][0] = files_all[stamp]["hires_size"][0]
-                                if files_all[stamp]["lowres_size"][1] > content["max_image_size"]["hires"][1]:
-                                    content["max_image_size"]["hires"][1] = files_all[stamp]["hires_size"][1]
+                        # prepare further metadata
+                        if "type" not in files_today[stamp]:
+                            files_today[stamp]["type"] = "image"
+                        files_today[stamp]["category"] = category + stamp
+                        files_today[stamp]["detect"] = self.camera[which_cam].image_differs(files_today[stamp])
+                        files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
 
-                            # copy data to new dict (select relevant data only)
-                            files_today[stamp] = files_all[stamp].copy()
+                        if "type" in files_today[stamp] and files_today[stamp]["type"] != "data":
+                            count += 1
 
-                            # prepare further metadata
-                            if "type" not in files_today[stamp]:
-                                files_today[stamp]["type"] = "image"
-                            files_today[stamp]["category"] = category + stamp
-                            files_today[stamp]["detect"] = self.camera[which_cam].image_differs(files_today[stamp])
-                            files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
-
-                            if "type" in files_today[stamp] and files_today[stamp]["type"] != "data":
-                                count += 1
-
-                            if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
-                                files_images[stamp] = files_today[stamp].copy()
-                                if "weather" in files_images[stamp]:
-                                    del files_images[stamp]["weather"]
-                                if "sensor" in files_images[stamp]:
-                                    del files_images[stamp]["sensor"]
+                        if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
+                            files_images[stamp] = files_today[stamp].copy()
+                            if "weather" in files_images[stamp]:
+                                del files_images[stamp]["weather"]
+                            if "sensor" in files_images[stamp]:
+                                del files_images[stamp]["sensor"]
 
             if not backup:
                 files_images["999999"] = {
