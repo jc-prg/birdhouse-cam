@@ -261,8 +261,14 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var dont_load   = "";
 	var edit        = false;
 	var category    = "";
+    var rotation    = 0;
 	var onclick_difference = "";
-	var settings    = app_data["DATA"]["settings"];
+	var settings     = app_data["DATA"]["settings"];
+	var settings_cam = app_data["DATA"]["settings"]["devices"]["camera"];
+
+	if (entry["camera"] && settings_cam[entry["camera"]] && settings_cam[entry["camera"]]["image"]["rotation"]) {
+	    rotation = settings_cam[entry["camera"]]["image"]["rotation"];
+	}
 
 	console.log(app_active_page);
 
@@ -406,12 +412,21 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
         height = " fixed_height";
         }
     else if (lowres_size != 0) {
-        container_width  = lowres_size["container_width"];
-        container_height = lowres_size["container_height"];
-        thumbnail_width  = lowres_size["thumbnail_width"];
-        thumbnail_height  = lowres_size["thumbnail_height"];
-        style           += "width:" + thumbnail_width + "px";
-        container_style += "width:" + container_width + "px;height:" + container_height +"px;";
+        if (rotation == 90 || rotation == 270) {
+            // ????
+            container_width  = lowres_size["container_width"];
+            container_height = lowres_size["container_height"];
+            thumbnail_width  = lowres_size["thumbnail_width"];
+            thumbnail_height = lowres_size["thumbnail_height"];
+            }
+        else {
+            container_width  = lowres_size["container_width"];
+            container_height = lowres_size["container_height"];
+            thumbnail_width  = lowres_size["thumbnail_width"];
+            thumbnail_height = lowres_size["thumbnail_height"];
+            }
+        style           += "width:" + thumbnail_width + "px;height:" + thumbnail_height + "px;";
+        container_style += "width:" + container_width + "px;height:" + container_height + "px;";
         }
 
     if (entry["type"] == "addon") { addon_id = "id='lowres_today'"; }
