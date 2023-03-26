@@ -4,6 +4,16 @@
 // additional functions 
 //--------------------------------------
 
+function birdhouse_genericApiRequest(method, commands, return_cmd) {
+
+	appFW.requestAPI(method, commands, '', return_cmd,'','birdhouse_genericApiRequest');
+}
+
+function birdhouse_loadSettings() {
+    commands = ["status"];
+	appFW.requestAPI('GET', commands, '', birdhouseLoadSettings,'','birdhouse_loadSettings');
+}
+
 function birdhouse_createShortVideo() {
         video_id = document.getElementById("video-id");
         if (video_id != null) {
@@ -25,6 +35,77 @@ function birdhouse_createDayVideo(camera) {
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerCreateDay,'','birdhouse_createDayVideo');
 	}
 	
+function birdhouse_reconnectCamera(camera) {
+	commands = ["reconnect_camera",camera];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_reconnectCamera');
+	}
+
+function birdhouse_cameraSettings(camera, key, value) {
+	commands = ["camera_settings", key, value, camera];
+	appFW.requestAPI('POST', commands, '', '','','birdhouse_cameraSettings');
+}
+
+function birdhouse_checkTimeout() {
+	commands = ["check_timeout"];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_checkTimeout');
+	}
+
+function birdhouse_editData(data) {
+    commands = ["edit_presets", data];
+    appFW.requestAPI('POST',commands,"",birdhouse_AnswerOther,"","birdhouse_editData");
+}
+
+function birdhouse_recordStart(camera) {
+    commands = ["start", "recording", camera];
+    appFW.requestAPI('POST',commands,"","","","birdhouse_recordStart");
+}
+
+function birdhouse_recordStop(camera) {
+    commands = ["stop", "recording", camera];
+    appFW.requestAPI('POST',commands,"","","","birdhouse_recordStop");
+}
+
+function birdhouse_forceBackup(camera) {
+	commands = ["force_backup",camera];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
+	}
+
+function birdhouse_forceUpdateViews() {
+	commands = ["update_views"];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceUpdateViews');
+	}
+
+function birdhouse_forceRestart() {
+
+    appMsg.confirm("Restart Birdhouse-Server?", "birdhouse_forceRestart_exec();", 250);
+    }
+
+function birdhouse_forceRestart_exec() {
+	commands = ["force_restart"];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceRestart');
+	}
+
+function birdhouse_killStream(camera_id, stream_id) {
+    console.log("birdhouse_killStream: "+stream_id);
+	commands = ["kill_stream", camera_id, stream_id];
+	appFW.requestAPI('POST', commands, '', '','','birdhouse_killStream');
+    }
+
+function birdhouse_deleteMarkedFiles(param1,param2) {
+	commands = ["remove", param1, param2];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerDeleteRequest,'','birdhouse_deleteMarkedFiles');
+    }
+
+function birdhouse_removeDataToday() {
+
+    appMsg.confirm("Remove all the data from today?", "birdhouse_removeDataToday_exec();", 250);
+}
+
+function birdhouse_removeDataToday_exec() {
+	commands = ["clean_data_today"];
+	appFW.requestAPI('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_removeDataToday');
+}
+
 function birdhouse_recreateImageConfig() {
 	commands = ["recreate-image-config"];
 	appFW.requestAPI('POST', commands, '', birdhouse_AnswerRecreateImageConfig,'','birdhouse_recreateImageConfig');
@@ -126,9 +207,20 @@ function birdhouse_setFavoritShow(command, param) {
         document.getElementById(img_id).style.borderColor = color;
 	}
 
+function birdhouse_showWeather() {
+	commands = ["status"];
+	appFW.requestAPI('GET', commands, '', birdhouseWeather,'','birdhouseWeather');
+}
+
 function birdhouse_AnswerDelete(data) {
 	//console.log(data);
-	appMsg.alert(lang("DELETE_DONE") + "<br/>(" + data["deleted_count"] + " " + lang("FILES")+")","");
+	appMsg.alert(lang("DELETE_DONE") + "<br/>(" + data["STATUS"]["deleted_count"] + " " + lang("FILES")+")","");
+	birdhouseReloadView();
+	}
+
+function birdhouse_AnswerDeleteRequest(data) {
+	//console.log(data);
+	appMsg.alert(lang("DELETE_REQUESTED"),"");
 	birdhouseReloadView();
 	}
 
@@ -141,6 +233,12 @@ function birdhouse_AnswerTrim(data) {
 function birdhouse_AnswerCreateDay(data) {
 	//console.log(data);
 	appMsg.alert(lang("CREATE_DAY_STARTED"));
+	birdhouseReloadView();
+	}
+
+function birdhouse_AnswerOther(data) {
+	//console.log(data);
+	appMsg.alert(lang("DONE"));
 	birdhouseReloadView();
 	}
 

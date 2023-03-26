@@ -8,3 +8,7 @@ wheel
 ffmpeg-python
 couchdb
 requests
+python_weather
+suntime
+geopy
+python-dotenv

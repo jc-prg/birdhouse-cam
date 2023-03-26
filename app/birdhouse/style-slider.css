@@ -1,0 +1,149 @@
+/*-----------------------------------------*/
+/* jc://remote/slider/                     */
+/*-----------------------------------------*/
+
+/* display information within the remote control */
+
+
+.bh-slider-button {
+  	z-index         : 99;
+  	width           : 50px;
+  	height          : 30px;
+  	float           : left;
+  	margin          : 3px;
+
+  	background      : #aaaaaa; /* Grey background */
+	opacity         : 0.9; /* Set transparency (for mouse-over effects on hover) */
+
+	border          : 2px solid #777777;
+	border-radius   : 5px;
+
+  	color           : #222222;
+  	font-family     : Helvetica,Arial;
+  	font-weight     : bold;
+  	font-size       : 11px;
+  	line-height     : 25px;
+
+  	text-align      : center;
+  	vertical-align  : middle;
+}
+
+
+.bh-slidecontainer {
+    z-index       : 99;
+    width         : 100%;
+    height        : 64px;
+}
+
+/* The slider itself */
+input[type="range"].bh-slider, .bh-slider {
+  	-webkit-appearance  : none;     /* Override default look */
+
+	z-index       : 100;
+  	width         : 83%;
+  	height        : 25px;
+  	float         : left;
+  	margin        : 3px;
+
+	-webkit-transition : .2s; /* 0.2 seconds transition on hover */
+  	transition    : opacity .2s;
+  	background    : #dddddd;
+/*
+    background    : #DDDDDD;
+    opacity       : 0.8;
+    border        : 2px solid #777777;
+*/
+	border-radius : 13px;
+}
+
+.bh-slidervalue {
+  	z-index         : 99;
+  	width           : 10%;
+  	height          : 25px;
+  	float           : left;
+  	margin          : 3px;
+
+  	background      : #DDDDDD; /* Grey background */
+	opacity         : 0.9; /* Set transparency (for mouse-over effects on hover) */
+  	
+	border          : 2px solid #777777;
+	border-radius   : 5px;
+  	
+  	color           : #222222;
+  	font-family     : Helvetica,Arial;
+  	font-weight     : bold;
+  	font-size       : 11px;
+  	line-height     : 25px;
+  	
+  	text-align      : center;
+  	vertical-align  : middle;
+	}
+
+.bh-sliderlabel {
+	z-index         : 99;
+	width           : 90%;
+	float           : left;
+	
+	padding	        : 5px;
+	padding-left    : 10px;
+
+	font-family     : Sans-serif, Arial, Helvetica;
+	font-size       : 12px;
+	text-align      : left;
+	}
+
+/* Mouse-over effects */
+input[type="range"].bh-slider:hover, .bh-slider:hover {
+  	opacity: 1; /* Fully shown on mouse-over */
+}
+
+/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+input[type="range"].bh-slider::-webkit-slider-runnable-track, .bh-slider::-webkit-slider-runnable-track {
+  	-webkit-appearance  : none;     /* Override default look */
+  	appearance          : none;
+  	width               : 29px;		/* Set a specific slider handle width */
+  	height              : 29px;		/* Slider handle height */
+  	background          : #223322;	/* Green background */
+  	cursor              : pointer;	/* Cursor on hover */
+  	border-radius       : 15px;
+	border              : 2px solid #777777;
+}
+
+input[type="range"].bh-slider::-webkit-slider-thumb, .bh-slider::-webkit-slider-thumb {
+  	-webkit-appearance  : none;	    /* Override default look */
+  	appearance          : none;
+  	width               : 25px;		/* Set a specific slider handle width */
+  	height              : 25px;		/* Slider handle height */
+  	background          : green;	/* Green background */
+  	cursor              : pointer;	/* Cursor on hover */
+  	border-radius       : 13px;
+	border              : 2px solid #00cc00;
+}
+
+input[type="range"].bh-slider::-moz-range-thumb, .bh-slider::-moz-range-thumb {
+  	-webkit-appearance  : none;	    /* Override default look */
+	width               : 25px;		/* Set a specific slider handle width */
+	height              : 25px;		/* Slider handle height */
+  	background          : green; 	/* Green background */
+  	cursor              : pointer;	/* Cursor on hover */
+  	border-radius       : 13px;
+	border              : 2px solid #00cc00;
+}
+
+.bh-slider.device_off::-webkit-slider-runnable-track    { background: #332222; }
+.bh-slider.device_off::-webkit-slider-thumb             { background : darkred;  border : 2px solid #cc0000; }
+.bh-slider.device_off::-moz-range-thumb                 { background : darkred;  border : 2px solid #cc0000; }
+
+.bh-slider.device_on::-webkit-slider-runnable-track     { background: #332222; }
+.bh-slider.device_on::-webkit-slider-thumb              { background : green;  border : 2px solid #00cc00; }
+.bh-slider.device_on::-moz-range-thumb                  { background : green;  border : 2px solid #00cc00; }
+
+.bh-slider.device_undef::-webkit-slider-runnable-track  { background: #332222; }
+.bh-slider.device_undef::-webkit-slider-thumb           { background : gray;  border : 2px solid #cccccc; }
+.bh-slider.device_undef::-moz-range-thumb               { background : gray;  border : 2px solid #cccccc; }
+
+.bh-slider.device_set::-webkit-slider-runnable-track  { background: #332222; }
+.bh-slider.device_set::-webkit-slider-thumb           { background : blue;  border : 2px solid lightblue; }
+.bh-slider.device_set::-moz-range-thumb               { background : blue;  border : 2px solid lightblue; }
+
+/* EOF */

@@ -21,3 +21,6 @@ server/modules/dht11/__pycache__/
 
 .idea/
 tryout/
+/.env
+/data/couchdb/*
+/log/*

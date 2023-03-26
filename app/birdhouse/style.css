@@ -87,7 +87,7 @@ h3 { margin : 4px; }
 
 .separator_group {
     float         : left;
-    width         : 280px;
+    width         : 98%;
     padding       : 4px;
     margin        : 2px;
     margin-bottom : 4px;
@@ -118,7 +118,19 @@ h3 { margin : 4px; }
     text-align : center;
 }
 
-.camera_info_text { 
+.camera_info_image .image_container {
+    width  : 100%;
+}
+
+.camera_info_image .image_container .thumbnail_container {
+    width  : 100%;
+}
+
+.camera_info_image .image_container img {
+    min-width  : 80%;
+}
+
+.camera_info_text {
     float      : left;
     margin     : 5px;
     text-align : left;
@@ -177,6 +189,8 @@ h3 { margin : 4px; }
     position    : absolute;
     width       : 40px;
     height      : 40px;
+    max-width       : 40px;
+    max-height      : 40px;
     left        : 50%;
     top         : 40%;
     margin-left : -20px; /*half of the width */
@@ -341,4 +355,14 @@ h3 { margin : 4px; }
     margin           : 2px;
     color            : black;
     border           : 1px solid white;
+}
+
+/* weather fields */
+
+.weather_hide_if_small {
+    display: none;
+}
+
+.weather_show {
+    display: blocK;
 }

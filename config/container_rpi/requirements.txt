@@ -1,5 +1,4 @@
 numpy
-picamera
 imutils
 flask
 tqdm
@@ -10,3 +9,7 @@ ffmpeg-python
 adafruit-circuitpython-dht
 couchdb
 requests
+python_weather
+board
+geopy
+python-dotenv

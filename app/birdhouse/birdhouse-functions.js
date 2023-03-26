@@ -6,16 +6,17 @@
 
 function birdhouse_edit_field(id, field, type="input", options="", data_type="string") {
     var fields = field.split(":");
+    var settings = app_data["DATA"]["settings"];
     var data   = "";
     var html   = "";
     var style  = "";
 
-    if (fields.length == 1) { data = app_data["DATA"][fields[0]]; }
-    else if (fields.length == 2) { data = app_data["DATA"][fields[0]][fields[1]]; }
-    else if (fields.length == 3) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]]; }
-    else if (fields.length == 4) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]][fields[3]]; }
-    else if (fields.length == 5) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]][fields[3]][fields[4]]; }
-    else if (fields.length == 6) { data = app_data["DATA"][fields[0]][fields[1]][fields[2]][fields[3]][fields[4]][fields[5]]; }
+    if (fields.length == 1) { data = settings[fields[0]]; }
+    else if (fields.length == 2) { data = settings[fields[0]][fields[1]]; }
+    else if (fields.length == 3) { data = settings[fields[0]][fields[1]][fields[2]]; }
+    else if (fields.length == 4) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]]; }
+    else if (fields.length == 5) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]][fields[4]]; }
+    else if (fields.length == 6) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]][fields[4]][fields[5]]; }
 
     if (data_type == "json") { data = JSON.stringify(data); }
     if (data_type == "integer" || data_type == "float") { style += "width:60px;" }
@@ -40,9 +41,21 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
             else { data_str = data; }
             if (data_str == values[i])  { html += "<option selected='selected'>"+values[i]+"</option>"; }
             else                        { html += "<option>"+values[i]+"</option>"; }
-        }
+            }
         html += "</select>";
-    }
+        }
+    else if (type == "range") {
+        range = options.split(":");
+        style = "width:100px";
+        if (range[0] == 0 && range[1] == 1) { style = "width:40px;"; }
+        on_set    = "document.getElementById(\""+id+"\").value = this.value;";
+        on_value  = "document.getElementById(\""+id+"_range\").value = this.value;";
+        html += "<div class='bh-slidecontainer' style='float:left;width:100px;height:auto;'>";
+        html += "<input id='"+id+"_range' class='bh-slider' type='range' name='' min='"+range[0]+"' max='"+range[1]+"' style='"+style+"' onchange='"+on_set+"'>";
+        html += "</div><div style='float:left;margin-left:12px;'>";
+        html += "<input id='"+id+"' class='bh-slidervalue' style='width:30px;' onchange='"+on_value+"'>";
+        html += "</div>";
+        }
     html += "<input id='"+id+"_data' style='display:none' value='"+field+"'>\n";
     html += "<input id='"+id+"_data_type' style='display:none' value='"+data_type+"'>\n";
     return html;
@@ -124,12 +137,7 @@ function birdhouse_edit_send(id_list) {
         }
     }
     if (error) { alert(error_msg); }
-    else { appFW.requestAPI('POST',[ "edit_presets", info ],"",birdhouse_edit_done,"",""); }
-}
-
-function birdhouse_edit_done(data) {
-
-    appMsg.alert("Done");
+    else { birdhouse_editData(info); }
 }
 
 
@@ -140,7 +148,7 @@ function birdhouse_initTooltip() {
 	tooltip_offset_height	= 42;
 	tooltip_offset_width	= -180;
 
-	button_tooltip = new jcTooltip("button_tooltip") ;
+	button_tooltip = new jcTooltip("button_tooltip");
 	button_tooltip.settings( tooltip_mode, tooltip_width, tooltip_height, tooltip_offset_height, tooltip_offset_width );	
 	}
 
@@ -148,6 +156,19 @@ function birdhouse_tooltip( tooltip_element, tooltip_content, name, left="" ) {
 	result = button_tooltip.create( tooltip_element, tooltip_content, name, left );
 	return result;
 	}
+
+
+function birdhouse_frameHeader(title, status_id="") {
+    if (status_id != "") {
+        title = "<div id='"+status_id+"' style='float:left;'><div id='black'></div></div>" + title;
+    }
+    setTextById(app_frame_header, "<center><h2>" + title + "</h2></center>");
+}
+
+function birdhouse_frameFooter(content) {
+
+    setTextById(app_frame_index, "<center>" + content + "</center>");
+}
 
 
 function birdhouse_table () {
@@ -164,9 +185,18 @@ function birdhouse_table () {
     };
 
     this.update_settings = function () {
-        for (let key in this.style_table) { this.style_table_string += key+":"+this.style_table[key]+";"; }
-        for (let key in this.style_rows)  { this.style_rows_string  += key+":"+this.style_rows[key]+";"; }
-        for (let key in this.style_cells) { this.style_cells_string += key+":"+this.style_cells[key]+";"; }
+        for (let key in this.style_table) {
+            var setting_string = key+":"+this.style_table[key]+";";
+            if (this.style_table_string.indexOf(setting_string) < 0) {this.style_table_string += setting_string; }
+        }
+        for (let key in this.style_rows)  {
+            var setting_string = key+":"+this.style_rows[key]+";";
+            if (this.style_rows_string.indexOf(setting_string) < 0) {this.style_rows_string += setting_string; }
+        }
+        for (let key in this.style_cells) {
+            var setting_string = key+":"+this.style_cells[key]+";";
+            if (this.style_cells_string.indexOf(setting_string) < 0) {this.style_cells_string += setting_string; }
+        }
     }
 
 	this.start	= function () {
@@ -198,7 +228,7 @@ function birdhouse_Links(link_list) {
 	}
 
 
-function birdhouse_imageOverlay(filename, description="", favorit="", to_be_deleted="") {
+function birdhouse_imageOverlay(filename, description="", favorite="", to_be_deleted="", image_id="overlay_image") {
 
         var overlay = "<div id=\"overlay_content\" class=\"overlay_content\" onclick=\"birdhouse_overlayHide();\"><!--overlay--></div>";
         setTextById("overlay_content",overlay);
@@ -210,7 +240,7 @@ function birdhouse_imageOverlay(filename, description="", favorit="", to_be_dele
         html  = "";
         html += "<div id=\"overlay_image_container\">";
         html += "<div id=\"overlay_close\" onclick='birdhouse_overlayHide();'>[X]</div>";
-        html += "<img id='overlay_image' src='"+filename+"'>";
+        html += "<img id='"+image_id+"' src='"+filename+"'>";
         html += "<br/>&nbsp;<br/>"+description+"</div>";
         document.getElementById("overlay_content").innerHTML = html;
         
@@ -224,7 +254,7 @@ function birdhouse_imageOverlay(filename, description="", favorit="", to_be_dele
 	    // check, how to destroy ...
 	}
 
-function birdhouse_videoOverlay(filename, description="", favorit="", to_be_deleted="") {
+function birdhouse_videoOverlay(filename, description="", favorite="", to_be_deleted="") {
         check_iOS = iOS();
         if (check_iOS == true) {
           window.location.href = filename;
@@ -278,35 +308,46 @@ function birdhouse_overlayHide() {
        }
 
 
-function birdhouse_groupToggle(id) {
-        if (document.getElementById("group_"+id).style.display == "none") {
-                document.getElementById("group_"+id).style.display = "block";
-            	if (document.getElementById("group_intro_"+id)) {
-            	    document.getElementById("group_intro_"+id).style.display = "block";
-            	}
-            	if (document.getElementById("group_ids_"+id)) {
-                    images = document.getElementById("group_ids_"+id).innerHTML;
-                }
-                else {
-                    images = "";
-                }
-                document.getElementById("group_link_"+id).innerHTML = "(&minus;)";
-                image_list = images.split(" ");
-                for (let i=0; i<image_list.length; i++) {
-                  if (image_list[i] != "") {
-			 img      = document.getElementById(image_list[i]);
-			 if (img != undefined) {
-	                        img_file = img.getAttribute('data-src');
-	                        img.src  = img_file;
-	                        }
-		   }	}
-		}
-	else {
-        	document.getElementById("group_"+id).style.display = "none";
-        	if (document.getElementById("group_intro_"+id)) { document.getElementById("group_intro_"+id).style.display = "none"; }
-        	document.getElementById("group_link_"+id).innerHTML = "(+)";
-		}
-	}
+function birdhouse_groupToggle(id, open="") {
+    if (open == "") {
+        if (document.getElementById("group_"+id).style.display == "none")   { birdhouse_groupOpen(id); }
+        else                                                                { birdhouse_groupClose(id); }
+    }
+    else {
+        if (open == true)   { birdhouse_groupOpen(id); }
+        else                { birdhouse_groupClose(id); }
+    }
+}
+
+function birdhouse_groupOpen(id) {
+    document.getElementById("group_"+id).style.display = "block";
+    if (document.getElementById("group_intro_"+id)) {
+        document.getElementById("group_intro_"+id).style.display = "block";
+    }
+    if (document.getElementById("group_ids_"+id)) {
+        images = document.getElementById("group_ids_"+id).innerHTML;
+    }
+    else {
+        images = "";
+    }
+    document.getElementById("group_link_"+id).innerHTML = "(&minus;)";
+    image_list = images.split(" ");
+    for (let i=0; i<image_list.length; i++) {
+        if (image_list[i] != "") {
+            img      = document.getElementById(image_list[i]);
+            if (img != undefined) {
+                img_file = img.getAttribute('data-src');
+                img.src  = img_file;
+            }
+        }
+    }
+}
+
+function birdhouse_groupClose(id) {
+        document.getElementById("group_"+id).style.display = "none";
+        if (document.getElementById("group_intro_"+id)) { document.getElementById("group_intro_"+id).style.display = "none"; }
+        document.getElementById("group_link_"+id).innerHTML = "(+)";
+}
 
 
 function iOS() {

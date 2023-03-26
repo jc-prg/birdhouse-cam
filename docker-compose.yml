@@ -10,56 +10,57 @@ services:
     image:  ${IMAGE_DB:-matthiasg/rpi-couchdb:latest}
     container_name: birdhouse_db
     ports:
-      - "${BIRDHOUSE_DB_PORT:-5100}:5984"
+      - "${COUCHDB_PORT}:5984"
     volumes:
       - ./data/couchdb:/opt/couchdb/data
       - ./config/couchdb/default.ini:/opt/couchdb/etc/default.ini
     environment:
-      - 'COUCHDB_USER=birdhouse'
-      - 'COUCHDB_PASSWORD=birdhouse'
+      - 'COUCHDB_USER=${COUCHDB_USER}'
+      - 'COUCHDB_PASSWORD=${COUCHDB_PASSWORD}'
+    restart: always
     networks:
-      mynet:
-        ipv4_address: 192.168.201.4
+      my-net:
+        ipv4_address: 192.168.202.3
 
   birdhouse_server:
     build: ${CONTAINER_SERVER:-./config/container_rpi/}
     container_name: birdhouse_server
     privileged: true
     volumes:
-      - ./:/usr/src/app/
       - ${BIRDHOUSE_DIR_LOGGING:-./log}:/log
       - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
+      - ./:/usr/src/app/
     ports:
-      - "${BIRDHOUSE_HTTP_PORT:-8000}:8000"
-#    depends_on:
-#      - birdhouse_db
-    restart: on-failure
+      - "${BIRDHOUSE_HTTP_PORT}:8000"
+    depends_on:
+      - birdhouse_db
+    restart: always
     networks:
-      mynet:
-        ipv4_address: 192.168.201.5
+      my-net:
+        ipv4_address: 192.168.202.4
 
   birdhouse_video_stream:
     build: ${CONTAINER_VIDEO:-./config/container_video_rpi/}
     container_name: birdhouse_video
     privileged: true
     volumes:
-      - ./:/usr/src/app/
       - ${BIRDHOUSE_DIR_LOGGING:-./log}:/log
       - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
+      - ./:/usr/src/app/
     ports:
-      - "${BIRDHOUSE_HTTP_VIDEO:-8008}:8008"
+      - "${BIRDHOUSE_VIDEO_PORT}:8008"
 #    depends_on:
 #      - birdhouse_db
     restart: on-failure
     networks:
-      mynet:
-        ipv4_address: 192.168.201.6
+      my-net:
+        ipv4_address: 192.168.202.5
 
 networks:
-  mynet:
+  my-net:
     driver: bridge
     ipam:
+      driver: default
       config:
-        - subnet: 192.168.201.0/24
-       
+        - subnet: 192.168.202.0/24
 

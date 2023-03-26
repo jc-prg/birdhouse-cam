@@ -18,12 +18,31 @@
 @media only screen and
     (device-width : 375px) and (orientation : portrait) {
 
-        .livestream_main     { max-width : 320px; }
         .image_container.fixed_height { height  : 180px; }
+        .livestream_main     { max-width : 320px; }
         .separator_group     { width  : 328px; font-size : 11px; }
         .thumbnail           { width :  98%;  }
         .thumbnail_container { width : 80px; }
 
+        .camera_info_image .image_container {
+            width  : 95%;
+            height : 270px;
+        }
+
+        .camera_info_image .image_container .thumbnail_container {
+            width  : 95%;
+            height : 100%;
+        }
+
+        .camera_info_image .image_container img {
+            min-height  : 200px;
+            max-height  : 250px;
+        }
+
+        .camera_info_image.video_edit .image_container img {
+            min-height  : none;
+            max-height  : none;
+        }
 }
 
 /* iPhone XS: landscape */
@@ -45,6 +64,8 @@
         .star_img        { width   : 20px;  height   : 20px; }
 
         .frame_column.wide { width : 695px; }
+
+        .weather_hide_if_small { display: block; }
     }
 
 /* ----------*/
