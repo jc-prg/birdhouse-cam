@@ -402,6 +402,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 
     var height = "";
     var container_style = "";
+    var thumb_container_style = "";
     var addon_id = "";
 
     if (!same_img_size) {
