@@ -423,7 +423,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	html += "<div "+addon_id+" class='image_container"+height+"' style='" + container_style + "'>";
 	html += "  <div class='star'>"+star+"</div>";
 	html += "  <div class='recycle'>"+recycle+"</div>";
-	html += "  <div class='thumbnail_container'>";
+    html += "  <div class='thumbnail_container' style='" + thumb_container_style + "'>";
 	html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id2+"' class='thumbnail' style='"+style+"'/></a>";
 	html +=      play_button;
 	html += "    <br/><center><small>"+description+"</small></center>";
