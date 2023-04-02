@@ -430,7 +430,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	html += "</div>";
 
 	if (entry["type"] == "addon") {
-        html += "<div id='lowres_today_error' class='image_container"+height+"' style='" + container_style + ";display:none;'>";
+        html += "<div id='lowres_today_error' class='image_container"+height+"' style='" + container_style +  ";display:none;'>";
         html += "  <div class='star'></div>";
         html += "  <div class='recycle'></div>";
         html += "  <div class='thumbnail_container' style='" + thumb_container_style + "'>";
