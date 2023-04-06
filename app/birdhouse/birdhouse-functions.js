@@ -230,6 +230,9 @@ function birdhouse_Links(link_list) {
 
 function birdhouse_imageOverlay(filename, description="", favorite="", to_be_deleted="", image_id="overlay_image") {
 
+        if (document.getElementById("overlay_content")) { existing = true; }
+        else                                            { existing = false; }
+
         var overlay = "<div id=\"overlay_content\" class=\"overlay_content\" onclick=\"birdhouse_overlayHide();\"><!--overlay--></div>";
         setTextById("overlay_content",overlay);
         document.getElementById("overlay").style.display         = "block";
@@ -243,10 +246,22 @@ function birdhouse_imageOverlay(filename, description="", favorite="", to_be_del
         html += "<img id='"+image_id+"' src='"+filename+"'>";
         html += "<br/>&nbsp;<br/>"+description+"</div>";
         document.getElementById("overlay_content").innerHTML = html;
-        
+
         myElement = document.getElementById("overlay_content");
+        if (existing) { delete pz; }
 	    pz = new PinchZoom.default(myElement);
+
 /*
+        //destroy an object
+
+        var namespace = {};
+        namespace.someClassObj = {};
+        delete namespace.someClassObj;
+
+        // -----
+        // or: https://www.delftstack.com/howto/javascript/javascript-destroy-object/
+        // pz = undefined;
+
 	    pz.zoomFactor = 1;
 	    pz.offset = { x: 0, y: 0 };
 	    pz.update();
