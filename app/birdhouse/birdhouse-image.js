@@ -301,7 +301,15 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	else if (entry["type"] == "directory") {
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["directory"] + entry["lowres"]);
 		var onclick     = "birdhousePrint_load(view=\"TODAY\", camera = \""+entry["camera"]+"\", date=\""+entry["datestamp"]+"\");";
-		var description = "<b>" + entry["date"] + "</b><br/>" + entry["count_cam"] + "/" + entry["count"] + " (" + entry["dir_size"] + " MB)";
+		var description = "";
+		if (entry["count_cam"] != entry["count"]) {
+            description += "<b>" + entry["date"] + "</b><br/>" + entry["count_cam"] + " / " + entry["count"];
+            description += "<br/><i>[" + entry["dir_size"] + " MB]</i>";
+            }
+        else {
+            description += "<b>" + entry["date"] + "</b><br/>" + entry["count_cam"];
+            description += "<br/><i>[" + entry["dir_size"] + " MB]</i>";
+            }
     }
 	else if (entry["type"] == "addon") {
 		var lowres      = birdhouse_ImageURL(RESTurl + entry["lowres"]);
@@ -393,7 +401,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		if (img_recycle == undefined || img_recycle == -1)   { img_recycle = 0; }
 		if (parseInt(img_star) == 0)     { img_star_r = 1; }    else { img_star_r = 0; }
 		if (parseInt(img_recycle) == 0)  { img_recycle_r = 1; } else { img_recycle_r = 0; }
-		var onclick_star    = "birdhouse_setFavorit(index=\""+img_id+"\",status=document.getElementById(\"s_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\",img_id=\""+img_id2+"\");";
+		var onclick_star    = "birdhouse_setFavorite(index=\""+img_id+"\",status=document.getElementById(\"s_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\",img_id=\""+img_id2+"\");";
 		var onclick_recycle = "birdhouse_setRecycle(index=\""+img_id+"\",status=document.getElementById(\"d_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\",img_id=\""+img_id2+"\");";
 		onclick_recycle    += "birdhouse_recycleRange(group_id=\""+group_id+"\", index=\""+img_id+"\", status=document.getElementById(\"d_"+img_id2+"_value\").innerHTML, lowres_file=\""+img_name+"\")";
 		star                = "<div id='s_"+img_id2+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id2+"' src='"+img_dir+"star"+img_star+".png'       onclick='"+onclick_star+"'/>";

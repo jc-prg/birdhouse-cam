@@ -114,35 +114,36 @@ function birdhouse_app_settings (name="Settings") {
         html += "<hr style='border:1px solid gray;'>"
         html += "<div style='display:none'>Edit initial setup: "+birdhouse_edit_field(id="set_initial_setup", field="server:initial_setup", type="select", options="false", data_type="boolean")+"</div>";
         html += this.tab.start();
-        html += this.tab.row("Title:&nbsp;", birdhouse_edit_field(id="set_title", field="title", type="input") );
-        html += this.tab.row("Language:&nbsp;", birdhouse_edit_field(id="set_language", field="localization:language", type="select", options="EN,DE") );
-        html += this.tab.row("Timezone:&nbsp;", birdhouse_edit_field(id="set_timezone", field="localization:timezone", type="select", options=timezones, data_type="string") );
-        html += this.tab.row("RPi Active:&nbsp;", birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false", data_type="boolean") );
+        html += this.tab.row("Title:&nbsp;",              birdhouse_edit_field(id="set_title", field="title", type="input") );
+        html += this.tab.row("Language:&nbsp;",           birdhouse_edit_field(id="set_language", field="localization:language", type="select", options="EN,DE") );
+        html += this.tab.row("Timezone:&nbsp;",           birdhouse_edit_field(id="set_timezone", field="localization:timezone", type="select", options=timezones, data_type="string") );
+        html += this.tab.row("RPi Active:&nbsp;",         birdhouse_edit_field(id="set_rpi", field="server:rpi_active", type="select", options="true,false", data_type="boolean") );
         html += this.tab.row("<hr/>");
-        html += this.tab.row("Backup-Time:&nbsp;", birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
-        html += this.tab.row("BU Index Favorite:&nbsp;", birdhouse_edit_field(id="set_preview_fav", field="backup:preview_fav", type="select", options="true,false", data_type="boolean") );
-        html += this.tab.row("BU Index Time:&nbsp;", birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
-        html += this.tab.row("<hr/>");
-
-        html += this.tab.row("Index View:&nbsp;", birdhouse_edit_field(id="set_index_view", field="views:index:type", type="select", options="default,overlay,picture-in-picture", data_type="string") );
-        html += this.tab.row("LowRes Position:&nbsp;", birdhouse_edit_field(id="set_index_lowres", field="views:index:lowres_position", type="select", options="1,2,3,4", data_type="integer") );
+        html += this.tab.row("Backup-Time:&nbsp;",        birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
+        html += this.tab.row("BU Index Favorite:&nbsp;",  birdhouse_edit_field(id="set_preview_fav", field="backup:preview_fav", type="select", options="true,false", data_type="boolean") );
+        html += this.tab.row("BU Index Time:&nbsp;",      birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
         html += this.tab.row("<hr/>");
 
-        html += this.tab.row("DB Server:&nbsp;", birdhouse_edit_field(id="set_db_server", field="server:database_server", type="input", options="", data_type="string") );
-        html += this.tab.row("DB Type:&nbsp;", birdhouse_edit_field(id="set_db_type", field="server:database_type", type="select", options="json,couch,both", data_type="string") );
-        html += this.tab.row("DB Daily Clean Up:&nbsp;", birdhouse_edit_field(id="set_db_clean_up", field="server:daily_clean_up", type="select", options="true,false", data_type="boolean") );
-        html += this.tab.row("DB Admin:","<a href='"+link+"' target='_blank'>"+link+"</a>");
+        html += this.tab.row("Index View:&nbsp;",         birdhouse_edit_field(id="set_index_view", field="views:index:type", type="select", options="default,overlay,picture-in-picture", data_type="string") );
+        html += this.tab.row("LowRes Position:&nbsp;",    birdhouse_edit_field(id="set_index_lowres", field="views:index:lowres_position", type="select", options="1,2,3,4", data_type="integer") );
         html += this.tab.row("<hr/>");
 
-        html += this.tab.row("HTTP Server:&nbsp;", birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
-        // html += this.tab.row("HTTP Port:&nbsp;", birdhouse_edit_field(id="set_port", field="server:port", type="input", options="true,false", data_type="integer") );
-        html += this.tab.row("HTTP Port:&nbsp;", settings["server"]["port"] + " (edit .env)");
-        //html += this.tab.row("Videostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_video", field="server:ip4_stream_video", type="input", options="true,false", data_type="string") );
-        //html += this.tab.row("Videostream Port:&nbsp;", birdhouse_edit_field(id="set_ip4_video_port", field="server:port_video", type="input", data_type="integer") );
-        html += this.tab.row("Videostream Port:&nbsp;", settings["server"]["port_video"] + " (edit .env)");
-        //html += this.tab.row("Audiostream Srv:&nbsp;", birdhouse_edit_field(id="set_ip4_audio", field="server:ip4_stream_audio", type="input", options="true,false", data_type="string") );
-        html += this.tab.row("Audiostream Port:&nbsp;", settings["server"]["port_audio"] + " (edit .env)");
-        html += this.tab.row("Deny admin from IP4:&nbsp;", birdhouse_edit_field(id="set_ip4_deny", field="server:ip4_admin_deny", type="input", options="true,false", data_type="json") );
+        html += this.tab.row("DB Server:&nbsp;",          birdhouse_edit_field(id="set_db_server", field="server:database_server", type="input", options="", data_type="string") );
+        html += this.tab.row("DB Type:&nbsp;",            birdhouse_edit_field(id="set_db_type", field="server:database_type", type="select", options="json,couch,both", data_type="string") );
+        html += this.tab.row("DB Daily Clean Up:&nbsp;",  birdhouse_edit_field(id="set_db_clean_up", field="server:daily_clean_up", type="select", options="true,false", data_type="boolean") );
+        html += this.tab.row("DB Port:&nbsp;",            settings["server"]["database_port"] + " <i>(edit .env)");
+        html += this.tab.row("DB Admin:",                 "<a href='"+link+"' target='_blank'>"+link+"</a>");
+        html += this.tab.row("<hr/>");
+
+        html += this.tab.row("HTTP Server:&nbsp;",        birdhouse_edit_field(id="set_ip4", field="server:ip4_address", type="input", options="true,false", data_type="string") );
+        html += this.tab.row("HTTP Port:&nbsp;",          settings["server"]["port"] + " <i>(edit .env)");
+        html += this.tab.row("Video stream port:&nbsp;",  settings["server"]["port_video"] + " <i>(edit .env)");
+        html += this.tab.row("Audio stream port:&nbsp;",  settings["server"]["port_audio"] + " <i>(edit .env)");
+
+        html += this.tab.row("<hr>");
+        html += this.tab.row("Admin access via:&nbsp;",   settings["server"]["admin_login"] + " <i>(edit .env)");
+        html += this.tab.row("ADM Deny from IP4:&nbsp;",  settings["server"]["ip4_admin_deny"] + " <i>(edit .env)");
+        html += this.tab.row("ADM Allow from IP4:&nbsp;", settings["server"]["ip4_admin_allow"] + " <i>(edit .env)");
         html += this.tab.row("<hr>");
 
         html += this.tab.row("", birdhouse_edit_save("set_main","set_preview_fav:set_db_clean_up:set_db_server:set_db_type:set_weather_location:set_initial_setup:set_language:set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port:set_index_lowres:set_index_view") );
@@ -152,13 +153,14 @@ function birdhouse_app_settings (name="Settings") {
     }
 
 	this.api_calls = function () {
-	    var api_call       = "";
+	    var api_call        = "";
         var cameras         = app_data["DATA"]["settings"]["devices"]["cameras"];
         var button_style    = "background-color:lightgray;color:black;width:90px;margin:3px;";
-        var html_entry = this.tab.start();
+        delete this.tab.style_cells["width"];
+        var html_entry      = this.tab.start();
 
-        api_call    = "<button onclick='window.open(\"" + RESTurl + "api/list/\",\"_blank\");' style='"+button_style+"';>REST API</button>";
-        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/INDEX/\",\"_blank\");' style='"+button_style+"';>INDEX</button>";
+        api_call    = "<button onclick='window.open(\"" + RESTurl + "api/no-id/list/\",\"_blank\");' style='"+button_style+"';>REST API</button>";
+        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/INDEX/\",\"_blank\");' style='"+button_style+"';>INDEX</button>";
         html_entry += this.tab.row("API Calls", api_call);
 
         api_call    = "<button onclick='birdhouse_forceBackup();' style='"+button_style+"';>Force Backup</button>";
@@ -170,12 +172,13 @@ function birdhouse_app_settings (name="Settings") {
         html_entry += this.tab.row("API Commands", api_call);
 
 	    for (let camera in cameras) {
-	        api_call  = "<button onclick='window.open(\"" + RESTurl + "api/TODAY/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Today "+camera.toUpperCase()+"</button>";
-	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Compl. "+camera.toUpperCase()+"</button>";
-	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/ARCHIVE/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Archive "+camera.toUpperCase()+"</button>";
+	        api_call  = "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Today "+camera.toUpperCase()+"</button>";
+	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Compl. "+camera.toUpperCase()+"</button>";
+	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/ARCHIVE/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Archive "+camera.toUpperCase()+"</button>";
             html_entry += this.tab.row("API "+camera, api_call);
         }
         html_entry += this.tab.end();
+        this.tab.style_cells["width"] = "40%";
         return html_entry;
 	}
 

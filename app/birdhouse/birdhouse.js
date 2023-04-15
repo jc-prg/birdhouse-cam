@@ -50,8 +50,8 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 	    }
 
 	var commands = [view];
-	if (camera != "" && date != "")	{ commands.push(camera); commands.push(date); }
-	else if (camera != "")          { commands.push(camera); }
+	if (camera != "" && date != "")	{ commands.push(date); commands.push(camera); app_active_cam = camera; }
+	else if (camera != "")          { commands.push(camera); app_active_cam = camera; }
 	else                            { commands.push(app_active_cam); }
 	
 	console.debug("Request "+view+" / "+camera+" / "+date);
@@ -93,7 +93,7 @@ function birdhousePrint(data) {
 	var date            = data_active["active_date"];
 	var camera          = data_active["active_cam"];
 	if (camera == "") 	{ camera = app_active_cam; }
-	else			    { app_active_cam = camera; }
+	// else			    { app_active_cam = camera; }
 
 	birdhouseSetMainStatus(data);
 	birdhousePrintTitle(data, app_active_page, camera);
@@ -174,8 +174,9 @@ function birdhouseSetMainStatus(data) {
     var status_view  = data["STATUS"]["view"];
     var status_admin = data["STATUS"]["admin_allowed"];
 
-	if (status_view["active_cam"] != undefined && status_view["active_cam"] != "")
-	                                                        { app_active_cam = status_view["active_cam"]; }
+	//if (status_view["active_cam"] != undefined && status_view["active_cam"] != "")
+	//                                                        { app_active_cam = status_view["active_cam"]; }
+
 	app_active_mic = app_available_micros[0];
 
 	if (status_view["active_page"] != "" && status_view["active_page"] != undefined && status_view["active_page"] != "status")
@@ -222,6 +223,7 @@ function birdhouseSwitchCam() {
 	if (next_cam > app_available_cameras.length-1) { next_cam = 0; }
 	
 	console.log("birdhouseSwitchCam: "+app_active_cam+"->"+app_available_cameras[next_cam]);
+	app_active_cam = app_available_cameras[next_cam];
 	birdhousePrint_load(view=app_active_page, camera=app_available_cameras[next_cam], date=app_active_date);
 }
 

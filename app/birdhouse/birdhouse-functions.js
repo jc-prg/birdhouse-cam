@@ -185,17 +185,21 @@ function birdhouse_table () {
     };
 
     this.update_settings = function () {
+        this.style_table_string = "";
         for (let key in this.style_table) {
             var setting_string = key+":"+this.style_table[key]+";";
-            if (this.style_table_string.indexOf(setting_string) < 0) {this.style_table_string += setting_string; }
+            this.style_table_string += setting_string;
         }
+        this.style_rows_string = "";
         for (let key in this.style_rows)  {
             var setting_string = key+":"+this.style_rows[key]+";";
-            if (this.style_rows_string.indexOf(setting_string) < 0) {this.style_rows_string += setting_string; }
+            this.style_rows_string += setting_string;
         }
+
+        this.style_cells_string = "";
         for (let key in this.style_cells) {
             var setting_string = key+":"+this.style_cells[key]+";";
-            if (this.style_cells_string.indexOf(setting_string) < 0) {this.style_cells_string += setting_string; }
+            this.style_cells_string += setting_string;
         }
     }
 
