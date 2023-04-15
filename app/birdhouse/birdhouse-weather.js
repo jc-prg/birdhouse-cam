@@ -135,8 +135,9 @@ function birdhouseWeather( data ) {
 
     html_weather += "<br/>&nbsp;<br/>";
 
-    console.error(chart_data);
-    console.error(weather_data);
+    //console.error(chart_data);
+    //console.error(weather_data);
+
     var chart     = "&nbsp;<br/>";
     chart        += birdhouseChart_create(title=chart_data["titles"],data=chart_data["data"]);
     chart        += "<br/>&nbsp;<br/>";
