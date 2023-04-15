@@ -370,6 +370,8 @@ h3 { margin : 4px; }
 /* move up botton */
 
 #move_up {
+    display       : none;
+
     position      : fixed;
     bottom        : 40px;
     right         : 20px;

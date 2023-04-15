@@ -57,6 +57,13 @@ function birdhouseStatus_print(data) {
     var status_dev = data["STATUS"]["devices"];
     var start_time = data["STATUS"]["start_time"];
 
+    // check page length vs. screen height
+    var body = document.body, html = document.documentElement;
+    var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
+
+    if (height > 1.5 * document.body.clientHeight) { elementVisible("move_up"); }
+    else { elementHidden("move_up"); }
+
     // add database information
     var db_info = "type=" + settings["server"]["database_type"]+"; ";
     if (settings["server"]["database_type"] == "couch") { db_info += "connected=" + status_db["db_connected_couch"]; }
