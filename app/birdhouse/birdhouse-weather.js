@@ -71,9 +71,10 @@ function birdhouseWeather( data ) {
     var current_day    = d.getDate();
     var current_hour   = d.getHours();
 
+    var last_day       = "";
     var day_count      = 0;
     var chart_data     = {
-        "titles" : [lang("TEMPERATURE"), lang("HUMIDITY"), lang("WIND_SPEED")],
+        "titles" : [lang("TEMPERATURE"), lang("HUMIDITY"), lang("WIND")],
         "data"   : {}
     }
     var weather_data = {}
@@ -94,6 +95,7 @@ function birdhouseWeather( data ) {
 
             if (day_count <= 3) {
                 var chart_key = key.split("-")[2] + "." + key.split("-")[1] + " " + key2;
+                if (key != last_day) { chart_data["data"][chart_key+"."] = [undefined, undefined, undefined]; last_day = key; }
                 chart_data["data"][chart_key] = [forcast_hour["temperature"], forcast_hour["humidity"], forcast_hour["wind_speed"]];
 
                 if (key_hour.split(":")[0] > 6) {
