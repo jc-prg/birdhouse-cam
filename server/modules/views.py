@@ -430,7 +430,6 @@ class BirdhouseViews(threading.Thread):
         self.logging.addHandler(birdhouse_loghandler)
         self.logging.info("Starting views thread ...")
 
-        self.server = None
         self.active_cams = None
         self._running = True
         self.health_check = time.time()
@@ -496,93 +495,33 @@ class BirdhouseViews(threading.Thread):
         """
         self._running = False
 
-    def admin_allowed(self):
-        """
-        Check if administration is allowed based on the IP4 the request comes from
-        """
-        if self.server is None:
-            return False
-
-        self.logging.debug("Check if administration is allowed: " + self.server.address_string() + " / " + str(
-            self.config.param["server"]["ip4_admin_deny"]))
-
-        if self.server.address_string() in self.config.param["server"]["ip4_admin_deny"]:
-            return False
-        else:
-            return True
-
-    def selected_camera(self, check_path=""):
-        """
-        Check path, which cam has been selected
-        """
-        which_cam = "cam1"
-        further_param = ""
-        complete_cam = ""
-
-        if check_path == "":
-            path = self.server.path
-        else:
-            path = check_path
-
-        if "/api" in path and "/api/status" not in path and "/api/version" not in path:
-            param = path.split("/")
-            if len(param) > 3:
-                complete_cam = param[3]
-                which_cam = param[3]
-            if "+" in complete_cam:
-                which_cam = complete_cam.split("+")[0]
-            if which_cam not in self.camera or len(param) <= 3:
-                self.logging.warning("Unknown camera requested (%s).", path)
-                which_cam = "cam1"
-        elif "?" in path and "index.html" not in path:
-            param = path.split("?")
-            param = param[1].split("&")
-            which_cam = param[0]
-            complete_cam = param[0]
-            if "+" in complete_cam:
-                which_cam = complete_cam.split("+")[0]
-            further_param = param
-
-        self.active_cams = []
-        for key in self.camera:
-            if self.camera[key].active:
-                self.active_cams.append(key)
-
-        if not self.camera[which_cam].active and self.active_cams:
-            which_cam = self.active_cams[0]
-
-        if check_path == "":
-            self.logging.debug("Selected CAM = " + which_cam + " (" + self.server.path + ")")
-        else:
-            self.logging.debug("Selected CAM = " + which_cam + " (" + check_path + ")")
-
-        self.which_cam = which_cam
-        return path, complete_cam, further_param
-
-    def index(self, server):
+    def index(self, param):
         """
         Index page with live-streaming pictures
         """
-        self.server = server
-        path, which_cam, further_param = self.selected_camera()
+        which_cam = param["which_cam"]
         content = {
             "active_cam": which_cam,
             "view": "index"
         }
-        if self.admin_allowed():
+        if param["admin_allowed"]:
             content["links"] = print_links_json(link_list=("favorit", "today", "backup", "cam_info"))
         else:
             content["links"] = print_links_json(link_list=("favorit", "today", "backup"))
 
         return content
 
-    def list(self, server):
+    def list(self, param):
         """
         Page with pictures (and videos) of a single day
         """
-        self.server = server
-        param = server.path.split("/")
-        path, which_cam, further_param = self.selected_camera()
+        path = param["path"]
+        which_cam = param["which_cam"]
+        further_param = param["parameter"]
+        date_backup = ""
+        if len(further_param) > 0:
+            date_backup = param["parameter"][0]
+
         time_now = self.config.local_time().strftime('%H%M%S')
         check_similarity = True
         backup = False
@@ -592,17 +531,6 @@ class BirdhouseViews(threading.Thread):
         files_images = {}
         files_weather = None
         files_sensor = None
-
-        if param[1] != "api":
-            if len(param) > 2:
-                date_backup = param[2]
-            else:
-                date_backup = ""
-        else:
-            if len(param) > 4:
-                date_backup = param[4]
-            else:
-                date_backup = ""
 
         content = {
             "active_cam": which_cam,
@@ -664,7 +592,7 @@ class BirdhouseViews(threading.Thread):
             subdirectory = ""
 
             content["subtitle"] = presets.birdhouse_pages["today"][0]
-            if self.admin_allowed():
+            if param["admin_allowed"]:
                 content["links"] = print_links_json(
                     link_list=("live", "favorit", "today_complete", "videos", "backup"), cam=which_cam)
             else:
@@ -766,7 +694,7 @@ class BirdhouseViews(threading.Thread):
 
             # To be deleted
             files_recycle = {}
-            if self.admin_allowed():
+            if param["admin_allowed"]:
                 for stamp in stamps:
                     if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
                         if "to_be_deleted" in files_all[stamp] and int(files_all[stamp]["to_be_deleted"]) == 1:
@@ -807,15 +735,16 @@ class BirdhouseViews(threading.Thread):
 
         return content
 
-    def archive_list(self, camera):
+    def archive_list(self, param):
         """
         Return data for list of archive folders (or an empty list if still loading)
         """
+        camera = param["which_cam"]
         if camera in self.archive_views:
             content = self.archive_views[camera]
         else:
             content = {}
-        if self.admin_allowed():
+        if param["admin_allowed"]:
             content["links"] = print_links_json(link_list=("live", "favorit", "today", "today_complete", "videos"), cam=camera)
         else:
             content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos"), cam=camera)
@@ -880,6 +809,7 @@ class BirdhouseViews(threading.Thread):
 
             self.logging.info("- Scan " + str(len(dir_list)) + " directories for " + cam + " ...")
             for directory in dir_list:
+                dir_size = 0
                 group_name = directory[0:4] + "-" + directory[4:6]
                 self.logging.debug("  -> Directory: " + directory + " | " + group_name)
 
@@ -938,7 +868,6 @@ class BirdhouseViews(threading.Thread):
                         count = 0  # file_data["info"]["count"]
                         first_img = ""
                         dir_size_cam = 0
-                        dir_size = 0
                         dir_count_cam = 0
                         dir_count_delete = 0
                         dir_count_data = 0
@@ -1014,8 +943,12 @@ class BirdhouseViews(threading.Thread):
                                 else:
                                     dir_count_data += 1
 
-                                if "size" in file_info and "float" in str(type(file_info["size"])):
-                                    dir_size += file_info["size"]
+                                if "size" in file_info and "lowres" in file_info:
+                                    dir_size += float(file_info["size"])
+                                    lowres_file = os.path.join(self.config.db_handler.directory(config="backup"),
+                                                               directory, file_info["lowres"])
+                                    if os.path.isfile(lowres_file):
+                                        dir_size += os.path.getsize(lowres_file)
 
                                 if ("camera" in file_info and file_info["camera"] == cam) or "camera" not in file_info:
                                     if "size" in file_info and "float" in str(type(file_info["size"])):
@@ -1050,7 +983,7 @@ class BirdhouseViews(threading.Thread):
                                     if "type" not in file_info or file_info["type"] == "image":
                                         dir_count_cam += 1
 
-                        dir_size += dir_size_cam
+                        #dir_size += dir_size_cam
                         dir_size = round(dir_size / 1024 / 1024, 1)
                         dir_size_cam = round(dir_size_cam / 1024 / 1024, 1)
                         dir_total_size += dir_size
@@ -1073,7 +1006,7 @@ class BirdhouseViews(threading.Thread):
                             "count_delete": dir_count_delete,
                             "count_cam": dir_count_cam,
                             "count_data": dir_count_data,
-                            "dir_size": dir_size,
+                            "dir_size": 0,
                             "dir_size_cam": dir_size_cam,
                             "lowres": image_file
                         }
@@ -1084,6 +1017,8 @@ class BirdhouseViews(threading.Thread):
                     self.logging.info("  -> Archive available in CouchDB")
                 else:
                     self.logging.error("  -> No config file available: /backup/" + directory)
+
+                content["entries"][directory]["dir_size"] = dir_size
 
             content["view_count"] = []
             content["subtitle"] = presets.birdhouse_pages["backup"][0] + " (" + self.camera[cam].name + ")"
@@ -1109,13 +1044,13 @@ class BirdhouseViews(threading.Thread):
         if force:
             self.force_reload = True
 
-    def complete_list_today(self, server):
+    def complete_list_today(self, param):
         """
         Page with all pictures of the current day
         """
         self.logging.debug("CompleteListToday: Start - "+self.config.local_time().strftime("%H:%M:%S"))
-        self.server = server
-        path, which_cam, further_param = self.selected_camera()
+        which_cam = param["which_cam"]
+
         content = {
             "active_cam": which_cam,
             "view": "list_complete",
@@ -1128,12 +1063,7 @@ class BirdhouseViews(threading.Thread):
         }
 
         count = 0
-        param = server.path.split("/")
-        if "app-v1" in param:
-            del param[1]
-
         category = "/current/"
-        path = self.config.db_handler.directory(config="images")
         files_all = self.config.db_handler.read_cache(config="images")
         data_weather = self.config.db_handler.read_cache(config="weather")
         data_sensor = self.config.db_handler.read_cache(config="sensor")
@@ -1194,7 +1124,6 @@ class BirdhouseViews(threading.Thread):
         content["view_count"] = ["all", "star", "detect", "recycle", "data"]
         content["subtitle"] = presets.birdhouse_pages["today_complete"][0] + " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
         content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"), cam=which_cam)
-        # content["chart_data"] = self.create.chart_data(content["entries"].copy(), self.config)
         content["chart_data"] = self.create.chart_data_new(data_image=content["entries"].copy(),
                                                            data_sensor=data_sensor,
                                                            data_weather=data_weather,
@@ -1207,14 +1136,15 @@ class BirdhouseViews(threading.Thread):
                            " (" + str(length) + " kB)")
         return content
 
-    def favorite_list(self, camera):
+    def favorite_list(self, param):
         """
         Return data for list of favorites from cache
         """
+        camera = param["which_cam"]
         content = self.favorite_views
         content["active_cam"] = camera
 
-        if self.admin_allowed():
+        if param["admin_allowed"]:
             content["links"] = print_links_json(link_list=("live", "today", "today_complete", "videos", "backup"), cam=camera)
         else:
             content["links"] = print_links_json(link_list=("live", "today", "videos", "backup"), cam=camera)
@@ -1377,21 +1307,13 @@ class BirdhouseViews(threading.Thread):
         if force:
             self.force_reload = True
 
-    def video_list(self, server):
+    def video_list(self, param):
         """
-        Page with all videos
+        Return data for page with all videos
         """
-        self.server = server
-        path, which_cam, further_param = self.selected_camera()
+        which_cam = param["which_cam"]
         content = {"active_cam": which_cam, "view": "list_videos"}
-        param = server.path.split("/")
-        if "app-v1" in param:
-            del param[1]
 
-        directory = self.config.db_handler.directory(config="videos")
-        category = "/videos/"  # self.config.directories["videos"]
-
-        files_all = {}
         files_delete = {}
         files_show = {}
         content["entries"] = {}
@@ -1409,33 +1331,29 @@ class BirdhouseViews(threading.Thread):
                 else:
                     files_show[file] = files_all[file]
 
-            if len(files_show) > 0:                           content["entries"] = files_show
-            if len(files_delete) > 0 and self.admin_allowed(): content["entries_delete"] = files_delete
+            if len(files_show) > 0:
+                content["entries"] = files_show
+            if len(files_delete) > 0 and param["admin_allowed"]:
+                content["entries_delete"] = files_delete
 
         content["view_count"] = ["all", "star", "detect", "recycle"]
-        content["subtitle"] = presets.birdhouse_pages["videos"][
-            0]  # + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
+        content["subtitle"] = presets.birdhouse_pages["videos"][0]
 
-        if self.admin_allowed():
+        if param["admin_allowed"]:
             content["links"] = print_links_json(link_list=("live", "favorit", "cam_info", "today", "backup"))
         else:
             content["links"] = print_links_json(link_list=("live", "favorit", "today", "backup"))
 
         return content
 
-    def camera_list(self, server):
+    def camera_list(self, param):
         """
-        Page with all videos
+        Return data for page with all cameras
         """
-        self.server = server
-        path, which_cam, further_param = self.selected_camera()
+        which_cam = param["which_cam"]
         content = {"active_cam": which_cam, "view": "list_cameras", "entries": {}}
-        param = server.path.split("/")
-        if "app-v1" in param: del param[1]
-        count = 0
 
         for cam in self.camera:
-            info = self.camera[cam].param
             content["entries"][cam] = self.camera[cam].param
             content["entries"][cam]["video"]["stream"] = "/stream.mjpg?" + cam
             content["entries"][cam]["video"]["stream_detect"] = "/detection/stream.mjpg?" + cam
@@ -1449,31 +1367,22 @@ class BirdhouseViews(threading.Thread):
 
         return content.copy()
 
-    def detail_view_video(self, server):
+    def detail_view_video(self, param):
         """
         Show details and edit options for a video file
         """
-        self.server = server
-        path, which_cam, further_param = self.selected_camera()
+        which_cam = param["which_cam"]
+        video_id = param["parameter"][0]
+
         content = {"active_cam": which_cam, "view": "detail_video", "entries": {}}
-        param = server.path.split("/")
-        if "app-v1" in param:
-            del param[1]
-        count = 0
-
-        if "api" in param:
-            video_id = param[4]
-        else:
-            video_id = param[1]
-
         config_data = self.config.db_handler.read_cache(config="videos")
-        if video_id in config_data and "video_file" in config_data[video_id]:
 
+        if video_id in config_data and "video_file" in config_data[video_id]:
             data = config_data[video_id]
             content["entries"][video_id] = data
             description = ""
 
-            if self.admin_allowed():
+            if param["admin_allowed"]:
                 if self.config.param["server"]["ip4_stream_video"] != "":
                     video_server = self.config.param["server"]["ip4_stream_video"]
                 elif self.config.param["server"]["ip4_address"] != "":
@@ -1481,7 +1390,6 @@ class BirdhouseViews(threading.Thread):
                 else:
                     video_server = "<!--CURRENT_SERVER-->"
                 files = {
-                    # "VIDEOFILE": self.camera[which_cam].param["video"]["streaming_server"] + data["video_file"],
                     "VIDEOFILE": "http://"+video_server+":"+str(self.config.param["server"]["port_video"])+"/",
                     "THUMBNAIL": data["thumbnail"],
                     "LENGTH": str(data["length"]),

@@ -26,8 +26,8 @@ from modules.sensors import BirdhouseSensor
 
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v0.9.6"}
-app_framework = "v0.9.6"
+api_description = {"name": "BirdhouseCAM", "version": "v0.9.7"}
+app_framework = "v0.9.7"
 
 
 def on_exit(signum, handler):
@@ -193,7 +193,7 @@ class ServerHealthCheck(threading.Thread):
                 if len(problem) > 0:
                     self.logging.warning("... not all threads are running as expected (<" + str(self._interval) + "s): ")
                     self.logging.warning("  -> " + ", ".join(problem))
-                    self._health_status = "NOT RUNNING: " + join(problem)
+                    self._health_status = "NOT RUNNING: " + ", ".join(problem)
                 else:
                     self.logging.info("... OK.")
                     self._health_status = "OK"
@@ -392,12 +392,118 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         Check if administration is allowed based on the IP4 the request comes from
         """
-        srv_logging.debug("Check if administration is allowed: " + self.address_string() + " / " + str(
-            config.param["server"]["ip4_admin_deny"]))
-        if self.address_string() in config.param["server"]["ip4_admin_deny"]:
-            return False
+        admin_type = birdhouse_env["admin_login"]
+        admin_deny = birdhouse_env["admin_ip4_deny"]
+        admin_allow = birdhouse_env["admin_ip4_allow"]
+        admin_pwd = birdhouse_env["admin_password"]
+
+        srv_logging.debug("Check if administration is allowed: " +
+                          admin_type + " / " + self.address_string() + " / " +
+                          "DENY=" + str(admin_deny) + "; ALLOW=" + str(admin_allow))
+
+        if admin_type == "DENY":
+            if self.address_string() in admin_deny:
+                return False
+            else:
+                return True
+        elif admin_type == "ALLOW":
+            if self.address_string() in admin_allow:
+                return True
+            else:
+                return False
+        elif admin_type == "LOGIN":
+            # initial implementation, later with session ID
+            param = self.path_split(check_allowed=False)
+            if param["session_id"] == admin_pwd:
+                return True
+            else:
+                return False
         else:
-            return True
+            return False
+
+    def path_split(self, check_allowed=True):
+        """
+        split path into parameters
+        -> /app/index.html?<PARAMETER>
+        -> /api/<command>/<param1>/<param2>/<param3>/<which_cam+other_cam>
+        -> /<other-path>/<filename>.<ending>?parameter1&parameter2
+        """
+        this_path = self.path.replace("///", "###")
+        elements = this_path.split("/")
+        param = {
+            "app_api": elements[1],
+            "command": "NONE",
+            "session_id": "",
+            "which_cam": "cam1",
+            "other_cam": "",
+            "parameter": [],
+            "path": self.path,
+            "path_short": "",
+            "file_ending": "",
+            "admin_allowed": False
+        }
+        if check_allowed:
+            param["admin_allowed"] = self.admin_allowed()
+
+        if elements[-1] == "":
+            del elements[-1]
+
+        if len(elements) > 2:
+            param["command"] = elements[2]
+
+        if self.path.startswith("/api/status") or self.path.startswith("/api/version"):
+            if "version" in self.path:
+                param["session_id"] = elements[3]
+
+        elif self.path.startswith("/api"):
+            param["session_id"] = elements[2]
+            param["command"] = elements[3]
+            last_is_cam = True
+
+            complete_cam = elements[len(elements) - 1]
+            if "+" in complete_cam:
+                param["which_cam"] = complete_cam.split("+")[0]
+                param["other_cam"] = complete_cam.split("+")[1]
+            else:
+                param["which_cam"] = complete_cam
+
+            if param["which_cam"] not in views.camera:
+                srv_logging.warning("Unknown camera requested (%s).", param["which_cam"])
+                param["which_cam"] = "cam1"
+                last_is_cam = False
+
+            count = 0
+            amount = len(elements)
+            if last_is_cam:
+                amount -= 1
+            while count < len(elements):
+                if 3 < count < amount:
+                    param["parameter"].append(elements[count])
+                count += 1
+
+            param["path_short"] = self.path.replace("/api", "")
+
+        elif self.path.startswith("/app/index.html"):
+            if "?" in self.path:
+                html_param = self.path.split("?")
+                param["command"] = html_param[1]
+            else:
+                param["command"] = "INDEX"
+
+        else:
+            if "." in self.path:
+                param["file_ending"] = self.path.split(".")
+                param["file_ending"] = "." + param["file_ending"][len(param["file_ending"]) - 1].lower()
+
+            if "?" in self.path:
+                temp = self.path.split("?")[1]
+                temp = temp.split("&")
+                param["which_cam"] = temp[0]
+                if len(temp) > 2:
+                    param["parameter"] = [temp[1]]
+                    param["session_id"] = temp[2]
+
+        return param
 
     def do_OPTIONS(self):
         self.send_response(200, "ok")
@@ -411,8 +517,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         REST API for javascript commands e.g. to change values in runtime
         """
-        srv_logging.debug("POST API request with '" + self.path + "'.")
         config.user_activity("set")
+        param = self.path_split()
+        which_cam = param["which_cam"]
+
+        srv_logging.debug("POST API request with '" + self.path + "'.")
+        srv_logging.debug(str(param))
 
         api_response = {
             "API": api_description,
@@ -422,73 +532,65 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         }
         response = {}
 
-        if not self.admin_allowed():
-            response["error"] = "Administration not allowed for this IP-Address!"
+        if not self.admin_allowed() and param["command"] != "check-pwd":
+            response["error"] = "Administration not allowed!"
             self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'),
                              no_cache=True)
+            return
 
-        if self.path.startswith("/api"):
-            self.path = self.path.replace("/api", "")
-
-        param = self.path.split("/")
-        if self.path.endswith("/"):
-            which_cam = param[len(param)-2]
-        else:
-            which_cam = param[len(param)-1]
-
-        if self.path.startswith("/favorit/"):
-            response = config.queue.set_status_favorite(self.path)
-        elif self.path.startswith("/recycle/"):
-            response = config.queue.set_status_recycle(self.path)
-        elif self.path.startswith("/recycle-range/"):
-            response = config.queue.set_status_recycle_range(self.path)
-        elif self.path.startswith("/start/recording/"):
-            response = camera[which_cam].video.record_start()
-        elif self.path.startswith("/stop/recording/"):
-            response = camera[which_cam].video.record_stop()
-        elif self.path.startswith("/create-short-video/"):
-            response = camera[which_cam].video.create_video_trimmed_queue(self.path)
-        elif self.path.startswith("/create-day-video/"):
-            response = camera[which_cam].video.create_video_day_queue(self.path)
-        elif self.path.startswith('/recreate-image-config/'):
-            response = backup.create_image_config_api(self.path)
-        elif self.path.startswith('/reconnect_camera/'):
+        if param["command"] == "favorit":
+            response = config.queue.set_status_favorite(param)
+        elif param["command"] == "recycle":
+            response = config.queue.set_status_recycle(param)
+        elif param["command"] == "recycle-range":
+            response = config.queue.set_status_recycle_range(param)
+        elif param["command"] == "create-short-video":
+            response = camera[which_cam].video.create_video_trimmed_queue(param)
+        elif param["command"] == "recreate-image-config":
+            response = backup.create_image_config_api(param)
+        elif param["command"] == "create-day-video":
+            response = camera[which_cam].video.create_video_day_queue(param)
+        elif param["command"] == "remove":
+            response = backup.delete_marked_files_api(param)
+        elif param["command"] == "reconnect_camera":
             response = camera[which_cam].camera_reconnect()
-        elif self.path.startswith('/camera_settings/'):
-            response = camera[which_cam].camera_settings(self.path)
-        elif self.path.startswith('/remove/'):
-            response = backup.delete_marked_files_api(self.path)
-        elif self.path.startswith('/clean_data_today/'):
+        elif param["command"] == "camera_settings":
+            response = camera[which_cam].camera_settings(param)
+        elif param["command"] == "start-recording":
+            response = camera[which_cam].video.record_start()
+        elif param["command"] == "stop-recording":
+            response = camera[which_cam].video.record_stop()
+        elif param["command"] == "clean_data_today":
             config.db_handler.clean_all_data("images")
             config.db_handler.clean_all_data("weather")
             config.db_handler.clean_all_data("sensor")
             response = {"cleanup": "done"}
-        elif self.path.startswith('/update_views/'):
+        elif param["command"] == "update_views":
             views.archive_list_update(force=True)
             views.favorite_list_update(force=True)
             response = {"update_views": "started"}
-        elif self.path.startswith('/force_backup/'):
+        elif param["command"] == "force_backup":
             backup.start_backup()
             response = {"backup": "started"}
-        elif self.path.startswith('/force_restart/'):
+        elif param["command"] == "force_restart":
             srv_logging.info("-------------------------------------------")
             srv_logging.info("FORCED SHUT-DOWN OF BIRDHOUSE SERVER .... !")
             srv_logging.info("-------------------------------------------")
             config.force_shutdown()
             response = {"shutdown": "started"}
-        elif self.path.startswith('/kill_stream/'):
-            if "&" in which_cam:
-                stream_id_kill = which_cam
-                further_param = which_cam.split("&")
-                which_cam = further_param[0]
+        elif param["command"] == "check-timeout":
+            time.sleep(30)
+            response = {"check": "timeout"}
+        elif param["command"] == "kill_stream":
+            stream_id = param["parameter"][0]
+            if "&" in stream_id:
+                stream_id_kill = stream_id
                 camera[which_cam].set_stream_kill(stream_id_kill)
                 response = {"kill_stream": which_cam}
-
-        elif self.path.startswith("/edit_presets/"):
-            param_string = self.path.replace("/edit_presets/", "")
-            param = param_string.split("///")
+        elif param["command"] == "edit_presets":
+            edit_param = param["parameter"][0].split("###")
             data = {}
-            for entry in param:
+            for entry in edit_param:
                 if "==" in entry:
                     key, value = entry.split("==")
                     data[key] = unquote(value)
@@ -502,10 +604,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             config.main_config_edit("main", data)
             for key in camera:
                 camera[key].config_update = True
-
-        elif self.path.startswith("/check-timeout/"):
-            time.sleep(30)
-            response = {"check": "timeout"}
+        elif param["command"] == "check-pwd":
+            admin_pwd = birdhouse_env["admin_password"]
+            if admin_pwd == param["parameter"][0]:
+                response["check-pwd"] = True
+            else:
+                response["check-pwd"] = False
         else:
             self.error_404()
             return
@@ -530,25 +634,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             return
 
         config.user_activity("set")
-        path, which_cam, further_param = views.selected_camera(self.path)
-        file_ending = self.path.split(".")
-        file_ending = "." + file_ending[len(file_ending) - 1].lower()
-
-        if "+" in which_cam:
-            which_cam2 = which_cam.split("+")[1]
-            which_cam = which_cam.split("+")[0]
-        else:
-            which_cam2 = ""
+        param = self.path_split()
+        which_cam = param["which_cam"]
+        which_cam2 = param["other_cam"]
+        further_param = param["parameter"]
+        file_ending = param["file_ending"]
 
         config.html_replace["title"] = config.param["title"]
-        config.html_replace["active_cam"] = which_cam
+        config.html_replace["active_cam"] = param["which_cam"]
 
         # get param
         param = ""
         redirect_app = "/app/index.html"
         if "?" in self.path:
-            param = self.path.split("?")[1]
-            redirect_app = "/app/index.html?"+param
+            redirect_app += "?"+self.path.split("?")[1]
 
         # index
         if self.path == "/":
@@ -558,11 +657,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path == "/app" or self.path == "/app/":
             self.redirect(redirect_app)
         elif self.path.startswith("/api/"):
-            self.do_GET_api(self.path, which_cam)
+            self.do_GET_api()
         elif '/image.jpg' in self.path:
-            self.do_GET_image(self.path, which_cam)
+            self.do_GET_image(which_cam)
         elif '/stream.mjpg' in self.path:
-            self.do_GET_stream(self.path, which_cam, which_cam2, further_param)
+            self.do_GET_stream(which_cam, which_cam2, further_param)
         elif self.path.endswith('favicon.ico'):
             self.stream_file(filetype='image/ico', content=read_image(directory='../app', filename=self.path))
         elif self.path.startswith("/app/index.html"):
@@ -573,27 +672,31 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                 file_path = "../"
             if "text" in file_types[file_ending]:
-                self.stream_file(filetype=file_types[file_ending], content=read_html(directory=file_path, filename=self.path))
+                self.stream_file(filetype=file_types[file_ending],
+                                 content=read_html(directory=file_path, filename=self.path))
             elif "application" in file_types[file_ending]:
-                self.stream_file(filetype=file_types[file_ending], content=read_html(directory=file_path, filename=self.path))
+                self.stream_file(filetype=file_types[file_ending],
+                                 content=read_html(directory=file_path, filename=self.path))
             else:
-                self.stream_file(filetype=file_types[file_ending], content=read_image(directory=file_path, filename=self.path))
+                self.stream_file(filetype=file_types[file_ending],
+                                 content=read_image(directory=file_path, filename=self.path))
         else:
             self.error_404()
 
-    def do_GET_api(self, path, which_cam):
+    def do_GET_api(self):
         """
         create API response
         """
-        srv_logging.debug("GET API request with '" + path + "'.")
         request_start = time.time()
-        param = path.split("/")
-        command = param[2]
         status = "Success"
         version = {}
 
-        if len(param) > 3:
-            which_cam = param[3]
+        param = self.path_split()
+        which_cam = param["which_cam"]
+        command = param["command"]
+
+        srv_logging.debug("GET API request with '" + self.path + "'.")
+        srv_logging.debug(str(param))
 
         # prepare API response
         api_response = {
@@ -636,7 +739,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         api_data = {
             "active": {
                 "active_cam": which_cam,
-                "active_path": path,
+                "active_path": self.path,
                 "active_page": command,
                 "active_date": ""
             },
@@ -644,36 +747,36 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             "settings": {},
             "view": {}
         }
-        if len(param) >= 5 and command == "TODAY":
-            api_data["active"]["active_date"] = param[4]
-            api_response["STATUS"]["view"]["active_date"] = param[4]
+        if command == "TODAY" and len(param["parameter"]) > 0:
+            api_data["active"]["active_date"] = param["parameter"][0]
+            api_response["STATUS"]["view"]["active_date"] = param["parameter"][0]
 
         # execute API commands
         if command == "INDEX":
-            content = views.index(server=self)
+            content = views.index(param=param)
         elif command == "FAVORITES":
-            content = views.favorite_list(camera=which_cam)
+            content = views.favorite_list(param=param)
         elif command == "TODAY":
-            content = views.list(server=self)
+            content = views.list(param=param)
         elif command == "TODAY_COMPLETE":
-            content = views.complete_list_today(server=self)
+            content = views.complete_list_today(param=param)
         elif command == "ARCHIVE":
-            content = views.archive_list(camera=which_cam)
+            content = views.archive_list(param=param)
         elif command == "VIDEOS":
-            content = views.video_list(server=self)
+            content = views.video_list(param=param)
         elif command == "VIDEO_DETAIL":
-            content = views.detail_view_video(server=self)
+            content = views.detail_view_video(param=param)
         elif command == "DEVICES":
-            content = views.camera_list(server=self)
+            content = views.camera_list(param=param)
             api_response["STATUS"]["system"] = sys_info.get()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
         elif command == "status" or command == "version" or command == "list" or command == "reload":
-            content = views.index(server=self)
+            content = views.index(param=param)
 
-            if len(param) > 3 and param[2] == "version":
+            if command == "version":
                 version["Code"] = "800"
                 version["Msg"] = "Version OK."
-                if param[3] != app_framework:
+                if app_framework != param["session_id"]:
                     version["Code"] = "802"
                     version["Msg"] = "Update required."
             content["last_answer"] = ""
@@ -755,7 +858,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
                 camera_data[key]["image"]["current_streams"] = camera[key].get_stream_count()
                 camera_data[key]["image"]["current_streams_detail"] = camera[key].image_streams
-                #camera_data[key]["status"] = camera[key].get_camera_status()
                 if config.param["server"]["ip4_stream_video"] == "":
                     camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_address"]
                 else:
@@ -781,6 +883,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         api_response["DATA"]["settings"]["server"]["port_video"] = birdhouse_env["port_video"]
         api_response["DATA"]["settings"]["server"]["port_audio"] = birdhouse_env["port_audio"]
         api_response["DATA"]["settings"]["server"]["database_port"] = birdhouse_env["couchdb_port"]
+        api_response["DATA"]["settings"]["server"]["ip4_admin_deny"] = birdhouse_env["admin_ip4_deny"]
+        api_response["DATA"]["settings"]["server"]["ip4_admin_allow"] = birdhouse_env["admin_ip4_allow"]
+        api_response["DATA"]["settings"]["server"]["admin_login"] = birdhouse_env["admin_login"]
         api_response["API"]["request_time"] = round(time.time() - request_start, 2)
 
         if command != "status" and command != "list" and command != "version":
@@ -792,15 +897,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'),
                          no_cache=True)
 
-    def do_GET_image(self, path, which_cam):
+    def do_GET_image(self, which_cam):
         """
         create images as response
         """
         # show compared images
-        if '/compare/' in path and '/image.jpg' in path:
+        if '/compare/' in self.path and '/image.jpg' in self.path:
             srv_logging.debug("Compare: Create and return image that shows differences to the former image ...")
             filename = os.path.join(config.db_handler.directory("images"), "_image_diff_" + which_cam + ".jpg")
-            param = path.split("?")
+            param = self.path.split("?")
             param = param[0].split("/")
             srv_logging.debug("---->" + param[2])
             srv_logging.debug("---->" + param[3])
@@ -826,15 +931,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # extract and show single image (creates images with a longer delay ?)
         elif '/image.jpg' in self.path:
             filename = "_image_temp_" + which_cam + ".jpg"
-            path = os.path.join(config.db_handler.directory("images"), filename)
-            camera[which_cam].write_image(path, camera[which_cam].get_stream_raw())
+            img_path = os.path.join(config.db_handler.directory("images"), filename)
+            camera[which_cam].write_image(img_path, camera[which_cam].get_stream_raw())
             time.sleep(2)
             self.stream_file(filetype='image/jpeg',
                              content=read_image(directory="../data/images/", filename=filename))
 
-    def do_GET_stream(self, path, which_cam, which_cam2, further_param):
+    def do_GET_stream(self, which_cam, which_cam2, further_param):
         """
-        create stream
+        create video stream
         """
         if camera[which_cam].type != "pi" and camera[which_cam].type != "usb" and \
                 camera[which_cam].type != "default":
@@ -842,6 +947,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                 camera[which_cam].name + ")")
             self.error_404()
             return
+
+        srv_logging.info("GET API request with '" + self.path + "'.")
+        srv_logging.info(str(which_cam))
 
         if ":" in which_cam2:
             which_cam2, cam2_pos = which_cam2.split(":")
@@ -860,9 +968,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         stream_wait_while_recording = 1
         stream_wait_while_streaming = 0.01
 
-        if '/lowres/stream.mjpg' in path:
+        if '/lowres/stream.mjpg' in self.path:
             stream_lowres = True
-        if '/pip/stream.mjpg' in path:
+        if '/pip/stream.mjpg' in self.path:
             stream_pip = True
 
         while stream_active:
@@ -873,7 +981,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if config.update["camera_" + which_cam]:
                 camera[which_cam].update_main_config()
 
-            if path.startswith("/detection/"):
+            if self.path.startswith("/detection/"):
                 frame_raw = camera[which_cam].get_stream_raw(normalize=False, stream_id=stream_id_int,
                                                              lowres=stream_lowres)
             elif stream_pip and which_cam2 != "":
@@ -890,7 +998,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                                              lowres=stream_lowres)
 
             if not camera[which_cam].error and not camera[which_cam].image.error:
-                if path.startswith("/detection/"):
+                if self.path.startswith("/detection/"):
                     if "black_white" in camera[which_cam].param["image"] and \
                             camera[which_cam].param["image"]["black_white"]:
                         frame_raw = camera[which_cam].image.convert_to_gray_raw(frame_raw)

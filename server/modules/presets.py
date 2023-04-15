@@ -20,7 +20,11 @@ birdhouse_env = {
     "port_video": get_env("BIRDHOUSE_VIDEO_PORT"),
     "port_audio": get_env("BIRDHOUSE_AUDIO_PORT"),
     "dir_project": get_env("BIRDHOUSE_DIR_PROJECT"),
-    "dir_logging": get_env("BIRDHOUSE_DIR_LOGGING")
+    "dir_logging": get_env("BIRDHOUSE_DIR_LOGGING"),
+    "admin_ip4_deny": get_env("ADMIN_IP4_DENY"),
+    "admin_ip4_allow": get_env("ADMIN_IP4_ALLOW"),
+    "admin_password": get_env("ADMIN_PASSWORD"),
+    "admin_login": get_env("ADMIN_LOGIN")
 }
 
 

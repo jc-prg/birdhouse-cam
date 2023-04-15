@@ -444,26 +444,21 @@ class BirdhouseVideoProcessing(threading.Thread):
         }
         return response
 
-    def create_video_day_queue(self, path):
+    def create_video_day_queue(self, param):
         """
         create a video of all existing images of the day
         """
-        param = path.split("/")
         response = {}
-        if len(param) < 3:
-            response["result"] = "Error: Parameters are missing "
-            response["result"] += "(/create-day-video/which-cam/)"
-            self.logging.warning("Create video of daily images ... Parameters are missing.")
-        else:
-            which_cam = param[2]
-            current_time = self.config.local_time()
-            stamp = current_time.strftime('%Y%m%d_%H%M%S')
-            date = current_time.strftime('%d.%m.%Y')
-            filename = "image_" + which_cam + "_big_"
-            self.queue_create.append([filename, stamp, date])
-            response["command"] = ["Create video of the day"]
-            response["video"] = {"camera": which_cam, "date": date}
+        which_cam = param["which_cam"]
+        current_time = self.config.local_time()
+        stamp = current_time.strftime('%Y%m%d_%H%M%S')
+        date = current_time.strftime('%d.%m.%Y')
+        filename = "image_" + which_cam + "_big_"
 
+        self.queue_create.append([filename, stamp, date])
+
+        response["command"] = ["Create video of the day"]
+        response["video"] = {"camera": which_cam, "date": date}
         return response
 
     def create_video_trimmed(self, video_id, start, end):
@@ -536,31 +531,23 @@ class BirdhouseVideoProcessing(threading.Thread):
         else:
             return "Error"
 
-    def create_video_trimmed_queue(self, path):
+    def create_video_trimmed_queue(self, param):
         """
         create a short video and save in DB (not deleting the old video at the moment)
         """
-        param = path.split("/")
         response = {}
+        parameter = param["parameter"]
 
-        if len(param) < 6:
-            response["result"] = "Error: Parameters are missing"
-            response["result"] += " (/create-short-video/video-id/start-timecode/end-timecode/which-cam/)"
-            self.logging.warning("Create short version of video ... Parameters are missing.")
+        self.logging.info("Create short version of video: " + str(parameter) + " ...")
+        config_data = self.config.db_handler.read_cache(config="videos")
 
+        if parameter[0] not in config_data:
+            response["result"] = "Error: video ID '" + str(parameter[0]) + "' doesn't exist."
+            self.logging.warning("VideoID '" + str(parameter[0]) + "' doesn't exist.")
         else:
-            self.logging.info("Create short version of video '" + str(param[2]) + "' [" + str(param[3]) + ":" +
-                         str(param[4]) + "] ...")
-            which_cam = param[5]
-            config_data = self.config.db_handler.read_cache(config="videos")
-
-            if param[2] not in config_data:
-                response["result"] = "Error: video ID '" + str(param[2]) + "' doesn't exist."
-                self.logging.warning("VideoID '" + str(param[2]) + "' doesn't exist.")
-            else:
-                self.queue_trim.append([param[2], param[3], param[4]])
-                response["command"] = ["Create short version of video"]
-                response["video"] = {"video_id": param[2], "start": param[3], "end": param[4]}
+            self.queue_trim.append([parameter[0], parameter[1], parameter[2]])
+            response["command"] = ["Create short version of video"]
+            response["video"] = {"video_id": parameter[0], "start": parameter[1], "end": parameter[2]}
 
         return response
 
@@ -1175,10 +1162,16 @@ class BirdhouseImageProcessing(object):
         self.logging.debug("Resize image ("+str(scale_percent)+"% / "+str(scale_size)+")")
         if scale_size is not None:
             [width, height] = scale_size
-            raw = cv2.resize(raw, (width, height))
+            try:
+                raw = cv2.resize(raw, (width, height))
+            except Exception as e:
+                self.raise_error("Could not resize raw image: " + str(e))
         elif scale_percent != 100:
             [width, height] = self.size_raw(raw, scale_percent=scale_percent)
-            raw = cv2.resize(raw, (width, height))
+            try:
+                raw = cv2.resize(raw, (width, height))
+            except Exception as e:
+                self.raise_error("Could not resize raw image: " + str(e))
         return raw
 
 
@@ -1923,14 +1916,14 @@ class BirdhouseCamera(threading.Thread):
         if self.type == "usb" or self.type == "default":
             return
 
-    def camera_settings(self, path):
+    def camera_settings(self, param):
         """
         change camera settings
         """
         response = {}
-        parameters = path.split("/")
-        setting_key = parameters[2]
-        setting_value = parameters[3]
+        parameters = param["parameter"]
+        setting_key = parameters[0]
+        setting_value = parameters[1]
         available_settings = self.camera.get_properties_available("set")
 
         if setting_key in available_settings:
@@ -2179,12 +2172,18 @@ class BirdhouseCamera(threading.Thread):
         if not self.error and self.image.error and self.image.error_count < 10:
             if not lowres and self.image_last_edited is not None:
                 image = self.image_last_edited
-                image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
-                return image
+                try:
+                    image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
+                    return image
+                except cv2.error as e:
+                    return image
             elif lowres and self.image_last_edited_lowres is not None:
                 image = self.image_last_edited_lowres
-                image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
-                return image
+                try:
+                    image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
+                    return image
+                except cv2.error as e:
+                    return image
 
         # if 10 or more image errors or a camera error return error msg as image
         elif self.error or self.image.error:

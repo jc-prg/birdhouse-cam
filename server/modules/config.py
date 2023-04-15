@@ -1070,28 +1070,29 @@ class BirdhouseConfigQueue(threading.Thread):
                 self.edit_queue[config][date] = []
             self.edit_queue[config][date].append([key, entry, command])
 
-    def set_status_favorite(self, path):
+    def set_status_favorite(self, param):
         """
         set / unset favorite -> redesigned
         """
-        param = path.split("/")
+        self.logging.debug("Status favorite: "+str(param))
+
         response = {}
-        category = param[2]
         config_data = {}
+        category = param["parameter"][0]
 
         if category == "current":
-            entry_id = param[3]
-            entry_value = param[4]
+            entry_id = param["parameter"][1]
+            entry_value = param["parameter"][2]
             entry_date = ""
             category = "images"
         elif category == "videos":
-            entry_id = param[3]
-            entry_value = param[4]
+            entry_id = param["parameter"][1]
+            entry_value = param["parameter"][2]
             entry_date = ""
         else:
-            entry_date = param[3]
-            entry_id = param[4]
-            entry_value = param[5]
+            entry_date = param["parameter"][1]
+            entry_id = param["parameter"][2]
+            entry_value = param["parameter"][3]
 
         if category == "images":
             config_data = self.db_handler.read_cache(config="images")
@@ -1112,29 +1113,29 @@ class BirdhouseConfigQueue(threading.Thread):
 
         return response
 
-    def set_status_recycle(self, path):
+    def set_status_recycle(self, param):
         """
         set / unset recycling -> redesigned
         """
-        self.logging.debug("Status recycle: "+str(path))
-        param = path.split("/")
+        self.logging.debug("Status recycle: "+str(param))
+
         response = {}
-        category = param[2]
         config_data = {}
+        category = param["parameter"][0]
 
         if category == "current":
-            entry_id = param[3]
-            entry_value = param[4]
+            entry_id = param["parameter"][1]
+            entry_value = param["parameter"][2]
             entry_date = ""
             category = "images"
         elif category == "videos":
-            entry_id = param[3]
-            entry_value = param[4]
+            entry_id = param["parameter"][1]
+            entry_value = param["parameter"][2]
             entry_date = ""
         else:
-            entry_date = param[3]
-            entry_id = param[4]
-            entry_value = param[5]
+            entry_date = param["parameter"][1]
+            entry_id = param["parameter"][2]
+            entry_value = param["parameter"][3]
 
         if category == "images":
             config_data = self.db_handler.read_cache(config="images")
@@ -1155,32 +1156,33 @@ class BirdhouseConfigQueue(threading.Thread):
 
         return response
 
-    def set_status_recycle_range(self, path):
+    def set_status_recycle_range(self, param):
         """
         set / unset recycling -> range from-to
         """
-        param = path.split("/")
-        response = {}
-        category = param[2]
-        config_data = {}
         self.logging.info("Start to identify RECYCLE range ...")
+        self.logging.debug("Status recycle range: "+str(param))
+
+        response = {}
+        config_data = {}
+        category = param["parameter"][0]
 
         if category == "current":
-            entry_from = param[3]
-            entry_to = param[4]
-            entry_value = param[5]
+            entry_from = param["parameter"][1]
+            entry_to = param["parameter"][2]
+            entry_value = param["parameter"][3]
             entry_date = ""
             category = "images"
         elif category == "videos":
-            entry_from = param[3]
-            entry_to = param[4]
-            entry_value = param[5]
+            entry_from = param["parameter"][1]
+            entry_to = param["parameter"][2]
+            entry_value = param["parameter"][3]
             entry_date = ""
         else:
-            entry_date = param[3]
-            entry_from = param[4]
-            entry_to = param[5]
-            entry_value = param[6]
+            entry_date = param["parameter"][1]
+            entry_from = param["parameter"][2]
+            entry_to = param["parameter"][3]
+            entry_value = param["parameter"][4]
 
         if category == "images":
             config_data = self.db_handler.read_cache(config="images")
