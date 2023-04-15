@@ -1018,7 +1018,8 @@ class BirdhouseViews(threading.Thread):
                 else:
                     self.logging.error("  -> No config file available: /backup/" + directory)
 
-                content["entries"][directory]["dir_size"] = dir_size
+                if directory in content["entries"]:
+                    content["entries"][directory]["dir_size"] = dir_size
 
             content["view_count"] = []
             content["subtitle"] = presets.birdhouse_pages["backup"][0] + " (" + self.camera[cam].name + ")"
