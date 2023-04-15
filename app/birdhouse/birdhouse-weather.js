@@ -63,12 +63,20 @@ function birdhouseWeather( data ) {
     html_temp += tab.row(current_icon, current_weather);
     html_temp += tab.end();
     html_weather += "&nbsp;<br/>" + html_temp + "<br/>&nbsp;";
+    html = "";
 
     var d = new Date();
     var current_year   = d.getFullYear();
     var current_month  = d.getMonth()+1;
     var current_day    = d.getDate();
     var current_hour   = d.getHours();
+
+    var day_count      = 0;
+    var chart_data     = {
+        "titles" : [lang("TEMPERATURE"), lang("HUMIDITY"), lang("WIND_SPEED")],
+        "data"   : {}
+    }
+    var weather_data = {}
 
     Object.keys(weather_3day).forEach(key=>{ if (key != "today") {
         var forecast_day = weather_3day[key];
@@ -77,13 +85,25 @@ function birdhouseWeather( data ) {
         var forecast_entries = 0;
         var [forcast_year, forcast_month, forcast_day] = key.split("-");
         if ((forcast_year*1) == (current_year*1) && (forcast_month*1) == (current_month*1) && (forcast_day*1) == (current_day*1)) { today = true; }
+        day_count += 1;
 
         Object.keys(forecast_day["hourly"]).forEach(key2=>{
             var key_hour = key2.split(":")[0];
             var key_minute = key2.split(":")[1];
+            var forcast_hour = forecast_day["hourly"][key2];
+
+            if (day_count <= 3) {
+                var chart_key = key.split("-")[2] + "." + key.split("-")[1] + " " + key2;
+                chart_data["data"][chart_key] = [forcast_hour["temperature"], forcast_hour["humidity"], forcast_hour["wind_speed"]];
+
+                if (key_hour.split(":")[0] > 6) {
+                    if (!weather_data[key]) { weather_data[key] = {}; }
+                    forcast_hour["key"] = key2;
+                    weather_data[key][key2] = forcast_hour;
+                    }
+            }
 
             if (!today || (current_hour*1) < (key_hour*1)) {
-                var forcast_hour = forecast_day["hourly"][key2];
                 var current_icon = "<center><font  style='font-size:40px;'>" + forcast_hour["description_icon"] + "</font></center>";
                 var current_weather = tab.start();
 
@@ -107,11 +127,24 @@ function birdhouseWeather( data ) {
             var title = "";
             if (today) { title = key + "&nbsp;-&nbsp;" + lang("TODAY"); }
             else       { title = key; }
-            html_weather += birdhouse_OtherGroup( "weather_forecast_"+key, title, forecast_html, false );
+            html += birdhouse_OtherGroup( "weather_forecast_"+key, title, forecast_html, false );
         }
     }});
 
     html_weather += "<br/>&nbsp;<br/>";
+
+    console.error(chart_data);
+    console.error(weather_data);
+    var chart     = "&nbsp;<br/>";
+    chart        += birdhouseChart_create(title=chart_data["titles"],data=chart_data["data"]);
+    chart        += "<br/>&nbsp;<br/>";
+
+    Object.keys(weather_data).forEach(date=>{
+        chart   += "<b>" + date + "</b><br/>";
+        chart   += "<center>" + birdhouseChart_weatherOverview(weather_data[date], "key", false) + "</center>" ;
+        });
+    html_weather += birdhouse_OtherGroup( "chart", lang("WEATHER"), chart, true );
+    html_weather += html;
 
     var title = "<div id='status_error_WEATHER' style='float:left'><div id='black'></div></div>";
     title += "<center><h2>" + lang("WEATHER") + "&nbsp;&nbsp;&nbsp;&nbsp;</h2></center>";

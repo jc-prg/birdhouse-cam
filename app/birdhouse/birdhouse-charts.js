@@ -104,13 +104,13 @@ function birdhouseChart_create (title, data, type="line", sort_keys=true) {
 	return html;
 	}
 
-function birdhouseChart_weatherOverview (entries) {
+function birdhouseChart_weatherOverview (entries, title_key="time", title_column=true) {
     var html = "";
     var count = 0;
     var weather_data = {};
 
     Object.keys(entries).forEach( key => {
-        weather_data[entries[key]["time"]] = entries[key]["description_icon"];
+        weather_data[entries[key][title_key]] = entries[key]["description_icon"];
         /*
         if (key.substring(2,4) == "00" && entries[key]["weather"]) {
             weather_data[key.substring(0,2)+":"+key.substring(2,4)] = entries[key]["weather"]["description_icon"];
@@ -120,8 +120,14 @@ function birdhouseChart_weatherOverview (entries) {
 
     // width -> 8 if small; 16 if middle; 24 if big
 
-    html_row1 = "<td></td>";
-    html_row2 = "<td>"+lang("WEATHER")+": &nbsp;</td>";
+    if (title_column) {
+        html_row1 = "<td></td>";
+        html_row2 = "<td>"+lang("WEATHER")+": &nbsp;</td>";
+    }
+    else {
+        html_row1 = "";
+        html_row2 = "";
+    }
     Object.keys(weather_data).sort().forEach(key => {
         var td_class = "weather_hide_if_small";
         if (Math.abs(count % 2) != 0 || Object.keys(weather_data).length <= 8) {
