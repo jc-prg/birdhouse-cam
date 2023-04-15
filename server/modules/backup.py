@@ -354,14 +354,11 @@ class BirdhouseArchive(threading.Thread):
         self.logging.info("Done.")
         return files
 
-    def create_image_config_api(self, path):
+    def create_image_config_api(self, param):
         """
         Call (re)creation via API and return JSON answer
         """
-        self.logging.debug(path)
-        param = path.split("/")
-        response = {"command": ["recreate main image config file", param]}
-
+        response = {"command": ["recreate main image config file", param["parameter"]]}
         self.create_image_config(date="", recreate=True)
         return response
 
@@ -490,35 +487,34 @@ class BirdhouseArchive(threading.Thread):
 
         return files
 
-    def delete_marked_files_api(self, path):
+    def delete_marked_files_api(self, param):
         """
         set / unset recycling
         """
-        self.logging.debug(path)
         date = ""
         config = ""
-        param = path.split("/")
+        category = param["parameter"][0]
         response = {"command": ["delete files that are marked as 'to_be_deleted'", param]}
 
-        if "delete_not_used" in param:
+        if "delete_not_used" in param["parameter"]:
             delete_not_used = True
         else:
             delete_not_used = False
 
-        if param[2] == "backup":
-            self.logging.info("Delete marked files: BACKUP ("+path+")")
-            date = param[3]
+        if category == "backup":
+            self.logging.info("Delete marked files: BACKUP ("+str(param["parameter"])+")")
+            date = param["parameter"][1]
             config = "images"
-        elif param[2] == "today":
-            self.logging.info("Delete marked files: TODAY ("+path+")")
+        elif category == "today":
+            self.logging.info("Delete marked files: TODAY ("+str(param["parameter"])+")")
             date = ""
             config = "images"
-        elif param[2] == "video":
-            self.logging.info("Delete marked files: VIDEO ("+path+")")
+        elif category == "video":
+            self.logging.info("Delete marked files: VIDEO ("+str(param["parameter"])+")")
             date = ""
             config = "videos"
         else:
-            self.logging.error("Delete marked files: Not clear what to be deleted ("+path+")")
+            self.logging.error("Delete marked files: Not clear what to be deleted ("+str(param["parameter"])+")")
             response["error"] = "not clear, which files shall be deleted"
 
         if "error" not in response:
