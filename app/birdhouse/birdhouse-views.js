@@ -201,6 +201,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var chart_data        = data_list["data"]["chart_data"];
 	var entry_count       = data_list["view"]["view_count"];
 	var camera_settings   = data["DATA"]["settings"]["devices"]["cameras"];
+	var current_weather   = app_data["WEATHER"]["forecast"]["today"];
+
+	var tab               = new birdhouse_table();
 
 	if (data_list["view"]["max_image_size"]) {
         var max_image_size_LR  = data_list["view"]["max_image_size"]["lowres"];
@@ -224,6 +227,39 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	if (active_page == "VIDEOS")                           { entry_category = [ "video" ]; }
 	else if (active_page == "TODAY" && active_date == "")  { entry_category = [ "today" ]; }
 	else if (active_page == "TODAY" && active_date != "")  { entry_category = [ "backup", active_date ]; }
+
+	// details for admins
+	if (active_page == "TODAY_COMPLETE") {
+	    var info_text    = "";
+	    var cam_settings = camera_settings[camera];
+	    var record_from  = cam_settings["image_save"]["record_from"];
+	    var record_to    = cam_settings["image_save"]["record_to"];
+	    var rhythm       = cam_settings["image_save"]["rhythm"];
+        var onclick      = "birdhouse_createDayVideo('"+camera+"');";
+        var create       =  "<div onclick=\""+onclick+"\" style=\"cursor:pointer\"><u>" + lang("CREATE_DAY") + " ...</u></div>";
+        tab.style_rows["height"] = "25px";
+
+	    if (record_from.indexOf("sun") == 0 && record_from.indexOf("+0") > 0)       { record_from = current_weather["sunrise"]; }
+	    else if (record_from.indexOf("sun") == 0 && record_from.indexOf("+1") > 0)  { record_from = current_weather["sunrise"] + "+1h"; }
+	    else if (record_from.indexOf("sun") == 0 && record_from.indexOf("-1") > 0)  { record_from = current_weather["sunrise"] + "-1h"; }
+	    else                                                                        { record_from += ":00"; }
+
+	    if (record_to.indexOf("sun") == 0 && record_to.indexOf("+0") > 0)           { record_from = current_weather["sunset"]; }
+	    else if (record_to.indexOf("sun") == 0 && record_to.indexOf("+1") > 0)      { record_from = current_weather["sunset"] + "+1h"; }
+	    else if (record_to.indexOf("sun") == 0 && record_to.indexOf("-1") > 0)      { record_from = current_weather["sunset"] + "-1h"; }
+	    else                                                                        { record_to += ":00"; }
+
+	    //info_text += "&nbsp;<br/>&nbsp;";
+	    info_text += tab.start();
+	    info_text += tab.row("&nbsp;&nbsp;" + lang("CAMERA") + ":", "<b>" + camera.toUpperCase() + "</b> - " + cam_settings["name"]);
+	    info_text += tab.row("&nbsp;&nbsp;" + lang("DATE") + ":", app_data["WEATHER"]["current"]["date"]);
+	    info_text += tab.row("&nbsp;&nbsp;" + lang("RECORDING_TIMES") + ":", "from <b>" + record_from + "</b> to <b>" + record_to + "</b> every <b>" + rhythm + "s</b>");
+	    info_text += tab.row("&nbsp;&nbsp;" + lang("VIDEO") + ":", create );
+	    info_text += tab.end();
+	    info_text += "&nbsp;<br/>&nbsp;";
+
+        html += birdhouse_OtherGroup( "info", lang("INFORMATION"), info_text, true );
+	}
 
     // create chart data
     if (active_page == "TODAY_COMPLETE" || (active_page == "TODAY" && active_date != "" && active_date != undefined)) {
