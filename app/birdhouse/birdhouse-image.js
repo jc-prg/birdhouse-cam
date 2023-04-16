@@ -102,7 +102,7 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
 
 	if (admin) {
 		for (i=0;i<entry_count.length;i++) 	{ count[entry_count[i]] = 0; }
-		if (count["all"] != undefined) 	{ count["all"] = Object.keys(entries).length; }
+		if (count["all"] != undefined) 	    { count["all"] = Object.keys(entries).length; }
 
 		for (let key in entries) {
 			var img_id2 = "";
@@ -120,16 +120,17 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
                     count["detect"]  += 1;
                 }
             }
-
-			if (header_open == false && entries[key]["lowres"] != undefined) {
-			    image_ids += " " + img_id2;
-            }
-
 			if (count["data"] == undefined && count["all"] != undefined) { }
 			if (count["data"] != undefined && entries[key]["type"] == "data") { count["data"] += 1; }
         }
 		if (count["all"] != undefined && count["data"] != undefined) { count["all"] -= count["data"]; }
     }
+
+	for (let key in entries) {
+			if (header_open == false && entries[key]["lowres"] != undefined) {
+			    image_ids += " " + img_id2;
+            }
+	}
 
 	if (header_open == false) {
 		display = "style='display:none;'";
