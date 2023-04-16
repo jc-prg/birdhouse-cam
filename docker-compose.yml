@@ -6,6 +6,19 @@ version: "3"
 
 services:
 
+  birdhouse_app:
+    image: httpd:latest
+    container_name: birdhouse_app
+    ports:
+    - '8080:80'
+    - '8081:81'
+    volumes:
+    - ./config/apache/apache2.conf:/usr/local/apache2/conf/apache2.conf
+    - ./config/apache/httpd.conf:/usr/local/apache2/conf/httpd.conf
+    - ./app:/usr/local/apache2/htdocs
+    - ./data/images:/usr/local/apache2/htdocs/images
+    - ./data/videos:/usr/local/apache2/htdocs/videos
+
   birdhouse_db:
     image:  ${IMAGE_DB:-matthiasg/rpi-couchdb:latest}
     container_name: birdhouse_db
@@ -31,7 +44,7 @@ services:
       - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
       - ./:/usr/src/app/
     ports:
-      - "${BIRDHOUSE_HTTP_PORT}:8000"
+      - "${BIRDHOUSE_API_PORT}:${BIRDHOUSE_API_PORT}"
     depends_on:
       - birdhouse_db
     restart: always

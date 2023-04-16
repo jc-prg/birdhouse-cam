@@ -29,15 +29,43 @@ index_template["single_admin"] = `
                 <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
                     <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="livestream_main">
                 </a>
-                <div class="livestream_record cam1">
-                    <button onclick="birdhouse_recordStart('<!--CAM1_ID-->');" class="button-video-record">Record (<!--CAM1_ID-->)</button>
-                    &nbsp;
-                    <button onclick="birdhouse_recordStop('<!--CAM1_ID-->');" class="button-video-record">Stop (<!--CAM1_ID-->)</button>
-                </div>
+                <!--ADMIN-->
             </div>
         </center>
         <br>&nbsp;<br>
     </div>
+`
+
+//-------------------------------------------------
+
+index_template["admin"] = `
+
+    <table border="0" width="100%" height="100px"><tr>
+    <td width="35%" align="center">
+        <div style="width:100%;text-align:center;">
+            <button onclick="birdhouse_recordStart('<!--CAM1_ID-->');" class="button-video-record">Record (<!--CAM1_ID-->)</button><br/><button onclick="birdhouse_recordStop('<!--CAM1_ID-->');" class="button-video-record">Stop (<!--CAM1_ID-->)</button>
+        </div>
+    </td>
+    <td width="65%">
+        <table border="0" width="100%">
+            <tr>
+                <td>Status &quot;<!--CAM1_ID-->&quot;:</td>
+                <td><div>
+                    <div id="status_error_<!--CAM1_ID-->" style="float:left;"><div id="black"></div></div>
+                    <div id="status_error_record_<!--CAM1_ID-->" style="float:left;"><div id="black"></div></div>
+                    <div style="float:left;padding:5px;"><font id="show_stream_count_<!--CAM1_ID-->">0</font> Streams</div>
+                </div></td>
+            </tr>
+            <tr>
+                <td>Status &quot;<!--CAM2_ID-->&quot;:</td>
+                <td><div style="text-align:center;">
+                    <div id="status_error_<!--CAM2_ID-->" style="float:left;"><div id="black"></div></div>
+                    <div id="status_error_record_<!--CAM2_ID-->" style="float:left;"><div id="black"></div></div>
+                    <div style="float:left;padding:5px;"><font id="show_stream_count_<!--CAM2_ID-->">0</font> Streams</div>
+                </div></td>
+            </tr>
+        </table>
+    </td></tr></table>
 `
 
 //-------------------------------------------------
@@ -91,11 +119,7 @@ index_template["overlay_admin"] = `
                 </a>
             </div>
         </div>
-        <div class="livestream_record cam1" style="height:80px;">
-                    <button onclick="birdhouse_recordStart('<!--CAM1_ID-->');" class="button-video-record">Record (<!--CAM1_ID-->)</button>
-                    &nbsp;
-                    <button onclick="birdhouse_recordStop('<!--CAM1_ID-->');" class="button-video-record">Stop (<!--CAM1_ID-->)</button>
-        </div>
+        <!--ADMIN-->
         </center>
     </div>
 `
@@ -135,11 +159,7 @@ index_template["default_admin"] = `
                 <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
                     <img src="<!--CAM1_URL-->" id="stream_<!--CAM2_ID-->" class="livestream_main">
                 </a>
-                <div class="livestream_record cam1cam2">
-                    <button onclick="birdhouse_recordStart('<!--CAM1_ID-->');" class="button-video-record">Record (<!--CAM1_ID-->)</button>
-                    &nbsp;
-                    <button onclick="birdhouse_recordStop('<!--CAM1_ID-->');" class="button-video-record">Stop (<!--CAM1_ID-->)</button>
-                </div>
+                <!--ADMIN-->
             </div>
         </center>
     </div>

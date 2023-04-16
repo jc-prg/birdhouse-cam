@@ -265,6 +265,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var onclick_difference = "";
 	var settings     = app_data["DATA"]["settings"];
 	var settings_cam = app_data["DATA"]["settings"]["devices"]["camera"];
+	var img_url      = ""; // RESTurl;
 
 	console.log(app_active_page);
 
@@ -272,8 +273,8 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		return "";
     }
 	else if (entry["type"] == "image") {
-		var lowres      = birdhouse_ImageURL(RESTurl + entry["directory"] + entry["lowres"]);
-		var hires       = birdhouse_ImageURL(RESTurl + entry["directory"] + entry["hires"]);
+		var lowres      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
+		var hires       = birdhouse_ImageURL(img_url + entry["directory"] + entry["hires"]);
 		var description = entry["time"] + " (" + entry["similarity"] + "%)";
 
 		if (app_active_page == "FAVORITES") {
@@ -290,7 +291,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		description     = description.replace(/\[br\/\]/g,"<br/>");
 
         if (admin && entry["compare"][1] != "000000" && app_active_page == "TODAY_COMPLETE") {
-            var diff_image      = "/compare/"+entry["compare"][0]+"/"+entry["compare"][1]+"/"+entry["similarity"]+"/image.jpg?"+entry["camera"];
+            var diff_image      = RESTurl + "compare/"+entry["compare"][0]+"/"+entry["compare"][1]+"/"+entry["similarity"]+"/image.jpg?"+entry["camera"];
             onclick_diff        = "birdhouse_imageOverlay(\""+diff_image+"\",\"Difference Detection - "+description+"\");";
             onclick_difference  = entry["time"] +" (<u onclick='"+onclick_diff+"' style='cursor:pointer;'>";
             onclick_difference += entry["similarity"] + "%</u>)";
@@ -299,7 +300,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		edit            = true;
     }
 	else if (entry["type"] == "directory") {
-		var lowres      = birdhouse_ImageURL(RESTurl + entry["directory"] + entry["lowres"]);
+		var lowres      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
 		var onclick     = "birdhousePrint_load(view=\"TODAY\", camera = \""+entry["camera"]+"\", date=\""+entry["datestamp"]+"\");";
 		var description = "";
 		if (entry["count_cam"] != entry["count"]) {
@@ -312,7 +313,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
             }
     }
 	else if (entry["type"] == "addon") {
-		var lowres      = birdhouse_ImageURL(RESTurl + entry["lowres"]);
+		var lowres      = birdhouse_ImageURL(img_url + entry["lowres"]);
 		var lowres      = birdhouse_StreamURL(app_active_cam, entry["stream"], "stream_list_5", true);
 		var onclick     = "birdhousePrint_load(view=\"INDEX\", camera = \""+entry["camera"]+"\");";
 		var description = lang("LIVESTREAM");
@@ -352,7 +353,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
         }
 
         var streaming_url = "http://"+stream_server+"/";
-		var lowres      = birdhouse_ImageURL(RESTurl + entry["path"] + entry["thumbnail"]);
+		var lowres      = birdhouse_ImageURL(img_url + entry["path"] + entry["thumbnail"]);
 		var hires       = birdhouse_ImageURL(streaming_url + video_file);
 		var description = "";
 		if (title.indexOf("_") > 0) { description = entry["date"] + "[br/]" + entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }

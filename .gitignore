@@ -24,3 +24,6 @@ tryout/
 /.env
 /data/couchdb/*
 /log/*
+
+Notizen.md
+Notes.md

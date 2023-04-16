@@ -6,9 +6,10 @@
 
 
 function birdhouseWeather( data ) {
-    var settings = data["DATA"]["settings"];
-    var status   = data["STATUS"];
-	var weather	= data["WEATHER"];
+    var settings        = data["DATA"]["settings"];
+    var admin_allowed   = data["STATUS"]["admin_allowed"];
+    var status          = data["STATUS"];
+	var weather	        = data["WEATHER"];
 
     if (settings["localization"]["weather_active"] == false) {
         setTextById(app_frame_content, "&nbsp;<br/><center>" + lang("NO_WEATHER_CHANGE_SETTINGS") + "</center><br/>&nbsp;");
@@ -74,7 +75,7 @@ function birdhouseWeather( data ) {
     var last_day       = "";
     var day_count      = 0;
     var chart_data     = {
-        "titles" : [lang("TEMPERATURE"), lang("HUMIDITY"), lang("WIND")],
+        "titles" : [lang("TEMPERATURE") + " [°C]", lang("HUMIDITY") + " [%]", lang("WIND") + " [km/h]"],
         "data"   : {}
     }
     var weather_data = {}
@@ -95,7 +96,8 @@ function birdhouseWeather( data ) {
 
             if (day_count <= 3) {
                 var chart_key = key.split("-")[2] + "." + key.split("-")[1] + " " + key2;
-                if (key != last_day) { chart_data["data"][chart_key+"."] = [undefined, undefined, undefined]; last_day = key; }
+                if (key != last_day) { chart_data["data"][chart_key] = [undefined, undefined, undefined]; last_day = key; }
+                if (key2 == "00:00") { chart_key = chart_key.replace("00:00", "00:01"); }
                 chart_data["data"][chart_key] = [forcast_hour["temperature"], forcast_hour["humidity"], forcast_hour["wind_speed"]];
 
                 if (key_hour.split(":")[0] > 6) {
@@ -146,8 +148,10 @@ function birdhouseWeather( data ) {
         chart   += "<b>" + date + "</b><br/>";
         chart   += "<center>" + birdhouseChart_weatherOverview(weather_data[date], "key", false) + "</center>" ;
         });
-    html_weather += birdhouse_OtherGroup( "chart", lang("WEATHER"), chart, true );
-    html_weather += html;
+    html_weather += birdhouse_OtherGroup( "chart", lang("WEATHER") + " (3 " + lang("DAYS") + ")", chart, true );
+    if (admin_allowed) {
+        html_weather += html;
+        }
 
     var title = "<div id='status_error_WEATHER' style='float:left'><div id='black'></div></div>";
     title += "<center><h2>" + lang("WEATHER") + "&nbsp;&nbsp;&nbsp;&nbsp;</h2></center>";
