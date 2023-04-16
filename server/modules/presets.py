@@ -38,6 +38,7 @@ birdhouse_loglevel_module = {
     "cam-video": birdhouse_loglevel,
     "cam-out": birdhouse_loglevel,
     "cam-other": birdhouse_loglevel,
+    "cam-stream": birdhouse_loglevel,
     "config": birdhouse_loglevel,
     "config-Q": birdhouse_loglevel,
     "DB-json": birdhouse_loglevel,
