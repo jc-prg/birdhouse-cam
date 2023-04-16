@@ -8,7 +8,6 @@ services:
   birdhouse_webdav:
     container_name: birdhouse_webdav
     build: ./config/webdav
-    #image: ugeek/webdav:arm
     ports:
       - "${BIRDHOUSE_WEBDAV_PORT}:80"
     volumes:

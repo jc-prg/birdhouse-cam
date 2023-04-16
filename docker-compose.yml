@@ -61,8 +61,6 @@ services:
       - ./:/usr/src/app/
     ports:
       - "${BIRDHOUSE_VIDEO_PORT}:${BIRDHOUSE_VIDEO_PORT}"
-#    depends_on:
-#      - birdhouse_db
     restart: on-failure
     networks:
       my-net:
