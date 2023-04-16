@@ -1,7 +1,9 @@
 #!/bin/bash
+PORT=8009
+echo "Start Audio-Server on port $PORT"
 # https://www.tunbury.org/audio-stream/
 
-/usr/bin/ffmpeg -loglevel error -ar 44100 -ac 1 -f alsa -i plughw:1,0 -f mp3 -listen 1 tcp://0.0.0.0:8009
+/usr/bin/ffmpeg -loglevel error -ar 44100 -ac 1 -f alsa -i plughw:1,0 -f mp3 -listen 1 tcp://0.0.0.0:$PORT
 #/usr/bin/ffmpeg -loglevel error -loop 1 -y -i input.jpg -f alsa -i plughw:1,0 -acodec aac -vcodec libx264 -movflags frag_keyframe+empty_moov -f mp4 -listen 1 tcp://0.0.0.0:5002
 #/usr/bin/ffmpeg -loop 1 -y -i input.jpg -f alsa -i plughw:1,0 -acodec aac -vcodec libx264 -profile:v main -level 3.1 -preset medium -crf 23 -x264-params ref=4 -movflags frag_keyframe+empty_moov -f mp4 -listen 1 tcp://0.0.0.0:5002
 
