@@ -17,6 +17,7 @@ birdhouse_env = {
     "couchdb_password": get_env("COUCHDB_PASSWORD"),
     "couchdb_port": get_env("COUCHDB_PORT"),
     "port_http": get_env("BIRDHOUSE_HTTP_PORT"),
+    "port_api": get_env("BIRDHOUSE_API_PORT"),
     "port_video": get_env("BIRDHOUSE_VIDEO_PORT"),
     "port_audio": get_env("BIRDHOUSE_AUDIO_PORT"),
     "dir_project": get_env("BIRDHOUSE_DIR_PROJECT"),

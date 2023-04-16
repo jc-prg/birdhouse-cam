@@ -1173,9 +1173,9 @@ if __name__ == "__main__":
 
     # Start Webserver
     try:
-        address = ('0.0.0.0', int(config.param["server"]["port"]))
+        address = ('0.0.0.0', int(birdhouse_env["port_api"]))
         server = StreamingServer(address, StreamingHandler)
-        srv_logging.info("Starting WebServer on port "+str(config.param["server"]["port"])+" ...")
+        srv_logging.info("Starting WebServer on port "+str(birdhouse_env["port_api"])+" ...")
         server.serve_forever()
         srv_logging.info("STOPPED SERVER.")
 
