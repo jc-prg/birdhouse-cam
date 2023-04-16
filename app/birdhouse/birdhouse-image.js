@@ -127,6 +127,9 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
     }
 
 	for (let key in entries) {
+			var img_id2 = "";
+			img_id2 += entries[key]["directory"] + entries[key]["lowres"];
+			img_id2 = img_id2.replaceAll( "/", "_");
 			if (header_open == false && entries[key]["lowres"] != undefined) {
 			    image_ids += " " + img_id2;
             }
