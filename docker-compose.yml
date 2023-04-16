@@ -42,13 +42,12 @@ services:
   birdhouse_video_stream:
     build: ${CONTAINER_VIDEO:-./config/container_video_rpi/}
     container_name: birdhouse_video
-    privileged: true
     volumes:
       - ${BIRDHOUSE_DIR_LOGGING:-./log}:/log
       - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
       - ./:/usr/src/app/
     ports:
-      - "${BIRDHOUSE_VIDEO_PORT}:8008"
+      - "${BIRDHOUSE_VIDEO_PORT}:${BIRDHOUSE_VIDEO_PORT}"
 #    depends_on:
 #      - birdhouse_db
     restart: on-failure
