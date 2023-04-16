@@ -236,7 +236,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    var record_to    = cam_settings["image_save"]["record_to"];
 	    var rhythm       = cam_settings["image_save"]["rhythm"];
         var onclick      = "birdhouse_createDayVideo('"+camera+"');";
-        var create       =  "<div onclick=\""+onclick+"\" style=\"cursor:pointer\"><u>" + lang("CREATE_DAY") + " ...</u></div>";
+        var create       =  "<div onclick=\""+onclick+"\" style=\"cursor:pointer\"><u>" + lang("CREATE_DAY") + ": " + app_data["WEATHER"]["current"]["date"] + "</u></div>";
         tab.style_rows["height"] = "25px";
 
 	    if (record_from.indexOf("sun") == 0 && record_from.indexOf("+0") > 0)       { record_from = current_weather["sunrise"]; }
@@ -244,15 +244,14 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    else if (record_from.indexOf("sun") == 0 && record_from.indexOf("-1") > 0)  { record_from = current_weather["sunrise"] + "-1h"; }
 	    else                                                                        { record_from += ":00"; }
 
-	    if (record_to.indexOf("sun") == 0 && record_to.indexOf("+0") > 0)           { record_from = current_weather["sunset"]; }
-	    else if (record_to.indexOf("sun") == 0 && record_to.indexOf("+1") > 0)      { record_from = current_weather["sunset"] + "+1h"; }
-	    else if (record_to.indexOf("sun") == 0 && record_to.indexOf("-1") > 0)      { record_from = current_weather["sunset"] + "-1h"; }
+	    if (record_to.indexOf("sun") == 0 && record_to.indexOf("+0") > 0)           { record_to = current_weather["sunset"]; }
+	    else if (record_to.indexOf("sun") == 0 && record_to.indexOf("+1") > 0)      { record_to = current_weather["sunset"] + "+1h"; }
+	    else if (record_to.indexOf("sun") == 0 && record_to.indexOf("-1") > 0)      { record_to = current_weather["sunset"] + "-1h"; }
 	    else                                                                        { record_to += ":00"; }
 
 	    //info_text += "&nbsp;<br/>&nbsp;";
 	    info_text += tab.start();
 	    info_text += tab.row("&nbsp;&nbsp;" + lang("CAMERA") + ":", "<b>" + camera.toUpperCase() + "</b> - " + cam_settings["name"]);
-	    info_text += tab.row("&nbsp;&nbsp;" + lang("DATE") + ":", app_data["WEATHER"]["current"]["date"]);
 	    info_text += tab.row("&nbsp;&nbsp;" + lang("RECORDING_TIMES") + ":", "from <b>" + record_from + "</b> to <b>" + record_to + "</b> every <b>" + rhythm + "s</b>");
 	    info_text += tab.row("&nbsp;&nbsp;" + lang("VIDEO") + ":", create );
 	    info_text += tab.end();
