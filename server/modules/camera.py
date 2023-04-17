@@ -1480,6 +1480,7 @@ class BirdhouseCameraStreamRaw(threading.Thread):
         self._recording = False
         self._stream = None
         self._stream_last = None
+        self._stream_last_time = None
         self._timeout = 3
         self._last_activity = 0
         self._start_time = None
@@ -1537,18 +1538,19 @@ class BirdhouseCameraStreamRaw(threading.Thread):
                 try:
                     raw = self._read_from_camera()
                     check = str(type(raw))
-                    if len(raw) > 0:
-                        self._stream = raw.copy()
-                        self._stream_last = raw.copy()
+                    if "NoneType" not in check and len(raw) > 0:
                         self._reset_error()
-                        circle_in_cache = False
-                    elif "NoneType" in check or len(raw) == 0:
+                    else:
                         msg = "Got an empty image (source=" + str(self.id) + ")"
                         self._raise_error(msg)
                         raise Exception(msg)
                     if self.rotation != 0:
                         raw = self.image.rotate_raw(raw, self.rotation)
-                        self._stream = raw.copy()
+
+                    self._stream = raw.copy()
+                    self._stream_last = raw.copy()
+                    self._stream_last_time = time.time()
+                    circle_in_cache = False
 
                 except Exception as e:
                     self._raise_error("Error reading stream for '" + self.id + "':" + str(e))
@@ -2293,9 +2295,6 @@ class BirdhouseCamera(threading.Thread):
         try:
             raw = self.camera_stream_raw.read()
             check = str(type(raw))
-            if not self.camera_stream_raw.error:
-                if self.param["image"]["rotation"] != 0:
-                    raw = self.image.rotate_raw(raw, self.param["image"]["rotation"])
             if "NoneType" in check or len(raw) == 0:
                 raise Exception("Got empty image.")
             elif len(raw) > 0 and not self.image.error:
