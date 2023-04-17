@@ -1516,6 +1516,9 @@ class BirdhouseCameraStreamRaw(threading.Thread):
         circle_in_cache = False
         circle_color = (0, 0, 255)
 
+        while self.camera is None:
+            time.sleep(1)
+
         while self._running:
             self._start_time = time.time()
 
@@ -1762,6 +1765,7 @@ class BirdhouseCamera(threading.Thread):
         self.record = self.param["record"]
         self.max_resolution = None
 
+        self.camera = None
         self.video = None
         self.image = None
         self.running = True
@@ -1822,12 +1826,10 @@ class BirdhouseCamera(threading.Thread):
         self.video = BirdhouseVideoProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param,
                                               directory=self.config.db_handler.directory("videos"),
                                               time_zone=self.timezone)
-        self.camera = None
-        self.camera_start()
-
         self.camera_stream_raw = BirdhouseCameraStreamRaw(camera_id=self.id, camera_handler=self.camera,
                                                           param=self.param, time_zone=self.timezone, config=config)
         self.camera_stream_raw.start()
+        self.camera_start()
 
     def _raise_error(self, cam_error, message):
         """
