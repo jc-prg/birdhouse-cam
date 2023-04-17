@@ -57,12 +57,12 @@ function birdhouse_INDEX(data, camera) {
     app_camera_source["overlay_" + active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream_detect"];
 
     if (other_cams.length > 0) {
-        replace_tags["CAM1_PIP_URL"]    = birdhouse_StreamURL(active_cam["name"], stream_server + cameras[active_cam["name"]]["video"]["stream_pip"], "main_pip", true);
+        replace_tags["CAM1_PIP_URL"]    = birdhouse_StreamURL(other_cams[0]["name"], stream_server + cameras[active_cam["name"]]["video"]["stream_pip"], "main_pip", true);
         replace_tags["CAM1_PIP_URL"]    = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-key}", other_cams[0]["name"]);
         replace_tags["CAM1_PIP_URL"]    = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-pos}", index_view["lowres_position"]);
         replace_tags["CAM2_ID"]         = other_cams[0]["name"];
-        replace_tags["CAM2_URL"]        = birdhouse_StreamURL(active_cam["name"], stream_server + cameras[other_cams[0]["name"]]["video"]["stream"], "2nd", true);
-        replace_tags["CAM2_LOWRES_URL"] = birdhouse_StreamURL(active_cam["name"], stream_server + cameras[other_cams[0]["name"]]["video"]["stream_lowres"], "2nd_lowres", true);
+        replace_tags["CAM2_URL"]        = birdhouse_StreamURL(other_cams[0]["name"], stream_server + cameras[other_cams[0]["name"]]["video"]["stream"], "2nd", true);
+        replace_tags["CAM2_LOWRES_URL"] = birdhouse_StreamURL(other_cams[0]["name"], stream_server + cameras[other_cams[0]["name"]]["video"]["stream_lowres"], "2nd_lowres", true);
         replace_tags["CAM2_LOWRES_POS"] = index_lowres_position[index_view["lowres_position"].toString()];
 
         app_camera_source[other_cams[0]["name"]]             = stream_server + cameras[other_cams[0]["name"]]["video"]["stream"];

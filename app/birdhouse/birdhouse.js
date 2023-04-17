@@ -245,7 +245,7 @@ function birdhouseReloadView() {
                 image.src = "";
                 app_camera_source[key] = app_camera_source[key].replaceAll("//","/");
                 app_camera_source[key] = app_camera_source[key].replace(":/","://");
-                if (app_unique_stream_url)	{ image.src = app_camera_source[key]+"?"+app_unique_stream_id; }
+                if (app_unique_stream_url)	{ image.src = app_camera_source[key]+"&"+app_unique_stream_id; }
                 else                        { image.src = app_camera_source[key]; }
                 }
 			}

@@ -584,7 +584,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif param["command"] == "kill_stream":
             stream_id = param["parameter"][0]
             if "&" in stream_id:
-                stream_id_kill = stream_id
+                stream_id_kill = stream_id.split("&")[-1]
                 camera[which_cam].set_stream_kill(stream_id_kill)
                 response = {"kill_stream": which_cam}
         elif param["command"] == "edit_presets":
@@ -644,7 +644,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         config.html_replace["active_cam"] = param["which_cam"]
 
         # get param
-        param = ""
         redirect_app = "/app/index.html"
         if "?" in self.path:
             redirect_app += "?"+self.path.split("?")[1]
@@ -661,7 +660,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif '/image.jpg' in self.path:
             self.do_GET_image(which_cam)
         elif '/stream.mjpg' in self.path:
-            self.do_GET_stream(which_cam, which_cam2, further_param)
+            self.do_GET_stream(which_cam, which_cam2, param)
         elif self.path.endswith('favicon.ico'):
             self.stream_file(filetype='image/ico', content=read_image(directory='../app', filename=self.path))
         elif self.path.startswith("/app/index.html"):
@@ -937,7 +936,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.stream_file(filetype='image/jpeg',
                              content=read_image(directory="../data/images/", filename=filename))
 
-    def do_GET_stream(self, which_cam, which_cam2, further_param):
+    def do_GET_stream(self, which_cam, which_cam2, param):
         """
         create video stream
         """
@@ -948,7 +947,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.error_404()
             return
 
-        srv_logging.info("GET API request with '" + self.path + "'.")
+        srv_logging.info("GET API request with '" + self.path + "' - Session-ID: " + param["session_id"])
         srv_logging.info(str(which_cam))
 
         if ":" in which_cam2:
@@ -962,7 +961,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         stream_pip = False
         stream_active = True
         stream_id_int = datetime.now().timestamp()
-        stream_id_ext = "&".join(further_param)
+        stream_id_ext = param["session_id"]
 
         stream_wait_while_error = 0.5
         stream_wait_while_recording = 1
@@ -975,7 +974,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         while stream_active:
 
-            if camera[which_cam].get_stream_kill(stream_id_ext) or config.shut_down:
+            if camera[which_cam].get_stream_kill(stream_id_ext, stream_id_int) or config.shut_down:
                 stream_active = False
 
             if config.update["camera_" + which_cam]:
