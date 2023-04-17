@@ -1994,6 +1994,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         try:
             self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source,
                                                  config=self.config, param=self.param)
+            self.camera_stream_raw.set_stream_handler(self.camera.stream)
 
             if self.camera.error:
                 self.raise_error("Can't connect to camera, check if '" + str(
