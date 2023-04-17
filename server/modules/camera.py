@@ -15,559 +15,314 @@ from datetime import datetime, timezone, timedelta
 from modules.presets import *
 
 
-# https://learn.circuit.rocks/introduction-to-opencv-using-the-raspberry-pi
-
-
-class BirdhouseVideoProcessing(threading.Thread):
+class BirdhouseCameraClass(object):
     """
-    Record videos: start and stop; from all pictures of the day
+    Main class for camera classes: error messaging, logging and global vars
     """
 
-    def __init__(self, camera_id, camera, config, param, directory, time_zone):
-        """
-        Initialize new thread and set inital parameters
-        """
-        threading.Thread.__init__(self)
+    def __init__(self, class_id, class_log, camera_id, config):
         self.id = camera_id
-        self.camera = camera
-        self.name = param["name"]
-        self.param = param
         self.config = config
-        self.directory = directory
-        self.timezone = time_zone
+        self.param = self.config.param["devices"]["cameras"][self.id]
 
-        self.logging = logging.getLogger(self.id + "-video")
-        self.logging.setLevel(birdhouse_loglevel_module["cam-video"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting VIDEO processing for '"+self.id+"' ...")
+        self._running = True
+        self._paused = False
 
-        self.queue_create = []
-        self.queue_trim = []
-        self.queue_wait = 10
+        self.health_check = time.time()
 
-        self.record_video_info = None
-        self.image_size = [0, 0]
-        self.recording = False
-        self.processing = False
-        self.max_length = 0.25 * 60
-        #self.output = None
-        self.output = BirdhouseCameraOutput(self.id)
-        self.output_codec = {"vcodec": "libx264", "crf": 18}
-        self.ffmpeg_cmd = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} "
-        self.ffmpeg_cmd += "-vcodec libx264 -crf 18"
-        self.ffmpeg_cmd += " {OUTPUT_FILENAME}"
-
-        self.ffmpeg_trim = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} -vcodec libx264 -crf 18 " + \
-                           "-ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
-
-        # Other working options:
-        # self.ffmpeg_cmd  += "-b 1000k -strict -2 -vcodec libx264 -profile:v main -level 3.1 -preset medium - \
-        #                      x264-params ref=4 -movflags +faststart -crf 18"
-        # self.ffmpeg_cmd  += "-c:v libx264 -pix_fmt yuv420p"
-        # self.ffmpeg_cmd  += "-profile:v baseline -level 3.0 -crf 18"
-        # self.ffmpeg_cmd  += "-vcodec libx264 -preset fast -profile:v baseline -lossless 1 -vf \
-        #                     \"scale=720:540,setsar=1,pad=720:540:0:0\" -acodec aac -ac 2 -ar 22050 -ab 48k"
-
-        # self.ffmpeg_trim  = "ffmpeg -y -i {INPUT_FILENAME} -c copy -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
-        self.count_length = 8
-        self.running = False
         self.error = False
         self.error_msg = []
-        self.info = {
-            "start": 0,
-            "start_stamp": 0,
-            "status": "ready"
-        }
+        self.error_time = None
+        self.error_count = 0
 
-    def raise_error(self, message, warning=False):
-        """
-        Report Error, set variables of modules, collect last 3 messages in var self.error_msg
-        """
-        if warning:
-            self.raise_warning(message)
-            return
-        self.logging.error("Video Processing (" + self.id + "): " + message)
-        self.error = True
-        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-        self.error_msg.append(time_info + " - " + message)
-        if len(self.error_msg) >= 5:
-            self.error_msg.pop()
+        self.logging = logging.getLogger(class_id)
+        self.logging.setLevel(birdhouse_loglevel_module[class_log])
+        self.logging.addHandler(birdhouse_loghandler)
 
-    def raise_warning(self, message):
+        self.timezone = 0
+        if "localization" in self.config.param and "timezone" in self.config.param["localization"]:
+            self.timezone = float(self.config.param["localization"]["timezone"].replace("UTC", ""))
+            self.logging.debug("Set Timezone: " + self.config.param["localization"]["timezone"] +
+                               " (" + str(self.timezone) + " / " + self.config.local_time().strftime("%H:%M") + ")")
+
+    def raise_error(self, message):
         """
         Report Error, set variables of modules
         """
-        self.logging.warning("Video Processing (" + self.id + "): " + message)
+        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+        self.error_msg.append(time_info + " - " + message)
+        self.error_count += 1
+        if len(self.error_msg) >= 10:
+            self.error_msg.pop()
+        self.error_time = time.time()
+        self.error = True
+        self.logging.error(self.id + ": " + message)
+
+    def raise_warning(self, message):
+        """
+        show warning message
+        """
+        self.logging.warning(self.id + ": " + message)
 
     def reset_error(self):
         """
-        reset all error values
+        remove all errors
         """
         self.error = False
         self.error_msg = []
+        self.error_time = 0
+        self.error_count = 0
 
-    def run(self):
+    def if_running(self):
         """
-        Initialize, set initial values
+        external check if running
         """
-        self.logging.info("Initialize video recording ...")
-        if "video" in self.param and "max_length" in self.param["video"]:
-            self.max_length = self.param["video"]["max_length"]
-            self.logging.debug("Set max video recording length for " + self.id + " to " + str(self.max_length))
+        return self._running
+
+    def if_error(self, message=False):
+        """
+        external check if error
+        """
+        if message:
+            return self.error_msg
         else:
-            self.logging.debug("Use default max video recording length for " + self.id + " = " + str(self.max_length))
+            return self.error
 
-        count = 0
-        self.running = True
-        while self.running:
-            time.sleep(1)
-            count += 1
-            if count >= self.queue_wait:
-                count = 0
 
-                # create short videos
-                if len(self.queue_create) > 0:
-                    self.config.async_running = True
-                    [filename, stamp, date] = self.queue_create.pop()
+class BirdhouseCameraHandler(BirdhouseCameraClass):
 
-                    self.logging.info("Start day video creation (" + filename + "): " + stamp + " - " + date + ")")
-                    response = self.create_video_day(filename=filename, stamp=stamp, date=date)
+    def __init__(self, camera_id, source, config, param):
+        BirdhouseCameraClass.__init__(self, class_id=camera_id+"-ctrl", class_log="cam-other",
+                                      camera_id=camera_id, config=config)
 
-                    if response["result"] == "OK":
-                        self.config.queue.entry_add(config="videos", date="", key=stamp, entry=response["data"])
-                        self.config.async_answers.append(["CREATE_DAY_DONE", date, response["result"]])
-                    else:
-                        self.config.async_answers.append(["CREATE_DAY_ERROR", date, response["result"]])
-                    self.config.async_running = False
+        if "/dev/" not in str(source):
+            source = "/dev/video" + str(source)
 
-                # create short videos
-                if len(self.queue_trim) > 0:
-                    self.config.async_running = True
-                    [video_id, start, end] = self.queue_trim.pop()
+        self.source = source
+        self.stream = None
+        self.property_keys = None
+        self.properties_get = None
+        self.properties_not_used = None
+        self.properties_set = None
 
-                    self.logging.info("Start video trimming (" + video_id + "): " + str(start) + " - " + str(end) + ")")
-                    response = self.create_video_trimmed(video_id, start, end)
-                    self.config.async_answers.append(["TRIM_DONE", video_id, response["result"]])
-                    self.config.async_running = True
+        self.logging.info("Starting CAMERA support for '"+self.id+":"+source+"' ...")
 
-        self.logging.info("Stopped video recording.")
+        self.connect()
+        self.get_properties(key="init")
+        self.set_properties(key="init")
 
-    def stop(self):
-        """
-        ending functions (nothing at the moment)
-        """
-        if self.recording:
-            self.record_stop()
-            while self.recording:
-                self.logging.info("Stopped recording for shut down. Please wait ...")
-                time.sleep(1)
-
-        self.running = False
-        return
-
-    def status(self):
-        """
-        Return recording status
-        """
-        return self.record_video_info.copy()
-
-    def filename(self, file_type="image"):
-        """
-        generate filename for images
-        """
-        if file_type == "video":
-            return self.config.filename_image(image_type="video", timestamp=self.info["date_start"], camera=self.id)
-        elif file_type == "thumb":
-            return self.config.filename_image(image_type="thumb", timestamp=self.info["date_start"], camera=self.id)
-        elif file_type == "vimages":
-            return self.config.filename_image(image_type="vimages", timestamp=self.info["date_start"], camera=self.id)
-        else:
+    def read(self):
+        try:
+            ref, raw = self.stream.read()
+            self.error = False
+            return raw
+        except cv2.error as err:
+            self.error = True
+            self.error_msg = str(err)
+            self.logging.warning("- Error connecting to camera '" + self.source +
+                                 "' and reading first image: " + str(err))
             return
 
-    def record_start(self):
-        """
-        start video recoding
-        """
-        response = {"command": ["start recording"]}
+    def connect(self):
+        self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
+        self.read()
 
-        if self.camera.active and not self.camera.error and not self.recording:
-            self.logging.info("Starting video recording (" + self.id + ") ...")
-            self.recording = True
-            current_time = self.config.local_time()
-            self.info = {
-                "date": current_time.strftime('%d.%m.%Y %H:%M:%S'),
-                "date_start": current_time.strftime('%Y%m%d_%H%M%S'),
-                "stamp_start": current_time.timestamp(),
-                "status": "recording",
-                "camera": self.id,
-                "camera_name": self.name,
-                "directory": self.directory,
-                "image_count": 0
-            }
-        elif not self.camera.active:
-            response["error"] = "camera is not active " + self.camera.id
-        elif self.recording:
-            response["error"] = "camera is already recording " + self.camera.id
-        return response
+    def reconnect(self):
+        self.disconnect()
+        self.connect()
 
-    def record_stop(self):
+    def disconnect(self):
+        if self.stream is not None:
+            try:
+                self.stream.release()
+            except cv2.error as err:
+                self.logging.debug("- Release of camera did not work: " + str(err))
+        else:
+            self.logging.debug("- Camera not yet connected.")
+
+    def set_properties(self, key, value=""):
         """
-        stop video recoding
+        set camera parameter ...
+        -----------------------------
+        0. CV_CAP_PROP_POS_MSEC Current position of the video file in milliseconds.
+        1. CV_CAP_PROP_POS_FRAMES 0-based index of the frame to be decoded/captured next.
+        2. CV_CAP_PROP_POS_AVI_RATIO Relative position of the video file
+        3. CV_CAP_PROP_FRAME_WIDTH Width of the frames in the video stream.
+        4. CV_CAP_PROP_FRAME_HEIGHT Height of the frames in the video stream.
+        5. CV_CAP_PROP_FPS Frame rate.
+        6. CV_CAP_PROP_FOURCC 4-character code of codec.
+        7. CV_CAP_PROP_FRAME_COUNT Number of frames in the video file.
+        8. CV_CAP_PROP_FORMAT Format of the Mat objects returned by retrieve() .
+        9. CV_CAP_PROP_MODE Backend-specific value indicating the current capture mode.
+        10. CV_CAP_PROP_BRIGHTNESS Brightness of the image (only for cameras). [0..255]
+        11. CV_CAP_PROP_CONTRAST Contrast of the image (only for cameras). [0..255]
+        12. CV_CAP_PROP_SATURATION Saturation of the image (only for cameras). [0..255]
+        13. CV_CAP_PROP_HUE Hue of the image (only for cameras).
+        14. CV_CAP_PROP_GAIN Gain of the image (only for cameras). [0..127]
+        15. CV_CAP_PROP_EXPOSURE Exposure (only for cameras). [-7..-1] ... tbc.
+        16. CV_CAP_PROP_CONVERT_RGB Boolean flags indicating whether images should be converted to RGB.
+        17. CV_CAP_PROP_WHITE_BALANCE Currently unsupported [4000..7000]
         """
-        response = {"command": ["stop recording"]}
-        if self.camera.active and not self.camera.error and self.recording:
-            self.logging.info("Stopping video recording (" + self.id + ") ...")
-            current_time = self.config.local_time()
-            self.info["date_end"] = current_time.strftime('%Y%m%d_%H%M%S')
-            self.info["stamp_end"] = current_time.timestamp()
-            self.info["status"] = "processing"
-            self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 2)
-            if float(self.info["length"]) > 1:
-                self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 2)
+        self.properties_set = ["saturation", "brightness", "contrast", "framerate", "exposure",
+                               "hue", "auto_white_balance", "auto_exposure", "gamma", "gain"]
+        if key == "init":
+            return
+
+        try:
+            if key == "auto_exposure":
+                self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, float(value))
+            elif key == "auto_white_balance":
+                self.stream.set(cv2.CAP_PROP_AUTO_WB, float(value))
+            elif key == "brightness":
+                self.stream.set(cv2.CAP_PROP_BRIGHTNESS, float(value))
+            elif key == "contrast":
+                self.stream.set(cv2.CAP_PROP_CONTRAST, float(value))
+            elif key == "exposure":
+                self.stream.set(cv2.CAP_PROP_EXPOSURE, float(value))
+            elif key == "fps":
+                self.stream.set(cv2.CAP_PROP_FPS, float(value))
+            elif key == "gain":
+                self.stream.set(cv2.CAP_PROP_GAIN, float(value))
+            elif key == "gamma":
+                self.stream.set(cv2.CAP_PROP_GAMMA, float(value))
+            elif key == "hue":
+                self.stream.set(cv2.CAP_PROP_HUE, float(value))
+            elif key == "saturation":
+                self.stream.set(cv2.CAP_PROP_SATURATION, float(value))
+        except cv2.error as err:
+            self.raise_error("Could not change camera setting '" + key + "': " + str(err))
+
+    def get_properties_available(self, keys="get"):
+        """
+        return keys for all properties that are implemented at the moment
+        """
+        if keys == "get":
+            return list(self.properties_get.keys())
+        elif keys == "set":
+            return self.properties_set
+        return self.property_keys
+
+    def get_properties(self, key=""):
+        """
+        get properties from camera
+        """
+        properties_not_used = ["pos_msec", "pos_frames", "pos_avi_ratio", "convert_rgb", "fourcc", "format", "mode",
+                               "frame_count", "frame_width", "frame_height"]
+        properties_get_array = ["brightness", "saturation", "contrast", "hue", "gain", "gamma",
+                                "exposure", "auto_exposure", "auto_wb", "wb_temperature", "temperature",
+                                "fps", "focus", "autofocus", "zoom"]
+
+        if key == "init":
+            self.properties_get = {}
+
+        for prop_key in properties_get_array:
+            command = "self.stream.get(cv2.CAP_PROP_" + prop_key.upper() + ")"
+            value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
+            if prop_key not in self.properties_get:
+                self.properties_get[prop_key] = [value, -1, -1]
             else:
-                self.info["framerate"] = 0
-            self.logging.info("---------------------> Length: "+str(self.info["length"]))
-            self.logging.info("---------------------> Count: "+str(self.info["image_count"]))
-            self.logging.info("---------------------> FPS: "+str(self.info["framerate"]))
-            self.create_video()
-            self.info["status"] = "finished"
-            self.config.queue.entry_add(config="videos", date="", key=self.info["date_start"], entry=self.info.copy())
-            self.recording = False
-        elif not self.camera.active:
-            response["error"] = "camera is not active " + self.camera.id
-        elif not self.recording:
-            response["error"] = "camera isn't recording " + self.camera.id
-        return response
+                self.properties_get[prop_key][0] = value
 
-    def record_stop_auto(self):
-        """
-        Check if maximum length is achieved
-        """
-        if self.info["status"] == "recording":
-            max_time = float(self.info["stamp_start"] + self.max_length)
-            if max_time < float(self.config.local_time().timestamp()):
-                self.logging.info("Maximum recording time achieved ...")
-                self.logging.info(str(max_time) + " < " + str(self.config.local_time().timestamp()))
-                return True
-        return False
+        if key == "init":
+            for prop_key in properties_get_array:
+                # evaluate minimum
+                if not prop_key.startswith("frame_"):
+                    self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), -100000.0)
+                    value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
+                    if value > 0:
+                        self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 0.0)
+                        value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
+                    self.properties_get[prop_key][1] = value
 
-    def record_info(self):
-        """
-        Get info of recording
-        """
-        if self.recording:
-            self.info["length"] = round(self.config.local_time().timestamp() - self.info["stamp_start"], 1)
-        elif self.processing:
-            self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 1)
+                # evaluate maximum
+                self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 100000.0)
+                value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
+                self.properties_get[prop_key][2] = value
 
-        self.info["image_size"] = self.image_size
+                # set again current value
+                self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), self.properties_get[prop_key][0])
 
-        if float(self.info["length"]) > 1:
-            self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+        return self.properties_get
+
+    def get_properties_image(self):
+        """
+        read image and get properties (-> fuer Regelkreislauf)
+        """
+        image_properties = {}
+        raw = self.read()
+
+        if raw is None:
+            return image_properties
+
+        if len(raw.shape) > 2:
+            gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
         else:
-            self.info["framerate"] = 0
-
-        return self.info
-
-    def create_video(self):
-        """
-        Create video from images
-        """
-        self.processing = True
-        self.logging.info("Start video creation with ffmpeg ...")
-
-        input_filenames = os.path.join(self.config.db_handler.directory("videos"), self.filename("vimages") + "%" +
-                                       str(self.count_length).zfill(2) + "d.jpg")
-        output_filename = os.path.join(self.config.db_handler.directory("videos"), self.filename("video"))
+            gray = raw
 
         try:
-            (
-                ffmpeg
-                .input(input_filenames)
-                .filter('fps', fps=self.info["framerate"], round='up')
-                .output(output_filename, vcodec=self.output_codec["vcodec"], crf=self.output_codec["crf"])
-                .overwrite_output()
-                .run(capture_stdout=True, capture_stderr=False)
-            )
-        except ffmpeg.Error as e:
-            self.raise_error("Error during ffmpeg video creation: " + str(e))
-            self.processing = False
-            return
-
-        self.info["thumbnail"] = self.filename("thumb")
-        cmd_thumb = "cp " + os.path.join(self.config.db_handler.directory("videos"),
-                                         self.filename("vimages") + str(1).zfill(self.count_length) + ".jpg "
-                                         ) + os.path.join(self.config.db_handler.directory("videos"),
-                                                          self.filename("thumb"))
-        cmd_delete = "rm " + os.path.join(self.config.db_handler.directory("videos"),
-                                          self.filename("vimages") + "*.jpg")
-        try:
-            self.logging.info(cmd_thumb)
-            message = os.system(cmd_thumb)
-            self.logging.debug(message)
-
-            self.logging.info(cmd_delete)
-            message = os.system(cmd_delete)
-            self.logging.debug(message)
-
-        except Exception as e:
-            self.raise_error("Error during video creation (thumbnail/cleanup): " + str(e))
-            self.processing = False
-            return
-
-        self.processing = False
-        self.logging.info("OK.")
-        return
-
-    def create_video_image(self, image):
-        """
-        Save image
-        """
-        self.info["image_count"] += 1
-        self.info["image_files"] = self.filename("vimages")
-        self.info["video_file"] = self.filename("video")
-        filename = self.info["image_files"] + str(self.info["image_count"]).zfill(self.count_length) + ".jpg"
-        path = os.path.join(self.directory, filename)
-        self.logging.debug("Save image as: " + path)
+            cols, rows = gray.shape
+            image_properties["brightness"] = np.sum(gray) / (255 * cols * rows)
+        except cv2.error as err:
+            self.raise_error("Could not measure brightness: " + str(err))
 
         try:
-            self.logging.debug("Write  image '" + path + "')")
-            return cv2.imwrite(path, image)
-        except Exception as e:
-            self.info["image_count"] -= 1
-            self.raise_error("Could not save image '" + filename + "': " + str(e))
-
-    def create_video_day(self, filename, stamp, date):
-        """
-        Create daily video from all single images available
-        """
-        camera = self.id
-        cmd_videofile = "video_" + camera + "_" + stamp + ".mp4"
-        cmd_thumbfile = "video_" + camera + "_" + stamp + "_thumb.jpeg"
-        cmd_tempfiles = "img_" + camera + "_" + stamp + "_"
-        framerate = 20
+            image_properties["contrast"] = gray.std()
+        except cv2.error as err:
+            self.raise_error("Could not measure contrast: " + str(err))
 
         try:
-            cmd_rm = "rm " + self.config.db_handler.directory("videos_temp") + "*"
-            self.logging.debug(cmd_rm)
-            message = os.system(cmd_rm)
-            if message != 0:
-                response = {"result": "error", "reason": "remove temp image files", "message": message}
-                self.raise_error("Error during day video creation: remove old temp image files.", warning=True)
-                # return response
-        except Exception as e:
-            self.raise_error("Error during day video creation: " + str(e), warning=True)
+            img_hsv = cv2.cvtColor(raw, cv2.COLOR_BGR2HSV)
+            image_properties["saturation"] = img_hsv[:, :, 1].mean()
+        except cv2.error as err:
+            self.raise_error("Could not measure saturation: " + str(err))
 
+        return image_properties
+
+    def set_black_white(self):
+        """
+        set saturation to 0
+        """
         try:
-            cmd_copy = "cp " + self.config.db_handler.directory("images") + filename + "* " + \
-                       self.config.db_handler.directory("videos_temp")
-            self.logging.debug(cmd_copy)
-            message = os.system(cmd_copy)
-            if message != 0:
-                response = {"result": "error", "reason": "copy temp image files", "message": message}
-                self.raise_error("Error during day video creation: copy temp image files.")
-                return response
-        except Exception as e:
-            self.raise_error("Error during day video creation: " + str(e))
+            self.stream.set(cv2.CAP_PROP_SATURATION, 0)
+            return True
+        except cv2.error as err:
+            self.raise_error("Could not set to black and white: " + str(err))
+            return False
 
-        cmd_filename = self.config.db_handler.directory("videos_temp") + cmd_tempfiles
-        cmd_rename = "i=0; for fi in " + self.config.db_handler.directory("videos_temp") + "image_*; do mv \"$fi\" $(printf \""
-        cmd_rename += cmd_filename + "%05d.jpg\" $i); i=$((i+1)); done"
+    def set_resolution(self, width, height):
+        """
+        set camera resolution
+        """
         try:
-            self.logging.info(cmd_rename)
-            message = os.system(cmd_rename)
-            if message != 0:
-                response = {"result": "error", "reason": "rename temp image files", "message": message}
-                self.raise_error("Error during day video creation: rename temp image files.")
-                return response
-        except Exception as e:
-            self.raise_error("Error during day video creation: " + str(e))
+            self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+            return True
+        except cv2.error as err:
+            self.raise_error("Could not set resolution: " + str(err))
+            return False
 
-        amount = 0
-        for root, dirs, files in os.walk(self.config.db_handler.directory("videos_temp")):
-            for filename in files:
-                if cmd_tempfiles in filename:
-                    amount += 1
-
-        input_filenames = cmd_filename + "%05d.jpg"
-        output_filename = os.path.join(self.config.db_handler.directory("videos"), cmd_videofile)
-        try:
-            (
-                ffmpeg
-                .input(input_filenames)
-                .filter('fps', fps=framerate, round='up')
-                .output(output_filename, vcodec=self.output_codec["vcodec"], crf=self.output_codec["crf"])
-                .overwrite_output()
-                .run(capture_stdout=True, capture_stderr=False)
-            )
-        except ffmpeg.Error as e:
-            self.raise_error("Error during ffmpeg video creation: " + str(e))
-            response = {"result": "error", "reason": "create video with ffmpeg", "message": str(e)}
-            return response
-
-        try:
-            cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.db_handler.directory("videos") + cmd_thumbfile
-            self.logging.info(cmd_thumb)
-            message = os.system(cmd_thumb)
-            if message != 0:
-                response = {"result": "error", "reason": "create thumbnail", "message": message}
-                self.raise_error("Error during day video creation: create thumbnails.")
-                return response
-
-            cmd_rm2 = "rm " + self.config.db_handler.directory("videos_temp") + "*.jpg"
-            self.logging.info(cmd_rm2)
-            message = os.system(cmd_rm2)
-            if message != 0:
-                response = {"result": "error", "reason": "remove temp image files", "message": message}
-                self.raise_error("Error during day video creation: remove temp image files.")
-                return response
-        except Exception as e:
-            self.raise_error("Error during day video creation: " + str(e))
-
-        length = (amount / framerate)
-        video_data = {
-            "camera": self.id,
-            "camera_name": self.name,
-            "date": date,
-            "date_start": stamp,
-            "framerate": framerate,
-            "image_count": amount,
-            "image_size": self.image_size,
-            "length": length,
-            "time": "complete day",
-            "type": "video",
-            "thumbnail": cmd_thumbfile,
-            "video_file": cmd_videofile,
-        }
-        response = {
-            "result": "OK",
-            "data": video_data
-        }
-        return response
-
-    def create_video_day_queue(self, param):
+    def get_resolution(self, maximum=False):
         """
-        create a video of all existing images of the day
+        get camera resolution
         """
-        response = {}
-        which_cam = param["which_cam"]
-        current_time = self.config.local_time()
-        stamp = current_time.strftime('%Y%m%d_%H%M%S')
-        date = current_time.strftime('%d.%m.%Y')
-        filename = "image_" + which_cam + "_big_"
-
-        self.queue_create.append([filename, stamp, date])
-
-        response["command"] = ["Create video of the day"]
-        response["video"] = {"camera": which_cam, "date": date}
-        return response
-
-    def create_video_trimmed(self, video_id, start, end):
-        """
-        create a shorter video based on date and time
-        """
-        config_file = self.config.db_handler.read_cache("videos")
-        if video_id in config_file:
-            input_file = config_file[video_id]["video_file"]
-            output_file = input_file.replace(".mp4", "_short.mp4")
-            framerate = config_file[video_id]["framerate"]
-            result = self.create_video_trimmed_exec(input_file=input_file, output_file=output_file,
-                                                    start_timecode=start,
-                                                    end_timecode=end, framerate=framerate)
-            if result == "OK":
-                config_file[video_id]["video_file_short"] = output_file
-                config_file[video_id]["video_file_short_start"] = float(start)
-                config_file[video_id]["video_file_short_end"] = float(end)
-                config_file[video_id]["video_file_short_length"] = float(end) - float(start)
-
-                self.config.db_handler.write("videos", "", config_file)
-                return {"result": "OK"}
-            else:
-                return {"result": "Error while creating shorter video."}
-
-        else:
-            self.logging.warning("No video with the ID " + str(video_id) + " available.")
-            return {"result": "No video with the ID " + str(video_id) + " available."}
-
-    def create_video_trimmed_exec(self, input_file, output_file, start_timecode, end_timecode, framerate):
-        """
-        creates a shortened version of the video
-        """
-        input_file = os.path.join(self.config.db_handler.directory("videos"), input_file)
-        output_file = os.path.join(self.config.db_handler.directory("videos"), output_file)
-
-        cmd = self.ffmpeg_trim
-        cmd = cmd.replace("{START_TIME}", str(start_timecode))
-        cmd = cmd.replace("{END_TIME}", str(end_timecode))
-        cmd = cmd.replace("{INPUT_FILENAME}", str(input_file))
-        cmd = cmd.replace("{OUTPUT_FILENAME}", str(output_file))
-        cmd = cmd.replace("{FRAMERATE}", str(framerate))
-
-        start_frame = round(float(start_timecode) * float(framerate))
-        end_frame = round(float(end_timecode) * float(framerate))
-
-        try:
-            (
-                ffmpeg
-                .input(input_file)
-                .filter('fps', fps=framerate, round='up')
-                .trim(start_frame=start_frame, end_frame=end_frame)
-                .output(output_file)
-                .overwrite_output()
-                .run(capture_stdout=True, capture_stderr=False)
-            )
-        except ffmpeg.Error as e:
-            self.raise_error("Error during video trimming: " + str(e))
-            return "Error"
-
-        # try:
-        #    self.logging.debug(cmd)
-        #    message = os.system(cmd)
-        #    self.logging.debug(message)
-        # except Exception as e:
-        #    self._msg_error("Error during video trimming: " + str(e))
-
-        if os.path.isfile(output_file):
-            return "OK"
-        else:
-            return "Error"
-
-    def create_video_trimmed_queue(self, param):
-        """
-        create a short video and save in DB (not deleting the old video at the moment)
-        """
-        response = {}
-        parameter = param["parameter"]
-
-        self.logging.info("Create short version of video: " + str(parameter) + " ...")
-        config_data = self.config.db_handler.read_cache(config="videos")
-
-        if parameter[0] not in config_data:
-            response["result"] = "Error: video ID '" + str(parameter[0]) + "' doesn't exist."
-            self.logging.warning("VideoID '" + str(parameter[0]) + "' doesn't exist.")
-        else:
-            self.queue_trim.append([parameter[0], parameter[1], parameter[2]])
-            response["command"] = ["Create short version of video"]
-            response["video"] = {"video_id": parameter[0], "start": parameter[1], "end": parameter[2]}
-
-        return response
+        if maximum:
+            high_value = 10000
+            self.set_resolution(width=high_value, height=high_value)
+        width = self.stream.get(cv2.CAP_PROP_FRAME_WIDTH)
+        height = self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        return [width, height]
 
 
-class BirdhouseImageProcessing(object):
+class BirdhouseImageProcessing(BirdhouseCameraClass):
     """
     modify encoded and raw images
     """
 
-    def __init__(self, camera_id, camera, config, param, time_zone):
-        self.frame = None
-        self.id = camera_id
-        self.config = config
-        self.param = param
+    def __init__(self, camera_id, config, param):
+        BirdhouseCameraClass.__init__(self, class_id=camera_id+"-img", class_log="cam-img",
+                                      camera_id=camera_id, config=config)
 
-        self.logging = logging.getLogger(self.id + "-img")
-        self.logging.setLevel(birdhouse_loglevel_module["cam-img"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting IMAGE processing for '"+self.id+"' ...")
+        self.frame = None
 
         self.text_default_position = (30, 40)
         self.text_default_scale = 0.8
@@ -580,41 +335,10 @@ class BirdhouseImageProcessing(object):
         self.img_camera_error_v3 = "camera_na_v4.jpg"
         self.img_camara_error_server = "camera_na_server.jpg"
 
-        self.error = False
-        self.error_msg = []
-        self.error_time = 0
-        self.error_count = 0
         self.error_camera = False
         self.error_image = {}
 
-        self.timezone = time_zone
-
-    def raise_error(self, message, warning=False):
-        """
-        Report Error, set variables of modules; collect last 3 messages in central var  self.error_msg
-        """
-        if not warning:
-            self.logging.error("Image Processing (" + self.id + "): " + message)
-            self.error = True
-            time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-            self.error_msg.append(time_info + " - " + message)
-            self.error_count += 1
-            if self.error_time == 0:
-                self.error_time = time.time()
-            if len(self.error_msg) >= 10:
-                self.error_msg.pop()
-        else:
-            self.logging.warning("Image Processing (" + self.id + "): " + message)
-
-    def reset_error(self):
-        """
-        reset error vars
-        """
-        self.error = False
-        self.error_msg = []
-        self.error_count = 0
-        self.error_time = 0
-        self.error_camera = False
+        self.logging.info("Starting IMAGE processing for '"+self.id+"' ...")
 
     def compare(self, image_1st, image_2nd, detection_area=None):
         """
@@ -637,11 +361,11 @@ class BirdhouseImageProcessing(object):
 
         try:
             if len(image_1st) == 0 or len(image_2nd) == 0:
-                self.raise_error("Compare: At least one file has a zero length - A:" +
-                                 str(len(image_1st)) + "/ B:" + str(len(image_2nd)), warning=True)
+                self.raise_warning("Compare: At least one file has a zero length - A:" +
+                                   str(len(image_1st)) + "/ B:" + str(len(image_2nd)))
                 score = 0
         except Exception as e:
-            self.raise_error("Compare: At least one file has a zero length.", warning=True)
+            self.raise_warning("Compare: At least one file has a zero length.")
             score = 0
 
         if detection_area is not None:
@@ -656,7 +380,7 @@ class BirdhouseImageProcessing(object):
             (score, diff) = ssim(image_1st, image_2nd, full=True)
 
         except Exception as e:
-            self.raise_error("Error comparing images (" + str(e) + ")", warning=True)
+            self.raise_warning("Error comparing images (" + str(e) + ")")
             score = 0
 
         return round(score * 100, 1)
@@ -888,7 +612,7 @@ class BirdhouseImageProcessing(object):
         image = self.draw_text(image, date_information, position, font, scale, color, thickness)
         return image
 
-    def draw_date_raw(self, raw, overwrite_color=None, overwrite_position=None, offset=[0, 0], timezone_info=+1):
+    def draw_date_raw(self, raw, overwrite_color=None, overwrite_position=None, offset=[0, 0]):
         date_information = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
         font = self.text_default_font
@@ -931,7 +655,7 @@ class BirdhouseImageProcessing(object):
             return image
 
         except Exception as e:
-            self.raise_error("Could not draw area into the image (" + str(e) + ")", warning=True)
+            self.raise_warning("Could not draw area into the image (" + str(e) + ")")
             return raw
 
     def image_in_image_raw(self, raw, raw2, position=4, distance=10):
@@ -1012,8 +736,7 @@ class BirdhouseImageProcessing(object):
                                          color=(0, 0, 255), thickness=1)
 
             line_position += 40
-            raw = self.draw_date_raw(raw=raw, overwrite_color=(0, 0, 255),
-                                     overwrite_position=(20, line_position), timezone_info=self.timezone)
+            raw = self.draw_date_raw(raw=raw, overwrite_color=(0, 0, 255), overwrite_position=(20, line_position))
 
         elif info_type == "empty":
             raw = self.image_error_raw(image=self.img_camera_error_v3)
@@ -1136,7 +859,7 @@ class BirdhouseImageProcessing(object):
             width = frame.shape[1]
             return [width, height]
         except Exception as e:
-            self.raise_error("Could not analyze image (" + str(e) + ")", warning=True)
+            self.raise_warning("Could not analyze image (" + str(e) + ")")
             return [0, 0]
 
     def size_raw(self, raw, scale_percent=100):
@@ -1152,7 +875,7 @@ class BirdhouseImageProcessing(object):
             width = raw.shape[1]
             return [width, height]
         except Exception as e:
-            self.raise_error("Could not analyze image (" + str(e) + ")", warning=True)
+            self.raise_warning("Could not analyze image (" + str(e) + ")")
             return [0, 0]
 
     def resize_raw(self, raw, scale_percent=100, scale_size=None):
@@ -1175,340 +898,532 @@ class BirdhouseImageProcessing(object):
         return raw
 
 
-class BirdhouseCameraOutput(object):
+class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     """
-    Create camera output
+    Record videos: start and stop; from all pictures of the day
     """
 
-    def __init__(self, camera):
-        self.frame = None
-        self.buffer = io.BytesIO()
-        self.condition = Condition()
-
-        self.logging = logging.getLogger(camera + "-out")
-        self.logging.setLevel(birdhouse_loglevel_module["cam-out"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting CAMERA output for '"+camera+"' ...")
-
-    def write(self, buf):
-        if buf.startswith(b'\xff\xd8'):
-            # New frame, copy the existing buffer's content and notify all
-            # clients it's available
-            self.buffer.truncate()
-            with self.condition:
-                self.frame = self.buffer.getvalue()
-                self.condition.notify_all()
-            self.buffer.seek(0)
-        return self.buffer.write(buf)
-
-
-class BirdhouseCameraHandler(object):
-
-    def __init__(self, config, source, name):
-        self.error = False
-        self.error_msg = []
-        self.error_time = None
-
-        if "/dev/" not in str(source):
-            source = "/dev/video" + str(source)
-
-        self.config = config
-        self.source = source
-        self.name = name
-        self.stream = None
-        self.property_keys = None
-        self.properties_get = None
-        self.properties_not_used = None
-        self.properties_set = None
-
-        self.logging = logging.getLogger(name + "-ctrl")
-        self.logging.setLevel(birdhouse_loglevel_module["cam-other"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting CAMERA support for '"+name+"/"+source+"' ...")
-
-        self.connect()
-        self.get_properties(key="init")
-        self.set_properties(key="init")
-
-    def _raise_error(self, message):
+    def __init__(self, camera_id, camera, config, param, directory):
         """
-        Report Error, set variables of modules
+        Initialize new thread and set inital parameters
         """
-        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-        self.error_msg.append(time_info + " - " + message)
-        if len(self.error_msg) >= 10:
-            self.error_msg.pop()
-        self.error_time = time.time()
-        self.logging.error(message)
+        threading.Thread.__init__(self)
+        BirdhouseCameraClass.__init__(self, class_id=camera_id+"-video", class_log="cam-video",
+                                      camera_id=camera_id, config=config)
 
-    def _reset_error(self):
+        self.camera = camera
+        self.name = param["name"]
+        self.directory = directory
+
+        self.queue_create = []
+        self.queue_trim = []
+        self.queue_wait = 10
+
+        self.record_video_info = None
+        self.image_size = [0, 0]
+        self.recording = False
+        self.processing = False
+        self.max_length = 0.25 * 60
+
+        self.output_codec = {"vcodec": "libx264", "crf": 18}
+
+        self.ffmpeg_cmd = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
+                          "-vcodec libx264 -crf 18 {OUTPUT_FILENAME}"
+        self.ffmpeg_trim = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} -vcodec libx264 -crf 18 " + \
+                           "-ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
+
+        # Other working options:
+        # self.ffmpeg_cmd  += "-b 1000k -strict -2 -vcodec libx264 -profile:v main -level 3.1 -preset medium - \
+        #                      x264-params ref=4 -movflags +faststart -crf 18"
+        # self.ffmpeg_cmd  += "-c:v libx264 -pix_fmt yuv420p"
+        # self.ffmpeg_cmd  += "-profile:v baseline -level 3.0 -crf 18"
+        # self.ffmpeg_cmd  += "-vcodec libx264 -preset fast -profile:v baseline -lossless 1 -vf \
+        #                     \"scale=720:540,setsar=1,pad=720:540:0:0\" -acodec aac -ac 2 -ar 22050 -ab 48k"
+
+        # self.ffmpeg_trim  = "ffmpeg -y -i {INPUT_FILENAME} -c copy -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
+        self.count_length = 8
+        self.info = {
+            "start": 0,
+            "start_stamp": 0,
+            "status": "ready"
+        }
+
+    def run(self):
         """
-        remove all errors
+        Initialize, set initial values
         """
-        self.error = False
-        self.error_msg = []
-        self.error_time = 0
-
-    def read(self):
-        try:
-            ref, raw = self.stream.read()
-            self.error = False
-            return raw
-        except cv2.error as err:
-            self.error = True
-            self.error_msg = str(err)
-            self.logging.warning("- Error connecting to camera '" + self.source +
-                                 "' and reading first image: " + str(err))
-            return
-
-    def connect(self):
-        self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
-        self.read()
-
-    def reconnect(self):
-        self.disconnect()
-        self.connect()
-
-    def disconnect(self):
-        if self.stream is not None:
-            try:
-                self.stream.release()
-            except cv2.error as err:
-                self.logging.debug("- Release of camera did not work: " + str(err))
+        self.logging.info("Starting VIDEO processing for '"+self.id+"' ...")
+        if "video" in self.param and "max_length" in self.param["video"]:
+            self.max_length = self.param["video"]["max_length"]
+            self.logging.debug("Set max video recording length for " + self.id + " to " + str(self.max_length))
         else:
-            self.logging.debug("- Camera not yet connected.")
+            self.logging.debug("Use default max video recording length for " + self.id + " = " + str(self.max_length))
 
-    def set_properties(self, key, value=""):
+        count = 0
+        while self._running:
+            time.sleep(1)
+            count += 1
+            if count >= self.queue_wait:
+                count = 0
+
+                # create short videos
+                if len(self.queue_create) > 0:
+                    self.config.async_running = True
+                    [filename, stamp, date] = self.queue_create.pop()
+
+                    self.logging.info("Start day video creation (" + filename + "): " + stamp + " - " + date + ")")
+                    response = self.create_video_day(filename=filename, stamp=stamp, date=date)
+
+                    if response["result"] == "OK":
+                        self.config.queue.entry_add(config="videos", date="", key=stamp, entry=response["data"])
+                        self.config.async_answers.append(["CREATE_DAY_DONE", date, response["result"]])
+                    else:
+                        self.config.async_answers.append(["CREATE_DAY_ERROR", date, response["result"]])
+                    self.config.async_running = False
+
+                # create short videos
+                if len(self.queue_trim) > 0:
+                    self.config.async_running = True
+                    [video_id, start, end] = self.queue_trim.pop()
+
+                    self.logging.info("Start video trimming (" + video_id + "): " + str(start) + " - " + str(end) + ")")
+                    response = self.create_video_trimmed(video_id, start, end)
+                    self.config.async_answers.append(["TRIM_DONE", video_id, response["result"]])
+                    self.config.async_running = True
+
+        self.logging.info("Stopped VIDEO processing for '"+self.id+"'.")
+
+    def stop(self):
         """
-        set camera parameter ...
-        -----------------------------
-        0. CV_CAP_PROP_POS_MSEC Current position of the video file in milliseconds.
-        1. CV_CAP_PROP_POS_FRAMES 0-based index of the frame to be decoded/captured next.
-        2. CV_CAP_PROP_POS_AVI_RATIO Relative position of the video file
-        3. CV_CAP_PROP_FRAME_WIDTH Width of the frames in the video stream.
-        4. CV_CAP_PROP_FRAME_HEIGHT Height of the frames in the video stream.
-        5. CV_CAP_PROP_FPS Frame rate.
-        6. CV_CAP_PROP_FOURCC 4-character code of codec.
-        7. CV_CAP_PROP_FRAME_COUNT Number of frames in the video file.
-        8. CV_CAP_PROP_FORMAT Format of the Mat objects returned by retrieve() .
-        9. CV_CAP_PROP_MODE Backend-specific value indicating the current capture mode.
-        10. CV_CAP_PROP_BRIGHTNESS Brightness of the image (only for cameras). [0..255]
-        11. CV_CAP_PROP_CONTRAST Contrast of the image (only for cameras). [0..255]
-        12. CV_CAP_PROP_SATURATION Saturation of the image (only for cameras). [0..255]
-        13. CV_CAP_PROP_HUE Hue of the image (only for cameras).
-        14. CV_CAP_PROP_GAIN Gain of the image (only for cameras). [0..127]
-        15. CV_CAP_PROP_EXPOSURE Exposure (only for cameras). [-7..-1] ... tbc.
-        16. CV_CAP_PROP_CONVERT_RGB Boolean flags indicating whether images should be converted to RGB.
-        17. CV_CAP_PROP_WHITE_BALANCE Currently unsupported [4000..7000]
+        ending functions (nothing at the moment)
         """
-        self.properties_set = ["saturation", "brightness", "contrast", "framerate", "exposure",
-                               "hue", "auto_white_balance", "auto_exposure", "gamma", "gain"]
-        if key == "init":
+        if self.recording:
+            self.record_stop()
+            while self.recording:
+                self.logging.info("Stopped recording for shut down. Please wait ...")
+                time.sleep(1)
+
+        self._running = False
+
+    def status(self):
+        """
+        Return recording status
+        """
+        return self.record_video_info.copy()
+
+    def filename(self, file_type="image"):
+        """
+        generate filename for images
+        """
+        if file_type == "video":
+            return self.config.filename_image(image_type="video", timestamp=self.info["date_start"], camera=self.id)
+        elif file_type == "thumb":
+            return self.config.filename_image(image_type="thumb", timestamp=self.info["date_start"], camera=self.id)
+        elif file_type == "vimages":
+            return self.config.filename_image(image_type="vimages", timestamp=self.info["date_start"], camera=self.id)
+        else:
             return
 
-        try:
-            if key == "auto_exposure":
-                self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, float(value))
-            elif key == "auto_white_balance":
-                self.stream.set(cv2.CAP_PROP_AUTO_WB, float(value))
-            elif key == "brightness":
-                self.stream.set(cv2.CAP_PROP_BRIGHTNESS, float(value))
-            elif key == "contrast":
-                self.stream.set(cv2.CAP_PROP_CONTRAST, float(value))
-            elif key == "exposure":
-                self.stream.set(cv2.CAP_PROP_EXPOSURE, float(value))
-            elif key == "fps":
-                self.stream.set(cv2.CAP_PROP_FPS, float(value))
-            elif key == "gain":
-                self.stream.set(cv2.CAP_PROP_GAIN, float(value))
-            elif key == "gamma":
-                self.stream.set(cv2.CAP_PROP_GAMMA, float(value))
-            elif key == "hue":
-                self.stream.set(cv2.CAP_PROP_HUE, float(value))
-            elif key == "saturation":
-                self.stream.set(cv2.CAP_PROP_SATURATION, float(value))
-        except cv2.error as err:
-            self._raise_error("Could not change camera setting '" + key + "': " + str(err))
-
-    def get_properties_available(self, keys="get"):
+    def record_start(self):
         """
-        return keys for all properties that are implemented at the moment
+        start video recoding
         """
-        if keys == "get":
-            return list(self.properties_get.keys())
-        elif keys == "set":
-            return self.properties_set
-        return self.property_keys
+        response = {"command": ["start recording"]}
 
-    def get_properties(self, key=""):
+        if self.camera.active and not self.camera.error and not self.recording:
+            self.logging.info("Starting video recording (" + self.id + ") ...")
+            self.recording = True
+            current_time = self.config.local_time()
+            self.info = {
+                "date": current_time.strftime('%d.%m.%Y %H:%M:%S'),
+                "date_start": current_time.strftime('%Y%m%d_%H%M%S'),
+                "stamp_start": current_time.timestamp(),
+                "status": "recording",
+                "camera": self.id,
+                "camera_name": self.name,
+                "directory": self.directory,
+                "image_count": 0
+            }
+        elif not self.camera.active:
+            response["error"] = "camera is not active " + self.camera.id
+        elif self.recording:
+            response["error"] = "camera is already recording " + self.camera.id
+        return response
+
+    def record_stop(self):
         """
-        get properties from camera
+        stop video recoding
         """
-        properties_not_used = ["pos_msec", "pos_frames", "pos_avi_ratio", "convert_rgb", "fourcc", "format", "mode",
-                               "frame_count", "frame_width", "frame_height"]
-        properties_get_array = ["brightness", "saturation", "contrast", "hue", "gain", "gamma",
-                                "exposure", "auto_exposure", "auto_wb", "wb_temperature", "temperature",
-                                "fps", "focus", "autofocus", "zoom"]
-
-        if key == "init":
-            self.properties_get = {}
-
-        for prop_key in properties_get_array:
-            command = "self.stream.get(cv2.CAP_PROP_" + prop_key.upper() + ")"
-            value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
-            if prop_key not in self.properties_get:
-                self.properties_get[prop_key] = [value, -1, -1]
+        response = {"command": ["stop recording"]}
+        if self.camera.active and not self.camera.error and self.recording:
+            self.logging.info("Stopping video recording (" + self.id + ") ...")
+            current_time = self.config.local_time()
+            self.info["date_end"] = current_time.strftime('%Y%m%d_%H%M%S')
+            self.info["stamp_end"] = current_time.timestamp()
+            self.info["status"] = "processing"
+            self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 2)
+            if float(self.info["length"]) > 1:
+                self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 2)
             else:
-                self.properties_get[prop_key][0] = value
+                self.info["framerate"] = 0
+            self.logging.info("---------------------> Length: "+str(self.info["length"]))
+            self.logging.info("---------------------> Count: "+str(self.info["image_count"]))
+            self.logging.info("---------------------> FPS: "+str(self.info["framerate"]))
+            self.create_video()
+            self.info["status"] = "finished"
+            self.config.queue.entry_add(config="videos", date="", key=self.info["date_start"], entry=self.info.copy())
+            self.recording = False
+        elif not self.camera.active:
+            response["error"] = "camera is not active " + self.camera.id
+        elif not self.recording:
+            response["error"] = "camera isn't recording " + self.camera.id
+        return response
 
-        if key == "init":
-            for prop_key in properties_get_array:
-                # evaluate minimum
-                if not prop_key.startswith("frame_"):
-                    self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), -100000.0)
-                    value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
-                    if value > 0:
-                        self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 0.0)
-                        value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
-                    self.properties_get[prop_key][1] = value
-
-                # evaluate maximum
-                self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 100000.0)
-                value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
-                self.properties_get[prop_key][2] = value
-
-                # set again current value
-                self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), self.properties_get[prop_key][0])
-
-        return self.properties_get
-
-    def get_properties_image(self):
+    def record_stop_auto(self):
         """
-        read image and get properties (-> fuer Regelkreislauf)
+        Check if maximum length is achieved
         """
-        image_properties = {}
-        raw = self.read()
+        if self.info["status"] == "recording":
+            max_time = float(self.info["stamp_start"] + self.max_length)
+            if max_time < float(self.config.local_time().timestamp()):
+                self.logging.info("Maximum recording time achieved ...")
+                self.logging.info(str(max_time) + " < " + str(self.config.local_time().timestamp()))
+                return True
+        return False
 
-        if raw is None:
-            return image_properties
+    def record_info(self):
+        """
+        Get info of recording
+        """
+        if self.recording:
+            self.info["length"] = round(self.config.local_time().timestamp() - self.info["stamp_start"], 1)
+        elif self.processing:
+            self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 1)
 
-        if len(raw.shape) > 2:
-            gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
+        self.info["image_size"] = self.image_size
+
+        if float(self.info["length"]) > 1:
+            self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
         else:
-            gray = raw
+            self.info["framerate"] = 0
+
+        return self.info
+
+    def create_video(self):
+        """
+        Create video from images
+        """
+        self.processing = True
+        self.logging.info("Start video creation with ffmpeg ...")
+
+        input_filenames = os.path.join(self.config.db_handler.directory("videos"), self.filename("vimages") + "%" +
+                                       str(self.count_length).zfill(2) + "d.jpg")
+        output_filename = os.path.join(self.config.db_handler.directory("videos"), self.filename("video"))
 
         try:
-            cols, rows = gray.shape
-            image_properties["brightness"] = np.sum(gray) / (255 * cols * rows)
-        except cv2.error as err:
-            self._raise_error("Could not measure brightness: " + str(err))
+            (
+                ffmpeg
+                .input(input_filenames)
+                .filter('fps', fps=self.info["framerate"], round='up')
+                .output(output_filename, vcodec=self.output_codec["vcodec"], crf=self.output_codec["crf"])
+                .overwrite_output()
+                .run(capture_stdout=True, capture_stderr=False)
+            )
+        except ffmpeg.Error as e:
+            self.raise_error("Error during ffmpeg video creation: " + str(e))
+            self.processing = False
+            return
+
+        self.info["thumbnail"] = self.filename("thumb")
+        cmd_thumb = "cp " + os.path.join(self.config.db_handler.directory("videos"),
+                                         self.filename("vimages") + str(1).zfill(self.count_length) + ".jpg "
+                                         ) + os.path.join(self.config.db_handler.directory("videos"),
+                                                          self.filename("thumb"))
+        cmd_delete = "rm " + os.path.join(self.config.db_handler.directory("videos"),
+                                          self.filename("vimages") + "*.jpg")
+        try:
+            self.logging.info(cmd_thumb)
+            message = os.system(cmd_thumb)
+            self.logging.debug(message)
+
+            self.logging.info(cmd_delete)
+            message = os.system(cmd_delete)
+            self.logging.debug(message)
+
+        except Exception as e:
+            self.raise_error("Error during video creation (thumbnail/cleanup): " + str(e))
+            self.processing = False
+            return
+
+        self.processing = False
+        self.logging.info("OK.")
+        return
+
+    def create_video_image(self, image):
+        """
+        Save image
+        """
+        self.info["image_count"] += 1
+        self.info["image_files"] = self.filename("vimages")
+        self.info["video_file"] = self.filename("video")
+        filename = self.info["image_files"] + str(self.info["image_count"]).zfill(self.count_length) + ".jpg"
+        path = os.path.join(self.directory, filename)
+        self.logging.debug("Save image as: " + path)
 
         try:
-            image_properties["contrast"] = gray.std()
-        except cv2.error as err:
-            self._raise_error("Could not measure contrast: " + str(err))
+            self.logging.debug("Write  image '" + path + "')")
+            return cv2.imwrite(path, image)
+        except Exception as e:
+            self.info["image_count"] -= 1
+            self.raise_error("Could not save image '" + filename + "': " + str(e))
+
+    def create_video_day(self, filename, stamp, date):
+        """
+        Create daily video from all single images available
+        """
+        camera = self.id
+        cmd_videofile = "video_" + camera + "_" + stamp + ".mp4"
+        cmd_thumbfile = "video_" + camera + "_" + stamp + "_thumb.jpeg"
+        cmd_tempfiles = "img_" + camera + "_" + stamp + "_"
+        framerate = 20
 
         try:
-            img_hsv = cv2.cvtColor(raw, cv2.COLOR_BGR2HSV)
-            image_properties["saturation"] = img_hsv[:, :, 1].mean()
-        except cv2.error as err:
-            self._raise_error("Could not measure saturation: " + str(err))
+            cmd_rm = "rm " + self.config.db_handler.directory("videos_temp") + "*"
+            self.logging.debug(cmd_rm)
+            message = os.system(cmd_rm)
+            if message != 0:
+                response = {"result": "error", "reason": "remove temp image files", "message": message}
+                self.raise_warning("Error during day video creation: remove old temp image files.")
+                # return response
+        except Exception as e:
+            self.raise_warning("Error during day video creation: " + str(e))
 
-        return image_properties
-
-    def set_black_white(self):
-        """
-        set saturation to 0
-        """
         try:
-            self.stream.set(cv2.CAP_PROP_SATURATION, 0)
-            return True
-        except cv2.error as err:
-            self._raise_error("Could not set to black and white: " + str(err))
-            return False
+            cmd_copy = "cp " + self.config.db_handler.directory("images") + filename + "* " + \
+                       self.config.db_handler.directory("videos_temp")
+            self.logging.debug(cmd_copy)
+            message = os.system(cmd_copy)
+            if message != 0:
+                response = {"result": "error", "reason": "copy temp image files", "message": message}
+                self.raise_error("Error during day video creation: copy temp image files.")
+                return response
+        except Exception as e:
+            self.raise_error("Error during day video creation: " + str(e))
 
-    def set_resolution(self, width, height):
-        """
-        set camera resolution
-        """
+        cmd_filename = self.config.db_handler.directory("videos_temp") + cmd_tempfiles
+        cmd_rename = "i=0; for fi in " + self.config.db_handler.directory("videos_temp") + \
+                     "image_*; do mv \"$fi\" $(printf \""
+        cmd_rename += cmd_filename + "%05d.jpg\" $i); i=$((i+1)); done"
         try:
-            self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-            self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-            return True
-        except cv2.error as err:
-            self._raise_error("Could not set resolution: " + str(err))
-            return False
+            self.logging.info(cmd_rename)
+            message = os.system(cmd_rename)
+            if message != 0:
+                response = {"result": "error", "reason": "rename temp image files", "message": message}
+                self.raise_error("Error during day video creation: rename temp image files.")
+                return response
+        except Exception as e:
+            self.raise_error("Error during day video creation: " + str(e))
 
-    def get_resolution(self, maximum=False):
+        amount = 0
+        for root, dirs, files in os.walk(self.config.db_handler.directory("videos_temp")):
+            for filename in files:
+                if cmd_tempfiles in filename:
+                    amount += 1
+
+        input_filenames = cmd_filename + "%05d.jpg"
+        output_filename = os.path.join(self.config.db_handler.directory("videos"), cmd_videofile)
+        try:
+            (
+                ffmpeg
+                .input(input_filenames)
+                .filter('fps', fps=framerate, round='up')
+                .output(output_filename, vcodec=self.output_codec["vcodec"], crf=self.output_codec["crf"])
+                .overwrite_output()
+                .run(capture_stdout=True, capture_stderr=False)
+            )
+        except ffmpeg.Error as e:
+            self.raise_error("Error during ffmpeg video creation: " + str(e))
+            response = {"result": "error", "reason": "create video with ffmpeg", "message": str(e)}
+            return response
+
+        try:
+            cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.db_handler.directory("videos") + cmd_thumbfile
+            self.logging.info(cmd_thumb)
+            message = os.system(cmd_thumb)
+            if message != 0:
+                response = {"result": "error", "reason": "create thumbnail", "message": message}
+                self.raise_error("Error during day video creation: create thumbnails.")
+                return response
+
+            cmd_rm2 = "rm " + self.config.db_handler.directory("videos_temp") + "*.jpg"
+            self.logging.info(cmd_rm2)
+            message = os.system(cmd_rm2)
+            if message != 0:
+                response = {"result": "error", "reason": "remove temp image files", "message": message}
+                self.raise_error("Error during day video creation: remove temp image files.")
+                return response
+        except Exception as e:
+            self.raise_error("Error during day video creation: " + str(e))
+
+        length = (amount / framerate)
+        video_data = {
+            "camera": self.id,
+            "camera_name": self.name,
+            "date": date,
+            "date_start": stamp,
+            "framerate": framerate,
+            "image_count": amount,
+            "image_size": self.image_size,
+            "length": length,
+            "time": "complete day",
+            "type": "video",
+            "thumbnail": cmd_thumbfile,
+            "video_file": cmd_videofile,
+        }
+        response = {
+            "result": "OK",
+            "data": video_data
+        }
+        return response
+
+    def create_video_day_queue(self, param):
         """
-        get camera resolution
+        create a video of all existing images of the day
         """
-        if maximum:
-            high_value = 10000
-            self.set_resolution(width=high_value, height=high_value)
-        width = self.stream.get(cv2.CAP_PROP_FRAME_WIDTH)
-        height = self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        return [width, height]
+        response = {}
+        which_cam = param["which_cam"]
+        current_time = self.config.local_time()
+        stamp = current_time.strftime('%Y%m%d_%H%M%S')
+        date = current_time.strftime('%d.%m.%Y')
+        filename = "image_" + which_cam + "_big_"
+
+        self.queue_create.append([filename, stamp, date])
+
+        response["command"] = ["Create video of the day"]
+        response["video"] = {"camera": which_cam, "date": date}
+        return response
+
+    def create_video_trimmed(self, video_id, start, end):
+        """
+        create a shorter video based on date and time
+        """
+        config_file = self.config.db_handler.read_cache("videos")
+        if video_id in config_file:
+            input_file = config_file[video_id]["video_file"]
+            output_file = input_file.replace(".mp4", "_short.mp4")
+            framerate = config_file[video_id]["framerate"]
+            result = self.create_video_trimmed_exec(input_file=input_file, output_file=output_file,
+                                                    start_timecode=start,
+                                                    end_timecode=end, framerate=framerate)
+            if result == "OK":
+                config_file[video_id]["video_file_short"] = output_file
+                config_file[video_id]["video_file_short_start"] = float(start)
+                config_file[video_id]["video_file_short_end"] = float(end)
+                config_file[video_id]["video_file_short_length"] = float(end) - float(start)
+
+                self.config.db_handler.write("videos", "", config_file)
+                return {"result": "OK"}
+            else:
+                return {"result": "Error while creating shorter video."}
+
+        else:
+            self.logging.warning("No video with the ID " + str(video_id) + " available.")
+            return {"result": "No video with the ID " + str(video_id) + " available."}
+
+    def create_video_trimmed_exec(self, input_file, output_file, start_timecode, end_timecode, framerate):
+        """
+        creates a shortened version of the video
+        """
+        input_file = os.path.join(self.config.db_handler.directory("videos"), input_file)
+        output_file = os.path.join(self.config.db_handler.directory("videos"), output_file)
+
+        cmd = self.ffmpeg_trim
+        cmd = cmd.replace("{START_TIME}", str(start_timecode))
+        cmd = cmd.replace("{END_TIME}", str(end_timecode))
+        cmd = cmd.replace("{INPUT_FILENAME}", str(input_file))
+        cmd = cmd.replace("{OUTPUT_FILENAME}", str(output_file))
+        cmd = cmd.replace("{FRAMERATE}", str(framerate))
+
+        start_frame = round(float(start_timecode) * float(framerate))
+        end_frame = round(float(end_timecode) * float(framerate))
+
+        try:
+            (
+                ffmpeg
+                .input(input_file)
+                .filter('fps', fps=framerate, round='up')
+                .trim(start_frame=start_frame, end_frame=end_frame)
+                .output(output_file)
+                .overwrite_output()
+                .run(capture_stdout=True, capture_stderr=False)
+            )
+        except ffmpeg.Error as e:
+            self.raise_error("Error during video trimming: " + str(e))
+            return "Error"
+
+        # try:
+        #    self.logging.debug(cmd)
+        #    message = os.system(cmd)
+        #    self.logging.debug(message)
+        # except Exception as e:
+        #    self._msg_error("Error during video trimming: " + str(e))
+
+        if os.path.isfile(output_file):
+            return "OK"
+        else:
+            return "Error"
+
+    def create_video_trimmed_queue(self, param):
+        """
+        create a short video and save in DB (not deleting the old video at the moment)
+        """
+        response = {}
+        parameter = param["parameter"]
+
+        self.logging.info("Create short version of video: " + str(parameter) + " ...")
+        config_data = self.config.db_handler.read_cache(config="videos")
+
+        if parameter[0] not in config_data:
+            response["result"] = "Error: video ID '" + str(parameter[0]) + "' doesn't exist."
+            self.logging.warning("VideoID '" + str(parameter[0]) + "' doesn't exist.")
+        else:
+            self.queue_trim.append([parameter[0], parameter[1], parameter[2]])
+            response["command"] = ["Create short version of video"]
+            response["video"] = {"video_id": parameter[0], "start": parameter[1], "end": parameter[2]}
+
+        return response
 
 
-class BirdhouseCameraStreamRaw(threading.Thread):
+class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
     """
     creates a continuous stream while active requests
     """
 
     def __init__(self, camera_id, param, time_zone, config):
         threading.Thread.__init__(self)
-        self.id = camera_id
-        self.config = config
-        self.param = param
+        BirdhouseCameraClass.__init__(self, class_id=camera_id+"-sRaw", class_log="cam-stream",
+                                      camera_id=camera_id, config=config)
+
         self.rotation = param["image"]["rotation"]
         self.timezone = time_zone
-        self.image = BirdhouseImageProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param,
-                                              time_zone=self.timezone)
-        self.image.resolution = param["image"]["resolution"]
         self.stream_handler = None
+        self.image = BirdhouseImageProcessing(camera_id=self.id, config=self.config, param=self.param)
+        self.image.resolution = param["image"]["resolution"]
 
         self.fps = None
         self.fps_max = 15
         self.duration_max = 1 / (self.fps_max + 1)
         self.active = False
-        self.error = False
-        self.error_msg = []
-        self.error_time = 0
 
-        self._running = True
+        self._active_streams = 0
         self._recording = False
         self._stream = None
         self._stream_last = None
         self._stream_last_time = None
         self._timeout = 3
         self._last_activity = 0
+        self._last_activity_per_stream = {}
         self._start_time = None
-
-        self.logging = logging.getLogger(self.id+"-sRaw")
-        self.logging.setLevel(birdhouse_loglevel_module["cam-stream"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting CAMERA raw stream for '"+self.id+"' ...")
-
-    def _raise_error(self, message):
-        """
-        Report Error, set variables of modules
-        """
-        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-        self.error_msg.append(time_info + " - " + message)
-        if len(self.error_msg) >= 10:
-            self.error_msg.pop()
-        self.error_time = time.time()
-        self.error = True
-        self.logging.error(message)
-
-    def _reset_error(self):
-        """
-        remove all errors
-        """
-        self.error = False
-        self.error_msg = []
-        self.error_time = 0
 
     def _read_from_camera(self):
         """
@@ -1516,16 +1431,17 @@ class BirdhouseCameraStreamRaw(threading.Thread):
         """
         try:
             ref, raw = self.stream_handler.read()
-            self._reset_error()
+            self.reset_error()
             return raw.copy()
         except cv2.error as err:
-            self._raise_error("- Error connecting to camera '" + self.id + "' or reading image: " + str(err))
+            self.raise_error("- Error connecting to camera '" + self.id + "' or reading image: " + str(err))
             return
 
     def run(self) -> None:
         """
         create a continuous stream while active; use buffer if empty answer
         """
+        self.logging.info("Start CAMERA raw stream for '"+self.id+"' ...")
         circle_in_cache = False
         circle_color = (0, 0, 255)
 
@@ -1539,10 +1455,10 @@ class BirdhouseCameraStreamRaw(threading.Thread):
                     raw = self._read_from_camera()
                     check = str(type(raw))
                     if "NoneType" not in check and len(raw) > 0:
-                        self._reset_error()
+                        self.reset_error()
                     else:
                         msg = "Got an empty image (source=" + str(self.id) + ")"
-                        self._raise_error(msg)
+                        self.raise_error(msg)
                         raise Exception(msg)
                     if self.rotation != 0:
                         raw = self.image.rotate_raw(raw, self.rotation)
@@ -1553,7 +1469,7 @@ class BirdhouseCameraStreamRaw(threading.Thread):
                     circle_in_cache = False
 
                 except Exception as e:
-                    self._raise_error("Error reading stream for '" + self.id + "':" + str(e))
+                    self.raise_error("Error reading stream for '" + self.id + "':" + str(e))
                     if not circle_in_cache:
                         try:
                             self._stream_last = cv2.circle(self._stream_last, (25, 50), 4, circle_color, 6)
@@ -1566,6 +1482,16 @@ class BirdhouseCameraStreamRaw(threading.Thread):
                 self.active = False
                 self._stream = None
                 self._last_activity = 0
+                self._last_activity_per_stream = {}
+
+            old_streams_to_delete = []
+            for stream_id in self._last_activity_per_stream:
+                if self._last_activity_per_stream[stream_id] + self._timeout < self._start_time:
+                    old_streams_to_delete.append(stream_id)
+            for stream_id in old_streams_to_delete:
+                if stream_id in self._last_activity_per_stream:
+                    del self._last_activity_per_stream[stream_id]
+            self._active_streams = len(self._last_activity_per_stream.keys())
 
             duration = time.time() - self._start_time
             if duration < self.duration_max:
@@ -1579,17 +1505,30 @@ class BirdhouseCameraStreamRaw(threading.Thread):
 
         self.logging.info("Stopped CAMERA raw stream for '"+self.id+"'.")
 
-    def read(self):
+    def read(self, stream_id="default"):
         """
         return stream image considering the max fps
         """
         duration = time.time() - self._last_activity
         self._last_activity = time.time()
+        self._last_activity_per_stream[stream_id] = time.time()
         if not self.active:
             time.sleep(self.duration_max * 2)
         elif duration < self.duration_max:
             time.sleep(self.duration_max - duration)
         return self._stream
+
+    def get_active_streams(self):
+        """
+        return amount of active streams
+        """
+        return int(self._active_streams)
+
+    def get_framerate(self):
+        """
+        return rounded framerate
+        """
+        return round(self.fps, 1)
 
     def set_stream_handler(self, stream_handler):
         """
@@ -1597,12 +1536,14 @@ class BirdhouseCameraStreamRaw(threading.Thread):
         """
         self.stream_handler = stream_handler
 
-    def kill(self):
+    def kill(self, stream_id="default"):
         """
         kill continuous stream creation
         """
         self._last_activity = 0
         self.stream_handler = None
+        if stream_id in self._last_activity_per_stream:
+            del self._last_activity_per_stream[stream_id]
 
     def stop(self):
         """
@@ -1611,27 +1552,25 @@ class BirdhouseCameraStreamRaw(threading.Thread):
         self._running = False
 
 
-class BirdhouseCameraStreamEdit(threading.Thread):
+class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
     """
     creates a continuous stream while active requests
     """
 
     def __init__(self, camera_id, camera_handler, stream_handler, param, time_zone, config, stream_type):
         threading.Thread.__init__(self)
-        self.id = camera_id
+        BirdhouseCameraClass.__init__(self, class_id=camera_id+"-sEdit", class_log="cam-stream",
+                                      camera_id=camera_id, config=config)
+
         self.type = stream_type
         self.type_available = ["lowres", "hires", "lowres_error", "hires_error", "hires_setting", "lowres_setting"]
 
         self.camera = camera_handler
         self.camera_stream = stream_handler
-        self.config = config
-        self.param = param
         self.timezone = time_zone
-        self.image = BirdhouseImageProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param,
-                                              time_zone=self.timezone)
+        self.image = BirdhouseImageProcessing(camera_id=self.id, config=self.config, param=self.param)
         self.image.resolution = param["image"]["resolution"]
 
-        self._running = True
         self._recording = False
         self._timeout = 3
         self._last_activity = 0
@@ -1644,36 +1583,8 @@ class BirdhouseCameraStreamEdit(threading.Thread):
         self.duration_max = 1 / (self.fps_max + 1)
         self.active = False
 
-        self.error = False
-        self.error_msg = []
-        self.error_time = 0
-
-        self.logging = logging.getLogger(self.id+"-sEdit")
-        self.logging.setLevel(birdhouse_loglevel_module["cam-stream"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting CAMERA edited stream for '"+self.id+"/"+self.type+"' ...")
-
-    def _raise_error(self, message):
-        """
-        Report Error, set variables of modules
-        """
-        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-        self.error_msg.append(time_info + " - " + message)
-        if len(self.error_msg) >= 10:
-            self.error_msg.pop()
-        self.error_time = time.time()
-        self.error = True
-        self.logging.error(message)
-
-    def _reset_error(self):
-        """
-        remove all errors
-        """
-        self.error = False
-        self.error_msg = []
-        self.error_time = 0
-
     def run(self) -> None:
+        self.logging.info("Starting CAMERA edited stream for '"+self.id+"/"+self.type+"' ...")
         while self._running:
             pass
         self.logging.info("Stopped CAMERA edited stream for '"+self.id+"/"+self.type+"'.")
@@ -1752,29 +1663,23 @@ class BirdhouseCameraStreamEdit(threading.Thread):
         self._running = False
 
 
-class BirdhouseCamera(threading.Thread):
+class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
-    def __init__(self, thread_id, config, sensor):
+    def __init__(self, camera_id, config, sensor):
         """
         Initialize new thread and set initial parameters
         """
         threading.Thread.__init__(self)
-        self.id = thread_id
-        self.config = config
+        BirdhouseCameraClass.__init__(self, class_id=camera_id + "-main", class_log="cam-main",
+                                      camera_id=camera_id, config=config)
+
         self.config_cache = {}
         self.config_cache_size = 5
+        self.config_update = None
         self.config.update["camera_" + self.id] = False
-        self.health_check = time.time()
-
-        self.logging = logging.getLogger(self.id+"-main")
-        self.logging.setLevel(birdhouse_loglevel_module["cam-main"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting CAMERA control for '"+self.id+"' ...")
 
         self.sensor = sensor
-        self.param = self.config.param["devices"]["cameras"][self.id]
         self.weather_active = self.config.param["weather"]["active"]
-        # ------------------
         self.weather_sunrise = None
         self.weather_sunset = None
 
@@ -1782,38 +1687,19 @@ class BirdhouseCamera(threading.Thread):
         self.active = self.param["active"]
         self.source = self.param["source"]
         self.type = self.param["type"]
-        self.record = self.param["record"]
         self.max_resolution = None
 
         self.camera = None
         self.video = None
         self.image = None
-        self.running = True
-        self._paused = False
+
         self._interval = 0.5
-        self.error = False
-        self.error_msg = []
-        self.error_time = 0
+
         self.error_reload_time = 60
         self.error_no_reconnect = False
 
         self.reload_camera = True
         self.reload_time = 0
-        self.config_update = None
-
-        self.param = self.config.param["devices"]["cameras"][self.id]
-        self.name = self.param["name"]
-        self.active = self.param["active"]
-        self.source = self.param["source"]
-        self.type = self.param["type"]
-        self.record = self.param["record"]
-        self.record_seconds = []
-
-        self.timezone = 0
-        if "localization" in self.config.param and "timezone" in self.config.param["localization"]:
-            self.timezone = float(self.config.param["localization"]["timezone"].replace("UTC", ""))
-            self.logging.info("Set Timezone: " + self.config.param["localization"]["timezone"] +
-                              " (" + str(self.timezone) + " / " + self.config.local_time().strftime("%H:%M") + ")")
 
         self.image_size = [0, 0]
         self.image_size_lowres = [0, 0]
@@ -1832,54 +1718,23 @@ class BirdhouseCamera(threading.Thread):
         self.image_to_select_last = "xxxxxx"
         self.previous_image = None
         self.previous_stamp = "000000"
+
+        self.record = self.param["record"]
+        self.record_seconds = []
         self.record_image_last = time.time()
         self.record_image_reload = time.time()
         self.record_image_last_string = ""
         self.record_image_last_compare = ""
         self.record_image_error = False
 
-        self.logging.info("Initializing camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
-
-        self.image = BirdhouseImageProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param,
-                                              time_zone=self.timezone)
+        self.image = BirdhouseImageProcessing(camera_id=self.id, config=self.config, param=self.param)
         self.image.resolution = self.param["image"]["resolution"]
         self.video = BirdhouseVideoProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param,
-                                              directory=self.config.db_handler.directory("videos"),
-                                              time_zone=self.timezone)
+                                              directory=self.config.db_handler.directory("videos"))
         self.camera_stream_raw = BirdhouseCameraStreamRaw(camera_id=self.id, param=self.param,
                                                           time_zone=self.timezone, config=self.config)
         self.camera_stream_raw.start()
         self.camera_start()
-
-    def _raise_error(self, cam_error, message):
-        """
-        Report Error, set variables of modules
-        """
-        if cam_error:
-            self.error = True
-            self.image.error_camera = True
-        else:
-            self.image.raise_error(message)
-        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-        self.error_msg.append(time_info + " - " + message)
-        if len(self.error_msg) >= 10:
-            self.error_msg.pop()
-        self.error_time = time.time()
-        self.logging.error(self.id + ": " + message + " (" + str(self.error_time) + ")")
-
-    def _reset_error(self):
-        """
-        remove all errors
-        """
-        self.error = False
-        self.error_msg = []
-        self.error_time = 0
-        self.video.reset_error()
-        self.image.reset_error()
-        self.image_last_raw = None
-        self.image_last_edited = None
-        self.image_last_edited_lowres = None
-        self.image_last_size_lowres = None
 
     def run(self):
         """
@@ -1893,7 +1748,10 @@ class BirdhouseCamera(threading.Thread):
         reload_time_error_record = 60*3
         sensor_last = ""
 
-        while self.running:
+        self.logging.info("Starting CAMERA control for '"+self.id+"' ...")
+        self.logging.info("Initializing camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
+
+        while self._running:
             current_time = self.config.local_time()
             stamp = current_time.strftime('%H%M%S')
             self.config_update = self.config.update["camera_" + self.id]
@@ -1939,7 +1797,7 @@ class BirdhouseCamera(threading.Thread):
             # check if camera is paused, wait with all processes ...
             if not self._paused:
                 count_paused = 0
-            while self._paused and self.running:
+            while self._paused and self._running:
                 if count_paused == 0:
                     self.logging.info("Recording images with " + self.id + " paused ...")
                     count_paused += 1
@@ -2098,7 +1956,7 @@ class BirdhouseCamera(threading.Thread):
                 self.video.stop()
 
         self.camera_stream_raw.stop()
-        self.running = False
+        self._running = False
 
     def pause(self, command):
         """
@@ -2110,7 +1968,7 @@ class BirdhouseCamera(threading.Thread):
         """
         Try out new
         """
-        self._reset_error()
+        self.reset_error()
         self.reload_time = time.time()
         try:
             self.camera_stream_raw.kill()
@@ -2119,33 +1977,33 @@ class BirdhouseCamera(threading.Thread):
             self.logging.debug("Ensure Stream is released - no stream to release.")
 
         try:
-            self.camera = BirdhouseCameraHandler(self.config, self.source, self.id)
+            self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source,
+                                                 config=self.config, param=self.param)
 
             if self.camera.error:
-                self._raise_error(True, "Can't connect to camera, check if '" + str(
+                self.raise_error("Can't connect to camera, check if '" + str(
                     self.source) + "' is a valid source (" + self.camera.error_msg + ").")
                 self.camera.disconnect()
             elif not self.camera.stream.isOpened():
-                self._raise_error(True, "Can't connect to camera, check if '" + str(
+                self.raise_error("Can't connect to camera, check if '" + str(
                     self.source) + "' is a valid source (could not open).")
                 self.camera.disconnect()
             elif self.camera.stream is None:
-                self._raise_error(True, "Can't connect to camera, check if '" + str(
+                self.raise_error("Can't connect to camera, check if '" + str(
                     self.source) + "' is a valid source (empty image).")
                 self.camera.disconnect()
             else:
                 raw = self.get_image_raw()
                 check = str(type(raw))
                 if "NoneType" in check:
-                    self._raise_error(True,
-                                      "Source " + str(self.source) + " returned empty image, try type 'pi' or 'usb'.")
+                    self.raise_error("Source " + str(self.source) + " returned empty image, try type 'pi' or 'usb'.")
                 else:
                     self.camera_initialize(self.param["image"]["resolution"])
                     self.camera_stream_raw.set_stream_handler(self.camera.stream)
                     self.logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
 
         except Exception as e:
-            self._raise_error(True, "Starting camera '" + self.source + "' doesn't work: " + str(e))
+            self.raise_error("Starting camera '" + self.source + "' doesn't work: " + str(e))
 
         return
 
@@ -2208,7 +2066,7 @@ class BirdhouseCamera(threading.Thread):
         """
         start recording and set current image size
         """
-        if not self.video.running:
+        if not self.video.if_running():
             self.video.start()
         self.video.image_size = self.image_size
 
@@ -2234,8 +2092,7 @@ class BirdhouseCamera(threading.Thread):
         if setting_key in available_settings:
             self.camera.set_properties(key=setting_key, value=setting_value)
         else:
-            self._raise_error(False,
-                              "Error during change of camera settings: given key '"+setting_key+"' is not supported.")
+            self.raise_error("Error during change of camera settings: given key '" + setting_key +"' is not supported.")
 
         self.logging.info("Camera settings: " + str(parameters))
         self.logging.info("   -> available: " + str(available_settings))
@@ -2252,8 +2109,8 @@ class BirdhouseCamera(threading.Thread):
         encoded = self.image.convert_from_raw(raw)
         return encoded
 
-    # backup ... decoupling stream handling
-    def get_image_raw_org(self):
+    # !!! interim, still in use to save images ... decoupling stream handling
+    def get_image_raw(self):
         """
         get image and convert to raw
         """
@@ -2265,11 +2122,11 @@ class BirdhouseCamera(threading.Thread):
             raw = self.camera.read()
             check = str(type(raw))
             if self.camera.error:
-                self._raise_error(False, "Error reading image (source=" + str(self.source) + ", " +
-                                  self.camera.error_msg + ")")
+                self.image.raise_error("Error reading image (source=" + str(self.source) + ", " +
+                                       self.camera.error_msg + ")")
                 return ""
             elif "NoneType" in check or len(raw) == 0:
-                self._raise_error(False, "Got an empty image (source=" + str(self.source) + ")")
+                self.image.raise_error("Got an empty image (source=" + str(self.source) + ")")
                 return ""
             else:
                 if self.param["image"]["rotation"] != 0:
@@ -2282,10 +2139,10 @@ class BirdhouseCamera(threading.Thread):
                 return ""
         except Exception as e:
             error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
-            self._raise_error(False, error_msg)
+            self.image.raise_error(error_msg)
             return ""
 
-    def get_image_raw(self):
+    def get_image_stream_raw(self, stream_id="default"):
         """
         get image and convert to raw
         """
@@ -2293,7 +2150,7 @@ class BirdhouseCamera(threading.Thread):
             return ""
 
         try:
-            raw = self.camera_stream_raw.read()
+            raw = self.camera_stream_raw.read(stream_id)
             check = str(type(raw))
             if "NoneType" in check or len(raw) == 0:
                 raise Exception("Got empty image.")
@@ -2305,9 +2162,10 @@ class BirdhouseCamera(threading.Thread):
                 return ""
         except Exception as e:
             error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
-            self._raise_error(False, error_msg)
+            self.image.raise_error(error_msg)
             return ""
 
+    # !!! interim, not required any more in new approach
     def get_image_raw_buffered(self, max_age_seconds=1):
         """
         get image from buffer if not to old
@@ -2323,7 +2181,7 @@ class BirdhouseCamera(threading.Thread):
 
     def image_recording_active(self, current_time=-1, check_in_general=False):
         """
-        check if image recording is active
+        check if image recording is currently active depending on settings (start and end time incl. sunset or sunrise)
         """
         is_active = False
         if check_in_general:
@@ -2494,7 +2352,7 @@ class BirdhouseCamera(threading.Thread):
         -> IMPROVE: reuse error images (lower frame rate required)
         """
 
-        image = self.get_image_raw()
+        image = self.get_image_stream_raw(stream_id)
         fps_rotate = self.get_stream_fps(stream_id=stream_id)
 
         # grab existing images if less than 10 image errors
@@ -2559,21 +2417,12 @@ class BirdhouseCamera(threading.Thread):
 
             return image
 
+    # !!! interim; use self.camera_stream_raw.get_active_streams() directly in future
     def get_stream_count(self):
         """
         identify amount of currently running streams
         """
-        current_time = datetime.now().timestamp()
-        count_streams = 0
-        del_key = ""
-        for key in self.image_streams:
-            if self.image_streams[key] + 1 > current_time:
-                count_streams += 1
-            else:
-                del_key = key
-        if del_key != "":
-            del self.image_streams[del_key]
-        return count_streams
+        return self.camera_stream_raw.get_active_streams()
 
     def get_stream_fps(self, stream_id):
         """
@@ -2633,9 +2482,9 @@ class BirdhouseCamera(threading.Thread):
             "record_image_reload": time.time() - self.record_image_reload,
             "record_image_active": self.image_recording_active(current_time=-1, check_in_general=True),
             "record_image_last_compare": self.record_image_last_compare,
-            "video_error": self.video.error,
-            "video_error_msg": ",\n".join(self.video.error_msg),
-            "running": self.running,
+            "video_error": self.video.if_error(),
+            "video_error_msg": ",\n".join(self.video.if_error(message=True)),
+            "running": self.if_running(),
             "properties": {},
             "properties_image": {}
             }
@@ -2688,7 +2537,7 @@ class BirdhouseCamera(threading.Thread):
 
         except Exception as e:
             error_msg = "Can't save image and/or create thumbnail '" + image_path + "': " + str(e)
-            self._raise_error(False, error_msg)
+            self.image.raise_error(error_msg)
             return ""
 
     def read_image(self, filename):
@@ -2705,7 +2554,7 @@ class BirdhouseCamera(threading.Thread):
 
         except Exception as e:
             error_msg = "Can't read image '" + image_path + "': " + str(e)
-            self._raise_error(False, error_msg)
+            self.image.raise_error(error_msg)
             return ""
 
     def update_main_config(self):

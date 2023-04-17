@@ -1132,7 +1132,7 @@ if __name__ == "__main__":
     camera = {}
     for cam in config.param["devices"]["cameras"]:
         settings = config.param["devices"]["cameras"][cam]
-        camera[cam] = BirdhouseCamera(thread_id=cam, config=config, sensor=sensor)
+        camera[cam] = BirdhouseCamera(camera_id=cam, config=config, sensor=sensor)
         camera[cam].start()
 
     # start views and commands
