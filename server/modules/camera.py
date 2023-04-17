@@ -1516,13 +1516,11 @@ class BirdhouseCameraStreamRaw(threading.Thread):
         circle_in_cache = False
         circle_color = (0, 0, 255)
 
-        while self.camera is None:
-            time.sleep(1)
-
         while self._running:
             self._start_time = time.time()
 
-            if self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
+            if self.camera is not None and not self.camera.error \
+                    and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
                 self.active = True
                 try:
                     raw = self.camera.read()
@@ -1538,6 +1536,7 @@ class BirdhouseCameraStreamRaw(threading.Thread):
                         raise Exception(msg)
                     if self.rotation != 0:
                         raw = self.image.rotate_raw(raw, self.rotation)
+                        self._stream = raw.copy()
 
                 except Exception as e:
                     self._raise_error("Error reading stream for '" + self.id + "':" + str(e))
@@ -2099,6 +2098,7 @@ class BirdhouseCamera(threading.Thread):
 
         try:
             self.camera = BirdhouseCameraHandler(self.config, self.source, self.id)
+            self.camera_stream_raw.camera = self.camera
 
             if self.camera.error:
                 self._raise_error(True, "Can't connect to camera, check if '" + str(
@@ -2272,10 +2272,13 @@ class BirdhouseCamera(threading.Thread):
 
         try:
             raw = self.camera_stream_raw.read()
+            check = str(type(raw))
             if not self.camera_stream_raw.error:
                 if self.param["image"]["rotation"] != 0:
                     raw = self.image.rotate_raw(raw, self.param["image"]["rotation"])
-            if len(raw) > 0 and not self.image.error:
+            if "NoneType" in check or len(raw) == 0:
+                raise Exception("Got empty image.")
+            elif len(raw) > 0 and not self.image.error:
                 self.image_last_raw = raw.copy()
                 self.image_last_raw_time = datetime.now().timestamp()
                 return raw.copy()
