@@ -1456,10 +1456,9 @@ class BirdhouseCameraStreamRaw(threading.Thread):
     creates a continuous stream while active requests
     """
 
-    def __init__(self, camera_id, camera_handler, param, time_zone, config):
+    def __init__(self, camera_id, param, time_zone, config):
         threading.Thread.__init__(self)
         self.id = camera_id
-        self.camera = camera_handler
         self.config = config
         self.param = param
         self.rotation = param["image"]["rotation"]
@@ -1467,6 +1466,7 @@ class BirdhouseCameraStreamRaw(threading.Thread):
         self.image = BirdhouseImageProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param,
                                               time_zone=self.timezone)
         self.image.resolution = param["image"]["resolution"]
+        self.stream_handler = None
 
         self.fps = None
         self.fps_max = 15
@@ -1509,6 +1509,18 @@ class BirdhouseCameraStreamRaw(threading.Thread):
         self.error_msg = []
         self.error_time = 0
 
+    def _read_from_camera(self):
+        """
+        extract image from stream
+        """
+        try:
+            ref, raw = self.stream_handler.read()
+            self._reset_error()
+            return raw.copy()
+        except cv2.error as err:
+            self._raise_error("- Error connecting to camera '" + self.id + "' or reading image: " + str(err))
+            return
+
     def run(self) -> None:
         """
         create a continuous stream while active; use buffer if empty answer
@@ -1519,11 +1531,11 @@ class BirdhouseCameraStreamRaw(threading.Thread):
         while self._running:
             self._start_time = time.time()
 
-            if self.camera is not None and not self.camera.error \
+            if self.stream_handler is not None \
                     and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
                 self.active = True
                 try:
-                    raw = self.camera.read()
+                    raw = self._read_from_camera()
                     check = str(type(raw))
                     if len(raw) > 0:
                         self._stream = raw.copy()
@@ -1577,11 +1589,18 @@ class BirdhouseCameraStreamRaw(threading.Thread):
             time.sleep(self.duration_max - duration)
         return self._stream
 
+    def set_stream_handler(self, stream_handler):
+        """
+        set or reset camera handler
+        """
+        self.stream_handler = stream_handler
+
     def kill(self):
         """
         kill continuous stream creation
         """
         self._last_activity = 0
+        self.stream_handler = None
 
     def stop(self):
         """
@@ -1825,8 +1844,8 @@ class BirdhouseCamera(threading.Thread):
         self.video = BirdhouseVideoProcessing(camera_id=self.id, camera=self, config=self.config, param=self.param,
                                               directory=self.config.db_handler.directory("videos"),
                                               time_zone=self.timezone)
-        self.camera_stream_raw = BirdhouseCameraStreamRaw(camera_id=self.id, camera_handler=self.camera,
-                                                          param=self.param, time_zone=self.timezone, config=config)
+        self.camera_stream_raw = BirdhouseCameraStreamRaw(camera_id=self.id, param=self.param,
+                                                          time_zone=self.timezone, config=self.config)
         self.camera_stream_raw.start()
         self.camera_start()
 
@@ -2092,9 +2111,10 @@ class BirdhouseCamera(threading.Thread):
         self._reset_error()
         self.reload_time = time.time()
         try:
+            self.camera_stream_raw.kill()
             self.camera.stream.release()
         except Exception as e:
-            self.logging.info("Ensure Stream is released ...")
+            self.logging.debug("Ensure Stream is released - no stream to release.")
 
         try:
             self.camera = BirdhouseCameraHandler(self.config, self.source, self.id)
@@ -2119,7 +2139,7 @@ class BirdhouseCamera(threading.Thread):
                                       "Source " + str(self.source) + " returned empty image, try type 'pi' or 'usb'.")
                 else:
                     self.camera_initialize(self.param["image"]["resolution"])
-                    self.camera_stream_raw.camera = self.camera
+                    self.camera_stream_raw.set_stream_handler(self.camera.stream)
                     self.logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
 
         except Exception as e:
