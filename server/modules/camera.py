@@ -2098,7 +2098,6 @@ class BirdhouseCamera(threading.Thread):
 
         try:
             self.camera = BirdhouseCameraHandler(self.config, self.source, self.id)
-            self.camera_stream_raw.camera = self.camera
 
             if self.camera.error:
                 self._raise_error(True, "Can't connect to camera, check if '" + str(
@@ -2120,6 +2119,7 @@ class BirdhouseCamera(threading.Thread):
                                       "Source " + str(self.source) + " returned empty image, try type 'pi' or 'usb'.")
                 else:
                     self.camera_initialize(self.param["image"]["resolution"])
+                    self.camera_stream_raw.camera = self.camera
                     self.logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
 
         except Exception as e:
