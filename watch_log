@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+
+watch 'head -n 2 log/server.log | tail -n 60 log/server.log'
