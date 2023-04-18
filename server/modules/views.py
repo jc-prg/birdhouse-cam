@@ -613,6 +613,8 @@ class BirdhouseViews(threading.Thread):
                     files_all[stamp]["datestamp"] = date_backup
                 if "date" not in files_all[stamp]:
                     files_all[stamp]["date"] = date_backup[6:8] + "." + date_backup[4:6] + "." + date_backup[0:4]
+                if "time" not in files_all[stamp]:
+                    files_all[stamp]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
 
                 if ((int(stamp) < int(time_now) or time_now == "000000")
                         and files_all[stamp]["datestamp"] == date_today) or backup:
@@ -646,7 +648,7 @@ class BirdhouseViews(threading.Thread):
                         if "type" in files_today[stamp] and files_today[stamp]["type"] != "data":
                             count += 1
 
-                        if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
+                        if "type" in files_today[stamp] and files_today[stamp]["type"] == "image":
                             files_images[stamp] = files_today[stamp].copy()
                             if "weather" in files_images[stamp]:
                                 del files_images[stamp]["weather"]
@@ -808,6 +810,7 @@ class BirdhouseViews(threading.Thread):
             image = os.path.join(self.config.db_handler.directory(config="images"), image_today)
 
             self.logging.info("- Scan " + str(len(dir_list)) + " directories for " + cam + " ...")
+            dir_list = sorted(dir_list)
             for directory in dir_list:
                 dir_size = 0
                 group_name = directory[0:4] + "-" + directory[4:6]
