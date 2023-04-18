@@ -19,8 +19,10 @@ function birdhouse_KillActiveStreams() {
 
 function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false) {
     var stream_server = RESTurl;
-    var stream_link   = stream_server + stream_url;
+    var stream_link   = stream_url;
     var stream_id_ext = camera;
+
+    if (stream_url.indexOf("http:") < 0 || stream_url.indexOf("https:") < 0) { stream_link = stream_server + stream_link; }
 
     console.error("BUGFIX preparation birdhouse_StreamURL: " + RESTurl + " / " + stream_url);
 
