@@ -21,6 +21,9 @@ function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false) {
     var stream_server = RESTurl;
     var stream_link   = stream_server + stream_url;
     var stream_id_ext = camera;
+
+    console.error("BUGFIX preparation birdhouse_StreamURL: " + RESTurl + " / " + stream_url);
+
     if (new_uid)  {
         app_unique_stream_id += 1;
     }
