@@ -1503,7 +1503,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         self._last_activity = time.time()
         self._last_activity_per_stream[stream_id] = time.time()
         if not self.active:
-            time.sleep(self.duration_max * 2)
+            time.sleep(1)
         elif duration < self.duration_max:
             time.sleep(self.duration_max - duration)
         return self._stream
