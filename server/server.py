@@ -455,6 +455,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if "version" in self.path:
                 param["session_id"] = elements[3]
 
+        elif "/edit_presets/" in self.path:
+            param["session_id"] = elements[2]
+            param["command"] = "edit_presets"
+            param["which_cam"] = ""
+            if len(elements) > 4:
+                param["parameter"] = elements[4]
+            if len(elements) > 5:
+                param["which_cam"] = elements[5]
+
         elif self.path.startswith("/api"):
             param["session_id"] = elements[2]
             param["command"] = elements[3]
@@ -467,10 +476,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                 param["which_cam"] = complete_cam
 
-            if param["which_cam"] not in views.camera:
-                srv_logging.warning("Unknown camera requested (%s).", param["which_cam"])
-                param["which_cam"] = "cam1"
-                last_is_cam = False
+            if param["command"]:
+                if param["which_cam"] not in views.camera:
+                    srv_logging.warning("Unknown camera requested (%s).", param["which_cam"])
+                    param["which_cam"] = "cam1"
+                    last_is_cam = False
 
             count = 0
             amount = len(elements)
@@ -555,7 +565,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif param["command"] == "reconnect_camera":
             response = camera[which_cam].camera_reconnect()
         elif param["command"] == "camera_settings":
-            response = camera[which_cam].camera_settings(param)
+            response = camera[which_cam].get_camera_settings(param)
         elif param["command"] == "start-recording":
             response = camera[which_cam].video.record_start()
         elif param["command"] == "stop-recording":
@@ -588,7 +598,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 camera[which_cam].set_stream_kill(stream_id_kill)
                 response = {"kill_stream": which_cam}
         elif param["command"] == "edit_presets":
-            edit_param = param["parameter"][0].split("###")
+            edit_param = param["parameter"].split("###")
             data = {}
             for entry in edit_param:
                 if "==" in entry:
@@ -601,9 +611,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     data[key] = data[key].replace("%7B", "{")
                     data[key] = data[key].replace("%7C", "|")
                     data[key] = data[key].replace("%7D", "}")
+                    data[key] = data[key].replace("-dev-", "/dev/")
+            srv_logging.info(str(data))
             config.main_config_edit("main", data)
-            for key in camera:
-                camera[key].config_update = True
+            if which_cam in camera:
+                camera[which_cam].config_update = True
         elif param["command"] == "check-pwd":
             admin_pwd = birdhouse_env["admin_password"]
             if admin_pwd == param["parameter"][0]:
@@ -972,6 +984,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             stream_resolution = "hires"
 
         stream_id = stream_type + "_" + stream_resolution
+        frame_id = None
 
         self.stream_video_header()
         while stream_active:
@@ -980,65 +993,59 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 stream_active = False
 
             if config.update["camera_" + which_cam]:
-                camera[which_cam].update_main_config()
+                camera[which_cam].camera_reconnect()
 
-            frame_raw = camera[which_cam].get_stream(stream_id=stream_id_int,
-                                                     stream_type=stream_type,
-                                                     stream_resolution=stream_resolution)
+            if frame_id != camera[which_cam].get_stream_image_id():
+                frame_raw = camera[which_cam].get_stream(stream_id=stream_id_int,
+                                                         stream_type=stream_type,
+                                                         stream_resolution=stream_resolution,
+                                                         system_info=True)
+                frame_id = camera[which_cam].get_stream_image_id()
 
-            if stream_pip and which_cam2 != "" and which_cam2 in camera:
-                frame_raw_pip = camera[which_cam].get_stream(stream_id=stream_id_int,
-                                                             stream_type=stream_type,
-                                                             stream_resolution="lowres")
-                frame_raw = camera[which_cam].image.image_in_image_raw(raw=frame_raw, raw2=frame_raw_pip,
-                                                                       position=int(cam2_pos))
+                if stream_pip and which_cam2 != "" and which_cam2 in camera:
+                    frame_raw_pip = camera[which_cam].get_stream(stream_id=stream_id_int,
+                                                                 stream_type=stream_type,
+                                                                 stream_resolution="lowres")
+                    frame_raw = camera[which_cam].image.image_in_image_raw(raw=frame_raw, raw2=frame_raw_pip,
+                                                                           position=int(cam2_pos))
 
-            if stream_type == "camera" \
-                    and not camera[which_cam].if_error() \
-                    and not camera[which_cam].image.if_error() \
-                    and not camera[which_cam].camera_streams[stream_id].if_error():
+                if stream_type == "camera" \
+                        and not camera[which_cam].if_error() \
+                        and not camera[which_cam].image.if_error() \
+                        and not camera[which_cam].camera_streams[stream_id].if_error():
 
-                if camera[which_cam].video.recording:
-                    srv_logging.debug("VIDEO RECORDING")
-                    length = str(round(camera[which_cam].video.record_info()["length"]))
-                    framerate = str(round(camera[which_cam].video.record_info()["framerate"]))
-                    y_position = camera[which_cam].image_size[1] - 40
-                    frame_raw = camera[which_cam].image.draw_text_raw(frame_raw.copy(), "Recording",
-                                                                      position=(20, y_position),
-                                                                      color=(0, 0, 255), scale=1, thickness=2)
-                    frame_raw = camera[which_cam].image.draw_text_raw(frame_raw.copy(),
-                                                                      "(" + length + "s/" + framerate + "fps)",
-                                                                      position=(200, y_position), color=(0, 0, 255),
-                                                                      scale=0.5, thickness=1)
+                    if camera[which_cam].video.recording:
+                        srv_logging.debug("VIDEO RECORDING")
+                        length = str(round(camera[which_cam].video.record_info()["length"]))
+                        framerate = str(round(camera[which_cam].video.record_info()["framerate"]))
+                        line1 = "Recording"
+                        line2 = "(" + length + "s/" + framerate + "fps)"
+                        camera[which_cam].set_system_info(True, line1, line2, (0, 0, 255))
 
-                if camera[which_cam].video.processing:
-                    srv_logging.debug("VIDEO PROCESSING")
-                    length = str(round(camera[which_cam].video.record_info()["length"]))
-                    image_size = str(camera[which_cam].video.record_info()["image_size"])
-                    y_position = camera[which_cam].image_size[1] - 40
-                    frame_raw = camera[which_cam].image.draw_text_raw(frame_raw, "Processing",
-                                                                      position=(20, y_position),
-                                                                      color=(0, 255, 255), scale=1, thickness=2)
-                    frame_raw = camera[which_cam].image.draw_text_raw(frame_raw,
-                                                                      "(" + length + "s/" + image_size + ")",
-                                                                      position=(200, y_position),
-                                                                      color=(0, 255, 255),
-                                                                      scale=0.5, thickness=1)
+                    elif camera[which_cam].video.processing:
+                        srv_logging.debug("VIDEO PROCESSING")
+                        length = str(round(camera[which_cam].video.record_info()["length"]))
+                        framerate = str(round(camera[which_cam].video.record_info()["framerate"]))
+                        line1 = "Processing"
+                        line2 = "(" + length + "s/" + framerate + "fps)"
+                        camera[which_cam].set_system_info(True, line1, line2, (0, 255, 255))
 
-            try:
-                frame = camera[which_cam].image.convert_from_raw(frame_raw)
-                camera[which_cam].camera_wait_recording()
-                self.stream_video_frame(frame, which_cam)
-                if not stream_active:
-                    self.stream_video_end()
-                    srv_logging.info("Closed streaming client: " + stream_id_ext)
+                    else:
+                        camera[which_cam].set_system_info(False)
 
-            except Exception as error_msg:
-                stream_active = False
-                if "Errno 104" in str(e) or "Errno 32" in str(error_msg):
-                    srv_logging.debug('Removed streaming client %s: %s', self.client_address, str(error_msg))
-                else:
-                    srv_logging.warning('Removed streaming client %s: %s', self.client_address, str(error_msg))
+                try:
+                    frame = camera[which_cam].image.convert_from_raw(frame_raw)
+                    self.stream_video_frame(frame, which_cam)
+                    if not stream_active:
+                        self.stream_video_end()
+                        srv_logging.info("Closed streaming client: " + stream_id_ext)
+
+                except Exception as error_msg:
+                    stream_active = False
+                    if "Errno 104" in str(error_msg) or "Errno 32" in str(error_msg):
+                        srv_logging.debug('Removed streaming client %s: %s', self.client_address, str(error_msg))
+                    else:
+                        srv_logging.warning('Removed streaming client %s: %s', self.client_address, str(error_msg))
 
             if camera[which_cam].error or camera[which_cam].image.error:
                 time.sleep(stream_wait_while_error)

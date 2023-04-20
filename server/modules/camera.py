@@ -49,14 +49,32 @@ class BirdhouseCameraClass(object):
         """
         Report Error, set variables of modules
         """
+        message_org = message
+        message_repeat = message + " !! repeated"
+
         time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+
+        message_exists = False
+        for error in self.error_msg:
+            if message_org in error:
+                message_exists = True
+        if message_exists:
+            message = message_repeat
+
         self.error_msg.append(time_info + " - " + message)
         self.error_count += 1
-        if len(self.error_msg) >= 10:
+        if len(self.error_msg) >= 20:
             self.error_msg.pop()
         self.error_time = time.time()
         self.error = True
-        self.logging.error(self.id + ": " + message)
+
+        message_exists = 0
+        for error in self.error_msg:
+            if message_repeat in error:
+                message_exists += 1
+
+        if message_exists <= 2:
+            self.logging.error(self.id + ": " + message)
 
     def raise_warning(self, message):
         """
@@ -117,13 +135,12 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             self.error = False
             return raw
         except cv2.error as err:
-            self.error = True
-            self.error_msg = str(err)
-            self.logging.warning("- Error connecting to camera '" + self.source +
-                                 "' and reading first image: " + str(err))
+            self.raise_error("- Error connecting to camera '" + self.source +
+                             "' and reading first image: " + str(err))
             return
 
     def connect(self):
+        self.reset_error()
         self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
         self.read()
 
@@ -338,7 +355,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         self.error_camera = False
         self.error_image = {}
 
-        self.logging.info("Starting IMAGE processing for '"+self.id+"' ...")
+        self.logging.info("Connected IMAGE processing ("+self.id+") ...")
 
     def compare(self, image_1st, image_2nd, detection_area=None):
         """
@@ -928,7 +945,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.image_size = [0, 0]
         self.recording = False
         self.processing = False
-        self.max_length = 0.25 * 60
+        self.max_length = 60
 
         self.output_codec = {"vcodec": "libx264", "crf": 18}
         self.ffmpeg_cmd = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
@@ -951,11 +968,13 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             "start_stamp": 0,
             "status": "ready"
         }
+        self._running = False
 
     def run(self):
         """
         Initialize, set initial values
         """
+        self._running = True
         self.logging.info("Starting VIDEO processing for '"+self.id+"' ...")
         if "video" in self.param and "max_length" in self.param["video"]:
             self.max_length = self.param["video"]["max_length"]
@@ -1408,7 +1427,6 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         BirdhouseCameraClass.__init__(self, class_id=camera_id+"-sRaw", class_log="cam-stream",
                                       camera_id=camera_id, config=config)
 
-        self.rotation = self.param["image"]["rotation"]
         self.stream_handler = None
         self.image = BirdhouseImageProcessing(camera_id=self.id, config=self.config)
         self.image.resolution = self.param["image"]["resolution"]
@@ -1421,12 +1439,14 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
 
         self.active = False
         self.slow_stream = False
+        self.maintenance_mode = False
 
         self._active_streams = 0
         self._recording = False
         self._stream = None
         self._stream_last = None
         self._stream_last_time = None
+        self._stream_image_id = 0
         self._timeout = 3
 
         self._last_activity = 0
@@ -1439,15 +1459,17 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         """
         create a continuous stream while active; use buffer if empty answer
         """
-        time.sleep(2)
-        self.logging.info("Starting CAMERA raw stream for '"+self.id+"' ...")
         circle_in_cache = False
         circle_color = (0, 0, 255)
+        time.sleep(2)
+
+        self.reset_error()
+        self.logging.info("Starting CAMERA raw stream for '"+self.id+"' ...")
 
         while self._running:
             self._start_time = time.time()
 
-            if self.stream_handler is not None \
+            if self.stream_handler is not None and not self.maintenance_mode \
                     and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
                 self.active = True
                 try:
@@ -1458,10 +1480,11 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
                     self._stream = raw.copy()
                     self._stream_last = raw.copy()
                     self._stream_last_time = time.time()
+                    self._stream_image_id += 1
                     circle_in_cache = False
 
                 except Exception as e:
-                    self.raise_error("Error reading stream for '" + self.id + "':" + str(e))
+                    self.raise_error("Error reading RAW stream for '" + self.id + "': " + str(e))
                     if self._stream_last is not None:
                         if not circle_in_cache:
                             try:
@@ -1474,6 +1497,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
             else:
                 self.active = False
                 self._stream = None
+                self._stream_image_id = 0
                 self._last_activity = 0
                 self._last_activity_count = 0
                 self._last_activity_per_stream = {}
@@ -1506,6 +1530,12 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
             time.sleep(self.duration_max - duration)
         return self._stream
 
+    def read_stream_image_id(self):
+        """
+        return current image id
+        """
+        return self._stream_image_id
+
     def read_from_camera(self):
         """
         extract image from stream
@@ -1516,8 +1546,8 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
             if "NoneType" in check or len(raw) == 0:
                 self.raise_error("Got an empty image (source=" + str(self.id) + ")")
                 return
-            if self.rotation != 0:
-                raw = self.image.rotate_raw(raw, self.rotation)
+            if self.param["image"]["rotation"] != 0:
+                raw = self.image.rotate_raw(raw, self.param["image"]["rotation"])
             return raw.copy()
         except cv2.error as err:
             self.raise_error("CV2-error connecting to camera '" + self.id + "' or reading image: " + str(err))
@@ -1642,8 +1672,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             return
 
         self.stream_raw = stream_raw
-        self.image = BirdhouseImageProcessing(camera_id=self.id, config=self.config)
-        self.image.resolution = self.param["image"]["resolution"]
+        self.image = None
 
         self.img_error_files = {
             "setting": "camera_na_v3.jpg",
@@ -1654,11 +1683,6 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             "camera": None
             }
 
-        if not self.init_error_images():
-            self.raise_error("Could not initialize, error images not found in ./data/: " + str(self.img_error_files))
-            self.stop()
-            return
-
         self._active_streams = 0
         self._recording = False
         self._timeout = 3
@@ -1668,6 +1692,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self._start_time = 0
         self._stream = None
         self._stream_last = None
+        self._stream_last_id = None
         self._stream_last_time = 0
         self._stream_id_base = self.type + "_" + self.resolution + "_"
         self._size_lowres = None
@@ -1680,59 +1705,21 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self.duration_slow = 1 / self.fps_slow
         self.slow_stream = False
         self.active = False
+        self.system_status = {
+            "active": False,
+            "color": "default",
+            "line1": "",
+            "line2": ""
+        }
+        self.maintenance_mode = False
 
-    def run(self) -> None:
-        circle_in_cache = False
-        circle_color = (0, 0, 255)
-
-        while not self.stream_raw.if_ready():
-            time.sleep(0.1)
-        self.logging.info("Starting CAMERA edited stream for '"+self.id+"/"+self.type+"/"+self.resolution+"' ...")
-
-        while self._running:
-            self._start_time = time.time()
-
-            if self.stream_raw is not None \
-                    and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
-                self.active = True
-                try:
-                    raw = self.read_raw_and_edit(stream=True, stream_id=self._stream_id_base, return_error_image=True)
-                    if self.error:
-                        raise Exception("Error with 'read_raw_and_edit()'.")
-
-                    self._stream = raw.copy()
-                    self._stream_last = raw.copy()
-                    self._stream_last_time = time.time()
-                    circle_in_cache = False
-
-                except Exception as e:
-                    self.raise_error("Error reading stream for '" + self.id + "':" + str(e))
-                    if self._stream_last is not None:
-                        if not circle_in_cache:
-                            try:
-                                self._stream_last = cv2.circle(self._stream_last, (25, 50), 4, circle_color, 6)
-                                circle_in_cache = True
-                            except cv2.error as e:
-                                pass
-                        self._stream = self._stream_last.copy()
-
-            else:
-                self.active = False
-                self._stream = None
-                self._last_activity = 0
-                self._last_activity_count = 0
-                self._last_activity_per_stream = {}
-
-            self.stream_count()
-            self.stream_framerate_check()
-
-        self.logging.info("Stopped CAMERA edited stream for '"+self.id+"/"+self.type+"/"+self.resolution+"'.")
-
-    def init_error_images(self):
+    def _init_error_images(self):
         """
         create error images for settings and camera
         """
-        if self.param["image"]["resolution"] and "x" in self.param["image"]["resolution"]:
+        if "resolution_current" in self.param["image"]:
+            resolution = self.param["image"]["resolution_current"]
+        elif self.param["image"]["resolution"] and "x" in self.param["image"]["resolution"]:
             resolution = self.param["image"]["resolution"].split("x")
         else:
             resolution = [800, 600]
@@ -1751,10 +1738,74 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             self.raise_error("Error reading images: " + str(e))
             return False
 
+    def run(self) -> None:
+        circle_in_cache = False
+        circle_color = (0, 0, 255)
+
+        self.reset_error()
+        while not self.stream_raw.if_ready():
+            time.sleep(0.1)
+
+        self.image = self.stream_raw.image
+        if not self._init_error_images():
+            self.raise_error("Could not initialize, error images not found in ./data/: " + str(self.img_error_files))
+            self.stop()
+            return
+
+        self.logging.info("Starting CAMERA edited stream for '"+self.id+"/"+self.type+"/"+self.resolution+"' ...")
+        while self._running:
+            self._start_time = time.time()
+
+            if self.stream_raw is not None \
+                    and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
+                    #self._stream_last_id != self.read_stream_image_id():
+                self.active = True
+                try:
+                    raw = self.read_raw_and_edit(stream=True, stream_id=self._stream_id_base, return_error_image=True)
+                    #self._stream_last_id = self.stream_raw.stream_image_id()
+                    if self.error:
+                        raise Exception("Error with 'read_raw_and_edit()'.")
+
+                    self._stream = raw.copy()
+                    self._stream_last = raw.copy()
+                    self._stream_last_time = time.time()
+                    circle_in_cache = False
+
+                except Exception as e:
+                    self.raise_error("Error reading EDIT stream for '" + self.id + "/" + self.type + "': " + str(e))
+                    #if self._stream_last is not None:
+                    #    if not circle_in_cache:
+                    #        try:
+                    #            #self._stream_last = cv2.circle(self._stream_last, (25, 50), 4, circle_color, 6)
+                    #            self._stream_last = self.edit_add_warning_bullet(self._stream_last.copy())
+                    #            circle_in_cache = True
+                    #        except cv2.error as e:
+                    #            self._stream = self._stream_last.copy()
+
+            else:
+                self.active = False
+                self._stream = None
+                self._last_activity = 0
+                self._last_activity_count = 0
+                self._last_activity_per_stream = {}
+
+            self.stream_count()
+            self.stream_framerate_check()
+
+        self.logging.info("Stopped CAMERA edited stream for '"+self.id+"/"+self.type+"/"+self.resolution+"'.")
+
     def read_raw_and_edit(self, stream=False, stream_id="default", return_error_image=True):
         """
         read image from raw stream and edit depending on streaming type and resolution
         """
+        if self.maintenance_mode:
+            raw = self.img_error_raw["camera"].copy()
+            if self.type == "camera":
+                raw = self.edit_crop_area(raw, start_zero=True)
+            if self.resolution != "lowres":
+                raw = self.edit_add_system_info(raw)
+            return raw.copy()
+
         if stream:
             raw = self.stream_raw.read_stream(self._stream_id_base + stream_id)
             raw = self.edit_check_error(raw, "Error reading 'self.stream_raw.read_stream()' in read_raw_and_edit()",
@@ -1823,7 +1874,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         return self.read_raw_and_edit(stream=False, stream_id="default", return_error_image=return_error_image)
 
-    def read_stream(self, stream_id):
+    def read_stream(self, stream_id, system_info=False):
         """
         read stream image considering the max fps
         """
@@ -1835,14 +1886,31 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             time.sleep(self._start_delay_stream)
         elif duration < self.duration_max:
             time.sleep(self.duration_max - duration)
-        return self._stream
+
+        if self._stream is not None and len(self._stream) > 0:
+            stream_img = self._stream.copy()
+            if system_info:
+                stream_img = self.edit_add_system_info(stream_img)
+            return stream_img
+        else:
+            return ""
+
+    def read_stream_image_id(self):
+        """
+        return current image number
+        """
+        return self.stream_raw.read_stream_image_id()
 
     def read_error_image(self, error_msg=""):
         """
         return error image, depending on settings
         """
         if error_msg == "":
-            error_msg = self.if_error(message=True)[-1]
+            error_msg = self.if_error(message=True)
+            if len(error_msg) == 0:
+                error_msg = "no error :-)"
+            else:
+                error_msg = error_msg[-1]
 
         if self.type == "setting":
             image = self.img_error_raw["setting"]
@@ -1927,14 +1995,18 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         if "black_white" in self.param["image"] and self.param["image"]["black_white"] is True:
             normalized = self.image.convert_to_gray_raw(raw)
             normalized = self.image.convert_from_gray_raw(normalized)
+            return normalized.copy()
         else:
             return raw.copy()
 
-    def edit_crop_area(self, raw):
+    def edit_crop_area(self, raw, start_zero=False):
         """
         crop image to area defined in the settings
         """
-        cropped, area = self.image.crop_raw(raw=raw, crop_area=self.param["image"]["crop"], crop_type="relative")
+        crop_area = self.param["image"]["crop"]
+        if start_zero:
+            crop_area = [0, 0, crop_area[2]-crop_area[0], crop_area[3]-crop_area[1]]
+        cropped, area = self.image.crop_raw(raw=raw, crop_area=crop_area, crop_type="relative")
         self.param["image"]["crop_area"] = area
         self.param["image"]["resolution_cropped"] = [area[2] - area[0], area[3] - area[1]]
         return cropped.copy()
@@ -1970,7 +2042,6 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         area_image = self.image.draw_area_raw(raw=area_image, area=inner_area, color=color_detect, thickness=frame_thickness)
         return area_image.copy()
 
-    # ----> in progress
     def edit_check_error(self, image, error_message="", return_error_image=True):
         """
         check: if error then show error image
@@ -1979,8 +2050,6 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             check = str(type(image))
             if "NoneType" in check or len(image) == 0:
                 self.raise_error(error_message)
-                # ---> return ERROR image ... but which one and which size ?
-                # or do a final check somewhere else?
             else:
                 return image
         else:
@@ -2009,13 +2078,31 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                                            position=(10, -20), scale=0.4, thickness=1)
         return raw.copy()
 
-    def edit_add_recording_info(self, raw):
+    def edit_add_system_info(self, raw):
         """
         add information if recording or processing to image
         """
-        pass
+        image = raw.copy()
+        if self.system_status["active"]:
+            image = self.image.draw_text_raw(raw=image, text=self.system_status["line1"],
+                                           font=cv2.QT_FONT_NORMAL, color=self.system_status["color"],
+                                           position=(10, -70), scale=1, thickness=2)
+            image = self.image.draw_text_raw(raw=image, text=self.system_status["line2"],
+                                           font=cv2.QT_FONT_NORMAL, color=self.system_status["color"],
+                                           position=(10, -50), scale=0.4, thickness=1)
+        return image.copy()
 
-    # <---- in progress
+    @staticmethod
+    def edit_add_warning_bullet(raw, color=None):
+        """
+        add read circle (depending on lowres position)
+        """
+        default_color = (0, 0, 255)
+        default_position = (25, -25)
+        if color is None:
+            color = default_color
+        raw = cv2.circle(raw.copy(), default_position, 4, color, 6)
+        return raw
 
     def stream_count(self):
         """
@@ -2055,6 +2142,34 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         self.slow_stream = slow_down
 
+    def set_maintenance_mode(self, active, line1="", line2=""):
+        """
+        set maintenance mode -> image plus text, no streaming image (e.g. for camera restart)
+        """
+        maintenance_color = (0, 0, 0)
+        if active:
+            self.logging.info("Start maintenance mode ("+self.type+"/"+self.resolution+"): " + line1 + " ... ")
+        self.maintenance_mode = active
+        self.stream_raw.maintenance_mode = active
+        self.set_system_info(active, line1, line2, color=maintenance_color)
+        if not active:
+            self.reset_error()
+            self.logging.debug("Stopped maintenance mode ("+self.type+"/"+self.resolution+").")
+
+    def set_system_info(self, active, line1="", line2="", color=""):
+        """
+        format message
+        """
+        default_color = (0, 0, 255)
+        self.system_status = {
+            "active": active,
+            "line1": line1,
+            "line2": line2,
+            "color": color,
+        }
+        if color == "":
+            self.system_status["color"] = default_color
+
     def kill(self):
         self._last_activity = 0
 
@@ -2077,6 +2192,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.config_update = None
         self.config.update["camera_" + self.id] = False
 
+        self.image = None
+        self.video = None
         self.camera = None
         self.sensor = sensor
         self.weather_active = self.config.param["weather"]["active"]
@@ -2094,13 +2211,14 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.error_reload_time = 60
         self.error_no_reconnect = False
 
-        self.reload_camera = True
+        self.reload_camera = False
         self.reload_time = 0
 
         self.image_size = [0, 0]
         self.image_size_lowres = [0, 0]
         self.image_last_raw = None
         self.image_last_raw_time = 0
+        self.image_last_id = 0
         self.image_last_edited = None
         self.image_last_edited_lowres = None
         self.image_last_size_lowres = None
@@ -2112,6 +2230,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.image_streams = {}
         self.image_streams_to_kill = {}
         self.image_to_select_last = "xxxxxx"
+
         self.previous_image = None
         self.previous_stamp = "000000"
 
@@ -2123,12 +2242,73 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.record_image_last_compare = ""
         self.record_image_error = False
 
+        self.camera_stream_raw = None
+        self.camera_streams = {}
+
+        self._init_image_processing()
+        self._init_video_processing()
+        self._init_stream_raw()
+        self._init_streams()
+        if self.active:
+            self._init_camera(init=True)
+
+    def _init_image_processing(self):
+        """
+        start image processing
+        """
         self.image = BirdhouseImageProcessing(camera_id=self.id, config=self.config)
         self.image.resolution = self.param["image"]["resolution"]
+
+    def _init_video_processing(self):
+        """
+        start or restart video processing
+        """
+
+        if self.video is not None and self.video.if_running():
+            self.video.stop()
+            time.sleep(1)
+
         self.video = BirdhouseVideoProcessing(camera_id=self.id, camera=self, config=self.config)
+
+        if not self.error and self.param["video"]["allow_recording"]:
+            self.camera_enable_recording()
+
+    def _init_stream_raw(self):
+        """
+        start or restart video processing
+        """
+        if self.camera_stream_raw is not None and self.camera_stream_raw.if_running():
+            self.camera_stream_raw.kill()
+            self.camera_stream_raw.stop()
+            time.sleep(1)
+
         self.camera_stream_raw = BirdhouseCameraStreamRaw(camera_id=self.id, config=self.config)
         self.camera_stream_raw.start()
-        self.camera_start()
+
+    def _init_streams(self):
+        """
+        init streams
+        """
+        available_streams = ["raw", "normalized_hires", "normalized_lowres", "camera_hires", "camera_lowres",
+                             "setting_hires", "setting_lowres"]
+
+        count = 0
+        while self.camera_stream_raw is None or not self.camera_stream_raw.if_running():
+            time.sleep(1)
+            count += 1
+            if count > 9:
+                self.raise_error("Could not start video streaming!")
+                return
+
+        count = 0
+        for stream in available_streams:
+            if stream in self.camera_streams:
+                if self.camera_streams[stream].if_running():
+                    count +=1
+                    self.camera_streams[stream].kill()
+                    self.camera_streams[stream].stop()
+            if count > 0:
+                time.sleep(1)
 
         self.camera_streams = {
             "raw": BirdhouseCameraStreamEdit(camera_id=self.id, config=self.config,
@@ -2153,6 +2333,117 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                                         stream_raw=self.camera_stream_raw,
                                                         stream_type="setting", stream_resolution="lowres")
         }
+        if self._running:
+            for stream in self.camera_streams:
+                self.camera_streams[stream].start()
+
+    def _init_camera(self, init=False):
+        """
+        Try out new
+        """
+        relevant_streams = ["camera_hires", "camera_lowres", "setting_hires", "setting_lowres"]
+        self.reload_time = time.time()
+
+        if not init:
+            self.logging.info("- Restarting CAMERA (" + self.id + ") ...")
+            for stream in relevant_streams:
+                if stream in self.camera_streams:
+                    self.camera_streams[stream].set_maintenance_mode(True, "Restart camera", self.id)
+            time.sleep(1)
+            #self._init_stream_raw()
+        else:
+            self.logging.info("Starting CAMERA (" + self.id + ") ...")
+        #self._init_streams()
+
+        #try:
+        #    self.camera.stream.release()
+        #except Exception as e:
+        #    self.logging.debug("Ensure Stream is released - no stream to release.")
+
+        try:
+            if init:
+                self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source,
+                                                     config=self.config, param=self.param)
+                self.camera_stream_raw.set_stream_handler(self.camera.stream)
+            else:
+                self.reset_error()
+                self.camera.reconnect()
+                self.camera_stream_raw.set_stream_handler(self.camera.stream)
+
+            if self.camera.error:
+                self.raise_error("Can't connect to camera, check if '" + str(
+                    self.source) + "' is a valid source (" + self.camera.error_msg + ").")
+                self.camera.disconnect()
+            elif not self.camera.stream.isOpened():
+                self.raise_error("Can't connect to camera, check if '" + str(
+                    self.source) + "' is a valid source (could not open).")
+                self.camera.disconnect()
+            elif self.camera.stream is None:
+                self.raise_error("Can't connect to camera, check if '" + str(
+                    self.source) + "' is a valid source (empty image).")
+                self.camera.disconnect()
+            else:
+                raw = self.camera.read()
+                check = str(type(raw))
+                if "NoneType" in check:
+                    self.raise_error("Check after (re)connect: Source " + str(self.source) + " returned empty image.")
+                else:
+                    self._init_camera_settings()
+                    self.camera_stream_raw.set_stream_handler(self.camera.stream)
+                    self.logging.info("Check after (re)connect: OK (Source=" + str(self.source) + ")")
+
+        except Exception as e:
+            self.raise_error("Starting camera '" + self.source + "' doesn't work: " + str(e))
+
+        if not init:
+            self.logging.error(" ........ " + str(self.camera_streams.keys()))
+            for stream in relevant_streams:
+                if stream in self.camera_streams:
+                    self.camera_streams[stream].set_maintenance_mode(False)
+        return
+
+    def _init_camera_settings(self):
+        """
+        set resolution for USB
+        """
+        if self.camera is None:
+            return
+
+        # set saturation, contrast, brightness
+        available_settings = self.camera.get_properties_available()
+        for key in available_settings:
+            if key in self.param["image"] and float(self.param["image"][key]) != -1:
+                self.camera.set_properties(key, float(self.param["image"][key]))
+
+        # set resolutions, define grop area
+        current = self.camera.get_resolution()
+        self.logging.info("- Current resolution: " + str(current))
+
+        self.max_resolution = self.camera.get_resolution(maximum=True)
+        self.logging.debug("- Maximum resolution: " + str(self.max_resolution))
+
+        if "x" in self.param["image"]["resolution"]:
+            dimensions = self.param["image"]["resolution"].split("x")
+            self.logging.debug(self.id + " Set resolution: " + str(dimensions))
+            self.camera.set_resolution(width=float(dimensions[0]), height=float(dimensions[1]))
+            current = self.camera.get_resolution()
+
+            if current == [0, 0]:
+                current = [int(dimensions[0]), int(dimensions[1])]
+
+            self.param["image"]["resolution_max"] = self.max_resolution
+            self.param["image"]["resolution_current"] = current
+            self.param["image"]["crop_area"] = self.image.crop_area_pixel(resolution=current,
+                                                                          area=self.param["image"]["crop"],
+                                                                          dimension=False)
+            self.logging.info("- New resolution: " + str(current))
+            self.logging.debug("- New crop area:  " + str(self.param["image"]["crop"]) + " -> " +
+                               str(self.param["image"]["crop_area"]))
+        else:
+            self.logging.info("- Resolution definition not supported (e.g. '800x600'): " + str(self.param["image"]["resolution"]))
+
+        # return properties as values
+        self.param["camera"] = self.camera.get_properties()
 
     def run(self):
         """
@@ -2165,10 +2456,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         reload_time_error = 60*3
         reload_time_error_record = 60*3
         sensor_last = ""
-
-        if self._running:
-            for stream in self.camera_streams:
-                self.camera_streams[stream].start()
 
         self.logging.info("Starting CAMERA control for '"+self.id+"' ...")
         self.logging.info("Initializing camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
@@ -2201,20 +2488,14 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.config_update = True
                 self.reload_camera = True
 
-            # check if configuration shall be updated
-            if self.config_update:
-                self.logging.info("....... RELOAD Update: " + self.id + " - " +
-                                  str(reload_time + reload_time_error) + " > " + str(time.time()))
-                self.update_main_config()
-                self.reload_camera = True
-
             # start or reload camera connection
-            if self.reload_camera and self.active:
-                self.logging.info("- (Re)starting Camera (" + self.id + ") ...")
-                self.camera_reconnect(directly=False)
-                if not self.error and self.param["video"]["allow_recording"]:
-                    self.camera_start_recording()
-                self.reload_camera = False
+            if (self.config_update or self.reload_camera) and self.active:
+                self.logging.info("Updating CAMERA configuration (" + self.id + ") ...")
+                self.update_main_config()
+                if self.active:
+                    self.camera_reconnect(directly=True)
+                else:
+                    self.logging.info(" - CAMERA is set inactive, no restart (" + self.id + ") ...")
 
             # check if camera is paused, wait with all processes ...
             if not self._paused:
@@ -2226,143 +2507,22 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 time.sleep(1)
 
             # Video Recording
-            if not self.error and self.video.recording:
-
-                if self.video.record_stop_auto():
-                    self.video.record_stop()
-                else:
-                    image = self.camera_streams["camera_hires"].read_stream("record")
-                    # image = self.get_image_raw()
-                    # image = self.image.normalize_raw(image)
-                    self.video.image_size = self.image_size
-                    self.video.create_video_image(image=image)
-
-                    if self.image_size == [0, 0]:
-                        self.image_size = self.image.size_raw(image)
-                        self.video.image_size = self.image_size
-
-                    self.logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(
-                        current_time.strftime("%H:%M:%S")))
+            if self.active and self.video.recording:
+                self.video_recording(current_time)
 
             # Image Recording (if not video recording)
-            elif not self.error and self.param["active"] and self.param["active"] != "False":
+            elif self.active and self.record:
                 time.sleep(self._interval/2)
-                if self.record:
-                    if self.image_recording_active(current_time=current_time):
+                self.image_recording(current_time, stamp, similarity, sensor_last)
 
-                        self.logging.debug(" ...... record now!")
-                        image = self.get_image_raw()
-
-                        # retry once if image could not be read
-                        if self.image.error or len(image) == 0:
-                            self.image.error = False
-                            image = self.get_image_raw()
-
-                        # if no error format and analyze image
-                        if not self.image.error and len(image) > 0:
-                            image = self.image.normalize_raw(image)
-                            image_compare = self.image.convert_to_gray_raw(image)
-
-                            if self.param["image"]["date_time"]:
-                                image = self.image.draw_date_raw(image)
-
-                            if self.image_size == [0, 0]:
-                                self.image_size = self.image.size_raw(image)
-                                self.video.image_size = self.image_size
-
-                            if self.image_size_lowres == [0, 0]:
-                                scale = self.param["image"]["preview_scale"]
-                                self.image_size_lowres = self.image.size_raw(image, scale)
-                                self.video.image_size = self.image_size
-
-                            if self.previous_image is not None:
-                                similarity = self.image.compare_raw(image_1st=image_compare,
-                                                                    image_2nd=self.previous_image,
-                                                                    detection_area=self.param["similarity"][
-                                                                        "detection_area"])
-                                similarity = str(similarity)
-
-                            image_info = {
-                                "camera": self.id,
-                                "compare": (stamp, self.previous_stamp),
-                                "date": current_time.strftime("%d.%m.%Y"),
-                                "datestamp": current_time.strftime("%Y%m%d"),
-                                "hires": self.config.filename_image("hires", stamp, self.id),
-                                "hires_size": self.image_size,
-                                "lowres": self.config.filename_image("lowres", stamp, self.id),
-                                "lowres_size": self.image_size_lowres,
-                                "similarity": similarity,
-                                "sensor": {},
-                                "time": current_time.strftime("%H:%M:%S"),
-                                "type": "image",
-                                "weather": {}
-                            }
-                            self.previous_image = image_compare
-                            sensor_data = {"activity": round(100 - float(similarity), 1)}
-
-                        # else if error save at least sensor data
-                        else:
-                            self.record_image_error = True
-                            sensor_data = {}
-                            image_info = {}
-                        #    image_info = {
-                        #        "camera": self.id,
-                        #        "compare": (stamp, self.previous_stamp),
-                        #        "date": current_time.strftime("%d.%m.%Y"),
-                        #        "datestamp": current_time.strftime("%Y%m%d"),
-                        #        "error": self.error_msg[len(self.error_msg) - 1],
-                        #        "hires": "",
-                        #        "lowres": "",
-                        #        "similarity": 0,
-                        #        "sensor": {},
-                        #        "size": self.image_size,
-                        #        "time": current_time.strftime("%H:%M:%S"),
-                        #        "type": "data",
-                        #        "weather": {}
-                        #    }
-
-                        #if self.weather_active:
-                        #    image_info["weather"] = self.config.weather.get_weather_info("current_small")
-
-                        for key in self.sensor:
-                            if self.sensor[key].running:
-                                sensor_data[key] = self.sensor[key].get_values()
-                                sensor_data[key]["date"] = current_time.strftime("%d.%m.%Y")
-                                #image_info["sensor"][key] = sensor_data[key]
-
-                        sensor_stamp = current_time.strftime("%H%M") + "00"
-                        self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
-
-                        if int(self.config.local_time().strftime("%M")) % 5 == 0 and sensor_stamp != sensor_last:
-                            sensor_last = sensor_stamp
-                            self.logging.info("Write sensor data to file ...")
-                            self.config.queue.entry_add(config="sensor", date="", key=sensor_stamp, entry=sensor_data)
-
-                        # if no error save image files
-                        if not self.error and not self.image.error:
-                            path_lowres = os.path.join(self.config.db_handler.directory("images"),
-                                                       self.config.filename_image("lowres", stamp, self.id))
-                            path_hires = os.path.join(self.config.db_handler.directory("images"),
-                                                      self.config.filename_image("hires", stamp, self.id))
-                            self.logging.debug("WRITE:" + path_lowres)
-                            self.write_image(filename=path_hires, image=image)
-                            self.write_image(filename=path_lowres, image=image,
-                                             scale_percent=self.param["image"]["preview_scale"])
-
-                            self.record_image_error = False
-                            self.record_image_last = time.time()
-                            self.record_image_reload = time.time()
-                            self.record_image_last_string = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-
-                        time.sleep(self._interval/2)
-                        self.previous_stamp = stamp
-
-                if "reconnect_to_calibrate" in self.param["image"] and self.param["image"]["reconnect_to_calibrate"] \
-                        and self.get_stream_count() == 0:
-                    count_reconnect += 1
-                    if count_reconnect > 9:
-                        self.camera_reconnect(directly=True)
-                        count_reconnect = 0
+            # reconnect from time to time, to foster re-calibrate by camera
+            #if self.active and "reconnect_to_calibrate" in self.param["image"] \
+            #        and self.param["image"]["reconnect_to_calibrate"] \
+            #        and self.get_stream_count() == 0:
+            #    count_reconnect += 1
+            #    if count_reconnect > 9:
+            #        self.camera_reconnect(directly=True)
+            #        count_reconnect = 0
 
             self.health_check = time.time()
 
@@ -2388,188 +2548,155 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         self._paused = command
 
-    def camera_start(self):
-        """
-        Try out new
-        """
-        self.reset_error()
-        self.reload_time = time.time()
-        try:
-            self.camera_stream_raw.kill()
-            self.camera.stream.release()
-        except Exception as e:
-            self.logging.debug("Ensure Stream is released - no stream to release.")
-
-        try:
-            self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source,
-                                                 config=self.config, param=self.param)
-            self.camera_stream_raw.set_stream_handler(self.camera.stream)
-
-            if self.camera.error:
-                self.raise_error("Can't connect to camera, check if '" + str(
-                    self.source) + "' is a valid source (" + self.camera.error_msg + ").")
-                self.camera.disconnect()
-            elif not self.camera.stream.isOpened():
-                self.raise_error("Can't connect to camera, check if '" + str(
-                    self.source) + "' is a valid source (could not open).")
-                self.camera.disconnect()
-            elif self.camera.stream is None:
-                self.raise_error("Can't connect to camera, check if '" + str(
-                    self.source) + "' is a valid source (empty image).")
-                self.camera.disconnect()
-            else:
-                raw = self.camera.read()
-                check = str(type(raw))
-                if "NoneType" in check:
-                    self.raise_error("Source " + str(self.source) + " returned empty image, try type 'pi' or 'usb'.")
-                else:
-                    self.camera_initialize(self.param["image"]["resolution"])
-                    self.camera_stream_raw.set_stream_handler(self.camera.stream)
-                    self.logging.info(self.id + ": OK (Source=" + str(self.source) + ")")
-
-        except Exception as e:
-            self.raise_error("Starting camera '" + self.source + "' doesn't work: " + str(e))
-
-        return
-
     def camera_reconnect(self, directly=False):
         """
         Reconnect after API call
         """
         if directly and self.camera is not None:
-            self.camera.reconnect()
+            #self.camera.reconnect()
+            #self._init_camera_settings()
+            self._init_camera()
+            self.reload_camera = False
         else:
             self.reload_camera = True
             self.config_update = True
         response = {"command": ["reconnect camera"], "camera": self.id}
         return response
 
-    def camera_initialize(self, resolution):
-        """
-        set resolution for USB
-        """
-        if self.camera is None:
-            return
-
-        # set saturation, contrast, brightness
-        available_settings = self.camera.get_properties_available()
-        for key in available_settings:
-            if key in self.param["image"] and float(self.param["image"][key]) != -1:
-                self.camera.set_properties(key, float(self.param["image"][key]))
-
-        # set resolutions, define grop area
-        current = self.camera.get_resolution()
-        self.logging.info("USB Current resolution: " + str(current))
-
-        self.max_resolution = self.camera.get_resolution(maximum=True)
-        self.logging.debug(self.id + " Maximum resolution: " + str(self.max_resolution))
-
-        if "x" in self.param["image"]["resolution"]:
-            dimensions = self.param["image"]["resolution"].split("x")
-            self.logging.debug(self.id + " Set resolution: " + str(dimensions))
-            self.camera.set_resolution(width=float(dimensions[0]), height=float(dimensions[1]))
-            current = self.camera.get_resolution()
-
-            if current == [0, 0]:
-                current = [int(dimensions[0]), int(dimensions[1])]
-
-            self.param["image"]["resolution_max"] = self.max_resolution
-            self.param["image"]["resolution_current"] = current
-            self.param["image"]["crop_area"] = self.image.crop_area_pixel(resolution=current,
-                                                                          area=self.param["image"]["crop"],
-                                                                          dimension=False)
-            self.logging.info(self.id + " New resolution: " + str(current))
-            self.logging.debug(self.id + " New crop area:  " + str(self.param["image"]["crop"]) + " -> " +
-                               str(self.param["image"]["crop_area"]))
-        else:
-            self.logging.info("Resolution definition not supported (e.g. '800x600'): " + str(resolution))
-
-        # return properties as values
-        self.param["camera"] = self.camera.get_properties()
-
-    def camera_start_recording(self):
+    def camera_enable_recording(self):
         """
         start recording and set current image size
         """
         if not self.video.if_running():
             self.video.start()
-        self.video.image_size = self.image_size
+            self.video.image_size = self.image_size
 
-    def camera_wait_recording(self):
+    def video_recording(self, current_time):
         """
-        Wait with recording between two pictures
+        record video
         """
-        if self.type == "pi":
-            self.camera.wait_recording(0.1)
-        if self.type == "usb" or self.type == "default":
+        if self.error:
             return
 
-    def camera_settings(self, param):
-        """
-        change camera settings
-        """
-        response = {}
-        parameters = param["parameter"]
-        setting_key = parameters[0]
-        setting_value = parameters[1]
-        available_settings = self.camera.get_properties_available("set")
+        if self.video.record_stop_auto():
+            self.video.record_stop()
 
-        if setting_key in available_settings:
-            self.camera.set_properties(key=setting_key, value=setting_value)
         else:
-            self.raise_error("Error during change of camera settings: given key '" + setting_key +"' is not supported.")
+            image_id = self.camera_streams["camera_hires"].read_stream_image_id()
 
-        self.logging.info("Camera settings: " + str(parameters))
-        self.logging.info("   -> available: " + str(available_settings))
-        return response
+            if self.image_last_id == 0 or self.image_last_id != image_id:
+                image = self.camera_streams["camera_hires"].read_stream("record")
+                self.image_last_id = image_id
+            else:
+                return
 
-    # !!! interim, potentially not required any more <-> direct access
-    def get_image_raw(self):
+            self.video.image_size = self.image_size
+            self.video.create_video_image(image=image)
+
+            if self.image_size == [0, 0]:
+                self.image_size = self.image.size_raw(image)
+                self.video.image_size = self.image_size
+
+            self.logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(
+                current_time.strftime("%H:%M:%S")))
+
+    def image_recording(self, current_time, stamp, similarity, sensor_last):
         """
-        get image and convert to raw
+        record images as defined in settings
         """
         if self.error:
-            return ""
+            return
 
-        try:
-            #raw = self.camera_stream_raw.read_image()
-            raw = self.camera_streams["raw"].read_image()
-            check = str(type(raw))
-            if "NoneType" in check or len(raw) == 0:
-                raise Exception("Got an empty image from 'self.camera_stream_raw.read_image()'")
-            elif self.camera_stream_raw.if_error():
-                raise Exception("Other error requesting 'self.camera_stream_raw.read_image()' - see log.")
+        if self.image_recording_active(current_time=current_time):
+
+            self.logging.debug(" ...... record now!")
+            image = self.get_image_raw()
+
+            # retry once if image could not be read
+            if self.image.error or len(image) == 0:
+                self.image.error = False
+                image = self.get_image_raw()
+
+            # if no error format and analyze image
+            if not self.image.error and len(image) > 0:
+                image = self.image.normalize_raw(image)
+                image_compare = self.image.convert_to_gray_raw(image)
+
+                if self.param["image"]["date_time"]:
+                    image = self.image.draw_date_raw(image)
+
+                if self.image_size == [0, 0]:
+                    self.image_size = self.image.size_raw(image)
+                    self.video.image_size = self.image_size
+
+                if self.image_size_lowres == [0, 0]:
+                    scale = self.param["image"]["preview_scale"]
+                    self.image_size_lowres = self.image.size_raw(image, scale)
+                    self.video.image_size = self.image_size
+
+                if self.previous_image is not None:
+                    similarity = self.image.compare_raw(image_1st=image_compare,
+                                                        image_2nd=self.previous_image,
+                                                        detection_area=self.param["similarity"][
+                                                            "detection_area"])
+                    similarity = str(similarity)
+
+                image_info = {
+                    "camera": self.id,
+                    "compare": (stamp, self.previous_stamp),
+                    "date": current_time.strftime("%d.%m.%Y"),
+                    "datestamp": current_time.strftime("%Y%m%d"),
+                    "hires": self.config.filename_image("hires", stamp, self.id),
+                    "hires_size": self.image_size,
+                    "lowres": self.config.filename_image("lowres", stamp, self.id),
+                    "lowres_size": self.image_size_lowres,
+                    "similarity": similarity,
+                    "sensor": {},
+                    "time": current_time.strftime("%H:%M:%S"),
+                    "type": "image",
+                    "weather": {}
+                }
+                self.previous_image = image_compare
+                sensor_data = {"activity": round(100 - float(similarity), 1)}
+
+            # else if error save at least sensor data
             else:
-                return raw.copy()
-        except Exception as e:
-            error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
-            self.image.raise_error(error_msg)
-            return ""
+                self.record_image_error = True
+                sensor_data = {}
+                image_info = {}
 
-    # !!! interim, potentially not required any more <-> direct access or get_stream
-    def get_image_stream_raw(self, stream_id="default"):
-        """
-        get image and convert to raw
-        """
-        if self.error:
-            return ""
+            for key in self.sensor:
+                if self.sensor[key].running:
+                    sensor_data[key] = self.sensor[key].get_values()
+                    sensor_data[key]["date"] = current_time.strftime("%d.%m.%Y")
+                    # image_info["sensor"][key] = sensor_data[key]
 
-        try:
-            #raw = self.camera_stream_raw.read_stream(stream_id)
-            raw = self.camera_streams["raw"].read_stream(stream_id)
-            check = str(type(raw))
-            if "NoneType" in check or len(raw) == 0:
-                raise Exception("Got an empty image from 'self.camera_stream_raw.read_stream(stream_id)'")
-            elif self.camera_stream_raw.if_error():
-                raise Exception("Other error requesting 'self.camera_stream_raw.read_stream(stream_id)' - see log.")
-            else:
-                self.image_last_raw = raw.copy()
-                self.image_last_raw_time = datetime.now().timestamp()
-                return raw.copy()
-        except Exception as e:
-            error_msg = "Can't grab image for stream from camera '" + self.id + "': " + str(e)
-            self.image.raise_error(error_msg)
-            return ""
+            sensor_stamp = current_time.strftime("%H%M") + "00"
+            self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
+
+            if int(self.config.local_time().strftime("%M")) % 5 == 0 and sensor_stamp != sensor_last:
+                sensor_last = sensor_stamp
+                self.logging.info("Write sensor data to file ...")
+                self.config.queue.entry_add(config="sensor", date="", key=sensor_stamp, entry=sensor_data)
+
+            # if no error save image files
+            if not self.error and not self.image.error:
+                path_lowres = os.path.join(self.config.db_handler.directory("images"),
+                                           self.config.filename_image("lowres", stamp, self.id))
+                path_hires = os.path.join(self.config.db_handler.directory("images"),
+                                          self.config.filename_image("hires", stamp, self.id))
+                self.logging.debug("WRITE:" + path_lowres)
+                self.write_image(filename=path_hires, image=image)
+                self.write_image(filename=path_lowres, image=image,
+                                 scale_percent=self.param["image"]["preview_scale"])
+
+                self.record_image_error = False
+                self.record_image_last = time.time()
+                self.record_image_reload = time.time()
+                self.record_image_last_string = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+
+            time.sleep(self._interval / 2)
+            self.previous_stamp = stamp
 
     def image_recording_active(self, current_time=-1, check_in_general=False):
         """
@@ -2736,7 +2863,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                            " -> " + str(select))
         return select
 
-    def get_stream(self, stream_id, stream_type, stream_resolution="", return_error_image=True):
+    def get_stream(self, stream_id, stream_type, stream_resolution="", system_info=False, return_error_image=True):
         """
         get image from new streams
         """
@@ -2750,123 +2877,48 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.raise_error(error_msg)
             return image
         else:
-            image = self.camera_streams[stream].read_stream(stream_id)
+            image = self.camera_streams[stream].read_stream(stream_id, system_info)
 
         if self.if_error() or self.camera_streams[stream].if_error():
             image = self.camera_streams[stream].read_error_image()
         return image
 
-    def slow_down_streams(self, slow_down=True):
+    def get_image_raw(self):
         """
-        slow down video streams, e.g. while recording
+        get image and convert to raw
         """
-        self.camera_stream_raw.slow_down(slow_down)
-        for stream in self.camera_streams:
-            self.camera_streams[stream].slow_down(slow_down)
+        if self.error:
+            return ""
 
-    # !!! interim, to be replace by get_stream()
-    def get_stream_raw(self, normalize=False, stream_id="", lowres=False):
-        """
-        get image, if error return error message on image
-        -> IMPROVE: reuse images, if multiple streams ... (define primary stream, others use copies ...)
-                    check if in device mode there are two streams of each camera?!
-        -> IMPROVE: reuse error images (lower frame rate required)
-        """
-
-        image = self.get_image_stream_raw(stream_id)
-        fps_rotate = self.get_stream_fps(stream_id=stream_id)
-
-        # grab existing images if less than 10 image errors
-        if not self.error and self.image.error and self.image.error_count < 10:
-            if not lowres and self.image_last_edited is not None:
-                image = self.image_last_edited
-                try:
-                    image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
-                    return image
-                except cv2.error as e:
-                    return image
-            elif lowres and self.image_last_edited_lowres is not None:
-                image = self.image_last_edited_lowres
-                try:
-                    image = cv2.circle(image, (25, 50), 4, (0, 0, 255), 6)
-                    return image
-                except cv2.error as e:
-                    return image
-
-        # if 10 or more image errors or a camera error return error msg as image
-        elif self.error or self.image.error:
-            if lowres:
-                image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "empty")
-                image_error = self.image.normalize_error_raw(image_error)
-            elif normalize:
-                image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "reduced")
-                image_error = self.image.normalize_error_raw(image_error)
+        try:
+            raw = self.camera_streams["raw"].read_image()
+            check = str(type(raw))
+            if "NoneType" in check or len(raw) == 0:
+                raise Exception("Got an empty image from 'self.camera_stream_raw.read_image()'")
+            elif self.camera_stream_raw.if_error():
+                raise Exception("Other error requesting 'self.camera_stream_raw.read_image()' - see log.")
             else:
-                image_error = self.image.image_error_info_raw(self.error_msg, self.reload_time, "complete")
+                return raw.copy()
+        except Exception as e:
+            error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
+            self.image.raise_error(error_msg)
+            return ""
 
-            if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"] \
-                    and stream_id in self.image_fps and not lowres:
-                image_error = self.image.draw_text_raw(raw=image_error,
-                                                       text=str(round(self.image_fps[stream_id], 1)) + "fps   " +
-                                                            fps_rotate, font=cv2.QT_FONT_NORMAL, color=(0, 0, 0),
-                                                       position=(20, -20), scale=0.4, thickness=1)
-            if lowres:
-                if self.image_last_size_lowres is None:
-                    self.image_last_size_lowres = self.image.size_raw(raw=image_error, scale_percent=self.param["image"]["preview_scale"])
-                image_error = self.image.resize_raw(raw=image_error, scale_percent=100, scale_size=self.image_last_size_lowres)
-
-            return image_error
-
-        # if no error create image for stream
-        else:
-            if normalize:
-                image = self.image.normalize_raw(image)
-
-            if not self.video.recording and not self.video.processing and not lowres:
-                if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"]:
-                    image = self.image.draw_text_raw(raw=image,
-                                                     text=str(round(self.image_fps[stream_id], 1)) + "fps   "
-                                                          + fps_rotate, font=cv2.QT_FONT_NORMAL,
-                                                     position=(10, -20), scale=0.4, thickness=1)
-            if lowres:
-                if self.image_last_size_lowres is None:
-                    self.image_last_size_lowres = self.image.size_raw(raw=image, scale_percent=self.param["image"]["preview_scale"])
-                image = self.image.resize_raw(raw=image, scale_percent=100, scale_size=self.image_last_size_lowres)
-                self.image_last_edited_lowres = image
-            else:
-                self.image_last_edited = image
-
-            return image
+    def get_stream_image_id(self):
+        """
+        return current image id from stream raw
+        """
+        return self.camera_stream_raw.read_stream_image_id()
 
     # !!! interim; use self.camera_stream_raw.get_active_streams() directly in future
     def get_stream_count(self):
         """
         identify amount of currently running streams
         """
-        return self.camera_stream_raw.get_active_streams()
-
-    # !!! check, if still required
-    def get_stream_fps(self, stream_id):
-        """
-        calculate fps for a specific stream
-        """
-        self.image_streams[stream_id] = datetime.now().timestamp()
-        if stream_id not in self.image_time_current:
-            self.image_time_current[stream_id] = 0
-        if stream_id not in self.image_time_rotate:
-            self.image_time_rotate[stream_id] = 0
-        if stream_id not in self.image_fps:
-            self.image_fps[stream_id] = 0
-
-        time_rotate = ["-", "/", "|", "\\"]
-        self.image_time_last[stream_id] = self.image_time_current[stream_id]
-        self.image_time_current[stream_id] = datetime.now().timestamp()
-        if self.image_time_last[stream_id] > 0:
-            self.image_fps[stream_id] = 1 / (self.image_time_current[stream_id] - self.image_time_last[stream_id])
-            self.image_time_rotate[stream_id] += 1
-            if self.image_time_rotate[stream_id] > len(time_rotate) - 1:
-                self.image_time_rotate[stream_id] = 0
-        return time_rotate[self.image_time_rotate[stream_id]]
+        if self.camera_stream_raw is not None and self.camera_stream_raw.if_running():
+            return self.camera_stream_raw.get_active_streams()
+        else:
+            return 0
 
     def get_stream_kill(self, ext_stream_id, int_stream_id):
         """
@@ -2916,33 +2968,30 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             status["properties_image"] = self.camera.get_properties_image()
         return status
 
-    def show_areas(self, image):
+    def get_camera_settings(self, param):
         """
-        Draw a red rectangle into the image to show detection area
+        change camera settings
         """
-        image = self.image.convert_to_raw(image)
-        image = self.show_areas_raw(image)
-        image = self.image.convert_from_raw(image)
-        return image
+        response = {}
+        parameters = param["parameter"]
+        setting_key = parameters[0]
+        setting_value = parameters[1]
+        available_settings = self.camera.get_properties_available("set")
 
-    # ---> BirdhouseCameraStreamEdit.edit_add_ares()
-    def show_areas_raw(self, image):
-        """
-        Draw a red rectangle into the image to show detection area / and a yellow to show the crop area
-        """
-        self.logging.debug("-----------------" + self.id + "------- show area")
-        outer_area = self.param["image"]["crop"]
-        inner_area = self.param["similarity"]["detection_area"]
-        image = self.image.draw_area_raw(raw=image, area=outer_area, color=(0, 255, 255), thickness=4)
+        if setting_key in available_settings:
+            self.camera.set_properties(key=setting_key, value=setting_value)
+        else:
+            self.raise_error("Error during change of camera settings: given key '" + setting_key + "' is not supported.")
 
-        w_start = outer_area[0] + ((outer_area[2] - outer_area[0]) * inner_area[0])
-        h_start = outer_area[1] + ((outer_area[3] - outer_area[1]) * inner_area[1])
-        w_end = outer_area[2] - ((outer_area[2] - outer_area[0]) * (1 - inner_area[2]))
-        h_end = outer_area[3] - ((outer_area[3] - outer_area[1]) * (1 - inner_area[3]))
+        self.logging.info("Camera settings: " + str(parameters))
+        self.logging.info("   -> available: " + str(available_settings))
+        return response
 
-        inner_area = (w_start, h_start, w_end, h_end)
-        image = self.image.draw_area_raw(raw=image, area=inner_area, color=(0, 0, 255), thickness=4)
-        return image
+    def set_system_info(self, active, line1="", line2="", color=""):
+        """
+        show system info in specific streams
+        """
+        self.camera_streams["camera_hires"].set_system_info(active, line1, line2, color)
 
     def write_image(self, filename, image, scale_percent=100):
         """
@@ -2980,8 +3029,16 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.image.raise_error(error_msg)
             return ""
 
+    def slow_down_streams(self, slow_down=True):
+        """
+        slow down video streams, e.g. while recording
+        """
+        self.camera_stream_raw.slow_down(slow_down)
+        for stream in self.camera_streams:
+            self.camera_streams[stream].slow_down(slow_down)
+
     def update_main_config(self):
-        self.logging.info("Update data from main configuration file for camera " + self.id)
+        self.logging.info("- Update data from main configuration file for camera " + self.id)
         temp_data = self.config.db_handler.read("main")
         self.param = temp_data["devices"]["cameras"][self.id]
         self.name = self.param["name"]
@@ -3009,4 +3066,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.previous_image = None
         self.previous_stamp = "000000"
 
-        self.camera_initialize(self.param["image"]["resolution"])
+        self.camera_stream_raw.param = self.param
+        for stream in self.camera_streams:
+            self.camera_streams[stream].param = self.param

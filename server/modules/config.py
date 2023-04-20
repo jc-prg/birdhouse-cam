@@ -31,7 +31,6 @@ class BirdhouseConfigCouchDB(object):
         self.logging = logging.getLogger("DB-couch")
         self.logging.setLevel(birdhouse_loglevel_module["DB-couch"])
         self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting DB handler CouchDB ("+self.db_url+") ...")
 
         self.database_definition = birdhouse_databases
         self.database_translation = birdhouse_dir_to_database
@@ -39,6 +38,8 @@ class BirdhouseConfigCouchDB(object):
         self.connected = self.connect()
         self.error = False
         self.error_msg = []
+
+        self.logging.info("Connected CouchDB handler ("+self.db_url+").")
 
     def connect(self):
         """
@@ -282,7 +283,7 @@ class BirdhouseConfigJSON(object):
         self.logging = logging.getLogger("DB-json")
         self.logging.setLevel(birdhouse_loglevel_module["DB-json"])
         self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting DB handler JSON ...")
+        self.logging.info("Connected JSON handler.")
 
     def raise_error(self, message):
         """
@@ -394,7 +395,6 @@ class BirdhouseConfigDBHandler(threading.Thread):
         self.logging = logging.getLogger("DB-handler")
         self.logging.setLevel(birdhouse_loglevel_module["DB-handler"])
         self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting DB handler ("+db_type+"|"+main_directory+") ...")
 
         self.db_usr = birdhouse_env["couchdb_user"]
         self.db_pwd = birdhouse_env["couchdb_password"]
@@ -420,6 +420,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         if db_type == json, create a backup regularly
         """
         update_time = time.time()
+        self.logging.info("Starting DB handler ("+self.db_type+"|"+self.main_directory+") ...")
         while self._running:
             if self.db_type == "couch" and update_time + self.backup_interval < time.time():
                 self.logging.info("Write cache to JSON ... " + str(self.backup_interval))
@@ -435,7 +436,8 @@ class BirdhouseConfigDBHandler(threading.Thread):
                 self.stop()
             self.health_check = time.time()
             time.sleep(1)
-        self.logging.info("Stopped DB handler.")
+
+        self.logging.info("Stopped DB handler ("+self.db_type+").")
 
     def stop(self):
         self._running = False
