@@ -146,7 +146,11 @@ function birdhouse_app_settings (name="Settings") {
         html += this.tab.row("ADM Allow from IP4:&nbsp;", settings["server"]["ip4_admin_allow"] + " <i>(edit .env)");
         html += this.tab.row("<hr>");
 
-        html += this.tab.row("", birdhouse_edit_save("set_main","set_preview_fav:set_db_clean_up:set_db_server:set_db_type:set_weather_location:set_initial_setup:set_language:set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:set_ip4_video_port:set_index_lowres:set_index_view") );
+        var id_list = "set_preview_fav:set_db_clean_up:set_db_server:set_db_type:set_weather_location:set_initial_setup:set_language:";
+        id_list    += "set_timezone:set_title:set_backup:set_preview:set_rpi:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:";
+        id_list    += "set_ip4_video_port:set_index_lowres:set_index_view";
+
+        html += this.tab.row("", birdhouse_edit_save("set_main",id_list) );
         html += this.tab.row("&nbsp;");
         html += this.tab.end();
         return html;

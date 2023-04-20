@@ -89,6 +89,9 @@ function birdhouse_INDEX(data, camera) {
 
 	setTextById(app_frame_content, html);
 	setTextById(app_frame_header, "<center><h2>" + title + "</h2></center>");
+
+    if (other_cams.length == 0)                             { elementHidden("admin_status_index"); }
+    if (!cameras[active_camera]["video"]["allow_recording"])   { elementHidden("admin_record_index"); }
 }
 
 function birdhouse_VIDEO_DETAIL( title, data ) {

@@ -264,6 +264,7 @@ function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 	}
 
 function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false, group_id="", same_img_size=false, lowres_size=0) {
+
 	var html        = "";
 	var play_button = "";
 	var dont_load   = "";

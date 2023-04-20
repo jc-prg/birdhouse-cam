@@ -186,7 +186,7 @@ function birdhouseDevices_cameras(data) {
         //if (admin && cameras[camera]["active"]) { var create =  "<button onclick=\""+onclick+"\" class=\"button-video-edit\">&nbsp;"+lang("CREATE_DAY")+"&nbsp;</button> &nbsp; "; }
     	var reconnect =  "<button onclick=\""+onclick2+"\" class=\"button-video-edit\">&nbsp;"+lang("RECONNECT_CAMERA")+"&nbsp;</button> &nbsp; ";
 
-		html_temp += "<hr/>&nbsp;<br/><center>" + reconnect + create + birdhouse_edit_save(id="edit_"+camera, id_list)+"</center><br/>";
+		html_temp += "<hr/>&nbsp;<br/><center>" + reconnect + create + birdhouse_edit_save(id="edit_"+camera, id_list, camera)+"</center><br/>";
 	    html_temp += "</div></div>";
 
 		html += birdhouse_OtherGroup( camera, camera_name, html_temp, false );
@@ -216,6 +216,7 @@ function birdhouseDevices_cameraSettings (data) {
 	    camera_name   = camera.toUpperCase() + ": " + camera_settings[camera]["name"];
 	    camera_stream = birdhouse_Image(camera_name, info);
 
+
 	    if (camera_properties[camera]["error"] || camera_settings[camera]["active"] == false) {
 	        html += "&nbsp;<br/><center>";
 	        html += "Camera " + camera.toUpperCase() + " is not available at the moment.<br/>";
@@ -238,11 +239,10 @@ function birdhouseDevices_cameraSettings (data) {
             var value = camera_settings_write[i].toLowerCase();
             var key   = camera_settings_write[i].replaceAll("_", " ");
 
-
             if (camera_properties[camera]["properties"][value][1] != camera_properties[camera]["properties"][value][2]) {
-                var range = camera_properties[camera]["properties"][value][1] + ":" + camera_properties[camera]["properties"][value][2];
-                var range_text = "[" + camera_properties[camera]["properties"][value][1] + ".." + camera_properties[camera]["properties"][value][2] + "]";
-                var prop  = "";
+                var range       = camera_properties[camera]["properties"][value][1] + ":" + camera_properties[camera]["properties"][value][2];
+                var range_text  = "[" + camera_properties[camera]["properties"][value][1] + ".." + camera_properties[camera]["properties"][value][2] + "]";
+                var prop        = "";
                 if (camera_settings_measure.indexOf(camera_settings_write[i]) > -1) { prop += "<i>(image=<span id='img_"+value+"_"+camera+"'></span>)</i>"; }
 
                 html_entry += tab.row("<b>" + key + ":</b><br/>" + range_text,   birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image:"+value, type="range", options=range, data_type="float") +
@@ -272,7 +272,7 @@ function birdhouseDevices_cameraSettings (data) {
         html += birdhouse_OtherGroup( camera+"_camera_2", camera.toUpperCase() + " - Camera Values", html_entry, false );
 
         html += "<center>&nbsp;<br/>";
-        html += birdhouse_edit_save(id="edit_"+camera, id_list);
+        html += birdhouse_edit_save(id="edit_"+camera, id_list, camera);
         html += "</center>";
 
         html += "</div></div>";

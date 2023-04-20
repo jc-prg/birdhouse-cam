@@ -40,24 +40,28 @@ index_template["single_admin"] = `
 
 index_template["admin"] = `
 
-    <table border="0" width="100%" height="100px"><tr>
+    <center>
+    <table border="0" width="100%">
+    <tr>
     <td width="35%" align="center">
-        <div style="width:100%;text-align:center;">
+        <div style="width:100%;text-align:center;" id="admin_record_index">
             <button onclick="birdhouse_recordStart('<!--CAM1_ID-->');" class="button-video-record">Record (<!--CAM1_ID-->)</button><br/><button onclick="birdhouse_recordStop('<!--CAM1_ID-->');" class="button-video-record">Stop (<!--CAM1_ID-->)</button>
         </div>
     </td>
-    <td width="65%">
+    <td>
         <table border="0" width="100%">
             <tr>
-                <td>Status &quot;<!--CAM1_ID-->&quot;:</td>
+                <td width="30%">Status&nbsp;&quot;<!--CAM1_ID-->&quot;:</td>
                 <td><div>
                     <div id="status_error_<!--CAM1_ID-->" style="float:left;"><div id="black"></div></div>
                     <div id="status_error_record_<!--CAM1_ID-->" style="float:left;"><div id="black"></div></div>
                     <div style="float:left;padding:5px;"><font id="show_stream_count_<!--CAM1_ID-->">0</font> Streams</div>
                 </div></td>
             </tr>
+        </table>
+        <table border="0" width="100%" id="admin_status_index">
             <tr>
-                <td>Status &quot;<!--CAM2_ID-->&quot;:</td>
+                <td width="30%">Status&nbsp;&quot;<!--CAM2_ID-->&quot;:</td>
                 <td><div style="text-align:center;">
                     <div id="status_error_<!--CAM2_ID-->" style="float:left;"><div id="black"></div></div>
                     <div id="status_error_record_<!--CAM2_ID-->" style="float:left;"><div id="black"></div></div>
@@ -66,6 +70,7 @@ index_template["admin"] = `
             </tr>
         </table>
     </td></tr></table>
+    </center>
 `
 
 //-------------------------------------------------

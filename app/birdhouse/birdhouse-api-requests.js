@@ -73,7 +73,7 @@ function birdhouse_createDayVideo(camera) {
 	
 function birdhouse_reconnectCamera(camera) {
 	commands = ["reconnect_camera",camera];
-	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_reconnectCamera');
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerReconnect,'','birdhouse_reconnectCamera');
 	}
 
 function birdhouse_cameraSettings(camera, key, value) {
@@ -86,9 +86,9 @@ function birdhouse_checkTimeout() {
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_checkTimeout');
 	}
 
-function birdhouse_editData(data) {
-    commands = ["edit_presets", data];
-    birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerOther,"","birdhouse_editData");
+function birdhouse_editData(data, camera) {
+    commands = ["edit_presets", data, camera];
+    birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerEditSend,"","birdhouse_editData");
 }
 
 function birdhouse_recordStart(camera) {
@@ -276,6 +276,16 @@ function birdhouse_AnswerOther(data) {
 	//console.log(data);
 	appMsg.alert(lang("DONE"));
 	birdhouseReloadView();
+	}
+
+function birdhouse_AnswerReconnect(data) {
+	//console.log(data);
+	appMsg.alert(lang("DONE"));
+	}
+
+function birdhouse_AnswerEditSend(data) {
+	//console.log(data);
+	appMsg.alert(lang("DONE"));
 	}
 
 function birdhouse_AnswerRecreateImageConfig(data) {

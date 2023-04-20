@@ -25,6 +25,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
     }
     else if (type == "select_dict") {
         html += "<select id='"+id+"'>";
+        html += "<option value=''>(empty)</option>";
         Object.keys(options).forEach (key => {
             if (data == true || data == false) { data_str = data.toString(); }
             else { data_str = data; }
@@ -61,7 +62,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
     return html;
 }
 
-function birdhouse_edit_save(id, id_list, text="") {
+function birdhouse_edit_save(id, id_list, camera="", text="") {
     var ids = id_list.split(":");
     var html = "<button onclick='birdhouse_edit_send(\""+id_list+"\");' style='background:gray;width:100px;'>"+lang("SAVE")+"</button>";
     return html;
@@ -111,7 +112,7 @@ function birdhouse_edit_check_values(id, data_type) {
     return [error, error_msg ];
 }
 
-function birdhouse_edit_send(id_list) {
+function birdhouse_edit_send(id_list, camera) {
     var ids = id_list.split(":");
     var info = "";
     var error = false;
@@ -122,7 +123,9 @@ function birdhouse_edit_send(id_list) {
             var data_type = document.getElementById(ids[i]+"_data_type").value;
             var field_name = document.getElementById(ids[i]+"_data").value.split(":");
             var field_data = document.getElementById(ids[i]).value;
+
             field_name = field_name[(field_name.length-1)];
+            field_data = field_data.replaceAll("/dev/", "-dev-")
 
             var field_error = birdhouse_edit_check_values(ids[i], data_type);
             if (field_error[0]) { error = true; error_msg += field_error[1]; }
@@ -137,7 +140,7 @@ function birdhouse_edit_send(id_list) {
         }
     }
     if (error) { alert(error_msg); }
-    else { birdhouse_editData(info); }
+    else { birdhouse_editData(info, camera); }
 }
 
 

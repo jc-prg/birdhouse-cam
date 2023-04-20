@@ -228,12 +228,12 @@ function birdhouseSwitchCam() {
 }
 
 function birdhouseReloadView() {
-	console.log("---> birdhouseReloadView: "+app_active_page+"/"+app_active_cam+"/"+app_active_date);
+	console.info("---> birdhouseReloadView: "+app_active_page+"/"+app_active_cam+"/"+app_active_date);
 	app_recycle_range = {};
 	birdhouse_overlayHide();
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 
-	if (app_active_page != "INDEX" && app_active_page != "CAMERA_SETTINGS") {
+	if (app_active_page != "INDEX" && app_active_page != "CAMERA_SETTINGS" && app_active_page != "DEVICES") {
 		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
 		}
 	// if (app_active_page == "INDEX" || app_active_page == "TODAY" || app_active_page == "DEVICES") {
@@ -247,6 +247,9 @@ function birdhouseReloadView() {
                 app_camera_source[key] = app_camera_source[key].replace(":/","://");
                 if (app_unique_stream_url)	{ image.src = app_camera_source[key]+"&"+app_unique_stream_id; }
                 else                        { image.src = app_camera_source[key]; }
+                }
+            else {
+			    console.info("---> birdhouseReloadView: Streaming not active: " + key + " / " + app_camera_source[key]);
                 }
 			}
 		}
