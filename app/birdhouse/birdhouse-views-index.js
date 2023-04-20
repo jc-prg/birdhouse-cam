@@ -96,12 +96,12 @@ index_template["overlay"] = `
         <div style="position:relative;margin:10px;">
 
             <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
-                <img src="<!--CAM1_URL-->" id="stream_<!--CAM2_ID-->" class="" style="width:100%;height:auto;border:white solid 1px;">
+                <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="" style="width:100%;height:auto;border:white solid 1px;">
             </a>
 
             <div style="position:absolute;<!--CAM2_LOWRES_POS-->;width:25%;">
                 <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM2_ID-->');" style="cursor:pointer;">
-                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM1_ID-->" class=""  style="width:100%;height:auto;border:white solid 1px;">
+                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class=""  style="width:100%;height:auto;border:white solid 1px;">
                 </a>
             </div>
         </div>
@@ -115,12 +115,12 @@ index_template["overlay_admin"] = `
         <div style="position:relative;margin:10px;">
 
             <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
-                <img src="<!--CAM1_URL-->" id="stream_<!--CAM2_ID-->" class="" style="width:100%;height:auto;border:white solid 1px;">
+                <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="" style="width:100%;height:auto;border:white solid 1px;">
             </a>
 
             <div style="position:absolute;<!--CAM2_LOWRES_POS-->;width:25%;">
                 <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM2_ID-->');" style="cursor:pointer;">
-                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM1_ID-->" class=""  style="width:100%;height:auto;border:white solid 1px;">
+                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class=""  style="width:100%;height:auto;border:white solid 1px;">
                 </a>
             </div>
         </div>
@@ -135,15 +135,15 @@ index_template["default"] = `
     <div id="video_stream_online" style="display:block;">
         <center>
             <div class="livestream_2nd_container cam1cam2">
-                <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM2_ID-->');" style="cursor:pointer;">
-                    <img src="<!--CAM2_URL-->" id="stream_<!--CAM1_ID-->" class="livestream_2nd">
+                <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
+                    <img src="<!--CAM2_URL-->" id="stream_<!--CAM2_ID-->" class="livestream_2nd">
                 </a>
             </div>
         </center>
         <center>
             <div class="livestream_main_container cam1cam2">
                 <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
-                    <img src="<!--CAM1_URL-->" id="stream_<!--CAM2_ID-->" class="livestream_main">
+                    <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="livestream_main">
                 </a>
             </div>
         </center>
@@ -154,15 +154,15 @@ index_template["default_admin"] = `
     <div id="video_stream_online" style="display:block;">
         <center>
             <div class="livestream_2nd_container cam1cam2">
-                <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM2_ID-->');" style="cursor:pointer;">
-                    <img src="<!--CAM2_URL-->" id="stream_<!--CAM1_ID-->" class="livestream_2nd">
+                <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
+                    <img src="<!--CAM2_URL-->" id="stream_<!--CAM2_ID-->" class="livestream_2nd">
                 </a>
             </div>
         </center>
         <center>
             <div class="livestream_main_container cam1cam2">
                 <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
-                    <img src="<!--CAM1_URL-->" id="stream_<!--CAM2_ID-->" class="livestream_main">
+                    <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="livestream_main">
                 </a>
                 <!--ADMIN-->
             </div>

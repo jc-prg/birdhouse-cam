@@ -63,6 +63,7 @@ function birdhousePrint(data) {
 	console.debug("Request->Print ...");
 
     birdhouseSetMainVars(data);
+
 	var data_settings = data["DATA"]["settings"];
 	var data_active   = data["DATA"]["active"];
 
@@ -91,9 +92,10 @@ function birdhousePrint(data) {
 
     var initial_setup   = data_settings["server"]["initial_setup"];
 	var date            = data_active["active_date"];
+	//var camera          = app_active_cam;
 	var camera          = data_active["active_cam"];
 	if (camera == "") 	{ camera = app_active_cam; }
-	// else			    { app_active_cam = camera; }
+	else			    { app_active_cam = camera; }
 
 	birdhouseSetMainStatus(data);
 	birdhousePrintTitle(data, app_active_page, camera);
@@ -222,13 +224,14 @@ function birdhouseSwitchCam() {
 	var next_cam = current_cam + 1;
 	if (next_cam > app_available_cameras.length-1) { next_cam = 0; }
 	
-	console.log("birdhouseSwitchCam: "+app_active_cam+"->"+app_available_cameras[next_cam]);
+	console.log("---> birdhouseSwitchCam: "+app_active_cam+"->"+app_available_cameras[next_cam]);
+
 	app_active_cam = app_available_cameras[next_cam];
 	birdhousePrint_load(view=app_active_page, camera=app_available_cameras[next_cam], date=app_active_date);
 }
 
 function birdhouseReloadView() {
-	console.info("---> birdhouseReloadView: "+app_active_page+"/"+app_active_cam+"/"+app_active_date);
+	console.log("----> birdhouseReloadView: "+app_active_page+"/"+app_active_cam+"/"+app_active_date);
 	app_recycle_range = {};
 	birdhouse_overlayHide();
 	setTextById("headerRight", birdhouseHeaderFunctions() );
@@ -237,11 +240,15 @@ function birdhouseReloadView() {
 		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
 		}
 	// if (app_active_page == "INDEX" || app_active_page == "TODAY" || app_active_page == "DEVICES") {
-	else {
+	if (app_active_page == "INDEX" || app_active_page == "CAMERA_SETTINGS" || app_active_page == "DEVICES") {
 		for (let key in app_camera_source) {
+
+		    console.log("--->"+app_active_cam+"/"+key);
+		    console.log(app_camera_source[key]);
+
 			var image = document.getElementById("stream_"+key);
 			if (image) {
-			    console.info("---> birdhouseReloadView: Restart streaming image: " + key + " / " + app_camera_source[key]);
+			    console.log("---> birdhouseReloadView: Restart streaming image: " + key + " / " + app_camera_source[key]);
                 image.src = "";
                 app_camera_source[key] = app_camera_source[key].replaceAll("//","/");
                 app_camera_source[key] = app_camera_source[key].replace(":/","://");
@@ -249,7 +256,7 @@ function birdhouseReloadView() {
                 else                        { image.src = app_camera_source[key]; }
                 }
             else {
-			    console.info("---> birdhouseReloadView: Streaming not active: " + key + " / " + app_camera_source[key]);
+			    console.debug("---> birdhouseReloadView: Streaming not active: " + key + " / " + app_camera_source[key]);
                 }
 			}
 		}

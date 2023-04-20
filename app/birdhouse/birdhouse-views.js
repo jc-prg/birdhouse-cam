@@ -34,12 +34,19 @@ function birdhouse_INDEX(data, camera) {
                     }
                 other_cams.push(other_cam);
                 }
+
+            app_camera_source[key]                      = stream_server + cameras[key]["video"]["stream"];
+            app_camera_source["lowres_" + key]          = stream_server + cameras[key]["video"]["stream_lowres"];
+            app_camera_source["pip_" + key]             = stream_server + cameras[key]["video"]["stream_pip"];
+            app_camera_source["detect_" + key]          = stream_server + cameras[key]["video"]["stream_detect"];
+            app_camera_source["detect_" + key + "_img"] = stream_server + cameras[key]["video"]["stream_detect"];
+            app_camera_source["overlay_" + key]         = stream_server + cameras[key]["video"]["stream_detect"];
             }
 		}
 	if (active_cam == {} && other_cams != []) { active_cam = other_cams[0]; other_cams.shift(); }
 	if (Object.keys(cameras).length == 0 || active_cam == {}) { html += lang("NO_ENTRIES"); }
 
-    console.log("---> birdhouse_INDEX: " + camera);
+    console.log("---> birdhouse_INDEX: " + camera + "/" + app_active_cam);
 
 	var replace_tags = {};
 	replace_tags["OFFLINE_URL"]     = app_error_connect_image;
@@ -47,14 +54,6 @@ function birdhouse_INDEX(data, camera) {
     replace_tags["CAM1_URL"]        = stream_server + cameras[active_cam["name"]]["video"]["stream"];
     replace_tags["CAM1_LOWRES_URL"] = birdhouse_StreamURL(active_cam["name"], stream_server + cameras[active_cam["name"]]["video"]["stream_lowres"], "main_lowres", true);
     replace_tags["CAM1_URL"]        = birdhouse_StreamURL(active_cam["name"], stream_server + cameras[active_cam["name"]]["video"]["stream"], "main", true);
-
-    // html += birdhouse_Camera(main=true, view="cam1", onclick=onclick, camera=active_cam, stream_server=stream_server, admin_allowed=admin_allowed)
-    app_camera_source[active_cam["name"]]             = stream_server + cameras[active_cam["name"]]["video"]["stream"];
-    app_camera_source["lowres_" + active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream_lowres"];
-    app_camera_source["pip_" + active_cam["name"]]    = stream_server + cameras[active_cam["name"]]["video"]["stream_pip"];
-    app_camera_source["detect_" + active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream_detect"];
-    app_camera_source["detect_" + active_cam["name"] + "_img"] = stream_server + cameras[active_cam["name"]]["video"]["stream_detect"];
-    app_camera_source["overlay_" + active_cam["name"]] = stream_server + cameras[active_cam["name"]]["video"]["stream_detect"];
 
     if (other_cams.length > 0) {
         replace_tags["CAM1_PIP_URL"]    = birdhouse_StreamURL(other_cams[0]["name"], stream_server + cameras[active_cam["name"]]["video"]["stream_pip"], "main_pip", true);
@@ -64,13 +63,6 @@ function birdhouse_INDEX(data, camera) {
         replace_tags["CAM2_URL"]        = birdhouse_StreamURL(other_cams[0]["name"], stream_server + cameras[other_cams[0]["name"]]["video"]["stream"], "2nd", true);
         replace_tags["CAM2_LOWRES_URL"] = birdhouse_StreamURL(other_cams[0]["name"], stream_server + cameras[other_cams[0]["name"]]["video"]["stream_lowres"], "2nd_lowres", true);
         replace_tags["CAM2_LOWRES_POS"] = index_lowres_position[index_view["lowres_position"].toString()];
-
-        app_camera_source[other_cams[0]["name"]]             = stream_server + cameras[other_cams[0]["name"]]["video"]["stream"];
-        app_camera_source["lowres_" + other_cams[0]["name"]] = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_lowres"];
-        app_camera_source["pip_" + other_cams[0]["name"]]    = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_pip"];
-        app_camera_source["detect_" + other_cams[0]["name"]] = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_detect"];
-        app_camera_source["detect_" + other_cams[0]["name"] + "_img"] = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_detect"];
-        app_camera_source["overlay_" + other_cams[0]["name"]] = stream_server + cameras[other_cams[0]["name"]]["video"]["stream_detect"];
     }
 
     var selected_view = "";

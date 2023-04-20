@@ -995,7 +995,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if config.update["camera_" + which_cam]:
                 camera[which_cam].camera_reconnect()
 
-            if frame_id != camera[which_cam].get_stream_image_id():
+            if frame_id != camera[which_cam].get_stream_image_id() \
+                    or camera[which_cam].if_error() or camera[which_cam].camera_stream_raw.if_error():
+
                 frame_raw = camera[which_cam].get_stream(stream_id=stream_id_int,
                                                          stream_type=stream_type,
                                                          stream_resolution=stream_resolution,
