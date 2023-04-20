@@ -12,9 +12,11 @@ mark favorites, analyze weather data, ...
    * [Install directly](#install-directly)
    * [First run and device configuration](#first-run-and-device-configuration)
    * [Finalize database setup](#finalize-database-setup)
+   * [Access images via WebDAV](Access-images-via-WebDAV)
    * [Add audio streaming](#add-audio-streaming)
    * [Optimize system configuration (Ubuntu 22.04)](#optimize-system-configuration--ubuntu-)
    * [Optimize system configuration (Raspbian / Raspberry OS)](#optimize-system-configuration--raspberry-os-)
+   * [Sample proxy server configuration](#Sample-proxy-server-configuration)
 5. [Helping stuff](#helping-stuff)
 6. [Sources](#sources)
 7. [Impressions](#impressions)
@@ -148,6 +150,14 @@ The default configuration of the database works without change but produces seve
 To remove those open the admin tool via http://your-hostname:5100/_utils/ and login (default user:birdhouse, pwd:birdhouse).
 Go to the settings and create a single node.
 
+### Access images via WebDAV
+
+To access image and video files via WebDAV define credentials and port in the .env-file and start docker container.
+
+```
+$ sudo docker-compose -f docker-compose-webdav.yml up -d
+```
+
 ### Add audio streaming
 
 * _under construction, not running on iOS devices yet_
@@ -182,6 +192,18 @@ CONF_SWAPFACTOR=2
 
 $ sudo systemctl restart dphys-swapfile
 ```
+
+### Sample proxy server configuration
+
+If you want to give access via internet you properly want to use a proxy such as NGINX. 
+Therefor it's required to enable access to the following ports (if not changed default port settings):
+
+* **App**: 80, 443
+* **API**: 8007
+* **Videostream**: 8008
+* **Audiostream**: 8009
+
+See a sample configuration (e.g. to forward http://birdhouse.your.domain:443 to http://your-server-ip:8000) here: [sample.nginx.conf](sample.nginx.conf). Ensure, that all used ports are publicly shared via your router.
 
 ## Helping stuff
 
