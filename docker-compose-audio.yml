@@ -1,0 +1,16 @@
+#--------------------------------------------
+# Birdhouse Server and Database
+#----------------------------------------
+
+version: '2'
+
+services:
+  birdhouse_audio:
+    container_name: birdhouse_audio
+    build: ./config/container_audio
+    ports:
+      - "${BIRDHOUSE_AUDIO_PORT}:8009"
+    privileged: true
+    restart: on-failure
+    volumes:
+      - ./:/usr/src/app/
