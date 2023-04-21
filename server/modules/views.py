@@ -752,6 +752,14 @@ class BirdhouseViews(threading.Thread):
             content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos"), cam=camera)
         return content
 
+    def archive_list_update(self, force=False):
+        """
+        Trigger recreation of the archive list
+        """
+        self.create_archive = True
+        if force:
+            self.force_reload = True
+
     def archive_list_create(self):
         """
         Page with backup/archive directory
@@ -1040,13 +1048,11 @@ class BirdhouseViews(threading.Thread):
         self.archive_loading = "done"
         self.logging.info("Create data for archive view done ("+str(round(time.time()-start_time, 1))+"s)")
 
-    def archive_list_update(self, force=False):
+    def archive_list_create_entry(self):
         """
-        Trigger recreation of the archive list
+        read if exists, create if not exists or changes
         """
-        self.create_archive = True
-        if force:
-            self.force_reload = True
+        pass
 
     def complete_list_today(self, param):
         """

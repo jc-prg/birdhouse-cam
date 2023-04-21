@@ -1077,6 +1077,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         return
 
 
+sys.excepthook = on_exception
+
 if __name__ == "__main__":
 
     # help
@@ -1104,7 +1106,7 @@ if __name__ == "__main__":
     srv_logging.info('Starting ...')
     srv_logging.info('-------------------------------------------')
 
-    sys.excepthook = on_exception
+    raise Exception("test")
 
     # set system signal handler
     signal.signal(signal.SIGINT, on_exit)
