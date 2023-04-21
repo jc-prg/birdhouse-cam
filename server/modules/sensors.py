@@ -103,6 +103,7 @@ class BirdhouseSensor(threading.Thread):
             # if longer time no correct data read, reconnect
             if self.last_read_time + self.interval_reconnect < time.time():
                 self.error_connect = True
+                self.last_read_time = time.time()
 
             # read data
             if count >= self.interval and self.param["active"]:
