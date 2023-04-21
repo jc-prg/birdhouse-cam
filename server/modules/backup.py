@@ -44,9 +44,7 @@ class BirdhouseArchive(threading.Thread):
             stamp = self.config.local_time().strftime('%H%M%S')
             check_stamp = str(int(stamp[0:4])-1)
 
-            self.logging.info("!!! " + stamp + " -- " + check_stamp)
-
-            if (check_stamp == self.config.param["backup"]["time"] or self.backup_start) and not backup_started:
+            if (int(check_stamp) == int(self.config.param["backup"]["time"]) or self.backup_start) and not backup_started:
                 backup_started = True
                 self.backup_start = False
                 if self.backup_start:
