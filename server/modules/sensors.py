@@ -70,7 +70,7 @@ class BirdhouseSensor(threading.Thread):
         """
         count = 0
         retry = 0
-        retry_wait = 10
+        retry_wait = 20
         self.logging.info("- Starting sensor loop (" + self.id + "/" + str(self.pin) + "/"+self.param["type"]+") ...")
         while self.running:
             p_count = 0
@@ -89,22 +89,19 @@ class BirdhouseSensor(threading.Thread):
 
             # check if configuration update
             if self.config.update["sensor_"+self.id]:
-                self.logging.info("....... RELOAD Update: Reread coonfiguration sensor: " + self.id)
+                self.logging.info("....... RELOAD Update: Reread configuration sensor: " + self.id)
                 self.param = self.config.param["devices"]["sensors"][self.id]
                 self.config.update["sensor_"+self.id] = False
                 self.active = self.param["active"]
 
             # reconnect if error and active
             if self.error_connect and self.param["active"]:
-                retry += 1
-                if retry > retry_wait:
-                    self.logging.info("....... RELOAD Error: Retry starting sensor: "+self.id)
-                    self.connect()
-                    retry = 0
+                self.logging.info("....... RELOAD Error: Retry starting sensor: "+self.id)
+                self.connect()
+                self.error_connect = False
 
             # if longer time no correct data read, reconnect
             if self.last_read_time + self.interval_reconnect < time.time():
-                retry = retry_wait
                 self.error_connect = True
 
             # read data
