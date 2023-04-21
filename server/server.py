@@ -85,12 +85,38 @@ def on_kill(signum, handler):
     sys.exit()
 
 
-def on_exception(type, value, tb):
+def on_exception(exc_type, value, tb):
     """
     grab all exceptions and write them to the logfile (if active)
     """
-    srv_logging.exception("Uncaught exception: {0}".format(str(value)))
+    srv_logging.exception("Uncaught exception 1: {0}".format(str(value)))
+    srv_logging.exception("Uncaught exception 2: {0}".format(str(exc_type)))
+    srv_logging.exception("Uncaught exception 3: {0}".format(str(tb)))
 
+
+def on_exception_setting():
+    """
+    Workaround for `sys.excepthook` thread bug from:
+    http://bugs.python.org/issue1230540
+
+    Call once from the main thread before creating any threads.
+    """
+    init_original = threading.Thread.__init__
+
+    def init(self, *args, **kwargs):
+
+        init_original(self, *args, **kwargs)
+        run_original = self.run
+
+        def run_with_except_hook(*args2, **kwargs2):
+            try:
+                run_original(*args2, **kwargs2)
+            except Exception:
+                sys.excepthook(*sys.exc_info())
+
+        self.run = run_with_except_hook
+
+    threading.Thread.__init__ = init
 
 def read_html(directory, filename, content=""):
     """
@@ -1078,6 +1104,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
 
 sys.excepthook = on_exception
+on_exception_setting()
 
 if __name__ == "__main__":
 
