@@ -65,6 +65,7 @@ class BirdhouseCameraClass(object):
         self.error_count += 1
         if len(self.error_msg) >= 20:
             self.error_msg.pop()
+
         self.error_time = time.time()
         self.error = True
 
@@ -73,7 +74,7 @@ class BirdhouseCameraClass(object):
             if message_repeat in error:
                 message_exists += 1
 
-        if message_exists <= 2:
+        if message_exists < 2:
             self.logging.error(self.id + ": " + message)
 
     def raise_warning(self, message):
@@ -90,6 +91,12 @@ class BirdhouseCameraClass(object):
         self.error_msg = []
         self.error_time = 0
         self.error_count = 0
+
+    def health_signal(self):
+        """
+        set var that can be requested
+        """
+        self.health_check = time.time()
 
     def if_running(self):
         """
@@ -1016,6 +1023,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                     self.config.async_answers.append(["TRIM_DONE", video_id, response["result"]])
                     self.config.async_running = True
 
+            self.health_signal()
+
         self.logging.info("Stopped VIDEO processing for '"+self.id+"'.")
 
     def stop(self):
@@ -1434,9 +1443,9 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         self.image.resolution = self.param["image"]["resolution"]
 
         self.fps = None
-        self.fps_max = 15
+        self.fps_max = 12
         self.fps_slow = 2
-        self.duration_max = 1 / (self.fps_max + 1)
+        self.duration_max = 1 / self.fps_max
         self.duration_slow = 1 / self.fps_slow
 
         self.active = False
@@ -1506,6 +1515,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
 
             self.stream_count()
             self.stream_framerate_check()
+            self.health_signal()
 
         self.logging.info("Stopped CAMERA raw stream for '"+self.id+"'.")
 
@@ -1793,6 +1803,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
             self.stream_count()
             self.stream_framerate_check()
+            self.health_signal()
 
         self.logging.info("Stopped CAMERA edited stream for '"+self.id+"/"+self.type+"/"+self.resolution+"'.")
 
@@ -2549,10 +2560,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             error_list = "Errors: " + self.id + "=" + str(self.error) + " (" + str(len(self.error_msg)) + "); "
             error_list += self.id + "-img=" + str(self.image.if_error()) + " ("
             error_list += str(self.image.if_error(length=True)) + "); "
-            error_list += self.id + "-raw=" + str(self.camera_stream_raw.if_error()) + " ("
+            error_list += self.id + "-sRaw=" + str(self.camera_stream_raw.if_error()) + " ("
             error_list += str(self.camera_stream_raw.if_error(length=True)) + "); "
             for stream in self.camera_streams:
-                error_list += self.id + "-edit-" + stream + "=" + str(self.camera_streams[stream].if_error()) + " ("
+                error_list += self.id + "-sEdit-" + stream + "=" + str(self.camera_streams[stream].if_error()) + " ("
                 error_list += str(self.camera_streams[stream].if_error(length=True)) + "); "
             error_list += "\n"
             return error_list
@@ -2560,15 +2571,15 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if self.error:
             return self.error
 
-        if self.image.if_error(message=False, length=True) > self._max_accepted_stream_errors:
-            self.raise_error("Camera doesn't work correctly: More than " + str(self._max_accepted_stream_errors) +
-                             " errors in IMAGE processing ...")
-            return self.error
+        #if self.image.if_error(message=False, length=True) > self._max_accepted_stream_errors:
+        #    self.raise_error("Camera doesn't work correctly: More than " + str(self._max_accepted_stream_errors) +
+        #                     " errors in IMAGE processing ...")
+        #    return self.error
 
-        if self.camera_stream_raw.if_error(message=False, length=True) > self._max_accepted_stream_errors:
-            self.raise_error("Camera doesn't work correctly: More than " + str(self._max_accepted_stream_errors) +
-                             " errors in RAW stream ...")
-            return self.error
+        #if self.camera_stream_raw.if_error(message=False, length=True) > self._max_accepted_stream_errors:
+        #    self.raise_error("Camera doesn't work correctly: More than " + str(self._max_accepted_stream_errors) +
+        #                     " errors in RAW stream ...")
+        #    return self.error
 
         for stream in self.camera_streams:
             if self.camera_streams[stream].if_error(message=False, length=True) > self._max_accepted_stream_errors:
@@ -2940,7 +2951,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         return self.camera_stream_raw.read_stream_image_id()
 
-    # !!! interim; use self.camera_stream_raw.get_active_streams() directly in future
     def get_stream_count(self):
         """
         identify amount of currently running streams
