@@ -97,12 +97,14 @@ class BirdhouseCameraClass(object):
         """
         return self._running
 
-    def if_error(self, message=False):
+    def if_error(self, message=False, length=False):
         """
         external check if error
         """
         if message:
             return self.error_msg
+        elif length:
+            return len(self.error_msg)
         else:
             return self.error
 
@@ -2207,6 +2209,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.max_resolution = None
 
         self._interval = 0.5
+        self._interval_reload_if_error = 60*3
+        self._max_accepted_stream_errors = 16
 
         self.error_reload_time = 60
         self.error_no_reconnect = False
@@ -2350,15 +2354,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 if stream in self.camera_streams:
                     self.camera_streams[stream].set_maintenance_mode(True, "Restart camera", self.id)
             time.sleep(1)
-            #self._init_stream_raw()
         else:
             self.logging.info("Starting CAMERA (" + self.id + ") ...")
-        #self._init_streams()
-
-        #try:
-        #    self.camera.stream.release()
-        #except Exception as e:
-        #    self.logging.debug("Ensure Stream is released - no stream to release.")
 
         try:
             if init:
@@ -2470,21 +2467,13 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.stop()
 
             # if error reload from time to time
-            if self.active and self.error and (reload_time + reload_time_error) < time.time():
-                self.logging.info("....... RELOAD Error: " + self.id + " - " +
-                                  str(reload_time + reload_time_error) + " > " + str(time.time()))
+            if self.active and self.if_error() and (reload_time + self._interval_reload_if_error) < time.time():
+                self.logging.warning("....... Reload CAMERA '" + self.id + "' due to errors --> " +
+                                     str(round(reload_time, 1)) + " + " +
+                                     str(round(self._interval_reload_if_error, 1)) + " > " +
+                                     str(round(time.time(), 1)))
+                self.logging.warning("        " + self.if_error(details=True))
                 reload_time = time.time()
-                self.config_update = True
-                self.reload_camera = True
-
-            # if record and images not recorded for while reload
-            if self.record and self.record_image_error and \
-                    (self.record_image_reload + reload_time_error_record) < time.time():
-
-                self.logging.info("....... RELOAD Record Error: " + self.id + " - " +
-                                  str(self.record_image_last + reload_time_error_record) + " < " +
-                                  str(time.time()))
-                self.record_image_reload = time.time()
                 self.config_update = True
                 self.reload_camera = True
 
@@ -2547,6 +2536,47 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         pause image recording and reconnect try
         """
         self._paused = command
+
+    def if_error(self, message=False, length=False, details=False):
+        """
+        check for camera error and errors in streams
+        """
+        if message:
+            return self.error_msg
+        elif length:
+            return len(self.error_msg)
+        elif details:
+            error_list = "Errors: " + self.id + "=" + str(self.error) + " (" + str(len(self.error_msg)) + "); "
+            error_list += self.id + "-img=" + str(self.image.if_error()) + " ("
+            error_list += str(self.image.if_error(length=True)) + "); "
+            error_list += self.id + "-raw=" + str(self.camera_stream_raw.if_error()) + " ("
+            error_list += str(self.camera_stream_raw.if_error(length=True)) + "); "
+            for stream in self.camera_streams:
+                error_list += self.id + "-edit-" + stream + "=" + str(self.camera_streams[stream].if_error()) + " ("
+                error_list += str(self.camera_streams[stream].if_error(length=True)) + "); "
+            error_list += "\n"
+            return error_list
+
+        if self.error:
+            return self.error
+
+        if self.image.if_error(message=False, length=True) > self._max_accepted_stream_errors:
+            self.raise_error("Camera doesn't work correctly: More than " + str(self._max_accepted_stream_errors) +
+                             " errors in IMAGE processing ...")
+            return self.error
+
+        if self.camera_stream_raw.if_error(message=False, length=True) > self._max_accepted_stream_errors:
+            self.raise_error("Camera doesn't work correctly: More than " + str(self._max_accepted_stream_errors) +
+                             " errors in RAW stream ...")
+            return self.error
+
+        for stream in self.camera_streams:
+            if self.camera_streams[stream].if_error(message=False, length=True) > self._max_accepted_stream_errors:
+                self.raise_error("Camera doesn't work correctly: More than " + str(self._max_accepted_stream_errors) +
+                                 " errors in EDIT stream '" + stream + "'...")
+                return self.error
+
+        return False
 
     def camera_reconnect(self, directly=False):
         """
