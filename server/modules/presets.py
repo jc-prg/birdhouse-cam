@@ -41,6 +41,7 @@ birdhouse_loglevel_module = {
     "cam-stream": birdhouse_loglevel,
     "config": birdhouse_loglevel,
     "config-Q": birdhouse_loglevel,
+    "DB-text": birdhouse_loglevel,
     "DB-json": birdhouse_loglevel,
     "DB-couch": birdhouse_loglevel,
     "DB-handler": birdhouse_loglevel,
@@ -270,6 +271,17 @@ birdhouse_preset = {
         "available_sources": ["Python-Weather", "Open-Metheo"]
     }
 }
+
+birdhouse_client_presets = {
+    "filename": "config_stage.js",
+    "content": "//--------------------------------\n" +
+               "// Configure stage details\n" +
+               "//---------------------------------" +
+               "// Please edit not here, but in .env-File\n" +
+               "var test		= false;\n" +
+               "var server_port = '8007';\n"
+}
+
 
 file_types = {
     '.css': 'text/css',

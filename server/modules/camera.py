@@ -1,4 +1,3 @@
-import io
 import os
 import time
 import logging
@@ -8,114 +7,10 @@ import cv2
 import psutil
 import threading
 
-from imutils.video import FPS, WebcamVideoStream
 from skimage.metrics import structural_similarity as ssim
-from threading import Condition
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from modules.presets import *
-
-
-class BirdhouseCameraClass(object):
-    """
-    Main class for camera classes: error messaging, logging and global vars
-    """
-
-    def __init__(self, class_id, class_log, camera_id, config):
-        self.id = camera_id
-        self.config = config
-        self.param = self.config.param["devices"]["cameras"][self.id]
-
-        self._running = True
-        self._paused = False
-
-        self.health_check = time.time()
-
-        self.error = False
-        self.error_msg = []
-        self.error_time = None
-        self.error_count = 0
-
-        self.logging = logging.getLogger(class_id)
-        self.logging.setLevel(birdhouse_loglevel_module[class_log])
-        self.logging.addHandler(birdhouse_loghandler)
-
-        self.timezone = 0
-        if "localization" in self.config.param and "timezone" in self.config.param["localization"]:
-            self.timezone = float(self.config.param["localization"]["timezone"].replace("UTC", ""))
-            self.logging.debug("Set Timezone: " + self.config.param["localization"]["timezone"] +
-                               " (" + str(self.timezone) + " / " + self.config.local_time().strftime("%H:%M") + ")")
-
-    def raise_error(self, message):
-        """
-        Report Error, set variables of modules
-        """
-        message_org = message
-        message_repeat = message + " !! repeated"
-
-        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-
-        message_exists = False
-        for error in self.error_msg:
-            if message_org in error:
-                message_exists = True
-        if message_exists:
-            message = message_repeat
-
-        self.error_msg.append(time_info + " - " + message)
-        self.error_count += 1
-        if len(self.error_msg) >= 20:
-            self.error_msg.pop(0)
-
-        self.error_time = time.time()
-        self.error = True
-
-        message_exists = 0
-        for error in self.error_msg:
-            if message_repeat in error:
-                message_exists += 1
-
-        if message_exists < 2:
-            self.logging.error("[" + str(self.error_count).zfill(4) + "] " + self.id + ": " + message)
-
-    def raise_warning(self, message):
-        """
-        show warning message
-        """
-        self.logging.warning(self.id + ": " + message)
-
-    def reset_error(self):
-        """
-        remove all errors
-        """
-        self.error = False
-        self.error_msg = []
-        self.error_time = 0
-        self.error_count = 0
-
-    def health_signal(self):
-        """
-        set var that can be requested
-        """
-        self.health_check = time.time()
-
-    def if_running(self):
-        """
-        external check if running
-        """
-        return self._running
-
-    def if_error(self, message=False, length=False, count=False):
-        """
-        external check if error
-        """
-        if message:
-            return self.error_msg
-        elif length:
-            return len(self.error_msg)
-        elif count:
-            return self.error_count
-        else:
-            return self.error
+from modules.bh_class import BirdhouseCameraClass
 
 
 class BirdhouseCameraHandler(BirdhouseCameraClass):
