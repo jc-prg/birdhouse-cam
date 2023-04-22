@@ -2596,12 +2596,17 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         reset errors for all relevant classes
         """
         self.reset_error()
-        self.image.reset_error()
-        self.video.reset_error()
-        self.camera.reset_error()
-        self.camera_stream_raw.reset_error()
+        if self.image is not None:
+            self.image.reset_error()
+        if self.video is not None:
+            self.video.reset_error()
+        if self.camera is not None:
+            self.camera.reset_error()
+        if self.camera_stream_raw is not None:
+            self.camera_stream_raw.reset_error()
         for stream_id in self.camera_streams:
-            self.camera_streams[stream_id].reset_error()
+            if self.camera_streams[stream_id] is not None:
+                self.camera_streams[stream_id].reset_error()
 
     def camera_reconnect(self, directly=False):
         """
