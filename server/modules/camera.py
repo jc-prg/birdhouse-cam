@@ -75,7 +75,7 @@ class BirdhouseCameraClass(object):
                 message_exists += 1
 
         if message_exists < 2:
-            self.logging.error(self.id + ": " + message)
+            self.logging.error(self.id + " [" + str(self.error_count).zfill(3) + "]: " + message)
 
     def raise_warning(self, message):
         """
@@ -153,8 +153,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         try:
             self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
         except Exception as err:
-            self.raise_error("- Error connecting to camera '" + self.source +
-                             "': " + str(err))
+            self.raise_error("- Error connecting to camera '" + self.source + "': " + str(err))
         self.read()
 
     def reconnect(self):
@@ -1489,8 +1488,8 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
                 self.active = True
                 try:
                     raw = self.read_from_camera()
-                    if self.error:
-                        raise Exception("Error with 'read_from_camera()'.")
+                    if raw is None or len(raw) == 0:
+                        raise Exception("Error with 'read_from_camera()': empty image.")
 
                     self._stream = raw.copy()
                     self._stream_last = raw.copy()
@@ -1506,7 +1505,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
                                 self._stream_last = cv2.circle(self._stream_last, (25, 50), 4, circle_color, 6)
                                 circle_in_cache = True
                             except cv2.error as e:
-                                pass
+                                self.raise_warning("Could not mark image as 'from cache due to error'.")
                         self._stream = self._stream_last.copy()
 
             else:
@@ -1557,17 +1556,20 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         extract image from stream
         """
         try:
-            ref, raw = self.stream_handler.read()
-            check = str(type(raw))
-            if "NoneType" in check or len(raw) == 0:
-                self.raise_error("Got an empty image (source=" + str(self.id) + ")")
+            retrieve, raw = self.stream_handler.read()
+            if not retrieve:
+                self.raise_error("Could not grab an image from source '" + str(self.id) + "'.")
                 return
-            if self.param["image"]["rotation"] != 0:
-                raw = self.image.rotate_raw(raw, self.param["image"]["rotation"])
-            return raw.copy()
-        except cv2.error as err:
-            self.raise_error("CV2-error connecting to camera '" + self.id + "' or reading image: " + str(err))
+
+        except Exception as err:
+            self.raise_error("Error while grabbing image from source '" + self.id + "': " + str(err))
             return
+
+        if self.param["image"]["rotation"] != 0:
+            raw = self.image.rotate_raw(raw, self.param["image"]["rotation"])
+
+        if raw is not None and len(raw) > 0:
+            return raw.copy()
 
     def get_active_streams(self, stream_id=""):
         """
@@ -1755,9 +1757,6 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             return False
 
     def run(self) -> None:
-        circle_in_cache = False
-        circle_color = (0, 0, 255)
-
         self.reset_error()
         while not self.stream_raw.if_ready():
             time.sleep(0.1)
@@ -1779,13 +1778,12 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 try:
                     raw = self.read_raw_and_edit(stream=True, stream_id=self._stream_id_base, return_error_image=True)
                     #self._stream_last_id = self.stream_raw.stream_image_id()
-                    if self.error:
-                        raise Exception("Error with 'read_raw_and_edit()'.")
+                    if raw is None or len(raw) == 0:
+                        raise Exception("Error with 'read_raw_and_edit()': empty image.")
 
                     self._stream = raw.copy()
                     self._stream_last = raw.copy()
                     self._stream_last_time = time.time()
-                    circle_in_cache = False
 
                 except Exception as e:
                     self.raise_error("Error reading EDIT stream for '" + self.id + "/" + self.type + "': " + str(e))
@@ -2066,7 +2064,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         if return_error_image:
             check = str(type(image))
             if "NoneType" in check or len(image) == 0:
-                self.raise_error(error_message)
+                self.raise_error("edit_check_error:  " + error_message)
             else:
                 return image
         else:
