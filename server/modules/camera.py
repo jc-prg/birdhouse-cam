@@ -2370,13 +2370,13 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         else:
             self.logging.info("Starting CAMERA (" + self.id + ") ...")
 
+        self.reset_error_all()
         try:
             if init:
                 self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source,
                                                      config=self.config, param=self.param)
                 self.camera_stream_raw.set_stream_handler(self.camera.stream)
             else:
-                self.reset_error()
                 self.camera.reconnect()
                 self.camera_stream_raw.set_stream_handler(self.camera.stream)
 
@@ -2590,6 +2590,18 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 return self.error
 
         return False
+
+    def reset_error_all(self):
+        """
+        reset errors for all relevant classes
+        """
+        self.reset_error()
+        self.image.reset_error()
+        self.video.reset_error()
+        self.camera.reset_error()
+        self.camera_stream_raw.reset_error()
+        for stream_id in self.camera_streams:
+            self.camera_streams[stream_id].reset_error()
 
     def camera_reconnect(self, directly=False):
         """
