@@ -139,18 +139,22 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         self.set_properties(key="init")
 
     def read(self):
+        if self.if_error():
+            return
         try:
             ref, raw = self.stream.read()
-            self.reset_error()
             return raw
         except Exception as err:
-            self.raise_error("- Error connecting to camera '" + self.source +
-                             "' and reading first image: " + str(err))
+            self.raise_error("- Error reading first image from camera '"+self.source+"': " + str(err))
             return
 
     def connect(self):
         self.reset_error()
-        self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
+        try:
+            self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
+        except Exception as err:
+            self.raise_error("- Error connecting to camera '" + self.source +
+                             "': " + str(err))
         self.read()
 
     def reconnect(self):
