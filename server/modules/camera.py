@@ -1121,21 +1121,21 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         cmd_tempfiles = "img_" + camera + "_" + stamp + "_"
         framerate = 20
 
+        self.logging.info("Remove old files from '" + self.config.db_handler.directory("videos_temp") + "' ...")
+        cmd_rm = "rm " + self.config.db_handler.directory("videos_temp") + "*"
+        self.logging.debug(cmd_rm)
         try:
-            cmd_rm = "rm " + self.config.db_handler.directory("videos_temp") + "*"
-            self.logging.debug(cmd_rm)
             message = os.system(cmd_rm)
             if message != 0:
-                response = {"result": "error", "reason": "remove temp image files", "message": message}
                 self.raise_warning("Error during day video creation: remove old temp image files.")
-                # return response
         except Exception as e:
             self.raise_warning("Error during day video creation: " + str(e))
 
+        self.logging.info("Copy files to temp directory '" + self.config.db_handler.directory("videos_temp") + "' ...")
+        cmd_copy = "cp " + self.config.db_handler.directory("images") + filename + "* " + \
+                   self.config.db_handler.directory("videos_temp")
+        self.logging.debug(cmd_copy)
         try:
-            cmd_copy = "cp " + self.config.db_handler.directory("images") + filename + "* " + \
-                       self.config.db_handler.directory("videos_temp")
-            self.logging.debug(cmd_copy)
             message = os.system(cmd_copy)
             if message != 0:
                 response = {"result": "error", "reason": "copy temp image files", "message": message}
@@ -1144,12 +1144,13 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         except Exception as e:
             self.raise_error("Error during day video creation: " + str(e))
 
+        self.logging.info("Rename files to prepare the video creation ...")
         cmd_filename = self.config.db_handler.directory("videos_temp") + cmd_tempfiles
         cmd_rename = "i=0; for fi in " + self.config.db_handler.directory("videos_temp") + \
                      "image_*; do mv \"$fi\" $(printf \""
         cmd_rename += cmd_filename + "%05d.jpg\" $i); i=$((i+1)); done"
+        self.logging.debug(cmd_rename)
         try:
-            self.logging.info(cmd_rename)
             message = os.system(cmd_rename)
             if message != 0:
                 response = {"result": "error", "reason": "rename temp image files", "message": message}
@@ -1164,6 +1165,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                 if cmd_tempfiles in filename:
                     amount += 1
 
+        self.logging.info("Starting FFMpeg video creation ...")
         input_filenames = cmd_filename + "%05d.jpg"
         output_filename = os.path.join(self.config.db_handler.directory("videos"), cmd_videofile)
         try:
@@ -1180,9 +1182,10 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             response = {"result": "error", "reason": "create video with ffmpeg", "message": str(e)}
             return response
 
+        self.logging.info("Create thumbnail file ...")
+        cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.db_handler.directory("videos") + cmd_thumbfile
+        self.logging.debug(cmd_thumb)
         try:
-            cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.db_handler.directory("videos") + cmd_thumbfile
-            self.logging.info(cmd_thumb)
             message = os.system(cmd_thumb)
             if message != 0:
                 response = {"result": "error", "reason": "create thumbnail", "message": message}
@@ -1199,6 +1202,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         except Exception as e:
             self.raise_error("Error during day video creation: " + str(e))
 
+        self.logging.info("Create database entry ...")
         length = (amount / framerate)
         video_data = {
             "camera": self.id,

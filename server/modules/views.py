@@ -1028,6 +1028,7 @@ class BirdhouseViews(threading.Thread):
                         dir_size_cam = content["entries"][directory]["dir_size_cam"]
                         dir_total_size += dir_size
                         files_total += content["entries"][directory]["count"]
+                        count = content["entries"][directory]["count"]
 
                         self.logging.info("  -> Archive " + directory + "*: " + str(round(dir_total_size, 1)) +
                                           " MB / " + cam + ": " + str(dir_size_cam) + " MB in " + str(count) + " files")
