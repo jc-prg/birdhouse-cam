@@ -127,6 +127,10 @@ function birdhouseStatus_print(data) {
         setTextById("error_streams_"+camera, error_stream_info);
         setTextById("error_rec_"+camera, camera_status[camera]["record_image_error"]);
 
+        record_time_info = "from <u>" + camera_status[camera]["record_image_start"] + "</u> to <u>" + camera_status[camera]["record_image_end"] + "</u>";
+        if (camera_status[camera]["record_image_start"] == "-1:-1") { record_time_info = "<i>N/A (camera not active)</i>"; }
+        setTextById("get_record_image_time_"+camera, record_time_info);
+
         // settings
         if (camera_status[camera]["properties"]) {
             for (let key in camera_status[camera]["properties"]) {
@@ -160,7 +164,7 @@ function birdhouseStatus_print(data) {
                         "<br/>active=" + camera_status[camera]["record_image_active"] + "; " + "error=" + camera_status[camera]["record_image_error"] + ";" +
                         "<br/>compare=" + camera_status[camera]["record_image_last_compare"].replace("] [","]<br/>active_time=["));
         }
-        if (camera_status[camera]["error"] || camera_status[camera]["image_error"]) {
+        if (camera_status[camera]["error"] || camera_status[camera]["error_details"]["image"]) {
             setHeaderColor(header_id=camera+"_error", header_color=header_color_error);
             setHeaderColor(header_id=camera, header_color=header_color_error);
             setStatusColor(status_id="status_error_"+camera, "red");

@@ -144,13 +144,15 @@ function birdhouseDevices_cameras(data) {
 		id_list += "set_rotation_"+camera+":set_show_framerate_"+camera+":set_crop_"+camera+":set_scale_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_image", "Image / Video Settings", html_entry, false );
 
+		hours = "00,01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24";
         html_entry = tab.start();
 		html_entry += tab.row("- Record:", birdhouse_edit_field(id="set_record_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
 		html_entry += tab.row("- Rhythm:", "record every " + birdhouse_edit_field(id="set_record_rhythm_"+camera, field="devices:cameras:"+camera+":image_save:rhythm", type="select", options="05,10,15,20", data_type="string") + " s");
-		hours = "00,01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24";
 		html_entry += tab.row("- Record time:",
 		    "from " + birdhouse_edit_field(id="set_record_from_"+camera, field="devices:cameras:"+camera+":image_save:record_from", type="select", options="sunrise-1,sunrise+0,sunrise+1,"+hours, data_type="string") + " &nbsp; " +
-		    "to " + birdhouse_edit_field(id="set_record_to_"+camera, field="devices:cameras:"+camera+":image_save:record_to", type="select", options="sunset-1,sunset+0,sunset+1,"+hours, data_type="string"));
+		    "to " + birdhouse_edit_field(id="set_record_to_"+camera, field="devices:cameras:"+camera+":image_save:record_to", type="select", options="sunset-1,sunset+0,sunset+1,"+hours, data_type="string")
+		    );
+		html_entry += tab.row("", "<text id='get_record_image_time_"+camera+"'></text>");
 		html_entry += tab.row("- Record offset:", birdhouse_edit_field(id="set_record_offset_"+camera, field="devices:cameras:"+camera+":image_save:rhythm_offset", type="select", options="0,3,6,12", data_type="string"));
 		html_entry += tab.end();
 

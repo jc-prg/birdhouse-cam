@@ -2166,6 +2166,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.record_image_reload = time.time()
         self.record_image_last_string = ""
         self.record_image_last_compare = ""
+        self.record_image_start = ""
+        self.record_image_end = ""
         self.record_image_error = False
 
         self.camera_stream_raw = None
@@ -2781,6 +2783,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                               str(int(record_from_hour)) + ":" + str(int(record_from_minute)) + \
                                               " | to " + str(int(record_to_hour)) + ":" + str(int(record_to_minute)) + \
                                               "]"
+            self.record_image_start = str(int(record_from_hour)).zfill(2) + ":" + str(int(record_from_minute)).zfill(2)
+            self.record_image_end = str(int(record_to_hour)).zfill(2) + ":" + str(int(record_to_minute)).zfill(2)
 
         return is_active
 
@@ -2924,16 +2928,15 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             "error_details_msg": {},
             "error_details_health": {},
             "error": self.error,
-            "error_warn": self.error_msg,
             "error_msg": ",\n".join(self.error_msg),
-            "image_error": self.image.error,
-            "image_error_msg": ",\n".join(self.image.error_msg),
             "image_cache_size": self.config_cache_size,
             "record_image_error": self.record_image_error,
             "record_image_last": time.time() - self.record_image_last,
             "record_image_reload": time.time() - self.record_image_reload,
             "record_image_active": self.image_recording_active(current_time=-1, check_in_general=True),
             "record_image_last_compare": self.record_image_last_compare,
+            "record_image_start": self.record_image_start,
+            "record_image_end": self.record_image_end,
             "video_error": self.video.if_error(),
             "video_error_msg": ",\n".join(self.video.if_error(message=True)),
             "running": self.if_running(),
