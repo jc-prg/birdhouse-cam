@@ -2922,7 +2922,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             "active_streams": self.get_stream_count(),
             "error_details": {},
             "error_details_msg": {},
-            "error_details_health": {}
+            "error_details_health": {},
             "error": self.error,
             "error_warn": self.error_msg,
             "error_msg": ",\n".join(self.error_msg),
