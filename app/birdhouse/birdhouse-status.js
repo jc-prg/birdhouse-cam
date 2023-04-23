@@ -103,9 +103,9 @@ function birdhouseStatus_print(data) {
         setTextById("show_stream_count_"+camera, cameras[camera]["image"]["current_streams"]);
         camera_streams += cameras[camera]["image"]["current_streams"];
 
+        // consolidate error messages
         error_stream_info = "";
         for (stream_id in camera_status[camera]["error_details"]) {
-
             error_stream_info += "<b>" + stream_id + ":</b><br/>";
             if (camera_status[camera]["error_details"][stream_id]) { error_stream_info += "<font color='red'>"; }
             else                                                   { error_stream_info += "<font color='lightgray'>"; }
@@ -122,11 +122,10 @@ function birdhouseStatus_print(data) {
             error_stream_info += "</font><br/>";
         }
 
-        //setTextById("error_cam_"+camera, camera_status[camera]["error_msg"]);
-        //setTextById("error_img_"+camera, camera_status[camera]["image_error_msg"]);
         setTextById("error_streams_"+camera, error_stream_info);
         setTextById("error_rec_"+camera, camera_status[camera]["record_image_error"]);
 
+        // recording time
         record_time_info = "from <u>" + camera_status[camera]["record_image_start"] + "</u> to <u>" + camera_status[camera]["record_image_end"] + "</u>";
         if (camera_status[camera]["record_image_start"] == "-1:-1") { record_time_info = "<i>N/A (camera not active)</i>"; }
         setTextById("get_record_image_time_"+camera, record_time_info);
@@ -164,10 +163,21 @@ function birdhouseStatus_print(data) {
                         "<br/>active=" + camera_status[camera]["record_image_active"] + "; " + "error=" + camera_status[camera]["record_image_error"] + ";" +
                         "<br/>compare=" + camera_status[camera]["record_image_last_compare"].replace("] [","]<br/>active_time=["));
         }
-        if (camera_status[camera]["error"] || camera_status[camera]["error_details"]["image"]) {
+
+        // camera stream working correctly
+        var error_count = 0;
+        for (let stream_id in camera_status[camera]["error_details"]) {
+            if (camera_status[camera]["error_details"][stream_id]) { error_count += 1; }
+        }
+        if (camera_status[camera]["error"] || camera_status[camera]["error_details"]["stream_raw"]) {
             setHeaderColor(header_id=camera+"_error", header_color=header_color_error);
             setHeaderColor(header_id=camera, header_color=header_color_error);
             setStatusColor(status_id="status_error_"+camera, "red");
+        }
+        else if (error_count > 0) {
+            setHeaderColor(header_id=camera+"_error", header_color=header_color_warning);
+            setHeaderColor(header_id=camera, header_color=header_color_warning);
+            setStatusColor(status_id="status_error_"+camera, "yellow");
         }
         else {
             setHeaderColor(header_id=camera+"_error", header_color="");
@@ -175,6 +185,7 @@ function birdhouseStatus_print(data) {
             setStatusColor(status_id="status_error_"+camera, "green");
         }
 
+        // image recording working correctly
         if (camera_status[camera]["record_image_active"] && camera_status[camera]["record_image_error"]) {
             setStatusColor(status_id="status_error_record_"+camera, "red");
         }
@@ -185,6 +196,7 @@ function birdhouseStatus_print(data) {
             setStatusColor(status_id="status_error_record_"+camera, "black");
         }
 
+        // camera activated
         if (cameras[camera]["active"]) {
             setStatusColor(status_id="status_active_"+camera, "white");
             }

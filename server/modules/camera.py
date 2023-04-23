@@ -1633,6 +1633,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             "line2": ""
         }
         self.maintenance_mode = False
+        self.reload_time = 0
 
     def _init_error_images(self):
         """
@@ -1878,7 +1879,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                                                color=(0, 0, 255), thickness=1)
 
             line_position += 30
-            msg = "Last Reconnect: " + str(round(time.time() - reload_time)) + "s"
+            msg = "Last Reconnect: " + str(round(time.time() - self.reload_time)) + "s"
             raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
                                            color=(0, 0, 255), thickness=1)
 
@@ -2264,6 +2265,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if self._running:
             for stream in self.camera_streams:
                 self.camera_streams[stream].start()
+                self.camera_streams[stream].reload_time = self.reload_time
 
     def _init_camera(self, init=False):
         """
@@ -2271,6 +2273,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         relevant_streams = ["camera_hires", "camera_lowres", "setting_hires", "setting_lowres"]
         self.reload_time = time.time()
+        for stream in self.camera_streams:
+            self.camera_streams[stream].reload_time = self.reload_time
 
         if not init:
             self.logging.info("- Restarting CAMERA (" + self.id + ") ...")
@@ -2530,8 +2534,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         Reconnect after API call
         """
         if directly and self.camera is not None:
-            #self.camera.reconnect()
-            #self._init_camera_settings()
             self._init_camera()
             self.reload_camera = False
         else:
