@@ -9,8 +9,8 @@ class BirdhouseClass(object):
     Main class for camera classes: error messaging, logging and global vars
     """
 
-    def __init__(self, class_id, class_log, camera_id, config):
-        self.id = camera_id
+    def __init__(self, class_id, class_log, device_id, config):
+        self.id = device_id
 
         self.config = None
         if config is not None and config != "":
@@ -25,15 +25,19 @@ class BirdhouseClass(object):
         self.error_msg = []
         self.error_time = None
         self.error_count = 0
+        self.error_connect = False
 
         self.logging = logging.getLogger(class_id)
         self.logging.setLevel(birdhouse_loglevel_module[class_log])
         self.logging.addHandler(birdhouse_loghandler)
 
-    def raise_error(self, message):
+    def raise_error(self, message, connect=False):
         """
         Report Error, set variables of modules
         """
+        if connect:
+            self.error_connect = True
+
         message_org = message
         message_repeat = message + " !! repeated"
 
@@ -76,6 +80,7 @@ class BirdhouseClass(object):
         self.error_msg = []
         self.error_time = 0
         self.error_count = 0
+        self.error_connect = False
 
     def health_signal(self):
         """

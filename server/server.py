@@ -1159,7 +1159,7 @@ if __name__ == "__main__":
     sensor = {}
     for sen in config.param["devices"]["sensors"]:
         settings = config.param["devices"]["sensors"][sen]
-        sensor[sen] = BirdhouseSensor(sensor_id=sen, param=settings, config=config)
+        sensor[sen] = BirdhouseSensor(sensor_id=sen, config=config)
         sensor[sen].start()
 
     # start cameras
