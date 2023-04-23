@@ -2959,6 +2959,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             }
 
         status["error_details"] = error_details
+        status["error_details_msg"] = error_details_msg
 
         if self.camera is not None:
             status["properties"] = self.camera.get_properties()
