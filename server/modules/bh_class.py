@@ -83,6 +83,12 @@ class BirdhouseClass(object):
         """
         self.health_check = time.time()
 
+    def health_status(self):
+        """
+        return time sind last heath signal
+        """
+        return time.time() - self.health_check
+
     def if_running(self):
         """
         external check if running
