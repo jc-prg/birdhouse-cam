@@ -915,7 +915,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         for key in sensor_data:
             api_response["STATUS"]["devices"]["sensors"][key] = sensor[key].get_status()
             sensor_data[key]["values"] = {}
-            if key in sensor and sensor[key].running:
+            if key in sensor and sensor[key].if_running():
                 sensor_data[key]["values"] = sensor[key].get_values()
 
         api_data["settings"]["devices"] = {
