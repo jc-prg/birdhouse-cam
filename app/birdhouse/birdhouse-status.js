@@ -102,8 +102,29 @@ function birdhouseStatus_print(data) {
     for (let camera in cameras) {
         setTextById("show_stream_count_"+camera, cameras[camera]["image"]["current_streams"]);
         camera_streams += cameras[camera]["image"]["current_streams"];
-        setTextById("error_cam_"+camera, camera_status[camera]["error_msg"]);
-        setTextById("error_img_"+camera, camera_status[camera]["image_error_msg"]);
+
+        error_stream_info = "";
+        for (stream_id in camera_status[camera]["error_details"]) {
+
+            error_stream_info += "<b>" + stream_id + ":</b><br/>";
+            if (camera_status[camera]["error_details"][stream_id]) { error_stream_info += "<font color='red'>"; }
+            else                                                   { error_stream_info += "<font color='lightgray'>"; }
+
+            error_stream_info += "error=" + camera_status[camera]["error_details"][stream_id] + "; ";
+            error_stream_info += "messages=" + camera_status[camera]["error_details_msg"][stream_id].length + "; ";
+            if (stream_id != "image") {
+                error_stream_info += "last_active=" + camera_status[camera]["error_details_health"][stream_id] + "s";
+                }
+            if (camera_status[camera]["error_details"][stream_id] && camera_status[camera]["error_details_msg"][stream_id].length > 0) {
+                last_msg = camera_status[camera]["error_details_msg"][stream_id].length - 1;
+                error_stream_info += "<br/>" + camera_status[camera]["error_details_msg"][stream_id][last_msg] + "; ";
+            }
+            error_stream_info += "</font><br/>";
+        }
+
+        //setTextById("error_cam_"+camera, camera_status[camera]["error_msg"]);
+        //setTextById("error_img_"+camera, camera_status[camera]["image_error_msg"]);
+        setTextById("error_streams_"+camera, error_stream_info);
         setTextById("error_rec_"+camera, camera_status[camera]["record_image_error"]);
 
         // settings

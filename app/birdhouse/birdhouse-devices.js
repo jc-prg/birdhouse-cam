@@ -86,6 +86,7 @@ function birdhouseDevices_cameras(data) {
 	var index_info = {};
 	var tab     = new birdhouse_table();
 	tab.style_rows["height"] = "27px";
+	tab.style_cells["vertical-align"] = "top";
 
 	for (let camera in cameras) {
     	var onclick  = "birdhouse_createDayVideo('"+camera+"');";
@@ -177,8 +178,7 @@ function birdhouseDevices_cameras(data) {
         html_entry = tab.start();
         html_entry += tab.row("Last Recorded:", "<div id='last_image_recorded_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
 		html_entry += tab.row("Current Streams:", "<div id='show_stream_count_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
-        html_entry += tab.row("Error Camera:", "<textarea id='error_cam_"+camera+"' class='settings_error_msg'></textarea>");
-        html_entry += tab.row("Error Image:", "<textarea id='error_img_"+camera+"' class='settings_error_msg'></textarea>");
+        html_entry += tab.row("Error Streams:", "<div id='error_streams_"+camera+"'></div>");
         html_entry += tab.end();
         html_temp += birdhouse_OtherGroup( camera+"_error", "Status", html_entry, false );
 
