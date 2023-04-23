@@ -997,7 +997,6 @@ class BirdhouseViews(threading.Thread):
                 if db_available:
                     self.logging.debug("  -> read from DB")
                     file_data = self.config.db_handler.read_cache(config="backup", date=directory)
-
                 elif not db_available and config_available:
                     self.logging.debug("  -> read from file")
                     file_data = self.config.db_handler.json.read(config_file)
@@ -1053,14 +1052,14 @@ class BirdhouseViews(threading.Thread):
                         count = files_total
                         content["entries"][directory]["lowres"] = image_file
 
+                        file_data["info"]["changed"] = False
+                        self.config.db_handler.write(config="backup", date=directory, data=file_data.copy())
+
                         self.logging.info("  -> Archive " + directory + ": " + str(round(dir_total_size, 1)) +
                                           " MB / " + cam + ": " + str(dir_size_cam) + " MB in " + str(count) + " files")
 
                     else:
                         self.logging.error("  -> Archive: config file available but empty/in wrong format: /backup/" + directory)
-
-                    file_data["info"]["changed"] = False
-                    self.config.queue.entry_edit(config="backup", date=directory, data=file_data.copy())
 
                 elif db_available:
                     self.logging.info("  -> Archive available in CouchDB")
