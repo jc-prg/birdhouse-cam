@@ -998,7 +998,8 @@ class BirdhouseViews(threading.Thread):
                     self.logging.debug("  -> read from DB")
                     file_data = self.config.db_handler.read_cache(config="backup", date=directory)
                     file_data["info"]["changed"] = False
-                    self.config.db_handler.write(config="backup", date=directory, data=file_data.copy())
+                    #self.config.db_handler.write(config="backup", date=directory, data=file_data.copy())
+                    self.config.queue.edit_entry(config="backup", date=directory, data=file_data.copy())
 
                 elif not db_available and config_available:
                     self.logging.debug("  -> read from file")
