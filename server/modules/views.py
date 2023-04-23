@@ -997,11 +997,15 @@ class BirdhouseViews(threading.Thread):
                 if db_available:
                     self.logging.debug("  -> read from DB")
                     file_data = self.config.db_handler.read_cache(config="backup", date=directory)
+                    file_data["info"]["changed"] = False
+                    self.config.db_handler.write(config="backup", date=directory, data=file_data.copy())
+
                 elif not db_available and config_available:
                     self.logging.debug("  -> read from file")
                     file_data = self.config.db_handler.json.read(config_file)
                     if file_data != {}:
                         self.logging.debug("  -> write to DB: " + str(file_data.keys()))
+                        file_data["info"]["changed"] = False
                         self.config.db_handler.write(config="backup", date=directory, data=file_data, create=True)
                         db_available = True
                     else:
@@ -1021,7 +1025,15 @@ class BirdhouseViews(threading.Thread):
 
                     elif "info" in file_data and "changed" in file_data["info"] and not file_data["info"]["changed"] \
                             and directory in archive_info[cam]["entries"]:
+
                         content["entries"][directory] = archive_info[cam]["entries"][directory].copy()
+                        dir_size = content["entries"][directory]["dir_size"]
+                        dir_size_cam = content["entries"][directory]["dir_size_cam"]
+                        dir_total_size += dir_size
+                        files_total += content["entries"][directory]["count"]
+
+                        self.logging.info("  -> Archive " + directory + "*: " + str(round(dir_total_size, 1)) +
+                                          " MB / " + cam + ": " + str(dir_size_cam) + " MB in " + str(count) + " files")
 
                     # analyze files and create archive entry
                     elif "files" in file_data:
