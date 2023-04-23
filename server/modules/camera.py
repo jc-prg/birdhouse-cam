@@ -2490,11 +2490,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         #                     " errors in RAW stream ...")
         #    return self.error
 
-        for stream in self.camera_streams:
-            if self.camera_streams[stream].if_error(message=False, length=True) > self._max_accepted_stream_errors:
-                self.raise_error("Camera doesn't work correctly: More than " + str(self._max_accepted_stream_errors) +
-                                 " errors in EDIT stream '" + stream + "'...")
-                return self.error
+        #for stream in self.camera_streams:
+        #    if self.camera_streams[stream].if_error(message=False, length=True) > self._max_accepted_stream_errors:
+        #        self.raise_error("Camera doesn't work correctly: More than " + str(self._max_accepted_stream_errors) +
+        #                         " errors in EDIT stream '" + stream + "'...")
+        #        return self.error
 
         return False
 
