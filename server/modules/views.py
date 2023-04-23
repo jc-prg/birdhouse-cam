@@ -508,10 +508,11 @@ class BirdhouseViews(threading.Thread):
         """
         self._running = False
 
-    def index(self, param):
+    def index_view(self, param):
         """
         Index page with live-streaming pictures
         """
+        self.logging.debug("Create data for Index View.")
         which_cam = param["which_cam"]
         content = {
             "active_cam": which_cam,

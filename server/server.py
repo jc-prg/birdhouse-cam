@@ -799,7 +799,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # execute API commands
         if command == "INDEX":
-            content = views.index(param=param)
+            content = views.index_view(param=param)
         elif command == "FAVORITES":
             content = views.favorite_list(param=param)
         elif command == "TODAY":
@@ -817,7 +817,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             api_response["STATUS"]["system"] = sys_info.get()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
         elif command == "status" or command == "version" or command == "list" or command == "reload":
-            content = views.index(param=param)
+            content = views.index_view(param=param)
 
             if command == "version":
                 version["Code"] = "800"

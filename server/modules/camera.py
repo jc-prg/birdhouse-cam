@@ -1003,10 +1003,10 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.logging.info("---------------------> Length: "+str(self.info["length"]))
             self.logging.info("---------------------> Count: "+str(self.info["image_count"]))
             self.logging.info("---------------------> FPS: "+str(self.info["framerate"]))
+            self.recording = False
             self.create_video()
             self.info["status"] = "finished"
             self.config.queue.entry_add(config="videos", date="", key=self.info["date_start"], entry=self.info.copy())
-            self.recording = False
         elif not self.camera.active:
             response["error"] = "camera is not active " + self.camera.id
         elif not self.recording:
@@ -1050,9 +1050,17 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.processing = True
         self.logging.info("Start video creation with ffmpeg ...")
 
+        time.sleep(5)
+
         input_filenames = os.path.join(self.config.db_handler.directory("videos"), self.filename("vimages") + "%" +
                                        str(self.count_length).zfill(2) + "d.jpg")
         output_filename = os.path.join(self.config.db_handler.directory("videos"), self.filename("video"))
+
+        cmd_ffmpeg = self.ffmpeg_cmd
+        cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_FILENAMES}", input_filenames)
+        cmd_ffmpeg = cmd_ffmpeg.replace("{OUTPUT_FILENAMES}", output_filename)
+        cmd_ffmpeg = cmd_ffmpeg.replace("{FRAMERATE}", str(round(self.info["framerate"], 1)))
+        self.logging.debug("Alternative: " + cmd_ffmpeg)
 
         try:
             (
@@ -1168,6 +1176,11 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.logging.info("Starting FFMpeg video creation ...")
         input_filenames = cmd_filename + "%05d.jpg"
         output_filename = os.path.join(self.config.db_handler.directory("videos"), cmd_videofile)
+        cmd_ffmpeg = self.ffmpeg_cmd
+        cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_FILENAMES}", input_filenames)
+        cmd_ffmpeg = cmd_ffmpeg.replace("{OUTPUT_FILENAMES}", output_filename)
+        cmd_ffmpeg = cmd_ffmpeg.replace("{FRAMERATE}", str(round(framerate, 1)))
+        self.logging.debug("Alternative: " + cmd_ffmpeg)
         try:
             (
                 ffmpeg
