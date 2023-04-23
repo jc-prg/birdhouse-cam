@@ -2130,7 +2130,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self._interval = 0.5
         self._interval_reload_if_error = 60*3
-        self._max_accepted_stream_errors = 16
+        self._stream_errors_max_accepted = 25
+        self._stream_errors_restart = False
+        self._stream_errors = 0
 
         self.error_reload_time = 60
         self.error_no_reconnect = False
@@ -2386,6 +2388,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             if self.config.shut_down:
                 self.stop()
 
+            if self._stream_errors > self._stream_errors_max_accepted and self._stream_errors_restart:
+                self.logging.warning("....... Reload CAMERA '" + self.id + "' due to stream errors: " +
+                                     str(self._stream_errors) + " errors.")
+
             # if error reload from time to time
             if self.active and self.if_error() and (reload_time + self._interval_reload_if_error) < time.time():
                 self.logging.warning("....... Reload CAMERA '" + self.id + "' due to errors --> " +
@@ -2490,10 +2496,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         #                     " errors in RAW stream ...")
         #    return self.error
 
-        #for stream in self.camera_streams:
-        #    if self.camera_streams[stream].if_error(message=False, length=True) > self._max_accepted_stream_errors:
-        #        self.raise_error("Camera doesn't work correctly: More than " + str(self._max_accepted_stream_errors) +
-        #                         " errors in EDIT stream '" + stream + "'...")
+        for stream in self.camera_streams:
+            if self.camera_streams[stream].if_error(message=False, length=True) > self._stream_errors_max_accepted:
+                self.raise_warning("Camera doesn't work correctly: More than " + str(self._stream_errors_max_accepted) +
+                                   " errors in EDIT stream '" + stream + "'...")
+                self._stream_errors += 1
         #        return self.error
 
         return False
@@ -2503,6 +2510,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         reset errors for all relevant classes
         """
         self.reset_error()
+        self._stream_errors = 0
         if self.image is not None:
             self.image.reset_error()
         if self.video is not None:
