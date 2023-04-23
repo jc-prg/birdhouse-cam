@@ -225,7 +225,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         return all error status information
         """
         error = {
-            "running": self.running,
+            "running": self._running,
             "last_read": time.time() - self.last_read_time,
             "error": self.error,
             "error_msg": self.error_msg,
