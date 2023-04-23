@@ -87,7 +87,7 @@ class BirdhouseClass(object):
         """
         return time sind last heath signal
         """
-        return time.time() - self.health_check
+        return round(time.time() - self.health_check, 2)
 
     def if_running(self):
         """

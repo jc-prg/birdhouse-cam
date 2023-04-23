@@ -1070,19 +1070,23 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     else:
                         camera[which_cam].set_system_info(False)
 
-                try:
-                    frame = camera[which_cam].image.convert_from_raw(frame_raw)
-                    self.stream_video_frame(frame, which_cam)
-                    if not stream_active:
-                        self.stream_video_end()
-                        srv_logging.info("Closed streaming client: " + stream_id_ext)
+                if not stream_active:
+                    self.stream_video_end()
+                    srv_logging.info("Closed streaming client: " + stream_id_ext)
 
-                except Exception as error_msg:
-                    stream_active = False
-                    if "Errno 104" in str(error_msg) or "Errno 32" in str(error_msg):
-                        srv_logging.debug('Removed streaming client %s: %s', self.client_address, str(error_msg))
-                    else:
-                        srv_logging.warning('Removed streaming client %s: %s', self.client_address, str(error_msg))
+                elif frame_raw is None or len(frame_raw) == 0:
+                    srv_logging.warning("Stream: Got an empty frame ...")
+
+                else:
+                    try:
+                        frame = camera[which_cam].image.convert_from_raw(frame_raw)
+                        self.stream_video_frame(frame, which_cam)
+                    except Exception as error_msg:
+                        stream_active = False
+                        if "Errno 104" in str(error_msg) or "Errno 32" in str(error_msg):
+                            srv_logging.debug('Removed streaming client %s: %s', self.client_address, str(error_msg))
+                        else:
+                            srv_logging.warning('Removed streaming client %s: %s', self.client_address, str(error_msg))
 
             if camera[which_cam].error or camera[which_cam].image.error:
                 time.sleep(stream_wait_while_error)
