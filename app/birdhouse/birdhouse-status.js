@@ -108,7 +108,7 @@ function birdhouseStatus_print(data) {
         for (stream_id in camera_status[camera]["error_details"]) {
             error_stream_info += "<b>" + stream_id + ":</b><br/>";
             if (camera_status[camera]["error_details"][stream_id]) { error_stream_info += "<font color='red'>"; }
-            else                                                   { error_stream_info += "<font color='lightgray'>"; }
+            else                                                   { error_stream_info += "<font>"; } //  color='lightgray'
 
             error_stream_info += "error=" + camera_status[camera]["error_details"][stream_id] + "; ";
             error_stream_info += "messages=" + camera_status[camera]["error_details_msg"][stream_id].length + "; ";
