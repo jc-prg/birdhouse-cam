@@ -133,7 +133,7 @@ var language_app = {
 		"FILES"                 : "Files",
 		"FRAMERATE"             : "Frame rate",
 		"FRAME_COUNT"           : "Frame count",
-		"FROM_TO_EVERY"         : "from {1} to {2} every {3}",
+		"FROM_TO_EVERY"         : "from {0} to {1} every {2}",
 		"HUMIDITY"              : "Humidity",
 		"GPS_POSITION"          : "GPS Position",
 		"GPS_LOCATION"          : "GPS Location",

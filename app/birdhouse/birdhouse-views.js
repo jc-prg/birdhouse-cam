@@ -188,6 +188,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var entry_category    = [];
 	var same_img_size     = false;
 	var data_list         = data["DATA"];
+	var status_data       = app_data["STATUS"]["devices"]["cameras"][camera];
 
 	var entries           = data_list["data"]["entries"];
 	var entries_yesterday = data_list["data"]["entries_yesterday"];
@@ -228,13 +229,16 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	if (active_page == "TODAY_COMPLETE") {
 	    var info_text    = "";
 	    var cam_settings = camera_settings[camera];
-	    var record_from  = cam_settings["image_save"]["record_from"];
-	    var record_to    = cam_settings["image_save"]["record_to"];
-	    var rhythm       = cam_settings["image_save"]["rhythm"] + "s";
+	    //var record_from  = cam_settings["image_save"]["record_from"];
+	    //var record_to    = cam_settings["image_save"]["record_to"];
+	    var record_from  = status_data["record_image_start"];
+	    var record_to    = status_data["record_image_end"];
+        var rhythm       = cam_settings["image_save"]["rhythm"] + "s";
         var onclick      = "birdhouse_createDayVideo('"+camera+"');";
         var create       =  "<div onclick=\""+onclick+"\" style=\"cursor:pointer\"><u>" + lang("CREATE_DAY") + ": " + app_data["WEATHER"]["current"]["date"] + "</u></div>";
         tab.style_rows["height"] = "25px";
 
+/*
 	    if (record_from.indexOf("sun") == 0 && record_from.indexOf("+0") > 0)       { record_from = current_weather["sunrise"]; }
 	    else if (record_from.indexOf("sun") == 0 && record_from.indexOf("+1") > 0)  { record_from = current_weather["sunrise"] + "+1h"; }
 	    else if (record_from.indexOf("sun") == 0 && record_from.indexOf("-1") > 0)  { record_from = current_weather["sunrise"] + "-1h"; }
@@ -244,6 +248,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    else if (record_to.indexOf("sun") == 0 && record_to.indexOf("+1") > 0)      { record_to = current_weather["sunset"] + "+1h"; }
 	    else if (record_to.indexOf("sun") == 0 && record_to.indexOf("-1") > 0)      { record_to = current_weather["sunset"] + "-1h"; }
 	    else                                                                        { record_to += ":00"; }
+*/
 
 	    //info_text += "&nbsp;<br/>&nbsp;";
 	    info_text += tab.start();
