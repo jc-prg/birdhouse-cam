@@ -67,6 +67,12 @@ function birdhouseDevices_status(index, show_button) {
             for (var a=0; a<index[i][key]["status"].length;a++) {
                 action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>";
             }
+            if (!show_button && index[i][key]["type"] == "camera") {
+                action += "<div style='float:left;padding:5px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0</font> Streams</div>";
+            }
+            else if (index[i][key]["type"] == "camera") {
+                action += "<br/><div style='padding:5px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0</font> Streams</div>";
+            }
             action += "</div>";
             html_index += tab.row(key, action);
         });
