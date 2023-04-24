@@ -2941,6 +2941,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         return all status and error information
         """
+        if self.record and time.time() - self.record_image_last > 120:
+            self.record_image_error = True
+
         status = {
             "active_streams": self.get_stream_count(),
             "error_details": {},
