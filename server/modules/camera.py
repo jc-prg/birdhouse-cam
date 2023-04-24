@@ -2013,7 +2013,10 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"] \
                 and self.resolution != "lowres":
-            raw = self.image.draw_text_raw(raw=raw, text=str(round(self.fps, 1)) + "fps",
+            framerate = round(self.stream_raw.fps, 1)
+            if self.fps < framerate:
+                framerate = self.fps
+            raw = self.image.draw_text_raw(raw=raw, text=str(round(framerate, 1)) + "fps",
                                            font=cv2.QT_FONT_NORMAL,
                                            position=(10, -20), scale=0.4, thickness=1)
         return raw.copy()
@@ -2640,6 +2643,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             statistics[self.id][this_stamp] = {
                 #"active_streams_raw": self.camera_stream_raw.get_active_streams(),
                 "active_streams": count,
+                "stream_framerate": self.camera_stream_raw.get_framerate(),
                 "camera_error": self.if_error(),
                 "camera_raw_error": self.camera_stream_raw.if_error()
             }
