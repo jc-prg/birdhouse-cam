@@ -2076,6 +2076,18 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         else:
             self.fps = 0
 
+    def get_active_streams(self, stream_id=""):
+        """
+        return amount of active streams
+        """
+        if stream_id == "":
+            return int(self._active_streams)
+        else:
+            if stream_id in self._last_activity_per_stream:
+                return True
+            else:
+                return False
+
     def slow_down(self, slow_down=True):
         """
         slow down streaming framerate
@@ -2190,6 +2202,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.camera_stream_raw = None
         self.camera_streams = {}
+
+        self.usage_time = time.time()
+        self.usage_interval = 60
 
         self._init_image_processing()
         self._init_video_processing()
@@ -2453,6 +2468,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 time.sleep(self._interval/2)
                 self.image_recording(current_time, stamp, similarity, sensor_last)
 
+            # Check and record active streams
+            if self.active:
+                self.measure_usage(current_time, stamp)
+
             # reconnect from time to time, to foster re-calibrate by camera
             #if self.active and "reconnect_to_calibrate" in self.param["image"] \
             #        and self.param["image"]["reconnect_to_calibrate"] \
@@ -2595,6 +2614,37 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
             self.logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(
                 current_time.strftime("%H:%M:%S")))
+
+    def measure_usage(self, current_time, stamp):
+        """
+        measure usage from time to time
+        """
+        if time.time() - self.usage_time > self.usage_interval:
+            self.logging.info("... check usage!")
+
+            self.usage_time = time.time()
+            this_stamp = stamp[0:4]
+            statistics = self.config.db_handler.read(config="statistics")
+
+            if statistics == {}:
+                statistics[self.id] = {}
+                self.config.db_handler.write(config="statistics", date="", data=statistics, create=True, save_json=True)
+            elif self.id not in statistics:
+                statistics[self.id] = {}
+                self.config.db_handler.write(config="statistics", date="", data=statistics, create=True, save_json=True)
+
+            count = 0
+            for stream_id in self.camera_streams:
+                count += self.camera_streams[stream_id].get_active_streams()
+
+            statistics[self.id][this_stamp] = {
+                #"active_streams_raw": self.camera_stream_raw.get_active_streams(),
+                "active_streams": count,
+                "camera_error": self.if_error(),
+                "camera_raw_error": self.camera_stream_raw.if_error()
+            }
+
+            self.config.queue.entry_add(config="statistics", date="", key=self.id, entry=statistics[self.id].copy())
 
     def image_recording(self, current_time, stamp, similarity, sensor_last):
         """
@@ -2920,10 +2970,16 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         identify amount of currently running streams
         """
-        if self.camera_stream_raw is not None and self.camera_stream_raw.if_running():
-            return self.camera_stream_raw.get_active_streams()
-        else:
-            return 0
+        count = 0
+        for stream_id in self.camera_streams:
+            if self.camera_streams[stream_id].if_running():
+                count += self.camera_streams[stream_id].get_active_streams()
+        return count
+
+        #if self.camera_stream_raw is not None and self.camera_stream_raw.if_running():
+        #    return self.camera_stream_raw.get_active_streams()
+        #else:
+        #    return 0
 
     def get_stream_kill(self, ext_stream_id, int_stream_id):
         """

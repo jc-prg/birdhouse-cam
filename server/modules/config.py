@@ -438,8 +438,8 @@ class BirdhouseConfigQueue(threading.Thread):
         self.views = None
         self.db_handler = db_handler
         self._running = True
-        self.edit_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": []}
-        self.status_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": []}
+        self.edit_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": [], "statistics": []}
+        self.status_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": [], "statistics": []}
         self.queue_wait = 5
         self.queue_wait_max = 30
         self.queue_wait_min = 5
@@ -449,7 +449,7 @@ class BirdhouseConfigQueue(threading.Thread):
         """
         create videos and process queue.
         """
-        config_files = ["images", "videos", "backup", "sensor", "weather"]
+        config_files = ["images", "videos", "backup", "sensor", "weather", "statistics"]
         start_time = time.time()
         start_time_2 = time.time()
         check_count_entries = 0
@@ -602,6 +602,7 @@ class BirdhouseConfigQueue(threading.Thread):
 
                             count_files += 1
                             while len(self.status_queue[config_file]) > 0:
+                                self.logging.info("Queue POP: " + str(self.status_queue[config_file][-1]))
                                 [date, key, change_status, status] = self.status_queue[config_file].pop()
                                 count_entries += 1
 

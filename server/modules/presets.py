@@ -89,17 +89,18 @@ birdhouse_databases = {
     "archive_videos": {}
 }
 birdhouse_directories = {
+    "backup": "images/",
+    "backup_info": "images/",
     "html": "../app/",
     "data": "../data/",
     "main": "",
-    "sensor": "images/",
     "images": "images/",
-    "weather": "images/",
-    "backup": "images/",
-    "backup_info": "images/",
     "favorites": "images/",
+    "sensor": "images/",
+    "statistics": "images/",
     "videos": "videos/",
-    "videos_temp": "videos/images2video/"
+    "videos_temp": "videos/images2video/",
+    "weather": "images/"
 }
 birdhouse_files = {
     "main": "config.json",
@@ -109,6 +110,7 @@ birdhouse_files = {
     "images": "config_images.json",
     "videos": "config_videos.json",
     "sensor": "config_sensor.json",
+    "statistics": "config_statistics.json",
     "weather": "config_weather.json"
 }
 birdhouse_dir_to_database = {
@@ -116,6 +118,7 @@ birdhouse_dir_to_database = {
     "images/config_images":         "today_images",
     "images/config_sensor":         "today_sensors",
     "images/config_weather":        "today_weather",
+    "images/config_statistics":     "today_statistics",
     "images/config_backup":         "archive_images",
     "images/config_favorites":      "favorites",
     "videos/config_videos":         "archive_videos",
