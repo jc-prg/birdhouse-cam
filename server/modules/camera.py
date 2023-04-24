@@ -2715,6 +2715,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         record_from_minute = -1
         record_to_hour = -1
         record_to_minute = -1
+        record_to_hour_compare = -1
+        record_to_minute_compare = -1
 
         if self.record and not self.error:
             # old detection
@@ -2778,24 +2780,30 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     record_from_minute = 0
                 if record_to_hour == -1:
                     record_to_hour = record_to
-                    record_to_minute = 59
+                    record_to_minute = 0
+
+                record_to_minute_compare = record_to_minute
+                record_to_hour_compare = record_to_hour
+                if int(record_to_minute) == 0:
+                    record_to_minute_compare = "59"
+                    record_to_hour_compare = str(int(record_to_hour_compare) - 1).zfill(2)
 
                 self.logging.debug(" -> RECORD check " + self.id + "  (" + str(record_from_hour) + ":" +
-                                   str(record_from_minute) + "-" + str(record_to_hour) + ":" +
-                                   str(record_to_minute) + ") " + str(int(hour)) + "/" + str(int(minute)) + "/" +
+                                   str(record_from_minute) + "-" + str(record_to_hour_compare) + ":" +
+                                   str(record_to_minute_compare) + ") " + str(int(hour)) + "/" + str(int(minute)) + "/" +
                                    str(int(second)) + " ... " + str(self.record_seconds))
 
                 if int(second) in self.record_seconds or check_in_general:
                     if ((int(record_from_hour)*60)+int(record_from_minute)) <= ((int(hour)*60)+int(minute)) <= \
-                            ((int(record_to_hour)*60)+int(record_to_minute)):
+                            ((int(record_to_hour_compare)*60)+int(record_to_minute_compare)):
                         self.logging.debug(
                             " -> RECORD TRUE "+self.id+"  (" + str(record_from_hour) + ":" + str(record_from_minute) + "-" +
-                            str(record_to_hour) + ":" + str(record_to_minute) + ") " +
+                            str(record_to_hour_compare) + ":" + str(record_to_minute_compare) + ") " +
                             str(hour) + "/" + str(minute) + "/" + str(second) + "  < -----")
                         is_active = True
 
         self.logging.debug(" -> RECORD FALSE "+self.id+" (" + str(record_from_hour) + ":" + str(record_from_minute) +
-                           "-" + str(record_to_hour) + ":" + str(record_to_minute) + ")")
+                           "-" + str(record_to_hour_compare) + ":" + str(record_to_minute_compare) + ")")
 
         if check_in_general:
             self.record_image_last_compare += "[" + str(is_active) + " | " + current_time_string + "] [from " + \
