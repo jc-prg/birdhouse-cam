@@ -2662,7 +2662,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 image_info = {}
 
             for key in self.sensor:
-                if self.sensor[key].running:
+                if self.sensor[key].if_running():
                     sensor_data[key] = self.sensor[key].get_values()
                     sensor_data[key]["date"] = current_time.strftime("%d.%m.%Y")
                     # image_info["sensor"][key] = sensor_data[key]
@@ -2949,6 +2949,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             "error": self.error,
             "error_msg": ",\n".join(self.error_msg),
             "image_cache_size": self.config_cache_size,
+            "record_image": self.record,
             "record_image_error": self.record_image_error,
             "record_image_last": time.time() - self.record_image_last,
             "record_image_reload": time.time() - self.record_image_reload,
