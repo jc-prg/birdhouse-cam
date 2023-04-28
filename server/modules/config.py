@@ -793,6 +793,42 @@ class BirdhouseConfigQueue(threading.Thread):
 
         return response
 
+    def set_status_recycle_threshold(self, param):
+        """
+        set / unset recycling based on given threshold
+        """
+        self.logging.info("Start to identify RECYCLE images based on threshold ...")
+        self.logging.info("- recycle threshold: "+str(param))
+
+        response = {}
+        category = param["parameter"][0]
+        entry_date = param["parameter"][1]
+        threshold = float(param["parameter"][2])
+        delete = int(param["parameter"][3])
+
+        if category == "images":
+            config_data = self.db_handler.read_cache(config="images")
+        elif category == "backup":
+            config_data = self.db_handler.read_cache(config="backup", date=entry_date)["files"]
+        else:
+            config_data = {}
+
+        self.logging.info("- category: " + str(len(config_data.keys())))
+
+        count = 0
+        for entry_id in config_data:
+            entry_threshold = float(config_data[entry_id]["similarity"])
+            if threshold > entry_threshold:
+                self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
+                                         change_status="to_be_deleted", status=0)
+                count += 1
+            elif int(config_data[entry_id]["favorit"]) != 1:
+                self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
+                                         change_status="to_be_deleted", status=1)
+
+        self.logging.info("- threshold=" + str(threshold) + "% -> " + str(count) + " entries.")
+        return response
+
     def set_status_recycle_range(self, param):
         """
         set / unset recycling -> range from-to

@@ -490,9 +490,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if "version" in self.path:
                 param["session_id"] = elements[3]
 
-        elif "/edit_presets/" in self.path:
+        elif "/edit-presets/" in self.path:
             param["session_id"] = elements[2]
-            param["command"] = "edit_presets"
+            param["command"] = "edit-presets"
             param["which_cam"] = ""
             if len(elements) > 4:
                 param["parameter"] = elements[4]
@@ -587,6 +587,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = config.queue.set_status_favorite(param)
         elif param["command"] == "recycle":
             response = config.queue.set_status_recycle(param)
+        elif param["command"] == "recycle-threshold":
+            # http://localhost:8007/api/1682709071876/recycle-threshold/backup/20230421/95/cam1/
+            srv_logging.info("RECYCLE THRESHOLD")
+            response = config.queue.set_status_recycle_threshold(param)
         elif param["command"] == "recycle-range":
             response = config.queue.set_status_recycle_range(param)
         elif param["command"] == "create-short-video":
@@ -597,27 +601,27 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = camera[which_cam].video.create_video_day_queue(param)
         elif param["command"] == "remove":
             response = backup.delete_marked_files_api(param)
-        elif param["command"] == "reconnect_camera":
+        elif param["command"] == "reconnect-camera":
             response = camera[which_cam].camera_reconnect()
-        elif param["command"] == "camera_settings":
+        elif param["command"] == "camera-settings":
             response = camera[which_cam].get_camera_settings(param)
         elif param["command"] == "start-recording":
             response = camera[which_cam].video.record_start()
         elif param["command"] == "stop-recording":
             response = camera[which_cam].video.record_stop()
-        elif param["command"] == "clean_data_today":
+        elif param["command"] == "clean-data-today":
             config.db_handler.clean_all_data("images")
             config.db_handler.clean_all_data("weather")
             config.db_handler.clean_all_data("sensor")
             response = {"cleanup": "done"}
-        elif param["command"] == "update_views":
+        elif param["command"] == "update-views":
             views.archive_list_update(force=True)
             views.favorite_list_update(force=True)
             response = {"update_views": "started"}
-        elif param["command"] == "force_backup":
+        elif param["command"] == "force-backup":
             backup.start_backup()
             response = {"backup": "started"}
-        elif param["command"] == "force_restart":
+        elif param["command"] == "force-restart":
             srv_logging.info("-------------------------------------------")
             srv_logging.info("FORCED SHUT-DOWN OF BIRDHOUSE SERVER .... !")
             srv_logging.info("-------------------------------------------")
@@ -626,13 +630,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif param["command"] == "check-timeout":
             time.sleep(30)
             response = {"check": "timeout"}
-        elif param["command"] == "kill_stream":
+        elif param["command"] == "kill-stream":
             stream_id = param["parameter"][0]
             if "&" in stream_id:
                 stream_id_kill = stream_id.split("&")[-1]
                 camera[which_cam].set_stream_kill(stream_id_kill)
-                response = {"kill_stream": which_cam}
-        elif param["command"] == "edit_presets":
+                response = {"kill-stream": which_cam}
+        elif param["command"] == "edit-presets":
             edit_param = param["parameter"].split("###")
             data = {}
             for entry in edit_param:

@@ -72,12 +72,12 @@ function birdhouse_createDayVideo(camera) {
 	}
 	
 function birdhouse_reconnectCamera(camera) {
-	commands = ["reconnect_camera",camera];
+	commands = ["reconnect-camera",camera];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerReconnect,'','birdhouse_reconnectCamera');
 	}
 
 function birdhouse_cameraSettings(camera, key, value) {
-	commands = ["camera_settings", key, value, camera];
+	commands = ["camera-settings", key, value, camera];
 	birdhouse_apiRequest('POST', commands, '', '','','birdhouse_cameraSettings');
 }
 
@@ -87,7 +87,12 @@ function birdhouse_checkTimeout() {
 	}
 
 function birdhouse_editData(data, camera) {
-    commands = ["edit_presets", data, camera];
+    commands = ["edit-presets", data, camera];
+    birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerEditSend,"","birdhouse_editData");
+}
+
+function birdhouse_recycleThreshold(category, date, threshold, del, camera) {
+    commands = ["recycle-threshold", category, date, threshold, del, camera];
     birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerEditSend,"","birdhouse_editData");
 }
 
@@ -102,12 +107,12 @@ function birdhouse_recordStop(camera) {
 }
 
 function birdhouse_forceBackup(camera) {
-	commands = ["force_backup",camera];
+	commands = ["force-backup",camera];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
 	}
 
 function birdhouse_forceUpdateViews() {
-	commands = ["update_views"];
+	commands = ["update-views"];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceUpdateViews');
 	}
 
@@ -117,13 +122,13 @@ function birdhouse_forceRestart() {
     }
 
 function birdhouse_forceRestart_exec() {
-	commands = ["force_restart"];
+	commands = ["force-restart"];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceRestart');
 	}
 
 function birdhouse_killStream(camera_id, stream_id) {
     console.log("birdhouse_killStream: "+stream_id);
-	commands = ["kill_stream", stream_id, camera_id];
+	commands = ["kill-stream", stream_id, camera_id];
 	birdhouse_apiRequest('POST', commands, '', '','','birdhouse_killStream');
     }
 
@@ -138,7 +143,7 @@ function birdhouse_removeDataToday() {
 }
 
 function birdhouse_removeDataToday_exec() {
-	commands = ["clean_data_today"];
+	commands = ["clean-data-today"];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_removeDataToday');
 }
 

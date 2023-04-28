@@ -132,8 +132,9 @@ class BirdhouseViewCreate(object):
                     hour_to = "00"
 
                 stamp = hour_to + minute_to + "00"
+                activity_dict[cam][stamp] = []
                 if stamp not in activity_dict:
-                    activity_dict[cam][stamp] = []
+                    pass
                 activity_dict[cam][stamp].append(key)
 
             # create data structure activity

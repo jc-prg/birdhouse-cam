@@ -386,7 +386,9 @@ function birdhouse_groupOpen(id) {
             img      = document.getElementById(image_list[i]);
             if (img != undefined) {
                 img_file = img.getAttribute('data-src');
-                img.src  = img_file;
+                if (img_file) {
+                    img.src  = img_file;
+                }
             }
         }
     }
