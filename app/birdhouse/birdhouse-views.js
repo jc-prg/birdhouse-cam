@@ -264,11 +264,11 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    threshold_onclick_reset    += "document.getElementById(\"set_threshold_"+app_active_cam+"\").value = "+threshold_initial_value+";";
 	    threshold_onclick_reset    += "birdhouse_view_images_threshold(100);";
 
-	    threshold_slider            = "<div style='float:left;'><input type='range' id='threshold_slider_"+app_active_cam+"' onchange='"+threshold_slider_onchange+"' class='bh-slider' min='0' max='100' value='"+threshold_initial_value+"'></div>";
-	    threshold_slider           += "<div style='float:left;'><input id='set_threshold_"+app_active_cam+"' class='bh-slider-value' style='width:30px;' onchange='"+threshold_input_onchange+"' value='"+threshold_initial_value+"'>";
+	    threshold_slider            = "<div style='float:left;'><input type='range' id='threshold_slider_"+app_active_cam+"' onchange='"+threshold_slider_onchange+"' class='bh-slider' style='width:80%;' min='0' max='100' value='"+threshold_initial_value+"'>";
+	    threshold_slider           += "<input id='set_threshold_"+app_active_cam+"' class='bh-slider-value' style='width:10%;' onchange='"+threshold_input_onchange+"' value='"+threshold_initial_value+"'>";
 	    threshold_slider           += "<input id='set_threshold_"+app_active_cam+"_data' style='display:none;' value='devices:cameras:"+app_active_cam+":similarity:threshold'>";
-	    threshold_slider           += "<input id='set_threshold_"+app_active_cam+"_data_type' style='display:none;' value='float'>";
-        threshold_slider           += "<button class='bh-slider-button' onclick='"+threshold_onclick_try+"' style='float:none;'>Try</button>";
+	    threshold_slider           += "<input id='set_threshold_"+app_active_cam+"_data_type' style='display:none;' value='float'></div>";
+        threshold_slider           += "<div style='float:left;'><button class='bh-slider-button' onclick='"+threshold_onclick_try+"' style='float:none;'>Try</button>";
         threshold_slider           += "<button class='bh-slider-button' onclick='"+threshold_onclick_reset+"' style='float:none;'>Reset</button>";
         threshold_slider           += "<button class='bh-slider-button' onclick='"+threshold_onclick_set+"' style='float:none;'>Save</button></div>";
         threshold_slider           += "<div id='info_set_threshold' style='padding:5px;width:100%;float:left;'>&nbsp;</div>";
