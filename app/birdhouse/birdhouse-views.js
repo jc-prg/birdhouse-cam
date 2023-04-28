@@ -200,7 +200,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var camera_settings   = data["DATA"]["settings"]["devices"]["cameras"];
 	var current_weather   = app_data["WEATHER"]["forecast"]["today"];
 
+	var group_list        = [];
 	var tab               = new birdhouse_table();
+	tab.style_cells["vertical-align"] = "top";
 
 	if (data_list["view"]["max_image_size"]) {
         var max_image_size_LR  = data_list["view"]["max_image_size"]["lowres"];
@@ -251,14 +253,36 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 */
 
 	    //info_text += "&nbsp;<br/>&nbsp;";
+	    threshold_slider_onchange   = "document.getElementById(\"set_threshold_"+app_active_cam+"\").value=this.value;";
+	    threshold_input_onchange    = "document.getElementById(\"threshold_slider_"+app_active_cam+"\").value=this.value;";
+	    threshold_initial_value     = cam_settings["similarity"]["threshold"];
+	    threshold_onclick_try       = "birdhouse_view_images_threshold(document.getElementById(\"set_threshold_"+app_active_cam+"\").value);";
+	    threshold_onclick_set       = "birdhouse_edit_send(\"set_threshold_"+app_active_cam+"\",\""+app_active_cam+"\");";
+	    threshold_onclick_set      += "birdhouseReloadView();";
+
+	    threshold_onclick_reset     = "document.getElementById(\"threshold_slider_"+app_active_cam+"\").value = "+threshold_initial_value+";";
+	    threshold_onclick_reset    += "document.getElementById(\"set_threshold_"+app_active_cam+"\").value = "+threshold_initial_value+";";
+	    threshold_onclick_reset    += "birdhouse_view_images_threshold(100);";
+
+	    threshold_slider            = "<div style='float:left;'><input type='range' id='threshold_slider_"+app_active_cam+"' onchange='"+threshold_slider_onchange+"' class='bh-slider' min='0' max='100' value='"+threshold_initial_value+"'></div>";
+	    threshold_slider           += "<div style='float:left;'><input id='set_threshold_"+app_active_cam+"' class='bh-slider-value' style='width:30px;' onchange='"+threshold_input_onchange+"' value='"+threshold_initial_value+"'>";
+	    threshold_slider           += "<input id='set_threshold_"+app_active_cam+"_data' style='display:none;' value='devices:cameras:"+app_active_cam+":similarity:threshold'>";
+	    threshold_slider           += "<input id='set_threshold_"+app_active_cam+"_data_type' style='display:none;' value='float'>";
+        threshold_slider           += "<button class='bh-slider-button' onclick='"+threshold_onclick_try+"' style='float:none;'>Try</button>";
+        threshold_slider           += "<button class='bh-slider-button' onclick='"+threshold_onclick_reset+"' style='float:none;'>Reset</button>";
+        threshold_slider           += "<button class='bh-slider-button' onclick='"+threshold_onclick_set+"' style='float:none;'>Save</button></div>";
+        threshold_slider           += "<div id='info_set_threshold' style='padding:5px;width:100%;float:left;'>&nbsp;</div>";
+
+        info_text += "&nbsp;";
 	    info_text += tab.start();
 	    info_text += tab.row("&nbsp;&nbsp;" + lang("CAMERA") + ":", "<b>" + camera.toUpperCase() + "</b> - " + cam_settings["name"]);
 	    info_text += tab.row("&nbsp;&nbsp;" + lang("RECORDING_TIMES") + ":", lang("FROM_TO_EVERY", [record_from, record_to, rhythm]));
 	    info_text += tab.row("&nbsp;&nbsp;" + lang("VIDEO") + ":", create );
+	    info_text += tab.row("&nbsp;&nbsp;" + lang("THRESHOLD") + ":", threshold_slider );
 	    info_text += tab.end();
 	    info_text += "&nbsp;<br/>&nbsp;";
 
-        html += birdhouse_OtherGroup( "info", lang("INFORMATION"), info_text, true );
+        html += birdhouse_OtherGroup( "info", lang("INFORMATION") + " &amp; " + lang("SETTINGS"), info_text, true );
 	}
 
     // create chart data
@@ -333,6 +357,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 			delete group_entries["999999"];
 			html += birdhouse_ImageGroup(title, group_entries, entry_count, entry_category, header_open, admin,
 			                             video_short, same_img_size, max_image_size_LR);
+			group_list.push(title);
 			count_groups += 1;
         });
         if (html == "" && server_status["view_favorite_loading"] == "done") {
@@ -340,6 +365,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         }
         else if (html == "") {
             html += "<center>&nbsp;<br/>"+lang("DATA_LOADING_TRY_AGAIN")+"<br/>&nbsp;</center>";
+        }
+        if (group_list.length > 0) {
+            html += "<div id='group_list' style='display:none;'>" + group_list.join(" ") + "</div>";
         }
     }
 

@@ -2202,10 +2202,12 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.record_image_start = ""
         self.record_image_end = ""
         self.record_image_error = False
+        self.record_temp_threshold = None
 
         self.camera_stream_raw = None
         self.camera_streams = {}
 
+        self.date_last = self.config.local_time().strftime("%Y-%m-%d")
         self.usage_time = time.time()
         self.usage_interval = 60
 
@@ -2424,6 +2426,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             current_time = self.config.local_time()
             stamp = current_time.strftime('%H%M%S')
             self.config_update = self.config.update["camera_" + self.id]
+
+            # reset some settings end of the day
+            if self.date_last != self.config.local_time().strftime("%Y-%m-%d"):
+                self.record_temp_threshold = None
+                self.date_last = self.config.local_time().strftime("%Y-%m-%d")
 
             # if shutdown
             if self.config.shut_down:
@@ -2884,6 +2891,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         check image properties to decide if image is a selected one (for backup and view with selected images)
         """
+        threshold = float(self.param["similarity"]["threshold"])
+        if self.record_temp_threshold is not None:
+            threshold = self.record_temp_threshold
+
         select = False
         if "similarity" not in file_info:
             select = False
@@ -2902,7 +2913,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 select = True
 
             elif check_similarity:
-                threshold = float(self.param["similarity"]["threshold"])
                 similarity = float(file_info["similarity"])
                 if similarity != 0 and similarity < threshold:
                     select = True

@@ -421,7 +421,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
     var height = "";
     var container_style = "";
     var thumb_container_style = "";
-    var addon_id = "";
+    var container_id = "";
 
     if (!same_img_size) {
         height = " fixed_height";
@@ -436,13 +436,17 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
         thumb_container_style += "width:" + thumbnail_width + "px;";
         }
 
-    if (entry["type"] == "addon") { addon_id = "id='lowres_today'"; }
+    if (entry["type"] == "addon")   { container_id = "lowres_today"; }
+    else                            { container_id = img_id2 + "_container"; }
 
-	html += "<div "+addon_id+" class='image_container"+height+"' style='" + container_style + "'>";
+	html += "<div id='"+container_id+"' class='image_container"+height+"' style='" + container_style + "'>";
 	html += "  <div class='star'>"+star+"</div>";
 	html += "  <div class='recycle'>"+recycle+"</div>";
     html += "  <div class='thumbnail_container' style='" + thumb_container_style + "'>";
 	html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id2+"' class='thumbnail' style='"+style+"'/></a>";
+	if (entry["similarity"]) {
+	    html += "    <input id='"+img_id2+"_similarity' value='"+entry["similarity"]+"' style='display:none;'>";
+	    }
 	html +=      play_button;
 	html += "    <br/><center><small>"+description+"</small></center>";
 	html += "  </div>";

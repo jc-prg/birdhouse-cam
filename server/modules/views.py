@@ -429,6 +429,30 @@ class BirdhouseViewCreate(object):
 
         return weather
 
+    def statistic_data(self, data):
+        """
+        create chart format out of statistic data
+        ----
+        titles - cam1_active, cam1_fps, cam2_active, cam2_fps
+        data - {"HHMM": [cam1_active, cam1_fps, cam2_active, cam2_fps], "HHMM": [cam1_active, cam1_fps, cam2_active, cam2_fps], ...}
+        """
+        self.logging.debug("create_statistic_data")
+        chart = {"titles": [], "data": {}}
+        main_keys = list(data.keys())
+        sub_keys = {"active_streams": "Streams", "stream_framerate": "Framerate"}
+
+        for main_key in main_keys:
+            for sub_key in sub_keys:
+                chart["titles"].append(main_key + ": " + sub_keys[sub_key])
+
+        for entry_key in data[main_keys[0]]:
+            chart["data"][entry_key] = []
+            for main_key in main_keys:
+                for sub_key in sub_keys:
+                    chart["data"][entry_key].append(data[main_key][entry_key][sub_key])
+
+        return chart
+
 
 class BirdhouseViews(threading.Thread):
 

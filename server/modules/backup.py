@@ -140,6 +140,9 @@ class BirdhouseArchive(threading.Thread):
             file_weather = self.config.db_handler.file_path(config="weather")
             file_weather_copy = os.path.join(self.config.db_handler.directory(config="weather", date=backup_date),
                                              self.config.files["weather"])
+            file_stats = self.config.db_handler.file_path(config="statistics")
+            file_stats_copy = os.path.join(self.config.db_handler.directory(config="statistics", date=backup_date),
+                                           self.config.files["statistics"])
 
             stamps = list(reversed(sorted(files.keys())))
             dir_source = self.config.db_handler.directory(config="images")
@@ -152,6 +155,8 @@ class BirdhouseArchive(threading.Thread):
                 os.popen("cp "+file_sensor+" "+file_sensor_copy)
             if os.path.isfile(file_weather):
                 os.popen("cp "+file_weather+" "+file_weather_copy)
+            if os.path.isfile(file_stats):
+                os.popen("cp "+file_stats+" "+file_stats_copy)
 
             info = True
             for cam in self.camera:

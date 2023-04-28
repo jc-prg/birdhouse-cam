@@ -651,6 +651,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             config.main_config_edit("main", data)
             if which_cam in camera:
                 camera[which_cam].config_update = True
+        elif param["command"] == "set-temp-threshold":
+            srv_logging.info("Set temporary threshold to camera '"+which_cam+"': " + str(param["parameter"]))
+            if which_cam in camera:
+                camera[which_cam].record_temp_threshold = param["parameter"]
         elif param["command"] == "check-pwd":
             admin_pwd = birdhouse_env["admin_password"]
             if admin_pwd == param["parameter"][0]:

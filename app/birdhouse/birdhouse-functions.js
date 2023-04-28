@@ -54,7 +54,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         html += "<div class='bh-slidecontainer' style='float:left;width:100px;height:auto;'>";
         html += "<input id='"+id+"_range' class='bh-slider' type='range' name='' min='"+range[0]+"' max='"+range[1]+"' style='"+style+"' onchange='"+on_set+"'>";
         html += "</div><div style='float:left;margin-left:12px;'>";
-        html += "<input id='"+id+"' class='bh-slidervalue' style='width:30px;' onchange='"+on_value+"'>";
+        html += "<input id='"+id+"' class='bh-slider-value' style='width:30px;' onchange='"+on_value+"'>";
         html += "</div>";
         }
     html += "<input id='"+id+"_data' style='display:none' value='"+field+"'>\n";
@@ -78,7 +78,7 @@ function birdhouse_edit_check_values(id, data_type) {
     var error = false;
     var error_msg = "";
 
-    input.style.backgroundColor = "white";
+    input.style.backgroundColor = "";
 
     if (data_type == "json") {
         try { var json_test = JSON.parse(value); }
@@ -159,6 +159,33 @@ function birdhouse_tooltip( tooltip_element, tooltip_content, name, left="" ) {
 	result = button_tooltip.create( tooltip_element, tooltip_content, name, left );
 	return result;
 	}
+
+
+function birdhouse_view_images_threshold(threshold) {
+    group_list = document.getElementById("group_list").innerHTML.split(" ");
+    image_list = [];
+    image_list_active = [];
+    for (var i=0;i<group_list.length;i++) {
+        image_ids_in_group = document.getElementById("group_ids_"+group_list[i]).innerHTML.split(" ");
+        image_list = image_list.concat(image_ids_in_group);
+        for (a=0;a<image_ids_in_group.length;a++) {
+            if (image_list[a] != "") {
+                image_threshold = document.getElementById(image_ids_in_group[a]+"_similarity");
+                image_container = image_ids_in_group[a] + "_container";
+                if (image_threshold && image_threshold.value+0 <= threshold+0) {
+                    image_list_active.push(image_ids_in_group[a]);
+                    elementVisible(image_container);
+                }
+                else {
+                    elementHidden(image_container);
+                }
+            }
+        }
+    }
+
+    setTextById("info_set_threshold", "Threshold = " + threshold + "%: " + image_list_active.length + " of " + image_list.length + " selected.")
+    //alert("birdhouse_view_images_threshold: threshold=" + threshold + "; all=" + image_list.length + "; select=" + image_list_active.length);
+}
 
 
 function birdhouse_frameHeader(title, status_id="") {

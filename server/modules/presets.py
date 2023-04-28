@@ -122,9 +122,10 @@ birdhouse_dir_to_database = {
     "images/config_backup":         "archive_images",
     "images/config_favorites":      "favorites",
     "videos/config_videos":         "archive_videos",
-    "images/<DATE>/config_images":  "archive_images",
-    "images/<DATE>/config_sensors": "archive_sensors",
-    "images/<DATE>/config_weather": "archive_weather"
+    "images/<DATE>/config_statistics": "archive_statistics",
+    "images/<DATE>/config_images":     "archive_images",
+    "images/<DATE>/config_sensors":    "archive_sensors",
+    "images/<DATE>/config_weather":    "archive_weather"
 }
 
 
