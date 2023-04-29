@@ -75,7 +75,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                 self.stop()
 
             # wait if paused
-            while self._paused:
+            while self._paused and self._running:
                 if p_count == 0:
                     self.logging.info("Pause sensor "+self.id+" ...")
                     p_count += 1

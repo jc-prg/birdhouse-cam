@@ -1445,7 +1445,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         else:
             return self.read_from_camera()
 
-    def read_stream(self, stream_id="default"):
+    def read_stream(self, stream_id="default", wait=True):
         """
         return stream image considering the max fps
         """
@@ -1454,10 +1454,11 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         self._last_activity_count += 1
         self._last_activity_per_stream[stream_id] = time.time()
 
-        wait_time = 0
-        while self._stream_image_id == 0 and wait_time <= self._timeout:
-            time.sleep(1)
-            wait_time += 1
+        if wait:
+            wait_time = 0
+            while self._stream_image_id == 0 and wait_time <= self._timeout:
+                time.sleep(1)
+                wait_time += 1
 
         if self._stream_image_id == 0:
             self.raise_error("sRaw: read_stream: got no image from source '" + self.id + "' yet!")
@@ -1635,6 +1636,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self._stream_image_id = 0
         self._size_lowres = None
         self._start_delay_stream = 2
+        self._error_wait = True
 
         self.fps = None
         self.fps_max = 15
@@ -1723,6 +1725,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 self._last_activity_count = 0
                 self._last_activity_per_stream = {}
                 self._stream_image_id += 0
+                self._error_wait = True
 
             self.stream_count()
             self.stream_framerate_check()
@@ -1743,7 +1746,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             return raw.copy()
 
         if stream:
-            raw = self.stream_raw.read_stream(self._stream_id_base + stream_id)
+            raw = self.stream_raw.read_stream(self._stream_id_base + stream_id, self._error_wait)
             raw = self.edit_check_error(raw, "Error reading 'self.stream_raw.read_stream()' in read_raw_and_edit()",
                                         return_error_image)
         else:
@@ -1810,19 +1813,23 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         return self.read_raw_and_edit(stream=False, stream_id="default", return_error_image=return_error_image)
 
-    def read_stream(self, stream_id, system_info=False):
+    def read_stream(self, stream_id, system_info=False, wait=True):
         """
         read stream image considering the max fps
         """
+        if not wait:
+            self._error_wait = False
+
         duration = time.time() - self._last_activity
         self._last_activity = time.time()
         self._last_activity_count += 1
         self._last_activity_per_stream[stream_id] = time.time()
 
-        wait_time = 0
-        while self._stream_image_id == 0 and wait_time <= self._timeout:
-            time.sleep(1)
-            wait_time += 1
+        if wait:
+            wait_time = 0
+            while self._stream_image_id == 0 and wait_time <= self._timeout:
+                time.sleep(1)
+                wait_time += 1
 
         if self._stream_image_id == 0:
             self.raise_error("sRaw: read_stream: got no image from source '" + self.id + "' yet!")
@@ -2499,9 +2506,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         Stop recording
         """
-        if not self.error and self.active:
-            if self.video:
-                self.video.stop()
+        if self.video:
+            self.video.stop()
 
         self.camera_stream_raw.stop()
         for stream in self.camera_streams:
@@ -2855,7 +2861,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                    str(int(second)) + " ... " + str(self.record_seconds))
 
                 if int(second) in self.record_seconds or check_in_general:
-                    if "sunrise" not in record_from_hour and not "sunrise" not in record_from_minute:
+                    if "sunrise" not in str(record_from_hour) and not "sunrise" not in str(record_from_minute):
                         if ((int(record_from_hour)*60)+int(record_from_minute)) <= ((int(hour)*60)+int(minute)) <= \
                                 ((int(record_to_hour_compare)*60)+int(record_to_minute_compare)):
                             self.logging.debug(
@@ -2934,7 +2940,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                            " -> " + str(select))
         return select
 
-    def get_stream(self, stream_id, stream_type, stream_resolution="", system_info=False, return_error_image=True):
+    def get_stream(self, stream_id, stream_type, stream_resolution="", system_info=False,
+                   return_error_image=True, wait=True):
         """
         get image from new streams
         """
@@ -2948,7 +2955,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.raise_error(error_msg)
             return image
         else:
-            image = self.camera_streams[stream].read_stream(stream_id, system_info)
+            image = self.camera_streams[stream].read_stream(stream_id, system_info, wait)
 
         if self.if_error() or self.camera_streams[stream].if_error():
             image = self.camera_streams[stream].read_error_image()

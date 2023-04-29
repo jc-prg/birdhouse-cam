@@ -259,15 +259,16 @@ class ServerInformation(threading.Thread):
         self.logging = logging.getLogger("srv-info")
         self.logging.setLevel(birdhouse_loglevel_module["srv-info"])
         self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting Server Information ...")
 
     def run(self) -> None:
+        self.logging.info("Starting Server Information ...")
         while self._running:
             self.read()
             self.health_check = time.time()
             if config.shut_down:
                 self.stop()
             time.sleep(self._interval)
+        self.logging.info("Stopped Server Information.")
 
     def stop(self):
         self._running = False
@@ -999,10 +1000,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         srv_logging.info(which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
 
-        if ":" in which_cam2:
-            which_cam2, cam2_pos = which_cam2.split(":")
+        if ":" in which_cam and "+" in which_cam:
+            pip_cam, cam2_pos = which_cam.split(":")
+            which_cam, which_cam2 = pip_cam.split("+")
         else:
             cam2_pos = 4
+
+        if param["app_api"] == "pip":
+            srv_logging.info("PIP: 1=" + which_cam + " / 2=" + which_cam2 + "/ pos=" + str(cam2_pos))
 
         stream_pip = False
         stream_active = True
@@ -1047,12 +1052,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                                          system_info=True)
                 frame_id = camera[which_cam].get_stream_image_id()
 
-                if stream_pip and which_cam2 != "" and which_cam2 in camera:
-                    frame_raw_pip = camera[which_cam].get_stream(stream_id=stream_id_int,
-                                                                 stream_type=stream_type,
-                                                                 stream_resolution="lowres")
-                    frame_raw = camera[which_cam].image.image_in_image_raw(raw=frame_raw, raw2=frame_raw_pip,
-                                                                           position=int(cam2_pos))
+                if frame_raw is not None and len(frame_raw) > 0:
+                    if stream_pip and which_cam2 != "" and which_cam2 in camera:
+                        frame_raw_pip = camera[which_cam2].get_stream(stream_id=stream_id_int,
+                                                                      stream_type=stream_type,
+                                                                      stream_resolution="lowres",
+                                                                      wait=False)
+
+                        if frame_raw_pip is not None and len(frame_raw_pip) > 0:
+                            frame_raw = camera[which_cam].image.image_in_image_raw(raw=frame_raw, raw2=frame_raw_pip,
+                                                                                   position=int(cam2_pos))
 
                 if stream_type == "camera" \
                         and not camera[which_cam].if_error() \
@@ -1227,8 +1236,8 @@ if __name__ == "__main__":
     # Stop all processes to stop
     finally:
         health_check.stop()
-        config.stop()
         sys_info.stop()
+        config.stop()
         backup.stop()
         for cam in camera:
             camera[cam].stop()
@@ -1241,3 +1250,8 @@ if __name__ == "__main__":
         time.sleep(5)
         srv_logging.info("Stopped WebServer.")
         srv_logging.info("-------------------------------------------")
+
+        for thread in threading.enumerate():
+            if thread.name != "MainThread":
+                srv_logging.error("Could not stop: " + thread.name)
+                thread.stop()
