@@ -2855,13 +2855,14 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                    str(int(second)) + " ... " + str(self.record_seconds))
 
                 if int(second) in self.record_seconds or check_in_general:
-                    if ((int(record_from_hour)*60)+int(record_from_minute)) <= ((int(hour)*60)+int(minute)) <= \
-                            ((int(record_to_hour_compare)*60)+int(record_to_minute_compare)):
-                        self.logging.debug(
-                            " -> RECORD TRUE "+self.id+"  (" + str(record_from_hour) + ":" + str(record_from_minute) + "-" +
-                            str(record_to_hour_compare) + ":" + str(record_to_minute_compare) + ") " +
-                            str(hour) + "/" + str(minute) + "/" + str(second) + "  < -----")
-                        is_active = True
+                    if "sunrise" not in record_from_hour and not "sunrise" not in record_from_minute:
+                        if ((int(record_from_hour)*60)+int(record_from_minute)) <= ((int(hour)*60)+int(minute)) <= \
+                                ((int(record_to_hour_compare)*60)+int(record_to_minute_compare)):
+                            self.logging.debug(
+                                " -> RECORD TRUE "+self.id+"  (" + str(record_from_hour) + ":" + str(record_from_minute) + "-" +
+                                str(record_to_hour_compare) + ":" + str(record_to_minute_compare) + ") " +
+                                str(hour) + "/" + str(minute) + "/" + str(second) + "  < -----")
+                            is_active = True
 
         self.logging.debug(" -> RECORD FALSE "+self.id+" (" + str(record_from_hour) + ":" + str(record_from_minute) +
                            "-" + str(record_to_hour_compare) + ":" + str(record_to_minute_compare) + ")")

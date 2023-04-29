@@ -360,7 +360,8 @@ class BirdhouseConfigDBHandler(threading.Thread):
                     self.config_cache_changed[config] = False
             else:
                 for date in self.config_cache[config]:
-                    if self.config_cache_changed[config+"_"+date]:
+                    if config+"_"+date in self.config_cache_changed \
+                            and self.config_cache_changed[config+"_"+date]:
                         filename = self.file_path(config=config, date=date)
                         self.json.write(filename=filename, data=self.config_cache[config][date])
                         self.logging.info("   -> backup: " + config + " / " + date +
