@@ -48,7 +48,7 @@ function birdhouseStatus_print(data) {
     //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
     console.debug("Update Status ...");
 
-    app_data       = data;
+    app_data          = data;
     var settings   = data["DATA"]["settings"];
     var weather    = data["WEATHER"];
     var status_sys = data["STATUS"]["system"];

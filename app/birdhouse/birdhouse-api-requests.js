@@ -22,9 +22,10 @@ function birdhouse_genericApiRequest(method, commands, return_cmd) {
 }
 
 function birdhouse_loginDialog() {
-    message  = "Please insert password to login as Administrator:<br/>&nbsp;<br/>";
+    message  = lang("LOGIN_MSG") + "<br/>&nbsp;<br/>";
     message += "<input id='adm_pwd' type='password'>";
     appMsg.confirm(message, "birdhouse_loginCheck(document.getElementById('adm_pwd').value);", 200);
+    document.getElementById('adm_pwd').focus();
 }
 
 function birdhouse_loginCheck(pwd) {
@@ -33,6 +34,16 @@ function birdhouse_loginCheck(pwd) {
     // else show message, that pwd is wrong
     app_session_id = pwd;
     birdhouse_apiRequest("POST", ["check-pwd", pwd], "", birdhouse_loginReturn, "", "birdhouse_loginCheck");
+}
+
+function birdhouse_logout() {
+    app_session_id = "";
+    app_admin_allowed = false;
+    birdhouse_apiRequest("POST", ["check-pwd", '--logout--'], "", birdhouse_logoutMsg, "", "birdhouse_loginCheck");
+    }
+
+function birdhouse_logoutMsg() {
+    appMsg.alert(lang("LOGOUT_MSG"));
 }
 
 function birdhouse_loginReturn(data) {

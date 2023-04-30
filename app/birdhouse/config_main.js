@@ -49,7 +49,13 @@ function app_menu_entries(data) {
 		[lang("CAMERAS"),   "script", hideSettings+"birdhousePrint_load('CAMERA_SETTINGS','"+app_active_cam+"');"],
 		[lang("SETTINGS"),  "script", "birdhouse_settings.create();" ],
 		]);
-    }
+		if (admin_type == "LOGIN") {
+    	    app_menu = app_menu.concat([
+            ["LINE"],
+            [lang("LOGOUT"), "script", "birdhouse_logout();"],
+    		]);
+		    }
+		}
 	else if (admin_type == "LOGIN") {
 	    app_menu = app_menu.concat([
 		["LINE"],
