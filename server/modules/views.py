@@ -821,18 +821,20 @@ class BirdhouseViews(threading.Thread):
                     entry = file_data["files"][file]
                     if "camera" in entry and entry["camera"] == cam and "lowres" in entry \
                             and file[2:4] != "00":
-                        first_img = file
-                        self.logging.debug(" ......... 2=" + first_img)
-                        break
+                        if "to_be_deleted" not in entry or int(entry["to_deleted"]) != 1:
+                            first_img = file
+                            self.logging.debug(" ......... 2=" + first_img)
+                            break
 
             # or take first image with detected image
             if first_img == "":
                 for file in sorted_file_keys:
                     entry = file_data["files"][file]
                     if "camera" in entry and entry["camera"] == cam and "lowres" in entry:
-                        first_img = file
-                        self.logging.debug(" ......... 3=" + first_img)
-                        break
+                        if "to_be_deleted" not in entry or int(entry["to_deleted"]) != 1:
+                            first_img = file
+                            self.logging.debug(" ......... 3=" + first_img)
+                            break
 
         # select preview image
         elif "preview_fav" not in self.config.param["backup"] \
