@@ -821,7 +821,7 @@ class BirdhouseViews(threading.Thread):
                     entry = file_data["files"][file]
                     if "camera" in entry and entry["camera"] == cam and "lowres" in entry \
                             and file[2:4] != "00":
-                        if "to_be_deleted" not in entry or int(entry["to_deleted"]) != 1:
+                        if "to_be_deleted" not in entry or int(entry["to_be_deleted"]) != 1:
                             first_img = file
                             self.logging.debug(" ......... 2=" + first_img)
                             break
@@ -831,7 +831,7 @@ class BirdhouseViews(threading.Thread):
                 for file in sorted_file_keys:
                     entry = file_data["files"][file]
                     if "camera" in entry and entry["camera"] == cam and "lowres" in entry:
-                        if "to_be_deleted" not in entry or int(entry["to_deleted"]) != 1:
+                        if "to_be_deleted" not in entry or int(entry["to_be_deleted"]) != 1:
                             first_img = file
                             self.logging.debug(" ......... 3=" + first_img)
                             break
@@ -846,9 +846,10 @@ class BirdhouseViews(threading.Thread):
                 entry = file_data["files"][file]
                 if image_title[0:4] == file[0:4] and "camera" in entry and entry["camera"] == cam \
                         and "lowres" in entry:
-                    self.logging.debug(" ......... 4=" + first_img)
-                    first_img_temp = file
-                    break
+                    if "to_be_deleted" not in entry or int(entry["to_be_deleted"]) != 1:
+                        self.logging.debug(" ......... 4=" + first_img)
+                        first_img_temp = file
+                        break
             if first_img_temp != "":
                 first_img = first_img_temp
 
@@ -857,9 +858,10 @@ class BirdhouseViews(threading.Thread):
             for file in sorted_file_keys:
                 entry = file_data["files"][file]
                 if "camera" in entry and entry["camera"] == cam and "lowres" in entry:
-                    self.logging.debug(" ......... 5=" + first_img)
-                    first_img = file
-                    break
+                    if "to_be_deleted" not in entry or int(entry["to_be_deleted"]) != 1:
+                        self.logging.debug(" ......... 5=" + first_img)
+                        first_img = file
+                        break
 
         if first_img in file_data["files"]:
             image_preview = os.path.join(directory, file_data["files"][first_img]["lowres"])
