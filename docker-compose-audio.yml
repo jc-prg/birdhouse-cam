@@ -13,4 +13,5 @@ services:
     privileged: true
     restart: on-failure
     volumes:
+      - ${BIRDHOUSE_DIR_LOGGING:-./log}:/log
       - ./:/usr/src/app/

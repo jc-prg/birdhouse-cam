@@ -6,8 +6,11 @@ PORT=$BIRDHOUSE_AUDIO_PORT
 DEVICE=$BIRDHOUSE_AUDIO_DEVICE
 
 echo "Start Audio-Server on port $PORT, device $DEVICE"
-echo "... call via browser: http://localhost:$PORT/stream.mp3"
+echo "... call via browser: http://localhost:$PORT/stream.mp3."
 echo ""
+
+DATE=`date +'%m/%d %H:%M:%S'`
+echo "${DATE} | INFO     audio-srv  | Starting audio streaming via ffmpeg (./stream_audio.ffmpeg, port=${PORT}, device=${DEVICE}) ... " >> log/server.log
 
 # https://www.tunbury.org/audio-stream/
 
@@ -18,3 +21,6 @@ echo ""
 # HTML5 compatible (Firefox)
 #/usr/bin/ffmpeg -loop 1 -y -i input.jpg -f alsa -i plughw:1,0 -c:v libx264 -b:v 5000k -minrate 1000k -maxrate 8000k -c:a aac -f mp4 -movflags frag_keyframe+empty_moov+faststart -listen 1 tcp://0.0.0.0:5002
 #/usr/bin/ffmpeg -loop 1 -y -i input.jpg -f alsa -i plughw:1,0 -c:v libx264 -b:v 800k -preset ultrafast -c:a aac -f mp4 -movflags frag_keyframe+empty_moov+faststart -listen 1 tcp://0.0.0.0:5002
+
+DATE=`date +'%m/%d %H:%M:%S'`
+echo "${DATE} | INFO     audio-srv  | Stopped audio streaming. " >> log/server.log
