@@ -98,13 +98,6 @@ function birdhouse_app_settings (name="Settings") {
 
         var timezones = "UTC-12,UTC-11,UTC-10,UTC-9,UTC-8,UTC-7,UTC-6,UTC-5,UTC-4,UTC-3,UTC-2,UTC-1,UTC+0,UTC+1,UTC+2,UTC+3,UTC+4,UTC+5,UTC+6,UTC+7,UTC+8,UTC+9,UTC+10,UTC+11,UTC+12"
 
-        if (settings["server"]["database_server"] && settings["server"]["database_server"] != "") {
-            var link = "http://"+settings["server"]["database_server"]+":"+settings["server"]["database_port"]+"/_utils/";
-        }
-        else {
-            var link = "http://"+this.current_server+":"+settings["server"]["database_port"]+"/_utils/";
-        }
-
         var html = "&nbsp;<br/><h2>&nbsp;<br/>"+lang("SETTINGS")+"</h2>";
         html += "<hr style='border:1px solid gray;'>"
         html += "<div style='display:none'>Edit initial setup: "+birdhouse_edit_field(id="set_initial_setup", field="server:initial_setup", type="select", options="false", data_type="boolean")+"</div>";
@@ -145,6 +138,13 @@ function birdhouse_app_settings (name="Settings") {
 
     this.server_side_settings = function() {
         var settings = app_data["DATA"]["settings"];
+        if (settings["server"]["database_server"] && settings["server"]["database_server"] != "") {
+            var link = "http://"+settings["server"]["database_server"]+":"+settings["server"]["database_port"]+"/_utils/";
+        }
+        else {
+            var link = "http://"+this.current_server+":"+settings["server"]["database_port"]+"/_utils/";
+        }
+
         var html_internal = "";
         html_internal += this.tab.start();
         html_internal += this.tab.row("DB Server:&nbsp;",          settings["server"]["database_server"]);
