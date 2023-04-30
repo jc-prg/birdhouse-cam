@@ -41,7 +41,8 @@ RUN mkdir -p ~/ffmpeg_sources ~/bin
 RUN cd ~/ffmpeg_sources &&  \
     wget -O  ffmpeg-snapshot.tar.bz2 https://ffmpeg.org/releases/ffmpeg-snapshot.tar.bz2 --no-check-certificate && \
     tar xjvf ffmpeg-snapshot.tar.bz2 && \
-    PATH="$HOME/bin:$PATH" PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig" && cd ffmpeg && ./configure \
+    PATH="$HOME/bin:$PATH" PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig"
+RUN cd ~/ffmpeg_sources/ffmpeg && ./configure \
   --prefix="$HOME/ffmpeg_build" \
   --pkg-config-flags="--static" \
   --extra-cflags="-I$HOME/ffmpeg_build/include" \
