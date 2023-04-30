@@ -48,6 +48,7 @@ birdhouse_loglevel_module = {
     "backup": birdhouse_loglevel,
     "cam-main": birdhouse_loglevel,
     "cam-img": birdhouse_loglevel,
+    "cam-ffmpg": birdhouse_loglevel,
     "cam-video": birdhouse_loglevel,
     "cam-out": birdhouse_loglevel,
     "cam-other": birdhouse_loglevel,

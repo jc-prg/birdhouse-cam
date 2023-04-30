@@ -28,7 +28,11 @@ class BirdhouseClass(object):
         self.error_connect = False
 
         self.logging = logging.getLogger(class_id)
-        self.logging.setLevel(birdhouse_loglevel_module[class_log])
+        if class_log not in birdhouse_loglevel_module:
+            self.logging.setLevel(logging.INFO)
+            self.logging.error("Key '" + class_id + "' is not defined in preset.py in 'birdhouse_loglevel_module'.")
+        else:
+            self.logging.setLevel(birdhouse_loglevel_module[class_log])
         self.logging.addHandler(birdhouse_loghandler)
 
     def raise_error(self, message, connect=False):

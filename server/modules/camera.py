@@ -9,8 +9,10 @@ import threading
 
 from skimage.metrics import structural_similarity as ssim
 from datetime import datetime
+from better_ffmpeg_progress import FfmpegProcess
+
 from modules.presets import *
-from modules.bh_class import BirdhouseCameraClass
+from modules.bh_class import BirdhouseCameraClass, BirdhouseClass
 
 
 class BirdhouseCameraHandler(BirdhouseCameraClass):
@@ -830,6 +832,54 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         return raw
 
 
+class BirdhouseFfmpegProcessing(BirdhouseClass):
+
+    def __init__(self, camera_id, camera, config):
+        BirdhouseClass.__init__(self, class_id=camera_id+"-ffmpg", class_log="cam-ffmpg",
+                                device_id=camera_id, config=config)
+        self.progess_reset = {
+            "running": False,
+            "error": False,
+            "percentage": 0,
+            "estimated_time": 0,
+            "estimated_filesize": 0,
+            "speed": 0
+        }
+        self.progress_info = self.progess_reset.copy()
+
+    def handle_progress_info(self, percentage, speed, eta, estimated_filesize):
+        if percentage is not None:
+            self.logging.info("FFMpeg progress: " + str(round(percentage, 1)) + "%; ...")
+            self.progress_info["percentage"] = percentage
+        if eta is not None:
+            self.logging.info("FFMpeg progress: " + str(round(eta, 1)) + "s; ...")
+            self.progress_info["estimated_time"] = eta
+        if speed is not None:
+            self.progress_info["speed"] = speed
+        if estimated_filesize is not None:
+            self.progress_info["estimated_filesize"] = estimated_filesize
+
+    def handle_success(self):
+        """Code to run if the FFmpeg process completes successfully."""
+        self.progress_info = self.progess_reset.copy()
+
+    def handle_error(self):
+        """Code to run if the FFmpeg process encounters an error."""
+        self.progress_info["error"] = True
+
+    def start_process(self, commands):
+        """
+        Run FFMpeg process
+        process = FfmpegProcess(["ffmpeg", "-i", "input.mp4", "-c:a", "libmp3lame", "output.mp3"])
+        """
+        self.logging.info("Start rendering: " + str(commands))
+        self.progress_info["running"] = True
+        process = FfmpegProcess(commands)
+        process.run(progress_handler=self.handle_progress_info,
+                    success_handler=self.handle_success,
+                    error_handler=self.handle_error)
+
+
 class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     """
     Record videos: start and stop; from all pictures of the day
@@ -861,6 +911,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                           "-vcodec libx264 -crf 18 {OUTPUT_FILENAME}"
         self.ffmpeg_trim = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} -vcodec libx264 -crf 18 " + \
                            "-ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
+        self.ffmpeg = BirdhouseFfmpegProcessing(camera_id, camera, config)
 
         # Other working options:
         # self.ffmpeg_cmd  += "-b 1000k -strict -2 -vcodec libx264 -profile:v main -level 3.1 -preset medium - \
@@ -1178,22 +1229,29 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         output_filename = os.path.join(self.config.db_handler.directory("videos"), cmd_videofile)
         cmd_ffmpeg = self.ffmpeg_cmd
         cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_FILENAMES}", input_filenames)
-        cmd_ffmpeg = cmd_ffmpeg.replace("{OUTPUT_FILENAMES}", output_filename)
+        cmd_ffmpeg = cmd_ffmpeg.replace("{OUTPUT_FILENAME}", output_filename)
         cmd_ffmpeg = cmd_ffmpeg.replace("{FRAMERATE}", str(round(framerate, 1)))
         self.logging.debug("Alternative: " + cmd_ffmpeg)
-        try:
-            (
-                ffmpeg
-                .input(input_filenames)
-                .filter('fps', fps=framerate, round='up')
-                .output(output_filename, vcodec=self.output_codec["vcodec"], crf=self.output_codec["crf"])
-                .overwrite_output()
-                .run(capture_stdout=True, capture_stderr=False)
-            )
-        except ffmpeg.Error as e:
-            self.raise_error("Error during ffmpeg video creation: " + str(e))
-            response = {"result": "error", "reason": "create video with ffmpeg", "message": str(e)}
-            return response
+        cmd_ffmpeg = cmd_ffmpeg.split(" ")
+
+        test = True
+        if test:
+            self.ffmpeg.start_process(cmd_ffmpeg)
+
+        else:
+            try:
+                (
+                    ffmpeg
+                    .input(input_filenames)
+                    .filter('fps', fps=framerate, round='up')
+                    .output(output_filename, vcodec=self.output_codec["vcodec"], crf=self.output_codec["crf"])
+                    .overwrite_output()
+                    .run(capture_stdout=True, capture_stderr=False)
+                )
+            except ffmpeg.Error as e:
+                self.raise_error("Error during ffmpeg video creation: " + str(e))
+                response = {"result": "error", "reason": "create video with ffmpeg", "message": str(e)}
+                return response
 
         self.logging.info("Create thumbnail file ...")
         cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.db_handler.directory("videos") + cmd_thumbfile
