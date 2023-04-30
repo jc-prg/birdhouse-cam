@@ -2814,17 +2814,24 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     self.record_seconds.append(start)
                     start += int(record_rhythm)
 
-                if ("sunrise" in record_from or "sunset" in record_to) and \
-                        self.weather_active and self.weather_sunrise is not None:
+                if "sun" in record_from and self.weather_active and self.weather_sunrise is not None:
                     if "sunrise-1" in record_from:
                         record_from_hour = int(self.weather_sunrise.split(":")[0]) - 1
-                        record_from_minute = self.weather_sunrise.split(":")[1]
+                        record_from_minute = int(self.weather_sunrise.split(":")[1])
                     elif "sunrise+0" in record_from:
                         record_from_hour = int(self.weather_sunrise.split(":")[0])
-                        record_from_minute = self.weather_sunrise.split(":")[1]
+                        record_from_minute = int(self.weather_sunrise.split(":")[1])
                     elif "sunrise+1" in record_from:
                         record_from_hour = int(self.weather_sunrise.split(":")[0]) + 1
-                        record_from_minute = self.weather_sunrise.split(":")[1]
+                        record_from_minute = int(self.weather_sunrise.split(":")[1])
+                elif "sun" in record_from:
+                    record_from_hour = 8
+                    record_from_minute = 0
+                else:
+                    record_from_hour = record_from
+                    record_from_minute = 0
+
+                if "sun" in record_to and self.weather_active and self.weather_sunrise is not None:
                     if "sunset-1" in record_to:
                         record_to_hour = int(self.weather_sunset.split(":")[0]) - 1
                         record_to_minute = self.weather_sunset.split(":")[1]
@@ -2834,18 +2841,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     elif "sunset+1" in record_to:
                         record_to_hour = int(self.weather_sunset.split(":")[0]) + 1
                         record_to_minute = self.weather_sunset.split(":")[1]
+                elif "sun" in record_to:
+                    record_to_hour = 20
+                    record_to_minute = 0
                 else:
-                    if "sunrise" in record_from:
-                        record_from_hour = 7
-                        record_from_minute = 0
-                    if "sunset" in record_to:
-                        record_to_hour = 20
-                        record_to_minute = 0
-
-                if record_from_hour == -1:
-                    record_from_hour = record_from
-                    record_from_minute = 0
-                if record_to_hour == -1:
                     record_to_hour = record_to
                     record_to_minute = 0
 
@@ -2861,14 +2860,13 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                    str(int(second)) + " ... " + str(self.record_seconds))
 
                 if int(second) in self.record_seconds or check_in_general:
-                    if "sunrise" not in str(record_from_hour) and not "sunrise" not in str(record_from_minute):
-                        if ((int(record_from_hour)*60)+int(record_from_minute)) <= ((int(hour)*60)+int(minute)) <= \
-                                ((int(record_to_hour_compare)*60)+int(record_to_minute_compare)):
-                            self.logging.debug(
-                                " -> RECORD TRUE "+self.id+"  (" + str(record_from_hour) + ":" + str(record_from_minute) + "-" +
-                                str(record_to_hour_compare) + ":" + str(record_to_minute_compare) + ") " +
-                                str(hour) + "/" + str(minute) + "/" + str(second) + "  < -----")
-                            is_active = True
+                    if ((int(record_from_hour)*60)+int(record_from_minute)) <= ((int(hour)*60)+int(minute)) <= \
+                            ((int(record_to_hour_compare)*60)+int(record_to_minute_compare)):
+                        self.logging.debug(
+                            " -> RECORD TRUE "+self.id+"  (" + str(record_from_hour) + ":" + str(record_from_minute) + "-" +
+                            str(record_to_hour_compare) + ":" + str(record_to_minute_compare) + ") " +
+                            str(hour) + "/" + str(minute) + "/" + str(second) + "  < -----")
+                        is_active = True
 
         self.logging.debug(" -> RECORD FALSE "+self.id+" (" + str(record_from_hour) + ":" + str(record_from_minute) +
                            "-" + str(record_to_hour_compare) + ":" + str(record_to_minute_compare) + ")")

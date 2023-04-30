@@ -185,7 +185,6 @@ function birdhouseDevices_cameras(data) {
 
         html_entry = tab.start();
         html_entry += tab.row("Last Recorded:", "<div id='last_image_recorded_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
-		html_entry += tab.row("Current Streams:", "<div id='show_stream_count_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
         html_entry += tab.row("Error Streams:", "<div id='error_streams_"+camera+"'></div>");
         html_entry += tab.end();
         html_temp += birdhouse_OtherGroup( camera+"_error", "Status", html_entry, false );

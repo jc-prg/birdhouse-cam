@@ -155,9 +155,10 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         connect with sensor
         """
         temp = ""
-        self.error = False
+        self.reset_error()
         self.error_connect = False
-        if "rpi_active" in self.config.param["server"] and self.config.param["server"]["rpi_active"]:
+
+        if birdhouse_env["rpi_active"]:
             try:
                 if self.param["type"] == "dht11":
                     if self.initial_load:
@@ -226,6 +227,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         """
         error = {
             "running": self._running,
+            "rpi_active": birdhouse_env["rpi_active"],
             "last_read": time.time() - self.last_read_time,
             "error": self.error,
             "error_msg": self.error_msg,

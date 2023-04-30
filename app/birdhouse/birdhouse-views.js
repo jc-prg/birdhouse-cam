@@ -281,7 +281,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    info_text += tab.end();
 	    info_text += "&nbsp;<br/>&nbsp;";
 
-        html += birdhouse_OtherGroup( "info", lang("INFORMATION") + " &amp; " + lang("SETTINGS"), info_text, true );
+        html += birdhouse_OtherGroup( "info", lang("SETTINGS"), info_text, false );
 	}
 	// settings for admins - BACKUP
 	if (admin && active_page == "TODAY" && active_date != "" && active_date != undefined) {

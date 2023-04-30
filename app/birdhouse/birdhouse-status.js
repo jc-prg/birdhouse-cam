@@ -110,14 +110,15 @@ function birdhouseStatus_print(data) {
             if (camera_status[camera]["error_details"][stream_id]) { error_stream_info += "<font color='red'>"; }
             else                                                   { error_stream_info += "<font>"; } //  color='lightgray'
 
-            error_stream_info += "error=" + camera_status[camera]["error_details"][stream_id] + "; ";
-            error_stream_info += "messages=" + camera_status[camera]["error_details_msg"][stream_id].length + "; ";
-            if (stream_id != "image") {
-                error_stream_info += "last_active=" + camera_status[camera]["error_details_health"][stream_id] + "s";
-                }
+            var no_error = true;
+            if (camera_status[camera]["error_details"][stream_id])                  { no_error = false; error_stream_info += "ERROR: "; }
+            if (camera_status[camera]["error_details_msg"][stream_id].length > 0)   { no_error = false; error_stream_info += "messages=" + camera_status[camera]["error_details_msg"][stream_id].length + "; "; }
+            if (no_error)                                                           { error_stream_info += "OK: "; }
+            if (stream_id != "image")                                               { error_stream_info += "last_active=" + camera_status[camera]["error_details_health"][stream_id] + "s"; }
+
             if (camera_status[camera]["error_details"][stream_id] && camera_status[camera]["error_details_msg"][stream_id].length > 0) {
                 last_msg = camera_status[camera]["error_details_msg"][stream_id].length - 1;
-                error_stream_info += "<br/>" + camera_status[camera]["error_details_msg"][stream_id][last_msg] + "; ";
+                error_stream_info += "<br/><i>" + camera_status[camera]["error_details_msg"][stream_id][last_msg] + ";</i> ";
             }
             error_stream_info += "</font><br/>";
         }
@@ -160,8 +161,7 @@ function birdhouseStatus_print(data) {
             else                                               { var record_image_reload = Math.round(camera_status[camera]["record_image_reload"]*10)/10 + "s"; }
             setTextById("last_image_recorded_" + camera,
                         "last_recorded=" + Math.round(camera_status[camera]["record_image_last"]*10)/10 + "s" + "; last_reload=" + record_image_reload +
-                        "<br/>active=" + camera_status[camera]["record_image_active"] + "; " + "error=" + camera_status[camera]["record_image_error"] + ";" +
-                        "<br/>compare=" + camera_status[camera]["record_image_last_compare"].replace("] [","]<br/>active_time=["));
+                        "<br/>active=" + camera_status[camera]["record_image_active"] + "; " + "error=" + camera_status[camera]["record_image_error"]);
         }
 
         // camera stream working correctly

@@ -100,7 +100,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         elif self.db_type == "couch" or self.db_type == "both":
             if self.couch is None or not self.couch.connected:
                 self.couch = BirdhouseCouchDB(self.config, self.db_usr, self.db_pwd, self.db_server,
-                                                    self.db_port_internal, self.db_basedir)
+                                              self.db_port_internal, self.db_basedir)
             if not self.couch.connected:
                 self.db_type = "json"
             self.logging.info("  -> database handler - db_type=" + self.db_type + ".")
@@ -1001,7 +1001,7 @@ class BirdhouseConfig(threading.Thread):
         self.db_handler.write(config="main", data=self.param)
 
         # set database type if not JSON
-        self.db_type = self.param["server"]["database_type"]
+        self.db_type = birdhouse_env["database_type"]
         if self.db_type != "json" and ("db_type" not in self.param_init or self.param_init["db_type"] != "json"):
             if self.db_handler is not None:
                 self.db_handler.stop()
@@ -1032,7 +1032,7 @@ class BirdhouseConfig(threading.Thread):
             time.sleep(1)
 
             # check if data has change and old data shall be removed
-            if self.param["server"]["daily_clean_up"]:
+            if birdhouse_env["database_cleanup"]:
                 date_today = self.local_time().strftime("%Y-%m-%d")
                 if date_today != self.last_day_running:
                     self.logging.info("-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.")

@@ -13,15 +13,25 @@ load_dotenv(path)
 
 
 birdhouse_env = {
+    "database_type": get_env("DATABASE_TYPE"),
+    "database_cleanup": get_env("DATABASE_DAILY_CLEANUP").lower() in ("true", "1", "yes"),
+
+    "rpi_active": get_env("RPI_ACTIVE").lower() in ("true", "1", "yes"),
+
+    "couchdb_server": get_env("COUCHDB_SERVER"),
     "couchdb_user": get_env("COUCHDB_USER"),
     "couchdb_password": get_env("COUCHDB_PASSWORD"),
     "couchdb_port": get_env("COUCHDB_PORT"),
+
+    "http_server": get_env("BIRDHOUSE_HTTP_SERVER"),
     "port_http": get_env("BIRDHOUSE_HTTP_PORT"),
     "port_api": get_env("BIRDHOUSE_API_PORT"),
     "port_video": get_env("BIRDHOUSE_VIDEO_PORT"),
     "port_audio": get_env("BIRDHOUSE_AUDIO_PORT"),
+
     "dir_project": get_env("BIRDHOUSE_DIR_PROJECT"),
     "dir_logging": get_env("BIRDHOUSE_DIR_LOGGING"),
+
     "admin_ip4_deny": get_env("ADMIN_IP4_DENY"),
     "admin_ip4_allow": get_env("ADMIN_IP4_ALLOW"),
     "admin_password": get_env("ADMIN_PASSWORD"),
@@ -247,23 +257,16 @@ birdhouse_preset = {
         "weather_active": True
     },
     "server": {
-        "ip4_admin_deny":   ["192.168.1.31"],  # put in the IP address of your proxy or router if you don't want to allow edits from outside
-        "ip4_address":      "192.168.1.20",
+        "ip4_admin_deny":   [""],  # put in the IP address of your proxy or router if you don't want to allow edits from outside
+        "ip4_address":      "",
         "ip4_stream_audio": "",
         "ip4_stream_video": "",
-        "rpi_active":       False,
-        "port":             8000,              # http-port
-        "port_video":       8008,
-        "database_type":    "json",             # can be "json" or "couchdb"
-        "database_port":    5100,
-        "database_server":  "",
-        "daily_clean_up":   True,
         "initial_setup":    True
     },
     "title": "jc://birdhouse/",
     "views": {
         "index": {
-            "type": "default",
+            "type": "overlay",
             "lowres_position": 1
         }
     },

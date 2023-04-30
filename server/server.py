@@ -938,6 +938,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         api_response["DATA"]["settings"]["server"]["port_video"] = birdhouse_env["port_video"]
         api_response["DATA"]["settings"]["server"]["port_audio"] = birdhouse_env["port_audio"]
         api_response["DATA"]["settings"]["server"]["database_port"] = birdhouse_env["couchdb_port"]
+        api_response["DATA"]["settings"]["server"]["database_server"] = birdhouse_env["couchdb_server"]
         api_response["DATA"]["settings"]["server"]["ip4_admin_deny"] = birdhouse_env["admin_ip4_deny"]
         api_response["DATA"]["settings"]["server"]["ip4_admin_allow"] = birdhouse_env["admin_ip4_allow"]
         api_response["DATA"]["settings"]["server"]["admin_login"] = birdhouse_env["admin_login"]

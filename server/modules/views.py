@@ -709,7 +709,7 @@ class BirdhouseViews(threading.Thread):
             # Yesterday
             files_yesterday = {}
             stamps = list(reversed(sorted(files_all.keys())))
-            if not backup and not self.config.param["server"]["daily_clean_up"]:
+            if not backup and not birdhouse_env["database_cleanup"]:
                 for stamp in stamps:
                     if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
                         if "datestamp" not in files_all[stamp]:
@@ -1388,8 +1388,8 @@ class BirdhouseViews(threading.Thread):
         if self.config.db_handler.exists("videos"):
             files_all = self.config.db_handler.read_cache(config="videos")
             for file in files_all:
-                files_all[file]["directory"] = "http://"+self.config.param["server"]["ip4_stream_video"]
-                files_all[file]["directory"] += ":"+str(self.config.param["server"]["port_video"])+"/"
+                files_all[file]["directory"] = "http://"+self.config.param["server"]["ip4_stream_video"] ### need for action
+                files_all[file]["directory"] += ":"+str(birdhouse_env["port_video"])+"/"
                 files_all[file]["type"] = "video"
                 files_all[file]["path"] = self.config.directories["videos"]
                 files_all[file]["category"] = "/videos/" + file
