@@ -157,6 +157,7 @@ function birdhouse_app_settings (name="Settings") {
         html_internal += this.tab.row("HTTP Server:&nbsp;",        settings["server"]["ip4_address"]);
         html_internal += this.tab.row("HTTP Port:&nbsp;",          settings["server"]["port"]);
         html_internal += this.tab.row("Video stream port:&nbsp;",  settings["server"]["port_video"]);
+        html_internal += this.tab.row("Audio stream server:&nbsp;",settings["server"]["server_audio"]);
         html_internal += this.tab.row("Audio stream port:&nbsp;",  settings["server"]["port_audio"]);
         html_internal += this.tab.row("RPi Active:&nbsp;",         settings["server"]["rpi_active"] );
 

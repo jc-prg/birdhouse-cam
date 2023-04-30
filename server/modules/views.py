@@ -1392,7 +1392,7 @@ class BirdhouseViews(threading.Thread):
         if self.config.db_handler.exists("videos"):
             files_all = self.config.db_handler.read_cache(config="videos")
             for file in files_all:
-                files_all[file]["directory"] = "http://"+self.config.param["server"]["ip4_stream_video"] ### need for action
+                files_all[file]["directory"] = "http://"+birdhouse_env["server_audio"] ### need for action
                 files_all[file]["directory"] += ":"+str(birdhouse_env["port_video"])+"/"
                 files_all[file]["type"] = "video"
                 files_all[file]["path"] = self.config.directories["videos"]

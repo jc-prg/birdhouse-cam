@@ -36,9 +36,9 @@ mark favorites, analyze weather data, ...
   * Small USB Microphone
   * DHT11 / DHT22 Sensor
 * Software
-  * Python 3, CV2, imutils, JSON, Flask
+  * Python 3, CV2, imutils, JSON, Flask, ffmpeg 
   * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
-  * HTML, CSS, JavaScript, Pinch-Zoom, ffmpeg 
+  * HTML, CSS, JavaScript, Pinch-Zoom
   * jc://modules/, jc://app-framework/
 
 ## Main Software Features
@@ -62,16 +62,17 @@ mark favorites, analyze weather data, ...
   * Create video from all pictures of the current day
   * Trim videos
 * Get, archive, and visualize **weather data**:
-  * from sensors connected to the Raspberry Pi (DHT11/DHT22)
   * via internet for a defined location (python_weather OR [Open Meteo](https://open-meteo.com/))
+  * from sensors connected to the Raspberry Pi (DHT11/DHT22)
   * GPS lookup for cities or addresses via GeoPy to set weather location
 * Connect to **audio stream** from microphone
   * under construction, currently browser only (no iPhone)
 * **Admin functionality** via app
-  * Deny recording and admin functionality for specific IP addresses (e.g. router or proxy, to deny for access from the internet)
+  * Deny recording and admin functionality for specific IP addresses (e.g. router or proxy, to deny for access from the internet) or use password to login as administrator
   * edit server settings (partly, other settings define in file .env)
-  * edit device settings (devices must be added via config file)
-  * edit camera and image settings
+  * edit device settings, reconnect devices (devices must be added via config file)
+  * edit camera and image settings (contrast, saturation, hue, brightness ...)
+  * see amount of currently active streams
 
 ## Software Installation
 
@@ -161,10 +162,11 @@ $ sudo docker-compose -f docker-compose-webdav.yml up -d
 ### Add audio streaming
 
 * _under construction, not running on iOS devices yet_
-* To start the audio streaming edit and link the file [stream.service](config/install/stream.service) to the folder /etc/systemd/systems and start as root (see instructions in the file):
+* for this option it's recommended to use a Raspberry Pi 4
+* ports and hardware address are defined in the .env-file, to identify the hardware address (card-id, device-id) use ```arecord -l```
 
 ``` bash
-$ systemctl start stream.service
+$ sudo docker-compose -f docker-compose-audio.yml up -d
 ```
 
 ### Optimize system configuration (Ubuntu)

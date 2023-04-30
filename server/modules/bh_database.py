@@ -406,7 +406,7 @@ class BirdhouseTEXT(BirdhouseDbClass):
         self.wait_if_locked(filename)
         try:
             self.locked[filename] = True
-            with open(filename, 'wb') as text_file:
+            with open(filename, 'w') as text_file:
                 text_file.write(data)
                 text_file.close()
             self.locked[filename] = False

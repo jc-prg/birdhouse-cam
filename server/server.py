@@ -893,10 +893,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         micro_data = config.param["devices"]["microphones"].copy()
         for key in micro_data:
             api_response["STATUS"]["devices"]["microphones"][key] = {"status": "not implemented yet"}
-            if config.param["server"]["ip4_stream_audio"] == "":
-                micro_data[key]["stream_server"] = config.param["server"]["ip4_address"]
-            else:
-                micro_data[key]["stream_server"] = config.param["server"]["ip4_stream_audio"]
+            micro_data[key]["stream_server"] = birdhouse_env["server_audio"]
             micro_data[key]["stream_server"] += ":" + str(micro_data[key]["port"])
 
         # get camera data and create streaming information
@@ -937,6 +934,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         api_response["DATA"]["settings"]["server"]["port"] = birdhouse_env["port_http"]
         api_response["DATA"]["settings"]["server"]["port_video"] = birdhouse_env["port_video"]
         api_response["DATA"]["settings"]["server"]["port_audio"] = birdhouse_env["port_audio"]
+        api_response["DATA"]["settings"]["server"]["server_audio"] = birdhouse_env["port_audio"]
         api_response["DATA"]["settings"]["server"]["database_port"] = birdhouse_env["couchdb_port"]
         api_response["DATA"]["settings"]["server"]["database_server"] = birdhouse_env["couchdb_server"]
         api_response["DATA"]["settings"]["server"]["ip4_admin_deny"] = birdhouse_env["admin_ip4_deny"]

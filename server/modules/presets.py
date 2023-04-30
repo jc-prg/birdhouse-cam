@@ -1,5 +1,6 @@
 import os
 import logging
+import time
 from dotenv import load_dotenv
 from logging.handlers import RotatingFileHandler
 
@@ -27,6 +28,8 @@ birdhouse_env = {
     "port_http": get_env("BIRDHOUSE_HTTP_PORT"),
     "port_api": get_env("BIRDHOUSE_API_PORT"),
     "port_video": get_env("BIRDHOUSE_VIDEO_PORT"),
+
+    "server_audio": get_env("BIRDHOUSE_AUDIO_SERVER"),
     "port_audio": get_env("BIRDHOUSE_AUDIO_PORT"),
 
     "dir_project": get_env("BIRDHOUSE_DIR_PROJECT"),
@@ -281,12 +284,13 @@ birdhouse_preset = {
 
 birdhouse_client_presets = {
     "filename": "config_stage.js",
+    "directory": os.path.join(os.path.dirname(__file__), "../../app/birdhouse/"),
     "content": "//--------------------------------\n" +
-               "// Configure stage details\n" +
-               "//---------------------------------" +
+               "// Configure stage details (" + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + ")\n" +
+               "//---------------------------------\n" +
                "// Please edit not here, but in .env-File\n" +
                "var test		= false;\n" +
-               "var server_port = '8007';\n"
+               "var server_port = '" + birdhouse_env["port_api"] + "';\n\n"
 }
 
 

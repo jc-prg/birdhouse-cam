@@ -8,7 +8,7 @@ import threading
 from datetime import datetime, timezone, timedelta
 from modules.presets import *
 from modules.weather import BirdhouseWeather
-from modules.bh_database import BirdhouseCouchDB, BirdhouseJSON
+from modules.bh_database import BirdhouseCouchDB, BirdhouseJSON, BirdhouseTEXT
 
 
 class BirdhouseConfigDBHandler(threading.Thread):
@@ -1011,6 +1011,10 @@ class BirdhouseConfig(threading.Thread):
         self.queue = BirdhouseConfigQueue(config=self, db_handler=self.db_handler)
         self.queue.start()
 
+        # text file handler
+        self.txt_handler = BirdhouseTEXT(config=self)
+        self.main_config_app()
+
     def run(self):
         """
         Core function (not clear what to do yet)
@@ -1170,6 +1174,15 @@ class BirdhouseConfig(threading.Thread):
             self.logging.error("Could not create main config file, check if directory '" +
                                directory + "' is writable.")
             sys.exit('Error creating main config file')
+
+    def main_config_app(self):
+        """
+        create / overwrite configuration file of app
+        """
+        filename = os.path.join(birdhouse_client_presets["directory"], birdhouse_client_presets["filename"])
+        self.txt_handler.write(filename, birdhouse_client_presets["content"])
+        self.logging.info("Write App config file: " + filename)
+        self.logging.debug(birdhouse_client_presets["content"])
 
     def local_time(self):
         """
