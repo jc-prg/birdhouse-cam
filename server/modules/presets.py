@@ -59,6 +59,7 @@ birdhouse_loglevel_module = {
     "DB-json": birdhouse_loglevel,
     "DB-couch": birdhouse_loglevel,
     "DB-handler": birdhouse_loglevel,
+    "mic-main": birdhouse_loglevel,
     "sensors": birdhouse_loglevel,
     "server": birdhouse_loglevel,
     "srv-info": birdhouse_loglevel,
@@ -223,9 +224,13 @@ birdhouse_default_cam2["image_save"]["record_to"] = "sunset+0"
 birdhouse_default_micro = {
     "active": True,
     "name": "Inside",
+    "device_id": 0,
+    "device_name": "none",
+    "sample_rate": 16000,
     "type": "usb",
     "port": 5002
 }
+
 birdhouse_default_sensor = {
     "active": True,
     "name": "Inside",
