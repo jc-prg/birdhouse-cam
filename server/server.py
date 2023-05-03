@@ -30,7 +30,8 @@ import pyaudio
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 api_description = {"name": "BirdhouseCAM", "version": "v0.9.8"}
 app_framework = "v0.9.8"
-
+srv_audio_stream = None
+srv_audio = None
 
 def on_exit(signum, handler):
     """
@@ -254,7 +255,8 @@ class ServerHealthCheck(threading.Thread):
 
 class ServerInformation(threading.Thread):
 
-    def __init__(self):
+    def __init__
+        (self):
         threading.Thread.__init__(self)
         self._running = True
         self._system_status = {}
@@ -282,6 +284,8 @@ class ServerInformation(threading.Thread):
         self._running = False
 
     def read(self):
+        global srv_audio
+
         system = {}
         # Initialize the result.
         result = 0.0
@@ -348,8 +352,8 @@ class ServerInformation(threading.Thread):
         test = True
         if test:
             if self.microphones is None:
-                audio1 = pyaudio.PyAudio()
-                info = audio1.get_host_api_info_by_index(0)
+                srv_audio = pyaudio.PyAudio()
+                info = srv_audio.get_host_api_info_by_index(0)
                 num_devices = info.get('deviceCount')
                 for i in range(0, num_devices):
                     if (audio1.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
@@ -1188,6 +1192,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
     def do_GET_stream_audio(self, which_cam, param):
         """Audio streaming generator function."""
+        global srv_audio_stream, srv_audio
         srv_logging.debug("AUDIO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
 
         CHANNELS = 1
@@ -1205,13 +1210,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             DEVICE = micro["device_id"]
             RATE = micro["sample_rate"]
 
-            audio1 = pyaudio.PyAudio()
-            info = audio1.get_host_api_info_by_index(0)
+            if srv_audio is None:
+                srv_audio = pyaudio.PyAudio()
+
+            info = app_audio.get_host_api_info_by_index(0)
             num_devices = info.get('deviceCount')
             if DEVICE not in range(0, num_devices):
                 srv_logging.error("... AUDIO device '"+str(DEVICE)+"' not available (range: 0, "+str(num_devices)+")")
                 return
-            device = audio1.get_device_info_by_host_api_device_index(0, DEVICE)
+            device = srv_audio.get_device_info_by_host_api_device_index(0, DEVICE)
             if device.get('input') == 0:
                 srv_logging.error("... AUDIO device '"+str(DEVICE)+"' is not a microphone / has no input (" +
                                   device.get('name') + ")")
@@ -1224,9 +1231,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             return
 
         try:
-            stream = audio1.open(format=pyaudio.paInt16, channels=CHANNELS,
-                                 rate=RATE, input=True, input_device_index=DEVICE,
-                                 frames_per_buffer=CHUNK)
+            if srv_audio_stream is None:
+                srv_audio_stream = srv_audio.open(format=pyaudio.paInt16, channels=CHANNELS,
+                                                  rate=RATE, input=True, input_device_index=DEVICE,
+                                                  frames_per_buffer=CHUNK)
         except Exception as err:
             srv_logging.error("- Could not initialize audio stream (" + str(DEVICE) + "): " + str(err))
             srv_logging.error("- open: channels=" + str(CHANNELS) + ", rate=" + str(RATE) +
@@ -1242,10 +1250,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         first_run = True
         streaming = True
         while streaming:
-            if stream.is_stopped():
-                stream.start_stream()
+            if srv_audio_stream.is_stopped():
+                srv_audio_stream.start_stream()
             if first_run:
-                data = wav_header + stream.read(CHUNK)
+                data = wav_header + srv_audio_stream.read(CHUNK)
                 try:
                     first_run = False
                 except Exception as err:
@@ -1253,7 +1261,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     srv_logging.error("Error while grabbing audio from device: " + str(err))
             else:
                 try:
-                    data = stream.read(CHUNK)
+                    data = srv_audio_stream.read(CHUNK)
                 except Exception as err:
                     streaming = False
                     srv_logging.error("Error while grabbing audio from device: " + str(err))
