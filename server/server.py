@@ -1170,7 +1170,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             break
 
     @staticmethod
-    def do_GET_stream_audio_header(self, sample_rate, bits_per_sample, channels):
+    def do_GET_stream_audio_header(sample_rate, bits_per_sample, channels):
         """.."""
         datasize = 2000 * 10 ** 6
         #datasize = samples * channels * bits_per_sample // 8
