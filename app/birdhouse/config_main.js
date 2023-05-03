@@ -47,7 +47,7 @@ function app_menu_entries(data) {
 		["LINE"],
 		[lang("DEVICES"),   "script", hideSettings+"birdhousePrint_load('DEVICES','"+app_active_cam+"');"],
 		[lang("CAMERAS"),   "script", hideSettings+"birdhousePrint_load('CAMERA_SETTINGS','"+app_active_cam+"');"],
-		[lang("SETTINGS"),  "script", "birdhouse_settings.create();" ],
+		[lang("SETTINGS"),  "script", hideSettings+"birdhousePrint_load('SETTINGS','"+app_active_cam+"');"],
 		]);
 		if (admin_type == "LOGIN") {
     	    app_menu = app_menu.concat([
