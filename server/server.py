@@ -1229,6 +1229,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                  frames_per_buffer=CHUNK)
         except Exception as err:
             srv_logging.error("- Could not initialize audio stream (" + str(DEVICE) + "): " + str(err))
+            srv_logging.error("- open: channels=" + str(CHANNELS) + ", rate=" + str(RATE) +
+                              ", input_device_index=" + str(DEVICE) + ", frames_per_buffer=" + str(CHUNK))
             srv_logging.error("- device: " + str(device))
             return
 
@@ -1240,6 +1242,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         first_run = True
         streaming = True
         while streaming:
+            if stream.is_stopped():
+                stream.start_stream()
             if first_run:
                 data = wav_header + stream.read(CHUNK)
                 try:
