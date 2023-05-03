@@ -48,7 +48,7 @@ function birdhouseStatus_print(data) {
     //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
     console.debug("Update Status ...");
 
-    app_data          = data;
+    app_data       = data;
     var settings   = data["DATA"]["settings"];
     var weather    = data["WEATHER"];
     var status_sys = data["STATUS"]["system"];
@@ -94,6 +94,10 @@ function birdhouseStatus_print(data) {
         cpu_details += "cpu"+i+"="+Math.round(status_sys["cpu_usage_detail"][i])+"%, ";
         }
     setTextById("system_info_cpu_usage_detail", cpu_details);
+
+    // client stream information
+    count_client_streams = birdhouse_CountActiveStreams();
+    setTextById("show_stream_count_client", count_client_streams);
 
     // add camera information
     var cameras       = settings["devices"]["cameras"];

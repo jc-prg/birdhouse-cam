@@ -16,6 +16,7 @@ function birdhouse_app_settings (name="Settings") {
       	setTimeout(function(){
       	    birdhouse_settings.create_exec();
 		}, 2000);
+		birdhouse_KillActiveStreams();
     	window.scrollTo(0,0);
     }
 
@@ -221,6 +222,7 @@ function birdhouse_app_settings (name="Settings") {
         html_entry = this.tab.start();
         html_entry += this.tab.row("Reload Interval:", app_reload_interval + "s");
         html_entry += this.tab.row("Active Camera:&nbsp;", app_active_cam);
+        html_entry += this.tab.row("Active Client Streams:&nbsp;", "<font id='show_stream_count_client'>0</font> Streams");
         html_entry += this.tab.row("Available Cameras:&nbsp;", app_available_cameras.length);
         html_entry += this.tab.row("Active Page:&nbsp;", app_active_page);
         html_entry += this.tab.row("Active Date:&nbsp;", app_active_date);

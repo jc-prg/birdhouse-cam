@@ -7,15 +7,24 @@
 var birdhouse_active_streams = {};
 
 function birdhouse_KillActiveStreams() {
-    Object.keys(birdhouse_active_streams).forEach(function (key) {
+    for (let key in birdhouse_active_streams) {
         if (birdhouse_active_streams[key] == true) {
             var param = key.split("&");
             birdhouse_killStream(param[0], key);
-            birdhouse_active_streams[key] = false;
             }
-        });
-    birdhouse_active_streams = {};
+        }
+    //birdhouse_active_streams = {};
     }
+
+function birdhouse_CountActiveStreams() {
+    count = 0;
+    for (let key in birdhouse_active_streams) {
+        if (birdhouse_active_streams[key] == true) {
+            count += 1;
+            }
+        }
+    return count;
+}
 
 function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false) {
     var stream_server = RESTurl;

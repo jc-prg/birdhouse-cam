@@ -140,8 +140,19 @@ function birdhouse_forceRestart_exec() {
 function birdhouse_killStream(camera_id, stream_id) {
     console.log("birdhouse_killStream: "+stream_id);
 	commands = ["kill-stream", stream_id, camera_id];
-	birdhouse_apiRequest('POST', commands, '', '','','birdhouse_killStream');
+	birdhouse_apiRequest('POST', commands, '', birdhouse_killStreamAnswer, '', 'birdhouse_killStream');
     }
+
+function birdhouse_killStreamAnswer(data) {
+    if (data["kill-stream-id"] && birdhouse_active_streams[data["kill-stream-id"]] != undefined) {
+        birdhouse_active_streams[data["kill-stream-id"]] = false;
+        console.log("birdhouse_killStreamAnswer: killed stream " + data["kill-stream-id"]);
+        }
+    else {
+        console.error("birdhouse_killStreamAnswer: unexpected data returned.");
+        console.error(data);
+    }
+}
 
 function birdhouse_deleteMarkedFiles(param1,param2) {
 	commands = ["remove", param1, param2];

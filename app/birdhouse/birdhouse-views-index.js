@@ -69,6 +69,15 @@ index_template["admin"] = `
                 </div></td>
             </tr>
         </table>
+        <table border="0" width="100%">
+            <tr>
+                <td width="30%">Status&nbsp;&quot;Client&quot;:</td>
+                <td><div style="text-align:center;">
+                    <div style="float:left;padding:5px;"><font id="show_stream_count_client">0</font> Streams</div>
+                </div></td>
+            </tr>
+        </table>
+
     </td></tr></table>
     </center>
 `
@@ -123,6 +132,9 @@ index_template["overlay_admin"] = `
                     <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class=""  style="width:100%;height:auto;border:white solid 1px;">
                 </a>
             </div>
+
+        </table>
+
         </div>
         <!--ADMIN-->
         </center>
