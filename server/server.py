@@ -19,10 +19,13 @@ from urllib.parse import unquote
 
 from modules.backup import BirdhouseArchive
 from modules.camera import BirdhouseCamera
+# from modules.micro import BirdhouseMicrophone
 from modules.config import BirdhouseConfig
 from modules.presets import *
 from modules.views import BirdhouseViews
 from modules.sensors import BirdhouseSensor
+
+import pyaudio
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 api_description = {"name": "BirdhouseCAM", "version": "v0.9.8"}
@@ -205,6 +208,9 @@ class ServerHealthCheck(threading.Thread):
                 for sensor_id in sensor:
                     self._thread_info["sensor_" + sensor_id] = time.time() - sensor[sensor_id].health_check
 
+#                for mic_id in microphones:
+#                    self._thread_info["mic_" + mic_id] = time.time() - microphones[mic_id].health_check
+
                 for camera_id in camera:
                     self._thread_info["camera_" + camera_id] = time.time() - camera[camera_id].health_check
                     health_state = camera[camera_id].camera_stream_raw.health_check
@@ -259,6 +265,8 @@ class ServerInformation(threading.Thread):
         self.logging = logging.getLogger("srv-info")
         self.logging.setLevel(birdhouse_loglevel_module["srv-info"])
         self.logging.addHandler(birdhouse_loghandler)
+
+        self.microphones = None
 
     def run(self) -> None:
         self.logging.info("Starting Server Information ...")
@@ -335,6 +343,28 @@ class ServerInformation(threading.Thread):
                 system["video_devices"][last_key].append(value)
                 info = last_key.split(":")
                 system["video_devices_02"][value] = value + " (" + info[0] + ")"
+        system["audio_devices"] = {}
+
+        test = True
+        if test:
+            if self.microphones is None:
+                audio1 = pyaudio.PyAudio()
+                info = audio1.get_host_api_info_by_index(0)
+                num_devices = info.get('deviceCount')
+                for i in range(0, num_devices):
+                    if (audio1.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
+                        name = audio1.get_device_info_by_host_api_device_index(0, i).get('name')
+                        info = audio1.get_device_info_by_host_api_device_index(0, i)
+                        system["audio_devices"][name] = {
+                            "id": i,
+                            "input": info.get("maxInputChannels"),
+                            "output": info.get("maxOutputChannels"),
+                            "sample_rate": info.get("defaultSampleRate")
+
+                        }
+                self.microphones = system["audio_devices"]
+            else:
+                system["audio_devices"] = self.microphones
 
         self._system_status = system.copy()
 
@@ -399,6 +429,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-cache, private')
         self.send_header('Pragma', 'no-cache')
         self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.end_headers()
+
+    def stream_audio_header(self):
+        """
+        send header for video stream
+        """
+        self.send_response(200)
+        self.send_header('Age', '0')
+        self.send_header('Cache-Control', 'no-cache, private')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Content-Type', 'audio/x-wav; codec=PCM')
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
@@ -636,7 +680,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if "&" in stream_id:
                 stream_id_kill = stream_id.split("&")[-1]
                 camera[which_cam].set_stream_kill(stream_id_kill)
-                response = {"kill-stream": which_cam}
+                response = {
+                    "kill-stream": which_cam,
+                    "kill-stream-id": stream_id
+                }
         elif param["command"] == "edit-presets":
             edit_param = param["parameter"].split("###")
             data = {}
@@ -716,7 +763,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif '/image.jpg' in self.path:
             self.do_GET_image(which_cam)
         elif '/stream.mjpg' in self.path:
-            self.do_GET_stream(which_cam, which_cam2, param)
+            self.do_GET_stream_video(which_cam, which_cam2, param)
+        elif '/audio.wav' in self.path:
+            self.do_GET_stream_audio(which_cam, param)
         elif self.path.endswith('favicon.ico'):
             self.stream_file(filetype='image/ico', content=read_image(directory='../app', filename=self.path))
         elif self.path.startswith("/app/index.html"):
@@ -993,11 +1042,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.stream_file(filetype='image/jpeg',
                              content=read_image(directory="../data/images/", filename=filename))
 
-    def do_GET_stream(self, which_cam, which_cam2, param):
+    def do_GET_stream_video(self, which_cam, which_cam2, param):
         """
         create video stream
         """
-        srv_logging.info(which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
+        srv_logging.info("VIDEO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
 
         if ":" in which_cam and "+" in which_cam:
             pip_cam, cam2_pos = which_cam.split(":")
@@ -1117,6 +1166,135 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             time.sleep(stream_wait_while_recording)
                             break
 
+    @staticmethod
+    def do_GET_stream_audio_header(self, sample_rate, bits_per_sample, channels):
+        """.."""
+        datasize = 2000 * 10 ** 6
+        #datasize = samples * channels * bits_per_sample // 8
+        o = bytes("RIFF", 'ascii')  # (4byte) Marks file as RIFF
+        o += (datasize + 36).to_bytes(4, 'little')  # (4byte) File size in bytes excluding this and RIFF marker
+        o += bytes("WAVE", 'ascii')  # (4byte) File type
+        o += bytes("fmt ", 'ascii')  # (4byte) Format Chunk Marker
+        o += (16).to_bytes(4, 'little')  # (4byte) Length of above format data
+        o += (1).to_bytes(2, 'little')  # (2byte) Format type (1 - PCM)
+        o += (channels).to_bytes(2, 'little')  # (2byte)
+        o += (sample_rate).to_bytes(4, 'little')  # (4byte)
+        o += (sample_rate * channels * bits_per_sample // 8).to_bytes(4, 'little')  # (4byte)
+        o += (channels * bits_per_sample // 8).to_bytes(2, 'little')  # (2byte)
+        o += (bits_per_sample).to_bytes(2, 'little')  # (2byte)
+        o += bytes("data", 'ascii')  # (4byte) Data Chunk Marker
+        o += (datasize).to_bytes(4, 'little')  # (4byte) Data size in bytes
+        return o
+
+    def do_GET_stream_audio(self, which_cam, param):
+        """Audio streaming generator function."""
+        srv_logging.debug("AUDIO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
+
+        FORMAT = pyaudio.paInt16
+        CHANNELS = 1
+        RATE = 16000
+        CHUNK = 1024
+        DEVICE = 2
+        BITS_PER_SAMPLE = 16
+
+        microphones = config.param["devices"]["microphones"]
+        if which_cam in microphones:
+            micro = microphones[which_cam]
+            srv_logging.info("AUDIO device " + which_cam + " (" + str(micro["device_id"]) + "; " +
+                             micro["device_name"] + "; " + str(micro["sample_rate"]) + ")")
+
+            DEVICE = micro["device_id"]
+            RATE = micro["sample_rate"]
+
+            audio1 = pyaudio.PyAudio()
+            info = audio1.get_host_api_info_by_index(0)
+            num_devices = info.get('deviceCount')
+            if DEVICE not in range(0, num_devices):
+                srv_logging.error("... AUDIO device '"+str(DEVICE)+"' not available (range: 0, "+str(num_devices)+")")
+                return
+            device = audio1.get_device_info_by_host_api_device_index(0, DEVICE)
+            if device.get('input') == 0:
+                srv_logging.error("... AUDIO device '"+str(DEVICE)+"' is not a microphone / has no input (" +
+                                  device.get('name') + ")")
+                return
+            if device.get('name') != micro["device_name"]:
+                srv_logging.warning("... AUDIO device '" + str(DEVICE) + "' not the same as expected: " +
+                                    device.get('name') + " != " + micro["device_name"])
+        else:
+            srv_logging.error("AUDIO device '" + which_cam + "' is not defined.")
+            return
+
+        try:
+            stream = audio1.open(format=FORMAT, channels=CHANNELS,
+                                 rate=RATE, input=True, input_device_index=DEVICE,
+                                 frames_per_buffer=CHUNK)
+        except Exception as err:
+            srv_logging.error("- Could not initialize audio stream: " + str(err))
+            srv_logging.error("- device: " + str(device))
+            return
+
+        srv_logging.info("Start streaming ...")
+        self.stream_audio_header()
+        # frames = []
+
+        wav_header = self.do_GET_stream_audio_header(RATE, BITS_PER_SAMPLE, CHANNELS)
+        first_run = True
+        streaming = True
+        while streaming:
+            if first_run:
+                data = wav_header + stream.read(CHUNK)
+                try:
+                    first_run = False
+                except Exception as err:
+                    streaming = False
+                    srv_logging.error("Error while grabbing audio from device: " + str(err))
+            else:
+                try:
+                    data = stream.read(CHUNK)
+                except Exception as err:
+                    streaming = False
+                    srv_logging.error("Error while grabbing audio from device: " + str(err))
+
+            self.wfile.write(data)
+
+    def do_GET_stream_audio_tryout(self, which_cam, param):
+        """Audio streaming generator function."""
+        srv_logging.info("AUDIO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
+
+        if which_cam not in microphones:
+            srv_logging.error("AUDIO device '" + which_cam + "' does not exist.")
+            return
+
+        if not microphones[which_cam].connected or microphones[which_cam].error:
+            srv_logging.error("AUDIO device '" + which_cam + "' not connected or with error.")
+            return
+
+        srv_logging.info("Start streaming ...")
+        self.stream_audio_header()
+        first_run = True
+        streaming = True
+        count = 0
+        last_count
+        while streaming:
+            if first_run:
+                data = microphones[which_cam].get_first_chunk()
+                first_run = True
+                last_count = microphones[which_cam].count
+            else:
+                while microphones[which_cam].count != last_count and streaming:
+                    pass
+                last_count = microphones[which_cam].count
+                data = microphones[which_cam].get_chunk()
+
+            if data != "":
+                self.wfile.write(data)
+                count = 0
+            elif count < 5:
+                count += 1
+            else:
+                srv_logging.error("Got no data from microphone, stop streaming.")
+                streaming = False
+
     def do_GET_files(self):
         """
         create API response
@@ -1184,6 +1362,12 @@ if __name__ == "__main__":
         settings = config.param["devices"]["cameras"][cam]
         camera[cam] = BirdhouseCamera(camera_id=cam, config=config, sensor=sensor)
         camera[cam].start()
+
+    # start microphones
+    microphones = {}
+#    for mic in config.param["devices"]["microphones"]:
+#        microphones[mic] = BirdhouseMicrophone(device_id=mic, config=config)
+#        microphones[mic].start()
 
     # start views and commands
     views = BirdhouseViews(config=config, camera=camera)
