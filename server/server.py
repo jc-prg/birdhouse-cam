@@ -1234,6 +1234,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_audio_stream = srv_audio.open(format=pyaudio.paInt16, channels=CHANNELS,
                                               rate=RATE, input=True, input_device_index=DEVICE,
                                               frames_per_buffer=CHUNK)
+            srv_logging.info("Initialized: channels=" + str(CHANNELS) + ", rate=" + str(RATE) +
+                            ", input_device_index=" + str(DEVICE) + ", frames_per_buffer=" + str(CHUNK))
         except Exception as err:
             srv_logging.error("- Could not initialize audio stream (" + str(DEVICE) + "): " + str(err))
             srv_logging.error("- open: channels=" + str(CHANNELS) + ", rate=" + str(RATE) +
