@@ -9,10 +9,12 @@ import threading
 
 from skimage.metrics import structural_similarity as ssim
 from datetime import datetime
-from better_ffmpeg_progress import FfmpegProcess
 
 from modules.presets import *
 from modules.bh_class import BirdhouseCameraClass, BirdhouseClass
+
+#from better_ffmpeg_progress import FfmpegProcess
+#from ffmpeg import FFmpeg, Progress
 
 
 class BirdhouseCameraHandler(BirdhouseCameraClass):
@@ -1234,9 +1236,39 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.logging.debug("Alternative: " + cmd_ffmpeg)
         cmd_ffmpeg = cmd_ffmpeg.split(" ")
 
-        test = True
+        test = False
         if test:
-            self.ffmpeg.start_process(cmd_ffmpeg)
+            # requires python-ffmpeg instead of ffmpeg-python
+            try:
+                ffmpeg = (
+                    FFmpeg()
+                    .option("y")
+                    .input(input_filenames)
+                    .output(output_filename,
+                            {"codec:v": "libx264"},
+                            vf="scale=1280:-1",
+                            preset="veryslow",
+                            crf=24,
+                            )
+                )
+
+                @ffmpeg.on("progress")
+                def time_to_terminate(progress: Progress):
+                    logging.info("FFmpeg: " + str(progress))
+                    if progress.frame > 100:
+                        logging.info("FFmpeg: " + str(progress.frame))
+                        ffmpeg.terminate()
+
+                # @ffmpeg_task.on("progress")
+                # def document_progress(progress: Progress):
+                #     logging.info("FFmpeg progress = " + str(progress.frame) + " / " + str(progress))
+
+                ffmpeg.execute()
+
+            except Exception as e:
+                self.raise_error("Error during ffmpeg video creation: " + str(e))
+                response = {"result": "error", "reason": "create video with ffmpeg", "message": str(e)}
+                return response
 
         else:
             try:
