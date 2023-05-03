@@ -4,7 +4,7 @@
 // additional functions 
 //--------------------------------------
 
-function birdhouse_edit_field(id, field, type="input", options="", data_type="string") {
+function birdhouse_edit_field(id, field, type="input", options="", data_type="string", on_change="") {
     var fields = field.split(":");
     var settings = app_data["DATA"]["settings"];
     var data   = "";
@@ -21,10 +21,10 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
     if (data_type == "json") { data = JSON.stringify(data); }
     if (data_type == "integer" || data_type == "float") { style += "width:60px;" }
     if (type == "input") {
-        html += "<input id='"+id+"' value='"+data+"' style='"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");'>";
+        html += "<input id='"+id+"' value='"+data+"' style='"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");' onchange='"+on_change+"'>";
     }
     else if (type == "select_dict") {
-        html += "<select id='"+id+"'>";
+        html += "<select id='"+id+"' onchange='"+on_change+"'>";
         html += "<option value=''>(empty)</option>";
         Object.keys(options).forEach (key => {
             if (data == true || data == false) { data_str = data.toString(); }
@@ -36,7 +36,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         }
     else if (type == "select") {
         var values = options.split(",");
-        html += "<select id='"+id+"'>";
+        html += "<select id='"+id+"' onchange='"+on_change+"'>";
         for (var i=0;i<values.length;i++) {
             if (data == true || data == false) { data_str = data.toString(); }
             else { data_str = data; }
@@ -52,7 +52,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         on_set    = "document.getElementById(\""+id+"\").value = this.value;";
         on_value  = "document.getElementById(\""+id+"_range\").value = this.value;";
         html += "<div class='bh-slidecontainer' style='float:left;width:100px;height:auto;'>";
-        html += "<input id='"+id+"_range' class='bh-slider' type='range' name='' min='"+range[0]+"' max='"+range[1]+"' style='"+style+"' onchange='"+on_set+"'>";
+        html += "<input id='"+id+"_range' class='bh-slider' type='range' name='' min='"+range[0]+"' max='"+range[1]+"' style='"+style+"' onchange='"+on_set+on_change+"'>";
         html += "</div><div style='float:left;margin-left:12px;'>";
         html += "<input id='"+id+"' class='bh-slider-value' style='width:30px;' onchange='"+on_value+"'>";
         html += "</div>";
