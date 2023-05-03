@@ -355,9 +355,9 @@ class ServerInformation(threading.Thread):
                 info = srv_audio.get_host_api_info_by_index(0)
                 num_devices = info.get('deviceCount')
                 for i in range(0, num_devices):
-                    if (audio1.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
-                        name = audio1.get_device_info_by_host_api_device_index(0, i).get('name')
-                        info = audio1.get_device_info_by_host_api_device_index(0, i)
+                    if (srv_audio.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
+                        name = srv_audio.get_device_info_by_host_api_device_index(0, i).get('name')
+                        info = srv_audio.get_device_info_by_host_api_device_index(0, i)
                         system["audio_devices"][name] = {
                             "id": i,
                             "input": info.get("maxInputChannels"),
