@@ -255,8 +255,7 @@ class ServerHealthCheck(threading.Thread):
 
 class ServerInformation(threading.Thread):
 
-    def __init__
-        (self):
+    def __init__(self):
         threading.Thread.__init__(self)
         self._running = True
         self._system_status = {}
@@ -1267,6 +1266,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     srv_logging.error("Error while grabbing audio from device: " + str(err))
 
             self.wfile.write(data)
+        srv_audio_stream.stop_stream()
 
     def do_GET_stream_audio_tryout(self, which_cam, param):
         """Audio streaming generator function."""
