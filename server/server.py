@@ -1190,16 +1190,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """Audio streaming generator function."""
         srv_logging.debug("AUDIO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
 
-        FORMAT = pyaudio.paInt16
         CHANNELS = 1
         RATE = 16000
         CHUNK = 1024
         DEVICE = 2
         BITS_PER_SAMPLE = 16
 
-        microphones = config.param["devices"]["microphones"]
-        if which_cam in microphones:
-            micro = microphones[which_cam]
+        micros = config.param["devices"]["microphones"]
+        if which_cam in micros:
+            micro = micros[which_cam]
             srv_logging.info("AUDIO device " + which_cam + " (" + str(micro["device_id"]) + "; " +
                              micro["device_name"] + "; " + str(micro["sample_rate"]) + ")")
 
@@ -1225,11 +1224,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             return
 
         try:
-            stream = audio1.open(format=FORMAT, channels=CHANNELS,
+            stream = audio1.open(format=pyaudio.paInt16, channels=CHANNELS,
                                  rate=RATE, input=True, input_device_index=DEVICE,
                                  frames_per_buffer=CHUNK)
         except Exception as err:
-            srv_logging.error("- Could not initialize audio stream: " + str(err))
+            srv_logging.error("- Could not initialize audio stream (" + str(DEVICE) + "): " + str(err))
             srv_logging.error("- device: " + str(device))
             return
 
