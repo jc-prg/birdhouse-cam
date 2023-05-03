@@ -1191,7 +1191,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
     def do_GET_stream_audio(self, which_cam, param):
         """Audio streaming generator function."""
-        global srv_audio_stream, srv_audio
+        global srv_audio # srv_audio_stream,
         srv_logging.debug("AUDIO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
 
         CHANNELS = 1
@@ -1230,10 +1230,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             return
 
         try:
-            if srv_audio_stream is None:
-                srv_audio_stream = srv_audio.open(format=pyaudio.paInt16, channels=CHANNELS,
-                                                  rate=RATE, input=True, input_device_index=DEVICE,
-                                                  frames_per_buffer=CHUNK)
+            #if srv_audio_stream is None:
+            srv_audio_stream = srv_audio.open(format=pyaudio.paInt16, channels=CHANNELS,
+                                              rate=RATE, input=True, input_device_index=DEVICE,
+                                              frames_per_buffer=CHUNK)
         except Exception as err:
             srv_logging.error("- Could not initialize audio stream (" + str(DEVICE) + "): " + str(err))
             srv_logging.error("- open: channels=" + str(CHANNELS) + ", rate=" + str(RATE) +
@@ -1248,9 +1248,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         wav_header = self.do_GET_stream_audio_header(RATE, BITS_PER_SAMPLE, CHANNELS)
         first_run = True
         streaming = True
+        if srv_audio_stream.is_stopped():
+            srv_audio_stream.start_stream()
+
         while streaming:
-            if srv_audio_stream.is_stopped():
-                srv_audio_stream.start_stream()
             if first_run:
                 data = wav_header + srv_audio_stream.read(CHUNK)
                 try:
