@@ -1212,7 +1212,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if srv_audio is None:
                 srv_audio = pyaudio.PyAudio()
 
-            info = app_audio.get_host_api_info_by_index(0)
+            info = srv_audio.get_host_api_info_by_index(0)
             num_devices = info.get('deviceCount')
             if DEVICE not in range(0, num_devices):
                 srv_logging.error("... AUDIO device '"+str(DEVICE)+"' not available (range: 0, "+str(num_devices)+")")
