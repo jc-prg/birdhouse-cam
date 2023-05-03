@@ -5,8 +5,10 @@ tqdm
 psutil
 setuptools
 wheel
+pyaudio
 ffmpeg-python
-better-ffmpeg-progress
+#python-ffmpeg
+#better-ffmpeg-progress
 adafruit-circuitpython-dht
 couchdb
 requests
