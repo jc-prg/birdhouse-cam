@@ -1270,8 +1270,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             self.wfile.write(data)
 
-        if not srv_audio_stream.is_stopped():
-            srv_audio_stream.stop_stream()
+        try:
+            if not srv_audio_stream.is_stopped():
+                srv_audio_stream.stop_stream()
+        except Exception as err:
+            srv_logging.error("Error while closing audio stream: " + str(err))
 
     def do_GET_stream_audio_tryout(self, which_cam, param):
         """Audio streaming generator function."""
