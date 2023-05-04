@@ -565,6 +565,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     srv_logging.warning("Unknown camera requested: " + param["which_cam"] + " (" + self.path + ")")
                     param["which_cam"] = "cam1"
                     last_is_cam = False
+            elif "command" in param and param["command"] in param_no_cam:
+                param["which_cam"] = "cam1"
+                last_is_cam = False
 
             count = 0
             amount = len(elements)
