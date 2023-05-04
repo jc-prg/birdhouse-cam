@@ -227,6 +227,7 @@ birdhouse_default_micro = {
     "device_id": 0,
     "device_name": "none",
     "sample_rate": 16000,
+    "chunk_size": 1,
     "type": "usb",
     "port": 5002
 }

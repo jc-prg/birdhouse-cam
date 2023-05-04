@@ -453,10 +453,12 @@ function birdhouseDevices_microphones(data) {
 		html_entry += tab.row("Device:",      birdhouse_edit_field(id="set_device_"+micro, field="devices:microphones:"+micro+":device_id", type="select_dict", options=mic_devices, data_type="integer", on_change=on_change));
 		html_entry += tab.row("",             birdhouse_edit_field(id="set_device_name_"+micro, field="devices:microphones:"+micro+":device_name", type="input", options="", data_type="string"));
 		html_entry += tab.row("Sample-Rate:", birdhouse_edit_field(id="set_sample_rate_"+micro, field="devices:microphones:"+micro+":sample_rate", type="input", options="", data_type="integer"));
+		//html_entry += tab.row("",             "default=");
+		html_entry += tab.row("Chunk size:",  "1024 * " + birdhouse_edit_field(id="set_chunk_"+micro, field="devices:microphones:"+micro+":chunk_size", type="input", options="", data_type="integer"));
 		html_entry += tab.row("Audio-Stream:","<a href='"+url_new+"' target='_blank'>"+url_new+"</a>");
 		html_entry += tab.row("",             "<audio controls><source src='"+url_new+"' type='audio/x-wav;codec=PCM'></audio>");
 
-		id_list += "set_name_"+micro+":set_active_"+micro+":set_device_"+micro+":set_device_name_"+micro+":set_sample_rate_"+micro;
+		id_list += "set_name_"+micro+":set_active_"+micro+":set_device_"+micro+":set_device_name_"+micro+":set_sample_rate_"+micro+":set_chunk_"+micro;
 		/*
 		id_list += "set_name_"+micro+":set_type_"+micro+":set_active_"+micro+":set_source_"+micro;
         html_entry += tab.row("Type:", birdhouse_edit_field(id="set_type_"+micro, field="devices:microphones:"+micro+":type", type="select", options="usb"));

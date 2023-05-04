@@ -559,7 +559,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                 param["which_cam"] = complete_cam
 
-            if param["command"]:
+            param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup"]
+            if "command" in param and param["command"] not in param_no_cam:
                 if param["which_cam"] not in views.camera:
                     srv_logging.warning("Unknown camera requested: " + param["which_cam"] + " (" + self.path + ")")
                     param["which_cam"] = "cam1"
@@ -1208,6 +1209,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             DEVICE = micro["device_id"]
             RATE = micro["sample_rate"]
+            CHUNK = CHUNK * int(micro["chunk_size"])
 
             if srv_audio is None:
                 srv_audio = pyaudio.PyAudio()
@@ -1256,7 +1258,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         count = 0
         while streaming:
             if first_run:
-                data = wav_header + srv_audio_stream.read(CHUNK)
+                data = wav_header + srv_audio_stream.read(CHUNK, exception_on_overflow=False)
                 try:
                     first_run = False
                 except Exception as err:
@@ -1265,7 +1267,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     srv_logging.error("Error while initially grabbing audio from device: " + str(err))
             else:
                 try:
-                    data = srv_audio_stream.read(CHUNK)
+                    data = srv_audio_stream.read(CHUNK, exception_on_overflow=False)
                 except Exception as err:
                     data = ""
                     count += 1
