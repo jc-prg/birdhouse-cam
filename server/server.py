@@ -30,8 +30,8 @@ import pyaudio
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 api_description = {"name": "BirdhouseCAM", "version": "v0.9.8"}
 app_framework = "v0.9.8"
-srv_audio_stream = None
 srv_audio = None
+
 
 def on_exit(signum, handler):
     """
@@ -1143,7 +1143,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     srv_logging.info("Closed streaming client: " + stream_id_ext)
 
                 elif frame_raw is None or len(frame_raw) == 0:
-                    srv_logging.warning("Stream: Got an empty frame ...")
+                    srv_logging.warning("Stream: Got an empty frame for '" + which_cam + "' ...")
 
                 else:
                     try:
@@ -1196,7 +1196,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         CHANNELS = 1
         RATE = 16000
-        CHUNK = 1024
+        CHUNK = 1024*8   # input overflow --> try increasing the buffer; partly helped
         DEVICE = 2
         BITS_PER_SAMPLE = 16
 
@@ -1235,7 +1235,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                               rate=RATE, input=True, input_device_index=DEVICE,
                                               frames_per_buffer=CHUNK)
             srv_logging.info("Initialized: channels=" + str(CHANNELS) + ", rate=" + str(RATE) +
-                            ", input_device_index=" + str(DEVICE) + ", frames_per_buffer=" + str(CHUNK))
+                             ", input_device_index=" + str(DEVICE) + ", frames_per_buffer=" + str(CHUNK))
         except Exception as err:
             srv_logging.error("- Could not initialize audio stream (" + str(DEVICE) + "): " + str(err))
             srv_logging.error("- open: channels=" + str(CHANNELS) + ", rate=" + str(RATE) +
@@ -1253,26 +1253,33 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if srv_audio_stream.is_stopped():
             srv_audio_stream.start_stream()
 
+        count = 0
         while streaming:
             if first_run:
                 data = wav_header + srv_audio_stream.read(CHUNK)
                 try:
                     first_run = False
                 except Exception as err:
+                    data = ""
                     streaming = False
-                    srv_logging.error("Error while grabbing audio from device: " + str(err))
+                    srv_logging.error("Error while initially grabbing audio from device: " + str(err))
             else:
                 try:
                     data = srv_audio_stream.read(CHUNK)
                 except Exception as err:
-                    streaming = False
-                    srv_logging.error("Error while grabbing audio from device: " + str(err))
+                    data = ""
+                    count += 1
+                    if count > 20:
+                        streaming = False
+                    srv_logging.error("Errors (>20) while grabbing audio from device: " + str(err))
 
-            self.wfile.write(data)
+            if data != "":
+                self.wfile.write(data)
 
         try:
             if not srv_audio_stream.is_stopped():
                 srv_audio_stream.stop_stream()
+            srv_audio_stream.close()
         except Exception as err:
             srv_logging.error("Error while closing audio stream: " + str(err))
 
