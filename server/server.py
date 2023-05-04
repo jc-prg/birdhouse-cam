@@ -19,7 +19,7 @@ from urllib.parse import unquote
 
 from modules.backup import BirdhouseArchive
 from modules.camera import BirdhouseCamera
-# from modules.micro import BirdhouseMicrophone
+from modules.micro import BirdhouseMicrophone
 from modules.config import BirdhouseConfig
 from modules.presets import *
 from modules.views import BirdhouseViews
@@ -349,25 +349,27 @@ class ServerInformation(threading.Thread):
         system["audio_devices"] = {}
 
         test = True
-        if test:
-            if self.microphones is None:
-                srv_audio = pyaudio.PyAudio()
-                info = srv_audio.get_host_api_info_by_index(0)
-                num_devices = info.get('deviceCount')
-                for i in range(0, num_devices):
-                    if (srv_audio.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
-                        name = srv_audio.get_device_info_by_host_api_device_index(0, i).get('name')
-                        info = srv_audio.get_device_info_by_host_api_device_index(0, i)
-                        system["audio_devices"][name] = {
-                            "id": i,
-                            "input": info.get("maxInputChannels"),
-                            "output": info.get("maxOutputChannels"),
-                            "sample_rate": info.get("defaultSampleRate")
+        if test and microphones != {}:
+            #srv_audio = pyaudio.PyAudio()
 
-                        }
-                self.microphones = system["audio_devices"]
-            else:
-                system["audio_devices"] = self.microphones
+            first_mic = list(config.param["devices"]["microphones"].keys())[0]
+            info = microphones[first_mic].get_device_information()
+            srv_logging.debug("... mic-info: " + str(info))
+            num_devices = info['deviceCount']
+
+            for i in range(0, num_devices):
+                dev_info = microphones["mic1"].get_device_information(i)
+                if (dev_info.get('maxInputChannels')) > 0:
+                    name = dev_info.get('name')
+                    info = dev_info
+                    srv_logging.debug("... mic-info: " + str(info))
+                    system["audio_devices"][name] = {
+                        "id": i,
+                        "input": info.get("maxInputChannels"),
+                        "output": info.get("maxOutputChannels"),
+                        "sample_rate": info.get("defaultSampleRate")
+
+                    }
 
         self._system_status = system.copy()
 
@@ -1193,7 +1195,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         o += (datasize).to_bytes(4, 'little')  # (4byte) Data size in bytes
         return o
 
-    def do_GET_stream_audio(self, which_cam, param):
+    def do_GET_stream_audio_org(self, which_cam, param):
         """Audio streaming generator function."""
         global srv_audio # srv_audio_stream,
         srv_logging.debug("AUDIO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
@@ -1288,8 +1290,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         except Exception as err:
             srv_logging.error("Error while closing audio stream: " + str(err))
 
-    def do_GET_stream_audio_tryout(self, which_cam, param):
-        """Audio streaming generator function."""
+    def do_GET_stream_audio(self, which_cam, param):
+        """
+        Audio streaming generator function
+        """
         srv_logging.info("AUDIO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
 
         if which_cam not in microphones:
@@ -1300,31 +1304,28 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_logging.error("AUDIO device '" + which_cam + "' not connected or with error.")
             return
 
-        srv_logging.info("Start streaming ...")
+        srv_logging.info("Start streaming from '"+which_cam+"' ...")
         self.stream_audio_header()
-        first_run = True
-        streaming = True
-        count = 0
-        last_count
-        while streaming:
-            if first_run:
-                data = microphones[which_cam].get_first_chunk()
-                first_run = True
-                last_count = microphones[which_cam].count
-            else:
-                while microphones[which_cam].count != last_count and streaming:
-                    pass
-                last_count = microphones[which_cam].count
-                data = microphones[which_cam].get_chunk()
+        data = microphones[which_cam].get_first_chunk()
+        self.wfile.write(data)
 
+        streaming = True
+        last_count = 0
+        while streaming:
+            while microphones[which_cam].count == last_count and streaming:
+                pass
+            last_count = microphones[which_cam].count
+            data = microphones[which_cam].get_chunk()
             if data != "":
-                self.wfile.write(data)
-                count = 0
-            elif count < 5:
-                count += 1
-            else:
-                srv_logging.error("Got no data from microphone, stop streaming.")
+                try:
+                    self.wfile.write(data)
+                except Exception as err:
+                    srv_logging.error("Error during streaming of '"+which_cam+"': " + str(err))
+                    streaming = False
+
+            if microphones[which_cam].if_error():
                 streaming = False
+        srv_logging.info("Stopped streaming from '"+which_cam+"'.")
 
     def do_GET_files(self):
         """
@@ -1396,9 +1397,9 @@ if __name__ == "__main__":
 
     # start microphones
     microphones = {}
-#    for mic in config.param["devices"]["microphones"]:
-#        microphones[mic] = BirdhouseMicrophone(device_id=mic, config=config)
-#        microphones[mic].start()
+    for mic in config.param["devices"]["microphones"]:
+        microphones[mic] = BirdhouseMicrophone(device_id=mic, config=config)
+        microphones[mic].start()
 
     # start views and commands
     views = BirdhouseViews(config=config, camera=camera)
