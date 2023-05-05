@@ -180,8 +180,8 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             "maxOutputChannels": 0,
             "defaultSampleRate": 0
         }
-        if not self.connected:
-            self.connect()
+        #if not self.connected:
+        #    self.connect()
 
         if i is None:
             return self.audio.get_host_api_info_by_index(0)
