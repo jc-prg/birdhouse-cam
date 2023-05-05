@@ -109,8 +109,9 @@ function birdhouseStatus_print(data) {
 
         // consolidate error messages
         error_stream_info = "";
-        camera_status[camera]["error_details"]["image_record"] = camera_status[camera]["record_image_error"];
-        camera_status[camera]["error_msg"]["image_record"]     = [];
+        camera_status[camera]["error_details"]["image_record"]     = camera_status[camera]["record_image_error"];
+        camera_status[camera]["error_details_msg"]["image_record"] = [];
+
         for (stream_id in camera_status[camera]["error_details"]) {
             error_stream_info += "<b>" + stream_id + ":</b><br/>";
             if (camera_status[camera]["error_details"][stream_id]) { error_stream_info += "<font color='red'>"; }
@@ -120,7 +121,7 @@ function birdhouseStatus_print(data) {
             if (camera_status[camera]["error_details"][stream_id])                  { no_error = false; error_stream_info += "ERROR: "; }
             if (camera_status[camera]["error_details_msg"][stream_id].length > 0)   { no_error = false; error_stream_info += "messages=" + camera_status[camera]["error_details_msg"][stream_id].length + "; "; }
             if (no_error)                                                           { error_stream_info += "OK: "; }
-            if (stream_id != "image")                                               { error_stream_info += "last_active=" + camera_status[camera]["error_details_health"][stream_id] + "s"; }
+            if (stream_id != "image" && stream_id != "image_record")                { error_stream_info += "last_active=" + camera_status[camera]["error_details_health"][stream_id] + "s"; }
 
             if (camera_status[camera]["error_details"][stream_id] && camera_status[camera]["error_details_msg"][stream_id].length > 0) {
                 last_msg = camera_status[camera]["error_details_msg"][stream_id].length - 1;
