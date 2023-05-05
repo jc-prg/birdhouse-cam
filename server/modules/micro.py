@@ -176,16 +176,18 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             "maxOutputChannels": 0,
             "defaultSampleRate": 0
         }
-        if self.connected:
-            if i is None:
-                return self.audio.get_host_api_info_by_index(0)
+        if not self.connected:
+            self.connect()
+
+        if i is None:
+            return self.audio.get_host_api_info_by_index(0)
+        else:
+            info = self.audio.get_host_api_info_by_index(0)
+            num_devices = self.info.get('deviceCount')
+            for i in range(0, num_devices):
+                return self.audio.get_device_info_by_host_api_device_index(0, i)
             else:
-                info = self.audio.get_host_api_info_by_index(0)
-                num_devices = self.info.get('deviceCount')
-                for i in range(0, num_devices):
-                    return self.audio.get_device_info_by_host_api_device_index(0, i)
-                else:
-                    return empty
+                return empty
 
     def get_chunk(self):
         data = None
