@@ -3127,6 +3127,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         if self.record and time.time() - self.record_image_last > 120:
             self.record_image_error = True
+            self.record_image_error_msg = ["No image recorded for >120s (" + str(round(self.record_image_last,1)) + ")"]
 
         status = {
             "active_streams": self.get_stream_count(),
