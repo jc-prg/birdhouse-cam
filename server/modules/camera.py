@@ -2579,7 +2579,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     self.slow_down_streams(False)
 
             # Image Recording (if not video recording)
-            elif self.active and self.record:
+            if self.active and self.record and not self.video.recording:
                 time.sleep(self._interval)
                 self.image_recording(current_time, stamp, similarity, sensor_last)
 
@@ -2768,6 +2768,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if self.error:
             return
 
+        self.logging.debug(" ...... check if recording")
         if self.image_recording_active(current_time=current_time):
 
             self.logging.debug(" ...... record now!")
