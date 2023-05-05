@@ -11,6 +11,7 @@ function birdhouse_INDEX(data, camera) {
 	var cameras       = data["DATA"]["settings"]["devices"]["cameras"];
 	var title         = data["DATA"]["settings"]["title"];
 	var admin_allowed = data["STATUS"]["admin_allowed"];
+	var camera_status = data["STATUS"]["devices"]["cameras"];
 	var index_view    = data["DATA"]["settings"]["views"]["index"];
 	var stream_server = RESTurl;
 	var active_cam    = {};
@@ -23,14 +24,16 @@ function birdhouse_INDEX(data, camera) {
                 active_cam  = {
                     "name"        : key,
                     "stream"      : cameras[key]["video"]["stream"],
-                    "description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
+                    "description" : key.toUpperCase + ": " + cameras[key]["camera_name"],
+                    "error"       : camera_status[key]["error"]
                     }
                 }
             else {
                 var other_cam  = {
                     "name"        : key,
                     "stream"      : cameras[key]["video"]["stream"],
-                    "description" : key.toUpperCase + ": " + cameras[key]["camera_name"]
+                    "description" : key.toUpperCase + ": " + cameras[key]["camera_name"],
+                    "error"       : camera_status[key]["error"]
                     }
                 other_cams.push(other_cam);
                 }
@@ -43,8 +46,12 @@ function birdhouse_INDEX(data, camera) {
             app_camera_source["overlay_" + key]         = stream_server + cameras[key]["video"]["stream_detect"];
             }
 		}
-	if (active_cam == {} && other_cams != []) { active_cam = other_cams[0]; other_cams.shift(); }
-	if (Object.keys(cameras).length == 0 || active_cam == {}) { html += lang("NO_ENTRIES"); }
+	if (active_cam == {} && other_cams != [])                   { active_cam = other_cams[0]; other_cams.shift(); }
+	if (Object.keys(cameras).length == 0 || active_cam == {})   { html += lang("NO_ENTRIES"); }
+	if (other_cams.length == 1 && admin_allowed == false) {
+	    if (other_cams[0]["error"])     { other_cams = []; }
+	    else if (active_cam["error"])   { active_cam = other_cams[0]; other_cams = []; }
+	}
 
     console.log("---> birdhouse_INDEX: " + camera + "/" + app_active_cam);
 
