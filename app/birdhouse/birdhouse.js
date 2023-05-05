@@ -88,7 +88,7 @@ function birdhousePrint(data) {
 
 	birdhouseCameras     = data_settings["devices"]["cameras"];
 	birdhouseMicrophones = data_settings["devices"]["microphones"];
-	birdhouseStream_load(server_link, birdhouseMicrophones);
+	birdhouseAudioStream_load(server_link, birdhouseMicrophones);
 
     var initial_setup   = data_settings["server"]["initial_setup"];
 	var date            = data_active["active_date"];
@@ -194,7 +194,7 @@ function birdhouseHeaderFunctions() {
 	var html = "";
 	var switch_cam  = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();' style='position:relative;top:-4px;'>";
 	var reload_view = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
-	var audio_stream = "<img id='stream_toggle_header' class='header_icon_wide' src='birdhouse/img/icon_bird_mute.png' onclick='birdhouseStream_toggle();'>";
+	var audio_stream = "<img id='stream_toggle_header' class='header_icon_wide' src='birdhouse/img/icon_bird_mute.png' onclick='birdhouseAudioStream_toggle();'>";
 	var active_cam  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_cam.toUpperCase()+"</text>";
 	if (app_active_mic && !iOS()) { var active_mic  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_mic.toUpperCase()+"</text>"  + audio_stream; }
 	else                        { var active_mic = ""; }

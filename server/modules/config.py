@@ -35,7 +35,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         self.db_port_internal = 5984
         self.db_basedir = "/usr/src/app/data/"
 
-        self.backup_interval = 60*15
+        self.backup_interval = 60 * 15
         self.directories = birdhouse_directories
         self.files = birdhouse_files
         self.main_directory = main_directory
@@ -52,7 +52,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         if db_type == json, create a backup regularly
         """
         update_time = time.time()
-        self.logging.info("Starting DB handler ("+self.db_type+"|"+self.main_directory+") ...")
+        self.logging.info("Starting DB handler (" + self.db_type + "|" + self.main_directory + ") ...")
         while self._running:
             if self.db_type == "couch" and update_time + self.backup_interval < time.time():
                 self.logging.info("Write cache to JSON ... " + str(self.backup_interval))
@@ -69,7 +69,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
             self.health_check = time.time()
             time.sleep(1)
 
-        self.logging.info("Stopped DB handler ("+self.db_type+").")
+        self.logging.info("Stopped DB handler (" + self.db_type + ").")
 
     def stop(self):
         self._running = False
@@ -81,7 +81,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         """
         if db_type is None:
             db_type = self.db_type
-        self.logging.info(" -> (Re)Connecting to database(s) '"+db_type+"' ...")
+        self.logging.info(" -> (Re)Connecting to database(s) '" + db_type + "' ...")
         self.reset_error()
         self._process_running = False
         self.set_db_type(db_type)
@@ -90,7 +90,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         """
         set DB type: JSON, CouchDB, BOTH
         """
-        self.logging.info("  -> database handler set database type ("+db_type+")")
+        self.logging.info("  -> database handler set database type (" + db_type + ")")
         self.db_type = db_type
         if self.json is None:
             self.json = BirdhouseJSON(self.config)
@@ -106,7 +106,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
             self.logging.info("  -> database handler - db_type=" + self.db_type + ".")
             return True
         else:
-            self.logging.error("  -> Unknown DB type ("+str(self.db_type)+")")
+            self.logging.error("  -> Unknown DB type (" + str(self.db_type) + ")")
             return False
 
     def get_db_status(self):
@@ -259,7 +259,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
                 result = self.json.read(filename)
 
         else:
-            self.raise_error("Unknown DB type ("+str(self.db_type)+")")
+            self.raise_error("Unknown DB type (" + str(self.db_type) + ")")
 
         return result.copy()
 
@@ -274,11 +274,11 @@ class BirdhouseConfigDBHandler(threading.Thread):
         elif config not in self.config_cache and date != "":
             self.config_cache[config] = {}
             self.config_cache[config][date] = self.read(config=config, date=date)
-            self.config_cache_changed[config+"_"+date] = False
+            self.config_cache_changed[config + "_" + date] = False
 
         elif date not in self.config_cache[config] and date != "":
             self.config_cache[config][date] = self.read(config=config, date=date)
-            self.config_cache_changed[config+"_"+date] = False
+            self.config_cache_changed[config + "_" + date] = False
 
         if date == "":
             return self.config_cache[config].copy()
@@ -292,7 +292,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         self.logging.debug("Write: " + config + " / " + date + " / " + self.db_type)
         self.wait_if_paused()
         if data is None:
-            self.logging.error("Write: No data given ("+str(config)+"/"+str(date)+")")
+            self.logging.error("Write: No data given (" + str(config) + "/" + str(date) + ")")
             return
         if create:
             self.directory(config, date)
@@ -314,7 +314,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
             self.json.write(filename, data)
             self.write_cache(config, date, data)
         else:
-            self.raise_error("Unknown DB type ("+str(self.db_type)+")")
+            self.raise_error("Unknown DB type (" + str(self.db_type) + ")")
 
     def write_copy(self, config, date="", add="copy"):
         """
@@ -336,11 +336,11 @@ class BirdhouseConfigDBHandler(threading.Thread):
             self.config_cache_changed[config] = True
         elif config in self.config_cache:
             self.config_cache[config][date] = data
-            self.config_cache_changed[config+"_"+date] = True
+            self.config_cache_changed[config + "_" + date] = True
         else:
             self.config_cache[config] = {}
             self.config_cache[config][date] = data
-            self.config_cache_changed[config+"_"+date] = True
+            self.config_cache_changed[config + "_" + date] = True
 
     def write_cache_to_json(self):
         """
@@ -356,16 +356,16 @@ class BirdhouseConfigDBHandler(threading.Thread):
                 if self.config_cache_changed[config]:
                     filename = self.file_path(config=config, date="")
                     self.json.write(filename=filename, data=self.config_cache[config])
-                    self.logging.info("   -> backup: " + config + " (" + str(round(time.time()-start_time, 1)) + "s)")
+                    self.logging.info("   -> backup: " + config + " (" + str(round(time.time() - start_time, 1)) + "s)")
                     self.config_cache_changed[config] = False
             else:
                 for date in self.config_cache[config]:
-                    if config+"_"+date in self.config_cache_changed \
-                            and self.config_cache_changed[config+"_"+date]:
+                    if config + "_" + date in self.config_cache_changed \
+                            and self.config_cache_changed[config + "_" + date]:
                         filename = self.file_path(config=config, date=date)
                         self.json.write(filename=filename, data=self.config_cache[config][date])
                         self.logging.info("   -> backup: " + config + " / " + date +
-                                          " (" + str(round(time.time()-start_time, 1)) + "s)")
+                                          " (" + str(round(time.time() - start_time, 1)) + "s)")
                         self.config_cache_changed[config + "_" + date] = False
         self._process_running = False
 
@@ -482,12 +482,12 @@ class BirdhouseConfigQueue(threading.Thread):
 
                 if entries_available:
                     self.logging.debug("... Entries available in the queue (" +
-                                       str(round(time.time()-start_time, 2)) + "s)")
+                                       str(round(time.time() - start_time, 2)) + "s)")
                     for config_file in config_files:
                         file_start_time = time.time()
-                        self.logging.debug("    -> Queue: "+config_file+" ... (" +
+                        self.logging.debug("    -> Queue: " + config_file + " ... (" +
                                            str(len(self.edit_queue[config_file])) + " entries / " +
-                                           str(round(time.time()-start_time, 2)) + "s)")
+                                           str(round(time.time() - start_time, 2)) + "s)")
 
                         # Check if DB connection
                         wait_for_db = 0
@@ -501,11 +501,11 @@ class BirdhouseConfigQueue(threading.Thread):
 
                         # EDIT QUEUE: today, video (without date)
                         if config_file != "backup" and len(self.edit_queue[config_file]) > 0:
-                            self.logging.debug("       .start (" + str(round(time.time()-file_start_time, 2)) + "s)")
+                            self.logging.debug("       .start (" + str(round(time.time() - file_start_time, 2)) + "s)")
                             active_files.append(config_file)
                             entries = self.db_handler.read_cache(config_file)
                             self.db_handler.lock(config_file)
-                            self.logging.debug("       .read (" + str(round(time.time()-file_start_time, 2)) + "s)")
+                            self.logging.debug("       .read (" + str(round(time.time() - file_start_time, 2)) + "s)")
 
                             count_files += 1
                             count_edit = 0
@@ -533,11 +533,12 @@ class BirdhouseConfigQueue(threading.Thread):
                                     if "to_be_deleted" in entries[key]:
                                         del entries[key]["to_be_deleted"]
 
-                            self.logging.debug("       .edit (" + str(round(time.time()-file_start_time, 2)) + "s)")
+                            self.logging.debug("       .edit (" + str(round(time.time() - file_start_time, 2)) + "s)")
                             self.db_handler.unlock(config_file)
                             self.db_handler.write(config_file, "", entries)
-                            self.logging.debug("       .write (" + str(round(time.time()-file_start_time, 2)) + "s / " +
-                                               str(round(sys.getsizeof(entries)/1024, 1)) + "kB)")
+                            self.logging.debug(
+                                "       .write (" + str(round(time.time() - file_start_time, 2)) + "s / " +
+                                str(round(sys.getsizeof(entries) / 1024, 1)) + "kB)")
 
                             if count_edit > 0 and self.views is not None:
                                 self.views.favorite_list_update()
@@ -561,7 +562,7 @@ class BirdhouseConfigQueue(threading.Thread):
                                     [key, entry, command] = self.edit_queue[config_file][date].pop()
                                     count_entries += 1
 
-                                    self.logging.info(" +++> "+command+" +++ "+key)
+                                    self.logging.info(" +++> " + command + " +++ " + key)
 
                                     if command == "add" or command == "edit":
                                         entries[key] = entry
@@ -625,7 +626,8 @@ class BirdhouseConfigQueue(threading.Thread):
                                 entries = entry_data["files"]
                                 self.db_handler.lock(config_file, date)
 
-                                if date in self.status_queue[config_file] and len(self.status_queue[config_file][date]) > 0:
+                                if date in self.status_queue[config_file] and len(
+                                        self.status_queue[config_file][date]) > 0:
                                     count_files += 1
                                 else:
                                     self.status_queue[config_file][date] = []
@@ -649,7 +651,7 @@ class BirdhouseConfigQueue(threading.Thread):
 
                     check_count_entries += count_entries
                     self.logging.debug("Queue: wrote " + str(count_entries) + " entries to " + str(count_files) +
-                                       " config files (" + str(round(time.time()-start_time, 2)) + "s/" +
+                                       " config files (" + str(round(time.time() - start_time, 2)) + "s/" +
                                        ",".join(active_files) + ")")
 
                     self.queue_wait_duration = time.time() - start_time
@@ -669,9 +671,9 @@ class BirdhouseConfigQueue(threading.Thread):
 
                         time.sleep(1)
 
-            if start_time_2 + self.queue_wait_max*6 < time.time():
+            if start_time_2 + self.queue_wait_max * 6 < time.time():
                 self.logging.info("Queue: wrote " + str(check_count_entries) + " entries since the last " +
-                                  str(self.queue_wait_max*6) + "s.")
+                                  str(self.queue_wait_max * 6) + "s.")
                 check_count_entries = 0
                 start_time_2 = time.time()
 
@@ -712,7 +714,7 @@ class BirdhouseConfigQueue(threading.Thread):
         """
         set / unset favorite -> redesigned
         """
-        self.logging.debug("Status favorite: "+str(param))
+        self.logging.debug("Status favorite: " + str(param))
 
         response = {}
         config_data = {}
@@ -755,7 +757,7 @@ class BirdhouseConfigQueue(threading.Thread):
         """
         set / unset recycling -> redesigned
         """
-        self.logging.debug("Status recycle: "+str(param))
+        self.logging.debug("Status recycle: " + str(param))
 
         response = {}
         config_data = {}
@@ -784,11 +786,12 @@ class BirdhouseConfigQueue(threading.Thread):
 
         response["command"] = ["mark/unmark for deletion", entry_id]
         if entry_id in config_data:
-            self.logging.debug("- OK "+entry_id)
+            self.logging.debug("- OK " + entry_id)
             self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted",
                                      status=entry_value)
             if entry_value == 1:
-                self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="favorit", status=0)
+                self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="favorit",
+                                         status=0)
         else:
             response["error"] = "no entry found with stamp " + entry_id
 
@@ -799,7 +802,7 @@ class BirdhouseConfigQueue(threading.Thread):
         set / unset recycling based on given threshold
         """
         self.logging.info("Start to identify RECYCLE images based on threshold ...")
-        self.logging.info("- recycle threshold: "+str(param))
+        self.logging.info("- recycle threshold: " + str(param))
 
         response = {}
         category = param["parameter"][0]
@@ -835,7 +838,7 @@ class BirdhouseConfigQueue(threading.Thread):
         set / unset recycling -> range from-to
         """
         self.logging.info("Start to identify RECYCLE range ...")
-        self.logging.debug("Status recycle range: "+str(param))
+        self.logging.debug("Status recycle range: " + str(param))
 
         response = {}
         config_data = {}
@@ -886,7 +889,6 @@ class BirdhouseConfigQueue(threading.Thread):
                             ("type" not in config_data[entry_id] or config_data[entry_id]["type"] != "data") and \
                             ("to_be_deleted" not in config_data[entry_id] or
                              int(config_data[entry_id]["to_be_deleted"]) != 1):
-
                         self.logging.debug("   ... add to queue: " + entry_id)
 
                         self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
@@ -913,21 +915,21 @@ class BirdhouseConfigQueue(threading.Thread):
         """
         edit entry in config file using the queue
         """
-        self.logging.debug("Request to edit data ("+config+"/"+date+"/"+key+").")
+        self.logging.debug("Request to edit data (" + config + "/" + date + "/" + key + ").")
         self.add_to_edit_queue(config, date, key, entry, "edit")
 
     def entry_delete(self, config, date, key):
         """
         delete entry from config file using the queue
         """
-        self.logging.debug("Request to delete data ("+config+"/"+date+"/"+key+").")
+        self.logging.debug("Request to delete data (" + config + "/" + date + "/" + key + ").")
         self.add_to_edit_queue(config, date, key, {}, "delete")
 
     def entry_keep_data(self, config, date, key):
         """
         cleaning image entry keeping activity and sensor data for charts using the queue
         """
-        self.logging.debug("Request to keep data and delete image reference ("+config+"/"+date+"/"+key+").")
+        self.logging.debug("Request to keep data and delete image reference (" + config + "/" + date + "/" + key + ").")
         self.add_to_edit_queue(config, date, key, {}, "keep_data")
 
 
@@ -946,6 +948,7 @@ class BirdhouseConfig(threading.Thread):
         self.param = None
         self.config = None
         self.config_cache = {}
+        self.device_signal = {}
         self.views = None
         self.queue = None
         self.db_handler = None
@@ -953,7 +956,7 @@ class BirdhouseConfig(threading.Thread):
         self.logging = logging.getLogger("config")
         self.logging.setLevel(birdhouse_loglevel_module["config"])
         self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting configuration handler ("+main_directory+") ...")
+        self.logging.info("Starting configuration handler (" + main_directory + ") ...")
 
         self.update = {}
         self.update_views = {"favorite": False, "archive": False}
@@ -986,7 +989,7 @@ class BirdhouseConfig(threading.Thread):
         self.current_day = self.local_time().strftime("%Y%m%d")
         self.html_replace = {"start_date": self.local_time().strftime("%d.%m.%Y %H:%M:%S")}
         self.logging.info("Read configuration from '" + self.db_handler.file_path("main") +
-                          "' (timezone="+str(self.timezone)+") ...")
+                          "' (timezone=" + str(self.timezone) + ") ...")
 
         # check main status information
         if "info" in self.param and "last_day_running" in self.param["info"]:
@@ -1148,7 +1151,8 @@ class BirdhouseConfig(threading.Thread):
                 self.update[key] = True
 
             if self.weather is not False and "weather:location" in config_data:
-                self.logging.info("Update weather config and lookup GPS data: '"+self.param["weather"]["location"]+"'.")
+                self.logging.info(
+                    "Update weather config and lookup GPS data: '" + self.param["weather"]["location"] + "'.")
                 self.weather.update = True
                 self.param["weather"] = self.weather.get_gps_info(self.param["weather"])
                 self.db_handler.write(config, date, self.param)
@@ -1291,3 +1295,20 @@ class BirdhouseConfig(threading.Thread):
             info["type"] = "hires"
             info["stamp"] = parts[3]
         return info
+
+    def set_device_signal(self, device, key, value):
+        """
+        set device signal
+        """
+        if device not in self.device_signal:
+            self.device_signal[device] = {}
+        self.device_signal[device][key] = value
+
+    def get_device_signal(self, device, key):
+        """
+        check device signal
+        """
+        if device in self.device_signal and key in self.device_signal[device]:
+            return self.device_signal[device][key]
+        else:
+            return False

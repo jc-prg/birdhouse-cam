@@ -4,22 +4,21 @@
 // birdhouse image views
 //--------------------------------------
 
-var birdhouse_active_streams = {};
+var birdhouse_active_video_streams = {};
 
 function birdhouse_KillActiveStreams() {
-    for (let key in birdhouse_active_streams) {
-        if (birdhouse_active_streams[key] == true) {
+    for (let key in birdhouse_active_video_streams) {
+        if (birdhouse_active_video_streams[key] == true) {
             var param = key.split("&");
             birdhouse_killStream(param[0], key);
             }
         }
-    //birdhouse_active_streams = {};
     }
 
 function birdhouse_CountActiveStreams() {
     count = 0;
-    for (let key in birdhouse_active_streams) {
-        if (birdhouse_active_streams[key] == true) {
+    for (let key in birdhouse_active_video_streams) {
+        if (birdhouse_active_video_streams[key] == true) {
             count += 1;
             }
         }
@@ -49,7 +48,7 @@ function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false) {
         stream_link   += "&" + stream_uid;
         stream_id_ext += "&" + stream_uid;
         }
-    birdhouse_active_streams[stream_id_ext] = true;
+    birdhouse_active_video_streams[stream_id_ext] = true;
 
 	stream_link = stream_link.replaceAll("//", '/');
 	stream_link = stream_link.replace(":/","://");

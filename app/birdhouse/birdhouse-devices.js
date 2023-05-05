@@ -435,13 +435,12 @@ function birdhouseDevices_microphones(data) {
 		    micro_name += " &nbsp; <i>(inactive)</i>";
         }
         url = "http://"+micros[micro]["stream_server"]+"/"+micro+".mp3";
-        call_id = new Date().getTime();
-        url_new = RESTurl + "audio.wav?" + micro + "&device_settings&" + call_id;
+        url_new = birdhouseAudioStream_URL(micro);
 
         html_entry = "<div class='camera_info'>";
         html_entry += "<div class='camera_info_image'>&nbsp;<br/>";
         html_entry += "<div id='mic_img_"+micro+"'>"
-        html_entry += birdhouseStream_toggle_image(micro);
+        html_entry += birdhouseAudioStream_toggle_image(micro);
         html_entry += "</div></div>";
         html_entry += "<div class='camera_info_text'>";
 
@@ -464,7 +463,7 @@ function birdhouseDevices_microphones(data) {
 		                                      " (default=" + default_sample_rate +")");
 		html_entry += tab.row("Chunk size:",  "1024 * " + birdhouse_edit_field(id="set_chunk_"+micro, field="devices:microphones:"+micro+":chunk_size", type="input", options="", data_type="integer"));
 		html_entry += tab.row("Audio-Stream:","<a href='"+url_new+"' target='_blank'>"+url_new+"</a>");
-		html_entry += tab.row("",             "<audio controls><source src='"+url_new+"' type='audio/x-wav;codec=PCM'></audio>");
+		html_entry += tab.row("Audio-Control [try-out]",    "<audio controls><source src='"+url_new+"' type='audio/x-wav;codec=PCM'></audio>");
 
 		id_list += "set_name_"+micro+":set_active_"+micro+":set_device_"+micro+":set_device_name_"+micro+":set_sample_rate_"+micro+":set_chunk_"+micro;
 		/*
@@ -472,8 +471,8 @@ function birdhouseDevices_microphones(data) {
         html_entry += tab.row("Type:", birdhouse_edit_field(id="set_type_"+micro, field="devices:microphones:"+micro+":type", type="select", options="usb"));
 		html_entry += tab.row("Port:", birdhouse_edit_field(id="set_source_"+micro, field="devices:microphones:"+micro+":port", type="input", options="", data_type="integer"));
 		html_entry += tab.row("Audio-Stream:", "<a href='"+url+"' target='_blank'>"+url+"</a>");
-		html_entry += tab.row("Audio-Control:", "<a onclick='birdhouseStream_play(\""+micro+"\");' style='cursor:pointer;'><u>PLAY</u></a> / <a onclick='birdhouseStream_stop(\""+micro+"\");' style='cursor:pointer;'><u>STOP</u></a>");
 		*/
+		html_entry += tab.row("Audio-Control [old]:", "<a onclick='birdhouseAudioStream_play(\""+micro+"\");' style='cursor:pointer;'><u>PLAY</u></a> / <a onclick='birdhouseAudioStream_stop(\""+micro+"\");' style='cursor:pointer;'><u>STOP</u></a>");
 		html_entry += tab.row("<hr/>");
 		html_entry += tab.row("<center>"+birdhouse_edit_save(id="edit_"+micro, id_list)+"</center>");
 		html_entry += tab.end();

@@ -1111,21 +1111,21 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
         cmd_ffmpeg = self.ffmpeg_cmd
         cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_FILENAMES}", input_filenames)
-        cmd_ffmpeg = cmd_ffmpeg.replace("{OUTPUT_FILENAMES}", output_filename)
+        cmd_ffmpeg = cmd_ffmpeg.replace("{OUTPUT_FILENAME}", output_filename)
         cmd_ffmpeg = cmd_ffmpeg.replace("{FRAMERATE}", str(round(self.info["framerate"], 1)))
-        self.logging.debug("Alternative: " + cmd_ffmpeg)
+        self.logging.info("Alternative: " + cmd_ffmpeg)
 
         try:
             (
                 ffmpeg
                 .input(input_filenames)
-                .filter('fps', fps=self.info["framerate"], round='up')
+                .filter('fps', fps=float(self.info["framerate"]), round='up')
                 .output(output_filename, vcodec=self.output_codec["vcodec"], crf=self.output_codec["crf"])
                 .overwrite_output()
                 .run(capture_stdout=True, capture_stderr=False)
             )
-        except ffmpeg.Error as e:
-            self.raise_error("Error during ffmpeg video creation: " + str(e))
+        except Exception as err:
+            self.raise_error("Error during ffmpeg video creation: " + str(err))
             self.processing = False
             return
 
@@ -1145,8 +1145,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             message = os.system(cmd_delete)
             self.logging.debug(message)
 
-        except Exception as e:
-            self.raise_error("Error during video creation (thumbnail/cleanup): " + str(e))
+        except Exception as err:
+            self.raise_error("Error during video creation (thumbnail/cleanup): " + str(err))
             self.processing = False
             return
 
@@ -1729,7 +1729,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self._error_wait = True
 
         self.fps = None
-        self.fps_max = 15
+        self.fps_max = 12
         self.fps_slow = 2
         self.duration_max = 1 / (self.fps_max + 1)
         self.duration_slow = 1 / self.fps_slow
@@ -2258,7 +2258,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.type = self.param["type"]
         self.max_resolution = None
 
-        self._interval = 0.5
+        self._interval = 0.2
         self._interval_reload_if_error = 60*3
         self._stream_errors_max_accepted = 25
         self._stream_errors_restart = False
@@ -2567,12 +2567,19 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 time.sleep(1)
 
             # Video Recording
-            if self.active and self.video.recording:
-                self.video_recording(current_time)
+            if self.active:
+                if self.video.recording:
+                    self.slow_down_streams(False)
+                    self.video_recording(current_time)
+
+                elif self.config.get_device_signal(self.id, "recording") and not self.video.processing:
+                    self.slow_down_streams(True)
+                else:
+                    self.slow_down_streams(False)
 
             # Image Recording (if not video recording)
             elif self.active and self.record:
-                time.sleep(self._interval/2)
+                time.sleep(self._interval)
                 self.image_recording(current_time, stamp, similarity, sensor_last)
 
             # Check and record active streams
@@ -2588,7 +2595,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             #        self.camera_reconnect(directly=True)
             #        count_reconnect = 0
 
-            self.health_check = time.time()
+            self.health_signal()
 
         self.logging.info("Stopped camera (" + self.id + "/" + self.type + ").")
 
@@ -2848,7 +2855,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.record_image_reload = time.time()
                 self.record_image_last_string = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
-            time.sleep(self._interval / 2)
+            time.sleep(self._interval)
             self.previous_stamp = stamp
 
     def image_recording_active(self, current_time=-1, check_in_general=False):

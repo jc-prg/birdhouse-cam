@@ -660,8 +660,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif param["command"] == "camera-settings":
             response = camera[which_cam].get_camera_settings(param)
         elif param["command"] == "start-recording":
+            for key in camera:
+                config.set_device_signal(key, "recording", True)
             response = camera[which_cam].video.record_start()
         elif param["command"] == "stop-recording":
+            for key in camera:
+                config.set_device_signal(key, "recording", False)
             response = camera[which_cam].video.record_stop()
         elif param["command"] == "clean-data-today":
             config.db_handler.clean_all_data("images")

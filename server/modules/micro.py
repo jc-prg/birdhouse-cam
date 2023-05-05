@@ -24,6 +24,10 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.connected = False
         self.chunk = None
 
+        self.last_active = time.time()
+        self.restart_stream = True
+        self.timeout = 3
+
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
         self.RATE = 16000
@@ -42,7 +46,12 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         while self._running:
             self.health_signal()
 
-            if not self.error and self.connected:
+            if self.last_active + self.timeout < time.time():
+                self._paused = True
+            if self.restart_stream:
+                self._paused = False
+
+            if self.connected and not self.error and not self._paused:
                 try:
                     self.chunk = self.stream.read(self.CHUNK, exception_on_overflow=False)
                     if len(self.chunk) > 0:
@@ -71,6 +80,10 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         connect to microphone
         """
+        self.connected = False
+        if not self.param["active"]:
+            self.logging.info("Device '" + self.id + "' is inactive, did not connect.")
+
         self.reset_error()
         self.logging.info("AUDIO device " + self.id + " (" + str(self.param["device_id"]) + "; " +
                           self.param["device_name"] + "; " + str(self.param["sample_rate"]) + ")")
@@ -119,6 +132,13 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.connected = True
         self.logging.info("Microphone connected.")
 
+    def update_config(self):
+        """
+        update configuration and trigger reconnect
+        """
+        self.param = self.config.param["devices"]["microphones"][self.id]
+        self.connect()
+
     def file_header(self):
         """
         create file header for streaming file
@@ -155,12 +175,16 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
     def get_chunk(self):
         data = None
+        self.last_active = time.time()
         if self.connected and not self.error and len(self.chunk) > 0:
             data = self.chunk
         return data
 
     def get_first_chunk(self):
         self.logging.info("Start new stream ...")
+        self.last_active = time.time()
+        self.restart_stream = True
         data = self.file_header()
         data += self.chunk
         return data
+
