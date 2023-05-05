@@ -2299,6 +2299,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.record_image_start = ""
         self.record_image_end = ""
         self.record_image_error = False
+        self.record_image_error_msg = []
         self.record_temp_threshold = None
 
         self.camera_stream_raw = None
@@ -2822,6 +2823,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             # else if error save at least sensor data
             else:
                 self.record_image_error = True
+                self.record_image_error_msg = ["img_error=" + str(self.image.error) + "; img_len=" + str(len(image))]
                 sensor_data = {}
                 image_info = {}
 
@@ -2851,6 +2853,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                  scale_percent=self.param["image"]["preview_scale"])
 
                 self.record_image_error = False
+                self.record_image_error_msg = []
                 self.record_image_last = time.time()
                 self.record_image_reload = time.time()
                 self.record_image_last_string = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
@@ -3151,6 +3154,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         error_details = {
             "camera": self.error,
             "image": self.image.error,
+            "image_record": self.record_image_error,
             "video": self.video.error,
             "stream_raw": self.camera_stream_raw.error
         }
@@ -3158,6 +3162,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         error_details_msg = {
             "camera": self.error_msg,
             "image": self.image.error_msg,
+            "image_record": self.record_image_error_msg,
             "video": self.video.error_msg,
             "stream_raw": self.camera_stream_raw.error_msg
         }
