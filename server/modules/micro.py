@@ -188,7 +188,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         else:
             info = self.audio.get_host_api_info_by_index(0)
             num_devices = info.get('deviceCount')
-            for i in range(0, num_devices):
+            if i in range(0, num_devices):
                 return self.audio.get_device_info_by_host_api_device_index(0, i)
             else:
                 return empty
