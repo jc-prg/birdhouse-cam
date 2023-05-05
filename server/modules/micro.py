@@ -89,9 +89,13 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                           self.param["device_name"] + "; " + str(self.param["sample_rate"]) + ")")
 
         self.DEVICE = int(self.param["device_id"])
-        self.RATE = self.param["sample_rate"]
-        self.CHUNK = self.CHUNK * self.param["chunk_size"]
-        self.CHANNELS = self.param["channels"]
+
+        if "sample_rate" in self.param:
+            self.RATE = self.param["sample_rate"]
+        if "chunk_size" in self.param:
+            self.CHUNK = self.CHUNK * self.param["chunk_size"]
+        if "channels" in self.param:
+            self.CHANNELS = self.param["channels"]
 
         if self.audio is None:
             self.audio = pyaudio.PyAudio()
