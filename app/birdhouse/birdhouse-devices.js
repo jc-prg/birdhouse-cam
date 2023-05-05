@@ -462,6 +462,7 @@ function birdhouseDevices_microphones(data) {
 		html_entry += tab.row("Sample-Rate:", birdhouse_edit_field(id="set_sample_rate_"+micro, field="devices:microphones:"+micro+":sample_rate", type="select", options=sample_rates, data_type="integer") +
 		                                      " (default=" + default_sample_rate +")");
 		html_entry += tab.row("Chunk size:",  "1024 * " + birdhouse_edit_field(id="set_chunk_"+micro, field="devices:microphones:"+micro+":chunk_size", type="input", options="", data_type="integer"));
+		html_entry += tab.row("Channels:",    birdhouse_edit_field(id="set_channels_"+micro, field="devices:microphones:"+micro+":channels", type="select", options="1,2", data_type="integer"));
 		html_entry += tab.row("Audio-Stream:","<a href='"+url_new+"' target='_blank'>"+url_new+"</a>");
 		html_entry += tab.row("Audio-Control [try-out]",    "<audio controls><source src='"+url_new+"' type='audio/x-wav;codec=PCM'></audio>");
 
