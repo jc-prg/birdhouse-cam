@@ -1381,10 +1381,6 @@ if __name__ == "__main__":
     config.db_handler.directory_create("videos_temp")
     time.sleep(0.5)
 
-    # system information
-    sys_info = ServerInformation()
-    sys_info.start()
-
     # start sensors
     sensor = {}
     for sen in config.param["devices"]["sensors"]:
@@ -1404,6 +1400,10 @@ if __name__ == "__main__":
     for mic in config.param["devices"]["microphones"]:
         microphones[mic] = BirdhouseMicrophone(device_id=mic, config=config)
         microphones[mic].start()
+
+    # system information
+    sys_info = ServerInformation()
+    sys_info.start()
 
     # start views and commands
     views = BirdhouseViews(config=config, camera=camera)
