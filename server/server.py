@@ -632,7 +632,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         response = {}
 
         public_commands = ["check-pwd", "kill-stream"]
-        if not self.admin_allowed() or param["command"] in public_commands:
+        if not self.admin_allowed() and param["command"] not in public_commands:
             response["error"] = "Administration not allowed!"
             self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'),
                              no_cache=True)
