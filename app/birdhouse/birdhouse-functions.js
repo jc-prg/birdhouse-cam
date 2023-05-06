@@ -64,7 +64,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
 
 function birdhouse_edit_save(id, id_list, camera="", text="") {
     var ids = id_list.split(":");
-    var html = "<button onclick='birdhouse_edit_send(\""+id_list+"\");' style='background:gray;width:100px;'>"+lang("SAVE")+"</button>";
+    var html = "<button onclick='birdhouse_edit_send(\""+id_list+"\", \""+camera+"\");' style='background:gray;width:100px;'>"+lang("SAVE")+"</button>";
     return html;
 }
 
