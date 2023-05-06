@@ -25,6 +25,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.chunk = None
 
         self.last_active = time.time()
+        self.last_reload = time.time()
         self.restart_stream = True
         self.timeout = 3
 
@@ -80,11 +81,12 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         connect to microphone
         """
+        self.reset_error()
         self.connected = False
         if not self.param["active"]:
             self.logging.info("Device '" + self.id + "' is inactive, did not connect.")
+            return
 
-        self.reset_error()
         self.logging.info("AUDIO device " + self.id + " (" + str(self.param["device_id"]) + "; " +
                           self.param["device_name"] + "; " + str(self.param["sample_rate"]) + ")")
 
@@ -135,6 +137,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             return
 
         self.connected = True
+        self.last_reload = time.time()
         self.logging.info("Microphone connected.")
 
     def update_config(self):
@@ -180,8 +183,6 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             "maxOutputChannels": 0,
             "defaultSampleRate": 0
         }
-        #if not self.connected:
-        #    self.connect()
 
         if i is None:
             return self.audio.get_host_api_info_by_index(0)
@@ -207,4 +208,21 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         data = self.file_header()
         data += self.chunk
         return data
+
+    def get_device_status(self):
+        """
+        return status information
+        """
+        answer = {
+            "active": self.param["active"],
+            "connected": self.connected,
+            "running": self.if_running(),
+
+            "error": self.error,
+            "error_msg": self.error_msg,
+
+            "last_reload": time.time() - self.last_reload,
+            "last_active": time.time() - self.last_active
+        }
+        return answer
 

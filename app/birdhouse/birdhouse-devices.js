@@ -415,6 +415,7 @@ function birdhouseDevices_microphones(data) {
 	var index_info = {};
 	var tab     = new birdhouse_table();
 	tab.style_rows["height"] = "27px";
+	tab.style_cells["vertical-align"] = "top";
 
 	for (let device in devices) {
 	    if (devices[device]["input"] > 0) {
@@ -429,13 +430,13 @@ function birdhouseDevices_microphones(data) {
 	    index_info[micro_name]["group"]  = micro;
         index_info[micro_name]["id"]     = micro;
 	    index_info[micro_name]["type"]   = "microphone";
-	    index_info[micro_name]["status"] = ["active"];
+	    index_info[micro_name]["status"] = ["active", "error"];
 
 		if (micros[micro]["active"] == false) {
 		    micro_name += " &nbsp; <i>(inactive)</i>";
         }
         url = "http://"+micros[micro]["stream_server"]+"/"+micro+".mp3";
-        url_new = birdhouseAudioStream_URL(micro);
+        url_new = birdhouseAudioStream_URL(micro, "device_settings");
 
         html_entry = "<div class='camera_info'>";
         html_entry += "<div class='camera_info_image'>&nbsp;<br/>";
@@ -454,29 +455,47 @@ function birdhouseDevices_microphones(data) {
 		}
 		var sample_rates = Math.round(default_sample_rate) + "," + Math.round(default_sample_rate/2) + "," + Math.round(default_sample_rate/4);
 
+		id_list += "set_name_"+micro+":set_active_"+micro+":set_device_"+micro+":set_device_name_"+micro+":set_sample_rate_"+micro+":set_chunk_"+micro;
+
         html_entry += tab.start();
 		html_entry += tab.row("Name:",        birdhouse_edit_field(id="set_name_"+micro, field="devices:microphones:"+micro+":name", type="input"));
 		html_entry += tab.row("Active:",      birdhouse_edit_field(id="set_active_"+micro, field="devices:microphones:"+micro+":active", type="select", options="true,false", data_type="boolean"));
 		html_entry += tab.row("Device:",      birdhouse_edit_field(id="set_device_"+micro, field="devices:microphones:"+micro+":device_id", type="select_dict", options=mic_devices, data_type="integer", on_change=on_change));
 		html_entry += tab.row("",             birdhouse_edit_field(id="set_device_name_"+micro, field="devices:microphones:"+micro+":device_name", type="input", options="", data_type="string"));
-		html_entry += tab.row("Sample-Rate:", birdhouse_edit_field(id="set_sample_rate_"+micro, field="devices:microphones:"+micro+":sample_rate", type="select", options=sample_rates, data_type="integer") +
-		                                      " (default=" + default_sample_rate +")");
-		html_entry += tab.row("Chunk size:",  "1024 * " + birdhouse_edit_field(id="set_chunk_"+micro, field="devices:microphones:"+micro+":chunk_size", type="input", options="", data_type="integer"));
-		html_entry += tab.row("Channels:",    birdhouse_edit_field(id="set_channels_"+micro, field="devices:microphones:"+micro+":channels", type="select", options="1,2", data_type="integer"));
-		html_entry += tab.row("Audio-Stream:","<a href='"+url_new+"' target='_blank'>"+url_new+"</a>");
-		html_entry += tab.row("Audio-Control [try-out]",    "<audio controls><source src='"+url_new+"' type='audio/x-wav;codec=PCM'></audio>");
 
-		id_list += "set_name_"+micro+":set_active_"+micro+":set_device_"+micro+":set_device_name_"+micro+":set_sample_rate_"+micro+":set_chunk_"+micro;
 		/*
 		id_list += "set_name_"+micro+":set_type_"+micro+":set_active_"+micro+":set_source_"+micro;
         html_entry += tab.row("Type:", birdhouse_edit_field(id="set_type_"+micro, field="devices:microphones:"+micro+":type", type="select", options="usb"));
 		html_entry += tab.row("Port:", birdhouse_edit_field(id="set_source_"+micro, field="devices:microphones:"+micro+":port", type="input", options="", data_type="integer"));
 		html_entry += tab.row("Audio-Stream:", "<a href='"+url+"' target='_blank'>"+url+"</a>");
 		*/
-		html_entry += tab.row("Audio-Control [old]:", "<a onclick='birdhouseAudioStream_play(\""+micro+"\");' style='cursor:pointer;'><u>PLAY</u></a> / <a onclick='birdhouseAudioStream_stop(\""+micro+"\");' style='cursor:pointer;'><u>STOP</u></a>");
-		html_entry += tab.row("<hr/>");
-		html_entry += tab.row("<center>"+birdhouse_edit_save(id="edit_"+micro, id_list)+"</center>");
 		html_entry += tab.end();
+
+        html_temp = tab.start();
+		html_temp += tab.row("Sample-Rate:", birdhouse_edit_field(id="set_sample_rate_"+micro, field="devices:microphones:"+micro+":sample_rate", type="select", options=sample_rates, data_type="integer") +
+		                                      " (default=" + default_sample_rate +")");
+		html_temp += tab.row("Chunk size:",  "1024 * " + birdhouse_edit_field(id="set_chunk_"+micro, field="devices:microphones:"+micro+":chunk_size", type="input", options="", data_type="integer"));
+		html_temp += tab.row("Channels:",    birdhouse_edit_field(id="set_channels_"+micro, field="devices:microphones:"+micro+":channels", type="select", options="1,2", data_type="integer"));
+        html_temp += tab.end();
+        html_entry += birdhouse_OtherGroup( micro + "_settings", "Device settings", html_temp, false );
+
+        html_temp = tab.start();
+		html_temp += tab.row("Audio-Stream:",   "<a href='"+url_new+"' target='_blank'>"+url_new+"</a>");
+		//html_temp += tab.row("Audio-Control [try-out]",   "<audio controls><source src='"+url_new+"' type='audio/x-wav;codec=PCM'></audio>");
+		html_temp += tab.row("Audio-Control:",  "<a onclick='birdhouseAudioStream_play(\""+micro+"\");' style='cursor:pointer;'><u>PLAY</u></a> / <a onclick='birdhouseAudioStream_stop(\""+micro+"\");' style='cursor:pointer;'><u>STOP</u></a>");
+		html_temp += tab.row("Playback:",       "<div id='playback_info_"+micro+"'>N/A</div>");
+        html_temp += tab.end();
+        html_entry += birdhouse_OtherGroup( micro + "_playback", "Playback controls", html_temp, false );
+
+        html_temp = tab.start();
+        html_temp += tab.row("Last Recorded:", "<div id='info_micro_"+micro+"'>"+lang("PLEASE_WAIT")+"..</div>");
+        html_temp += tab.row("Error Messages:", "<div id='error_micro_"+micro+"'></div>");
+        html_temp += tab.end();
+        html_entry += birdhouse_OtherGroup( micro + "_error", "Status", html_temp, false );
+
+		html_entry += "<hr/>";
+		html_entry += "<center>"+birdhouse_edit_save(id="edit_"+micro, id_list)+"</center>";
+
         html_entry += "</div></div>";
 
         html += birdhouse_OtherGroup( micro, micro_name, html_entry, false );

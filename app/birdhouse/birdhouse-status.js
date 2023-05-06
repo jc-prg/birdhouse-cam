@@ -157,13 +157,13 @@ function birdhouseStatus_print(data) {
         }
 
 
-        // error
+        // error recording images
         if (camera_status[camera]["error"]) {
             setTextById("last_image_recorded_"+camera, "Recording inactive due to camera error.");
         }
         else {
             if (!camera_status[camera]["record_image_active"]) { var record_image_reload = "INACTIVE"; }
-            else                                               { var record_image_reload = Math.round(camera_status[camera]["camera_reload"]*10)/10 + "s"; }
+            else                                               { var record_image_reload = Math.round(camera_status[camera]["last_reload"]*10)/10 + "s"; }
             setTextById("last_image_recorded_" + camera,
                         "last_recorded=" + Math.round(camera_status[camera]["record_image_last"]*10)/10 + "s" + "; last_reload=" + record_image_reload +
                         "<br/>active=" + camera_status[camera]["record_image_active"] + "; " + "error=" + camera_status[camera]["record_image_error"]);
@@ -334,15 +334,26 @@ function birdhouseStatus_print(data) {
     }
 
     // add micro information
-    var microphones = settings["devices"]["microphones"];
+    var microphones  = app_data["STATUS"]["devices"]["microphones"];
     var keys = Object.keys(microphones);
     for (let micro in microphones) {
-        if (microphones[micro]["active"]) {
-            setStatusColor(status_id="status_active_"+micro, "white");
-        }
+        if (microphones[micro]["active"]) { setStatusColor(status_id="status_active_"+micro, "white"); }
+        else                              { setStatusColor(status_id="status_active_"+micro, "black"); }
+        if (microphones[micro]["error"])  {
+            setStatusColor(status_id="status_error_"+micro, "red");
+            setHeaderColor(header_id=micro+"_error", header_color=header_color_error);
+            }
         else {
-            setStatusColor(status_id="status_active_"+micro, "black");
-        }
+            setStatusColor(status_id="status_error_"+micro, "green");
+            setHeaderColor(header_id=micro+"_error", header_color="");
+            }
+
+        setTextById("info_micro_"+micro, "Connected=" + microphones[micro]["connected"] + "; " +
+                                         "Error=" + microphones[micro]["error"] + "; " +
+                                         "Last_active=" + Math.round(microphones[micro]["last_active"]*10)/10 + "s; " +
+                                         "Last_reload=" + Math.round(microphones[micro]["last_reload"]*10)/10 + "s; "
+                                         );
+        setTextById("error_micro_"+micro, microphones[micro]["error_msg"].join("<br/>"))
     }
 
     document.getElementById(app_frame_info).style.display = "block";

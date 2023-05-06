@@ -8,6 +8,7 @@ var birdhouse_stream = {};
 var birdhouse_stream_play = {};
 var birdhouse_infinity = false;
 var birdhouse_active_audio_streams = {};
+var birdhouse_player_id = {};
 
 function birdhouseAudioStream_load(server, microphones) {
     var audio_container = "audio_stream_container";
@@ -23,14 +24,15 @@ function birdhouseAudioStream_load(server, microphones) {
         console.log("Reload audio stream not implemented yet.")
     }
     for (let mic in microphones) {
-        var stream_url = "http://"+microphones[mic]["stream_server"]+"/";
-        stream_url += mic+".mp3";
+        var stream_url = birdhouseAudioStream_URL(mic, "player")
         if (!birdhouse_stream[mic]) {
             console.log("Load Audio Streams: "+stream_url);
             birdhouse_stream[mic] = document.createElement("audio");
+            birdhouse_stream[mic].setAttribute("controls", true);
             birdhouse_stream[mic].setAttribute("id", "stream_"+mic);
             birdhouse_stream[mic].setAttribute("src", stream_url);
-            birdhouse_stream[mic].setAttribute("type","audio/mp3");
+            //birdhouse_stream[mic].setAttribute("type","audio/mp3");
+            birdhouse_stream[mic].setAttribute("type","audio/x-wav;codec=PCM");
             //document.body.appendChild(birdhouse_stream[mic]);
             container.appendChild(birdhouse_stream[mic]);
             birdhouse_stream_play[mic] = false;
@@ -38,10 +40,10 @@ function birdhouseAudioStream_load(server, microphones) {
     }
 }
 
-function birdhouseAudioStream_URL(micro) {
+function birdhouseAudioStream_URL(micro, player) {
         //url = "http://"+micros[micro]["stream_server"]+"/"+micro+".mp3";
         var timestamp = new Date().getTime();
-        var call_id =  micro + "&device_settings&" + timestamp;
+        var call_id =  micro + "&" + player + "&" + timestamp;
         var url = RESTurl + "audio.wav?" + call_id;
         birdhouse_active_audio_streams[call_id] == true;
         return url;
@@ -50,6 +52,10 @@ function birdhouseAudioStream_URL(micro) {
 function birdhouseAudioStream_play(mic) {
     var id = "stream_"+mic;
     var player = document.getElementById(id);
+
+    var stream_url = birdhouseAudioStream_URL(mic, "player")
+    player.setAttribute("src", stream_url);
+
     var src = player.getAttribute("src");
     if (player.duration === Infinity) {
         player.currentTime = 1e101;
@@ -61,6 +67,27 @@ function birdhouseAudioStream_play(mic) {
     player.muted = false;
     player.play();
     birdhouse_stream_play[mic] = true;
+
+    if (!birdhouse_player_id[mic]) {
+        birdhouse_player_id[mic] = setInterval(function() {
+            birdhouseAudioStream_playback_info(mic);
+        }, 1000);
+    }
+}
+
+function birdhouseAudioStream_playback_info(mic) {
+    var id = "stream_"+mic;
+    var player = document.getElementById(id);
+    var info = "<b>Status: " + mic + "</b><br/>";
+    info    += "ID:" + id + " | DURATION:" + player.duration + " | POS:" + Math.round(player.currentTime*10)/10 + "s<br/>";
+    info    += "PAUSE:" + player.paused + " | ENDED:" + player.ended+" | MUTE:" + player.muted + "<br/>";
+    info    += "VOLUME:" + player.volume;
+
+    if (player.paused || player.ended)  { birdhouseAudioStream_image_header(on=false); }
+    else                                { birdhouseAudioStream_image_header(on=true); }
+    if (player.paused || player.ended)  { birdhouseAudioStream_image(on=false); }
+    else                                { birdhouseAudioStream_image(on=true); }
+    setTextById("playback_info_" + mic, info);
 }
 
 function birdhouseAudioStream_stop(mic) {
