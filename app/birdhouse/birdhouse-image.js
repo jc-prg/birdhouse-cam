@@ -13,6 +13,7 @@ function birdhouse_KillActiveStreams() {
             birdhouse_killStream(param[0], key);
             }
         }
+    window.stop();
     }
 
 function birdhouse_CountActiveStreams() {
