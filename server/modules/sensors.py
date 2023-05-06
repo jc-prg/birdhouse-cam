@@ -46,7 +46,6 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
 
         if not error_module:
             self.connect()
-
         else:
             self.logging.error(error_module_msg)
             self.logging.error("- Requires Raspberry and installation of this module.")
@@ -56,16 +55,14 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
             self.error_msg += " - " + error_module_msg
             self.running = False
 
-        self.logging.info("Starting sensor control for '"+sensor_id+"' ...")
-
     def run(self):
         """
         Start recording from sensors
         """
         count = 0
-        retry = 0
-        retry_wait = 20
-        self.logging.info("- Starting sensor loop (" + self.id + "/" + str(self.pin) + "/"+self.param["type"]+") ...")
+        self.logging.info("- Starting sensor handler (" + self.id + "/" + str(self.pin) + "/" +
+                          self.param["type"] + ") ...")
+
         while self._running:
             p_count = 0
             count += 1
@@ -74,13 +71,6 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
             if self.config.shut_down:
                 self.stop()
 
-            # wait if paused
-            while self._paused and self._running:
-                if p_count == 0:
-                    self.logging.info("Pause sensor "+self.id+" ...")
-                    p_count += 1
-                time.sleep(1)
-
             # check if configuration update
             if self.config.update["sensor_"+self.id]:
                 self.logging.info("....... Reload SENSOR '"+self.id+"' after update: Reread configuration.")
@@ -88,55 +78,65 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                 self.config.update["sensor_"+self.id] = False
                 self.active = self.param["active"]
 
-            # reconnect if error and active
-            if self.error_connect and self.param["active"]:
-                self.logging.info("....... Reload SENSOR '"+self.id+"' due to errors.")
-                self.connect()
-                self.error_connect = False
+            # operation and error handling if active
+            if self.param["active"]:
 
-            # if longer time no correct data read, reconnect
-            if self.last_read_time + self.interval_reconnect < time.time():
-                self.error_connect = True
-                self.last_read_time = time.time()
+                # wait if paused
+                while self._paused and self._running:
+                    if p_count == 0:
+                        self.logging.info("Pause sensor " + self.id + " ...")
+                        p_count += 1
+                    time.sleep(1)
 
-            # read data
-            if count >= self.interval and self.param["active"]:
-                count = 0
-                try:
-                    if self.param["type"] == "dht11":
-                        indoor = self.sensor.read()
-                        if indoor.is_valid():
-                            self.values["temperature"] = indoor.temperature
-                            self.values["humidity"] = indoor.humidity
+                # reconnect if error and active
+                if self.error_connect:
+                    self.logging.info("....... Reload SENSOR '"+self.id+"' due to errors.")
+                    self.connect()
+                    self.error_connect = False
+
+                # if longer time no correct data read, reconnect
+                if self.last_read_time + self.interval_reconnect < time.time():
+                    self.error_connect = True
+                    self.last_read_time = time.time()
+
+                # read data
+                if count >= self.interval:
+                    count = 0
+                    try:
+                        if self.param["type"] == "dht11":
+                            indoor = self.sensor.read()
+                            if indoor.is_valid():
+                                self.values["temperature"] = indoor.temperature
+                                self.values["humidity"] = indoor.humidity
+                                self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+                                self.last_read_time = time.time()
+                                self.logging.debug("Temperature: " + str(indoor.temperature))
+                                self.logging.debug("Humidity:    " + str(indoor.humidity))
+                            else:
+                                raise Exception("Not valid ("+str(indoor.is_valid())+")")
+                            if self.values == {}:
+                                raise Exception("Returned empty values.")
+
+                        elif self.param["type"] == "dht22":
+                            self.values["temperature"] = self.sensor.temperature
+                            self.values["humidity"] = self.sensor.humidity
                             self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
                             self.last_read_time = time.time()
-                            self.logging.debug("Temperature: " + str(indoor.temperature))
-                            self.logging.debug("Humidity:    " + str(indoor.humidity))
-                        else:
-                            raise Exception("Not valid ("+str(indoor.is_valid())+")")
-                        if self.values == {}:
-                            raise Exception("Returned empty values.")
+                            self.logging.debug("Temperature: " + str(self.sensor.temperature))
+                            self.logging.debug("Humidity:    " + str(self.sensor.humidity))
 
-                    elif self.param["type"] == "dht22":
-                        self.values["temperature"] = self.sensor.temperature
-                        self.values["humidity"] = self.sensor.humidity
+                        self.reset_error()
+
+                    except Exception as e:
+                        if self.last_read_time + self.interval_reconnect < time.time():
+                            self.raise_error(connect=False, message="Error reading data from sensor: " + str(e))
+
+                    if self.values == {}:
+                        self.raise_error(connect=False, message="Returned empty values.")
+
+                    if not self.error:
                         self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
                         self.last_read_time = time.time()
-                        self.logging.debug("Temperature: " + str(self.sensor.temperature))
-                        self.logging.debug("Humidity:    " + str(self.sensor.humidity))
-
-                    self.reset_error()
-
-                except Exception as e:
-                    if self.last_read_time + self.interval_reconnect < time.time():
-                        self.raise_error(connect=False, message="Error reading data from sensor: " + str(e))
-
-                if self.values == {}:
-                    self.raise_error(connect=False, message="Returned empty values.")
-
-                if not self.error:
-                    self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-                    self.last_read_time = time.time()
 
             self.health_signal()
             time.sleep(1)
@@ -158,7 +158,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         self.reset_error()
         self.error_connect = False
 
-        if birdhouse_env["rpi_active"]:
+        if birdhouse_env["rpi_active"] and self.param["active"]:
             try:
                 if self.param["type"] == "dht11":
                     if self.initial_load:
