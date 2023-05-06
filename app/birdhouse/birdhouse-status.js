@@ -104,7 +104,8 @@ function birdhouseStatus_print(data) {
     var camera_status = status_dev["cameras"];
     var camera_streams = 0;
     for (let camera in cameras) {
-        setTextById("show_stream_count_"+camera, cameras[camera]["image"]["current_streams"]);
+        setTextById("show_stream_count_"+camera, camera_status[camera]["active_streams"]);
+        setTextById("show_stream_fps_"+camera,   camera_status[camera]["stream_raw_fps"]);
         camera_streams += cameras[camera]["image"]["current_streams"];
 
         // consolidate error messages

@@ -56,6 +56,7 @@ index_template["admin"] = `
                     <div id="status_error_<!--CAM1_ID-->" style="float:left;"><div id="black"></div></div>
                     <div id="status_error_record_<!--CAM1_ID-->" style="float:left;"><div id="black"></div></div>
                     <div style="float:left;padding:5px;"><font id="show_stream_count_<!--CAM1_ID-->">0</font> Streams</div>
+                    <div style="float:left;padding:5px;">(<font id="show_stream_fps_<!--CAM1_ID-->">0</font> fps)</div>
                 </div></td>
             </tr>
         </table>
@@ -66,6 +67,7 @@ index_template["admin"] = `
                     <div id="status_error_<!--CAM2_ID-->" style="float:left;"><div id="black"></div></div>
                     <div id="status_error_record_<!--CAM2_ID-->" style="float:left;"><div id="black"></div></div>
                     <div style="float:left;padding:5px;"><font id="show_stream_count_<!--CAM2_ID-->">0</font> Streams</div>
+                    <div style="float:left;padding:5px;">(<font id="show_stream_fps_<!--CAM2_ID-->">0</font> fps)</div>
                 </div></td>
             </tr>
         </table>

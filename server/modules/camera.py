@@ -1310,6 +1310,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         self.fps = None
         self.fps_max = 12
         self.fps_slow = 2
+        self.fps_average = []
         self.duration_max = 1 / self.fps_max
         self.duration_slow = 1 / self.fps_slow
 
@@ -1455,7 +1456,18 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         """
         return rounded framerate
         """
-        return round(self.fps, 1)
+        if len(self.fps_average) > 0:
+            return round(sum(self.fps_average) / len(self.fps_average), 1)
+        else:
+            return round(self.fps, 1)
+
+    def set_framerate(self, fps):
+        """
+        add framerate to array to calculate avarage rate -> get_framerate
+        """
+        self.fps_average.append(fps)
+        if len(self.fps_average) > 10:
+            self.fps_average.pop(0)
 
     def set_stream_handler(self, stream_handler):
         """
@@ -1492,6 +1504,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         duration = time.time() - self._start_time
         if self.active:
             self.fps = 1 / duration
+            self.set_framerate(self.fps)
         else:
             self.fps = 0
 
@@ -3008,6 +3021,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             "record_image_end": self.record_image_end,
             "video_error": self.video.if_error(),
             "video_error_msg": ",\n".join(self.video.if_error(message=True)),
+            "stream_raw_fps": self.camera_stream_raw.get_framerate(),
             "running": self.if_running(),
             "properties": {},
             "properties_image": {}
