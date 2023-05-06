@@ -957,7 +957,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # get microphone data and create streaming information
         micro_data = config.param["devices"]["microphones"].copy()
         for key in micro_data:
-            api_response["STATUS"]["devices"]["microphones"][key] = {"status": "not implemented yet"}
+            api_response["STATUS"]["devices"]["microphones"][key] = microphones[key].get_device_status()
             micro_data[key]["stream_server"] = birdhouse_env["server_audio"]
             micro_data[key]["stream_server"] += ":" + str(micro_data[key]["port"])
 
