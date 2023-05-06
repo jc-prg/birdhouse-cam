@@ -714,10 +714,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if which_cam in camera:
                 camera[which_cam].record_temp_threshold = param["parameter"]
         elif param["command"] == "kill-stream":
-            srv_logging.info("................. " + self.path + " / " + which_cam + " ... KILL ")
             stream_id = param["parameter"][0]
             if "&" in stream_id:
                 stream_id_kill = stream_id.split("&")[-1]
+                which_cam = stream_id.split("&")[0]
                 camera[which_cam].set_stream_kill(stream_id_kill)
                 response = {
                     "kill-stream": which_cam,
