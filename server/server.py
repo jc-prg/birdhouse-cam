@@ -631,12 +631,29 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         }
         response = {}
 
-        if not self.admin_allowed() and param["command"] != "check-pwd":
+        # public commands
+        if param["command"] == "kill-stream":
+            stream_id = param["parameter"][0]
+            if "&" in stream_id:
+                stream_id_kill = stream_id.split("&")[-1]
+                camera[which_cam].set_stream_kill(stream_id_kill)
+                response = {
+                    "kill-stream": which_cam,
+                    "kill-stream-id": stream_id
+                }
+        elif param["command"] == "check-pwd":
+            admin_pwd = birdhouse_env["admin_password"]
+            if admin_pwd == param["parameter"][0]:
+                response["check-pwd"] = True
+            else:
+                response["check-pwd"] = False
+        elif self.admin_allowed():
             response["error"] = "Administration not allowed!"
             self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'),
                              no_cache=True)
             return
 
+        # admin commands
         if param["command"] == "favorit":
             response = config.queue.set_status_favorite(param)
         elif param["command"] == "recycle":
@@ -688,15 +705,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif param["command"] == "check-timeout":
             time.sleep(30)
             response = {"check": "timeout"}
-        elif param["command"] == "kill-stream":
-            stream_id = param["parameter"][0]
-            if "&" in stream_id:
-                stream_id_kill = stream_id.split("&")[-1]
-                camera[which_cam].set_stream_kill(stream_id_kill)
-                response = {
-                    "kill-stream": which_cam,
-                    "kill-stream-id": stream_id
-                }
         elif param["command"] == "edit-presets":
             edit_param = param["parameter"].split("###")
             data = {}
@@ -720,12 +728,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_logging.info("Set temporary threshold to camera '"+which_cam+"': " + str(param["parameter"]))
             if which_cam in camera:
                 camera[which_cam].record_temp_threshold = param["parameter"]
-        elif param["command"] == "check-pwd":
-            admin_pwd = birdhouse_env["admin_password"]
-            if admin_pwd == param["parameter"][0]:
-                response["check-pwd"] = True
-            else:
-                response["check-pwd"] = False
         else:
             self.error_404()
             return
