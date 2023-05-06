@@ -146,7 +146,7 @@ function birdhouse_killStream(camera_id, stream_id) {
 function birdhouse_killStreamAnswer(data) {
     if (data["kill-stream-id"] && birdhouse_active_video_streams[data["kill-stream-id"]] != undefined) {
         birdhouse_active_video_streams[data["kill-stream-id"]] = false;
-        console.log("birdhouse_killStreamAnswer: killed stream " + data["kill-stream-id"]);
+        console.log("birdhouse_killStreamAnswer: killed stream " + data["kill-stream"] + "; id=" + data["kill-stream-id"]);
         }
     else {
         console.error("birdhouse_killStreamAnswer: unexpected data returned.");
