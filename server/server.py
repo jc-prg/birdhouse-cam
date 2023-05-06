@@ -647,7 +647,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 response["check-pwd"] = True
             else:
                 response["check-pwd"] = False
-        elif self.admin_allowed():
+
+        if not self.admin_allowed():
             response["error"] = "Administration not allowed!"
             self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'),
                              no_cache=True)
