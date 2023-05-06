@@ -3004,13 +3004,17 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                            str(round(time.time() - self.record_image_last, 1)) + ")"]
 
         status = {
+            "active": self.param["active"],
             "active_streams": self.get_stream_count(),
+            "running": self.if_running(),
+            "last_reload": time.time() - self.record_image_reload,
+
             "error_details": {},
             "error_details_msg": {},
             "error_details_health": {},
             "error": self.error,
             "error_msg": ",\n".join(self.error_msg),
-            "camera_reload": time.time() - self.record_image_reload,
+
             "image_cache_size": self.config_cache_size,
             "record_image": self.record,
             "record_image_error": self.record_image_error,
@@ -3019,10 +3023,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             "record_image_last_compare": self.record_image_last_compare,
             "record_image_start": self.record_image_start,
             "record_image_end": self.record_image_end,
-            "video_error": self.video.if_error(),
-            "video_error_msg": ",\n".join(self.video.if_error(message=True)),
             "stream_raw_fps": self.camera_stream_raw.get_framerate(),
-            "running": self.if_running(),
+
             "properties": {},
             "properties_image": {}
             }
