@@ -2310,6 +2310,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     self.camera_stream_raw.set_stream_handler(self.camera.stream)
                     self.logging.info("Check after (re)connect: OK (Source=" + str(self.source) + ")")
 
+            self.record_image_reload = time.time()
+
         except Exception as e:
             self.raise_error("Starting camera '" + self.source + "' doesn't work: " + str(e))
 
@@ -2714,7 +2716,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.record_image_error = False
                 self.record_image_error_msg = []
                 self.record_image_last = time.time()
-                self.record_image_reload = time.time()
                 self.record_image_last_string = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
             time.sleep(self._interval)
@@ -2996,11 +2997,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             "error_details_health": {},
             "error": self.error,
             "error_msg": ",\n".join(self.error_msg),
+            "camera_reload": time.time() - self.record_image_reload,
             "image_cache_size": self.config_cache_size,
             "record_image": self.record,
             "record_image_error": self.record_image_error,
             "record_image_last": time.time() - self.record_image_last,
-            "record_image_reload": time.time() - self.record_image_reload,
             "record_image_active": self.image_recording_active(current_time=-1, check_in_general=True),
             "record_image_last_compare": self.record_image_last_compare,
             "record_image_start": self.record_image_start,

@@ -162,7 +162,7 @@ function birdhouseStatus_print(data) {
         }
         else {
             if (!camera_status[camera]["record_image_active"]) { var record_image_reload = "INACTIVE"; }
-            else                                               { var record_image_reload = Math.round(camera_status[camera]["record_image_reload"]*10)/10 + "s"; }
+            else                                               { var record_image_reload = Math.round(camera_status[camera]["camera_reload"]*10)/10 + "s"; }
             setTextById("last_image_recorded_" + camera,
                         "last_recorded=" + Math.round(camera_status[camera]["record_image_last"]*10)/10 + "s" + "; last_reload=" + record_image_reload +
                         "<br/>active=" + camera_status[camera]["record_image_active"] + "; " + "error=" + camera_status[camera]["record_image_error"]);
