@@ -218,9 +218,10 @@ class ServerHealthCheck(threading.Thread):
                     self._thread_info["camera_" + camera_id + "_raw"] = time.time() - health_state
                     health_state = camera[camera_id].video.health_check
                     self._thread_info["camera_" + camera_id + "_video"] = time.time() - health_state
-                    for stream_id in camera[camera_id].camera_streams:
-                        health_state = camera[camera_id].camera_streams[stream_id].health_check
-                        self._thread_info["camera_" + camera_id + "_edit_" + stream_id] = time.time() - health_state
+                    if camera[camera_id].param["active"]:
+                        for stream_id in camera[camera_id].camera_streams:
+                            health_state = camera[camera_id].camera_streams[stream_id].health_check
+                            self._thread_info["camera_" + camera_id + "_edit_" + stream_id] = time.time() - health_state
 
                 if self._initial:
                     self._initial = False
