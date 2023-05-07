@@ -3037,7 +3037,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         error_details = {
             "camera": self.error,
-            "camera_handler": self.camera.error,
+            "camera_handler": None,
             "image": self.image.error,
             "image_record": self.record_image_error,
             "video": self.video.error,
@@ -3046,7 +3046,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         error_details_msg = {
             "camera": self.error_msg,
-            "camera_handler": self.camera.error_msg,
+            "camera_handler": None,
             "image": self.image.error_msg,
             "image_record": self.record_image_error_msg,
             "video": self.video.error_msg,
@@ -3058,6 +3058,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             "video": self.video.health_status(),
             "stream_raw": self.camera_stream_raw.health_status()
         }
+
+        if self.camera is not None:
+            error_details["camera_handler"] = self.camera.error
+            error_details_msg["camera_handler"] = self.camera.error_msg
 
         for stream_id in self.camera_streams:
             error_details[stream_id] = self.camera_streams[stream_id].error
