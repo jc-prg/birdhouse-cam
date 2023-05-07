@@ -54,8 +54,10 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         self.reset_error()
         try:
             self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
+            time.sleep(1)
         except Exception as err:
             self.raise_error("- Error connecting to camera '" + self.source + "': " + str(err))
+            return
         self.read()
 
     def reconnect(self):
