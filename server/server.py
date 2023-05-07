@@ -361,15 +361,12 @@ class ServerInformation(threading.Thread):
                 system["video_devices_02"][value] = value + " (" + info[0] + ")"
         system["audio_devices"] = {}
 
-        test = True
-        if test and microphones != {}:
-            #srv_audio = pyaudio.PyAudio()
+        first_mic = list(config.param["devices"]["microphones"].keys())[0]
+        info = microphones[first_mic].get_device_information()
+        srv_logging.debug("... mic-info: " + str(info))
 
-            first_mic = list(config.param["devices"]["microphones"].keys())[0]
-            info = microphones[first_mic].get_device_information()
-            srv_logging.debug("... mic-info: " + str(info))
+        if 'deviceCount' in info:
             num_devices = info['deviceCount']
-
             for i in range(0, num_devices):
                 dev_info = microphones["mic1"].get_device_information(i)
                 if (dev_info.get('maxInputChannels')) > 0:
@@ -381,7 +378,6 @@ class ServerInformation(threading.Thread):
                         "input": info.get("maxInputChannels"),
                         "output": info.get("maxOutputChannels"),
                         "sample_rate": info.get("defaultSampleRate")
-
                     }
 
         self._system_status = system.copy()
