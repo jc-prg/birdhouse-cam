@@ -90,10 +90,12 @@ function birdhouseStatus_print(data) {
     setTextById("system_health_check",           status_srv["health_check"]);
 
     var cpu_details = "";
-    for (var i=0;i<status_sys["cpu_usage_detail"].length;i++) {
-        cpu_details += "cpu"+i+"="+Math.round(status_sys["cpu_usage_detail"][i])+"%, ";
+    if (status_sys["cpu_usage_detail"]) {
+        for (var i=0;i<status_sys["cpu_usage_detail"].length;i++) {
+            cpu_details += "cpu"+i+"="+Math.round(status_sys["cpu_usage_detail"][i])+"%, ";
+            }
+        setTextById("system_info_cpu_usage_detail", cpu_details);
         }
-    setTextById("system_info_cpu_usage_detail", cpu_details);
 
     // client stream information
     count_client_streams = birdhouse_CountActiveStreams();
