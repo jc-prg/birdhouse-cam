@@ -83,10 +83,6 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         self.reset_error()
         self.connected = False
-        if not self.param["active"]:
-            self.logging.info("Device '" + self.id + "' is inactive, did not connect.")
-            return
-
         self.logging.info("AUDIO device " + self.id + " (" + str(self.param["device_id"]) + "; " +
                           self.param["device_name"] + "; " + str(self.param["sample_rate"]) + ")")
 
@@ -109,6 +105,10 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         for i in range(0, num_devices):
             self.logging.info(" - " + str(i) + " - " +
                               str(self.audio.get_device_info_by_host_api_device_index(0, i).get('name')))
+
+        if not self.param["active"]:
+            self.logging.info("Device '" + self.id + "' is inactive, did not connect.")
+            return
 
         if self.DEVICE not in range(0, num_devices):
             self.raise_error("... AUDIO device '" + str(self.DEVICE) + "' not available (range: 0, " +
@@ -183,9 +183,6 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             "maxOutputChannels": 0,
             "defaultSampleRate": 0
         }
-
-        if not self.param["active"]:
-            return empty
 
         if i is None:
             return self.audio.get_host_api_info_by_index(0)
