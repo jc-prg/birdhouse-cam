@@ -184,6 +184,9 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             "defaultSampleRate": 0
         }
 
+        if not self.param["active"]:
+            return empty
+
         if i is None:
             return self.audio.get_host_api_info_by_index(0)
         else:
