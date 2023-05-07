@@ -2564,7 +2564,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
     def camera_reconnect(self, directly=False):
         """
-        Reconnect after API call
+        Reconnect after API call.
         """
         if directly and self.camera is not None:
             self._init_camera()
