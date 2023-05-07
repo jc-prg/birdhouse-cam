@@ -122,7 +122,7 @@ function birdhouseStatus_print(data) {
             if (camera_status[camera]["error_details"][stream_id])                  { no_error = false; error_stream_info += "ERROR: "; }
             if (camera_status[camera]["error_details_msg"][stream_id].length > 0)   { no_error = false; error_stream_info += "messages=" + camera_status[camera]["error_details_msg"][stream_id].length + "; "; }
             if (no_error)                                                           { error_stream_info += "OK: "; }
-            if (stream_id != "image" && stream_id != "image_record")                { error_stream_info += "last_active=" + camera_status[camera]["error_details_health"][stream_id] + "s"; }
+            if (stream_id != "image" && stream_id != "image_record" && stream_id != "camera_handler") { error_stream_info += "last_active=" + camera_status[camera]["error_details_health"][stream_id] + "s"; }
 
             if (camera_status[camera]["error_details"][stream_id] && camera_status[camera]["error_details_msg"][stream_id].length > 0) {
                 last_msg = camera_status[camera]["error_details_msg"][stream_id].length - 1;
