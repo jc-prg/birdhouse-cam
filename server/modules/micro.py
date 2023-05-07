@@ -161,17 +161,20 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.param = self.config.param["devices"]["microphones"][self.id]
         self.connect()
 
-    def file_header(self):
+    def file_header(self, size=False):
         """
         create file header for streaming file
         info: https://docs.fileformat.com/audio/wav/
         """
         datasize = 2000 * 10 ** 6
+        #datasize = samples * channels * bits_per_sample // 8
         sample_rate = int(self.RATE)
         bits_per_sample = int(self.BITS_PER_SAMPLE)
         channels = int(self.CHANNELS)
 
-        #datasize = samples * channels * bits_per_sample // 8
+        if size:
+            return datasize + 36
+
         o = bytes("RIFF", 'ascii')  # (4byte) Marks file as RIFF
         o += (datasize + 36).to_bytes(4, 'little')  # (4byte) File size in bytes excluding this and RIFF marker
         o += bytes("WAVE", 'ascii')  # (4byte) File type

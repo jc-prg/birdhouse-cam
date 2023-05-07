@@ -2190,13 +2190,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.usage_time = time.time()
         self.usage_interval = 60
 
-        self._init_image_processing()
-        self._init_video_processing()
-        self._init_stream_raw()
-        self._init_streams()
-        if self.active:
-            self._init_camera(init=True)
-
     def _init_image_processing(self):
         """
         start image processing
@@ -2391,12 +2384,16 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         Start recording for livestream and save images every x seconds
         """
+        self._init_image_processing()
+        self._init_video_processing()
+        self._init_stream_raw()
+        self._init_streams()
+        if self.active:
+            self._init_camera(init=True)
+
         similarity = 0
         count_paused = 0
-        count_reconnect = 0
         reload_time = time.time()
-        reload_time_error = 60*3
-        reload_time_error_record = 60*3
         sensor_last = ""
 
         self.logging.info("Starting CAMERA control for '"+self.id+"' ...")

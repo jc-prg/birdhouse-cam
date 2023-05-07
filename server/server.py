@@ -449,7 +449,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.end_headers()
 
-    def stream_audio_header(self):
+    def stream_audio_header(self, size):
         """
         send header for video stream
         """
@@ -463,13 +463,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_header('Age', '0')
         self.send_header('Cache-Control', 'no-cache, private')
         self.send_header('Pragma', 'no-cache')
-        #self.send_header('Content-Type', 'audio/x-wav; codec=PCM')
-        self.send_header('Content-Type', 'audio/wav')
 
-        self.send_header('Accept-Ranges', 'bytes')
-        self.send_header('Content-Length', '1024')
-        self.send_header('Content-Range', 'bytes 0-1024/1024')
-        #self.send_header('Content-Disposition', 'attachment;filename="audio.wav"')
+        #self.send_header('Accept-Ranges', 'bytes')
+        self.send_header('Content-Range', 'bytes 0-'+str(size)+'/'+str(size))
+        self.send_header('Content-Disposition', 'attachment;filename="audio.WAV"')
+        self.send_header('Content-Length', str(size))
+        #self.send_header('Content-Type', 'audio/x-wav;codec=PCM')
+        self.send_header('Content-Type', 'audio/wav')
 
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "*")
@@ -804,7 +804,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif '/stream.mjpg' in self.path:
             self.do_GET_stream_video(which_cam, which_cam2, param)
         elif '/audio.wav' in self.path:
-            self.do_GET_stream_audio(which_cam, param)
+            self.do_GET_stream_audio(which_cam, self.path)
         elif self.path.endswith('favicon.ico'):
             self.stream_file(filetype='image/ico', content=read_image(directory='../app', filename=self.path))
         elif self.path.startswith("/app/index.html"):
@@ -1320,11 +1320,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         except Exception as err:
             srv_logging.error("Error while closing audio stream: " + str(err))
 
-    def do_GET_stream_audio(self, which_cam, param):
+    def do_GET_stream_audio(self, which_cam, this_path):
         """
         Audio streaming generator function
         """
-        srv_logging.info("AUDIO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
+        param = this_path.split("/")[-2]
+        which_cam = param.split("&")[0]
+        session_id = param.split("&")[-1]
+
+        srv_logging.info("AUDIO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + session_id)
 
         if which_cam not in microphones:
             srv_logging.error("AUDIO device '" + which_cam + "' does not exist.")
@@ -1335,7 +1339,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             return
 
         srv_logging.info("Start streaming from '"+which_cam+"' ...")
-        self.stream_audio_header()
+        size = microphones[which_cam].file_header(size=True)
+        self.stream_audio_header(size)
         data = microphones[which_cam].get_first_chunk()
         self.wfile.write(data)
 
