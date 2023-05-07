@@ -102,6 +102,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
         self.info = self.audio.get_host_api_info_by_index(0)
         num_devices = self.info.get('deviceCount')
+        self.logging.info("Identified " + str(num_devices) + " audio devices:")
         for i in range(0, num_devices):
             self.logging.info(" - " + str(i) + " - " +
                               str(self.audio.get_device_info_by_host_api_device_index(0, i).get('name')))

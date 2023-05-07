@@ -2969,11 +2969,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 count += self.camera_streams[stream_id].get_active_streams()
         return count
 
-        #if self.camera_stream_raw is not None and self.camera_stream_raw.if_running():
-        #    return self.camera_stream_raw.get_active_streams()
-        #else:
-        #    return 0
-
     def get_stream_kill(self, ext_stream_id, int_stream_id):
         """
         check if stream has to be killed
@@ -2998,7 +2993,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         return all status and error information
         """
-        if self.record and time.time() - self.record_image_last > 120:
+        if self.record and time.time() - self.record_image_last > 120 \
+                and (not self.video.recording or not self.video.processing):
             self.record_image_error = True
             self.record_image_error_msg = ["No image recorded for >120s (" +
                                            str(round(time.time() - self.record_image_last, 1)) + ")"]
@@ -3007,6 +3003,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             "active": self.param["active"],
             "active_streams": self.get_stream_count(),
             "running": self.if_running(),
+            "recording": self.video.recording,
+            "processing": self.video.processing,
             "last_reload": time.time() - self.record_image_reload,
 
             "error_details": {},
