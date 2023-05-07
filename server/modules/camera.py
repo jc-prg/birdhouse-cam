@@ -2558,6 +2558,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         for stream_id in self.camera_streams:
             if self.camera_streams[stream_id] is not None:
                 self.camera_streams[stream_id].reset_error()
+        self.record_image_error = False
 
     def camera_reconnect(self, directly=False):
         """
