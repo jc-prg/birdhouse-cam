@@ -1602,6 +1602,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self.fps = None
         self.fps_max = 12
         self.fps_slow = 2
+        if self.resolution == "lowres":
+            self.fps_max = 3
         self.duration_max = 1 / (self.fps_max + 1)
         self.duration_slow = 1 / self.fps_slow
         self.slow_stream = False
