@@ -28,8 +28,8 @@ from modules.sensors import BirdhouseSensor
 import pyaudio
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v0.9.8"}
-app_framework = "v0.9.8"
+api_description = {"name": "BirdhouseCAM", "version": "v0.9.9"}
+app_framework = "v0.9.9"
 srv_audio = None
 
 
