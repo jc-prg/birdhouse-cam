@@ -50,6 +50,8 @@ class BirdhouseWeatherPython(threading.Thread):
         self.config = config
         self.health_check = time.time()
 
+        self.id = "python-weather"
+        self.class_id = "weather-py"
         self.logging = logging.getLogger("weather-py")
         self.logging.setLevel(birdhouse_loglevel_module["weather-py"])
         self.logging.addHandler(birdhouse_loghandler)
@@ -260,6 +262,8 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
         self.config = config
         self.health_check = time.time()
 
+        self.id = "open-meteo"
+        self.class_id = "weather-om"
         self.logging = logging.getLogger("weather-om")
         self.logging.setLevel(birdhouse_loglevel_module["weather-om"])
         self.logging.addHandler(birdhouse_loghandler)
@@ -477,6 +481,8 @@ class BirdhouseWeather(threading.Thread):
         self.id = self.config.local_time().strftime("%H%M%S")
         self.health_check = time.time()
 
+        self.id = "weather"
+        self.class_id = "weather"
         self.logging = logging.getLogger("weather")
         self.logging.setLevel(birdhouse_loglevel_module["weather"])
         self.logging.addHandler(birdhouse_loghandler)

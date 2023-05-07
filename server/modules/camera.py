@@ -1460,8 +1460,10 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         """
         if len(self.fps_average) > 0:
             return round(sum(self.fps_average) / len(self.fps_average), 1)
-        else:
+        elif self.fps is not None:
             return round(self.fps, 1)
+        else:
+            return 0
 
     def set_framerate(self, fps):
         """
@@ -1520,7 +1522,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         """
         check if stream is ready to deliver images, connection to camera exists
         """
-        if self.stream_handler is None:
+        if self.stream_handler is None or not self.param["active"]:
             return False
         else:
             return True
@@ -1647,7 +1649,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
     def run(self) -> None:
         self.reset_error()
-        while not self.stream_raw.if_ready():
+        #while not self.stream_raw.if_ready() and not self.param["active"]:
+        while not self.stream_raw.if_running():
             time.sleep(0.1)
 
         self.image = self.stream_raw.image
@@ -1660,7 +1663,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         while self._running:
             self._start_time = time.time()
 
-            if self.stream_raw is not None \
+            if self.stream_raw is not None and self.param["active"] \
                     and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
                 self.active = True
                 try:
@@ -1693,8 +1696,10 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 self._stream_image_id += 0
                 self._error_wait = True
 
-            self.stream_count()
-            self.stream_framerate_check()
+            if self.param["active"]:
+                self.stream_count()
+                self.stream_framerate_check()
+
             self.health_signal()
 
         self.logging.info("Stopped CAMERA edited stream for '"+self.id+"/"+self.type+"/"+self.resolution+"'.")
@@ -2244,7 +2249,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         for stream in available_streams:
             if stream in self.camera_streams:
                 if self.camera_streams[stream].if_running():
-                    count +=1
+                    count += 1
                     self.camera_streams[stream].kill()
                     self.camera_streams[stream].stop()
             if count > 0:
@@ -2273,10 +2278,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                                         stream_raw=self.camera_stream_raw,
                                                         stream_type="setting", stream_resolution="lowres")
         }
-        if self._running:
-            for stream in self.camera_streams:
-                self.camera_streams[stream].start()
-                self.camera_streams[stream].reload_time = self.reload_time
+        for stream in self.camera_streams:
+            self.camera_streams[stream].start()
+            self.camera_streams[stream].reload_time = self.reload_time
 
     def _init_camera(self, init=False):
         """
@@ -2487,6 +2491,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.camera_stream_raw.stop()
         for stream in self.camera_streams:
+            self.camera_streams[stream].kill()
             self.camera_streams[stream].stop()
 
         self._running = False

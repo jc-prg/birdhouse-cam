@@ -58,6 +58,10 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             if self.config.update["micro_" + self.id]:
                 self.connect()
 
+            # cneck if shutdown requested
+            if self.config.shut_down:
+                self.stop()
+
             # read data from device and store in a var
             if self.connected and not self.error and not self._paused:
                 try:
@@ -73,9 +77,10 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                 self.count = 0
                 time.sleep(1)
 
-        if not self.stream.is_stopped():
-            self.stream.stop_stream()
-        self.stream.close()
+        if self.stream is not None:
+            if not self.stream.is_stopped():
+                self.stream.stop_stream()
+            self.stream.close()
         self.logging.info("Stopped microphone '" + self.id + "'.")
 
     def stop(self):
@@ -159,6 +164,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
     def file_header(self):
         """
         create file header for streaming file
+        info: https://docs.fileformat.com/audio/wav/
         """
         datasize = 2000 * 10 ** 6
         sample_rate = int(self.RATE)

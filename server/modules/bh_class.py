@@ -13,6 +13,7 @@ class BirdhouseClass(object):
         self.id = device_id
 
         self.config = None
+        self.class_id = class_id
         if config is not None and config != "":
             self.config = config
 

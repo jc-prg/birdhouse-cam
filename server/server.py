@@ -453,11 +453,24 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         send header for video stream
         """
+        #https://stackoverflow.com/questions/13275409/playing-a-wav-file-on-ios-safari
+        #Content - Range: bytes XX - XX / XX
+        #Content - Type: audio / wav
+        #Content-Disposition: attachment;filename="whatever.WAV"
+        #Content - Length: XX
+
         self.send_response(200)
         self.send_header('Age', '0')
         self.send_header('Cache-Control', 'no-cache, private')
         self.send_header('Pragma', 'no-cache')
-        self.send_header('Content-Type', 'audio/x-wav; codec=PCM')
+        #self.send_header('Content-Type', 'audio/x-wav; codec=PCM')
+        self.send_header('Content-Type', 'audio/wav')
+
+        self.send_header('Accept-Ranges', 'bytes')
+        self.send_header('Content-Length', '1024')
+        self.send_header('Content-Range', 'bytes 0-1024/1024')
+        #self.send_header('Content-Disposition', 'attachment;filename="audio.wav"')
+
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
@@ -1485,5 +1498,9 @@ if __name__ == "__main__":
 
         for thread in threading.enumerate():
             if thread.name != "MainThread":
-                srv_logging.error("Could not stop: " + thread.name)
+                if thread.class_id and thread.id:
+                    srv_logging.error("Could not stop: " + thread.name + " = " +
+                                      thread.class_id + " (" + thread.id + ")")
+                else:
+                    srv_logging.error("Could not stop: " + thread.name)
                 thread.stop()
