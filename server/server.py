@@ -286,8 +286,30 @@ class ServerInformation(threading.Thread):
         global srv_audio
 
         system = {}
+        try:
+            # cpu information
+            system["cpu_usage"] = psutil.cpu_percent(interval=1, percpu=False)
+            system["cpu_usage_detail"] = psutil.cpu_percent(interval=1, percpu=True)
+            system["mem_total"] = psutil.virtual_memory().total / 1024 / 1024
+            system["mem_used"] = psutil.virtual_memory().used / 1024 / 1024
+
+            # diskusage
+            hdd = psutil.disk_usage("/")
+            system["hdd_used"] = hdd.used / 1024 / 1024 / 1024
+            system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
+
+        except Exception as err:
+            system = {
+                "cpu_usage": -1,
+                "cpu_usage_detail": -1,
+                "mem_total": -1,
+                "mem_used": -1,
+                "hdd_used": -1,
+                "hdd_total": -1
+            }
+
         # Initialize the result.
-        result = 0.0
+        result = -1
         # The first line in this file holds the CPU temperature as an integer times 1000.
         # Read the first line and remove the newline character at the end of the string.
         if os.path.isfile('/sys/class/thermal/thermal_zone0/temp'):
@@ -300,29 +322,19 @@ class ServerInformation(threading.Thread):
         # Give the result back to the caller.
         system["cpu_temperature"] = result
 
-        # cpu information
-        system["cpu_usage"] = psutil.cpu_percent(interval=1, percpu=False)
-        system["cpu_usage_detail"] = psutil.cpu_percent(interval=1, percpu=True)
-        system["mem_total"] = psutil.virtual_memory().total / 1024 / 1024
-        system["mem_used"] = psutil.virtual_memory().used / 1024 / 1024
-
-        # diskusage
-        hdd = psutil.disk_usage("/")
-        system["hdd_used"] = hdd.used / 1024 / 1024 / 1024
-        system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
-
         try:
             cmd_data = ["du", "-hs", os.path.join(self.main_dir, "data")]
-            system["hdd_data"] = str(subprocess.check_output(cmd_data))
-            system["hdd_data"] = system["hdd_data"].replace("b'", "")
-            system["hdd_data"] = system["hdd_data"].split("\\t")[0]
-            if "k" in system["hdd_data"]:
-                system["hdd_data"] = float(system["hdd_data"].replace("k", "")) / 1024 / 1024
-            elif "M" in system["hdd_data"]:
-                system["hdd_data"] = float(system["hdd_data"].replace("M", "")) / 1024
-            elif "G" in system["hdd_data"]:
-                system["hdd_data"] = float(system["hdd_data"].replace("G", ""))
+            temp_data = str(subprocess.check_output(cmd_data))
+            temp_data = temp_data.replace("b'", "")
+            temp_data = temp_data.split("\\t")[0]
+            if "k" in temp_data:
+                system["hdd_data"] = float(temp_data.replace("k", "")) / 1024 / 1024
+            elif "M" in temp_data:
+                system["hdd_data"] = float(temp_data.replace("M", "")) / 1024
+            elif "G" in temp_data:
+                system["hdd_data"] = float(temp_data.replace("G", ""))
         except Exception as e:
+            system["hdd_data"] = -1
             self.logging.warning("Was not able to get size of data dir: " + (str(cmd_data)) + " - " + str(e))
 
         # threading information
