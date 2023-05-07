@@ -3046,7 +3046,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         error_details_msg = {
             "camera": self.error_msg,
-            "camera_handler": None,
+            "camera_handler": [],
             "image": self.image.error_msg,
             "image_record": self.record_image_error_msg,
             "video": self.video.error_msg,
