@@ -2569,6 +2569,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if directly and self.camera is not None:
             self._init_camera()
             self.reload_camera = False
+        elif directly:
+            self._init_camera(init=True)
+            self.reload_camera = False
         else:
             self.reload_camera = True
             self.config_update = True

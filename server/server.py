@@ -1343,8 +1343,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.stream_audio_header(size)
         data = microphones[which_cam].get_first_chunk()
         self.wfile.write(data)
-
         streaming = True
+
         last_count = 0
         while streaming:
             while microphones[which_cam].count == last_count and streaming:
