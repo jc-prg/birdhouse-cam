@@ -3135,16 +3135,13 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
     def update_main_config(self):
         self.logging.info("- Update data from main configuration file for camera " + self.id)
         temp_data = self.config.db_handler.read("main")
+
         self.param = temp_data["devices"]["cameras"][self.id]
         self.name = self.param["name"]
         self.active = self.param["active"]
         self.source = self.param["source"]
         self.type = self.param["type"]
         self.record = self.param["record"]
-        self.video.param = self.param
-        self.image.param = self.param
-        self.config.update["camera_" + self.id] = False
-        self.reload_camera = True
 
         self.image_size = [0, 0]
         self.image_size_lowres = [0, 0]
@@ -3164,3 +3161,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.camera_stream_raw.param = self.param
         for stream in self.camera_streams:
             self.camera_streams[stream].param = self.param
+        self.image.param = self.param
+        self.video.param = self.param
+
+        self.config.update["camera_" + self.id] = False
+        self.reload_camera = True

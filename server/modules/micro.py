@@ -17,6 +17,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
         self.count = None
         self.param = config.param["devices"]["microphones"][device_id]
+        self.config.update["micro_" + self.id] = False
         self.audio = None
         self.device = None
         self.info = None
@@ -38,7 +39,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
     def run(self):
         """
-        Stream
+        Start streaming
         """
         self.logging.info("Start microphone handler for '" + self.id + "' ...")
         self.connect()
@@ -47,11 +48,17 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         while self._running:
             self.health_signal()
 
+            # Pause if not used for a while
             if self.last_active + self.timeout < time.time():
                 self._paused = True
             if self.restart_stream:
                 self._paused = False
 
+            # reconnect if config data were updated
+            if self.config.update["micro_" + self.id]:
+                self.connect()
+
+            # read data from device and store in a var
             if self.connected and not self.error and not self._paused:
                 try:
                     self.chunk = self.stream.read(self.CHUNK, exception_on_overflow=False)
@@ -83,6 +90,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         self.reset_error()
         self.connected = False
+        self.param = self.config.param["devices"]["microphones"][self.id]
         self.logging.info("AUDIO device " + self.id + " (" + str(self.param["device_id"]) + "; " +
                           self.param["device_name"] + "; " + str(self.param["sample_rate"]) + ")")
 
