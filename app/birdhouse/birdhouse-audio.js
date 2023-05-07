@@ -32,7 +32,8 @@ function birdhouseAudioStream_load(server, microphones) {
             birdhouse_stream[mic].setAttribute("id", "stream_"+mic);
             birdhouse_stream[mic].setAttribute("src", stream_url);
             //birdhouse_stream[mic].setAttribute("type","audio/mp3");
-            birdhouse_stream[mic].setAttribute("type","audio/x-wav;codec=PCM");
+            //birdhouse_stream[mic].setAttribute("type","audio/x-wav;codec=PCM");
+            birdhouse_stream[mic].setAttribute("type","audio/wav");
             //document.body.appendChild(birdhouse_stream[mic]);
             container.appendChild(birdhouse_stream[mic]);
             birdhouse_stream_play[mic] = false;
@@ -53,40 +54,61 @@ function birdhouseAudioStream_play(mic) {
     var id = "stream_"+mic;
     var player = document.getElementById(id);
 
-    var stream_url = birdhouseAudioStream_URL(mic, "player")
+    var stream_url = birdhouseAudioStream_URL(mic, "player");
     player.setAttribute("src", stream_url);
-
     var src = player.getAttribute("src");
+
     if (player.duration === Infinity) {
         player.currentTime = 1e101;
         birdhouse_infinity = true;
         }
     else if (birdhouse_infinity) { player.currentTime = player.duration - 1; }
 
-    console.log("Play Audio Streams: "+mic+" (ID:"+id+" | URL:"+src+" | DURATION:"+player.duration+" | POS:"+player.currentTime+")");
     player.muted = false;
     player.play();
     birdhouse_stream_play[mic] = true;
 
+    setTimeout(function() {
+        console.log("Play Audio Streams: "+mic+" (ID:"+id+" | URL:"+src+" | DURATION:"+player.duration+
+                    " | POS:"+player.currentTime+" | ERROR:"+player.error+")");
+        if (player.error) {
+            //alert("Could not start playback: Error #" + player.error.code + " - " + player.error.message);
+            birdhouseAudioStream_playback_info(mic, player, player.error.code);
+            }
+        }, 1000);
+
     if (!birdhouse_player_id[mic]) {
         birdhouse_player_id[mic] = setInterval(function() {
-            birdhouseAudioStream_playback_info(mic);
+            birdhouseAudioStream_playback_info(mic, player);
         }, 1000);
     }
 }
 
-function birdhouseAudioStream_playback_info(mic) {
+function birdhouseAudioStream_playback_info(mic, player, error=0) {
     var id = "stream_"+mic;
-    var player = document.getElementById(id);
-    var info = "<b>Status: " + mic + "</b><br/>";
-    info    += "ID:" + id + " | DURATION:" + player.duration + " | POS:" + Math.round(player.currentTime*10)/10 + "s<br/>";
-    info    += "PAUSE:" + player.paused + " | ENDED:" + player.ended+" | MUTE:" + player.muted + "<br/>";
-    info    += "VOLUME:" + player.volume;
+    if (player.error || error != 0) {
+        error_code = player.error.code;
+        if (error != 0) { error_code = error; }
+        var info = "Could not start playback: Error #" + player.error.code;
+        if (error_code == 1) { info += " - Aborted by user. "; }
+        if (error_code == 2) { info += " - Network error. "; }
+        if (error_code == 3) { info += " - Decoding error. "; }
+        if (error_code == 4) { info += " - Codec not supported by your device. "; }
+        //alert(info);
+        //birdhouseAudioStream_image(on=false);
+        //birdhouseAudioStream_image_header(on=false);
+    }
+    else {
+        var info = "<b>Status: " + mic + "</b><br/>";
+        info    += "ID:" + id + " | DURATION:" + player.duration + " | POS:" + Math.round(player.currentTime*10)/10 + "s<br/>";
+        info    += "PAUSE:" + player.paused + " | ENDED:" + player.ended+" | MUTE:" + player.muted + "<br/>";
+        info    += "VOLUME:" + player.volume;
 
-    if (player.paused || player.ended)  { birdhouseAudioStream_image_header(on=false); }
-    else                                { birdhouseAudioStream_image_header(on=true); }
-    if (player.paused || player.ended)  { birdhouseAudioStream_image(on=false); }
-    else                                { birdhouseAudioStream_image(on=true); }
+        if (player.paused || player.ended)  { birdhouseAudioStream_image_header(on=false); }
+        else                                { birdhouseAudioStream_image_header(on=true); }
+        if (player.paused || player.ended)  { birdhouseAudioStream_image(on=false); }
+        else                                { birdhouseAudioStream_image(on=true); }
+    }
     setTextById("playback_info_" + mic, info);
 }
 
