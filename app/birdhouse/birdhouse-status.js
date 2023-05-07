@@ -39,6 +39,7 @@ function birdhouseStatus_connectionError() {
     }
     for (let micro in microphones) {
         setStatusColor(status_id="status_active_"+micro, "red");
+        setStatusColor(status_id="status_error_"+micro, "black");
     }
     setStatusColor(status_id="status_active_WEATHER", "red");
     setStatusColor(status_id="status_error_WEATHER", "black");
