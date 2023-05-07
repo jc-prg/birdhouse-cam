@@ -361,24 +361,25 @@ class ServerInformation(threading.Thread):
                 system["video_devices_02"][value] = value + " (" + info[0] + ")"
         system["audio_devices"] = {}
 
-        first_mic = list(config.param["devices"]["microphones"].keys())[0]
-        info = microphones[first_mic].get_device_information()
-        srv_logging.debug("... mic-info: " + str(info))
+        if microphones != {}:
+            first_mic = list(microphones.keys())[0]
+            info = microphones[first_mic].get_device_information()
+            srv_logging.debug("... mic-info: " + str(info))
 
-        if 'deviceCount' in info:
-            num_devices = info['deviceCount']
-            for i in range(0, num_devices):
-                dev_info = microphones["mic1"].get_device_information(i)
-                if (dev_info.get('maxInputChannels')) > 0:
-                    name = dev_info.get('name')
-                    info = dev_info
-                    srv_logging.debug("... mic-info: " + str(info))
-                    system["audio_devices"][name] = {
-                        "id": i,
-                        "input": info.get("maxInputChannels"),
-                        "output": info.get("maxOutputChannels"),
-                        "sample_rate": info.get("defaultSampleRate")
-                    }
+            if 'deviceCount' in info:
+                num_devices = info['deviceCount']
+                for i in range(0, num_devices):
+                    dev_info = microphones["mic1"].get_device_information(i)
+                    if (dev_info.get('maxInputChannels')) > 0:
+                        name = dev_info.get('name')
+                        info = dev_info
+                        srv_logging.debug("... mic-info: " + str(info))
+                        system["audio_devices"][name] = {
+                            "id": i,
+                            "input": info.get("maxInputChannels"),
+                            "output": info.get("maxOutputChannels"),
+                            "sample_rate": info.get("defaultSampleRate")
+                        }
 
         self._system_status = system.copy()
 
