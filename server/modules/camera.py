@@ -1309,9 +1309,11 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
 
         self.fps = None
         self.fps_max = 12
+        self.fps_max_lowres = 3
         self.fps_slow = 2
         self.fps_average = []
         self.duration_max = 1 / self.fps_max
+        self.duration_max_lowres = 1 / self.fps_max_lowres
         self.duration_slow = 1 / self.fps_slow
 
         self.active = False
@@ -1601,9 +1603,10 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
         self.fps = None
         self.fps_max = 12
+        self.fps_max_lowres = 3
         self.fps_slow = 2
         if self.resolution == "lowres":
-            self.fps_max = 3
+            self.fps_max = self.fps_max_lowres
         self.duration_max = 1 / (self.fps_max + 1)
         self.duration_slow = 1 / self.fps_slow
         self.slow_stream = False
