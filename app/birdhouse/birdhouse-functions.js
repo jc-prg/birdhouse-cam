@@ -24,24 +24,32 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         html += "<input id='"+id+"' value='"+data+"' style='"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");' onchange='"+on_change+"'>";
     }
     else if (type == "select_dict") {
+        var exists = false;
         html += "<select id='"+id+"' onchange='"+on_change+"'>";
         html += "<option value=''>(empty)</option>";
+        if (data == true || data == false) { data_str = data.toString(); }
+        else { data_str = data; }
         Object.keys(options).forEach (key => {
-            if (data == true || data == false) { data_str = data.toString(); }
-            else { data_str = data; }
-            if (data_str == key)  { html += "<option selected='selected' value='"+key+"'>"+options[key]+"</option>"; }
+            if (data_str == key)  { html += "<option selected='selected' value='"+key+"'>"+options[key]+"</option>"; exists = true; }
             else                  { html += "<option value='"+key+"'>"+options[key]+"</option>"; }
             });
+        if (!exists) {
+            html += "<option selected='selected'>"+data_str+"</option>";
+            }
         html += "</select>";
         }
     else if (type == "select") {
         var values = options.split(",");
+        var exists = false;
         html += "<select id='"+id+"' onchange='"+on_change+"'>";
+        if (data == true || data == false) { data_str = data.toString(); }
+        else { data_str = data; }
         for (var i=0;i<values.length;i++) {
-            if (data == true || data == false) { data_str = data.toString(); }
-            else { data_str = data; }
-            if (data_str == values[i])  { html += "<option selected='selected'>"+values[i]+"</option>"; }
+            if (data_str == values[i])  { html += "<option selected='selected'>"+values[i]+"</option>"; exists = true;}
             else                        { html += "<option>"+values[i]+"</option>"; }
+            }
+        if (!exists) {
+            html += "<option selected='selected'>"+data_str+"</option>";
             }
         html += "</select>";
         }
