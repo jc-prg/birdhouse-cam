@@ -1,8 +1,6 @@
 import os
 import time
-import logging
 import numpy as np
-import ffmpeg
 import cv2
 import psutil
 import threading
@@ -13,9 +11,6 @@ from datetime import datetime
 from modules.presets import *
 from modules.bh_class import BirdhouseCameraClass, BirdhouseClass
 from modules.bh_ffmpeg import BirdhouseFfmpegTranscoding
-
-#from better_ffmpeg_progress import FfmpegProcess
-#from ffmpeg import FFmpeg, Progress
 
 
 class BirdhouseCameraHandler(BirdhouseCameraClass):
@@ -33,38 +28,53 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         self.properties_get = None
         self.properties_not_used = None
         self.properties_set = None
+        self.connected = False
 
         self.logging.info("Starting CAMERA support for '"+self.id+":"+source+"' ...")
 
-        self.connect()
-        self.get_properties(key="init")
-        self.set_properties(key="init")
-
-    def read(self):
-        if self.if_error():
-            return
-        try:
-            ref, raw = self.stream.read()
-            return raw
-        except Exception as err:
-            self.raise_error("- Error reading first image from camera '"+self.source+"': " + str(err))
-            return
-
     def connect(self):
+        """
+        connect with camera
+        """
         self.reset_error()
+        self.connected = False
+
+        self.logging.info("Try to connect camera '" + self.id + "' ...")
         try:
             self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
-            time.sleep(1)
+            time.sleep(0.5)
         except Exception as err:
-            self.raise_error("- Error connecting to camera '" + self.source + "': " + str(err))
-            return
-        self.read()
+            self.raise_error("- Can' connect to camera '" + self.source + "': " + str(err))
+            return False
+
+        if self.stream is None:
+            self.raise_error("- Can't connect to camera '" + self.source + "': Unknown error.")
+            return False
+        elif not self.stream.isOpened():
+            self.raise_error("- Can't connect to camera '" + self.source + "': Could not open.")
+            return False
+        else:
+            self.logging.info("- Connected.")
+            self.get_properties(key="init")
+            self.set_properties(key="init")
+            self.connected = True
+
+        try:
+            ref, raw = self.stream.read()
+            check = str(type(raw))
+            if "NoneType" in check or len(raw) == 0:
+                raise Exception("Returned empty image.")
+            return True
+        except Exception as err:
+            self.raise_warning("- Error reading first image from camera '"+self.source+"': " + str(err))
+            return "WARNING"
 
     def reconnect(self):
         self.disconnect()
-        self.connect()
+        return self.connect()
 
     def disconnect(self):
+        self.connected = False
         if self.stream is not None:
             try:
                 self.stream.release()
@@ -72,6 +82,22 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
                 self.logging.debug("- Release of camera did not work: " + str(err))
         else:
             self.logging.debug("- Camera not yet connected.")
+
+    def read(self, stream="not set"):
+        """
+        read image from camera
+        """
+        try:
+            ref, raw = self.stream.read()
+            check = str(type(raw))
+            if not ref:
+                raise Exception("Error reading image.")
+            if "NoneType" in check or len(raw) == 0:
+                raise Exception("Returned empty image.")
+            return raw
+        except Exception as err:
+            self.raise_error("- Error reading image from camera '"+self.source+"' by stream '" + stream + "': " + str(err))
+            return
 
     def set_properties(self, key, value=""):
         """
@@ -244,6 +270,12 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         width = self.stream.get(cv2.CAP_PROP_FRAME_WIDTH)
         height = self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)
         return [width, height]
+
+    def if_connected(self):
+        """
+        check if camera is connected
+        """
+        return self.connected
 
 
 class BirdhouseImageProcessing(BirdhouseCameraClass):
@@ -1305,7 +1337,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         BirdhouseCameraClass.__init__(self, class_id=camera_id+"-sRaw", class_log="cam-stream",
                                       camera_id=camera_id, config=config)
 
-        self.stream_handler = None
+        self.camera = None
         self.image = BirdhouseImageProcessing(camera_id=self.id, config=self.config)
         self.image.resolution = self.param["image"]["resolution"]
 
@@ -1350,7 +1382,8 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         while self._running:
             self._start_time = time.time()
 
-            if self.stream_handler is not None and not self.maintenance_mode \
+            if self.camera is not None and self.camera.if_connected() \
+                    and not self.maintenance_mode \
                     and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
                 self.active = True
                 try:
@@ -1378,6 +1411,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
             else:
                 self.active = False
                 self._stream = None
+                self._stream_last = None
                 self._stream_image_id = 0
                 self._last_activity = 0
                 self._last_activity_count = 0
@@ -1388,6 +1422,19 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
             self.health_signal()
 
         self.logging.info("Stopped CAMERA raw stream for '"+self.id+"'.")
+
+    def read_from_camera(self):
+        """
+        extract image from stream
+        """
+        raw = self.camera.read("stream_raw")
+
+        if raw is not None and self.param["image"]["rotation"] != 0:
+            raw = self.image.rotate_raw(raw, self.param["image"]["rotation"])
+        if raw is not None and len(raw) > 0:
+            return raw.copy()
+        else:
+            self.raise_warning("Could not read image from camera.")
 
     def read_image(self):
         """
@@ -1424,26 +1471,6 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         """
         return self._stream_image_id
 
-    def read_from_camera(self):
-        """
-        extract image from stream
-        """
-        try:
-            retrieve, raw = self.stream_handler.read()
-            if not retrieve:
-                self.raise_error("Could not grab an image from source '" + str(self.id) + "'.")
-                return
-
-        except Exception as err:
-            self.raise_error("Error while grabbing image from source '" + self.id + "': " + str(err))
-            return
-
-        if self.param["image"]["rotation"] != 0:
-            raw = self.image.rotate_raw(raw, self.param["image"]["rotation"])
-
-        if raw is not None and len(raw) > 0:
-            return raw.copy()
-
     def get_active_streams(self, stream_id=""):
         """
         return amount of active streams
@@ -1475,11 +1502,11 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         if len(self.fps_average) > 10:
             self.fps_average.pop(0)
 
-    def set_stream_handler(self, stream_handler):
+    def set_camera_handler(self, camera_handler):
         """
-        set or reset camera handler
+        set camera handler for internal purposes
         """
-        self.stream_handler = stream_handler
+        self.camera = camera_handler
 
     def stream_count(self):
         """
@@ -1524,7 +1551,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         """
         check if stream is ready to deliver images, connection to camera exists
         """
-        if self.stream_handler is None or not self.param["active"]:
+        if self.camera is not None and self.camera.if_connected() or not self.param["active"]:
             return False
         else:
             return True
@@ -1535,7 +1562,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         """
         if stream_id == "default":
             self._last_activity = 0
-            self.stream_handler = None
+            self.camera = None
 
         if stream_id in self._last_activity_per_stream:
             self.logging.info(".... kill: " + str(stream_id))
@@ -2152,6 +2179,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.reload_camera = False
         self.reload_time = 0
+        self.reload_tried = 0
+        self.reload_success = 0
 
         self.image_size = [0, 0]
         self.image_size_lowres = [0, 0]
@@ -2287,7 +2316,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.camera_streams[stream].reload_time = self.reload_time
 
         if not init:
-            self.logging.info("- Restarting CAMERA (" + self.id + ") ...")
+            self.logging.info("Restarting CAMERA (" + self.id + ") ...")
             for stream in relevant_streams:
                 if stream in self.camera_streams:
                     self.camera_streams[stream].set_maintenance_mode(True, "Restart camera", self.id)
@@ -2296,54 +2325,35 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.logging.info("Starting CAMERA (" + self.id + ") ...")
 
         self.reset_error_all()
-        try:
-            if init:
-                self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source,
-                                                     config=self.config, param=self.param)
-                self.camera_stream_raw.set_stream_handler(self.camera.stream)
-            else:
-                self.camera.reconnect()
-                self.camera_stream_raw.set_stream_handler(self.camera.stream)
+        if init:
+            self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source,
+                                                 config=self.config, param=self.param)
+            self.connected = self.camera.connect()
+        else:
+            self.connected = self.camera.reconnect()
 
-            if self.camera.error:
-                self.raise_error("Can't connect to camera, check if '" + str(
-                    self.source) + "' is a valid source (" + self.camera.error_msg + ").")
-                self.camera.disconnect()
-            elif not self.camera.stream.isOpened():
-                self.raise_error("Can't connect to camera, check if '" + str(
-                    self.source) + "' is a valid source (could not open).")
-                self.camera.disconnect()
-            elif self.camera.stream is None:
-                self.raise_error("Can't connect to camera, check if '" + str(
-                    self.source) + "' is a valid source (empty image).")
-                self.camera.disconnect()
-            else:
-                raw = self.camera.read()
-                check = str(type(raw))
-                if "NoneType" in check:
-                    self.raise_error("Check after (re)connect: Source " + str(self.source) + " returned empty image.")
-                else:
-                    self._init_camera_settings()
-                    self.camera_stream_raw.set_stream_handler(self.camera.stream)
-                    self.logging.info("Check after (re)connect: OK (Source=" + str(self.source) + ")")
-
+        self.reload_tried = time.time()
+        if self.connected:
+            self.camera_stream_raw.set_camera_handler(self.camera)
+            self.reload_success = time.time()
             self.record_image_reload = time.time()
 
-        except Exception as e:
-            self.raise_error("Starting camera '" + self.source + "' doesn't work: " + str(e))
+            self._init_camera_settings()
+            self.camera_stream_raw.set_camera_handler(self.camera)
+        else:
+            self.raise_error("Could not connect camera, check error msg of camera handler.")
 
         if not init:
             self.logging.error(" ........ " + str(self.camera_streams.keys()))
             for stream in relevant_streams:
                 if stream in self.camera_streams:
                     self.camera_streams[stream].set_maintenance_mode(False)
-        return
 
     def _init_camera_settings(self):
         """
         set resolution for USB
         """
-        if self.camera is None:
+        if self.camera is None or not self.camera.if_connected():
             return
 
         # set saturation, contrast, brightness
@@ -3007,7 +3017,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         return all status and error information
         """
         if self.record and time.time() - self.record_image_last > 120 \
-                and not self.video.recording and not self.video.processing and self.param["active"]:
+                and not self.video.recording and not self.video.processing \
+                and self.param["active"] and self.active:
             self.record_image_error = True
             self.record_image_error_msg = ["No image recorded for >120s (" +
                                            str(round(time.time() - self.record_image_last, 1)) + ")"]
@@ -3077,7 +3088,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         status["error_details_msg"] = error_details_msg
         status["error_details_health"] = error_details_health
 
-        if self.camera is not None:
+        if self.camera is not None and self.camera.if_connected():
             status["properties"] = self.camera.get_properties()
             status["properties_image"] = self.camera.get_properties_image()
         return status

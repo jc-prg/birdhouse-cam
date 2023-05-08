@@ -260,7 +260,9 @@ class ServerInformation(threading.Thread):
         threading.Thread.__init__(self)
         self._running = True
         self._system_status = {}
-        self._interval = 5
+        self._device_status = {}
+        self._srv_info_time = 0
+        self._interval = 4
         self.health_check = time.time()
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
@@ -273,10 +275,13 @@ class ServerInformation(threading.Thread):
     def run(self) -> None:
         self.logging.info("Starting Server Information ...")
         while self._running:
+            start_time = time.time()
             self.read()
+            self.read_device_status()
             self.health_check = time.time()
             if config.shut_down:
                 self.stop()
+            self._srv_info_time = round(time.time() - start_time, 2)
             time.sleep(self._interval)
         self.logging.info("Stopped Server Information.")
 
@@ -308,6 +313,8 @@ class ServerInformation(threading.Thread):
                 "hdd_used": -1,
                 "hdd_total": -1
             }
+
+        system["system_info_interval"] = self._srv_info_time
 
         # Initialize the result.
         result = -1
@@ -361,7 +368,8 @@ class ServerInformation(threading.Thread):
                 system["video_devices_02"][value] = value + " (" + info[0] + ")"
         system["audio_devices"] = {}
 
-        if microphones != {}:
+        test = False
+        if test and microphones != {}:
             first_mic = list(microphones.keys())[0]
             info = microphones[first_mic].get_device_information()
             srv_logging.debug("... mic-info: " + str(info))
@@ -383,8 +391,37 @@ class ServerInformation(threading.Thread):
 
         self._system_status = system.copy()
 
+    def read_device_status(self):
+        """
+        get device data ever x seconds for a faster API response
+        """
+        global microphones, camera, sensor
+        # get microphone data and create streaming information
+        self._device_status = {
+            "cameras": {},
+            "sensors": {},
+            "microphones": {}
+        }
+
+        for key in microphones:
+            self._device_status["microphones"][key] = microphones[key].get_device_status()
+
+        # get camera data and create streaming information
+        for key in camera:
+            self._device_status["cameras"][key] = camera[key].get_camera_status()
+
+        # get sensor data
+        for key in sensor:
+            self._device_status["sensors"][key] = sensor[key].get_status()
+
     def get(self):
         return self._system_status
+
+    def get_device_status(self):
+        """
+        return device status
+        """
+        return self._device_status
 
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
@@ -831,6 +868,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         create API response
         """
         request_start = time.time()
+        request_times = {}
         status = "Success"
         version = {}
 
@@ -894,6 +932,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             api_data["active"]["active_date"] = param["parameter"][0]
             api_response["STATUS"]["view"]["active_date"] = param["parameter"][0]
 
+        request_times["0_initial"] = round(time.time() - request_start, 3)
+
         # execute API commands
         if command == "INDEX":
             content = views.index_view(param=param)
@@ -942,33 +982,40 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content = {}
             status = "Error: command not found."
 
+        request_times["1_api-commands"] = round(time.time() - request_start, 3)
+
         # collect data for new DATA section
         param_to_publish = ["backup", "devices", "info", "localization", "server", "title", "views", "weather"]
         for key in param_to_publish:
             if key in config.param:
                 api_data["settings"][key] = config.param[key]
+        request_times["2_settings"] = round(time.time() - request_start, 3)
 
         param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups", "chart_data", "weather_data"]
         for key in param_to_publish:
             if key in content:
                 api_data["data"][key] = content[key]
+        request_times["3_entries"] = round(time.time() - request_start, 3)
 
         param_to_publish = ["view", "view_count", "links", "subtitle", "max_image_size"]
         for key in param_to_publish:
             if key in content:
                 api_data["view"][key] = content[key]
+        request_times["4_views"] = round(time.time() - request_start, 3)
 
         # collect data for "DATA" section
         param_to_publish = ["title", "backup", "weather", "views", "info"]
         for key in param_to_publish:
             if key in content:
                 content[key] = config.param[key]
+        request_times["5_config"] = round(time.time() - request_start, 3)
 
         # collect data for STATUS section
         param_to_publish = ["last_answer", "background_process"]
         for key in param_to_publish:
             if key in content:
                 api_response["STATUS"]["server"][key] = content[key]
+        request_times["6_process_info"] = round(time.time() - request_start, 3)
 
         # ensure localization data are available
         if "localization" in api_data["settings"]:
@@ -977,18 +1024,21 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         else:
             api_data["settings"]["localization"] = birdhouse_preset["localization"]
 
+        # get device data
+        api_response["STATUS"]["devices"] = sys_info.get_device_status()
+        request_times["7_devices_status"] = round(time.time() - request_start, 3)
+
         # get microphone data and create streaming information
         micro_data = config.param["devices"]["microphones"].copy()
         for key in micro_data:
-            api_response["STATUS"]["devices"]["microphones"][key] = microphones[key].get_device_status()
             micro_data[key]["stream_server"] = birdhouse_env["server_audio"]
             micro_data[key]["stream_server"] += ":" + str(micro_data[key]["port"])
+        request_times["8_status_micro"] = round(time.time() - request_start, 3)
 
         # get camera data and create streaming information
         camera_data = config.param["devices"]["cameras"].copy()
         for key in camera_data:
             if key in camera:
-                api_response["STATUS"]["devices"]["cameras"][key] = camera[key].get_camera_status()
                 camera_data[key]["video"]["stream"] = "/stream.mjpg?" + key
                 camera_data[key]["video"]["stream_pip"] = "/pip/stream.mjpg?" + key + \
                                                           "+{2nd-camera-key}:{2nd-camera-pos}"
@@ -1003,14 +1053,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 else:
                     camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_stream_video"]
                 camera_data[key]["video"]["stream_server"] += ":" + str(config.param["server"]["port_video"])
+        request_times["9_status_camera"] = round(time.time() - request_start, 3)
 
         # get sensor data
         sensor_data = config.param["devices"]["sensors"].copy()
         for key in sensor_data:
-            api_response["STATUS"]["devices"]["sensors"][key] = sensor[key].get_status()
             sensor_data[key]["values"] = {}
             if key in sensor and sensor[key].if_running():
                 sensor_data[key]["values"] = sensor[key].get_values()
+        request_times["10_status_sensor"] = round(time.time() - request_start, 3)
 
         api_data["settings"]["devices"] = {
             "cameras": camera_data,
@@ -1018,6 +1069,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             "microphones": micro_data
         }
 
+        # server-side settings for information
         api_response["DATA"] = api_data
         api_response["DATA"]["settings"]["server"]["port"] = birdhouse_env["port_http"]
         api_response["DATA"]["settings"]["server"]["port_video"] = birdhouse_env["port_video"]
@@ -1028,7 +1080,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         api_response["DATA"]["settings"]["server"]["ip4_admin_deny"] = birdhouse_env["admin_ip4_deny"]
         api_response["DATA"]["settings"]["server"]["ip4_admin_allow"] = birdhouse_env["admin_ip4_allow"]
         api_response["DATA"]["settings"]["server"]["admin_login"] = birdhouse_env["admin_login"]
-        api_response["API"]["request_time"] = round(time.time() - request_start, 2)
+        api_response["API"]["request_details"] = request_times
+        api_response["API"]["request_time"] = round(time.time() - request_start, 3)
 
         if command != "status" and command != "list" and command != "version":
             del api_response["WEATHER"]

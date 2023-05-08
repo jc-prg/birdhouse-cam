@@ -110,7 +110,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
         if self.audio is None:
             self.audio = pyaudio.PyAudio()
-        elif not self.stream.is_stopped():
+        elif self.stream is not None and not self.stream.is_stopped():
             self.stream.stop_stream()
 
         self.info = self.audio.get_host_api_info_by_index(0)
