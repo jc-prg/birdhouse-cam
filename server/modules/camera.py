@@ -3016,9 +3016,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         return all status and error information
         """
+        recording_active = self.image_recording_active(current_time=-1, check_in_general=True)
         if self.record and time.time() - self.record_image_last > 120 \
                 and not self.video.recording and not self.video.processing \
-                and self.param["active"] and self.active:
+                and self.param["active"] and recording_active:
             self.record_image_error = True
             self.record_image_error_msg = ["No image recorded for >120s (" +
                                            str(round(time.time() - self.record_image_last, 1)) + ")"]
@@ -3041,7 +3042,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             "record_image": self.record,
             "record_image_error": self.record_image_error,
             "record_image_last": time.time() - self.record_image_last,
-            "record_image_active": self.image_recording_active(current_time=-1, check_in_general=True),
+            "record_image_active": recording_active,
             "record_image_last_compare": self.record_image_last_compare,
             "record_image_start": self.record_image_start,
             "record_image_end": self.record_image_end,
