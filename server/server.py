@@ -600,6 +600,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if "version" in self.path:
                 param["session_id"] = elements[3]
 
+        elif self.path.startswith("/api/reload"):
+            param["command"] = "reload"
+
         elif "/edit-presets/" in self.path:
             param["session_id"] = elements[2]
             param["command"] = "edit-presets"
@@ -960,27 +963,25 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content = views.camera_list(param=param)
             api_response["STATUS"]["system"] = sys_info.get()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
-        elif command == "status" or command == "version" or command == "list" or command == "reload":
-            content = views.index_view(param=param)
-
-            if command == "version":
-                version["Code"] = "800"
-                version["Msg"] = "Version OK."
-                if app_framework != param["session_id"]:
-                    version["Code"] = "802"
-                    version["Msg"] = "Update required."
-            content["last_answer"] = ""
-
+        elif command == "status" or command == "list":
+            content = {"last_answer": ""}
             if len(config.async_answers) > 0:
                 content["last_answer"] = config.async_answers.pop()
                 content["background_process"] = config.async_running
-
             api_response["STATUS"]["database"] = config.db_status()
             api_response["STATUS"]["system"] = sys_info.get()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
-
-            if command == "reload":
-                api_response["STATUS"]["reload"] = True
+        elif command == "reload":
+            content = {}
+            api_response["STATUS"]["reload"] = True
+        elif command == "version":
+            content = {}
+            version["Code"] = "800"
+            version["Msg"] = "Version OK."
+            if app_framework != param["session_id"]:
+                version["Code"] = "802"
+                version["Msg"] = "Update required."
+            api_response["STATUS"]["check-version"] = version
         elif command == "camera-param":
             content = {}
             api_data["data"] = camera[which_cam].get_camera_status("properties")
@@ -990,101 +991,106 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         request_times["1_api-commands"] = round(time.time() - request_start, 3)
 
-        # collect data for new DATA section
-        param_to_publish = ["backup", "devices", "info", "localization", "server", "title", "views", "weather"]
-        for key in param_to_publish:
-            if key in config.param:
-                api_data["settings"][key] = config.param[key]
-        request_times["2_settings"] = round(time.time() - request_start, 3)
-
-        param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups", "chart_data", "weather_data"]
-        for key in param_to_publish:
-            if key in content:
-                api_data["data"][key] = content[key]
-        request_times["3_entries"] = round(time.time() - request_start, 3)
-
-        param_to_publish = ["view", "view_count", "links", "subtitle", "max_image_size"]
-        for key in param_to_publish:
-            if key in content:
-                api_data["view"][key] = content[key]
-        request_times["4_views"] = round(time.time() - request_start, 3)
-
-        # collect data for "DATA" section
-        param_to_publish = ["title", "backup", "weather", "views", "info"]
-        for key in param_to_publish:
-            if key in content:
-                content[key] = config.param[key]
-        request_times["5_config"] = round(time.time() - request_start, 3)
-
         # collect data for STATUS section
-        param_to_publish = ["last_answer", "background_process"]
-        for key in param_to_publish:
-            if key in content:
-                api_response["STATUS"]["server"][key] = content[key]
-        request_times["6_process_info"] = round(time.time() - request_start, 3)
-
-        # ensure localization data are available
-        if "localization" in api_data["settings"]:
-            if "language" not in api_data["settings"]["localization"]:
-                api_data["settings"]["localization"]["language"] = "EN"
-        else:
-            api_data["settings"]["localization"] = birdhouse_preset["localization"]
-
-        # get device data
-        api_response["STATUS"]["devices"] = sys_info.get_device_status()
-        request_times["7_devices_status"] = round(time.time() - request_start, 3)
-
-        # get weather data
         weather_status = {}
         if command in cmd_status:
             if config.weather is not None:
                 api_response["WEATHER"] = config.weather.get_weather_info("all")
                 weather_status = config.weather.get_weather_info("status")
 
-        # get microphone data and create streaming information
-        micro_data = config.param["devices"]["microphones"].copy()
-        for key in micro_data:
-            micro_data[key]["stream_server"] = birdhouse_env["server_audio"]
-            micro_data[key]["stream_server"] += ":" + str(micro_data[key]["port"])
-        request_times["8_status_micro"] = round(time.time() - request_start, 3)
+            param_to_publish = ["last_answer", "background_process"]
+            for key in param_to_publish:
+                if key in content:
+                    api_response["STATUS"]["server"][key] = content[key]
 
-        # get camera data and create streaming information
-        camera_data = config.param["devices"]["cameras"].copy()
-        for key in camera_data:
-            if key in camera:
-                camera_data[key]["video"]["stream"] = "/stream.mjpg?" + key
-                camera_data[key]["video"]["stream_pip"] = "/pip/stream.mjpg?" + key + \
-                                                          "+{2nd-camera-key}:{2nd-camera-pos}"
-                camera_data[key]["video"]["stream_lowres"] = "/lowres/stream.mjpg?" + key
-                camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
-                camera_data[key]["device"] = "camera"
-                camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
-                camera_data[key]["image"]["current_streams"] = camera[key].get_stream_count()
-                camera_data[key]["image"]["current_streams_detail"] = camera[key].image_streams
-                if config.param["server"]["ip4_stream_video"] == "":
-                    camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_address"]
-                else:
-                    camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_stream_video"]
-                camera_data[key]["video"]["stream_server"] += ":" + str(config.param["server"]["port_video"])
-        request_times["9_status_camera"] = round(time.time() - request_start, 3)
+            request_times["1_status-commands"] = round(time.time() - request_start, 3)
 
-        # get sensor data
-        sensor_data = config.param["devices"]["sensors"].copy()
-        for key in sensor_data:
-            sensor_data[key]["values"] = {}
-            if key in sensor and sensor[key].if_running():
-                sensor_data[key]["values"] = sensor[key].get_values()
-        request_times["10_status_sensor"] = round(time.time() - request_start, 3)
+        # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
+        if command in cmd_views:
+            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups", "chart_data", "weather_data"]
+            for key in param_to_publish:
+                if key in content:
+                    api_data["data"][key] = content[key]
 
-        api_response["SETTINGS"]["devices"] = {
-            "cameras": camera_data,
-            "sensors": sensor_data,
-            "microphones": micro_data,
-            "weather": weather_status
-        }
+            param_to_publish = ["view", "view_count", "links", "subtitle", "max_image_size"]
+            for key in param_to_publish:
+                if key in content:
+                    api_data["view"][key] = content[key]
 
-        # server-side settings for information
-        api_data["settings"]["devices"] = api_response["SETTINGS"]["devices"]
+            request_times["3_view-commands"] = round(time.time() - request_start, 3)
+
+        # collect data for STATUS and SETTINGS sections (to be clarified -> goal: only for status request)
+        if command not in cmd_info:
+            # collect data for new DATA section
+            param_to_publish = ["backup", "devices", "info", "localization", "server", "title", "views", "weather"]
+            for key in param_to_publish:
+                if key in config.param:
+                    api_data["settings"][key] = config.param[key]
+            request_times["4_settings"] = round(time.time() - request_start, 3)
+
+            # collect data for "DATA" section
+            param_to_publish = ["title", "backup", "weather", "views", "info"]
+            for key in param_to_publish:
+                if key in content:
+                    content[key] = config.param[key]
+            request_times["5_config"] = round(time.time() - request_start, 3)
+
+            # ensure localization data are available
+            if "localization" in api_data["settings"]:
+                if "language" not in api_data["settings"]["localization"]:
+                    api_data["settings"]["localization"]["language"] = "EN"
+            else:
+                api_data["settings"]["localization"] = birdhouse_preset["localization"]
+
+            # get device data
+            api_response["STATUS"]["devices"] = sys_info.get_device_status()
+            request_times["6_devices_status"] = round(time.time() - request_start, 3)
+
+            # get microphone data and create streaming information
+            micro_data = config.param["devices"]["microphones"].copy()
+            for key in micro_data:
+                micro_data[key]["stream_server"] = birdhouse_env["server_audio"]
+                micro_data[key]["stream_server"] += ":" + str(micro_data[key]["port"])
+            request_times["7_status_micro"] = round(time.time() - request_start, 3)
+
+            # get camera data and create streaming information
+            camera_data = config.param["devices"]["cameras"].copy()
+            for key in camera_data:
+                if key in camera:
+                    camera_data[key]["video"]["stream"] = "/stream.mjpg?" + key
+                    camera_data[key]["video"]["stream_pip"] = "/pip/stream.mjpg?" + key + \
+                                                              "+{2nd-camera-key}:{2nd-camera-pos}"
+                    camera_data[key]["video"]["stream_lowres"] = "/lowres/stream.mjpg?" + key
+                    camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
+                    camera_data[key]["device"] = "camera"
+                    camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
+                    camera_data[key]["image"]["current_streams"] = camera[key].get_stream_count()
+                    camera_data[key]["image"]["current_streams_detail"] = camera[key].image_streams
+                    if config.param["server"]["ip4_stream_video"] == "":
+                        camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_address"]
+                    else:
+                        camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_stream_video"]
+                    camera_data[key]["video"]["stream_server"] += ":" + str(config.param["server"]["port_video"])
+            request_times["8_status_camera"] = round(time.time() - request_start, 3)
+
+            # get sensor data
+            sensor_data = config.param["devices"]["sensors"].copy()
+            for key in sensor_data:
+                sensor_data[key]["values"] = {}
+                if key in sensor and sensor[key].if_running():
+                    sensor_data[key]["values"] = sensor[key].get_values()
+            request_times["9_status_sensor"] = round(time.time() - request_start, 3)
+
+            api_response["SETTINGS"]["devices"] = {
+                "cameras": camera_data,
+                "sensors": sensor_data,
+                "microphones": micro_data,
+                "weather": weather_status
+            }
+
+            # server-side settings for information
+            api_data["settings"]["devices"] = api_response["SETTINGS"]["devices"]
+
         api_response["DATA"] = api_data
 
         if command in cmd_status:
