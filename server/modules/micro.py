@@ -58,7 +58,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             if self.config.update["micro_" + self.id]:
                 self.connect()
 
-            # cneck if shutdown requested
+            # check if shutdown requested
             if self.config.shut_down:
                 self.stop()
 
@@ -236,6 +236,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         answer = {
             "active": self.param["active"],
+            "active_streaming": not self._paused,
             "connected": self.connected,
             "running": self.if_running(),
 
@@ -246,4 +247,3 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             "last_active": time.time() - self.last_active
         }
         return answer
-

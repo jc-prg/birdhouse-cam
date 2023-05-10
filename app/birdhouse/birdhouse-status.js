@@ -341,14 +341,20 @@ function birdhouseStatus_microphones(data) {
     var microphones  = app_data["STATUS"]["devices"]["microphones"];
     var keys = Object.keys(microphones);
     for (let micro in microphones) {
-        if (microphones[micro]["active"]) { setStatusColor(status_id="status_active_"+micro, "white"); }
-        else                              { setStatusColor(status_id="status_active_"+micro, "black"); }
+        if (microphones[micro]["active"])        { setStatusColor(status_id="status_active_"+micro, "white"); }
+        else                                     { setStatusColor(status_id="status_active_"+micro, "black"); }
+        if (microphones[micro]["active_stream"]) { setTextById("show_stream_count_"+micro, 1); }
+        else                                     { setTextById("show_stream_count_"+micro, 0); }
         if (microphones[micro]["error"])  {
             setStatusColor(status_id="status_error_"+micro, "red");
             setHeaderColor(header_id=micro+"_error", header_color=header_color_error);
             }
-        else {
+        else if (microphones[micro]["active"]) {
             setStatusColor(status_id="status_error_"+micro, "green");
+            setHeaderColor(header_id=micro+"_error", header_color="");
+            }
+        else {
+            setStatusColor(status_id="status_error_"+micro, "black");
             setHeaderColor(header_id=micro+"_error", header_color="");
             }
 
