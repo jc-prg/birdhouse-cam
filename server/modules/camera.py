@@ -2674,14 +2674,13 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             image_lowres = self.camera_streams["camera_lowres"].read_image()
 
             # retry once if image could not be read
-            if self.image.error or len(image) == 0:
+            if self.image.error or len(image_hires) == 0:
                 self.image.error = False
                 image_hires = self.camera_streams["camera_hires"].read_image()
                 image_lowres = self.camera_streams["camera_lowres"].read_image()
-                image = image_hires
 
             # if no error format and analyze image
-            if not self.image.error and len(image) > 0:
+            if not self.image.error and len(image_hires) > 0:
                 image_compare = self.image.convert_to_gray_raw(image_hires)
 
                 if self.previous_image is not None:
