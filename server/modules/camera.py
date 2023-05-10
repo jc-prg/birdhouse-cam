@@ -2157,6 +2157,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.image = None
         self.video = None
         self.camera = None
+        self.cam_param = None
+        self.cam_param_image = None
         self.sensor = sensor
         self.weather_active = self.config.param["weather"]["active"]
         self.weather_sunrise = None
@@ -3090,10 +3092,15 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             status["error_details_msg"] = error_details_msg
             status["error_details_health"] = error_details_health
 
-        if info == "all" or info == "properties":
+        if info == "properties" or self.cam_param is None:
             if self.camera is not None and self.camera.if_connected():
                 status["properties"] = self.camera.get_properties()
                 status["properties_image"] = self.camera.get_properties_image()
+                self.cam_param = status["properties"]
+                self.cam_param_image = status["properties_image"]
+        elif self.cam_param is not None:
+            status["properties"] = self.cam_param
+            status["properties_image"] = self.cam_param_image
 
         return status
 

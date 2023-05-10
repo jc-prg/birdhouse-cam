@@ -6,6 +6,7 @@
 
 
 var birdhouse_device_list = [];
+var birdhouse_camera_interval = {};
 
 function birdhouseDevices( title, data, show_settings=true ) {
 	var html = "";
@@ -202,17 +203,17 @@ function birdhouseDevices_cameras(data) {
 }
 
 function birdhouseDevices_cameraSettings (data) {
-	var camera_settings	  = data["DATA"]["settings"]["devices"]["cameras"];
+	var camera_settings	  = app_data["SETTINGS"]["devices"]["cameras"];
 	var camera_properties = data["STATUS"]["devices"]["cameras"];
+
 	var admin             = data["STATUS"]["admin_allowed"];
 	var html = "";
 	var tab     = new birdhouse_table();
 	tab.style_rows["height"] = "27px";
-	var camera_settings_write = ["Brightness", "Contrast", "Gain", "Gamma", "Hue", "Saturation", "Exposure", "FPS"];
-	var camera_settings_read  = ["Auto_WB", "Auto_Exposure", "WB_Temperature"];
-	var camera_settings_measure = ["Brightness", "Contrast", "Saturation"];
 
-    // birdhouse_cameraSettings(camera, key, value);
+	var camera_settings_write   = ["Brightness", "Contrast", "Gain", "Gamma", "Hue", "Saturation", "Exposure", "FPS"];
+	var camera_settings_read    = ["Auto_WB", "Auto_Exposure", "WB_Temperature"];
+	var camera_settings_measure = ["Brightness", "Contrast", "Saturation"];
 
 	for (let camera in camera_settings) {
 	    id_list = "";
@@ -223,8 +224,7 @@ function birdhouseDevices_cameraSettings (data) {
 	    camera_name   = camera.toUpperCase() + ": " + camera_settings[camera]["name"];
 	    camera_stream = birdhouse_Image(camera_name, info);
 
-
-	    if (camera_properties[camera]["error"] || camera_settings[camera]["active"] == false) {
+	    if (!camera_properties[camera] || (camera_properties[camera]["error"] || camera_settings[camera]["active"] == false)) {
 	        html += "&nbsp;<br/><center>";
 	        html += "Camera " + camera.toUpperCase() + " is not available at the moment.<br/>";
 	        html += "<a href='index.html?DEVICES'>See device settings for details.</a>";
@@ -233,9 +233,8 @@ function birdhouseDevices_cameraSettings (data) {
 	    }
 
 	    html += "<div class='camera_info'><div class='camera_info_image'>";
-	    if (camera_settings[camera]["active"])
-	         { html  += camera_stream; }
-	    else { html  += lang("CAMERA_INACTIVE"); }
+	    if (camera_settings[camera]["active"])   { html  += camera_stream; }
+	    else                                     { html  += lang("CAMERA_INACTIVE"); }
 		html += "</div>";
 		html += "<div class='camera_info_text'>";
 
@@ -246,14 +245,15 @@ function birdhouseDevices_cameraSettings (data) {
             var value = camera_settings_write[i].toLowerCase();
             var key   = camera_settings_write[i].replaceAll("_", " ");
 
-            if (camera_properties[camera]["properties"][value][1] != camera_properties[camera]["properties"][value][2]) {
+            if (camera_properties[camera] && camera_properties[camera]["properties"][value][1] != camera_properties[camera]["properties"][value][2]) {
                 var range       = camera_properties[camera]["properties"][value][1] + ":" + camera_properties[camera]["properties"][value][2];
                 var range_text  = "[" + camera_properties[camera]["properties"][value][1] + ".." + camera_properties[camera]["properties"][value][2] + "]";
                 var prop        = "";
-                if (camera_settings_measure.indexOf(camera_settings_write[i]) > -1) { prop += "<i>(image=<span id='img_"+value+"_"+camera+"'></span>)</i>"; }
 
-                html_entry += tab.row("<b>" + key + ":</b><br/>" + range_text,   birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image:"+value, type="range", options=range, data_type="float") +
-                                                    " " + birdhouseDevices_cameraSettingsButton (camera, value, "set_"+value+"_"+camera, "change"));
+                if (camera_settings_measure.indexOf(camera_settings_write[i]) > -1) { prop += "<i>(image=<span id='img_"+value+"_"+camera+"'></span>)</i>"; }
+                html_entry += tab.row("<b>" + key + ":</b><br/>" + range_text,
+                                      birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image:"+value, type="range", options=range, data_type="float") +
+                                      " " + birdhouseDevices_cameraSettingsButton (camera, value, "set_"+value+"_"+camera, "change"));
                 html_entry += tab.row("",   prop);
 
                 id_list += "set_"+value+"_"+camera+":";
@@ -289,6 +289,22 @@ function birdhouseDevices_cameraSettings (data) {
     html += "&nbsp;<br/>";
     setTextById(app_frame_content, html);
     setTextById(app_frame_header, "<center><h2>" + lang("CAMERA") + "-" + lang("SETTINGS") + "</h2></center>");
+
+	for (let camera in camera_settings) {
+        birdhouseDevices_cameraSettingsLoad(camera);
+    }
+}
+
+function birdhouseDevices_cameraSettingsLoad (camera, active=true) {
+    clearInterval(birdhouse_camera_interval[camera]);
+    delete birdhouse_camera_interval[camera];
+
+    if (active) {
+        birdhouse_getCameraParam(camera);
+        birdhouse_camera_interval[camera] = setInterval( function() {
+            birdhouse_getCameraParam(camera);
+        }, 5000);
+    }
 }
 
 function birdhouseDevices_cameraSettingsButton (camera, key, field_id, description) {

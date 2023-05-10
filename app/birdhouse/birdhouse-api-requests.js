@@ -43,6 +43,7 @@ function birdhouse_logout() {
     }
 
 function birdhouse_logoutMsg() {
+
     appMsg.alert(lang("LOGOUT_MSG"));
 }
 
@@ -138,7 +139,9 @@ function birdhouse_forceRestart_exec() {
 	}
 
 function birdhouse_killStream(camera_id, stream_id) {
-    console.log("birdhouse_killStream: "+stream_id);
+    console.log("birdhouse_killStream: "+camera_id+" - "+stream_id);
+    camera_id = camera_id.replace("_img", "");
+    stream_id = stream_id.replace("_img", "");
 	commands = ["kill-stream", stream_id, camera_id];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_killStreamAnswer, '', 'birdhouse_killStream');
     }
@@ -269,6 +272,16 @@ function birdhouse_setFavoriteShow(command, param) {
         document.getElementById("s_"+img_id+"_value").innerHTML = status;
         document.getElementById(img_id).style.borderColor = color;
 	}
+
+function birdhouse_getCameraParam(camera) {
+    commands = ["camera-param", camera];
+    birdhouse_apiRequest('GET',commands,"",birdhouse_showCameraParam,"","birdhouse_getCameraParam");
+}
+
+function birdhouse_showCameraParam(data) {
+    camera = data["DATA"]["active"]["active_cam"];
+    birdhouseStatus_cameraParam(data, camera);
+}
 
 function birdhouse_showWeather() {
 	commands = ["status"];

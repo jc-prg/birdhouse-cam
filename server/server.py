@@ -262,7 +262,7 @@ class ServerInformation(threading.Thread):
         self._system_status = {}
         self._device_status = {}
         self._srv_info_time = 0
-        self._interval = 4
+        self._interval = 5
         self.health_check = time.time()
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
@@ -774,6 +774,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if which_cam in camera:
                 camera[which_cam].record_temp_threshold = param["parameter"]
         elif param["command"] == "kill-stream":
+            srv_logging.info(self.path)
+            srv_logging.info(str(param["parameter"]))
             stream_id = param["parameter"][0]
             if "&" in stream_id:
                 stream_id_kill = stream_id.split("&")[-1]

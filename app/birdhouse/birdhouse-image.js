@@ -39,8 +39,6 @@ function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false) {
     }
     var stream_uid    = app_unique_stream_id;
 
-    //var app_unique_stream_id  = new Date().getTime();
-
     if (stream_id != "")        {
         stream_link   += "&" + stream_id;
         stream_id_ext += "&" + stream_id;
@@ -339,14 +337,14 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	else if (entry["type"] == "camera") {
 		var description = title;
 		//var lowres      = entry["video"]["stream"];
-		var lowres      = birdhouse_StreamURL(entry["id"], entry["video"]["stream"], "image_stream");
+		var lowres      = birdhouse_StreamURL(entry["id"], entry["video"]["stream"], "image_stream", true);
 		var hires       = lowres;
 		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
     }
 	else if (entry["type"] == "detection") {
 		var description = title;
 		//var lowres      = entry["video"]["stream_detect"];
-		var lowres      = birdhouse_StreamURL(entry["id"], entry["video"]["stream_detect"], "image_stream_detect");
+		var lowres      = birdhouse_StreamURL(entry["id"], entry["video"]["stream_detect"], "image_stream_detect", true);
 		var hires       = lowres;
 		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\", \"\", \"\", \"stream_overlay_"+entry["id"]+"\");";
     }

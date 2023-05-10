@@ -116,7 +116,7 @@ function birdhouseStatus_cameras(data) {
             if (camera_status[camera]["record_image_start"] == "-1:-1") { record_time_info = "<i>N/A (camera not active)</i>"; }
             setTextById("get_record_image_time_"+camera, record_time_info);
 
-            birdhouseStatus_cameraParam(data, camera);
+            //birdhouseStatus_cameraParam(data, camera);
 
             // error recording images
             if (camera_status[camera]["error"]) {
@@ -188,24 +188,20 @@ function birdhouseStatus_cameras(data) {
 
 function birdhouseStatus_cameraParam(data, camera) {
     // camera parameter (image settings)
-    var cameras         = data["SETTINGS"]["devices"]["cameras"];
-    var camera_status   = data["STATUS"]["devices"]["cameras"];
-
-    if (camera_status[camera]["properties"]) {
-        for (let key in camera_status[camera]["properties"]) {
-            var prop_text = camera_status[camera]["properties"][key][0];
-            //if (camera_status[camera]["properties"][key][1] != camera_status[camera]["properties"][key][2]) {
-            //    prop_text += " [" + camera_status[camera]["properties"][key][1] + ".." + camera_status[camera]["properties"][key][2] + "]";
-            //}
+    //var camera_status   = data["STATUS"]["devices"]["cameras"];
+    var camera_status   = data["DATA"]["data"];
+    if (camera_status["properties"]) {
+        for (let key in camera_status["properties"]) {
+            var prop_text = camera_status["properties"][key][0];
             setTextById("prop_" + key + "_" + camera, prop_text);
             if (document.activeElement != document.getElementById("set_" + key + "_" + camera) && document.activeElement != document.getElementById("set_" + key + "_" + camera + "_range")) {
-                setValueById("set_" + key + "_" + camera, camera_status[camera]["properties"][key][0]);
-                setValueById("set_" + key + "_" + camera + "_range", camera_status[camera]["properties"][key][0]);
+                setValueById("set_" + key + "_" + camera, camera_status["properties"][key][0]);
+                setValueById("set_" + key + "_" + camera + "_range", camera_status["properties"][key][0]);
                 }
             //console.error(key + ":" + camera_status[camera]["properties"][key].toString());
         }
-        for (let key in camera_status[camera]["properties_image"]) {
-            setTextById("img_" + key + "_" + camera, Math.round(camera_status[camera]["properties_image"][key]*100)/100);
+        for (let key in camera_status["properties_image"]) {
+            setTextById("img_" + key + "_" + camera, Math.round(camera_status["properties_image"][key]*100)/100);
             //console.error(key + ":" + camera_status[camera]["properties"][key].toString());
         }
     }
