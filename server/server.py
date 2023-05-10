@@ -912,6 +912,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 },
                 "database": {}
             },
+            "SETTINGS": {},
             "WEATHER": {},
             "DATA": {}
         }
@@ -933,6 +934,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             api_response["STATUS"]["view"]["active_date"] = param["parameter"][0]
 
         request_times["0_initial"] = round(time.time() - request_start, 3)
+
+        cmd_views = ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL", "DEVICES"]
+        cmd_status = ["status", "list"]
+        cmd_info = ["camera-param", "version", "reload"]
 
         # execute API commands
         if command == "INDEX":
@@ -968,16 +973,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 content["last_answer"] = config.async_answers.pop()
                 content["background_process"] = config.async_running
 
-            if config.weather is not None:
-                api_response["WEATHER"] = config.weather.get_weather_info("all")
-                api_response["STATUS"]["devices"]["weather"] = config.weather.get_weather_info("status")
-
             api_response["STATUS"]["database"] = config.db_status()
             api_response["STATUS"]["system"] = sys_info.get()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
 
             if command == "reload":
                 api_response["STATUS"]["reload"] = True
+        elif command == "camera-param":
+            content = {}
+            api_data["data"] = camera[which_cam].get_camera_status("properties")
         else:
             content = {}
             status = "Error: command not found."
@@ -1028,6 +1032,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         api_response["STATUS"]["devices"] = sys_info.get_device_status()
         request_times["7_devices_status"] = round(time.time() - request_start, 3)
 
+        # get weather data
+        weather_status = {}
+        if command in cmd_status:
+            if config.weather is not None:
+                api_response["WEATHER"] = config.weather.get_weather_info("all")
+                weather_status = config.weather.get_weather_info("status")
+
         # get microphone data and create streaming information
         micro_data = config.param["devices"]["microphones"].copy()
         for key in micro_data:
@@ -1063,31 +1074,39 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 sensor_data[key]["values"] = sensor[key].get_values()
         request_times["10_status_sensor"] = round(time.time() - request_start, 3)
 
-        api_data["settings"]["devices"] = {
+        api_response["SETTINGS"]["devices"] = {
             "cameras": camera_data,
             "sensors": sensor_data,
-            "microphones": micro_data
+            "microphones": micro_data,
+            "weather": weather_status
         }
 
         # server-side settings for information
+        api_data["settings"]["devices"] = api_response["SETTINGS"]["devices"]
         api_response["DATA"] = api_data
-        api_response["DATA"]["settings"]["server"]["port"] = birdhouse_env["port_http"]
-        api_response["DATA"]["settings"]["server"]["port_video"] = birdhouse_env["port_video"]
-        api_response["DATA"]["settings"]["server"]["port_audio"] = birdhouse_env["port_audio"]
-        api_response["DATA"]["settings"]["server"]["server_audio"] = birdhouse_env["port_audio"]
-        api_response["DATA"]["settings"]["server"]["database_port"] = birdhouse_env["couchdb_port"]
-        api_response["DATA"]["settings"]["server"]["database_server"] = birdhouse_env["couchdb_server"]
-        api_response["DATA"]["settings"]["server"]["ip4_admin_deny"] = birdhouse_env["admin_ip4_deny"]
-        api_response["DATA"]["settings"]["server"]["ip4_admin_allow"] = birdhouse_env["admin_ip4_allow"]
-        api_response["DATA"]["settings"]["server"]["admin_login"] = birdhouse_env["admin_login"]
-        api_response["API"]["request_details"] = request_times
-        api_response["API"]["request_time"] = round(time.time() - request_start, 3)
 
-        if command != "status" and command != "list" and command != "version":
+        if command in cmd_status:
+            api_response["SETTINGS"]["server"] = {
+                "port": birdhouse_env["port_http"],
+                "port_video": birdhouse_env["port_video"],
+                "port_audio": birdhouse_env["port_audio"],
+                "server_audio": birdhouse_env["port_audio"],
+                "database_type": birdhouse_env["database_type"],
+                "database_port": birdhouse_env["couchdb_port"],
+                "database_server": birdhouse_env["couchdb_server"],
+                "ip4_admin_deny": birdhouse_env["admin_ip4_deny"],
+                "ip4_admin_allow": birdhouse_env["admin_ip4_allow"],
+                "admin_login": birdhouse_env["admin_login"]
+            }
+
+        if command not in cmd_status and command not in cmd_info:
             del api_response["WEATHER"]
             del api_response["STATUS"]["system"]
             del api_response["STATUS"]["database"]
             del api_response["STATUS"]["check-version"]
+
+        api_response["API"]["request_details"] = request_times
+        api_response["API"]["request_time"] = round(time.time() - request_start, 3)
 
         self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'),
                          no_cache=True)
@@ -1257,121 +1276,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         if camera[key].video.recording:
                             time.sleep(stream_wait_while_recording)
                             break
-
-    @staticmethod
-    def do_GET_stream_audio_header(sample_rate, bits_per_sample, channels):
-        """.."""
-        datasize = 2000 * 10 ** 6
-        #datasize = samples * channels * bits_per_sample // 8
-        o = bytes("RIFF", 'ascii')  # (4byte) Marks file as RIFF
-        o += (datasize + 36).to_bytes(4, 'little')  # (4byte) File size in bytes excluding this and RIFF marker
-        o += bytes("WAVE", 'ascii')  # (4byte) File type
-        o += bytes("fmt ", 'ascii')  # (4byte) Format Chunk Marker
-        o += (16).to_bytes(4, 'little')  # (4byte) Length of above format data
-        o += (1).to_bytes(2, 'little')  # (2byte) Format type (1 - PCM)
-        o += (channels).to_bytes(2, 'little')  # (2byte)
-        o += (sample_rate).to_bytes(4, 'little')  # (4byte)
-        o += (sample_rate * channels * bits_per_sample // 8).to_bytes(4, 'little')  # (4byte)
-        o += (channels * bits_per_sample // 8).to_bytes(2, 'little')  # (2byte)
-        o += (bits_per_sample).to_bytes(2, 'little')  # (2byte)
-        o += bytes("data", 'ascii')  # (4byte) Data Chunk Marker
-        o += (datasize).to_bytes(4, 'little')  # (4byte) Data size in bytes
-        return o
-
-    def do_GET_stream_audio_org(self, which_cam, param):
-        """Audio streaming generator function."""
-        global srv_audio # srv_audio_stream,
-        srv_logging.debug("AUDIO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
-
-        CHANNELS = 1
-        RATE = 16000
-        CHUNK = 1024*8   # input overflow --> try increasing the buffer; partly helped
-        DEVICE = 2
-        BITS_PER_SAMPLE = 16
-
-        micros = config.param["devices"]["microphones"]
-        if which_cam in micros:
-            micro = micros[which_cam]
-            srv_logging.info("AUDIO device " + which_cam + " (" + str(micro["device_id"]) + "; " +
-                             micro["device_name"] + "; " + str(micro["sample_rate"]) + ")")
-
-            DEVICE = micro["device_id"]
-            RATE = micro["sample_rate"]
-            CHUNK = CHUNK * int(micro["chunk_size"])
-
-            if srv_audio is None:
-                srv_audio = pyaudio.PyAudio()
-
-            info = srv_audio.get_host_api_info_by_index(0)
-            num_devices = info.get('deviceCount')
-            if DEVICE not in range(0, num_devices):
-                srv_logging.error("... AUDIO device '"+str(DEVICE)+"' not available (range: 0, "+str(num_devices)+")")
-                return
-            device = srv_audio.get_device_info_by_host_api_device_index(0, DEVICE)
-            if device.get('input') == 0:
-                srv_logging.error("... AUDIO device '"+str(DEVICE)+"' is not a microphone / has no input (" +
-                                  device.get('name') + ")")
-                return
-            if device.get('name') != micro["device_name"]:
-                srv_logging.warning("... AUDIO device '" + str(DEVICE) + "' not the same as expected: " +
-                                    device.get('name') + " != " + micro["device_name"])
-        else:
-            srv_logging.error("AUDIO device '" + which_cam + "' is not defined.")
-            return
-
-        try:
-            #if srv_audio_stream is None:
-            srv_audio_stream = srv_audio.open(format=pyaudio.paInt16, channels=CHANNELS,
-                                              rate=RATE, input=True, input_device_index=DEVICE,
-                                              frames_per_buffer=CHUNK)
-            srv_logging.info("Initialized: channels=" + str(CHANNELS) + ", rate=" + str(RATE) +
-                             ", input_device_index=" + str(DEVICE) + ", frames_per_buffer=" + str(CHUNK))
-        except Exception as err:
-            srv_logging.error("- Could not initialize audio stream (" + str(DEVICE) + "): " + str(err))
-            srv_logging.error("- open: channels=" + str(CHANNELS) + ", rate=" + str(RATE) +
-                              ", input_device_index=" + str(DEVICE) + ", frames_per_buffer=" + str(CHUNK))
-            srv_logging.error("- device: " + str(device))
-            return
-
-        srv_logging.info("Start streaming ...")
-        self.stream_audio_header()
-        # frames = []
-
-        wav_header = self.do_GET_stream_audio_header(RATE, BITS_PER_SAMPLE, CHANNELS)
-        first_run = True
-        streaming = True
-        if srv_audio_stream.is_stopped():
-            srv_audio_stream.start_stream()
-
-        count = 0
-        while streaming:
-            if first_run:
-                data = wav_header + srv_audio_stream.read(CHUNK, exception_on_overflow=False)
-                try:
-                    first_run = False
-                except Exception as err:
-                    data = ""
-                    streaming = False
-                    srv_logging.error("Error while initially grabbing audio from device: " + str(err))
-            else:
-                try:
-                    data = srv_audio_stream.read(CHUNK, exception_on_overflow=False)
-                except Exception as err:
-                    data = ""
-                    count += 1
-                    if count > 20:
-                        streaming = False
-                    srv_logging.error("Errors (>20) while grabbing audio from device: " + str(err))
-
-            if data != "":
-                self.wfile.write(data)
-
-        try:
-            if not srv_audio_stream.is_stopped():
-                srv_audio_stream.stop_stream()
-            srv_audio_stream.close()
-        except Exception as err:
-            srv_logging.error("Error while closing audio stream: " + str(err))
 
     def do_GET_stream_audio(self, which_cam, this_path):
         """

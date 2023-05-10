@@ -3012,7 +3012,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.logging.info("set_image_stream_kill: " + ext_stream_id)
         self.image_streams_to_kill[ext_stream_id] = datetime.now().timestamp()
 
-    def get_camera_status(self):
+    def get_camera_status(self, info="all"):
         """
         return all status and error information
         """
@@ -3052,46 +3052,49 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             "properties_image": {}
             }
 
-        error_details = {
-            "camera": self.error,
-            "camera_handler": None,
-            "image": self.image.error,
-            "image_record": self.record_image_error,
-            "video": self.video.error,
-            "stream_raw": self.camera_stream_raw.error
-        }
+        if info == "all":
+            error_details = {
+                "camera": self.error,
+                "camera_handler": None,
+                "image": self.image.error,
+                "image_record": self.record_image_error,
+                "video": self.video.error,
+                "stream_raw": self.camera_stream_raw.error
+            }
 
-        error_details_msg = {
-            "camera": self.error_msg,
-            "camera_handler": [],
-            "image": self.image.error_msg,
-            "image_record": self.record_image_error_msg,
-            "video": self.video.error_msg,
-            "stream_raw": self.camera_stream_raw.error_msg
-        }
+            error_details_msg = {
+                "camera": self.error_msg,
+                "camera_handler": [],
+                "image": self.image.error_msg,
+                "image_record": self.record_image_error_msg,
+                "video": self.video.error_msg,
+                "stream_raw": self.camera_stream_raw.error_msg
+            }
 
-        error_details_health = {
-            "camera": self.health_status(),
-            "video": self.video.health_status(),
-            "stream_raw": self.camera_stream_raw.health_status()
-        }
+            error_details_health = {
+                "camera": self.health_status(),
+                "video": self.video.health_status(),
+                "stream_raw": self.camera_stream_raw.health_status()
+            }
 
-        if self.camera is not None:
-            error_details["camera_handler"] = self.camera.error
-            error_details_msg["camera_handler"] = self.camera.error_msg
+            if self.camera is not None:
+                error_details["camera_handler"] = self.camera.error
+                error_details_msg["camera_handler"] = self.camera.error_msg
 
-        for stream_id in self.camera_streams:
-            error_details[stream_id] = self.camera_streams[stream_id].error
-            error_details_msg[stream_id] = self.camera_streams[stream_id].error_msg
-            error_details_health[stream_id] = self.camera_streams[stream_id].health_status()
+            for stream_id in self.camera_streams:
+                error_details[stream_id] = self.camera_streams[stream_id].error
+                error_details_msg[stream_id] = self.camera_streams[stream_id].error_msg
+                error_details_health[stream_id] = self.camera_streams[stream_id].health_status()
 
-        status["error_details"] = error_details
-        status["error_details_msg"] = error_details_msg
-        status["error_details_health"] = error_details_health
+            status["error_details"] = error_details
+            status["error_details_msg"] = error_details_msg
+            status["error_details_health"] = error_details_health
 
-        if self.camera is not None and self.camera.if_connected():
-            status["properties"] = self.camera.get_properties()
-            status["properties_image"] = self.camera.get_properties_image()
+        if info == "all" or info == "properties":
+            if self.camera is not None and self.camera.if_connected():
+                status["properties"] = self.camera.get_properties()
+                status["properties_image"] = self.camera.get_properties_image()
+
         return status
 
     def get_camera_settings(self, param):

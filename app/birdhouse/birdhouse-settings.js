@@ -138,7 +138,7 @@ function birdhouse_app_settings (name="Settings") {
     }
 
     this.server_side_settings = function() {
-        var settings = app_data["DATA"]["settings"];
+        var settings = app_data["SETTINGS"];
         if (settings["server"]["database_server"] && settings["server"]["database_server"] != "") {
             var link = "http://"+settings["server"]["database_server"]+":"+settings["server"]["database_port"]+"/_utils/";
         }
