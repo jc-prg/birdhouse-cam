@@ -1943,7 +1943,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             normalized = self.image.convert_to_gray_raw(raw)
             normalized = self.image.convert_from_gray_raw(normalized)
             return normalized.copy()
-        else:
+        elif raw is not None:
             return raw.copy()
 
     def edit_crop_area(self, raw, start_zero=False):
@@ -2670,35 +2670,24 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if self.image_recording_active(current_time=current_time):
 
             self.logging.debug(" ...... record now!")
-            image = self.get_image_raw()
+            image_hires = self.camera_streams["camera_hires"].read_image()
+            image_lowres = self.camera_streams["camera_lowres"].read_image()
 
             # retry once if image could not be read
             if self.image.error or len(image) == 0:
                 self.image.error = False
-                image = self.get_image_raw()
+                image_hires = self.camera_streams["camera_hires"].read_image()
+                image_lowres = self.camera_streams["camera_lowres"].read_image()
+                image = image_hires
 
             # if no error format and analyze image
             if not self.image.error and len(image) > 0:
-                image = self.image.normalize_raw(image)
-                image_compare = self.image.convert_to_gray_raw(image)
-
-                if self.param["image"]["date_time"]:
-                    image = self.image.draw_date_raw(image)
-
-                if self.image_size == [0, 0]:
-                    self.image_size = self.image.size_raw(image)
-                    self.video.image_size = self.image_size
-
-                if self.image_size_lowres == [0, 0]:
-                    scale = self.param["image"]["preview_scale"]
-                    self.image_size_lowres = self.image.size_raw(image, scale)
-                    self.video.image_size = self.image_size
+                image_compare = self.image.convert_to_gray_raw(image_hires)
 
                 if self.previous_image is not None:
                     similarity = self.image.compare_raw(image_1st=image_compare,
                                                         image_2nd=self.previous_image,
-                                                        detection_area=self.param["similarity"][
-                                                            "detection_area"])
+                                                        detection_area=self.param["similarity"]["detection_area"])
                     similarity = str(similarity)
 
                 image_info = {
@@ -2747,9 +2736,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 path_hires = os.path.join(self.config.db_handler.directory("images"),
                                           self.config.filename_image("hires", stamp, self.id))
                 self.logging.debug("WRITE:" + path_lowres)
-                self.write_image(filename=path_hires, image=image)
-                self.write_image(filename=path_lowres, image=image,
-                                 scale_percent=self.param["image"]["preview_scale"])
+                self.write_image(filename=path_hires, image=image_hires)
+                self.write_image(filename=path_lowres, image=image_lowres)
 
                 self.record_image_error = False
                 self.record_image_error_msg = []
