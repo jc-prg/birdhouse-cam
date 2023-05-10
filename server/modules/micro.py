@@ -1,6 +1,7 @@
 import pyaudio
 import threading
 import time
+import wave
 from modules.presets import *
 from modules.bh_class import BirdhouseClass
 
@@ -24,6 +25,11 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.stream = None
         self.connected = False
         self.chunk = None
+
+        self.recording = False
+        self.recording_processing = False
+        self.recording_filename = ""
+        self.recording_frames = []
 
         self.last_active = time.time()
         self.last_reload = time.time()
@@ -68,6 +74,8 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                     self.chunk = self.stream.read(self.CHUNK, exception_on_overflow=False)
                     if len(self.chunk) > 0:
                         self.count += 1
+                        if self.recording:
+                            self.recording_frames.append(self.chunk)
 
                 except Exception as err:
                     self.raise_error("Could not read chunk: " + str(err))
@@ -76,6 +84,10 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             else:
                 self.count = 0
                 time.sleep(1)
+
+            # start processing if trigger is set
+            if self.recording_processing:
+                self.record_process()
 
         if self.stream is not None:
             if not self.stream.is_stopped():
@@ -247,3 +259,38 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             "last_active": time.time() - self.last_active
         }
         return answer
+
+    def record_start(self, filename):
+        """
+        empty cache and start recording
+        """
+        self.logging.info("Start recording '" + filename + "' ...")
+        self.last_active = time.time()
+        self.recording_frames = []
+        self.recording_filename = filename
+        self.recording = True
+
+    def record_stop(self):
+        """
+        stop recording and write to file
+        inspired by https://realpython.com/playing-and-recording-sound-python/#pyaudio_1
+        """
+        self.recording = False
+        self.recording_processing = True
+        self.logging.info("Stopping recording of '" + self.recording_filename + "' with " +
+                          str(len(self.recording_frames)) + " chunks ...")
+
+    def record_process(self):
+        """
+        write to file
+        """
+        self.recording_processing = False
+        wf = wave.open(self.recording_filename, 'wb')
+        wf.setnchannels(self.CHANNELS)
+        wf.setsampwidth(self.audio.get_sample_size(self.FORMAT))
+        # wf.setsampwidth(self.CHUNK)
+        wf.setframerate(self.RATE)
+        wf.writeframes(b''.join(self.recording_frames))
+        wf.close()
+        self.recording_frames = []
+        self.logging.info("Stopped recording of '" + self.recording_filename + "'.")

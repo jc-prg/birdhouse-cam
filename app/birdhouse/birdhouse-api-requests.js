@@ -118,6 +118,16 @@ function birdhouse_recordStop(camera) {
     birdhouse_apiRequest('POST',commands,"","","","birdhouse_recordStop");
 }
 
+function birdhouse_recordStartAudio(micro) {
+    commands = ["start-recording-audio", micro];
+    birdhouse_apiRequest('POST',commands,"","","","birdhouse_recordStartAudio");
+}
+
+function birdhouse_recordStopAudio(micro) {
+    commands = ["stop-recording-audio", micro];
+    birdhouse_apiRequest('POST',commands,"","","","birdhouse_recordStopAudio");
+}
+
 function birdhouse_forceBackup(camera) {
 	commands = ["force-backup",camera];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');

@@ -175,7 +175,8 @@ function birdhouse_app_settings (name="Settings") {
 
 	this.api_calls = function () {
 	    var api_call        = "";
-        var cameras         = app_data["DATA"]["settings"]["devices"]["cameras"];
+        var cameras         = app_data["SETTINGS"]["devices"]["cameras"];
+        var microphones     = app_data["SETTINGS"]["devices"]["microphones"];
         var button_style    = "background-color:lightgray;color:black;width:90px;margin:3px;";
         delete this.tab.style_cells["width"];
         var html_entry      = this.tab.start();
@@ -197,6 +198,12 @@ function birdhouse_app_settings (name="Settings") {
 	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Compl. "+camera.toUpperCase()+"</button>";
 	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/ARCHIVE/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Archive "+camera.toUpperCase()+"</button>";
             html_entry += this.tab.row("API "+camera, api_call);
+        }
+
+        for (let micro in microphones) {
+            api_call    = "<button onclick='birdhouse_recordStartAudio(\""+micro+"\");' style='"+button_style+"';>Record "+micro+"</button>";
+            api_call   += "<button onclick='birdhouse_recordStopAudio(\""+micro+"\");' style='"+button_style+"';>Stop "+micro+"</button>";
+            html_entry += this.tab.row("API "+micro, api_call);
         }
         html_entry += this.tab.end();
         this.tab.style_cells["width"] = "40%";

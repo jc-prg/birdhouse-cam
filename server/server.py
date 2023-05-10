@@ -732,6 +732,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             for key in camera:
                 config.set_device_signal(key, "recording", False)
             response = camera[which_cam].video.record_stop()
+        elif param["command"] == "start-recording-audio":
+            which_mic = self.path.split("/")[-2]
+            srv_logging.info("start-recording-audio: " + which_mic)
+            response = microphones[which_mic].record_start("test.wav")
+        elif param["command"] == "stop-recording-audio":
+            which_mic = self.path.split("/")[-2]
+            srv_logging.info("stop-recording-audio: " + which_mic)
+            response = microphones[which_mic].record_stop()
         elif param["command"] == "clean-data-today":
             config.db_handler.clean_all_data("images")
             config.db_handler.clean_all_data("weather")
