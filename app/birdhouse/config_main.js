@@ -26,7 +26,7 @@ var app_session_id        = "";
 function app_menu_entries(data) {
 	var hideSettings    = "birdhouse_settings.toggle(true);";
 	var weather_active  = data["DATA"]["settings"]["localization"]["weather_active"];
-	var admin_type      = data["DATA"]["settings"]["server"]["admin_login"];
+	var admin_type      = data["SETTINGS"]["server"]["admin_login"];
 
 	var app_menu = [
 		[lang("LIVESTREAM"),   "script", hideSettings+"birdhousePrint_load('INDEX',   '"+app_active_cam+"');"],
