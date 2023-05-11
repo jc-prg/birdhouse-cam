@@ -10,23 +10,25 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
                                 device_id=camera_id, config=config)
 
         self.output_codec = {
-            "vcodec": "libx264",
-            "acodec": "aac",
+            "video-codec": "libx264",
+            "audio-codec": "aac",
+            "sample-rate": "48000",
             "crf": 18
         }
 
         self.ffmpeg_create_av = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
                                 "-i {INPUT_AUDIO_FILENAME} " + \
-                                "-vcodec " + self.output_codec["vcodec"] + " " + \
-                                "-acodec " + self.output_codec["acodec"] + " " + \
+                                "-vcodec " + self.output_codec["video-codec"] + " " + \
+                                "-acodec " + self.output_codec["audio-codec"] + " " + \
+                                "-ar " + self.output_codec["sample-rate"] + " " + \
                                 " -crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
 
         self.ffmpeg_create = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
-                             "-vcodec " + self.output_codec["vcodec"] + " " + \
+                             "-vcodec " + self.output_codec["video-codec"] + " " + \
                              " -crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
 
         self.ffmpeg_trim = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} " + \
-                           "-vcodec " + self.output_codec["vcodec"] + " " + \
+                           "-vcodec " + self.output_codec["video-codec"] + " " + \
                            "-crf " + str(self.output_codec["crf"]) + " " + \
                            "-ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
 
