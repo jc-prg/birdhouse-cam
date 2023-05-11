@@ -115,6 +115,7 @@ birdhouse_directories = {
     "statistics": "images/",
     "videos": "videos/",
     "videos_temp": "videos/images2video/",
+    "audio_temp": "videos/images2video/",
     "weather": "images/"
 }
 birdhouse_files = {

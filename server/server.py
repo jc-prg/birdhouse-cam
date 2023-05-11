@@ -25,7 +25,6 @@ from modules.presets import *
 from modules.views import BirdhouseViews
 from modules.sensors import BirdhouseSensor
 
-import pyaudio
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 api_description = {"name": "BirdhouseCAM", "version": "v0.9.9"}
@@ -501,12 +500,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-cache, private')
         self.send_header('Pragma', 'no-cache')
 
-        #self.send_header('Accept-Ranges', 'bytes')
         self.send_header('Content-Range', 'bytes 0-'+str(size)+'/'+str(size))
-        self.send_header('Content-Disposition', 'attachment;filename="audio.WAV"')
+        #self.send_header('Content-Disposition', 'attachment;filename="audio.WAV"')
+        self.send_header('Content-Transfer-Encoding', 'binary')
         self.send_header('Content-Length', str(size))
-        #self.send_header('Content-Type', 'audio/x-wav;codec=PCM')
-        self.send_header('Content-Type', 'audio/wav')
+        self.send_header('Content-Type', 'audio/x-wav;codec=PCM')
+        #self.send_header('Content-Type', 'audio/wav')
+        self.send_header('Accept-Ranges', 'bytes')
 
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "*")
@@ -727,10 +727,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif param["command"] == "start-recording":
             for key in camera:
                 config.set_device_signal(key, "recording", True)
-            response = camera[which_cam].video.record_start()
+            audio = ""
+            if microphones["mic1"].param["active"] and microphones["mic1"].connected:
+                response = microphones["mic1"].record_start("recording_"+which_cam+".wav")
+                audio = response["filename"]
+            response = camera[which_cam].video.record_start(audio)
         elif param["command"] == "stop-recording":
             for key in camera:
                 config.set_device_signal(key, "recording", False)
+            if microphones["mic1"].param["active"] and microphones["mic1"].connected:
+                microphones["mic1"].record_stop()
             response = camera[which_cam].video.record_stop()
         elif param["command"] == "start-recording-audio":
             which_mic = self.path.split("/")[-2]
@@ -1055,13 +1061,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # collect data for STATUS and SETTINGS sections (to be clarified -> goal: only for status request)
         if command not in cmd_info:
-            # collect data for new DATA section
-            #param_to_publish = ["backup", "devices", "info", "localization", "server", "title", "views", "weather"]
-            #for key in param_to_publish:
-            #    if key in config.param:
-            #        api_data["settings"][key] = config.param[key]
-            #request_times["4_settings"] = round(time.time() - request_start, 3)
-
             # collect data for "DATA" section  ??????????????????????ßß
             param_to_publish = ["title", "backup", "weather", "views", "info"]
             for key in param_to_publish:

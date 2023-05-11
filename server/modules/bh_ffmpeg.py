@@ -11,12 +11,20 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
 
         self.output_codec = {
             "vcodec": "libx264",
+            "acodec": "aac",
             "crf": 18
         }
+
+        self.ffmpeg_create_av = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
+                                "-i {INPUT_AUDIO_FILENAME} " + \
+                                "-vcodec " + self.output_codec["vcodec"] + " " + \
+                                "-acodec " + self.output_codec["acodec"] + " " + \
+                                " -crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
 
         self.ffmpeg_create = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
                              "-vcodec " + self.output_codec["vcodec"] + " " + \
                              " -crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
+
         self.ffmpeg_trim = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} " + \
                            "-vcodec " + self.output_codec["vcodec"] + " " + \
                            "-crf " + str(self.output_codec["crf"]) + " " + \
@@ -26,7 +34,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         self.ffmpeg_handler = "ffmpeg-python"
         self.ffmpeg_handler = "cmd-line"
 
-    def create_video(self, input_filenames, framerate, output_filename):
+    def create_video(self, input_filenames, framerate, output_filename, input_audio_filename=""):
         """
         create video file from images files
         """
@@ -67,8 +75,13 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
 
                 ffmpeg_process.execute()
             elif self.ffmpeg_handler == "cmd-line":
-                cmd_ffmpeg = self.ffmpeg_create
+                if input_audio_filename == "":
+                    cmd_ffmpeg = self.ffmpeg_create
+                else:
+                    cmd_ffmpeg = self.ffmpeg_create_av
+
                 cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_FILENAMES}", input_filenames)
+                cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_AUDIO_FILENAME}", input_audio_filename)
                 cmd_ffmpeg = cmd_ffmpeg.replace("{OUTPUT_FILENAME}", output_filename)
                 cmd_ffmpeg = cmd_ffmpeg.replace("{FRAMERATE}", str(round(float(framerate), 1)))
 

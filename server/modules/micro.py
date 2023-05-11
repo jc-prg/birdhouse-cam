@@ -2,6 +2,7 @@ import pyaudio
 import threading
 import time
 import wave
+import os
 from modules.presets import *
 from modules.bh_class import BirdhouseClass
 
@@ -29,6 +30,9 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.recording = False
         self.recording_processing = False
         self.recording_filename = ""
+        self.recording_default_path = os.path.join(os.path.dirname(__file__), "../../data",
+                                                   birdhouse_directories["audio_temp"])
+        self.recording_default_filename = "recording_" + self.id + ".wav"
         self.recording_frames = []
 
         self.last_active = time.time()
@@ -173,13 +177,12 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.param = self.config.param["devices"]["microphones"][self.id]
         self.connect()
 
-    def file_header(self, size=False):
+    def file_header(self, size=False, duration=180):
         """
-        create file header for streaming file
+        create file header for streaming file (duration in seconds, default = 180s)
         info: https://docs.fileformat.com/audio/wav/
         """
-        datasize = 2000 * 10 ** 6
-        #datasize = samples * channels * bits_per_sample // 8
+        datasize = duration * self.RATE * self.CHANNELS * self.BITS_PER_SAMPLE // 8
         sample_rate = int(self.RATE)
         bits_per_sample = int(self.BITS_PER_SAMPLE)
         channels = int(self.CHANNELS)
@@ -267,8 +270,10 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.logging.info("Start recording '" + filename + "' ...")
         self.last_active = time.time()
         self.recording_frames = []
-        self.recording_filename = filename
+        self.recording_filename = os.path.join(self.recording_default_path, filename)
         self.recording = True
+
+        return {"filename": self.recording_filename}
 
     def record_stop(self):
         """
@@ -288,7 +293,6 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         wf = wave.open(self.recording_filename, 'wb')
         wf.setnchannels(self.CHANNELS)
         wf.setsampwidth(self.audio.get_sample_size(self.FORMAT))
-        # wf.setsampwidth(self.CHUNK)
         wf.setframerate(self.RATE)
         wf.writeframes(b''.join(self.recording_frames))
         wf.close()

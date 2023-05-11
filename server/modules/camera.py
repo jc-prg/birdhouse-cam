@@ -889,6 +889,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.queue_trim = []
         self.queue_wait = 10
 
+        self.record_audio_filename = ""
         self.record_video_info = None
         self.image_size = [0, 0]
         self.recording = False
@@ -1000,11 +1001,12 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         else:
             return
 
-    def record_start(self):
+    def record_start(self, audio=""):
         """
         start video recoding
         """
         response = {"command": ["start recording"]}
+        self.record_audio_filename = audio
 
         if self.camera.active and not self.camera.error and not self.recording:
             self.logging.info("Starting video recording (" + self.id + ") ...")
@@ -1091,12 +1093,15 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         self.processing = True
         self.logging.info("Start video creation with ffmpeg ...")
+        if self.record_audio_filename != "":
+            self.logging.info("- including audio '" + str(self.record_audio_filename) + "' ...")
 
         input_filenames = os.path.join(self.config.db_handler.directory("videos"), self.filename("vimages") + "%" +
                                        str(self.count_length).zfill(2) + "d.jpg")
         output_filename = os.path.join(self.config.db_handler.directory("videos"), self.filename("video"))
 
-        success = self.ffmpeg.create_video(input_filenames, self.info["framerate"], output_filename)
+        success = self.ffmpeg.create_video(input_filenames, self.info["framerate"],
+                                           output_filename, self.record_audio_filename)
         if not success:
             self.processing = False
             return
@@ -1108,6 +1113,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                                                           self.filename("thumb"))
         cmd_delete = "rm " + os.path.join(self.config.db_handler.directory("videos"),
                                           self.filename("vimages") + "*.jpg")
+        cmd_delete_audio = "rm " + self.record_audio_filename
+
         try:
             self.logging.info(cmd_thumb)
             message = os.system(cmd_thumb)
@@ -1115,6 +1122,10 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
             self.logging.info(cmd_delete)
             message = os.system(cmd_delete)
+            self.logging.debug(message)
+
+            self.logging.info(cmd_delete_audio)
+            message = os.system(cmd_delete_audio)
             self.logging.debug(message)
 
         except Exception as err:
@@ -2671,13 +2682,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
             self.logging.debug(" ...... record now!")
             image_hires = self.camera_streams["camera_hires"].read_image()
-            image_lowres = self.camera_streams["camera_lowres"].read_image()
 
             # retry once if image could not be read
             if self.image.error or len(image_hires) == 0:
                 self.image.error = False
                 image_hires = self.camera_streams["camera_hires"].read_image()
-                image_lowres = self.camera_streams["camera_lowres"].read_image()
 
             # if no error format and analyze image
             if not self.image.error and len(image_hires) > 0:
@@ -2736,7 +2745,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                           self.config.filename_image("hires", stamp, self.id))
                 self.logging.debug("WRITE:" + path_lowres)
                 self.write_image(filename=path_hires, image=image_hires)
-                self.write_image(filename=path_lowres, image=image_lowres)
+                self.write_image(filename=path_lowres, image=image_hires,
+                                 scale_percent=self.param["image"]["preview_scale"])
 
                 self.record_image_error = False
                 self.record_image_error_msg = []
