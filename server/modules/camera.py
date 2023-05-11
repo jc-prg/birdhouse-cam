@@ -1097,10 +1097,17 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.logging.info("- including audio '" + str(self.record_audio_filename) + "' ...")
             count = 0
             while not os.path.exists(self.record_audio_filename) and count < 10:
+                time.sleep(1)
                 count += 1
-            if not os.path.exists(self.record_audio_filename):
+            if os.path.exists(self.record_audio_filename):
+                last_file_size = 0
+                while last_file_size != os.path.getsize(self.record_audio_filename):
+                    time.sleep(0.5)
+                    last_file_size = os.path.getsize(self.record_audio_filename)
+                    time.sleep(0.5)
+            elif not os.path.exists(self.record_audio_filename):
                 self.record_audio_filename = ""
-                self.logging.info("- audio file '" + str(self.record_audio_filename) + "' not available yet ...")
+                self.logging.error("- audio file '" + str(self.record_audio_filename) + "' not available yet ...")
 
         input_filenames = os.path.join(self.config.db_handler.directory("videos"), self.filename("vimages") + "%" +
                                        str(self.count_length).zfill(2) + "d.jpg")
