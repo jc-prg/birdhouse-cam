@@ -953,7 +953,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "active_date": ""
             },
             "data": {},
-            "settings": {},
             "view": {}
         }
         if command == "TODAY" and len(param["parameter"]) > 0:
@@ -1031,6 +1030,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if key in config.param:
                     api_response["SETTINGS"][key] = config.param[key]
 
+            # ensure localization data are available
+            if "localization" in api_response["SETTINGS"]:
+                if "language" not in api_response["SETTINGS"]["localization"]:
+                    api_response["SETTINGS"]["localization"]["language"] = "EN"
+            else:
+                api_response["SETTINGS"]["localization"] = birdhouse_preset["localization"]
+
             request_times["1_status-commands"] = round(time.time() - request_start, 3)
 
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
@@ -1045,30 +1051,23 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if key in content:
                     api_data["view"][key] = content[key]
 
-            request_times["3_view-commands"] = round(time.time() - request_start, 3)
+            request_times["2_view-commands"] = round(time.time() - request_start, 3)
 
         # collect data for STATUS and SETTINGS sections (to be clarified -> goal: only for status request)
         if command not in cmd_info:
             # collect data for new DATA section
-            param_to_publish = ["backup", "devices", "info", "localization", "server", "title", "views", "weather"]
-            for key in param_to_publish:
-                if key in config.param:
-                    api_data["settings"][key] = config.param[key]
-            request_times["4_settings"] = round(time.time() - request_start, 3)
+            #param_to_publish = ["backup", "devices", "info", "localization", "server", "title", "views", "weather"]
+            #for key in param_to_publish:
+            #    if key in config.param:
+            #        api_data["settings"][key] = config.param[key]
+            #request_times["4_settings"] = round(time.time() - request_start, 3)
 
-            # collect data for "DATA" section
+            # collect data for "DATA" section  ??????????????????????ßß
             param_to_publish = ["title", "backup", "weather", "views", "info"]
             for key in param_to_publish:
                 if key in content:
                     content[key] = config.param[key]
             request_times["5_config"] = round(time.time() - request_start, 3)
-
-            # ensure localization data are available
-            if "localization" in api_data["settings"]:
-                if "language" not in api_data["settings"]["localization"]:
-                    api_data["settings"]["localization"]["language"] = "EN"
-            else:
-                api_data["settings"]["localization"] = birdhouse_preset["localization"]
 
             # get device data
             api_response["STATUS"]["devices"] = sys_info.get_device_status()
@@ -1117,12 +1116,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             }
 
             # server-side settings for information
-            api_data["settings"]["devices"] = api_response["SETTINGS"]["devices"]
+            #api_data["settings"]["devices"] = api_response["SETTINGS"]["devices"]
 
         api_response["DATA"] = api_data
 
         if command in cmd_status:
-            api_response["SETTINGS"]["server"] = {
+            server_config = {
                 "port": birdhouse_env["port_http"],
                 "port_video": birdhouse_env["port_video"],
                 "port_audio": birdhouse_env["port_audio"],
@@ -1134,6 +1133,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "ip4_admin_allow": birdhouse_env["admin_ip4_allow"],
                 "admin_login": birdhouse_env["admin_login"]
             }
+            api_response["SETTINGS"]["server"] = server_config
 
         if command not in cmd_status and command not in cmd_info:
             del api_response["WEATHER"]

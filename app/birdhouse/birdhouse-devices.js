@@ -370,10 +370,10 @@ function birdhouseDevices_sensors(data) {
 }
 
 function birdhouseDevices_weather(data) {
-	var weather_config  = data["SETTINGS"]["weather"];
-	var weather_data = data["WEATHER"];
-	var info_key = lang("WEATHER").toUpperCase()+": "+weather_config["location"];
-	var index_info = {};
+	var weather_config  = app_data["SETTINGS"]["weather"];
+	var weather_data    = app_data["WEATHER"];
+	var info_key        = lang("WEATHER").toUpperCase()+": "+weather_config["location"];
+	var index_info      = {};
 	index_info[info_key] = {};
     index_info[info_key]["active"] = weather_config["active"];
     index_info[info_key]["group"]  = "weather_settings";

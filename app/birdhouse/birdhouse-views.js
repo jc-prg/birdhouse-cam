@@ -8,9 +8,9 @@ function birdhouse_INDEX(data, camera) {
 
 	var html          = "";
 	var active_camera = camera;
-	var cameras       = data["SETTINGS"]["devices"]["cameras"];
-	var title         = data["SETTINGS"]["title"];
-	var index_view    = data["SETTINGS"]["views"]["index"];
+	var cameras       = app_data["SETTINGS"]["devices"]["cameras"];
+	var title         = app_data["SETTINGS"]["title"];
+	var index_view    = app_data["SETTINGS"]["views"]["index"];
 	var admin_allowed = data["STATUS"]["admin_allowed"];
 	var camera_status = data["STATUS"]["devices"]["cameras"];
 	var stream_server = RESTurl;
