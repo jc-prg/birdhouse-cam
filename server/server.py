@@ -367,7 +367,7 @@ class ServerInformation(threading.Thread):
                 system["video_devices_02"][value] = value + " (" + info[0] + ")"
         system["audio_devices"] = {}
 
-        test = False
+        test = True
         if test and microphones != {}:
             first_mic = list(microphones.keys())[0]
             info = microphones[first_mic].get_device_information()
