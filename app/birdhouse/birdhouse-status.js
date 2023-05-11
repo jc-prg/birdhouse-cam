@@ -7,6 +7,7 @@
 var header_color_error = "#993333";
 var header_color_warning = "#666633";
 var header_color_default = "";
+var weather_footer = [];
 
 function setHeaderColor(header_id, header_color) {
     header = document.getElementById("group_header_" + header_id);
@@ -50,6 +51,7 @@ function birdhouseStatus_print(data) {
 
     // set latest status data to var app_data
     app_data       = data;
+    weather_footer = [];
 
 /*
     var settings   = data["DATA"]["settings"];
@@ -73,6 +75,11 @@ function birdhouseStatus_print(data) {
     birdhouseStatus_microphones(data);
 
     document.getElementById(app_frame_info).style.display = "block";
+
+    html = "<center><i><font color='gray'>";
+    html += weather_footer.join(" / ");
+    html += "</font></i></center>";
+    setTextById(app_frame_info, html);
 }
 
 function birdhouseStatus_cameras(data) {
@@ -212,7 +219,6 @@ function birdhouseStatus_weather(data) {
     var weather         = data["WEATHER"];
     var settings        = data["SETTINGS"]["devices"]["weather"];
 
-    var weather_footer  = [];
     var entry           = "";
     var weather_icon    = "<small>N/A</small>";
     var weather_update  = "N/A";
@@ -258,18 +264,13 @@ function birdhouseStatus_weather(data) {
             setStatusColor(status_id="status_error_WEATHER", "black");
         }
     }
-    weather_footer.push(entry);
+    if (entry != "") { weather_footer.push(entry); }
     setTextById("weather_info_icon", weather_icon);
     setTextById("weather_info_update", weather_update);
     setTextById("weather_info_error", weather_error);
 
     coordinates = "(" + settings["gps_coordinates"].toString().replaceAll(",", ", ") + ")";
     setTextById("gps_coordinates", coordinates);
-
-    html = "<center><i><font color='gray'>";
-    html += weather_footer.join(" / ");
-    html += "</font></i></center>";
-    setTextById(app_frame_info, html);
 }
 
 function birdhouseStatus_sensors(data) {

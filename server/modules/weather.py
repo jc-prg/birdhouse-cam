@@ -483,6 +483,7 @@ class BirdhouseWeather(threading.Thread):
 
         self.id = "weather"
         self.class_id = "weather"
+        self.param = self.config.param["weather"]
         self.logging = logging.getLogger("weather")
         self.logging.setLevel(birdhouse_loglevel_module["weather"])
         self.logging.addHandler(birdhouse_loghandler)
@@ -683,6 +684,7 @@ class BirdhouseWeather(threading.Thread):
             status = self.weather_info["info_status"].copy()
             status["gps_coordinates"] = self.weather_gps
             status["gps_location"] = self.weather_city
+            status["active"] = self.param["active"]
             return status
 
         if info_type == "current_small":
