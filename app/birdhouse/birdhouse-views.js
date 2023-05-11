@@ -102,7 +102,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 
 	var html        = "";
 	var video       = data["DATA"]["data"]["entries"];
-	var admin       = app_data["STATUS"]["admin_allowed"];
+	var admin       = data["STATUS"]["admin_allowed"];
 	var server_info = app_data["SETTINGS"]["server"];
 
 	for (let key in video) {
@@ -230,7 +230,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var active_page       = app_active_page;
 	var active_date       = data_list["active"]["active_date"];
 
-	var admin             = app_data["STATUS"]["admin_allowed"];
+	var admin             = data["STATUS"]["admin_allowed"];
 	var server_status     = app_data["STATUS"]["server"];
 	var video_short       = true;
 	var page_title        = "";
