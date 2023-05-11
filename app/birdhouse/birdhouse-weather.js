@@ -6,7 +6,7 @@
 
 
 function birdhouseWeather( data ) {
-    var settings        = data["DATA"]["settings"];
+    var settings        = data["SETTINGS"];
     var admin_allowed   = data["STATUS"]["admin_allowed"];
     var status          = data["STATUS"];
 	var weather	        = data["WEATHER"];

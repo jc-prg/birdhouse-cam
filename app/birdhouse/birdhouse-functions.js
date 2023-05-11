@@ -6,7 +6,7 @@
 
 function birdhouse_edit_field(id, field, type="input", options="", data_type="string", on_change="") {
     var fields = field.split(":");
-    var settings = app_data["DATA"]["settings"];
+    var settings = app_data["SETTINGS"];
     var data   = "";
     var html   = "";
     var style  = "";

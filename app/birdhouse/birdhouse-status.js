@@ -53,15 +53,6 @@ function birdhouseStatus_print(data) {
     app_data       = data;
     weather_footer = [];
 
-/*
-    var settings   = data["DATA"]["settings"];
-    var status_sys = data["STATUS"]["system"];
-    var status_srv = data["STATUS"]["server"];
-    var status_db  = data["STATUS"]["database"];
-    var status_dev = data["STATUS"]["devices"];
-    var start_time = data["STATUS"]["start_time"];
-*/
-
     // check page length vs. screen height
     var body = document.body, html = document.documentElement;
     var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );

@@ -279,8 +279,8 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var category    = "";
     var rotation    = 0;
 	var onclick_difference = "";
-	var settings     = app_data["DATA"]["settings"];
-	var settings_cam = app_data["DATA"]["settings"]["devices"]["camera"];
+	var settings     = app_data["SETTINGS"];
+	var settings_cam = app_data["SETTINGS"]["devices"]["camera"];
 	var img_url      = ""; // RESTurl;
 
 	console.log(app_active_page);

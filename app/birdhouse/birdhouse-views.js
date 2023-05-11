@@ -8,11 +8,11 @@ function birdhouse_INDEX(data, camera) {
 
 	var html          = "";
 	var active_camera = camera;
-	var cameras       = data["DATA"]["settings"]["devices"]["cameras"];
-	var title         = data["DATA"]["settings"]["title"];
+	var cameras       = data["SETTINGS"]["devices"]["cameras"];
+	var title         = data["SETTINGS"]["title"];
+	var index_view    = data["SETTINGS"]["views"]["index"];
 	var admin_allowed = data["STATUS"]["admin_allowed"];
 	var camera_status = data["STATUS"]["devices"]["cameras"];
-	var index_view    = data["DATA"]["settings"]["views"]["index"];
 	var stream_server = RESTurl;
 	var active_cam    = {};
 	var other_cams    = [];
@@ -100,10 +100,10 @@ function birdhouse_INDEX(data, camera) {
 
 function birdhouse_VIDEO_DETAIL( title, data ) {
 
-	var html = "";
-	var video = data["DATA"]["data"]["entries"];
-	var admin = data["STATUS"]["admin_allowed"];
-	var server_info = data["DATA"]["settings"]["server"];
+	var html        = "";
+	var video       = data["DATA"]["data"]["entries"];
+	var admin       = app_data["STATUS"]["admin_allowed"];
+	var server_info = app_data["SETTINGS"]["server"];
 
 	for (let key in video) {
 		app_active_date         = key;
@@ -209,7 +209,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var weather_data      = data_list["data"]["weather_data"];
 	var chart_data        = data_list["data"]["chart_data"];
 	var entry_count       = data_list["view"]["view_count"];
-	var camera_settings   = data["DATA"]["settings"]["devices"]["cameras"];
+
+	var sensors           = app_data["SETTINGS"]["devices"]["sensors"];
+	var camera_settings   = app_data["SETTINGS"]["devices"]["cameras"];
 	var current_weather   = app_data["WEATHER"]["forecast"]["today"];
 
 	var group_list        = [];
@@ -226,11 +228,10 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         }
 
 	var active_page       = app_active_page;
-	var sensors           = data_list["settings"]["devices"]["sensors"];
 	var active_date       = data_list["active"]["active_date"];
 
-	var admin             = data["STATUS"]["admin_allowed"];
-	var server_status     = data["STATUS"]["server"];
+	var admin             = app_data["STATUS"]["admin_allowed"];
+	var server_status     = app_data["STATUS"]["server"];
 	var video_short       = true;
 	var page_title        = "";
 	var page_status       = "";
@@ -306,7 +307,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    info_text += tab.end();
 	    info_text += "&nbsp;<br/>&nbsp;";
 
-        html += birdhouse_OtherGroup( "settings", lang("SETTINGS"), info_text, false );
+        html += birdhouse_OtherGroup("settings", lang("SETTINGS"), info_text, false );
 	}
 
     // create chart data

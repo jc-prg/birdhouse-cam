@@ -25,7 +25,7 @@ var app_session_id        = "";
 
 function app_menu_entries(data) {
 	var hideSettings    = "birdhouse_settings.toggle(true);";
-	var weather_active  = data["DATA"]["settings"]["localization"]["weather_active"];
+	var weather_active  = data["SETTINGS"]["localization"]["weather_active"];
 	var admin_type      = data["SETTINGS"]["server"]["admin_login"];
 
 	var app_menu = [
@@ -74,7 +74,7 @@ function app_initialize(data) {
 	app_api_version = data["API"]["version"];
 	app_data = data;
 
-	var settings = data["DATA"]["settings"];
+	var settings = data["SETTINGS"];
     if (settings["localization"]["language"]) { LANG = settings["localization"]["language"]; }
 	}
 

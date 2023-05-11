@@ -90,7 +90,7 @@ function birdhouseDevices_status(index, show_button) {
 }
 
 function birdhouseDevices_cameras(data) {
-	var cameras	= data["DATA"]["settings"]["devices"]["cameras"];
+	var cameras	= data["SETTINGS"]["devices"]["cameras"];
 	var admin 	= data["STATUS"]["admin_allowed"];
 	var html	= "";
 	var index_info = {};
@@ -317,7 +317,7 @@ function birdhouseDevices_cameraSettingsButton (camera, key, field_id, descripti
 }
 
 function birdhouseDevices_sensors(data) {
-	var sensors = data["DATA"]["settings"]["devices"]["sensors"];
+	var sensors = app_data["SETTINGS"]["devices"]["sensors"];
 	var admin 	= data["STATUS"]["admin_allowed"];
 	var html    = "";
 	var index_info = {};
@@ -370,7 +370,7 @@ function birdhouseDevices_sensors(data) {
 }
 
 function birdhouseDevices_weather(data) {
-	var weather_config  = data["DATA"]["settings"]["weather"];
+	var weather_config  = data["SETTINGS"]["weather"];
 	var weather_data = data["WEATHER"];
 	var info_key = lang("WEATHER").toUpperCase()+": "+weather_config["location"];
 	var index_info = {};
@@ -426,9 +426,9 @@ function birdhouseDevices_weather(data) {
 }
 
 function birdhouseDevices_microphones(data) {
-	var micros  = data["DATA"]["settings"]["devices"]["microphones"];
+	var micros  = app_data["SETTINGS"]["devices"]["microphones"];
 	var devices = app_data["STATUS"]["system"]["audio_devices"];
-	var admin 	= data["STATUS"]["admin_allowed"];
+	var admin 	= app_data["STATUS"]["admin_allowed"];
 	var mic_devices = {};
 	var html = "";
 	var index_info = {};

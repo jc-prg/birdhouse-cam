@@ -925,7 +925,21 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 },
                 "database": {}
             },
-            "SETTINGS": {},
+            "SETTINGS": {
+                "backup": {},
+                "devices": {
+                    "cameras": {},
+                    "sensors": {},
+                    "weather": {},
+                    "microphones": {}
+                },
+                "info": {},
+                "localization": {},
+                "server": {},
+                "title": "",
+                "views": {},
+                "weather": {}
+            },
             "WEATHER": {},
             "DATA": {}
         }
@@ -1010,6 +1024,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             for key in param_to_publish:
                 if key in content:
                     api_response["STATUS"]["server"][key] = content[key]
+
+            # collect data for new DATA section
+            param_to_publish = ["backup", "localization", "title", "views", "info", "weather"]
+            for key in param_to_publish:
+                if key in config.param:
+                    api_response["SETTINGS"][key] = config.param[key]
 
             request_times["1_status-commands"] = round(time.time() - request_start, 3)
 

@@ -63,7 +63,7 @@ function birdhousePrint(data) {
 	console.debug("Request->Print ...");
 
 	window.scrollTo(0,0);
-	var data_settings = data["DATA"]["settings"];
+	var data_settings = data["SETTINGS"];
 	var data_active   = data["DATA"]["active"];
 
     birdhouseSetMainVars(data);
@@ -130,7 +130,7 @@ function birdhousePrintTitle(data, active_page="", camera="") {
 
 	var title         = document.getElementById("navTitle");
 	var data_view     = data["DATA"]["view"];
-	var data_settings = data["DATA"]["settings"];
+	var data_settings = data["SETTINGS"];
 
 	if (title.innerHTML == "..." && data_settings["title"] != undefined)
 	                                             { setNavTitle(data_settings["title"]); setTextById("title",data_settings["title"]); }
@@ -150,7 +150,7 @@ function birdhouseLoadSettings(data) {
 
 function birdhouseSetMainVars(data) {
     //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
-    var data_settings = data["DATA"]["settings"];
+    var data_settings = data["SETTINGS"];
     var initial_setup = data_settings["server"]["initial_setup"];
 
 	if (data_settings["devices"]["cameras"] != undefined) {
