@@ -173,6 +173,7 @@ birdhouse_default_cam = {
     "source": "/dev/video0",
     "active": True,
     "record": True,
+    "record_micro": "",
     "image": {
         "crop": (0.1, 0.0, 0.85, 1.0),
         "resolution": "800x600",
@@ -214,6 +215,7 @@ birdhouse_default_cam = {
 birdhouse_default_cam1 = birdhouse_default_cam.copy()
 birdhouse_default_cam1["name"] = "Inside"
 birdhouse_default_cam1["source"] = "/dev/video0"
+birdhouse_default_cam1["record_micro"] = "mic1"
 
 birdhouse_default_cam2 = birdhouse_default_cam.copy()
 birdhouse_default_cam2["name"] = "Outside"
