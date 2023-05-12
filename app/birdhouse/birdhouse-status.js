@@ -339,6 +339,7 @@ function birdhouseStatus_microphones(data) {
         else                                     { setTextById("show_stream_count_"+micro, 0); }
         if (microphones[micro]["error"])  {
             setStatusColor(status_id="status_error_"+micro, "red");
+            setHeaderColor(header_id=micro, header_color=header_color_error);
             setHeaderColor(header_id=micro+"_error", header_color=header_color_error);
             }
         else if (microphones[micro]["active"]) {
@@ -347,6 +348,7 @@ function birdhouseStatus_microphones(data) {
             }
         else {
             setStatusColor(status_id="status_error_"+micro, "black");
+            setHeaderColor(header_id=micro, header_color="");
             setHeaderColor(header_id=micro+"_error", header_color="");
             }
 
