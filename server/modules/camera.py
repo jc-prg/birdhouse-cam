@@ -1979,13 +1979,18 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         crop image to area defined in the settings
         """
+        if raw is None or len(raw) == 0:
+            return raw
         crop_area = self.param["image"]["crop"]
         if start_zero:
             crop_area = [0, 0, crop_area[2]-crop_area[0], crop_area[3]-crop_area[1]]
         cropped, area = self.image.crop_raw(raw=raw, crop_area=crop_area, crop_type="relative")
         self.param["image"]["crop_area"] = area
         self.param["image"]["resolution_cropped"] = [area[2] - area[0], area[3] - area[1]]
-        return cropped.copy()
+        if cropped is not None:
+            return cropped.copy()
+        else:
+            return raw.copy()
 
     def edit_create_lowres(self, raw):
         """
