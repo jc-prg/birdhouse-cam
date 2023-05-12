@@ -700,7 +700,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if not self.admin_allowed() and param["command"] not in public_commands:
             response["error"] = "Administration not allowed!"
             srv_logging.error(response["error"] + " - command=" + param["command"] + "; admin=" +
-                              str(self.admin_allowed()))
+                              str(self.admin_allowed()) + "; param=" + str(param))
             self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'),
                              no_cache=True)
             return
