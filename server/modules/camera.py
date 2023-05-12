@@ -1114,7 +1114,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                 self.record_audio_filename = ""
                 self.logging.error("- audio file '" + str(self.record_audio_filename) + "' not available yet ...")
 
-        input_filenames = os.path.join(self.config.db_handler.directory("videos"), self.filename("vimages") + "%" +
+        input_filenames = os.path.join(self.config.db_handler.directory("videos_temp"), self.filename("vimages") + "%" +
                                        str(self.count_length).zfill(2) + "d.jpg")
         output_filename = os.path.join(self.config.db_handler.directory("videos"), self.filename("video"))
 
@@ -1125,11 +1125,11 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             return
 
         self.info["thumbnail"] = self.filename("thumb")
-        cmd_thumb = "cp " + os.path.join(self.config.db_handler.directory("videos"),
+        cmd_thumb = "cp " + os.path.join(self.config.db_handler.directory("videos_temp"),
                                          self.filename("vimages") + str(1).zfill(self.count_length) + ".jpg "
                                          ) + os.path.join(self.config.db_handler.directory("videos"),
                                                           self.filename("thumb"))
-        cmd_delete = "rm " + os.path.join(self.config.db_handler.directory("videos"),
+        cmd_delete = "rm " + os.path.join(self.config.db_handler.directory("videos_temp"),
                                           self.filename("vimages") + "*.jpg")
         cmd_delete_audio = "rm " + self.record_audio_filename
 
@@ -1163,7 +1163,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.info["image_files"] = self.filename("vimages")
         self.info["video_file"] = self.filename("video")
         filename = self.info["image_files"] + str(self.info["image_count"]).zfill(self.count_length) + ".jpg"
-        path = os.path.join(self.directory, filename)
+        #path = os.path.join(self.directory, filename)
+        path = os.path.join(self.config.db_handler.directory("videos_temp"), filename)
         self.logging.debug("Save image as: " + path)
 
         try:
