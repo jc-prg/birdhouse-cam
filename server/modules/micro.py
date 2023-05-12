@@ -121,7 +121,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         if "sample_rate" in self.param:
             self.RATE = self.param["sample_rate"]
         if "chunk_size" in self.param:
-            CHUNK = self.CHUNK * self.param["chunk_size"]
+            chunk = self.CHUNK * self.param["chunk_size"]
         if "channels" in self.param:
             self.CHANNELS = self.param["channels"]
 
@@ -159,11 +159,11 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         try:
             self.stream = self.audio.open(format=self.FORMAT, channels=int(self.CHANNELS),
                                           rate=int(self.RATE), input=True, input_device_index=int(self.DEVICE),
-                                          frames_per_buffer=CHUNK)
+                                          frames_per_buffer=chunk)
         except Exception as err:
             self.raise_error("- Could not initialize audio stream (device:" + str(self.DEVICE) + "): " + str(err))
             self.raise_error("- open: channels=" + str(self.CHANNELS) + ", rate=" + str(self.RATE) +
-                             ", input_device_index=" + str(self.DEVICE) + ", frames_per_buffer=" + str(CHUNK))
+                             ", input_device_index=" + str(self.DEVICE) + ", frames_per_buffer=" + str(chunk))
             self.raise_error("- device: " + str(self.info))
             return
 
