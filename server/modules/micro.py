@@ -45,6 +45,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.CHANNELS = 1
         self.RATE = 16000
         self.CHUNK = 1024
+        self.CHUNK_default = 1024
         self.DEVICE = 2
         self.BITS_PER_SAMPLE = 16
 
@@ -68,6 +69,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             # reconnect if config data were updated
             if self.config.update["micro_" + self.id]:
                 self.connect()
+                self.config.update["micro_" + self.id] = False
 
             # check if shutdown requested
             if self.config.shut_down:
@@ -116,12 +118,13 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.logging.info("AUDIO device " + self.id + " (" + str(self.param["device_id"]) + "; " +
                           self.param["device_name"] + "; " + str(self.param["sample_rate"]) + ")")
 
+        self.CHUNK = self.CHUNK_default
         self.DEVICE = int(self.param["device_id"])
 
         if "sample_rate" in self.param:
             self.RATE = self.param["sample_rate"]
         if "chunk_size" in self.param:
-            chunk_size = self.CHUNK * self.param["chunk_size"]
+            self.CHUNK = self.CHUNK * self.param["chunk_size"]
         if "channels" in self.param:
             self.CHANNELS = self.param["channels"]
 
@@ -129,6 +132,11 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             self.audio = pyaudio.PyAudio()
         elif self.stream is not None and not self.stream.is_stopped():
             self.stream.stop_stream()
+            self.stream.close()
+            self.audio.terminate()
+            time.sleep(1)
+            self.audio = pyaudio.PyAudio()
+            #self.audio = pyaudio.PyAudio()
 
         self.info = self.audio.get_host_api_info_by_index(0)
         num_devices = self.info.get('deviceCount')
@@ -159,11 +167,11 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         try:
             self.stream = self.audio.open(format=self.FORMAT, channels=int(self.CHANNELS),
                                           rate=int(self.RATE), input=True, input_device_index=int(self.DEVICE),
-                                          frames_per_buffer=chunk_size)
+                                          frames_per_buffer=self.CHUNK)
         except Exception as err:
             self.raise_error("- Could not initialize audio stream (device:" + str(self.DEVICE) + "): " + str(err))
             self.raise_error("- open: channels=" + str(self.CHANNELS) + ", rate=" + str(self.RATE) +
-                             ", input_device_index=" + str(self.DEVICE) + ", frames_per_buffer=" + str(chunk_size))
+                             ", input_device_index=" + str(self.DEVICE) + ", frames_per_buffer=" + str(self.CHUNK))
             self.raise_error("- device: " + str(self.info))
             return
 
