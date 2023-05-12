@@ -559,6 +559,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif admin_type == "LOGIN":
             # initial implementation, later with session ID
             param = self.path_split(check_allowed=False)
+            srv_logging.warning("CHECK if " + param["session_id"] + " == " +  admin_pwd + " !!!!!!!! " +
+                                str(param["session_id"] == admin_pwd))
             if param["session_id"] == admin_pwd:
                 return True
             else:
@@ -683,7 +685,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         param = self.path_split()
         which_cam = param["which_cam"]
 
-        srv_logging.debug("POST API request with '" + self.path + "'.")
+        srv_logging.info("POST API request with '" + self.path + "'.")
         srv_logging.debug(str(param))
 
         api_response = {
@@ -697,6 +699,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         public_commands = ["check-pwd", "kill-stream"]
         if not self.admin_allowed() and param["command"] not in public_commands:
             response["error"] = "Administration not allowed!"
+            srv_logging.error(response["error"] + " - command=" + param["command"] + "; admin=" +
+                              str(self.admin_allowed()))
             self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'),
                              no_cache=True)
             return
@@ -734,9 +738,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     response = microphones[which_mic].record_start("recording_"+which_cam+"_"+which_mic+".wav")
                     audio_filename = response["filename"]
                 else:
+                    srv_logging.info("Recording without audio (active=" + str(microphones[which_mic].param["active"]) +
+                                     "; connected=" + str(microphones[which_mic].connected) + ")")
                     which_mic = "N/A"
-                    srv_logging.info("Recording without audio (active="+str(microphones[which_mic].param["active"])+
-                                     "; connected="+str(microphones[which_mic].connected)+")")
             response = camera[which_cam].video.record_start(which_mic, audio_filename)
         elif param["command"] == "stop-recording":
             for key in camera:
