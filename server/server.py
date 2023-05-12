@@ -502,11 +502,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         self.send_header('Content-Range', 'bytes 0-'+str(size)+'/'+str(size))
         #self.send_header('Content-Disposition', 'attachment;filename="audio.WAV"')
-        self.send_header('Content-Transfer-Encoding', 'binary')
+        #self.send_header('Content-Transfer-Encoding', 'binary')
         self.send_header('Content-Length', str(size))
-        self.send_header('Content-Type', 'audio/x-wav;codec=PCM')
-        #self.send_header('Content-Type', 'audio/wav')
-        self.send_header('Accept-Ranges', 'bytes')
+        #self.send_header('Content-Type', 'audio/x-wav;codec=PCM')
+        self.send_header('Content-Type', 'audio/wav')
+        #self.send_header('Accept-Ranges', 'bytes')
 
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "*")
