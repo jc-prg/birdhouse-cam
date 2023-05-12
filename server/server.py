@@ -725,18 +725,26 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif param["command"] == "camera-settings":
             response = camera[which_cam].get_camera_settings(param)
         elif param["command"] == "start-recording":
+            audio_filename = ""
             for key in camera:
                 config.set_device_signal(key, "recording", True)
-            audio = ""
-            if microphones["mic1"].param["active"] and microphones["mic1"].connected:
-                response = microphones["mic1"].record_start("recording_"+which_cam+".wav")
-                audio = response["filename"]
-            response = camera[which_cam].video.record_start(audio)
+            which_mic = camera[which_cam].param["record_micro"]
+            if which_mic != "" and which_mic in microphones:
+                if microphones[which_mic].param["active"] and microphones[which_mic].connected:
+                    response = microphones[which_mic].record_start("recording_"+which_cam+"_"+which_mic+".wav")
+                    audio_filename = response["filename"]
+                else:
+                    which_mic = "N/A"
+                    srv_logging.info("Recording without audio (active="+str(microphones[which_mic].param["active"])+
+                                     "; connected="+str(microphones[which_mic].connected)+")")
+            response = camera[which_cam].video.record_start(which_mic, audio_filename)
         elif param["command"] == "stop-recording":
             for key in camera:
                 config.set_device_signal(key, "recording", False)
-            if microphones["mic1"].param["active"] and microphones["mic1"].connected:
-                microphones["mic1"].record_stop()
+            which_mic = camera[which_cam].param["record_micro"]
+            if which_mic != "" and which_mic in microphones:
+                if microphones[which_mic].param["active"] and microphones[which_mic].connected:
+                    microphones[which_mic].record_stop()
             response = camera[which_cam].video.record_stop()
         elif param["command"] == "start-recording-audio":
             which_mic = self.path.split("/")[-2]

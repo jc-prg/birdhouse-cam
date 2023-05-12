@@ -1001,15 +1001,15 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         else:
             return
 
-    def record_start(self, audio=""):
+    def record_start(self, micro="", audio_filename=""):
         """
         start video recoding
         """
         response = {"command": ["start recording"]}
-        self.record_audio_filename = audio
+        self.record_audio_filename = audio_filename
 
         if self.camera.active and not self.camera.error and not self.recording:
-            self.logging.info("Starting video recording (" + self.id + ") ...")
+            self.logging.info("Starting video recording (camera=" + self.id + " / micro=" + micro + ") ...")
             self.recording = True
             current_time = self.config.local_time()
             self.info = {
