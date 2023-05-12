@@ -730,16 +730,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = camera[which_cam].get_camera_settings(param)
         elif param["command"] == "start-recording":
             audio_filename = ""
+            which_mic = ""
             for key in camera:
                 config.set_device_signal(key, "recording", True)
-            which_mic = camera[which_cam].param["record_micro"]
+            if "record_micro" in camera[which_cam].param:
+                which_mic = camera[which_cam].param["record_micro"]
+            else:
+                srv_logging.warning("Error in configuration file, 'record_micro' is missing.")
             if which_mic != "" and which_mic in microphones:
                 if microphones[which_mic].param["active"] and microphones[which_mic].connected:
                     response = microphones[which_mic].record_start("recording_"+which_cam+"_"+which_mic+".wav")
                     audio_filename = response["filename"]
                 else:
-                    #srv_logging.info("Recording without audio (active=" + str(microphones[which_mic].param["active"]) +
-                    #                 "; connected=" + str(microphones[which_mic].connected) + ")")
+                    srv_logging.info("Recording without audio (active=" + str(microphones[which_mic].param["active"]) +
+                                     "; connected=" + str(microphones[which_mic].connected) + ")")
                     which_mic = "N/A"
             response = camera[which_cam].video.record_start(which_mic, audio_filename)
         elif param["command"] == "stop-recording":
