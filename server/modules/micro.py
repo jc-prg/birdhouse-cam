@@ -88,7 +88,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
             else:
                 self.count = 0
-                time.sleep(0.1)
+                time.sleep(1)
 
             # start processing if trigger is set
             if self.recording_processing:
@@ -121,7 +121,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         if "sample_rate" in self.param:
             self.RATE = self.param["sample_rate"]
         if "chunk_size" in self.param:
-            chunk = self.CHUNK * self.param["chunk_size"]
+            chunk_size = self.CHUNK * self.param["chunk_size"]
         if "channels" in self.param:
             self.CHANNELS = self.param["channels"]
 
@@ -159,11 +159,11 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         try:
             self.stream = self.audio.open(format=self.FORMAT, channels=int(self.CHANNELS),
                                           rate=int(self.RATE), input=True, input_device_index=int(self.DEVICE),
-                                          frames_per_buffer=chunk)
+                                          frames_per_buffer=chunk_size)
         except Exception as err:
             self.raise_error("- Could not initialize audio stream (device:" + str(self.DEVICE) + "): " + str(err))
             self.raise_error("- open: channels=" + str(self.CHANNELS) + ", rate=" + str(self.RATE) +
-                             ", input_device_index=" + str(self.DEVICE) + ", frames_per_buffer=" + str(chunk))
+                             ", input_device_index=" + str(self.DEVICE) + ", frames_per_buffer=" + str(chunk_size))
             self.raise_error("- device: " + str(self.info))
             return
 
@@ -178,9 +178,9 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.param = self.config.param["devices"]["microphones"][self.id]
         self.connect()
 
-    def file_header(self, size=False, duration=180):
+    def file_header(self, size=False, duration=1800):
         """
-        create file header for streaming file (duration in seconds, default = 180s)
+        create file header for streaming file (duration in seconds, default = 1800s / 30min)
         info: https://docs.fileformat.com/audio/wav/
         """
         datasize = duration * self.RATE * self.CHANNELS * self.BITS_PER_SAMPLE // 8
