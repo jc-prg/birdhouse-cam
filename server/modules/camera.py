@@ -1011,6 +1011,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         if self.camera.active and not self.camera.error and not self.recording:
             self.logging.info("Starting video recording (camera=" + self.id + " / micro=" + micro + ") ...")
             self.recording = True
+            self.logging.info(" --- " + self.id + " --> " + str(time.time()))
             current_time = self.config.local_time()
             self.info = {
                 "date": current_time.strftime('%d.%m.%Y %H:%M:%S'),
@@ -1047,6 +1048,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.logging.info("---------------------> Length: "+str(self.info["length"]))
             self.logging.info("---------------------> Count: "+str(self.info["image_count"]))
             self.logging.info("---------------------> FPS: "+str(self.info["framerate"]))
+            self.logging.info(" <-- " + self.id + " --- " + str(time.time()))
             self.recording = False
             self.create_video()
             self.info["status"] = "finished"

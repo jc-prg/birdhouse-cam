@@ -268,6 +268,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         empty cache and start recording
         """
         self.logging.info("Start recording '" + filename + "' ...")
+        self.logging.info(" --- " + self.id + " --> " + str(time.time()))
         self.last_active = time.time()
         self.recording_frames = []
         self.recording_filename = os.path.join(self.recording_default_path, filename)
@@ -289,6 +290,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         write to file
         """
+        self.logging.info(" <-- " + self.id + " --- " + str(time.time()))
         self.recording_processing = False
         wf = wave.open(self.recording_filename, 'wb')
         wf.setnchannels(self.CHANNELS)
