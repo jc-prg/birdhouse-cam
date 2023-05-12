@@ -559,8 +559,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif admin_type == "LOGIN":
             # initial implementation, later with session ID
             param = self.path_split(check_allowed=False)
-            srv_logging.warning("CHECK if " + param["session_id"] + " == " +  admin_pwd + " !!!!!!!! " +
-                                str(param["session_id"] == admin_pwd))
+            srv_logging.debug("CHECK if " + param["session_id"] + " == " +  admin_pwd + " !!!!!!!! " +
+                              str(param["session_id"] == admin_pwd))
             if param["session_id"] == admin_pwd:
                 return True
             else:
@@ -738,8 +738,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     response = microphones[which_mic].record_start("recording_"+which_cam+"_"+which_mic+".wav")
                     audio_filename = response["filename"]
                 else:
-                    srv_logging.info("Recording without audio (active=" + str(microphones[which_mic].param["active"]) +
-                                     "; connected=" + str(microphones[which_mic].connected) + ")")
+                    #srv_logging.info("Recording without audio (active=" + str(microphones[which_mic].param["active"]) +
+                    #                 "; connected=" + str(microphones[which_mic].connected) + ")")
                     which_mic = "N/A"
             response = camera[which_cam].video.record_start(which_mic, audio_filename)
         elif param["command"] == "stop-recording":
