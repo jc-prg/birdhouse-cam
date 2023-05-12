@@ -891,6 +891,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
         self.record_audio_filename = ""
         self.record_video_info = None
+        self.record_start_time = None
         self.image_size = [0, 0]
         self.recording = False
         self.processing = False
@@ -1012,6 +1013,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.logging.info("Starting video recording (camera=" + self.id + " / micro=" + micro + ") ...")
             self.recording = True
             self.logging.info(" --- " + self.id + " --> " + str(time.time()))
+            self.record_start_time = time.time()
             current_time = self.config.local_time()
             self.info = {
                 "date": current_time.strftime('%d.%m.%Y %H:%M:%S'),
@@ -1048,7 +1050,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.logging.info("---------------------> Length: "+str(self.info["length"]))
             self.logging.info("---------------------> Count: "+str(self.info["image_count"]))
             self.logging.info("---------------------> FPS: "+str(self.info["framerate"]))
-            self.logging.info(" <-- " + self.id + " --- " + str(time.time()))
+            self.logging.info(" <-- " + self.id + " --- " + str(time.time()) + " ... (" +
+                              str(round(time.time() - self.record_start_time, 3)) + ")")
             self.recording = False
             self.create_video()
             self.info["status"] = "finished"
