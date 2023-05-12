@@ -36,7 +36,7 @@ mark favorites, analyze weather data, ...
   * Small USB Microphone
   * DHT11 / DHT22 Sensor
 * Software
-  * Python 3, CV2, imutils, JSON, Flask, ffmpeg 
+  * Python 3, CV2, JSON, Flask, ffmpeg, PyAudio 
   * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
   * HTML, CSS, JavaScript, Pinch-Zoom
   * jc://modules/, jc://app-framework/
