@@ -12,7 +12,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         self.output_codec = {
             "video-codec": "libx264",
             "audio-codec": "aac",
-            "sample-rate": "48000",
+            "sample-rate": "441000",
             "crf": 18
         }
 
