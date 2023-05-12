@@ -27,6 +27,7 @@ class BirdhouseClass(object):
         self.error_time = None
         self.error_count = 0
         self.error_connect = False
+        self.error_timeout = 60*5
 
         self.logging = logging.getLogger(class_id)
         if class_log not in birdhouse_loglevel_module:
@@ -86,6 +87,15 @@ class BirdhouseClass(object):
         self.error_time = 0
         self.error_count = 0
         self.error_connect = False
+
+    def reset_error_check(self, error_timeout=-1):
+        """
+        check if last error has been before x seconds and reset error status, if older
+        """
+        if error_timeout == -1:
+            error_timeout = self.error_timeout
+        if self.error_time + error_timeout < time.time():
+            self.reset_error()
 
     def health_signal(self):
         """
