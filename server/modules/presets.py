@@ -43,7 +43,11 @@ birdhouse_env = {
 
 
 birdhouse_log_into_file = True
-birdhouse_loglevel = logging.INFO
+birdhouse_loglevel = logging.ERROR
+birdhouse_loglevel_modules_info = ["mic-main", "server"]
+birdhouse_loglevel_modules_debug = []
+birdhouse_loglevel_modules_warning = []
+birdhouse_loglevel_modules_error = []
 birdhouse_loglevel_module = {
     "backup": birdhouse_loglevel,
     "cam-main": birdhouse_loglevel,
@@ -72,6 +76,16 @@ birdhouse_loglevel_module = {
     "weather-py": birdhouse_loglevel,
     "weather-om": birdhouse_loglevel,
 }
+
+for module in birdhouse_loglevel_modules_info:
+    birdhouse_loglevel_module[module] = logging.INFO
+for module in birdhouse_loglevel_modules_debug:
+    birdhouse_loglevel_module[module] = logging.DEBUG
+for module in birdhouse_loglevel_modules_warning:
+    birdhouse_loglevel_module[module] = logging.WARNING
+for module in birdhouse_loglevel_modules_error:
+    birdhouse_loglevel_module[module] = logging.ERROR
+
 birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
                                          datefmt='%m/%d %H:%M:%S')
 birdhouse_log_filename = str(os.path.join(os.path.dirname(__file__), "../../log", "server.log"))
@@ -98,6 +112,7 @@ birdhouse_databases = {
     "today_images": {},
     "today_weather": {},
     "today_sensors": {},
+    "today_statistics": {},
     "archive_images": {},
     "archive_sensors": {},
     "archive_weather": {},
