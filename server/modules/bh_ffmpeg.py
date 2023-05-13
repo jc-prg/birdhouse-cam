@@ -29,20 +29,19 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         }
 
         self.ffmpeg_create_av = "ffmpeg " + \
-                                "-nostats -loglevel 0 -y -vstats_file {VSTATS_PATH} " + \
                                 "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
                                 "-i {INPUT_AUDIO_FILENAME} " + \
                                 "-vcodec " + self.output_codec["video-codec"] + " " + \
                                 "-acodec " + self.output_codec["audio-codec"] + " " + \
                                 "-crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
-        #"-ar " + self.output_codec["sample-rate"] + " " + \
+        # "-nostats -loglevel 0 -y -vstats_file {VSTATS_PATH} " + \
+        # "-ar " + self.output_codec["sample-rate"] + " " + \
 
         self.ffmpeg_create = "ffmpeg " + \
-                             "-nostats -loglevel 0 -y -vstats_file {VSTATS_PATH} " + \
                              "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
                              "-vcodec " + self.output_codec["video-codec"] + " " + \
                              "-crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
-
+        # "-nostats -loglevel 0 -y -vstats_file {VSTATS_PATH} " + \
         self.ffmpeg_trim = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} " + \
                            "-vcodec " + self.output_codec["video-codec"] + " " + \
                            "-crf " + str(self.output_codec["crf"]) + " " + \
@@ -50,7 +49,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
 
         self.ffmpeg_handler_available = ["cmd-line", "python-ffmpeg", "ffmpeg-python", "ffmpeg-progress"]
         self.ffmpeg_handler = "ffmpeg-python"
-        self.ffmpeg_handler = "ffmpeg-progress"
+        self.ffmpeg_handler = "cmd-line"
         self.ffmpeg_running = False
 
     def ffmpeg_callback(self, infile: str, outfile: str, vstats_path: str):
