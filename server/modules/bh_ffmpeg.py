@@ -28,7 +28,9 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
             "crf": 18
         }
 
-        self.ffmpeg_create_av = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
+        self.ffmpeg_create_av = "ffmpeg " + \
+                                "-nostats -loglevel 0 -y -vstats_file {VSTATS_PATH} " + \
+                                "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
                                 "-i {INPUT_AUDIO_FILENAME} " + \
                                 "-vcodec " + self.output_codec["video-codec"] + " " + \
                                 "-acodec " + self.output_codec["audio-codec"] + " " + \
@@ -36,7 +38,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         #"-ar " + self.output_codec["sample-rate"] + " " + \
 
         self.ffmpeg_create = "ffmpeg " + \
-                             "-nostats -loglevel 0 -y " + \
+                             "-nostats -loglevel 0 -y -vstats_file {VSTATS_PATH} " + \
                              "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
                              "-vcodec " + self.output_codec["video-codec"] + " " + \
                              "-crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
@@ -58,6 +60,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
             cmd_ffmpeg = self.ffmpeg_create_av
 
         cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_FILENAMES}", infile)
+        cmd_ffmpeg = cmd_ffmpeg.replace("{VSTATS_PATH}", vstats_path)
         cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_AUDIO_FILENAME}", self.audio_filename)
         cmd_ffmpeg = cmd_ffmpeg.replace("{OUTPUT_FILENAME}", outfile)
         cmd_ffmpeg = cmd_ffmpeg.replace("{FRAMERATE}", "12")
