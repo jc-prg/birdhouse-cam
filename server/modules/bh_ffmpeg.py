@@ -49,6 +49,17 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
                               "-c:v " + self.output_codec["video-codec"] + " " + \
                               "-crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
 
+        self.ffmpeg_create_av = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
+                                "-i {INPUT_AUDIO_FILENAME} " + \
+                                "-vcodec " + self.output_codec["video-codec"] + " " + \
+                                "-acodec " + self.output_codec["audio-codec"] + " " + \
+                                "-ar " + self.output_codec["sample-rate"] + " " + \
+                                " -crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
+
+        self.ffmpeg_create = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
+                             "-vcodec " + self.output_codec["video-codec"] + " " + \
+                             " -crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
+
         self.ffmpeg_trim = "/usr/bin/ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} " + \
                            "-c:v " + self.output_codec["video-codec"] + " " + \
                            "-crf " + str(self.output_codec["crf"]) + " " + \
