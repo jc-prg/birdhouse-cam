@@ -20,6 +20,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
                                 device_id=camera_id, config=config)
 
         self.progress_info = {}
+        self.audio_filename = ""
         self.output_codec = {
             "video-codec": "libx264",
             "audio-codec": "aac",
@@ -51,20 +52,22 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         self.ffmpeg_running = False
 
     def ffmpeg_callback(self, infile: str, outfile: str, vstats_path: str):
-        self.logging.info('ffmpeg-progress: START')
-        cmd_ffmpeg = self.ffmpeg_create
+        if self.audio_filename == "":
+            cmd_ffmpeg = self.ffmpeg_create
+        else:
+            cmd_ffmpeg = self.ffmpeg_create_av
+
         cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_FILENAMES}", infile)
+        cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_AUDIO_FILENAME}", self.audio_filename)
         cmd_ffmpeg = cmd_ffmpeg.replace("{OUTPUT_FILENAME}", outfile)
         cmd_ffmpeg = cmd_ffmpeg.replace("{FRAMERATE}", "12")
         cmd_ffmpeg = cmd_ffmpeg.replace("   ", " ")
         cmd_ffmpeg = cmd_ffmpeg.replace("  ", " ")
         cmd_parts = cmd_ffmpeg.split(" ")
+        self.logging.info('ffmpeg-progress: START ' + str(cmd_parts))
         return sp.Popen(cmd_parts).pid
 
-    def on_message_handler(self, percent: float,
-                           fr_cnt: int,
-                           total_frames: int,
-                           elapsed: float):
+    def on_message_handler(self, percent: float, fr_cnt: int, total_frames: int, elapsed: float):
         self.progress_info = {
             "percent": percent,
             "frame_count": fr_cnt,
@@ -79,7 +82,6 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
     def create_video(self, input_filenames, framerate, output_filename, input_audio_filename=""):
         """
         create video file from images files
-        # neuer Versuch: https://github.com/Tatsh/ffmpeg-progress
         """
 
         try:
@@ -131,6 +133,8 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
                 self.logging.info("Call ffmpeg: " + cmd_ffmpeg)
                 message = os.system(cmd_ffmpeg)
             elif self.ffmpeg_handler == "ffmpeg-progress":
+                # for details see https://github.com/Tatsh/ffmpeg-progress
+                self.audio_filename = input_audio_filename
                 start(input_filenames,
                       output_filename,
                       self.ffmpeg_callback,
