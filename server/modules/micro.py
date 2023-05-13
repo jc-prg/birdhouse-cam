@@ -315,7 +315,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.logging.info(" <-- " + self.id + " --- " + str(time.time()) + " ... (" +
                           str(round(time.time() - self.record_start_time, 3)) + ")")
         self.config.record_audio_info["stamp_end"] = time.time()
-        self.config.record_audio_info["length"] = round(time.time() - self.record_start_time, 3)
+        self.config.record_audio_info["length_record"] = round(time.time() - self.record_start_time, 3)
 
         self.recording_processing = False
         wf = wave.open(self.recording_filename, 'wb')
@@ -324,6 +324,14 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         wf.setframerate(self.RATE)
         wf.writeframes(b''.join(self.recording_frames))
         wf.close()
+
+        wf = wave.open(self.recording_filename, 'r')
+        frames = wf.getnframes()
+        rate = wf.getframerate()
+        duration = frames / float(rate)
+        wf.close()
+        self.config.record_audio_into["length"] = duration
+
         self.config.record_audio_info["status"] = "finished"
         self.recording_frames = []
         self.logging.info("Stopped recording of '" + self.recording_filename + "'.")
