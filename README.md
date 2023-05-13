@@ -13,7 +13,6 @@ mark favorites, analyze weather data, ...
    * [First run and device configuration](#first-run-and-device-configuration)
    * [Finalize database setup](#finalize-database-setup)
    * [Access images via WebDAV](Access-images-via-WebDAV)
-   * [Add audio streaming](#add-audio-streaming)
    * [Optimize system configuration (Ubuntu 22.04)](#optimize-system-configuration--ubuntu-)
    * [Optimize system configuration (Raspbian / Raspberry OS)](#optimize-system-configuration--raspberry-os-)
    * [Sample proxy server configuration](#Sample-proxy-server-configuration)
@@ -58,7 +57,7 @@ mark favorites, analyze weather data, ...
   * Delete marked photos
   * Archive photos with movement and favorite photos once a day
 * **Record and stream videos**
-  * create mp4 video, works with iOS devices
+  * create mp4 video incl. audio, works with iOS devices
   * Create video from all pictures of the current day
   * Trim videos
 * Get, archive, and visualize **weather data**:
@@ -157,16 +156,6 @@ To access image and video files via WebDAV define credentials and port in the .e
 
 ```
 $ sudo docker-compose -f docker-compose-webdav.yml up -d
-```
-
-### Add audio streaming
-
-* _under construction, not running on iOS devices yet_
-* for this option it's recommended to use a Raspberry Pi 4
-* ports and hardware address are defined in the .env-file, to identify the hardware address (card-id, device-id) use ```arecord -l```
-
-``` bash
-$ sudo docker-compose -f docker-compose-audio.yml up -d
 ```
 
 ### Optimize system configuration (Ubuntu)
