@@ -90,7 +90,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
             else:
                 self.count = 0
-                time.sleep(1)
+                time.sleep(0.1)
 
             # start processing if trigger is set
             if self.recording_processing:

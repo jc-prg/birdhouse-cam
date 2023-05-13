@@ -28,29 +28,32 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
             "crf": 18
         }
 
-        self.ffmpeg_create_av = "ffmpeg " + \
-                                "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
-                                "-i {INPUT_AUDIO_FILENAME} " + \
-                                "-vcodec " + self.output_codec["video-codec"] + " " + \
-                                "-acodec " + self.output_codec["audio-codec"] + " " + \
-                                "-crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
-        # "-nostats -loglevel 0 -y -vstats_file {VSTATS_PATH} " + \
-        # "-ar " + self.output_codec["sample-rate"] + " " + \
+        self.ffmpeg_handler_available = ["cmd-line", "python-ffmpeg", "ffmpeg-python", "ffmpeg-progress"]
+        self.ffmpeg_handler = "ffmpeg-progress"
+        self.ffmpeg_running = False
 
-        self.ffmpeg_create = "ffmpeg " + \
-                             "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
-                             "-vcodec " + self.output_codec["video-codec"] + " " + \
-                             "-crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
-        # "-nostats -loglevel 0 -y -vstats_file {VSTATS_PATH} " + \
-        self.ffmpeg_trim = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} " + \
-                           "-vcodec " + self.output_codec["video-codec"] + " " + \
+        self.ffmpeg_create_av = "/usr/bin/ffmpeg "
+        if self.ffmpeg_handler == "ffmpeg-progress":
+            self.ffmpeg_create_av += "-nostats -loglevel 0 -y -vstats_file {VSTATS_PATH} "
+        self.ffmpeg_create_av += "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
+                                 "-i {INPUT_AUDIO_FILENAME} " + \
+                                 "-c:v " + self.output_codec["video-codec"] + " " + \
+                                 "-c:a " + self.output_codec["audio-codec"] + " " + \
+                                 "-crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
+
+        # "-ar " + self.output_codec["sample-rate"] + " " + \
+        self.ffmpeg_create = "/usr/bin/ffmpeg "
+        if self.ffmpeg_handler == "ffmpeg-progress":
+            self.ffmpeg_create += "-nostats -loglevel 0 -y -vstats_file {VSTATS_PATH} "
+        self.ffmpeg_create += "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
+                              "-c:v " + self.output_codec["video-codec"] + " " + \
+                              "-crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
+
+        self.ffmpeg_trim = "/usr/bin/ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} " + \
+                           "-c:v " + self.output_codec["video-codec"] + " " + \
                            "-crf " + str(self.output_codec["crf"]) + " " + \
                            "-ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
 
-        self.ffmpeg_handler_available = ["cmd-line", "python-ffmpeg", "ffmpeg-python", "ffmpeg-progress"]
-        self.ffmpeg_handler = "ffmpeg-python"
-        self.ffmpeg_handler = "cmd-line"
-        self.ffmpeg_running = False
 
     def ffmpeg_callback(self, infile: str, outfile: str, vstats_path: str):
         if self.audio_filename == "":
