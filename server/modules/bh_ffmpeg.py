@@ -54,7 +54,6 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
                            "-crf " + str(self.output_codec["crf"]) + " " + \
                            "-ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
 
-
     def ffmpeg_callback(self, infile: str, outfile: str, vstats_path: str):
         if self.audio_filename == "":
             cmd_ffmpeg = self.ffmpeg_create
