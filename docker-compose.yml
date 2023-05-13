@@ -47,6 +47,14 @@ services:
       - "${BIRDHOUSE_API_PORT}:${BIRDHOUSE_API_PORT}"
     depends_on:
       - birdhouse_db
+    deploy:
+      resources:
+        limits:
+          #cpus: '0.001'
+          memory: 600M
+        reservations:
+          cpus: '0.50'
+          memory: 300M
     restart: always
     networks:
       my-net:
