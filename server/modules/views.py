@@ -811,9 +811,10 @@ class BirdhouseViews(threading.Thread):
                 entry = file_data["files"][file]
                 if "camera" in entry and entry["camera"] == cam and "favorit" in entry \
                         and int(entry["favorit"]) == 1 and "lowres" in entry:
-                    first_img = file
-                    self.logging.debug(" ......... 1=" + first_img)
-                    break
+                    if "type" not in entry or entry["type"] == "image":
+                        first_img = file
+                        self.logging.debug(" ......... 1=" + first_img)
+                        break
 
             # or take first image with detected image, not full hour
             if first_img == "":
@@ -822,9 +823,10 @@ class BirdhouseViews(threading.Thread):
                     if "camera" in entry and entry["camera"] == cam and "lowres" in entry \
                             and file[2:4] != "00":
                         if "to_be_deleted" not in entry or int(entry["to_be_deleted"]) != 1:
-                            first_img = file
-                            self.logging.debug(" ......... 2=" + first_img)
-                            break
+                            if "type" not in entry or entry["type"] == "image":
+                                first_img = file
+                                self.logging.debug(" ......... 2=" + first_img)
+                                break
 
             # or take first image with detected image
             if first_img == "":
@@ -832,9 +834,10 @@ class BirdhouseViews(threading.Thread):
                     entry = file_data["files"][file]
                     if "camera" in entry and entry["camera"] == cam and "lowres" in entry:
                         if "to_be_deleted" not in entry or int(entry["to_be_deleted"]) != 1:
-                            first_img = file
-                            self.logging.debug(" ......... 3=" + first_img)
-                            break
+                            if "type" not in entry or entry["type"] == "image":
+                                first_img = file
+                                self.logging.debug(" ......... 3=" + first_img)
+                                break
 
         # select preview image
         elif "preview_fav" not in self.config.param["backup"] \
