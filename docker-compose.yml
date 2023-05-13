@@ -51,10 +51,10 @@ services:
       resources:
         limits:
           #cpus: '0.001'
-          memory: 600M
+          memory: ${MEMORY_MAX:-550M}
         reservations:
           cpus: '0.50'
-          memory: 300M
+          memory: ${MEMORY_MIN:-300M}
     restart: always
     networks:
       my-net:
