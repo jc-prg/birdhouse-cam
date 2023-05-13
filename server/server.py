@@ -1282,7 +1282,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         length = str(round(record_info["length"], 1)) + "s"
                         framerate = str(round(record_info["framerate"], 1)) + "fps"
                         line1 = "Recording"
-                        line2 = length + "/" + framerate
+                        line2 = length + " / " + framerate
                         camera[which_cam].set_system_info(True, line1, line2, (0, 0, 155))
 
                     elif camera[which_cam].video.processing:
@@ -1291,8 +1291,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         length = str(round(record_info["length"], 1)) + "s"
                         framerate = str(round(record_info["framerate"], 1)) + "fps"
                         progress = str(round(float(record_info["percent"]), 1)) + "%"
+                        time_s = int(record_info["elapsed"]) % 60
+                        time_h = round((int(record_info["elapsed"]) - time_s) / 60)
+                        time_e = str(time_h).zfill(2) + ":" + str(time_s).zfill(2)
                         line1 = "Processing"
-                        line2 = length + "/" + framerate + "/" + progress
+                        line2 = time_e + " / " + progress
                         camera[which_cam].set_system_info(True, line1, line2, (0, 255, 255))
 
                     else:
