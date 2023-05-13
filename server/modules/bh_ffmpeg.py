@@ -78,8 +78,8 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
             "frames": total_frames,
             "elapsed": elapsed
         }
-        self.logging.info("ffmpeg-progress: " + str(round(percent, 2)) + "%, " +
-                          str(fr_cnt) + "/" + str(total_frames) + ", " + str(round(elapsed, 2)))
+        self.logging.debug("ffmpeg-progress: " + str(round(percent, 2)) + "%, " +
+                           str(fr_cnt) + "/" + str(total_frames) + ", " + str(round(elapsed, 2)))
 
     def on_done_handler(self):
         self.progress_info = {"percent": 0, "frame_count": 0, "frames": 0, "elapsed": 0}
