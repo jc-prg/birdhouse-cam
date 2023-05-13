@@ -43,7 +43,7 @@ birdhouse_env = {
 
 
 birdhouse_log_into_file = True
-birdhouse_loglevel = logging.ERROR
+birdhouse_loglevel = logging.INFO
 birdhouse_loglevel_modules_info = ["mic-main", "server"]
 birdhouse_loglevel_modules_debug = []
 birdhouse_loglevel_modules_warning = []

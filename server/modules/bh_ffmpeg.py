@@ -1,6 +1,16 @@
+import time
 import ffmpeg
 import os
+import logging
+import subprocess as sp
+
+from modules.presets import *
 from modules.bh_class import BirdhouseClass
+from ffmpeg_progress import start
+
+ffmpeg_logging = logging.getLogger('root')
+ffmpeg_logging.setLevel(birdhouse_loglevel_module["server"])
+ffmpeg_logging.addHandler(birdhouse_loghandler)
 
 
 class BirdhouseFfmpegTranscoding(BirdhouseClass):
@@ -9,6 +19,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         BirdhouseClass.__init__(self, class_id="ffmpeg-trc", class_log="cam-ffmpg",
                                 device_id=camera_id, config=config)
 
+        self.progress_info = {}
         self.output_codec = {
             "video-codec": "libx264",
             "audio-codec": "aac",
@@ -20,25 +31,55 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
                                 "-i {INPUT_AUDIO_FILENAME} " + \
                                 "-vcodec " + self.output_codec["video-codec"] + " " + \
                                 "-acodec " + self.output_codec["audio-codec"] + " " + \
-                                " -crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
+                                "-crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
         #"-ar " + self.output_codec["sample-rate"] + " " + \
 
-        self.ffmpeg_create = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
+        self.ffmpeg_create = "ffmpeg " + \
+                             "-nostats -loglevel 0 -y " + \
+                             "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
                              "-vcodec " + self.output_codec["video-codec"] + " " + \
-                             " -crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
+                             "-crf " + str(self.output_codec["crf"]) + " {OUTPUT_FILENAME}"
 
         self.ffmpeg_trim = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} " + \
                            "-vcodec " + self.output_codec["video-codec"] + " " + \
                            "-crf " + str(self.output_codec["crf"]) + " " + \
                            "-ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
 
-        self.ffmpeg_handler_available = ["cmd-line", "python-ffmpeg", "ffmpeg-python"]
+        self.ffmpeg_handler_available = ["cmd-line", "python-ffmpeg", "ffmpeg-python", "ffmpeg-progress"]
         self.ffmpeg_handler = "ffmpeg-python"
-        self.ffmpeg_handler = "cmd-line"
+        self.ffmpeg_handler = "ffmpeg-progress"
+        self.ffmpeg_running = False
+
+    def ffmpeg_callback(self, infile: str, outfile: str, vstats_path: str):
+        self.logging.info('ffmpeg-progress: START')
+        cmd_ffmpeg = self.ffmpeg_create
+        cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_FILENAMES}", infile)
+        cmd_ffmpeg = cmd_ffmpeg.replace("{OUTPUT_FILENAME}", outfile)
+        cmd_ffmpeg = cmd_ffmpeg.replace("{FRAMERATE}", "12")
+        cmd_ffmpeg = cmd_ffmpeg.replace("   ", " ")
+        cmd_ffmpeg = cmd_ffmpeg.replace("  ", " ")
+        cmd_parts = cmd_ffmpeg.split(" ")
+        return sp.Popen(cmd_parts).pid
+
+    def on_message_handler(self, percent: float,
+                           fr_cnt: int,
+                           total_frames: int,
+                           elapsed: float):
+        self.progress_info = {
+            "percent": percent,
+            "frame_count": fr_cnt,
+            "frames": total_frames,
+            "elapsed": elapsed
+        }
+        self.logging.info("ffmpeg-progress: " + str(round(percent, 2)) + "%")
+
+    def on_done_handler(self):
+        self.logging.info('ffmpeg-progress: DONE')
 
     def create_video(self, input_filenames, framerate, output_filename, input_audio_filename=""):
         """
         create video file from images files
+        # neuer Versuch: https://github.com/Tatsh/ffmpeg-progress
         """
 
         try:
@@ -89,6 +130,14 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
 
                 self.logging.info("Call ffmpeg: " + cmd_ffmpeg)
                 message = os.system(cmd_ffmpeg)
+            elif self.ffmpeg_handler == "ffmpeg-progress":
+                start(input_filenames,
+                      output_filename,
+                      self.ffmpeg_callback,
+                      on_message=self.on_message_handler,
+                      on_done=self.on_done_handler,
+                      wait_time=1)  # seconds
+
             return True
 
         except Exception as err:
@@ -132,55 +181,3 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         except Exception as err:
             self.raise_error("Error during ffmpeg video trimming (" + self.id + " / " + self.ffmpeg_handler + "): " + str(err))
             return False
-
-
-class BirdhouseFfmpegProcessingDRAFT(BirdhouseClass):
-    """
-    draft how to handle ffmpeg incl process - requires python-ffmpeg (instead of ffmpeg-python)
-    """
-
-    def __init__(self, camera_id, camera, config):
-        BirdhouseClass.__init__(self, class_id=camera_id+"-ffmpg", class_log="cam-ffmpg",
-                                device_id=camera_id, config=config)
-        self.progess_reset = {
-            "running": False,
-            "error": False,
-            "percentage": 0,
-            "estimated_time": 0,
-            "estimated_filesize": 0,
-            "speed": 0
-        }
-        self.progress_info = self.progess_reset.copy()
-
-    def handle_progress_info(self, percentage, speed, eta, estimated_file_size):
-        if percentage is not None:
-            self.logging.info("FFMpeg progress: " + str(round(percentage, 1)) + "%; ...")
-            self.progress_info["percentage"] = percentage
-        if eta is not None:
-            self.logging.info("FFMpeg progress: " + str(round(eta, 1)) + "s; ...")
-            self.progress_info["estimated_time"] = eta
-        if speed is not None:
-            self.progress_info["speed"] = speed
-        if estimated_file_size is not None:
-            self.progress_info["estimated_filesize"] = estimated_file_size
-
-    def handle_success(self):
-        """Code to run if the FFmpeg process completes successfully."""
-        self.progress_info = self.progess_reset.copy()
-
-    def handle_error(self):
-        """Code to run if the FFmpeg process encounters an error."""
-        self.progress_info["error"] = True
-
-    def start_process(self, commands):
-        """
-        Run FFMpeg process
-        process = FfmpegProcess(["ffmpeg", "-i", "input.mp4", "-c:a", "libmp3lame", "output.mp3"])
-        """
-        self.logging.info("Start rendering: " + str(commands))
-        self.progress_info["running"] = True
-        process = FfmpegProcess(commands)
-        process.run(progress_handler=self.handle_progress_info,
-                    success_handler=self.handle_success,
-                    error_handler=self.handle_error)
-

@@ -8,6 +8,7 @@ wheel
 ffmpeg-python
 #python-ffmpeg
 #better-ffmpeg-progress
+ffmpeg-progress
 adafruit-circuitpython-dht
 couchdb
 requests
