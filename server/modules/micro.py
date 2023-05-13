@@ -251,8 +251,9 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.last_active = time.time()
         self.restart_stream = True
         data = self.file_header()
-        data += self.chunk
-        return data
+        if self.chunk is not None:
+            data += self.chunk
+            return data
 
     def get_device_status(self):
         """

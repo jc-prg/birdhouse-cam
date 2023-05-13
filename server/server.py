@@ -500,15 +500,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-cache, private')
         self.send_header('Pragma', 'no-cache')
 
-        #self.send_header('Content-Range', 'bytes 0-'+str(size)+'/'+str(size))
-        #self.send_header('Content-Disposition', 'attachment;filename="audio.WAV"')
-        #self.send_header('Content-Transfer-Encoding', 'binary')
-        #self.send_header('Content-Type', 'audio/x-wav;codec=PCM')
         self.send_header('Content-Range', 'bytes 0-'+str(size)+'/'+str(size))
-        self.send_header('Content-Disposition', 'attachment;filename="audio.WAV"')
+        # self.send_header('Content-Disposition', 'attachment;filename="audio.WAV"')
+        self.send_header('Content-Transfer-Encoding', 'binary')
+        # self.send_header('Content-Type', 'audio/x-wav;codec=PCM')
         self.send_header('Content-Type', 'audio/wav')
         self.send_header('Content-Length', str(size))
-        #self.send_header('Accept-Ranges', 'bytes')
+        self.send_header('Accept-Ranges', 'bytes')
 
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "*")
@@ -1148,7 +1146,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "database_server": birdhouse_env["couchdb_server"],
                 "ip4_admin_deny": birdhouse_env["admin_ip4_deny"],
                 "ip4_admin_allow": birdhouse_env["admin_ip4_allow"],
-                "admin_login": birdhouse_env["admin_login"]
+                "admin_login": birdhouse_env["admin_login"],
+                "rpi_active": birdhouse_env["rpi_active"]
             }
             api_response["SETTINGS"]["server"] = server_config
 
