@@ -1286,10 +1286,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                     elif camera[which_cam].video.processing:
                         srv_logging.debug("VIDEO PROCESSING")
-                        length = str(round(camera[which_cam].video.record_info()["length"]))
-                        framerate = str(round(camera[which_cam].video.record_info()["framerate"]))
+                        record_info = camera[which_cam].video.record_info()
+                        length = str(round(record_info["length"], 1)) + "s"
+                        framerate = str(round(record_info["framerate"], 1)) + "fps"
+                        progress = str(round(record_info["percent"], 1)) + "%"
                         line1 = "Processing"
-                        line2 = "(" + length + "s/" + framerate + "fps)"
+                        line2 = "(" + length + "/" + framerate + " - " + progress + ")"
                         camera[which_cam].set_system_info(True, line1, line2, (0, 255, 255))
 
                     else:

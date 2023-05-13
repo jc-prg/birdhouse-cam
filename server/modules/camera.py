@@ -1096,6 +1096,9 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         else:
             self.info["framerate"] = 0
 
+        for key in self.ffmpeg.progress_info:
+            self.info[key] = self.ffmpeg.progress_info[key]
+
         return self.info
 
     def create_video(self):

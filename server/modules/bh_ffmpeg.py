@@ -19,8 +19,8 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         BirdhouseClass.__init__(self, class_id="ffmpeg-trc", class_log="cam-ffmpg",
                                 device_id=camera_id, config=config)
 
-        self.progress_info = {}
         self.audio_filename = ""
+        self.progress_info = {"percent": 0, "frame_count": 0, "frames": 0, "elapsed": 0}
         self.output_codec = {
             "video-codec": "libx264",
             "audio-codec": "aac",
@@ -82,6 +82,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
                           str(fr_cnt) + "/" + str(total_frames) + ", " + str(round(elapsed, 2)))
 
     def on_done_handler(self):
+        self.progress_info = {"percent": 0, "frame_count": 0, "frames": 0, "elapsed": 0}
         self.logging.info('ffmpeg-progress: DONE')
 
     def create_video(self, input_filenames, framerate, output_filename, input_audio_filename=""):
