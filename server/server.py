@@ -1285,7 +1285,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         framerate = str(round(camera[which_cam].video.record_info()["framerate"]))
                         line1 = "Recording"
                         line2 = "(" + length + "s/" + framerate + "fps)"
-                        camera[which_cam].set_system_info(True, line1, line2, (0, 0, 255))
+                        camera[which_cam].set_system_info(True, line1, line2, (0, 0, 155))
 
                     elif camera[which_cam].video.processing:
                         srv_logging.debug("VIDEO PROCESSING")
