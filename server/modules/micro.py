@@ -323,10 +323,9 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         wf.setsampwidth(self.audio.get_sample_size(self.FORMAT))
         wf.setframerate(self.RATE)
         wf.writeframes(b''.join(self.recording_frames))
-        frames = wf.getnframes()
         wf.close()
 
-        self.config.record_audio_info["length"] = frames / float(self.RATE)
+        self.config.record_audio_info["length"] = len(self.recording_frames) * self.CHUNK / self.BITS_PER_SAMPLE / float(self.RATE)
         self.config.record_audio_info["status"] = "finished"
         self.recording_frames = []
         self.logging.info("Stopped recording of '" + self.recording_filename + "'.")
