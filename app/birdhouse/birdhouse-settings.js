@@ -139,6 +139,8 @@ function birdhouse_app_settings (name="Settings") {
 
     this.server_side_settings = function() {
         var settings = app_data["SETTINGS"];
+        if (settings["rpi_active"]) { rpi_active = "true"; } else { rpi_active = "false"; }
+
         if (settings["server"]["database_server"] && settings["server"]["database_server"] != "") {
             var link = "http://"+settings["server"]["database_server"]+":"+settings["server"]["database_port"]+"/_utils/";
         }
@@ -160,7 +162,7 @@ function birdhouse_app_settings (name="Settings") {
         html_internal += this.tab.row("Video stream port:&nbsp;",  settings["server"]["port_video"]);
         html_internal += this.tab.row("Audio stream server:&nbsp;",settings["server"]["server_audio"]);
         html_internal += this.tab.row("Audio stream port:&nbsp;",  settings["server"]["port_audio"]);
-        html_internal += this.tab.row("RPi Active:&nbsp;",         settings["server"]["rpi_active"] );
+        html_internal += this.tab.row("RPi Active:&nbsp;",         rpi_active);
 
         html_internal += this.tab.row("<hr>");
         html_internal += this.tab.row("Admin access via:&nbsp;",   settings["server"]["admin_login"]);
