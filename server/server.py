@@ -1130,9 +1130,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "weather": weather_status
             }
 
-            # server-side settings for information
-            #api_data["settings"]["devices"] = api_response["SETTINGS"]["devices"]
-
         api_response["DATA"] = api_data
 
         if command in cmd_status:

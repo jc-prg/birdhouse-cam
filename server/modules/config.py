@@ -973,6 +973,7 @@ class BirdhouseConfig(threading.Thread):
         self.user_active = False
         self.user_activity_last = 0
         self.last_start = ""
+        self.record_audio_info = {}
 
         # read or create main config file
         self.db_handler = BirdhouseConfigDBHandler(self, "json", main_directory)

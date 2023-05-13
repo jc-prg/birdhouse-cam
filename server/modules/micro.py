@@ -284,6 +284,16 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.recording_frames = []
         self.recording_filename = os.path.join(self.recording_default_path, filename)
         self.recording = True
+        self.config.record_audio_info = {
+            "id": self.id,
+            "path": self.recording_default_path,
+            "file": filename,
+            "sample_rate": self.RATE,
+            "channels": self.CHANNELS,
+            "chunk_size": self.CHUNK,
+            "status": "starting",
+            "stamp_start": self.last_active,
+        }
 
         return {"filename": self.recording_filename}
 
@@ -294,6 +304,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         self.recording = False
         self.recording_processing = True
+        self.config.record_audio_info["status"] = "processing"
         self.logging.info("Stopping recording of '" + self.recording_filename + "' with " +
                           str(len(self.recording_frames)) + " chunks ...")
 
@@ -303,6 +314,9 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         self.logging.info(" <-- " + self.id + " --- " + str(time.time()) + " ... (" +
                           str(round(time.time() - self.record_start_time, 3)) + ")")
+        self.config.record_audio_info["stamp_end"] = time.time()
+        self.config.record_audio_info["length"] = round(time.time() - self.record_start_time, 3)
+
         self.recording_processing = False
         wf = wave.open(self.recording_filename, 'wb')
         wf.setnchannels(self.CHANNELS)
@@ -310,5 +324,6 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         wf.setframerate(self.RATE)
         wf.writeframes(b''.join(self.recording_frames))
         wf.close()
+        self.config.record_audio_info["status"] = "finished"
         self.recording_frames = []
         self.logging.info("Stopped recording of '" + self.recording_filename + "'.")

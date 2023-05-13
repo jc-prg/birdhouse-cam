@@ -1054,8 +1054,13 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                               str(round(time.time() - self.record_start_time, 3)) + ")")
             self.recording = False
             self.create_video()
+            self.info["audio"] = self.config.record_audio_info
+            if "stamp_start" in self.info["audio"]:
+                self.info["audio"]["delay"] = self.info["stamp_start"] - self.info["audio"]["stamp_start"]
+                self.info["audio"]["length_difference"] = self.info["length"] - self.info["audio"]["length"]
             self.info["status"] = "finished"
             self.config.queue.entry_add(config="videos", date="", key=self.info["date_start"], entry=self.info.copy())
+            self.config.record_audio_info = {}
         elif not self.camera.active:
             response["error"] = "camera is not active " + self.camera.id
         elif not self.recording:
