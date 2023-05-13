@@ -1290,7 +1290,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         record_info = camera[which_cam].video.record_info()
                         length = str(round(record_info["length"], 1)) + "s"
                         framerate = str(round(record_info["framerate"], 1)) + "fps"
-                        progress = str(round(float(record_info["percent"], 1))) + "%"
+                        progress = str(round(float(record_info["percent"]), 1)) + "%"
                         line1 = "Processing"
                         line2 = length + "/" + framerate + "/" + progress
                         camera[which_cam].set_system_info(True, line1, line2, (0, 255, 255))
