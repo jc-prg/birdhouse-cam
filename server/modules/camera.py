@@ -896,6 +896,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.recording = False
         self.processing = False
         self.max_length = 60
+        self.delete_temp_files = True   # usually set to True, can temporarily be used to keep recorded files for analysis
 
         self.output_codec = {"vcodec": "libx264", "crf": 18}
         self.ffmpeg_cmd = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
@@ -1127,7 +1128,6 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                                            output_filename, self.record_audio_filename)
         if not success:
             self.processing = False
-            return
 
         self.info["thumbnail"] = self.filename("thumb")
         cmd_thumb = "cp " + os.path.join(self.config.db_handler.directory("videos_temp"),
@@ -1139,17 +1139,19 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         cmd_delete_audio = "rm " + self.record_audio_filename
 
         try:
-            self.logging.info(cmd_thumb)
-            message = os.system(cmd_thumb)
-            self.logging.debug(message)
+            if self.delete_temp_files:
 
-            self.logging.info(cmd_delete)
-            message = os.system(cmd_delete)
-            self.logging.debug(message)
+                self.logging.info(cmd_thumb)
+                message = os.system(cmd_thumb)
+                self.logging.debug(message)
 
-            self.logging.info(cmd_delete_audio)
-            message = os.system(cmd_delete_audio)
-            self.logging.debug(message)
+                self.logging.info(cmd_delete)
+                message = os.system(cmd_delete)
+                self.logging.debug(message)
+
+                self.logging.info(cmd_delete_audio)
+                message = os.system(cmd_delete_audio)
+                self.logging.debug(message)
 
         except Exception as err:
             self.raise_error("Error during video creation (thumbnail/cleanup): " + str(err))
@@ -1251,13 +1253,15 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                 self.raise_error("Error during day video creation: create thumbnails.")
                 return response
 
-            cmd_rm2 = "rm " + self.config.db_handler.directory("videos_temp") + "*.jpg"
-            self.logging.info(cmd_rm2)
-            message = os.system(cmd_rm2)
-            if message != 0:
-                response = {"result": "error", "reason": "remove temp image files", "message": message}
-                self.raise_error("Error during day video creation: remove temp image files.")
-                return response
+            if self.delete_temp_files:
+                cmd_rm2 = "rm " + self.config.db_handler.directory("videos_temp") + "*.jpg"
+                self.logging.info(cmd_rm2)
+                message = os.system(cmd_rm2)
+                if message != 0:
+                    response = {"result": "error", "reason": "remove temp image files", "message": message}
+                    self.raise_error("Error during day video creation: remove temp image files.")
+                    return response
+
         except Exception as e:
             self.raise_error("Error during day video creation: " + str(e))
 
