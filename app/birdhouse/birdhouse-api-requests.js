@@ -82,6 +82,13 @@ function birdhouse_createDayVideo(camera) {
 	commands = ["create-day-video",camera];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerCreateDay,'','birdhouse_createDayVideo');
 	}
+
+function birdhouse_editVideoTitle(title, video_id, camera) {
+    title    = document.getElementById(title).value;
+    if (title == "") { title = "EMPTY_TITLE_FIELD"; }
+	commands = ["edit-video-title", video_id, title, camera];
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_editVideoTitle');
+}
 	
 function birdhouse_reconnectCamera(camera) {
 	commands = ["reconnect-camera",camera];

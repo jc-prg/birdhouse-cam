@@ -168,6 +168,17 @@ def read_image(directory, filename):
     return f
 
 
+def decode_url_string(string):
+    string = string.replace("%20", " ")
+    string = string.replace("%22", "\"")
+    string = string.replace("%5B", "[")
+    string = string.replace("%5D", "]")
+    string = string.replace("%7B", "{")
+    string = string.replace("%7C", "|")
+    string = string.replace("%7D", "}")
+    return string
+
+
 class ServerHealthCheck(threading.Thread):
 
     def __init__(self):
@@ -762,6 +773,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             which_mic = self.path.split("/")[-2]
             srv_logging.info("stop-recording-audio: " + which_mic)
             response = microphones[which_mic].record_stop()
+        elif param["command"] == "edit-video-title":
+            srv_logging.info("edit-video-title: " + str(param["parameter"]))
+            entries = config.db_handler.read("videos")
+            key = param["parameter"][0]
+            if key in entries:
+                entry = entries[key]
+                if param["parameter"][1] == "EMPTY_TITLE_FIELD":
+                    entry["title"] = ""
+                else:
+                    entry["title"] = decode_url_string(param["parameter"][1])
+                config.queue.entry_edit("videos", "", key, entry)
+            else:
+                srv_logging.error("edit-video-title: key not found ("+key+","+self.path+")")
         elif param["command"] == "clean-data-today":
             config.db_handler.clean_all_data("images")
             config.db_handler.clean_all_data("weather")
@@ -790,14 +814,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if "==" in entry:
                     key, value = entry.split("==")
                     data[key] = unquote(value)
-                    data[key] = data[key].replace("%20", " ")
-                    data[key] = data[key].replace("%22", "\"")
-                    data[key] = data[key].replace("%5B", "[")
-                    data[key] = data[key].replace("%5D", "]")
-                    data[key] = data[key].replace("%7B", "{")
-                    data[key] = data[key].replace("%7C", "|")
-                    data[key] = data[key].replace("%7D", "}")
-                    data[key] = data[key].replace("-dev-", "/dev/")
+                    data[key] = decode_url_string(data[key])
+                    #data[key] = data[key].replace("%20", " ")
+                    #data[key] = data[key].replace("%22", "\"")
+                    #data[key] = data[key].replace("%5B", "[")
+                    #data[key] = data[key].replace("%5D", "]")
+                    #data[key] = data[key].replace("%7B", "{")
+                    #data[key] = data[key].replace("%7C", "|")
+                    #data[key] = data[key].replace("%7D", "}")
+                    #data[key] = data[key].replace("-dev-", "/dev/")
             srv_logging.info(str(data))
             config.main_config_edit("main", data)
             if which_cam in camera:

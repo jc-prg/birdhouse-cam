@@ -372,8 +372,12 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		var lowres      = birdhouse_ImageURL(img_url + entry["path"] + entry["thumbnail"]);
 		var hires       = birdhouse_ImageURL(streaming_url + video_file);
 		var description = "";
-		if (title.indexOf("_") > 0) { description = entry["date"] + "[br/]" + entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }
-		else                        { description = title + "[br/]" + entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }
+		var image_title = "";
+		if (entry["title"] && entry["title"] != "") { image_title = "<b>" + entry["title"] + "</b>"; }
+		else                                        { image_title = entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }
+		if (title.indexOf("_") > 0) { description = entry["date"] + "[br/]" + image_title; }
+		else                        { description = title + "[br/]" + image_title; }
+
 		var onclick     = "birdhouse_videoOverlay(\""+hires+"\",\""+description+"\");";
 		var play_button = "<img src=\"birdhouse/img/play.png\" class=\"play_button\" onclick='"+onclick+"' />";
 		entry["lowres"] = entry["thumbnail"];
@@ -418,6 +422,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		if (img_recycle == undefined || img_recycle == -1)   { img_recycle = 0; }
 		if (parseInt(img_star) == 0)     { img_star_r = 1; }    else { img_star_r = 0; }
 		if (parseInt(img_recycle) == 0)  { img_recycle_r = 1; } else { img_recycle_r = 0; }
+
 		var onclick_star    = "birdhouse_setFavorite(index=\""+img_id+"\",status=document.getElementById(\"s_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\",img_id=\""+img_id2+"\");";
 		var onclick_recycle = "birdhouse_setRecycle(index=\""+img_id+"\",status=document.getElementById(\"d_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\",img_id=\""+img_id2+"\");";
 		if (app_active_page == "TODAY" || app_active_page == "TODAY_COMPLETE") {

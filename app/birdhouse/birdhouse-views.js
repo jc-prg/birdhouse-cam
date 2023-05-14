@@ -126,6 +126,16 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 		console.log(video_stream);
 		console.log(video_stream_short);
 
+        var tab = new birdhouse_table();
+        tab.style_rows["height"]           = "20px";
+        tab.style_cells["vertical-align"]  = "top";
+
+        var video_title = "";
+        if (video[key]["title"]) { video_title  = video[key]["title"]; }
+        var onclick_video = "birdhouse_editVideoTitle(title=\"set_video_title\", video_id=\""+key+"\", camera=\""+video[key]["camera"]+"\");";
+        var edit_title    = "<input id='set_video_title' value='"+video_title+"' style='width:100px;'>&nbsp;&nbsp;";
+        edit_title       += "<button class='button-video-edit' onclick='"+onclick_video+"'>"+lang("SAVE")+"</button>";
+
 		html += "<div class='camera_info' style='height:auto;'>";
 		html += "<div class='camera_info_image video_edit'>";
 		html += video_stream;
@@ -136,20 +146,23 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 		html += "<div class='camera_info_text'>";
 		html += "<h3>"+video_name+"</h3>";
 		html += "&nbsp;<br/>";
-		html += lang("CAMERA")     + ": " + video[key]["camera"].toUpperCase() + " - " + video[key]["camera_name"] + "<br/>";
-		html += lang("LENGTH")     + ": " + Math.round(video[key]["length"]*10)/10 + " s<br/>";
-		html += lang("FRAMERATE")  + ": " + video[key]["framerate"]   + " fps<br/>";
-		html += lang("FRAME_COUNT") + ": " + video[key]["image_count"] + "<br/>";
-		html += lang("IMAGESIZE")  + ": " + video[key]["image_size"]  + "<br/>";
+
+        html += tab.start();
+		html += tab.row(lang("CAMERA")      + ": ", video[key]["camera"].toUpperCase() + " - " + video[key]["camera_name"]);
+		html += tab.row(lang("TITLE")       + ": ", edit_title);
+		html += tab.row(lang("LENGTH")      + ": ", Math.round(video[key]["length"]*10)/10 + " s<br/>");
+		html += tab.row(lang("FRAMERATE")   + ": ", video[key]["framerate"]   + " fps");
+		html += tab.row(lang("FRAME_COUNT") + ": ", video[key]["image_count"]);
+		html += tab.row(lang("IMAGESIZE")   + ": ", video[key]["image_size"]);
 //		html += lang("FILES")  + ": " + video[key]["video_file"]  + "<br/>";
 		if (short) {
 //			html += lang("FILES")  + ": " + video[key]["video_file_short"]  + "<br/>";
-			html += lang("SHORT_VERSION") + ": " + Math.round(video[key]["video_file_short_length"]*10)/10 + " s<br/>";
+			html += tab.row(lang("SHORT_VERSION") + ": ", Math.round(video[key]["video_file_short_length"]*10)/10 + " s");
 			}
+
 		if (admin) {
-			html += "&nbsp;<br/>";
-			html += lang("EDIT") + ":&nbsp; <button onclick=\"birdhouse_videoOverlayToggle();\" class=\"button-video-edit\">&nbsp;"+lang("SHORTEN_VIDEO")+"&nbsp;</button>&nbsp;<br/>";
-			html += "</div>";
+		    html += tab.row("&nbsp;");
+			html += tab.row(lang("EDIT") + ":", "<button onclick=\"birdhouse_videoOverlayToggle();\" class=\"button-video-edit\">&nbsp;"+lang("SHORTEN_VIDEO")+"&nbsp;</button>&nbsp;");
 
 			var player = "<div id='camera_video_edit_overlay' class='camera_video_edit_overlay' style='display:none'></div>";
 			player += "<div id='camera_video_edit' class='camera_video_edit' style='display:none'>";
@@ -190,6 +203,8 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 			setTextById("videoplayer",player);
 			}
 		}
+        html += tab.end();
+        html += "</div>";
 
 	setTextById(app_frame_content,html);
 	}
