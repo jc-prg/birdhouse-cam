@@ -189,6 +189,7 @@ class ServerHealthCheck(threading.Thread):
         self._initial = True
         self._min_live_time = 65
         self._thread_info = {}
+        self.class_id = "health"
         self._health_status = None
 
         self.logging = logging.getLogger("srv-health")
@@ -274,6 +275,7 @@ class ServerInformation(threading.Thread):
         self._srv_info_time = 0
         self._interval = 5
         self.health_check = time.time()
+        self.class_id = "info"
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
         self.logging = logging.getLogger("srv-info")
