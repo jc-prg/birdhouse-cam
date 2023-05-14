@@ -724,7 +724,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif param["command"] == "recycle-threshold":
             # http://localhost:8007/api/1682709071876/recycle-threshold/backup/20230421/95/cam1/
             srv_logging.info("RECYCLE THRESHOLD")
-            response = config.queue.set_status_recycle_threshold(param)
+            response = config.queue.set_status_recycle_threshold(param, which_cam)
         elif param["command"] == "recycle-range":
             response = config.queue.set_status_recycle_range(param)
         elif param["command"] == "create-short-video":
@@ -815,14 +815,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     key, value = entry.split("==")
                     data[key] = unquote(value)
                     data[key] = decode_url_string(data[key])
-                    #data[key] = data[key].replace("%20", " ")
-                    #data[key] = data[key].replace("%22", "\"")
-                    #data[key] = data[key].replace("%5B", "[")
-                    #data[key] = data[key].replace("%5D", "]")
-                    #data[key] = data[key].replace("%7B", "{")
-                    #data[key] = data[key].replace("%7C", "|")
-                    #data[key] = data[key].replace("%7D", "}")
-                    #data[key] = data[key].replace("-dev-", "/dev/")
             srv_logging.info(str(data))
             config.main_config_edit("main", data)
             if which_cam in camera:

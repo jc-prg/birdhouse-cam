@@ -1106,6 +1106,9 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         Create video from images using ffmpeg
         """
+        if self.processing:
+            return
+
         self.processing = True
         self.logging.info("Start video creation with ffmpeg ...")
         if self.record_audio_filename != "":
