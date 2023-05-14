@@ -182,7 +182,7 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
         lowres_size["container_width"]  = Math.round(container_width) - 4;
         lowres_size["thumbnail_width"]  = lowres_size["container_width"] - 2;
         lowres_size["thumbnail_height"] = Math.round(lowres_height / lowres_width * lowres_size["container_width"]);
-        lowres_size["container_height"] = lowres_size["thumbnail_height"] + 25 + (max_text_lines * 23);
+        lowres_size["container_height"] = lowres_size["thumbnail_height"] + 30 + (max_text_lines * 23);
 
         console.debug("Thumbnail size: frame-width=" + frame_width + "; thumbnail-width=" + lowres_size["thumbnail_width"]);
         console.debug("              : container-width=" + lowres_size["container_width"]  + "; container-height=" + lowres_size["container_height"]);
