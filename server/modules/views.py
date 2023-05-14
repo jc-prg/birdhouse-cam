@@ -811,7 +811,7 @@ class BirdhouseViews(threading.Thread):
                 entry = file_data["files"][file]
                 if "camera" in entry and entry["camera"] == cam and "favorit" in entry \
                         and int(entry["favorit"]) == 1 and "lowres" in entry:
-                    if "type" not in entry or entry["type"] == "image":
+                    if "type" not in entry or ("type" in entry and entry["type"] == "image"):
                         first_img = file
                         self.logging.debug(" ......... 1=" + first_img)
                         break
@@ -823,7 +823,7 @@ class BirdhouseViews(threading.Thread):
                     if "camera" in entry and entry["camera"] == cam and "lowres" in entry \
                             and file[2:4] != "00":
                         if "to_be_deleted" not in entry or int(entry["to_be_deleted"]) != 1:
-                            if "type" not in entry or entry["type"] == "image":
+                            if "type" not in entry or ("type" in entry and entry["type"] == "image"):
                                 first_img = file
                                 self.logging.debug(" ......... 2=" + first_img)
                                 break
@@ -834,7 +834,7 @@ class BirdhouseViews(threading.Thread):
                     entry = file_data["files"][file]
                     if "camera" in entry and entry["camera"] == cam and "lowres" in entry:
                         if "to_be_deleted" not in entry or int(entry["to_be_deleted"]) != 1:
-                            if "type" not in entry or entry["type"] == "image":
+                            if "type" not in entry or ("type" in entry and entry["type"] == "image"):
                                 first_img = file
                                 self.logging.debug(" ......... 3=" + first_img)
                                 break
