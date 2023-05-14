@@ -1299,7 +1299,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         create a video of all existing images of the day
         """
         response = {}
-        which_cam = param["which_cam"]
+        #which_cam = param["which_cam"]
+        which_cam = self.id
         current_time = self.config.local_time()
         stamp = current_time.strftime('%Y%m%d_%H%M%S')
         date = current_time.strftime('%d.%m.%Y')
