@@ -822,7 +822,7 @@ class BirdhouseConfigQueue(threading.Thread):
         count = 0
         for entry_id in config_data:
             entry_threshold = float(config_data[entry_id]["similarity"])
-            if entry["camera"] == which_cam:
+            if config_data[entry_id]["camera"] == which_cam:
                 if threshold > entry_threshold:
                     self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
                                              change_status="to_be_deleted", status=0)
