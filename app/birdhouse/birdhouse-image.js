@@ -379,7 +379,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		else                        { description = title + "[br/]" + image_title; }
 
 		var onclick     = "birdhouse_videoOverlay(\""+hires+"\",\""+description+"\");";
-		var play_button = "<img src=\"birdhouse/img/play.png\" class=\"play_button\" onclick='"+onclick+"' />";
+		var play_button = "<img src=\"birdhouse/img/play.png\" class=\"play_button\" style=\"min-width:auto;min-height:auto;\" onclick='"+onclick+"' />";
 		entry["lowres"] = entry["thumbnail"];
 		description     = description.replace(/\[br\/\]/g,"<br/>");
 		if (admin) {

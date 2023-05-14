@@ -127,7 +127,11 @@ h3 { margin : 4px; }
 }
 
 .camera_info_image .image_container img {
-    min-width  : 80%;
+    min-width  : 60%;
+}
+
+img .play_button  {
+    min-width  : auto;
 }
 
 .camera_info_text {
