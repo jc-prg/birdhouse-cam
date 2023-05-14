@@ -20,6 +20,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
                                 device_id=camera_id, config=config)
 
         self.audio_filename = ""
+        self.audio_framerate = 12
         self.progress_info = {"percent": 0, "frame_count": 0, "frames": 0, "elapsed": 0}
         self.output_codec = {
             "video-codec": "libx264",
@@ -64,7 +65,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         cmd_ffmpeg = cmd_ffmpeg.replace("{VSTATS_PATH}", vstats_path)
         cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_AUDIO_FILENAME}", self.audio_filename)
         cmd_ffmpeg = cmd_ffmpeg.replace("{OUTPUT_FILENAME}", outfile)
-        cmd_ffmpeg = cmd_ffmpeg.replace("{FRAMERATE}", "12")
+        cmd_ffmpeg = cmd_ffmpeg.replace("{FRAMERATE}", str(round(float(self.audio_framerate), 1)))
         cmd_ffmpeg = cmd_ffmpeg.replace("   ", " ")
         cmd_ffmpeg = cmd_ffmpeg.replace("  ", " ")
         cmd_parts = cmd_ffmpeg.split(" ")
@@ -141,6 +142,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
             elif self.ffmpeg_handler == "ffmpeg-progress":
                 # for details see https://github.com/Tatsh/ffmpeg-progress
                 self.audio_filename = input_audio_filename
+                self.audio_framerate = framerate
                 start(input_filenames,
                       output_filename,
                       self.ffmpeg_callback,
