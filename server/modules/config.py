@@ -827,7 +827,7 @@ class BirdhouseConfigQueue(threading.Thread):
                     self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
                                              change_status="to_be_deleted", status=0)
                     count += 1
-                elif int(config_data[entry_id]["favorit"]) != 1:
+                elif "favorit" in config_data[entry_id] and int(config_data[entry_id]["favorit"]) != 1:
                     self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
                                              change_status="to_be_deleted", status=1)
 
