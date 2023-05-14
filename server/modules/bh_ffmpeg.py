@@ -33,7 +33,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         self.ffmpeg_handler = "ffmpeg-progress"
         self.ffmpeg_running = False
 
-        self.ffmpeg_create_av = "/usr/bin/ffmpeg "
+        self.ffmpeg_create_av = "/usr/bin/ffmpeg -y "
         if self.ffmpeg_handler == "ffmpeg-progress":
             self.ffmpeg_create_av += "-nostats -loglevel 0 -y -vstats_file {VSTATS_PATH} "
         self.ffmpeg_create_av += "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
@@ -44,7 +44,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
 
         # "-ar " + self.output_codec["sample-rate"] + " " + \
         self.ffmpeg_create = "/usr/bin/ffmpeg "
-        if self.ffmpeg_handler == "ffmpeg-progress":
+        if self.ffmpeg_handler == "ffmpeg-progress -y ":
             self.ffmpeg_create += "-nostats -loglevel 0 -y -vstats_file {VSTATS_PATH} "
         self.ffmpeg_create += "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
                               "-c:v " + self.output_codec["video-codec"] + " " + \
@@ -178,7 +178,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
             elif self.ffmpeg_handler == "python-ffmpeg":
                 self.logging.warning("Trim video not yet implemented for '" + self.ffmpeg_handler + "'!")
                 pass
-            elif self.ffmpeg_handler == "cmd-line":
+            elif self.ffmpeg_handler == "cmd-line" or self.ffmpeg_handler == "ffmpeg-progress":
                 cmd_ffmpeg = self.ffmpeg_trim
                 cmd_ffmpeg = cmd_ffmpeg.replace("{START_TIME}", str(start_timecode))
                 cmd_ffmpeg = cmd_ffmpeg.replace("{END_TIME}", str(end_timecode))
