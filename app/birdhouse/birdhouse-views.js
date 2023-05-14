@@ -390,6 +390,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         }
         else if (html == "") {
             html += "<center>&nbsp;<br/>"+lang("DATA_LOADING_TRY_AGAIN")+"<br/>&nbsp;</center>";
+            appMsg.alert(lang("DATA_LOADING_TRY_AGAIN"));
+            return false;
         }
         if (group_list.length > 0) {
             html += "<div id='group_list' style='display:none;'>" + group_list.join(" ") + "</div>";
@@ -425,9 +427,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
    			    html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;</center>";
    			    }
    			else {
-    			html += "<center>&nbsp;<br/>"+lang("DATA_LOADING_TRY_AGAIN")+"<br/>&nbsp;</center>";
     			appMsg.alert(lang("DATA_LOADING_TRY_AGAIN"));
-    			return;
+    			return false;
    			    }
 			}
         html += "<div id='group_list' style='display:none;'>" + group_list.join(" ") + "</div>";

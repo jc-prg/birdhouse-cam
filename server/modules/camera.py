@@ -1058,7 +1058,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.info["audio"] = self.config.record_audio_info
             if "stamp_start" in self.info["audio"]:
                 self.info["audio"]["delay"] = self.info["stamp_start"] - self.info["audio"]["stamp_start"]
-                self.info["audio"]["length_difference"] = self.info["length"] - self.info["audio"]["length"]
+            if "length" in self.info["audio"]:
+                self.info["audio"]["length_difference"] = float(self.info["length"]) - self.info["audio"]["length"]
             self.info["status"] = "finished"
             self.config.queue.entry_add(config="videos", date="", key=self.info["date_start"], entry=self.info.copy())
             self.config.record_audio_info = {}
