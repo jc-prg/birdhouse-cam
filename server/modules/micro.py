@@ -103,12 +103,6 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             self.stream.close()
         self.logging.info("Stopped microphone '" + self.id + "'.")
 
-    def stop(self):
-        """
-        stop thread by stopping loop
-        """
-        self._running = False
-
     def connect(self):
         """
         connect to microphone

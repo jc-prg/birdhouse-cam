@@ -74,8 +74,7 @@ def get_directories(main_directory):
 class BirdhouseViewCreate(BirdhouseClass):
 
     def __init__(self, config):
-        BirdhouseClass.__init__(self, class_id="view-creat", class_log="view-creat",
-                                device_id="view-creat", config=config)
+        BirdhouseClass.__init__(self, class_id="view-creat", config=config)
 
         self.logging.info("Connected creation handler.")
 
@@ -461,7 +460,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         Initialize new thread and set initial parameters
         """
         threading.Thread.__init__(self)
-        BirdhouseClass.__init__(self, class_id="views", class_log="views", device_id="views", config=config)
+        BirdhouseClass.__init__(self, class_id="views", config=config)
         self.thread_set_priority(4)
 
         self.active_cams = None

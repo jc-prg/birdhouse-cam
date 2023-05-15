@@ -242,8 +242,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
     def __init__(self):
         threading.Thread.__init__(self)
-        BirdhouseClass.__init__(self, class_id="srv-info", class_log="srv-info",
-                                device_id="srv-info", config=config)
+        BirdhouseClass.__init__(self, class_id="srv-info", config=config)
         self.thread_set_priority(4)
 
         self._system_status = {}

@@ -16,7 +16,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         Initialize new thread and set initial parameters
         """
         threading.Thread.__init__(self)
-        BirdhouseClass.__init__(self, class_id="backup", class_log="backup", device_id="backup", config=config)
+        BirdhouseClass.__init__(self, class_id="backup", config=config)
         self.thread_set_priority(4)
 
         self.camera = camera

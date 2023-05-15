@@ -27,7 +27,7 @@ class BirdhouseClass(object):
         self._processing = False
         self._thread_priority = 3  # range 0..3
         self._thread_waiting_times = [1, 2, 4, 8, 16]  # to be used depending priority
-        self.health_check = time.time()
+        self._health_check = time.time()
 
         self.error = False
         self.error_msg = []
@@ -120,14 +120,14 @@ class BirdhouseClass(object):
         """
         set var that can be requested
         """
-        self.health_check = time.time()
+        self._health_check = time.time()
         self.thread_register()
 
     def health_status(self):
         """
         return time sind last heath signal
         """
-        return round(time.time() - self.health_check, 2)
+        return round(time.time() - self._health_check, 2)
 
     def thread_wait(self):
         """

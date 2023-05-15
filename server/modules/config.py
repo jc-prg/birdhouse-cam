@@ -387,7 +387,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
-        BirdhouseClass.__init__(self, class_id="config-Q", class_log="config-Qr", device_id="config-Q", config=config)
+        BirdhouseClass.__init__(self, class_id="config-Q", config=config)
         self.thread_set_priority(1)
 
         self.queue_count = None

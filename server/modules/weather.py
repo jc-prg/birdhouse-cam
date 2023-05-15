@@ -46,8 +46,7 @@ class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
         get weather data via python weather (in the main class at the moment)
         """
         threading.Thread.__init__(self)
-        BirdhouseClass.__init__(self, class_id="weather-py", class_log="weather-py",
-                                device_id="python-weather", config=config)
+        BirdhouseClass.__init__(self, class_id="weather-py", config=config)
         self.thread_set_priority(4)
 
         self.weather_location = location
@@ -225,8 +224,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
         * https://open-meteo.com/ (without API key)
         """
         threading.Thread.__init__(self)
-        BirdhouseClass.__init__(self, class_id="weather-om", class_log="weather-om",
-                                device_id="open-meteo", config=config)
+        BirdhouseClass.__init__(self, class_id="weather-om", config=config)
         self.thread_set_priority(4)
 
         self.weather_location = gps_location
@@ -408,8 +406,7 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
         # https://pypi.org/project/python-weather/
         """
         threading.Thread.__init__(self)
-        BirdhouseClass.__init__(self, class_id="weather", class_log="weather",
-                                device_id="weather", config=config)
+        BirdhouseClass.__init__(self, class_id="weather", config=config)
         self.thread_set_priority(3)
 
         self.initial_date = self.config.local_time().strftime("%Y%m%d")
