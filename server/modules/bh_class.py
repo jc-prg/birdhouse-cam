@@ -160,11 +160,11 @@ class BirdhouseClass(object):
                 "wait_time": self._thread_waiting_times[self._thread_priority],
                 "status": {
                     "health_signal": time.time(),
-                    "running": self._running,
-                    "processing": self._processing,
-                    "paused": self._paused,
-                    "error": self.error,
-                    "error_msg": self.error_msg
+                    "running": self.if_running(),
+                    "processing": self.if_processing(),
+                    "paused": self.if_paused(),
+                    "error": self.if_error(),
+                    "error_msg": self.if_error(message=True)
                 },
             }
         else:
@@ -173,11 +173,11 @@ class BirdhouseClass(object):
             self.config.thread_status[self.class_id]["wait_time"] = self._thread_waiting_times[self._thread_priority]
             self.config.thread_status[self.class_id]["status"] = {
                 "health_signal": time.time(),
-                "running": self._running,
-                "processing": self._processing,
-                "paused": self._paused,
-                "error": self.error,
-                "error_msg": self.error_msg
+                "running": self.if_running(),
+                "processing": self.if_processing(),
+                "paused": self.if_paused(),
+                "error": self.if_error(),
+                "error_msg": self.if_error(message=True)
             }
 
     def if_running(self):
@@ -185,6 +185,18 @@ class BirdhouseClass(object):
         external check if running
         """
         return self._running
+
+    def if_paused(self):
+        """
+        external check if paused
+        """
+        return self._paused
+
+    def if_processing(self):
+        """
+        external check if paused
+        """
+        return self._processing
 
     def if_error(self, message=False, length=False, count=False):
         """

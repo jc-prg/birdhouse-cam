@@ -495,7 +495,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.end_headers()
 
-    def stream_video_frame(self, frame, which_cam):
+    def stream_video_frame(self, frame):
         """
         send header and frame inside a MJPEG video stream
         """
@@ -864,7 +864,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif '/stream.mjpg' in self.path:
             self.do_GET_stream_video(which_cam, which_cam2, param)
         elif '/audio.wav' in self.path:
-            self.do_GET_stream_audio(which_cam, self.path)
+            self.do_GET_stream_audio(self.path)
         elif self.path.endswith('favicon.ico'):
             self.stream_file(filetype='image/ico', content=read_image(directory='../app', filename=self.path))
         elif self.path.startswith("/app/index.html"):
@@ -1302,7 +1302,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 else:
                     try:
                         frame = camera[which_cam].image.convert_from_raw(frame_raw)
-                        self.stream_video_frame(frame, which_cam)
+                        self.stream_video_frame(frame)
                     except Exception as error_msg:
                         stream_active = False
                         if "Errno 104" in str(error_msg) or "Errno 32" in str(error_msg):
@@ -1323,7 +1323,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             time.sleep(stream_wait_while_recording)
                             break
 
-    def do_GET_stream_audio(self, which_cam, this_path):
+    def do_GET_stream_audio(self, this_path):
         """
         Audio streaming generator function
         """

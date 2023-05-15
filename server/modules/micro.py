@@ -16,6 +16,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id=device_id + "-main", class_log="mic-main",
                                 device_id=device_id, config=config)
+        self.thread_set_priority(1)
 
         self.count = None
         self.param = config.param["devices"]["microphones"][device_id]

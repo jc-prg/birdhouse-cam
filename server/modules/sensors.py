@@ -22,13 +22,11 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, "SENSORS", "sensors", sensor_id, config)
+        self.thread_set_priority(4)
 
         self.config.update["sensor_"+self.id] = False
         self.param = self.config.param["devices"]["sensors"][sensor_id]
         self.active = self.param["active"]
-
-        self._running = True
-        self._paused = False
 
         self.GPIO = None
         self.sensor = None
@@ -139,7 +137,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                         self.last_read_time = time.time()
 
             self.health_signal()
-            time.sleep(1)
+            self.thread_wait()
 
         # GPIO.cleanup()
         self.logging.info("Stopped sensor (" + self.id + "/"+self.param["type"]+").")
