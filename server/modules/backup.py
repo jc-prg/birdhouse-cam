@@ -6,45 +6,39 @@ import threading
 from tqdm import tqdm
 from datetime import datetime
 from modules.presets import *
+from modules.bh_class import *
 
 
-class BirdhouseArchive(threading.Thread):
+class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
     def __init__(self, config, camera, views):
         """
         Initialize new thread and set initial parameters
         """
         threading.Thread.__init__(self)
+        BirdhouseClass.__init__(self, class_id="backup", class_log="backup", device_id="backup", config=config)
+        self.thread_set_priority(4)
 
-        self.logging = logging.getLogger("backup")
-        self.logging.setLevel(birdhouse_loglevel_module["backup"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting backup handler ...")
-
-        self._running = True
-        self._interval = 5
-        self.config = config
         self.camera = camera
         self.views = views
-        self.name = "Backup"
-        self.processing = False
         self.archive_data = False
         self.backup_start = False
         self.backup_running = False
-        self.health_check = time.time()
 
     def run(self):
         """
         start backup in the background
         """
         backup_started = False
+        self.logging.info("Starting backup handler ...")
         while self._running:
             if self.config.shut_down:
                 self.stop()
             stamp = self.config.local_time().strftime('%H%M%S')
             check_stamp = str(int(stamp[0:4])-1)
 
-            if (int(check_stamp) == int(self.config.param["backup"]["time"]) or self.backup_start) and not backup_started:
+            if (int(check_stamp) == int(self.config.param["backup"]["time"])
+                    or self.backup_start) and not backup_started:
                 backup_started = True
                 self.backup_start = False
                 if self.backup_start:
@@ -61,15 +55,11 @@ class BirdhouseArchive(threading.Thread):
                 self.logging.info("Backup DONE.")
             else:
                 backup_started = False
-            self.health_check = time.time()
-            time.sleep(self._interval)
-        self.logging.info("Stopped backup process.")
 
-    def stop(self):
-        """
-        stop running process
-        """
-        self._running = False
+            self.health_signal()
+            self.thread_wait()
+
+        self.logging.info("Stopped backup handler.")
 
     def start_backup(self):
         """
@@ -373,11 +363,11 @@ class BirdhouseArchive(threading.Thread):
         """
         Compare image files and write to config file (incl. sensor data if exist)
         """
-        if self.processing:
+        if self._processing:
             # this part potentially can be removed again
             self.logging.warning("Compare Files already processing ...")
             return
-        self.processing = True
+        self._processing = True
 
         if os.path.isfile(self.config.db_handler.file_path("images")) and subdir == "":
             files = self.config.db_handler.read_cache(config='images')
@@ -429,7 +419,7 @@ class BirdhouseArchive(threading.Thread):
                         image_current = cv2.imread(filename)
                         image_current = cv2.cvtColor(image_current, cv2.COLOR_BGR2GRAY)
                     except Exception as e:
-                        self.logging.error("Could not load image: " + filename + " ... "+str(e))
+                        self.raise_error("Could not load image: " + filename + " ... "+str(e))
 
                     if len(filename_last) > 0:
                         detection_area = self.camera[cam].param["similarity"]["detection_area"]
@@ -455,7 +445,7 @@ class BirdhouseArchive(threading.Thread):
 
 #        if subdir == '':
 #            self.config.db_handler.write("images", "", files_new)
-        self.processing = False
+        self._processing = False
         return files_new
 
     def create_image_config_get_filelist(self, file_list, files, subdir=""):
@@ -521,7 +511,7 @@ class BirdhouseArchive(threading.Thread):
             date = ""
             config = "videos"
         else:
-            self.logging.error("Delete marked files: Not clear what to be deleted ("+str(param["parameter"])+")")
+            self.raise_error("Delete marked files: Not clear what to be deleted ("+str(param["parameter"])+")")
             response["error"] = "not clear, which files shall be deleted"
 
         if "error" not in response:
@@ -613,7 +603,7 @@ class BirdhouseArchive(threading.Thread):
                     count_del_entry += 1
 
             except Exception as e:
-                self.logging.error(" - Error while deleting file '" + key + "' ... " + str(e))
+                self.raise_error(" - Error while deleting file '" + key + "' ... " + str(e))
                 response["error"] += "delete file '" + key + "': " + str(e) + "\n"
 
         self.logging.info(" - Perform DELETE " + config + ": files="+str(count_del_file) + "; " +

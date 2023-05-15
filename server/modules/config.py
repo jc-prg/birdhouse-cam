@@ -9,32 +9,17 @@ from datetime import datetime, timezone, timedelta
 from modules.presets import *
 from modules.weather import BirdhouseWeather
 from modules.bh_database import BirdhouseCouchDB, BirdhouseJSON, BirdhouseTEXT
+from modules.bh_class import BirdhouseClass
 
 
-class BirdhouseConfigDBHandler(threading.Thread):
+class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
 
     def __init__(self, config, db_type="json", main_directory=""):
         threading.Thread.__init__(self)
-        self._running = True
-        self._paused = False
-        self._process_running = False
-        self.health_check = time.time()
+        BirdhouseClass.__init__(self, class_id="DB-handler", config=config)
+        self.thread_set_priority(1)
 
-        self.config = config
-        self.error = False
-        self.error_msg = []
-
-        self.logging = logging.getLogger("DB-handler")
-        self.logging.setLevel(birdhouse_loglevel_module["DB-handler"])
-        self.logging.addHandler(birdhouse_loghandler)
-
-        self.db_usr = birdhouse_env["couchdb_user"]
-        self.db_pwd = birdhouse_env["couchdb_password"]
-        self.db_server = "192.168.202.3"
-        self.db_server = "birdhouse_db"
-        self.db_port_internal = 5984
-        self.db_basedir = "/usr/src/app/data/"
-
+        self.db = birdhouse_couchdb
         self.backup_interval = 60 * 15
         self.directories = birdhouse_directories
         self.files = birdhouse_files
@@ -66,14 +51,11 @@ class BirdhouseConfigDBHandler(threading.Thread):
                     time.sleep(10)
             if self.config.shut_down:
                 self.stop()
-            self.health_check = time.time()
-            time.sleep(1)
+
+            self.health_signal()
+            self.thread_wait()
 
         self.logging.info("Stopped DB handler (" + self.db_type + ").")
-
-    def stop(self):
-        self._running = False
-        self._process_running = False
 
     def connect(self, db_type=None):
         """
@@ -83,7 +65,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
             db_type = self.db_type
         self.logging.info(" -> (Re)Connecting to database(s) '" + db_type + "' ...")
         self.reset_error()
-        self._process_running = False
+        self._processing = False
         self.set_db_type(db_type)
 
     def set_db_type(self, db_type):
@@ -99,8 +81,9 @@ class BirdhouseConfigDBHandler(threading.Thread):
             return True
         elif self.db_type == "couch" or self.db_type == "both":
             if self.couch is None or not self.couch.connected:
-                self.couch = BirdhouseCouchDB(self.config, self.db_usr, self.db_pwd, self.db_server,
-                                              self.db_port_internal, self.db_basedir)
+                #self.couch = BirdhouseCouchDB(self.config, self.db_usr, self.db_pwd, self.db_server,
+                #                              self.db_port_internal, self.db_basedir)
+                self.couch = BirdhouseCouchDB(self.config, self.db)
             if not self.couch.connected:
                 self.db_type = "json"
             self.logging.info("  -> database handler - db_type=" + self.db_type + ".")
@@ -145,29 +128,6 @@ class BirdhouseConfigDBHandler(threading.Thread):
             }
         return db_info
 
-    def raise_error(self, message):
-        """
-        Report Error, set variables of modules, collect last 3 messages in var self.error_msg
-        """
-        self.logging.error(message)
-        self.error = True
-        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-        self.error_msg.append(time_info + " - " + message)
-        if len(self.error_msg) >= 5:
-            self.error_msg.pop()
-
-    def reset_error(self):
-        """
-        reset all error values
-        """
-        self.error = False
-        self.error_msg = []
-        if self.db_type == "json":
-            self.json.reset_error()
-        if self.db_type == "couch":
-            self.json.reset_error()
-            self.couch.reset_error()
-
     def wait_if_paused(self):
         """
         wait if paused to avoid loss of data
@@ -179,7 +139,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         """
         wait if paused to avoid loss of data
         """
-        while self._process_running:
+        while self._processing:
             time.sleep(0.2)
 
     def file_path(self, config, date=""):
@@ -347,7 +307,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
         create a backup of all data in the cache to JSON files (backup if db_type == couch)
         """
         self.wait_if_process_running()
-        self._process_running = True
+        self._processing = True
 
         start_time = time.time()
         self.logging.info("Create backup from cached data ...")
@@ -367,14 +327,14 @@ class BirdhouseConfigDBHandler(threading.Thread):
                         self.logging.info("   -> backup: " + config + " / " + date +
                                           " (" + str(round(time.time() - start_time, 1)) + "s)")
                         self.config_cache_changed[config + "_" + date] = False
-        self._process_running = False
+        self._processing = False
 
     def clean_all_data(self, config, date=""):
         """
         remove all entries from a database
         """
         self.wait_if_process_running()
-        self._process_running = True
+        self._processing = True
 
         self.logging.info("Clean all data from database " + config + " " + date)
         self.write(config=config, date=date, data={})
@@ -401,7 +361,7 @@ class BirdhouseConfigDBHandler(threading.Thread):
                 self.raise_error("Could not delete image files from " +
                                  self.config.db_handler.directory(config=config, date=date) + " (" + str(e) + ")")
 
-        self._process_running = False
+        self._processing = False
 
     def lock(self, config, date=""):
         """
@@ -420,25 +380,19 @@ class BirdhouseConfigDBHandler(threading.Thread):
             return self.json.unlock(filename)
 
 
-class BirdhouseConfigQueue(threading.Thread):
+class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
     def __init__(self, config, db_handler):
         """
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
-        self.health_check = time.time()
-
-        self.logging = logging.getLogger("config-Q")
-        self.logging.setLevel(birdhouse_loglevel_module["config-Q"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting config queue ...")
+        BirdhouseClass.__init__(self, class_id="config-Q", class_log="config-Qr", device_id="config-Q", config=config)
+        self.thread_set_priority(1)
 
         self.queue_count = None
-        self.config = config
         self.views = None
         self.db_handler = db_handler
-        self._running = True
         self.edit_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": [], "statistics": []}
         self.status_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": [], "statistics": []}
         self.queue_wait = 5
@@ -450,6 +404,8 @@ class BirdhouseConfigQueue(threading.Thread):
         """
         create videos and process queue.
         """
+        self.logging.info("Starting config queue ...")
+
         config_files = ["images", "videos", "backup", "sensor", "weather", "statistics"]
         start_time = time.time()
         start_time_2 = time.time()
@@ -677,16 +633,10 @@ class BirdhouseConfigQueue(threading.Thread):
                 check_count_entries = 0
                 start_time_2 = time.time()
 
-            self.health_check = time.time()
-            time.sleep(1)
+            self.health_signal()
+            self.thread_wait()
 
         self.logging.info("Stopped Config Queue.")
-
-    def stop(self):
-        """
-        Do nothing at the moment
-        """
-        self._running = False
 
     def add_to_status_queue(self, config, date, key, change_status, status):
         """
@@ -934,18 +884,17 @@ class BirdhouseConfigQueue(threading.Thread):
         self.add_to_edit_queue(config, date, key, {}, "keep_data")
 
 
-class BirdhouseConfig(threading.Thread):
+class BirdhouseConfig(threading.Thread, BirdhouseClass):
 
     def __init__(self, param_init, main_directory):
         """
         Initialize new thread and set inital parameters
         """
         threading.Thread.__init__(self)
-        self.name = "Config"
-        self._running = True
-        self._paused = False
+        BirdhouseClass.__init__(self, class_id="config", config=None)
+        self.thread_set_priority(1)
+
         self.shut_down = False
-        self.health_check = time.time()
         self.param = None
         self.config = None
         self.config_cache = {}
@@ -953,11 +902,7 @@ class BirdhouseConfig(threading.Thread):
         self.views = None
         self.queue = None
         self.db_handler = None
-
-        self.logging = logging.getLogger("config")
-        self.logging.setLevel(birdhouse_loglevel_module["config"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting configuration handler (" + main_directory + ") ...")
+        self.thread_status = {}
 
         self.update = {}
         self.update_views = {"favorite": False, "archive": False}
@@ -1024,12 +969,14 @@ class BirdhouseConfig(threading.Thread):
         """
         Core function (not clear what to do yet)
         """
+        self.logging.info("Starting config handler (" + self.main_directory + ") ...")
+
         count = 0
         self.param = self.db_handler.read("main")
         self.param["path"] = self.main_directory
 
         if "weather" not in self.param_init or self.param_init["weather"] is not False:
-            self.weather = BirdhouseWeather(config=self, time_zone=self.timezone)
+            self.weather = BirdhouseWeather(config=self)
             self.weather.start()
         elif not self.weather and self.weather is not None:
             self.weather.stop()
@@ -1038,7 +985,6 @@ class BirdhouseConfig(threading.Thread):
             self.weather = False
 
         while self._running:
-            time.sleep(1)
 
             # check if data has change and old data shall be removed
             if birdhouse_env["database_cleanup"]:
@@ -1072,7 +1018,8 @@ class BirdhouseConfig(threading.Thread):
                 if self.weather is not False:
                     self.weather.active(self.param["localization"]["weather_active"])
 
-            self.health_check = time.time()
+            self.health_signal()
+            self.thread_wait()
 
         self.logging.info("Stopped config handler.")
 
@@ -1083,8 +1030,6 @@ class BirdhouseConfig(threading.Thread):
         self.queue.stop()
         self.db_handler.stop()
         self._running = False
-
-        return
 
     def pause(self, command):
         """

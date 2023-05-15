@@ -95,6 +95,14 @@ birdhouse_loghandler = RotatingFileHandler(filename=birdhouse_log_filename, mode
 birdhouse_loghandler.setFormatter(birdhouse_log_format)
 
 
+birdhouse_couchdb = {
+    "db_usr": birdhouse_env["couchdb_user"],
+    "db_pwd": birdhouse_env["couchdb_password"],
+    "db_server_ip": "192.168.202.3",
+    "db_server": "birdhouse_db",
+    "db_port": 5984,
+    "db_basedir": "/usr/src/app/data/"
+}
 birdhouse_pages = {
     "live":             ("Live-Stream", "/index.html",       "INDEX"),
     "backup":           ("Archiv",      "/list_backup.html", "ARCHIVE"),

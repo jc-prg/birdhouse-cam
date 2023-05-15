@@ -8,10 +8,6 @@ from modules.presets import *
 from modules.bh_class import BirdhouseClass
 from ffmpeg_progress import start
 
-ffmpeg_logging = logging.getLogger('root')
-ffmpeg_logging.setLevel(birdhouse_loglevel_module["server"])
-ffmpeg_logging.addHandler(birdhouse_loghandler)
-
 
 class BirdhouseFfmpegTranscoding(BirdhouseClass):
 

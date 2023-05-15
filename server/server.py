@@ -24,7 +24,7 @@ from modules.config import BirdhouseConfig
 from modules.presets import *
 from modules.views import BirdhouseViews
 from modules.sensors import BirdhouseSensor
-
+from modules.bh_class import BirdhouseClass
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 api_description = {"name": "BirdhouseCAM", "version": "v0.9.9"}
@@ -179,60 +179,36 @@ def decode_url_string(string):
     return string
 
 
-class ServerHealthCheck(threading.Thread):
+class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
     def __init__(self):
         threading.Thread.__init__(self)
-        self._running = True
-        self._interval = 5
-        self._interval_check = 60 * 5
+        BirdhouseClass.__init__(self, class_id="srv-health", config=config)
+        self.thread_set_priority(4)
+
         self._initial = True
+        self._interval_check = 60 * 5
         self._min_live_time = 65
         self._thread_info = {}
-        self.class_id = "health"
         self._health_status = None
 
-        self.logging = logging.getLogger("srv-health")
-        self.logging.setLevel(birdhouse_loglevel_module["srv-health"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting Server Health Check ...")
-
     def run(self):
-        last_update = time.time()
+        self.logging.info("Starting Server Health Check ...")
         count = 0
+        last_update = time.time()
         while self._running:
-            time.sleep(self._interval)
+            self.thread_wait()
+            self.health_signal()
+
             if last_update + self._interval_check < time.time():
                 self.logging.info("Health check ...")
                 last_update = time.time()
                 count += 1
 
-                self._thread_info = {
-                    "views": time.time() - views.health_check,
-                    "weather": time.time() - config.weather.health_check,
-                    "weather-module": time.time() - config.weather.module.health_check,
-                    "srv-info": time.time() - sys_info.health_check,
-                    "config": time.time() - config.health_check,
-                    "config-Q": time.time() - config.queue.health_check,
-                    "DB-handler": time.time() - config.db_handler.health_check,
-                    "backup": time.time() - backup.health_check
-                }
-                for sensor_id in sensor:
-                    self._thread_info["sensor_" + sensor_id] = time.time() - sensor[sensor_id].health_check
-
-#                for mic_id in microphones:
-#                    self._thread_info["mic_" + mic_id] = time.time() - microphones[mic_id].health_check
-
-                for camera_id in camera:
-                    self._thread_info["camera_" + camera_id] = time.time() - camera[camera_id].health_check
-                    health_state = camera[camera_id].camera_stream_raw.health_check
-                    self._thread_info["camera_" + camera_id + "_raw"] = time.time() - health_state
-                    health_state = camera[camera_id].video.health_check
-                    self._thread_info["camera_" + camera_id + "_video"] = time.time() - health_state
-                    if camera[camera_id].param["active"]:
-                        for stream_id in camera[camera_id].camera_streams:
-                            health_state = camera[camera_id].camera_streams[stream_id].health_check
-                            self._thread_info["camera_" + camera_id + "_edit_" + stream_id] = time.time() - health_state
+                self._thread_info = {}
+                for key in self.config.thread_status:
+                    if self.config.thread_status[key]["thread"]:
+                        self._thread_info[key] = time.time() - self.config.thread_status[key]["status"]["health_signal"]
 
                 if self._initial:
                     self._initial = False
@@ -261,27 +237,20 @@ class ServerHealthCheck(threading.Thread):
     def status(self):
         return self._health_status
 
-    def stop(self):
-        self._running = False
 
-
-class ServerInformation(threading.Thread):
+class ServerInformation(threading.Thread, BirdhouseClass):
 
     def __init__(self):
         threading.Thread.__init__(self)
-        self._running = True
+        BirdhouseClass.__init__(self, class_id="srv-info", class_log="srv-info",
+                                device_id="srv-info", config=config)
+        self.thread_set_priority(4)
+
         self._system_status = {}
         self._device_status = {}
         self._srv_info_time = 0
-        self._interval = 5
-        self.health_check = time.time()
-        self.class_id = "info"
+
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-
-        self.logging = logging.getLogger("srv-info")
-        self.logging.setLevel(birdhouse_loglevel_module["srv-info"])
-        self.logging.addHandler(birdhouse_loghandler)
-
         self.microphones = None
 
     def run(self) -> None:
@@ -290,15 +259,15 @@ class ServerInformation(threading.Thread):
             start_time = time.time()
             self.read()
             self.read_device_status()
-            self.health_check = time.time()
+
             if config.shut_down:
                 self.stop()
             self._srv_info_time = round(time.time() - start_time, 2)
-            time.sleep(self._interval)
-        self.logging.info("Stopped Server Information.")
 
-    def stop(self):
-        self._running = False
+            self.thread_wait()
+            self.health_signal()
+
+        self.logging.info("Stopped Server Information.")
 
     def read(self):
         global srv_audio
@@ -1405,6 +1374,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
 on_exception_setting()
 sys.excepthook = on_exception
+
 
 if __name__ == "__main__":
 

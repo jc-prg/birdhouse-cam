@@ -1,11 +1,11 @@
 import os
 import time
-import logging
 import threading
 from sys import getsizeof
 from datetime import datetime, timedelta
 import modules.presets as presets
 from modules.presets import *
+from modules.bh_class import BirdhouseClass
 
 
 view_logging = logging.getLogger("view-head")
@@ -71,14 +71,13 @@ def get_directories(main_directory):
     return dir_list
 
 
-class BirdhouseViewCreate(object):
+class BirdhouseViewCreate(BirdhouseClass):
 
     def __init__(self, config):
-        self.config = config
-        self.logging = logging.getLogger("view-creat")
-        self.logging.setLevel(birdhouse_loglevel_module["view-creat"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting backup handler ...")
+        BirdhouseClass.__init__(self, class_id="view-creat", class_log="view-creat",
+                                device_id="view-creat", config=config)
+
+        self.logging.info("Connected creation handler.")
 
     def chart_data_new(self, data_image, data_sensor=None, data_weather=None, date=None, cameras=None):
         """
@@ -455,35 +454,31 @@ class BirdhouseViewCreate(object):
         return chart
 
 
-class BirdhouseViews(threading.Thread):
+class BirdhouseViews(threading.Thread, BirdhouseClass):
 
     def __init__(self, camera, config):
         """
         Initialize new thread and set initial parameters
         """
         threading.Thread.__init__(self)
-
-        self.logging = logging.getLogger("views")
-        self.logging.setLevel(birdhouse_loglevel_module["views"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting views thread ...")
+        BirdhouseClass.__init__(self, class_id="views", class_log="views", device_id="views", config=config)
+        self.thread_set_priority(4)
 
         self.active_cams = None
-        self._running = True
-        self.health_check = time.time()
-        self.name = "Views"
         self.camera = camera
-        self.config = config
         self.which_cam = ""
+        self.force_reload = False
+
         self.archive_views = {}
         self.archive_loading = "started"
         self.archive_dir_size = 0
+
         self.today_dir_size = 0             # not implemented yet
         self.favorite_views = {}
         self.favorite_loading = "started"
+
         self.create_archive = True
         self.create_favorites = True
-        self.force_reload = False
         self.create = BirdhouseViewCreate(config)
 
     def run(self):
@@ -522,16 +517,10 @@ class BirdhouseViews(threading.Thread):
             if self.config.user_activity():
                 count += 1
 
-            self.health_check = time.time()
-            time.sleep(1)
+            self.health_signal()
+            self.thread_wait()
 
         self.logging.info("Stopped HTML views and REST API for GET.")
-
-    def stop(self):
-        """
-        Do nothing at the moment
-        """
-        self._running = False
 
     def index_view(self, param):
         """

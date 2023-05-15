@@ -9,17 +9,24 @@ class BirdhouseClass(object):
     Main class for camera classes: error messaging, logging and global vars
     """
 
-    def __init__(self, class_id, class_log, device_id, config):
-        self.id = device_id
+    def __init__(self, class_id, class_log="", device_id="", config=""):
 
-        self.config = None
+        if class_log == "":
+            class_log = class_id
+        if device_id == "":
+            device_id = class_id
+        if config == "":
+            config = None
+
+        self.id = device_id
+        self.name = class_id
         self.class_id = class_id
-        if config is not None and config != "":
-            self.config = config
 
         self._running = True
         self._paused = False
-
+        self._processing = False
+        self._thread_priority = 3  # range 0..3
+        self._thread_waiting_times = [1, 2, 4, 8, 16]  # to be used depending priority
         self.health_check = time.time()
 
         self.error = False
@@ -29,6 +36,11 @@ class BirdhouseClass(object):
         self.error_connect = False
         self.error_timeout = 60*5
 
+        self.config = None
+        if config is not None:
+            self.config = config
+            self.thread_register(init=True)
+
         self.logging = logging.getLogger(class_id)
         if class_log not in birdhouse_loglevel_module:
             self.logging.setLevel(logging.INFO)
@@ -36,6 +48,13 @@ class BirdhouseClass(object):
         else:
             self.logging.setLevel(birdhouse_loglevel_module[class_log])
         self.logging.addHandler(birdhouse_loghandler)
+
+    def stop(self):
+        """
+        stop if thread (set self._running = False)
+        """
+        self._running = False
+        self._processing = False
 
     def raise_error(self, message, connect=False):
         """
@@ -102,12 +121,64 @@ class BirdhouseClass(object):
         set var that can be requested
         """
         self.health_check = time.time()
+        self.thread_register()
 
     def health_status(self):
         """
         return time sind last heath signal
         """
         return round(time.time() - self.health_check, 2)
+
+    def thread_wait(self):
+        """
+        wait depending on priority
+        """
+        time.sleep(self._thread_waiting_times[self._thread_priority])
+
+    def thread_set_priority(self, priority):
+        """
+        set priority
+        """
+        if 1 <= int(priority) <= 5:
+            self._thread_priority = priority - 1
+        else:
+            self.raise_warning("Could not priority, out of range (0..5): " + str(priority))
+
+    def thread_register(self, init=False):
+        """
+        register class in config
+        """
+        if self.config is None:
+            return
+
+        elif init:
+            self.config.thread_status[self.class_id] = {
+                "id": self.class_id,
+                "device": self.id,
+                "thread": False,
+                "priority": self._thread_priority,
+                "wait_time": self._thread_waiting_times[self._thread_priority],
+                "status": {
+                    "health_signal": time.time(),
+                    "running": self._running,
+                    "processing": self._processing,
+                    "paused": self._paused,
+                    "error": self.error,
+                    "error_msg": self.error_msg
+                },
+            }
+        else:
+            self.config.thread_status[self.class_id]["thread"] = True
+            self.config.thread_status[self.class_id]["priority"] = self._thread_priority
+            self.config.thread_status[self.class_id]["wait_time"] = self._thread_waiting_times[self._thread_priority]
+            self.config.thread_status[self.class_id]["status"] = {
+                "health_signal": time.time(),
+                "running": self._running,
+                "processing": self._processing,
+                "paused": self._paused,
+                "error": self.error,
+                "error_msg": self.error_msg
+            }
 
     def if_running(self):
         """

@@ -92,7 +92,7 @@ class BirdhouseJSON(BirdhouseDbClass):
 
 class BirdhouseCouchDB(BirdhouseDbClass):
 
-    def __init__(self, config, db_usr, db_pwd, db_server, db_port, base_dir):
+    def __init__(self, config, db):
         """
         initialize
         """
@@ -100,8 +100,14 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         self.locked = {}
         self.changed_data = False
         self.database = None
-        self.basic_directory = base_dir
-        self.db_url = "http://" + db_usr + ":" + db_pwd + "@" + db_server + ":" + str(db_port) + "/"
+
+        #self.basic_directory = base_dir
+        #self.db_url = "http://" + db_usr + ":" + db_pwd + "@" + db_server + ":" + str(db_port) + "/"
+
+        self.basic_directory = db["db_basedir"]
+        self.db_url = "http://" + db["db_usr"] + ":" + db["db_pwd"] + "@" + db["db_server"] + \
+                      ":" + str(db["db_port"]) + "/"
+
         self.create_revisions = False
 
         self.database_definition = birdhouse_databases

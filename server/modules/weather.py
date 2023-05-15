@@ -6,6 +6,7 @@ import time
 import requests
 from geopy.geocoders import Nominatim
 from modules.presets import *
+from modules.bh_class import BirdhouseClass
 
 
 class BirdhouseGPS(object):
@@ -38,24 +39,16 @@ class BirdhouseGPS(object):
             return [0, 0, "Error GPS lookup ("+str(gps_coordinates)+") -> " + str(e)]
 
 
-class BirdhouseWeatherPython(threading.Thread):
+class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
 
-    def __init__(self, config, location, time_zone):
+    def __init__(self, config, location):
         """
         get weather data via python weather (in the main class at the moment)
         """
         threading.Thread.__init__(self)
-        self._running = True
-        self._paused = False
-        self.config = config
-        self.health_check = time.time()
-
-        self.id = "python-weather"
-        self.class_id = "weather-py"
-        self.logging = logging.getLogger("weather-py")
-        self.logging.setLevel(birdhouse_loglevel_module["weather-py"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting weather process 'python_weather' ...")
+        BirdhouseClass.__init__(self, class_id="weather-py", class_log="weather-py",
+                                device_id="python-weather", config=config)
+        self.thread_set_priority(4)
 
         self.weather_location = location
         self.weather_empty = birdhouse_weather.copy()
@@ -64,8 +57,6 @@ class BirdhouseWeatherPython(threading.Thread):
         self.weather_update_rhythm = 60 * 60 * 3
         self.weather_raw_data = None
 
-        self.error = False
-        self.error_msg = []
         self.update_interval = self.weather_update_rhythm / 4
         self.update_settings = True
         self.update_wait = 0
@@ -78,6 +69,7 @@ class BirdhouseWeatherPython(threading.Thread):
         """
         run thread
         """
+        self.logging.info("Starting weather process 'python_weather' ...")
         last_update = 0
         while self._running:
 
@@ -93,34 +85,10 @@ class BirdhouseWeatherPython(threading.Thread):
             self.logging.debug("Wait to read weather data (" + str(round(self.update_interval, 1)) + ":" +
                                str(round(self.update_wait, 1)) + "s) ...")
 
-            self.health_check = time.time()
-            time.sleep(5)
+            self.health_signal()
+            self.thread_wait()
 
-        self.logging.info("Weather thread PYTHON stopped.")
-
-    def stop(self):
-        """
-        stop thread loop
-        """
-        self._running = False
-
-    def raise_error(self, message):
-        """
-        raise error message
-        """
-        self.error = True
-        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-        self.error_msg.append(time_info + " - " + message)
-        if len(self.error_msg) >= 10:
-            self.error_msg.pop()
-        self.logging.error(message)
-
-    def reset_error(self):
-        """
-        reset all error vars
-        """
-        self.error = False
-        self.error_msg = []
+        self.logging.info("Stopped weather process 'python_weather'.")
 
     def _extract_icon(self, icon_type, icon_object):
         """
@@ -249,25 +217,17 @@ class BirdhouseWeatherPython(threading.Thread):
         return data
 
 
-class BirdhouseWeatherOpenMeteo(threading.Thread):
+class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
 
-    def __init__(self, config, gps_location, time_zone):
+    def __init__(self, config, gps_location):
         """
         get weather data using Open Metheo API; API get hourly updated
         * https://open-meteo.com/ (without API key)
         """
         threading.Thread.__init__(self)
-        self._running = True
-        self._paused = False
-        self.config = config
-        self.health_check = time.time()
-
-        self.id = "open-meteo"
-        self.class_id = "weather-om"
-        self.logging = logging.getLogger("weather-om")
-        self.logging.setLevel(birdhouse_loglevel_module["weather-om"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting weather process 'Open-Metheo.com' for GPS="+str(gps_location)+" ...")
+        BirdhouseClass.__init__(self, class_id="weather-om", class_log="weather-om",
+                                device_id="open-meteo", config=config)
+        self.thread_set_priority(4)
 
         self.weather_location = gps_location
         self.weather_empty = birdhouse_weather.copy()
@@ -275,12 +235,9 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
         self.weather_update = 0
         self.weather_update_rhythm = 60 * 60
 
-        self.error = False
-        self.error_msg = []
         self.update_interval = self.weather_update_rhythm / 4
         self.update_settings = True
         self.update_wait = 0
-        self.timezone = time_zone
 
         self.link_required = True
         self.link_provider = "<a href='https://open-meteo.com/' target='_blank'>Weather by Open-Meteo.com</a>"
@@ -294,6 +251,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
         regularly request weather data
         """
         last_update = 0
+        self.logging.info("Starting weather process 'Open-Metheo.com' for GPS=" + str(self.weather_location) + " ...")
         while self._running:
 
             # if last update is over since update interval or settings have been updated -> request new data
@@ -311,34 +269,10 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
             self.logging.debug("Wait to read weather data (" + str(round(self.update_interval, 1)) + ":" +
                                str(round(self.update_wait, 1)) + "s) ...")
 
-            self.health_check = time.time()
-            time.sleep(5)
+            self.health_signal()
+            self.thread_wait()
 
-        self.logging.info("Weather thread OPEN-METEO stopped.")
-
-    def stop(self):
-        """
-        stop thread loop
-        """
-        self._running = False
-
-    def raise_error(self, message):
-        """
-        raise error message
-        """
-        self.error = True
-        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-        self.error_msg.append(time_info + " - " + message)
-        if len(self.error_msg) >= 10:
-            self.error_msg.pop()
-        self.logging.error(message)
-
-    def reset_error(self):
-        """
-        reset all error vars
-        """
-        self.error = False
-        self.error_msg = []
+        self.logging.info("Stopped weather process 'Open-Metheo.com'.")
 
     def _weather_descriptions(self, weather_code):
         """
@@ -466,31 +400,21 @@ class BirdhouseWeatherOpenMeteo(threading.Thread):
             return {"error": self.error, "error_msg": self.error_msg}
 
 
-class BirdhouseWeather(threading.Thread):
+class BirdhouseWeather(threading.Thread, BirdhouseClass):
 
-    def __init__(self, config, time_zone=0):
+    def __init__(self, config):
         """
         start weather and sunrise function
         # https://pypi.org/project/python-weather/
         """
         threading.Thread.__init__(self)
-        self._running = True
-        self._paused = False
-        self.config = config
+        BirdhouseClass.__init__(self, class_id="weather", class_log="weather",
+                                device_id="weather", config=config)
+        self.thread_set_priority(3)
+
         self.initial_date = self.config.local_time().strftime("%Y%m%d")
         self.id = self.config.local_time().strftime("%H%M%S")
-        self.health_check = time.time()
-
-        self.id = "weather"
-        self.class_id = "weather"
         self.param = self.config.param["weather"]
-        self.logging = logging.getLogger("weather")
-        self.logging.setLevel(birdhouse_loglevel_module["weather"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting weather process ...")
-
-        self.error = False
-        self.error_msg = []
 
         self.weather = None
         self.weather_source = None
@@ -509,7 +433,6 @@ class BirdhouseWeather(threading.Thread):
         self.update_time = 60 * 5
         self.update_wait = 0
 
-        self.timezone = time_zone
         self.module = None
         self.gps = BirdhouseGPS()
         self.connect(self.config.param["weather"])
@@ -519,7 +442,7 @@ class BirdhouseWeather(threading.Thread):
         continuously request fresh data once a minute
         """
         self.logging.info("Starting Weather module ...")
-        time.sleep(5)
+        self.thread_wait()
         last_update = 0
         while self._running:
 
@@ -564,7 +487,7 @@ class BirdhouseWeather(threading.Thread):
 
             # check if data are correct
             if "current" not in self.weather_info:
-                self._raise_error("Weather data not correct (missing 'current').")
+                self.raise_error("Weather data not correct (missing 'current').")
                 self.weather_info = self.weather_empty.copy()
 
             # move errors to status info
@@ -574,35 +497,16 @@ class BirdhouseWeather(threading.Thread):
             # if error wait longer for next action
             if "info_status" in self.weather_info and "running" in self.weather_info["info_status"] \
                     and self.weather_info["info_status"]["running"] == "error":
-                time.sleep(1)
+                self.thread_wait()
 
             self.update_wait = (last_update + self.update_time) - time.time()
             self.logging.debug("Wait to read weather data (" + str(round(self.update_time, 1)) + ":" +
                                str(round(self.update_wait, 1)) + "s) ...")
 
-            self.health_check = time.time()
-            time.sleep(1)
+            self.health_signal()
+            self.thread_wait()
 
         self.logging.info("Weather module stopped.")
-
-    def _raise_error(self, message):
-        """
-        raise error message
-        """
-        self.error = True
-        time_info = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-        self.error_msg.append(time_info + " - " + message)
-        if len(self.error_msg) >= 10:
-            self.error_msg.pop()
-        self.logging.error(message)
-
-    def _reset_error(self):
-        """
-        reset all error vars
-        """
-        self.error = False
-        self.error_msg = []
-        self.module.reset_error()
 
     def stop(self):
         """
@@ -641,9 +545,7 @@ class BirdhouseWeather(threading.Thread):
 
             if self.module is not None:
                 self.module.stop()
-            self.module = BirdhouseWeatherOpenMeteo(config=self.config,
-                                                    gps_location=self.weather_gps,
-                                                    time_zone=self.timezone)
+            self.module = BirdhouseWeatherOpenMeteo(config=self.config, gps_location=self.weather_gps)
             self.module.start()
 
         else:
@@ -653,9 +555,7 @@ class BirdhouseWeather(threading.Thread):
                 self.weather_gps = param["gps_location"]
             else:
                 self.weather_gps = self.gps.look_up_location(self.weather_city)
-            self.module = BirdhouseWeatherPython(config=self.config,
-                                                 location=self.weather_city,
-                                                 time_zone=self.timezone)
+            self.module = BirdhouseWeatherPython(config=self.config, location=self.weather_city)
             self.module.start()
 
     def get_gps_info(self, param):
@@ -676,8 +576,7 @@ class BirdhouseWeather(threading.Thread):
         return information with different level of detail
         """
         if "current" not in self.weather_info:
-            self._raise_error("Weather data not correct (get_weather_info)")
-            self.logging.error(str(self.weather_info))
+            self.raise_error("Weather data not correct (get_weather_info): " + str(self.weather_info))
             self.weather_info = self.weather_empty.copy()
 
         if info_type == "status":
