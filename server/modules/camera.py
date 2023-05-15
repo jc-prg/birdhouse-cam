@@ -480,8 +480,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         return raw, (0, 0, 1, 1)
 
-    @staticmethod
-    def crop_area_pixel(resolution, area, dimension=True):
+    def crop_area_pixel(self, resolution, area, dimension=True):
         """
         calculate start & end pixel for relative area
         """
@@ -502,6 +501,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         else:
             pixel_area = (x_start, y_start, x_end, y_end)
 
+        self.logging.debug("- Crop area " + self.id + ": " + str(pixel_area))
         return pixel_area
 
     def draw_text(self, image, text, position=None, font=None, scale=None, color=None, thickness=0):
@@ -623,6 +623,26 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         except Exception as e:
             self.raise_warning("Could not draw area into the image (" + str(e) + ")")
+            return raw
+
+    def draw_warning_bullet(self, raw, color=None):
+        """
+        add read circle (depending on lowres position)
+        """
+        (start_x, start_y, end_x, end_y) = self.param["image"]["crop_area"]
+        position = self.config.param["views"]["index"]["lowres_position"]
+        if position == 1:
+            default_position = (end_x - 25, start_y + 30)
+        else:
+            default_position = (start_x + 25, start_y + 30)
+        self.logging.info(str(default_position))
+        default_color = (0, 0, 255)
+        if color is None:
+            color = default_color
+        raw_bullet = cv2.circle(raw, default_position, 4, color, 6)
+        if raw_bullet is not None:
+            return raw_bullet
+        else:
             return raw
 
     def image_in_image_raw(self, raw, raw2, position=4, distance=10):
@@ -1449,7 +1469,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
                     if self._stream_last is not None:
                         if not circle_in_cache:
                             try:
-                                self._stream_last = cv2.circle(self._stream_last, (25, 50), 4, circle_color, 6)
+                                self._stream_last = self.image.draw_warning_bullet(self._stream_last)
                                 circle_in_cache = True
                             except cv2.error as e:
                                 self.raise_warning("Could not mark image as 'from cache due to error'.")
@@ -2093,18 +2113,6 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                                            font=cv2.QT_FONT_NORMAL, color=self.system_status["color"],
                                            position=(10, -50), scale=0.4, thickness=1)
         return image.copy()
-
-    @staticmethod
-    def edit_add_warning_bullet(raw, color=None):
-        """
-        add read circle (depending on lowres position)
-        """
-        default_color = (0, 0, 255)
-        default_position = (25, -25)
-        if color is None:
-            color = default_color
-        raw = cv2.circle(raw.copy(), default_position, 4, color, 6)
-        return raw
 
     def stream_count(self):
         """
