@@ -25,8 +25,8 @@ class BirdhouseClass(object):
         self._running = True
         self._paused = False
         self._processing = False
-        self._thread_priority = 3  # range 0..3
-        self._thread_waiting_times = [1, 2, 4, 8, 16]  # to be used depending priority
+        self._thread_priority = 3                      # range 0..4 (1..5 via self.threat_set_priority)
+        self._thread_waiting_times = [1, 2, 4, 8, 16]  # to be used depending on priority
         self._health_check = time.time()
 
         self.error = False
