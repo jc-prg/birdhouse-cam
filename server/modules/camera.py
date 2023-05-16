@@ -988,7 +988,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                     self.config.async_answers.append(["TRIM_DONE", video_id, response["result"]])
                     self.config.async_running = True
 
-            self.health_signal()
+            self.thread_control()
 
         self.logging.info("Stopped VIDEO processing for '"+self.id+"'.")
 
@@ -1486,7 +1486,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
 
             self.stream_count()
             self.stream_framerate_check()
-            self.health_signal()
+            self.thread_control()
 
         self.logging.info("Stopped CAMERA raw stream for '"+self.id+"'.")
 
@@ -1796,7 +1796,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 self.stream_count()
                 self.stream_framerate_check()
 
-            self.health_signal()
+            self.thread_control()
 
         self.logging.info("Stopped CAMERA edited stream for '"+self.id+"/"+self.type+"/"+self.resolution+"'.")
 
@@ -2483,10 +2483,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.record_temp_threshold = None
                 self.date_last = self.config.local_time().strftime("%Y-%m-%d")
 
-            # if shutdown
-            if self.config.shut_down:
-                self.stop()
-
             if self._stream_errors > self._stream_errors_max_accepted and self._stream_errors_restart:
                 self.logging.warning("....... Reload CAMERA '" + self.id + "' due to stream errors: " +
                                      str(self._stream_errors) + " errors.")
@@ -2540,16 +2536,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             if self.active:
                 self.measure_usage(current_time, stamp)
 
-            # reconnect from time to time, to foster re-calibrate by camera
-            #if self.active and "reconnect_to_calibrate" in self.param["image"] \
-            #        and self.param["image"]["reconnect_to_calibrate"] \
-            #        and self.get_stream_count() == 0:
-            #    count_reconnect += 1
-            #    if count_reconnect > 9:
-            #        self.camera_reconnect(directly=True)
-            #        count_reconnect = 0
-
-            self.health_signal()
+            self.thread_control()
 
         self.logging.info("Stopped camera (" + self.id + "/" + self.type + ").")
 

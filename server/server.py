@@ -198,7 +198,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
         last_update = time.time()
         while self._running:
             self.thread_wait()
-            self.health_signal()
+            self.thread_control()
 
             if last_update + self._interval_check < time.time():
                 self.logging.info("Health check ...")
@@ -259,12 +259,10 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             self.read()
             self.read_device_status()
 
-            if config.shut_down:
-                self.stop()
             self._srv_info_time = round(time.time() - start_time, 2)
 
+            self.thread_control()
             self.thread_wait()
-            self.health_signal()
 
         self.logging.info("Stopped Server Information.")
 
@@ -826,7 +824,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         global camera, sensor, config
 
-        if config.shut_down:
+        if config.thread_ctrl["shutdown"]:
             time.sleep(5)
             config.shut_down = False
             srv_logging.info("FINALLY KILLING ALL PROCESSES NOW!")
@@ -1232,7 +1230,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.stream_video_header()
         while stream_active:
 
-            if camera[which_cam].get_stream_kill(stream_id_ext, stream_id_int) or config.shut_down:
+            if camera[which_cam].get_stream_kill(stream_id_ext, stream_id_int) or config.thread_ctrl["shutdown"]:
                 stream_active = False
 
             if config.update["camera_" + which_cam]:

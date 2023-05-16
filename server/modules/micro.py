@@ -59,8 +59,6 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.count = 0
 
         while self._running:
-            self.health_signal()
-
             # Pause if not used for a while
             if self.last_active + self.timeout < time.time():
                 self._paused = True
@@ -71,10 +69,6 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             if self.config.update["micro_" + self.id]:
                 self.connect()
                 self.config.update["micro_" + self.id] = False
-
-            # check if shutdown requested
-            if self.config.shut_down:
-                self.stop()
 
             # read data from device and store in a var
             if self.connected and not self.error and not self._paused:
@@ -96,6 +90,8 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             # start processing if trigger is set
             if self.recording_processing:
                 self.record_process()
+
+            self.thread_control()
 
         if self.stream is not None:
             if not self.stream.is_stopped():

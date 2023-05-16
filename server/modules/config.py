@@ -49,10 +49,8 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                                    str(wait) + "s")
                 if wait > 20:
                     time.sleep(10)
-            if self.config.shut_down:
-                self.stop()
 
-            self.health_signal()
+            self.thread_control()
             self.thread_wait()
 
         self.logging.info("Stopped DB handler (" + self.db_type + ").")
@@ -633,7 +631,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                 check_count_entries = 0
                 start_time_2 = time.time()
 
-            self.health_signal()
+            self.thread_control()
             self.thread_wait()
 
         self.logging.info("Stopped Config Queue.")
@@ -894,7 +892,6 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         BirdhouseClass.__init__(self, class_id="config", config=None)
         self.thread_set_priority(1)
 
-        self.shut_down = False
         self.param = None
         self.config = None
         self.config_cache = {}
@@ -902,7 +899,11 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.views = None
         self.queue = None
         self.db_handler = None
+
         self.thread_status = {}
+        self.thread_ctrl = {
+            "shutdown": False
+        }
 
         self.update = {}
         self.update_views = {"favorite": False, "archive": False}
@@ -1018,7 +1019,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 if self.weather is not False:
                     self.weather.active(self.param["localization"]["weather_active"])
 
-            self.health_signal()
+            self.thread_control()
             self.thread_wait()
 
         self.logging.info("Stopped config handler.")
@@ -1149,7 +1150,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         """
         if self._running:
             self.logging.info("STOPPING THE RUNNING THREADS ...")
-            self.shut_down = True
+            self.thread_ctrl["shutdown"] = True
             self.stop()
 
     def if_new_day(self) -> bool:

@@ -65,10 +65,6 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
             p_count = 0
             count += 1
 
-            # if shutdown
-            if self.config.shut_down:
-                self.stop()
-
             # check if configuration update
             if self.config.update["sensor_"+self.id]:
                 self.logging.info("....... Reload SENSOR '"+self.id+"' after update: Reread configuration.")
@@ -136,7 +132,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                         self.last_read = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
                         self.last_read_time = time.time()
 
-            self.health_signal()
+            self.thread_control()
             self.thread_wait()
 
         # GPIO.cleanup()

@@ -84,7 +84,7 @@ class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
             self.logging.debug("Wait to read weather data (" + str(round(self.update_interval, 1)) + ":" +
                                str(round(self.update_wait, 1)) + "s) ...")
 
-            self.health_signal()
+            self.thread_control()
             self.thread_wait()
 
         self.logging.info("Stopped weather process 'python_weather'.")
@@ -267,7 +267,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
             self.logging.debug("Wait to read weather data (" + str(round(self.update_interval, 1)) + ":" +
                                str(round(self.update_wait, 1)) + "s) ...")
 
-            self.health_signal()
+            self.thread_control()
             self.thread_wait()
 
         self.logging.info("Stopped weather process 'Open-Metheo.com'.")
@@ -443,10 +443,6 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
         last_update = 0
         while self._running:
 
-            # if shutdown
-            if self.config.shut_down:
-                self.stop()
-
             # if config update or new day
             self.error = False
             if self.update or self.initial_date != self.config.local_time().strftime("%Y%m%d"):
@@ -500,7 +496,7 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
             self.logging.debug("Wait to read weather data (" + str(round(self.update_time, 1)) + ":" +
                                str(round(self.update_wait, 1)) + "s) ...")
 
-            self.health_signal()
+            self.thread_control()
             self.thread_wait()
 
         self.logging.info("Weather module stopped.")

@@ -489,21 +489,17 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         self.logging.info("Starting HTML views and REST API for GET ...")
         while self._running:
-            # if shutdown
-            if self.config.shut_down:
-                self.stop()
-
             # if archive to be read again (from time to time and depending on user activity)
             if self.create_archive and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
-                if not self.config.shut_down:
+                if not self.if_shutdown():
                     self.archive_list_create()
                     self.create_archive = False
 
             # if favorites to be read again (from time to time and depending on user activity)
             if self.create_favorites and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
-                if not self.config.shut_down:
+                if not self.if_shutdown():
                     self.favorite_list_create()
                     self.create_favorites = False
 
@@ -516,7 +512,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             if self.config.user_activity():
                 count += 1
 
-            self.health_signal()
+            self.thread_control()
             self.thread_wait()
 
         self.logging.info("Stopped HTML views and REST API for GET.")
@@ -971,7 +967,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             dir_total_size = 0
             files_total = 0
 
-            if self.config.shut_down:
+            if self.if_shutdown():
                 self.logging.info("Interrupt creating the archive list.")
                 return
 
@@ -987,7 +983,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 group_name = directory[0:4] + "-" + directory[4:6]
                 self.logging.debug("  -> Directory: " + directory + " | " + group_name)
 
-                if self.config.shut_down:
+                if self.if_shutdown():
                     self.logging.info("Interrupt create favorite list.")
                     return
 
@@ -1306,7 +1302,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             category = "/backup/" + directory + "/"
             favorites[directory] = {}
 
-            if self.config.shut_down:
+            if self.if_shutdown():
                 self.logging.info("Interrupt create favorite list.")
                 return
 

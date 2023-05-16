@@ -32,8 +32,6 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         backup_started = False
         self.logging.info("Starting backup handler ...")
         while self._running:
-            if self.config.shut_down:
-                self.stop()
             stamp = self.config.local_time().strftime('%H%M%S')
             check_stamp = str(int(stamp[0:4])-1)
 
@@ -56,7 +54,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             else:
                 backup_started = False
 
-            self.health_signal()
+            self.thread_control()
             self.thread_wait()
 
         self.logging.info("Stopped backup handler.")
@@ -153,7 +151,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                 for stamp in stamps:
                     save_entry = False
 
-                    if self.config.shut_down and info:
+                    if self.if_shutdown() and info:
                         self.logging.info("Backup process is running, shut down may take a bit longer ...")
                         info = False
 

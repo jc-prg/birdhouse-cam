@@ -9,7 +9,7 @@ class BirdhouseClass(object):
     Main class for camera classes: error messaging, logging and global vars
     """
 
-    def __init__(self, class_id, class_log="", device_id="", config=""):
+    def __init__(self, class_id, class_log="", device_id="", config=None):
 
         if class_log == "":
             class_log = class_id
@@ -133,7 +133,10 @@ class BirdhouseClass(object):
         """
         wait depending on priority
         """
-        time.sleep(self._thread_waiting_times[self._thread_priority])
+        start = time.time()
+        wait = self._thread_waiting_times[self._thread_priority]
+        while start + wait > time.time() and not self.if_shutdown():
+            time.sleep(0.1)
 
     def thread_set_priority(self, priority):
         """
@@ -158,13 +161,14 @@ class BirdhouseClass(object):
                 "thread": False,
                 "priority": self._thread_priority,
                 "wait_time": self._thread_waiting_times[self._thread_priority],
+                "processes": {},
                 "status": {
                     "health_signal": time.time(),
-                    "running": self.if_running(),
-                    "processing": self.if_processing(),
-                    "paused": self.if_paused(),
-                    "error": self.if_error(),
-                    "error_msg": self.if_error(message=True)
+                    "running": True,
+                    "processing": False,
+                    "paused": False,
+                    "error": False,
+                    "error_msg": []
                 },
             }
         else:
@@ -179,6 +183,14 @@ class BirdhouseClass(object):
                 "error": self.if_error(),
                 "error_msg": self.if_error(message=True)
             }
+
+    def thread_control(self):
+        """
+        central thread functionality
+        """
+        self.health_signal()
+        if self.config is not None and self.config.thread_ctrl["shutdown"]:
+            self.stop()
 
     def if_running(self):
         """
@@ -210,6 +222,15 @@ class BirdhouseClass(object):
             return self.error_count
         else:
             return self.error
+
+    def if_shutdown(self):
+        """
+        check if shutdown is requested
+        """
+        if self.config is not None:
+            return self.config.thread_ctrl["shutdown"]
+        else:
+            return False
 
 
 class BirdhouseCameraClass(BirdhouseClass):
