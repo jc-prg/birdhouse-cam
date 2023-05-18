@@ -291,7 +291,8 @@ function birdhouse_imageOverlay(filename, description="", favorite="", to_be_del
 
         myElement = document.getElementById("overlay_content");
         if (existing) { delete pz; }
-	    pz = new PinchZoom.default(myElement);
+	    var pz = new PinchZoom.default(myElement);
+	    pz.update.bind(pz);
 
 /*
         //destroy an object
