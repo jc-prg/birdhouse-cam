@@ -27,6 +27,7 @@ class BirdhouseClass(object):
         self._processing = False
         self._thread_priority = 3                      # range 0..4 (1..5 via self.threat_set_priority)
         self._thread_waiting_times = [1, 2, 4, 8, 16]  # to be used depending on priority
+        self._thread_slowdown = False
         self._health_check = time.time()
 
         self.error = False
@@ -135,6 +136,9 @@ class BirdhouseClass(object):
         """
         start = time.time()
         wait = self._thread_waiting_times[self._thread_priority]
+        if self._thread_slowdown:
+            wait = wait * 3
+
         while start + wait > time.time() and not self.if_shutdown():
             time.sleep(0.1)
 
@@ -146,6 +150,28 @@ class BirdhouseClass(object):
             self._thread_priority = priority - 1
         else:
             self.raise_warning("Could not priority, out of range (0..5): " + str(priority))
+
+    def thread_register_process(self, name, pid, status, progress):
+        """
+        register progress in config vars (status: start, running, finished, remove; progres 0..1)
+        """
+        process_info = {
+            "id": pid,
+            "name": name,
+            "start": time.time(),
+            "status": "start",
+            "progress": 0
+        }
+        process_id = name + "_" + pid
+        if process_id in self.config.thread_status[self.class_id]["processes"]:
+            process_info = self.config.thread_status[self.class_id]["processes"].copy()
+
+        if status != "remove":
+            process_info["status"] = status
+            process_info["progress"] = progress
+            self.config.thread_status[self.class_id]["processes"][process_id] = process_info
+        else:
+            del self.config.thread_status[self.class_id]["processes"][process_id]
 
     def thread_register(self, init=False):
         """
@@ -191,6 +217,12 @@ class BirdhouseClass(object):
         self.health_signal()
         if self.config is not None and self.config.thread_ctrl["shutdown"]:
             self.stop()
+
+    def thread_slowdown(self, slowdown=True):
+        """
+        set var to increase waiting time for the thread
+        """
+        self._thread_slowdown = slowdown
 
     def if_running(self):
         """

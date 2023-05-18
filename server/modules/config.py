@@ -409,15 +409,17 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         start_time_2 = time.time()
         check_count_entries = 0
         while self._running:
+            update_views = False
+            count_entries = 0
+            count_files = 0
+            active_files = []
+
             if start_time + self.queue_wait < time.time():
                 self.logging.debug("... Check Queue (" + str(self.queue_wait) + "s)")
                 self.logging.debug("    ... " + str(self.edit_queue))
                 self.logging.debug("    ... " + str(self.status_queue))
 
                 start_time = time.time()
-                count_entries = 0
-                count_files = 0
-                active_files = []
 
                 # check first if entries are available
                 entries_available = False
@@ -548,6 +550,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                                 entry_data["files"] = entries
                                 entry_data["info"]["changed"] = True
+                                update_views = True
+
                                 self.db_handler.unlock(config_file, date)
                                 self.db_handler.write(config_file, date, entry_data)
 
@@ -597,6 +601,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                                 entry_data["files"] = entries
                                 entry_data["info"]["changed"] = True
+                                update_views = True
+
                                 self.db_handler.unlock(config_file, date)
                                 self.db_handler.write(config_file, date, entry_data)
 
@@ -630,6 +636,10 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                   str(self.queue_wait_max * 6) + "s.")
                 check_count_entries = 0
                 start_time_2 = time.time()
+
+            if update_views:
+                self.views.archive_list_update()
+                self.views.favorite_list_update()
 
             self.thread_control()
             self.thread_wait()
@@ -1182,18 +1192,35 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.user_active = False
         return False
 
-    def db_status(self):
-        """
-        return DB status
-        """
-        return self.db_handler.get_db_status()
-
     def set_views(self, views):
         """
         set handler for views
         """
         self.views = views
         self.queue.views = views
+
+    def set_device_signal(self, device, key, value):
+        """
+        set device signal
+        """
+        if device not in self.device_signal:
+            self.device_signal[device] = {}
+        self.device_signal[device][key] = value
+
+    def get_device_signal(self, device, key):
+        """
+        check device signal
+        """
+        if device in self.device_signal and key in self.device_signal[device]:
+            return self.device_signal[device][key]
+        else:
+            return False
+
+    def get_db_status(self):
+        """
+        return DB status
+        """
+        return self.db_handler.get_db_status()
 
     @staticmethod
     def filename_image(image_type, timestamp, camera=""):
@@ -1243,20 +1270,3 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             info["type"] = "hires"
             info["stamp"] = parts[3]
         return info
-
-    def set_device_signal(self, device, key, value):
-        """
-        set device signal
-        """
-        if device not in self.device_signal:
-            self.device_signal[device] = {}
-        self.device_signal[device][key] = value
-
-    def get_device_signal(self, device, key):
-        """
-        check device signal
-        """
-        if device in self.device_signal and key in self.device_signal[device]:
-            return self.device_signal[device][key]
-        else:
-            return False
