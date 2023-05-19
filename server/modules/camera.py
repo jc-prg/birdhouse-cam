@@ -3221,7 +3221,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         check if only lowres is requested
         """
         for stream in self.camera_streams:
-            if self.camera_streams[stream].stream_active() and "lowres" not in stream:
+            if self.camera_streams[stream].stream_count() > 0 and "lowres" not in stream:
                 return False
         return True
 
