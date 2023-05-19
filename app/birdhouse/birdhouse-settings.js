@@ -102,27 +102,30 @@ function birdhouse_app_settings (name="Settings") {
         var html = "&nbsp;<br/><h2>&nbsp;<br/>"+lang("SETTINGS")+"</h2>";
         html += "<hr style='border:1px solid gray;'>"
         html += "<div style='display:none'>Edit initial setup: "+birdhouse_edit_field(id="set_initial_setup", field="server:initial_setup", type="select", options="false", data_type="boolean")+"</div>";
-        html += this.tab.start();
-        html += this.tab.row("Title:&nbsp;",              birdhouse_edit_field(id="set_title", field="title", type="input") );
-        html += this.tab.row("Language:&nbsp;",           birdhouse_edit_field(id="set_language", field="localization:language", type="select", options="EN,DE") );
-        html += this.tab.row("Timezone:&nbsp;",           birdhouse_edit_field(id="set_timezone", field="localization:timezone", type="select", options=timezones, data_type="string") );
-        html += this.tab.row("<hr/>");
-        html += this.tab.row("Backup-Time:&nbsp;",        birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
-        html += this.tab.row("BU Index Favorite:&nbsp;",  birdhouse_edit_field(id="set_preview_fav", field="backup:preview_fav", type="select", options="true,false", data_type="boolean") );
-        html += this.tab.row("BU Index Time:&nbsp;",      birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
-        html += this.tab.row("<hr/>");
 
-        html += this.tab.row("Index View:&nbsp;",         birdhouse_edit_field(id="set_index_view", field="views:index:type", type="select", options="default,overlay,picture-in-picture", data_type="string") );
-        html += this.tab.row("LowRes Position:&nbsp;",    birdhouse_edit_field(id="set_index_lowres", field="views:index:lowres_position", type="select", options="1,2,3,4", data_type="integer") );
+        html_entry = this.tab.start();
+        html_entry += this.tab.row("Title:&nbsp;",              birdhouse_edit_field(id="set_title", field="title", type="input") );
+        html_entry += this.tab.row("Language:&nbsp;",           birdhouse_edit_field(id="set_language", field="localization:language", type="select", options="EN,DE") );
+        html_entry += this.tab.row("Timezone:&nbsp;",           birdhouse_edit_field(id="set_timezone", field="localization:timezone", type="select", options=timezones, data_type="string") );
+        html_entry += this.tab.row("<hr/>");
+        html_entry += this.tab.row("Backup-Time:&nbsp;",        birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
+        html_entry += this.tab.row("BU Index Favorite:&nbsp;",  birdhouse_edit_field(id="set_preview_fav", field="backup:preview_fav", type="select", options="true,false", data_type="boolean") );
+        html_entry += this.tab.row("BU Index Time:&nbsp;",      birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
+        html_entry += this.tab.row("<hr/>");
+
+        html_entry += this.tab.row("Index View:&nbsp;",         birdhouse_edit_field(id="set_index_view", field="views:index:type", type="select", options="default,overlay,picture-in-picture", data_type="string") );
+        html_entry += this.tab.row("LowRes Position:&nbsp;",    birdhouse_edit_field(id="set_index_lowres", field="views:index:lowres_position", type="select", options="1,2,3,4", data_type="integer") );
 
         var id_list = "set_preview_fav:set_initial_setup:set_language:";
         id_list    += "set_timezone:set_title:set_backup:set_preview:set_rpi:set_index_lowres:set_index_view";
         //id_list    += ":set_db_server:set_db_clean_up:set_db_type:set_ip4_video_port:set_weather_location:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:";
 
-        html += this.tab.row("&nbsp;");
-        html += this.tab.row("", birdhouse_edit_save("set_main",id_list) );
-        html += this.tab.row("&nbsp;");
-        html += this.tab.end();
+        html_entry += this.tab.row("&nbsp;");
+        html_entry += this.tab.row("", birdhouse_edit_save("set_main",id_list) );
+        html_entry += this.tab.row("&nbsp;");
+        html_entry += this.tab.end();
+
+        html += birdhouse_OtherGroup( "server_settings", "Main Settings", html_entry, false );
 
         var html_entry = this.api_calls();
         html_entry += "&nbsp;<br/>";
