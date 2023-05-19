@@ -1122,7 +1122,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         api_response["DATA"] = api_data
 
-        if command in cmd_status:
+        if command in cmd_status and command != "last-answer":
             server_config = {
                 "port": birdhouse_env["port_http"],
                 "port_video": birdhouse_env["port_video"],
@@ -1143,6 +1143,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             del api_response["STATUS"]["system"]
             del api_response["STATUS"]["database"]
             del api_response["STATUS"]["check-version"]
+
+        if command == "last-answer":
+            del api_response["STATUS"]["devices"]
+            del api_response["DATA"]
+            del api_response["WEATHER"]
 
         api_response["API"]["request_details"] = request_times
         api_response["API"]["request_time"] = round(time.time() - request_start, 3)
