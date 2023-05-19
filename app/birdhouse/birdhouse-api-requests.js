@@ -62,7 +62,7 @@ function birdhouse_loginReturn(data) {
 
 function birdhouse_adminAnswer(set=true) {
     if (set) {
-        intervalAdmin = setInterval(function() { birdhouse_adminLastAnswerRequest(); }, 5000 );
+        intervalAdmin = setInterval(function() { birdhouse_adminAnswerRequest(); }, 5000 );
         }
     else {
         window.clearInterval(intervalAdmin);
