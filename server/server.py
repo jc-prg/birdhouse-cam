@@ -992,7 +992,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             api_response["STATUS"]["system"] = sys_info.get()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
         elif command == "status" or command == "list":
-            #content = {"last_answer": ""}
+            content = {"last_answer": ""}
             #if self.admin_allowed() and len(config.async_answers) > 0:
             #    content["last_answer"] = config.async_answers.pop()
             #    content["background_process"] = config.async_running
