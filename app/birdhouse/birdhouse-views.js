@@ -202,9 +202,10 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 
 			setTextById("videoplayer",player);
 			}
-		}
+
         html += tab.end();
         html += "</div>";
+		}
 
 	setTextById(app_frame_content,html);
 	}
