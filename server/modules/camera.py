@@ -2471,11 +2471,12 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         connect with the correct microphone
         """
-        which_mic = self.param["record_micro"]
-        if which_mic != "" and which_mic in self.microphones:
-            self.micro = self.microphones[which_micro]
-        else:
-            self.micro = None
+        if "record_micro" in self self.param:
+            which_mic = self.param["record_micro"]
+            if which_mic != "" and which_mic in self.microphones:
+                self.micro = self.microphones[which_mic]
+            else:
+                self.micro = None
 
     def run(self):
         """
