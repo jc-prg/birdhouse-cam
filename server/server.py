@@ -1420,18 +1420,18 @@ if __name__ == "__main__":
         sensor[sen] = BirdhouseSensor(sensor_id=sen, config=config)
         sensor[sen].start()
 
-    # start cameras
-    camera = {}
-    for cam in config.param["devices"]["cameras"]:
-        settings = config.param["devices"]["cameras"][cam]
-        camera[cam] = BirdhouseCamera(camera_id=cam, config=config, sensor=sensor)
-        camera[cam].start()
-
     # start microphones
     microphones = {}
     for mic in config.param["devices"]["microphones"]:
         microphones[mic] = BirdhouseMicrophone(device_id=mic, config=config)
         microphones[mic].start()
+
+    # start cameras
+    camera = {}
+    for cam in config.param["devices"]["cameras"]:
+        settings = config.param["devices"]["cameras"][cam]
+        camera[cam] = BirdhouseCamera(camera_id=cam, config=config, sensor=sensor, microphones=microphones)
+        camera[cam].start()
 
     # system information
     sys_info = ServerInformation()

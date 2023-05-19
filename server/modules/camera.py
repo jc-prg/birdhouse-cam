@@ -1324,7 +1324,6 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         create a video of all existing images of the day
         """
         response = {}
-        #which_cam = param["which_cam"]
         which_cam = self.id
         current_time = self.config.local_time()
         stamp = current_time.strftime('%Y%m%d_%H%M%S')
@@ -2206,7 +2205,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
 class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
-    def __init__(self, camera_id, config, sensor):
+    def __init__(self, camera_id, config, sensor, microphones):
         """
         Initialize new thread and set initial parameters
         """
@@ -2225,6 +2224,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.cam_param = None
         self.cam_param_image = None
         self.sensor = sensor
+        self.microphones = microphones
+        self.micro = None
         self.weather_active = self.config.param["weather"]["active"]
         self.weather_sunrise = None
         self.weather_sunset = None
@@ -2294,6 +2295,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self._init_streams()
         if self.active:
             self._init_camera(init=True)
+        self._init_microphone()
 
     def _init_image_processing(self):
         """
@@ -2465,6 +2467,16 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         # return properties as values
         self.param["camera"] = self.camera.get_properties()
 
+    def _init_microphone(self):
+        """
+        connect with the correct microphone
+        """
+        which_mic = self.param["record_micro"]
+        if which_mic != "" and which_mic in self.microphones:
+            self.micro = self.microphones[micro]
+        else:
+            self.micro = None
+
     def run(self):
         """
         Start recording for livestream and save images every x seconds
@@ -2634,6 +2646,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.reload_camera = False
         elif directly:
             self._init_camera(init=True)
+            self._init_microphone()
             self.reload_camera = False
         else:
             self.reload_camera = True
@@ -2658,6 +2671,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         if self.video.record_stop_auto():
             self.video.record_stop()
+            if self.micro is not None:
+                self.micro.record_stop()
 
         else:
             image_id = self.camera_streams["camera_hires"].read_stream_image_id()
@@ -2973,8 +2988,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                            " -> " + str(select))
         return select
 
-    def get_stream(self, stream_id, stream_type, stream_resolution="", system_info=False,
-                   return_error_image=True, wait=True):
+    def get_stream(self, stream_id, stream_type, stream_resolution="", system_info=False, wait=True):
         """
         get image from new streams
         """
