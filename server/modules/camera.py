@@ -2477,8 +2477,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.micro = self.microphones[which_mic]
                 self.logging.info("- Connected microphone '" + which_mic + "' and camera '" + self.id + "'.")
                 return
-            else:
-                self.micro = None
+            #else:
+            #    self.micro = None
         self.logging.warning("- Could not connect a microphone to camera '" + self.id + "'!")
 
     def run(self):
