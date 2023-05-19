@@ -156,6 +156,14 @@ function birdhouseDevices_cameras(data) {
 		id_list += "set_rotation_"+camera+":set_show_framerate_"+camera+":set_crop_"+camera+":set_scale_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_image", "Image Settings", html_entry, false );
 
+        html_entry = tab.start();
+		html_entry += tab.row("- Area:", birdhouse_edit_field(id="set_area_"+camera, field="devices:cameras:"+camera+":similarity:detection_area", type="input", options="", data_type="json"));
+		html_entry += tab.row("- Threshold:", birdhouse_edit_field(id="set_threshold_"+camera, field="devices:cameras:"+camera+":similarity:threshold", type="input", options="", data_type="float") + " %");
+        html_entry += tab.end();
+
+		id_list += "set_area_"+camera+":set_threshold_"+camera+":";
+        html_temp += birdhouse_OtherGroup( camera+"_detect", "Image Similarity Detection", html_entry, false );
+
 		hours = "00,01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24";
         html_entry = tab.start();
 		html_entry += tab.row("- Record:", birdhouse_edit_field(id="set_record_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
@@ -173,19 +181,11 @@ function birdhouseDevices_cameras(data) {
 
         html_entry = tab.start();
 		html_entry += tab.row("- Recording active:", birdhouse_edit_field(id="set_video_active_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
-		html_entry += tab.row("- Max length:", birdhouse_edit_field(id="set_video_max_"+camera, field="devices:cameras:"+camera+":video:max_length", type="select", options="60,120,180,240,300", data_type="integer"));
+		html_entry += tab.row("- Max length:", birdhouse_edit_field(id="set_video_max_"+camera, field="devices:cameras:"+camera+":video:max_length", type="select", options="60,120,180,240,300", data_type="integer") + " seconds");
         html_entry += tab.end();
 
 		id_list += "set_video_active__"+camera+":set_video_max_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_record_video", "Video Recording", html_entry, false );
-
-        html_entry = tab.start();
-		html_entry += tab.row("- Area:", birdhouse_edit_field(id="set_area_"+camera, field="devices:cameras:"+camera+":similarity:detection_area", type="input", options="", data_type="json"));
-		html_entry += tab.row("- Threshold:", birdhouse_edit_field(id="set_threshold_"+camera, field="devices:cameras:"+camera+":similarity:threshold", type="input", options="", data_type="float") + " %");
-        html_entry += tab.end();
-
-		id_list += "set_area_"+camera+":set_threshold_"+camera+":";
-        html_temp += birdhouse_OtherGroup( camera+"_detect", "Image Similarity Detection", html_entry, false );
 
         html_entry = tab.start();
 		html_entry += tab.row("- Show Time:", birdhouse_edit_field(id="set_time_"+camera, field="devices:cameras:"+camera+":image:date_time", type="select", options="true,false", data_type="boolean"));
