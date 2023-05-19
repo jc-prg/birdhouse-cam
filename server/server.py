@@ -969,7 +969,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         request_times["0_initial"] = round(time.time() - request_start, 3)
 
         cmd_views = ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL", "DEVICES"]
-        cmd_status = ["status", "list"]
+        cmd_status = ["status", "list", "last-answer"]
         cmd_info = ["camera-param", "version", "reload"]
 
         # execute API commands
