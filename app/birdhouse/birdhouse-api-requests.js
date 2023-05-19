@@ -4,6 +4,8 @@
 // additional functions 
 //--------------------------------------
 
+var intervalAdmin;
+
 function birdhouse_apiRequest(method, commands, data, return_cmd, wait_till_executed, method_name) {
     // app_unique_stream_id -> timestamp
     // app_session_id -> pwd
@@ -12,9 +14,6 @@ function birdhouse_apiRequest(method, commands, data, return_cmd, wait_till_exec
         if (app_session_id != "")     { commands.unshift(app_session_id); }
         else                          { commands.unshift(app_unique_stream_id); }
         }
-    else if (commands[0] == "status" && app_session_id != "") {
-        commands.unshift(app_session_id);
-    }
     console.error(commands);
 	appFW.requestAPI(method, commands, data, return_cmd, wait_till_executed, method_name);
 }
@@ -47,17 +46,42 @@ function birdhouse_logout() {
 
 function birdhouse_logoutMsg() {
 
+    birdhouse_adminLastAnswer(false);
     appMsg.alert(lang("LOGOUT_MSG"));
 }
 
 function birdhouse_loginReturn(data) {
     if (data["check-pwd"]) {
         birdhousePrint_load();
+        birdhouse_adminLastAnswer(true);
         appMsg.alert("Login successful.");
     }
     else {
         appMsg.alert("Wrong password!");
     }
+}
+
+function birdhouse_adminLastAnswer(set=true) {
+    if (set) {
+        intervalAdmin = setInterval(function() { birdhouse_adminLastAnswerRequest(); }, 5000 );
+        }
+    else {
+        window.clearInterval(intervalAdmin);
+    }
+}
+
+function birdhouse_adminLastAnswerRequest() {
+    birdhouse_apiRequest("GET", ["last-answer"], "", birdhouse_adminLastAnswerReturn, "", "birdhouse_adminLastAnswer");
+}
+
+function birdhouse_adminLastAnswerReturn(data) {
+    var status = data["STATUS"]["server"];
+    if (status["last_answer"] != "") {
+        var msg = status["last_answer"];
+        appMsg.alert(lang(msg[0]));
+        if (msg[0] == "RANGE_DONE") { button_tooltip.hide("info"); }
+        birdhouseReloadView();
+        }
 }
 
 function birdhouse_loadSettings() {
