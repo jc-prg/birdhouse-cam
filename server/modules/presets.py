@@ -207,7 +207,6 @@ birdhouse_default_cam = {
         "contrast": -1,
         "exposure": -1,
         "rotation": 0,
-        "reconnect_to_calibrate": False,
         "preview_scale": 18,
         "date_time": True,
         "date_time_position": (10, 20),
