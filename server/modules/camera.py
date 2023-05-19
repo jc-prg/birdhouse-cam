@@ -1128,7 +1128,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         if self.record_audio_filename != "":
             self.logging.info("- including audio '" + str(self.record_audio_filename) + "' ...")
             count = 0
-            while not os.path.exists(self.record_audio_filename) and count < 10:
+            while not os.path.exists(self.record_audio_filename) and count < 20:
                 time.sleep(1)
                 count += 1
             if os.path.exists(self.record_audio_filename):
