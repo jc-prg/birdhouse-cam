@@ -60,7 +60,7 @@ function birdhouse_loginReturn(data) {
     }
 }
 
-function birdhouse_adminLastAnswer(set=true) {
+function birdhouse_adminAnswer(set=true) {
     if (set) {
         intervalAdmin = setInterval(function() { birdhouse_adminLastAnswerRequest(); }, 5000 );
         }
@@ -69,13 +69,12 @@ function birdhouse_adminLastAnswer(set=true) {
     }
 }
 
-function birdhouse_adminLastAnswerRequest() {
-    birdhouse_apiRequest("GET", ["last-answer"], "", birdhouse_adminLastAnswerReturn, "", "birdhouse_adminLastAnswer");
+function birdhouse_adminAnswerRequest() {
+    birdhouse_apiRequest("GET", ["last-answer"], "", birdhouse_adminAnswerReturn, "", "birdhouse_adminLastAnswer");
 }
 
-function birdhouse_adminLastAnswerReturn(data) {
+function birdhouse_adminAnswerReturn(data) {
     var status = data["STATUS"]["server"];
-    console.error(status);
     if (status["last_answer"] != "") {
         var msg = status["last_answer"];
         appMsg.alert(lang(msg[0]));
