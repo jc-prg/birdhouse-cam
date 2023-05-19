@@ -151,7 +151,26 @@ class BirdhouseClass(object):
         else:
             self.raise_warning("Could not priority, out of range (0..5): " + str(priority))
 
-    def thread_register_process(self, name, pid, status, progress):
+    def thread_prio_process(self, start, pid):
+        """
+        set central info that prio process is running
+        """
+        self.config.thread_ctrl["priority"] = {
+            "process": start,
+            "pid": pid
+        }
+
+    def if_other_prio_process(self, pid):
+        """
+        check if prio process with other ID
+        """
+        priority = self.config.thread_ctrl["priority"]
+        if priority["process"] and priority["pid"] != pid:
+            return True
+        else:
+            return False
+
+    def thread_register_process(self, pid, name, status, progress):
         """
         register progress in config vars (status: start, running, finished, remove; progres 0..1)
         """
@@ -162,13 +181,14 @@ class BirdhouseClass(object):
             "status": "start",
             "progress": 0
         }
-        process_id = name + "_" + pid
+        process_id = pid
         if process_id in self.config.thread_status[self.class_id]["processes"]:
             process_info = self.config.thread_status[self.class_id]["processes"].copy()
 
         if status != "remove":
             process_info["status"] = status
             process_info["progress"] = progress
+            process_info["update"] = time.time()
             self.config.thread_status[self.class_id]["processes"][process_id] = process_info
         else:
             del self.config.thread_status[self.class_id]["processes"][process_id]

@@ -24,6 +24,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
             "sample-rate": "441000",
             "crf": 18
         }
+        self.process_id = ""
 
         self.ffmpeg_handler_available = ["cmd-line", "python-ffmpeg", "ffmpeg-python", "ffmpeg-progress"]
         self.ffmpeg_handler = "ffmpeg-progress"
@@ -87,11 +88,11 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         self.progress_info = {"percent": 0, "frame_count": 0, "frames": 0, "elapsed": 0}
         self.logging.info('ffmpeg-progress: DONE')
 
-    def create_video(self, input_filenames, framerate, output_filename, input_audio_filename=""):
+    def create_video(self, process_id, input_filenames, framerate, output_filename, input_audio_filename=""):
         """
         create video file from images files
         """
-
+        self.process_id = process_id
         try:
             if self.ffmpeg_handler == "ffmpeg-python":
                 (

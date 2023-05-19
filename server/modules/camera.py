@@ -373,7 +373,8 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         convert from raw image to image // untested
         """
         try:
-            r, buf = cv2.imencode(".jpg", raw)
+            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 100]
+            r, buf = cv2.imencode(".jpg", raw, encode_param)
             size = len(buf)
             image = bytearray(buf)
             return image
@@ -903,6 +904,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                                       camera_id=camera_id, config=config)
 
         self.camera = camera
+        self.micro = ""
         self.name = self.param["name"]
         self.directory = self.config.db_handler.directory("videos")
         self.queue_create = []
@@ -918,24 +920,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.max_length = 60
         self.delete_temp_files = True   # usually set to True, can temporarily be used to keep recorded files for analysis
 
-        self.output_codec = {"vcodec": "libx264", "crf": 18}
-        self.ffmpeg_cmd = "ffmpeg -f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
-                          "-vcodec libx264 -crf 18 {OUTPUT_FILENAME}"
-        self.ffmpeg_trim = "ffmpeg -y -i {INPUT_FILENAME} -r {FRAMERATE} -vcodec libx264 -crf 18 " + \
-                           "-ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
-        # self.ffmpeg = BirdhouseFfmpegProcessing(camera_id, camera, config)
-
         self.ffmpeg = BirdhouseFfmpegTranscoding(self.id, self.config)
-
-        # Other working options:
-        # self.ffmpeg_cmd  += "-b 1000k -strict -2 -vcodec libx264 -profile:v main -level 3.1 -preset medium - \
-        #                      x264-params ref=4 -movflags +faststart -crf 18"
-        # self.ffmpeg_cmd  += "-c:v libx264 -pix_fmt yuv420p"
-        # self.ffmpeg_cmd  += "-profile:v baseline -level 3.0 -crf 18"
-        # self.ffmpeg_cmd  += "-vcodec libx264 -preset fast -profile:v baseline -lossless 1 -vf \
-        #                     \"scale=720:540,setsar=1,pad=720:540:0:0\" -acodec aac -ac 2 -ar 22050 -ab 48k"
-
-        # self.ffmpeg_trim  = "ffmpeg -y -i {INPUT_FILENAME} -c copy -ss {START_TIME} -to {END_TIME} {OUTPUT_FILENAME}"
         self.count_length = 8
         self.info = {
             "start": 0,
@@ -1028,11 +1013,16 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         start video recoding
         """
         response = {"command": ["start recording"]}
+        self.micro = micro
         self.record_audio_filename = audio_filename
 
         if self.camera.active and not self.camera.error and not self.recording:
             self.logging.info("Starting video recording (camera=" + self.id + " / micro=" + micro + ") ...")
+
+            self.thread_register_process("recording", self.id + "_" + self.micro, "start", 0)
+            self.thread_prio_process(start=True, pid=self.id)
             self.recording = True
+
             self.logging.info(" --- " + self.id + " --> " + str(time.time()))
             self.record_start_time = time.time()
             current_time = self.config.local_time()
@@ -1056,6 +1046,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         stop video recoding
         """
+        self.thread_prio_process(start=False, pid=self.id)
         response = {"command": ["stop recording"]}
         if self.camera.active and not self.camera.error and self.recording:
             self.logging.info("Stopping video recording (" + self.id + ") ...")
@@ -1083,6 +1074,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.info["status"] = "finished"
             self.config.queue.entry_add(config="videos", date="", key=self.info["date_start"], entry=self.info.copy())
             self.config.record_audio_info = {}
+            self.thread_register_process("recording", self.id + "_" + self.micro, "stop", 0)
         elif not self.camera.active:
             response["error"] = "camera is not active " + self.camera.id
         elif not self.recording:
@@ -1093,6 +1085,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         Check if maximum length is achieved
         """
+        self.thread_prio_process(start=False, pid=self.id)
         if self.info["status"] == "recording":
             max_time = float(self.info["stamp_start"] + self.max_length)
             if max_time < float(self.config.local_time().timestamp()):
@@ -1131,6 +1124,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
         self.processing = True
         self.logging.info("Start video creation with ffmpeg ...")
+        self.thread_register_process("recording", self.id + "_" + self.micro, "encoding", 0)
         if self.record_audio_filename != "":
             self.logging.info("- including audio '" + str(self.record_audio_filename) + "' ...")
             count = 0
@@ -1151,8 +1145,10 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                                        str(self.count_length).zfill(2) + "d.jpg")
         output_filename = os.path.join(self.config.db_handler.directory("videos"), self.filename("video"))
 
-        success = self.ffmpeg.create_video(input_filenames, self.info["framerate"],
+        success = self.ffmpeg.create_video(self.id + "_" + self.micro, input_filenames, self.info["framerate"],
                                            output_filename, self.record_audio_filename)
+        self.thread_register_process("recording", self.id + "_" + self.micro, "clean-up", 100)
+
         if not success:
             self.processing = False
 
@@ -1186,6 +1182,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             return
 
         self.processing = False
+        self.thread_register_process("recording", self.id + "_" + self.micro, "remove", 0)
         self.logging.info("OK.")
         return
 
@@ -1217,6 +1214,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         cmd_thumbfile = "video_" + camera + "_" + stamp + "_thumb.jpeg"
         cmd_tempfiles = "img_" + camera + "_" + stamp + "_"
         framerate = 20
+
+        self.thread_register_process("day_video", self.id, "start", 0)
 
         self.logging.info("Remove old files from '" + self.config.db_handler.directory("videos_temp") + "' ...")
         cmd_rm = "rm " + self.config.db_handler.directory("videos_temp") + "*"
@@ -1262,13 +1261,17 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                 if cmd_tempfiles in filename:
                     amount += 1
 
+        self.thread_register_process("day_video", self.id, "encoding", 0)
+
         self.logging.info("Starting FFMpeg video creation ...")
         input_filenames = cmd_filename + "%05d.jpg"
         output_filename = os.path.join(self.config.db_handler.directory("videos"), cmd_videofile)
-        success = self.ffmpeg.create_video(input_filenames, framerate, output_filename)
+        success = self.ffmpeg.create_video(self.id, input_filenames, framerate, output_filename)
         if not success:
             response = {"result": "error", "reason": "create video with ffmpeg", "message": ""}
             return response
+
+        self.thread_register_process("day_video", self.id, "cleanup", 100)
 
         self.logging.info("Create thumbnail file ...")
         cmd_thumb = "cp " + cmd_filename + "00001.jpg " + self.config.db_handler.directory("videos") + cmd_thumbfile
@@ -1312,6 +1315,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             "result": "OK",
             "data": video_data
         }
+
+        self.thread_register_process("day_video", self.id, "remove", 0)
         return response
 
     def create_video_day_queue(self, param):
@@ -2517,15 +2522,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 time.sleep(1)
 
             # Video Recording
-            if self.active:
-                if self.video.recording:
-                    self.slow_down_streams(False)
-                    self.video_recording(current_time)
-
-                elif self.config.get_device_signal(self.id, "recording") and not self.video.processing:
-                    self.slow_down_streams(True)
-                else:
-                    self.slow_down_streams(False)
+            if self.if_other_prio_process(self.id):
+                self.slow_down_streams(True)
+            else:
+                self.slow_down_streams(False)
 
             # Image Recording (if not video recording)
             if self.active and self.record and not self.video.recording:

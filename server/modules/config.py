@@ -912,7 +912,11 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
 
         self.thread_status = {}
         self.thread_ctrl = {
-            "shutdown": False
+            "shutdown": False,
+            "priority": {
+                "process": False,
+                "pid": ""
+            }
         }
 
         self.update = {}
