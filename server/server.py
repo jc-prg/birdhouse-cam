@@ -1147,6 +1147,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if command == "last-answer":
             del api_response["STATUS"]["devices"]
             del api_response["DATA"]
+            del api_response["SETTINGS"]
             del api_response["WEATHER"]
 
         api_response["API"]["request_details"] = request_times
