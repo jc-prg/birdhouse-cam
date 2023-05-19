@@ -3220,11 +3220,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 elif self.camera_streams[stream].get_active_streams() > 0:
                     count_other += 1
 
-        self.logging.info(" ... lowres=" + str(count_lowres) + "; other=" + str(count_other))
+        self.logging.debug(" ... lowres=" + str(count_lowres) + "; other=" + str(count_other))
         if count_other > 0:
-            return True
-        else:
             return False
+        else:
+            return True
 
     def update_main_config(self):
         self.logging.info("- Update data from main configuration file for camera " + self.id)
