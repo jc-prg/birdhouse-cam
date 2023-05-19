@@ -9,9 +9,10 @@ function birdhouse_apiRequest(method, commands, data, return_cmd, wait_till_exec
     // app_session_id
 
     if (commands[0] != "status" && commands[0] != "version") {
-        if (app_session_id != "")   { commands.unshift(app_session_id); }
-        else                        { commands.unshift(app_unique_stream_id); }
+        if (app_session_id != "")     { commands.unshift(app_session_id); }
+        else                          { commands.unshift(app_unique_stream_id); }
         }
+    else if (commands[0] == "status") { if (app_session_id != "") { commands.unshift(app_session_id); } }
 
 	appFW.requestAPI(method, commands, data, return_cmd, wait_till_executed, method_name);
 }
