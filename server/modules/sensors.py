@@ -1,6 +1,5 @@
 import time
 import threading
-import logging
 from modules.presets import *
 from modules.bh_class import BirdhouseClass
 
@@ -18,7 +17,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
 
     def __init__(self, sensor_id, config):
         """
-        Initialize new thread and set inital parameters
+        Initialize new thread and set initial parameters
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, "SENSORS", "sensors", sensor_id, config)
@@ -121,9 +120,9 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
 
                         self.reset_error()
 
-                    except Exception as e:
+                    except Exception as err:
                         if self.last_read_time + self.interval_reconnect < time.time():
-                            self.raise_error(connect=False, message="Error reading data from sensor: " + str(e))
+                            self.raise_error(connect=False, message="Error reading data from sensor: " + str(err))
 
                     if self.values == {}:
                         self.raise_error(connect=False, message="Returned empty values.")
@@ -168,8 +167,8 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                     self.sensor = adafruit_dht.DHT22(ada_pin, use_pulseio=False)
                 else:
                     raise "Sensor type not supported"
-            except Exception as e:
-                self.raise_error(message="Could not load " + self.param["type"] + " sensor module: " + str(e),
+            except Exception as err:
+                self.raise_error(message="Could not load " + self.param["type"] + " sensor module: " + str(err),
                                  connect=True)
                 return
 
@@ -189,8 +188,8 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
 
                 self.reset_error()
 
-            except Exception as e:
-                self.raise_error(message="Initial load " + self.param["type"] + " not OK: " + str(e),
+            except Exception as err:
+                self.raise_error(message="Initial load " + self.param["type"] + " not OK: " + str(err),
                                  connect=False)
                 return
 

@@ -293,8 +293,8 @@ birdhouse_preset = {
         "timezone": "UTC+1",
         "weather_active": True
     },
-    "server": {
-        "ip4_admin_deny":   [""],  # put in the IP address of your proxy or router if you don't want to allow edits from outside
+    "server": {                     # set vars in the .env file
+        "ip4_admin_deny":   [""],
         "ip4_address":      "",
         "ip4_stream_audio": "",
         "ip4_stream_video": "",

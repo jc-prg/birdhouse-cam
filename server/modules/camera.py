@@ -9,13 +9,13 @@ from skimage.metrics import structural_similarity as ssim
 from datetime import datetime
 
 from modules.presets import *
-from modules.bh_class import BirdhouseCameraClass, BirdhouseClass
+from modules.bh_class import BirdhouseCameraClass
 from modules.bh_ffmpeg import BirdhouseFfmpegTranscoding
 
 
 class BirdhouseCameraHandler(BirdhouseCameraClass):
 
-    def __init__(self, camera_id, source, config, param):
+    def __init__(self, camera_id, source, config):
         BirdhouseCameraClass.__init__(self, class_id=camera_id+"-ctrl", class_log="cam-other",
                                       camera_id=camera_id, config=config)
 
@@ -96,7 +96,8 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
                 raise Exception("Returned empty image.")
             return raw
         except Exception as err:
-            self.raise_error("- Error reading image from camera '"+self.source+"' by stream '" + stream + "': " + str(err))
+            self.raise_error("- Error reading image from camera '" + self.source +
+                             "' by stream '" + stream + "': " + str(err))
             return
 
     def set_properties(self, key, value=""):
@@ -175,7 +176,6 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             self.properties_get = {}
 
         for prop_key in properties_get_array:
-            command = "self.stream.get(cv2.CAP_PROP_" + prop_key.upper() + ")"
             value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
             if prop_key not in self.properties_get:
                 self.properties_get[prop_key] = [value, -1, -1]
@@ -205,7 +205,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
 
     def get_properties_image(self):
         """
-        read image and get properties (-> fuer Regelkreislauf)
+        read image and get properties
         """
         image_properties = {}
         raw = self.read()
@@ -330,7 +330,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
                                    str(len(image_1st)) + "/ B:" + str(len(image_2nd)))
                 score = 0
         except Exception as e:
-            self.raise_warning("Compare: At least one file has a zero length.")
+            self.raise_warning("Compare: At least one file has a zero length: " + str(e))
             score = 0
 
         if detection_area is not None:
@@ -354,8 +354,6 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         show in an image where the differences are
         """
-        #image_1st = cv2.cvtColor(image_1st, cv2.COLOR_BGR2GRAY)
-        #image_2nd = cv2.cvtColor(image_2nd, cv2.COLOR_BGR2GRAY)
         image_diff = cv2.subtract(image_2nd, image_1st)
 
         # color the mask red
@@ -384,7 +382,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def convert_to_raw(self, image):
         """
-        convert from device to raw image -> to be modifeid with CV2
+        convert from device to raw image -> to be modified with CV2
         """
         if self.error_camera:
             return
@@ -580,7 +578,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         return image
 
     # !!! check if to be moved to EditStream
-    def draw_date_raw(self, raw, overwrite_color=None, overwrite_position=None, offset=[0, 0]):
+    def draw_date_raw(self, raw, overwrite_color=None, overwrite_position=None, offset=None):
         date_information = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
         font = self.text_default_font
@@ -593,8 +591,9 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             position = self.param["image"]["date_time_position"]
         else:
             position = None
-        if offset is not None:
-            position = (int(position[0] + offset[0]), int(position[1] + offset[1]))
+        if offset is None:
+            offset = [0, 0]
+        position = (int(position[0] + offset[0]), int(position[1] + offset[1]))
         if self.param["image"]["date_time_size"]:
             scale = self.param["image"]["date_time_size"]
         else:
@@ -897,7 +896,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
     def __init__(self, camera_id, camera, config):
         """
-        Initialize new thread and set inital parameters
+        Initialize new thread and set initial parameters
         """
         threading.Thread.__init__(self)
         BirdhouseCameraClass.__init__(self, class_id=camera_id+"-video", class_log="cam-video",
@@ -1569,7 +1568,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
 
     def set_framerate(self, fps):
         """
-        add framerate to array to calculate avarage rate -> get_framerate
+        add framerate to array to calculate average rate -> get_framerate
         """
         self.fps_average.append(fps)
         if len(self.fps_average) > 10:
@@ -2184,7 +2183,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             self.reset_error()
             self.logging.debug("Stopped maintenance mode ("+self.type+"/"+self.resolution+").")
 
-    def set_system_info(self, active, line1="", line2="", color=""):
+    def set_system_info(self, active, line1="", line2="", color=None):
         """
         format message
         """
@@ -2195,7 +2194,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             "line2": line2,
             "color": color,
         }
-        if color == "":
+        if color is None:
             self.system_status["color"] = default_color
 
     def kill(self):
@@ -2401,8 +2400,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.reset_error_all()
         if init:
-            self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source,
-                                                 config=self.config, param=self.param)
+            self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source, config=self.config)
             self.connected = self.camera.connect()
         else:
             self.connected = self.camera.reconnect()
