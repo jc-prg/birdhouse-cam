@@ -45,14 +45,14 @@ function birdhouse_logout() {
 
 function birdhouse_logoutMsg() {
 
-    birdhouse_adminLastAnswer(false);
+    birdhouse_adminAnswer(false);
     appMsg.alert(lang("LOGOUT_MSG"));
 }
 
 function birdhouse_loginReturn(data) {
     if (data["check-pwd"]) {
         birdhousePrint_load();
-        birdhouse_adminLastAnswer(true);
+        birdhouse_adminAnswer(true);
         appMsg.alert("Login successful.");
     }
     else {
