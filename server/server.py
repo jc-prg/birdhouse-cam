@@ -605,7 +605,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                 param["which_cam"] = complete_cam
 
-            param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup"]
+            param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup", "last-answer"]
             if "command" in param and param["command"] not in param_no_cam:
                 if param["which_cam"] not in views.camera:
                     srv_logging.warning("Unknown camera requested: " + param["which_cam"] + " (" + self.path + ")")
