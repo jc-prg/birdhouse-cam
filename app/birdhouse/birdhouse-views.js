@@ -104,6 +104,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 	var video       = data["DATA"]["data"]["entries"];
 	var admin       = data["STATUS"]["admin_allowed"];
 	var server_info = app_data["SETTINGS"]["server"];
+    var tab         = new birdhouse_table();
 
 	for (let key in video) {
 		app_active_date         = key;
@@ -126,7 +127,6 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 		console.log(video_stream);
 		console.log(video_stream_short);
 
-        var tab = new birdhouse_table();
         tab.style_rows["height"]           = "20px";
         tab.style_cells["vertical-align"]  = "top";
 
@@ -202,10 +202,9 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 
 			setTextById("videoplayer",player);
 			}
-
-        html += tab.end();
-        html += "</div>";
 		}
+    html += tab.end();
+    html += "</div>";
 
 	setTextById(app_frame_content,html);
 	}
