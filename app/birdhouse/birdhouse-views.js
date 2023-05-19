@@ -130,7 +130,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
         tab.style_rows["height"]           = "20px";
         tab.style_cells["vertical-align"]  = "top";
 
-        var video_title = "";
+        var video_title  = "";
         if (video[key]["title"]) { video_title  = video[key]["title"]; }
         var onclick_video = "birdhouse_editVideoTitle(title=\"set_video_title\", video_id=\""+key+"\", camera=\""+video[key]["camera"]+"\");";
         var edit_title    = "<input id='set_video_title' value='"+video_title+"' style='width:100px;'>&nbsp;&nbsp;";
