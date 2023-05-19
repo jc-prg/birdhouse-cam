@@ -2133,15 +2133,6 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 del self._last_activity_per_stream[stream_id]
         self._active_streams = len(self._last_activity_per_stream.keys())
 
-    def stream_active(self):
-        """
-        return if active streams
-        """
-        if self.stream_count() == 0:
-            return False
-        else:
-            return True
-
     def stream_framerate_check(self):
         """
         calculate framerate and ensure max. framerate
@@ -3223,10 +3214,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         count_lowres = 0
         count_other = 0
         for stream in self.camera_streams:
-            if self.camera_streams[stream].stream_count() is not None:
-                if self.camera_streams[stream].stream_count() > 0 and "lowres" in stream:
+            if self.camera_streams[stream].get_active_streams() is not None:
+                if self.camera_streams[stream].get_active_streams() > 0 and "lowres" in stream:
                     count_lowres += 1
-                elif self.camera_streams[stream].stream_count() > 0:
+                elif self.camera_streams[stream].get_active_streams() > 0:
                     count_other += 1
 
         self.logging.info(" ... lowres=" + str(count_lowres) + "; other=" + str(count_other))
