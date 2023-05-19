@@ -5,15 +5,17 @@
 //--------------------------------------
 
 function birdhouse_apiRequest(method, commands, data, return_cmd, wait_till_executed, method_name) {
-    // app_unique_stream_id
-    // app_session_id
+    // app_unique_stream_id -> timestamp
+    // app_session_id -> pwd
 
     if (commands[0] != "status" && commands[0] != "version") {
         if (app_session_id != "")     { commands.unshift(app_session_id); }
         else                          { commands.unshift(app_unique_stream_id); }
         }
-    else if (commands[0] == "status") { if (app_session_id != "") { commands.unshift(app_session_id); } }
-
+    else if (commands[0] == "status" && app_session_id != "") {
+        commands.unshift(app_session_id);
+    }
+    console.error(commands);
 	appFW.requestAPI(method, commands, data, return_cmd, wait_till_executed, method_name);
 }
 
