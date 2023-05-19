@@ -14,7 +14,6 @@ function birdhouse_apiRequest(method, commands, data, return_cmd, wait_till_exec
         if (app_session_id != "")     { commands.unshift(app_session_id); }
         else                          { commands.unshift(app_unique_stream_id); }
         }
-    console.error(commands);
 	appFW.requestAPI(method, commands, data, return_cmd, wait_till_executed, method_name);
 }
 
@@ -76,6 +75,7 @@ function birdhouse_adminLastAnswerRequest() {
 
 function birdhouse_adminLastAnswerReturn(data) {
     var status = data["STATUS"]["server"];
+    console.error(status);
     if (status["last_answer"] != "") {
         var msg = status["last_answer"];
         appMsg.alert(lang(msg[0]));
