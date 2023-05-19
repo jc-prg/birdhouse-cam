@@ -868,6 +868,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         dir_count_data = 0
 
         for file in file_data["files"]:
+            if self.if_other_prio_process("archive_view"):
+                time.sleep(0.1)
+
             file_info = file_data["files"][file]
             if ("datestamp" in file_info and file_info["datestamp"] == directory) or "datestamp" not in file_info:
                 if "type" not in file_info or file_info["type"] == "image":
@@ -1305,6 +1308,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             if self.if_shutdown():
                 self.logging.info("Interrupt create favorite list.")
                 return
+
+            if self.if_other_prio_process("favorite_view"):
+                time.sleep(0.2)
 
             if self.config.db_handler.exists(config="backup", date=directory):
                 files_data = self.config.db_handler.read_cache(config="backup", date=directory)

@@ -155,6 +155,10 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                         self.logging.info("Backup process is running, shut down may take a bit longer ...")
                         info = False
 
+                    # if recording slow down this process
+                    if self.if_other_prio_process("backup"):
+                        time.sleep(0.2)
+
                     # if files are to be archived
                     if "datestamp" not in files[stamp]:
                         self.logging.warning("Wrong entry format:" + str(files[stamp]))
