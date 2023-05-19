@@ -2522,6 +2522,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     count_paused += 1
                 time.sleep(1)
 
+            # Video recording
+            if self.active:
+                if self.video.recording:
+                    self.video_recording(current_time)
+
             # Video Recording
             if self.if_other_prio_process(self.id) or self.if_only_lowres():
                 self.slow_down_streams(True)
