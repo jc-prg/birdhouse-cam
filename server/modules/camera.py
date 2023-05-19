@@ -3220,11 +3220,20 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         check if only lowres is requested
         """
+        count_lowres = 0
+        count_other = 0
         for stream in self.camera_streams:
-            if self.camera_streams[stream].stream_count() is not None \
-                    and self.camera_streams[stream].stream_count() > 0 and "lowres" not in stream:
-                return False
-        return True
+            if self.camera_streams[stream].stream_count() is not None:
+                if self.camera_streams[stream].stream_count() > 0 and "lowres" in stream:
+                    count_lowres += 1
+                elif self.camera_streams[stream].stream_count() > 0:
+                    count_other += 1
+
+        self.logging.info(" ... lowres=" + str(count_lowres) + "; other=" + str(count_other))
+        if count_other > 0:
+            return True
+        else:
+            return False
 
     def update_main_config(self):
         self.logging.info("- Update data from main configuration file for camera " + self.id)
