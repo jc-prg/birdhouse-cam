@@ -2133,6 +2133,15 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 del self._last_activity_per_stream[stream_id]
         self._active_streams = len(self._last_activity_per_stream.keys())
 
+    def stream_active(self):
+        """
+        return if active streams
+        """
+        if self.stream_count() == 0:
+            return False
+        else:
+            return True
+
     def stream_framerate_check(self):
         """
         calculate framerate and ensure max. framerate
@@ -2523,7 +2532,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 time.sleep(1)
 
             # Video Recording
-            if self.if_other_prio_process(self.id):
+            if self.if_other_prio_process(self.id) or self.if_only_lowres():
                 self.slow_down_streams(True)
             else:
                 self.slow_down_streams(False)
@@ -3206,6 +3215,16 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.camera_stream_raw.slow_down(slow_down)
         for stream in self.camera_streams:
             self.camera_streams[stream].slow_down(slow_down)
+
+    def if_only_lowres(self):
+        """
+        check if only lowres is requested
+        """
+        for stream in self.camera_streams:
+            if self.camera_streams[stream].stream_active() and "lowres" not in stream:
+                return False
+        return True
+
 
     def update_main_config(self):
         self.logging.info("- Update data from main configuration file for camera " + self.id)
