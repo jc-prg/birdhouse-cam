@@ -1090,7 +1090,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 except Exception as e:
                     self.logging.error("Could not load as JSON: " + str(e))
 
-            value = value.replace("-dev-", "/dev/")
+            if "-dev-" in str(value):
+                value = value.replace("-dev-", "/dev/")
 
             if ":" not in key:
                 param[key] = value
