@@ -3274,6 +3274,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.previous_image = None
         self.previous_stamp = "000000"
 
+        if "video" in self.param and "max_length" in self.param["video"]:
+            self.video.max_length = self.param["video"]["max_length"]
+
         self.camera_stream_raw.param = self.param
         for stream in self.camera_streams:
             self.camera_streams[stream].param = self.param
