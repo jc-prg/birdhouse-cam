@@ -903,7 +903,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                                       camera_id=camera_id, config=config)
 
         self.camera = camera
-        self.micro = ""
+        self.micro = None
         self.name = self.param["name"]
         self.directory = self.config.db_handler.directory("videos")
         self.queue_create = []
@@ -2477,8 +2477,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.micro = self.microphones[which_mic]
                 self.logging.info("- Connected microphone '" + which_mic + "' and camera '" + self.id + "'.")
                 return
-            #else:
-            #    self.micro = None
+        self.micro = None
         self.logging.warning("- Could not connect a microphone to camera '" + self.id + "'!")
 
     def run(self):
@@ -2542,7 +2541,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     self.video_recording(current_time)
 
             # Video Recording
-            if self.if_other_prio_process(self.id) or self.if_only_lowres():
+            if self.if_other_prio_process(self.id) or self.if_only_lowres() or self.video.processing:
                 self.slow_down_streams(True)
             else:
                 self.slow_down_streams(False)
