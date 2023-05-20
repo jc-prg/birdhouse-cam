@@ -221,7 +221,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
                 if len(problem) > 0:
                     self.logging.warning(
-                        "... not all threads are running as expected (<" + str(self._interval) + "s): ")
+                        "... not all threads are running as expected: ")
                     self.logging.warning("  -> " + ", ".join(problem))
                     self._health_status = "NOT RUNNING: " + ", ".join(problem)
                 else:
