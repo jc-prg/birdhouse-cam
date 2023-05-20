@@ -2675,9 +2675,13 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if self.video.record_stop_auto():
             self.logging.info("- Automatically stop VIDEO recording ...")
             self.video.record_stop()
-            if self.micro is not None:
-                self.logging.info("- Automatically stop AUDIO recording ...")
-                self.micro.record_stop()
+
+            if "record_micro" in self.param:
+                mic = self.param["record_micro"]
+                self.logging.info("- Try to stop micro '" + mic + "' ...")
+                if mic in self.microphones:
+                    self.logging.info("- Automatically stop AUDIO recording ...")
+                    self.microphones[mic].record_stop()
 
         else:
             image_id = self.camera_streams["camera_hires"].read_stream_image_id()
