@@ -1282,7 +1282,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         time_m = round((int(record_info["length"]) - time_s) / 60)
                         time_l = str(time_m).zfill(2) + ":" + str(time_s).zfill(2)
                         line1 = "Recording"
-                        line2 = time_l + " / " + framerate
+                        line2 = time_l + " / " + framerate + " (max " + str(camera[which_cam].video.max_length) + "s)"
                         camera[which_cam].set_system_info(True, line1, line2, (0, 0, 155))
 
                     elif camera[which_cam].video.processing:
