@@ -625,9 +625,9 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             self.raise_warning("Could not draw area into the image (" + str(e) + ")")
             return raw
 
-    def draw_warning_bullet(self, raw, color=None):
+    def draw_warning_bullet_raw(self, raw, color=None):
         """
-        add read circle (depending on lowres position)
+        add read circle in raw image (not cropped, depending on lowres position)
         """
         (start_x, start_y, end_x, end_y) = self.param["image"]["crop_area"]
         position = self.config.param["views"]["index"]["lowres_position"]
@@ -1473,7 +1473,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
                     if self._stream_last is not None:
                         if not circle_in_cache:
                             try:
-                                self._stream_last = self.image.draw_warning_bullet(self._stream_last)
+                                self._stream_last = self.image.draw_warning_bullet_raw(self._stream_last)
                                 circle_in_cache = True
                             except cv2.error as e:
                                 self.raise_warning("Could not mark image as 'from cache due to error'.")
@@ -1678,8 +1678,9 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self.image = None
 
         self.img_error_files = {
-            "setting": "camera_na_v3.jpg",
-            "camera": "camera_na_v4.jpg"
+            "setting": "camera_error_settings.jpg",
+            "camera": "camera_error_hires.jpg",
+            "lowres": "camera_error_lowres.png"
             }
         self.img_error_raw = {
             "setting": None,
@@ -1934,7 +1935,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             image = self.img_error_raw["setting"]
             image = self.edit_error_add_info(image, error_msg, reload_time=0, info_type="setting")
         elif self.resolution == "lowres":
-            image = self.img_error_raw["camera"]
+            image = self.img_error_raw["lowres"]
             image = self.edit_create_lowres(image)
             image = self.edit_error_add_info(image, error_msg, reload_time=0, info_type="lowres")
         else:
@@ -1948,8 +1949,11 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         edit information to error image
         """
         raw = raw.copy()
+        lowres_position = self.config.param["views"]["index"]["lowres_position"]
+
         if info_type == "setting":
             line_position = 160
+
             msg = self.id + ": " + self.param["name"]
             raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=1,
                                            color=(0, 0, 255), thickness=2)
@@ -2000,9 +2004,15 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             raw = self.image.draw_date_raw(raw=raw, overwrite_color=(0, 0, 255), overwrite_position=(20, line_position))
 
         elif info_type == "camera":
-            raw = self.image.draw_text_raw(raw=raw, text=self.id + ": " + self.param["name"],
-                                           position=(20, 40), color=(255, 255, 255), thickness=2)
-            raw = self.image.draw_date_raw(raw=raw, overwrite_color=(255, 255, 255), overwrite_position=(20, 80))
+            if int(lowres_position) != 1:
+                line_position = 40
+            else:
+                line_position = -70
+
+            raw = self.image.draw_text_raw(raw=raw, text=self.id.upper() + ": " + self.param["name"],
+                                           position=(20, line_position), color=(255, 255, 255), thickness=2)
+            raw = self.image.draw_date_raw(raw=raw, overwrite_color=(255, 255, 255),
+                                           overwrite_position=(20, line_position + 30))
 
         return raw
 
@@ -2109,13 +2119,22 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         add information if recording or processing to image
         """
         image = raw.copy()
+        lowres_position = self.config.param["views"]["index"]["lowres_position"]
+
+        if int(lowres_position) != 3:
+            pos_line1 = (10, -70)
+            pos_line2 = (10, -50)
+        else:
+            pos_line1 = (-230, -70)
+            pos_line2 = (-230, -50)
+
         if self.system_status["active"]:
             image = self.image.draw_text_raw(raw=image, text=self.system_status["line1"],
-                                           font=cv2.QT_FONT_NORMAL, color=self.system_status["color"],
-                                           position=(10, -70), scale=1, thickness=2)
+                                             font=cv2.QT_FONT_NORMAL, color=self.system_status["color"],
+                                             position=pos_line1, scale=1, thickness=2)
             image = self.image.draw_text_raw(raw=image, text=self.system_status["line2"],
-                                           font=cv2.QT_FONT_NORMAL, color=self.system_status["color"],
-                                           position=(10, -50), scale=0.4, thickness=1)
+                                             font=cv2.QT_FONT_NORMAL, color=self.system_status["color"],
+                                             position=pos_line2, scale=0.4, thickness=1)
         return image.copy()
 
     def stream_count(self):
@@ -2184,7 +2203,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
     def set_system_info(self, active, line1="", line2="", color=None):
         """
-        format message
+        format message -> added via edit_add_system_info
         """
         default_color = (0, 0, 255)
         self.system_status = {
@@ -2462,7 +2481,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.logging.debug("- New crop area:  " + str(self.param["image"]["crop"]) + " -> " +
                                str(self.param["image"]["crop_area"]))
         else:
-            self.logging.info("- Resolution definition not supported (e.g. '800x600'): " + str(self.param["image"]["resolution"]))
+            self.logging.info("- Resolution definition not supported (e.g. '800x600'): " +
+                              str(self.param["image"]["resolution"]))
 
         # return properties as values
         self.param["camera"] = self.camera.get_properties()
