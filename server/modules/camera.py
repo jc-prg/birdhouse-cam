@@ -2421,11 +2421,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             if self.if_other_prio_process(self.id) or self.if_only_lowres() or self.video.processing \
                     or self.error or not self.active:
 
-                self.logging.warning("prio=" + str(self.if_other_prio_process(self.id)) + "; " +
-                                     "lowres=" + str(self.if_only_lowres()) + "; " +
-                                     "processing=" + str(self.video.processing) + "; " +
-                                     "error=" + str(self.error) + "; " +
-                                     "active=" + str(self.active))
+                self.logging.debug("prio=" + str(self.if_other_prio_process(self.id)) + "; " +
+                                   "lowres=" + str(self.if_only_lowres()) + "; " +
+                                   "processing=" + str(self.video.processing) + "; " +
+                                   "error=" + str(self.error) + "; " +
+                                   "active=" + str(self.active))
 
                 self.slow_down_streams(True)
             else:
@@ -3140,7 +3140,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 elif self.camera_streams[stream].get_active_streams() > 0:
                     count_other += 1
 
-        self.logging.warning(" ... lowres=" + str(count_lowres) + "; other=" + str(count_other))
+        self.logging.debug(" ... lowres=" + str(count_lowres) + "; other=" + str(count_other))
         if count_other > 0:
             return False
         else:
