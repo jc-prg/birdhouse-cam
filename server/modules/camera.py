@@ -1771,7 +1771,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=1,
                                            color=(0, 0, 255), thickness=2)
 
-            if self.active:
+            if self.param["active"]:
                 line_position += 40
                 source = self.param["source"]
                 if source == "":
