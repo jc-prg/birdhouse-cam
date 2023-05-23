@@ -1,6 +1,14 @@
 #!/usr/bin/bash
 
 LOGFILE="log/server.log"
+PARAM=$1
 
-watch "head -n 2 $LOGFILE | tail -n 60 $LOGFILE"
-cat $LOGFILE
+if [ ! $PARAM ]; then
+  watch "head -n 2 $LOGFILE | tail -n 60 $LOGFILE"
+  cat $LOGFILE
+
+else
+  watch "head -n 2 $LOGFILE | tail -n 120 $LOGFILE | grep $PARAM"
+  cat $LOGFILE | grep $PARAM
+
+fi
