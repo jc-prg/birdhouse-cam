@@ -184,7 +184,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
     def __init__(self):
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="srv-health", config=config)
-        self.thread_set_priority(4)
+        self.thread_set_priority(5)
 
         self._initial = True
         self._interval_check = 60 * 5
@@ -467,29 +467,29 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
     def stream_audio_header(self, size):
         """
         send header for video stream
+        see https://stackoverflow.com/questions/13275409/playing-a-wav-file-on-ios-safari
         """
-        #https://stackoverflow.com/questions/13275409/playing-a-wav-file-on-ios-safari
-        #Content - Range: bytes XX - XX / XX
-        #Content - Type: audio / wav
-        #Content-Disposition: attachment;filename="whatever.WAV"
-        #Content - Length: XX
 
         self.send_response(200)
-        self.send_header('Age', '0')
-        self.send_header('Cache-Control', 'no-cache, private')
-        self.send_header('Pragma', 'no-cache')
-
-        self.send_header('Content-Range', 'bytes 0-'+str(size)+'/'+str(size))
-        # self.send_header('Content-Disposition', 'attachment;filename="audio.WAV"')
-        self.send_header('Content-Transfer-Encoding', 'binary')
-        # self.send_header('Content-Type', 'audio/x-wav;codec=PCM')
-        self.send_header('Content-Type', 'audio/wav')
-        self.send_header('Content-Length', str(size))
-        self.send_header('Accept-Ranges', 'bytes')
 
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+
+        self.send_header("Connection", "Keep-Alive")
+        # self.send_header('Age', '0')
+        # self.send_header('Cache-Control', 'no-cache, private')
+        # self.send_header('Pragma', 'no-cache')
+
+        self.send_header('Content-Range', 'bytes 0-'+str(size)+'/'+str(size))
+        # self.send_header('Content-Disposition', 'attachment;filename="audio.WAV"')
+        self.send_header('Content-Type', 'audio/x-wav')
+        # self.send_header('Content-Type', 'audio/x-wav;codec=PCM')
+        self.send_header('Content-Length', str(size))
+        self.send_header('Content-Transfer-Encoding', 'binary')
+        # self.send_header('Transfer-Encoding', 'binary')
+        self.send_header('Accept-Ranges', 'bytes')
+
         self.end_headers()
 
     def stream_video_frame(self, frame):
@@ -1262,11 +1262,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         frame_raw_pip = camera[which_cam2].get_stream(stream_id=stream_id_int,
                                                                       stream_type=stream_type,
                                                                       stream_resolution="lowres",
+                                                                      system_info=False,
                                                                       wait=False)
 
                         if frame_raw_pip is not None and len(frame_raw_pip) > 0:
                             frame_raw = camera[which_cam].image.image_in_image_raw(raw=frame_raw, raw2=frame_raw_pip,
-                                                                                   position=int(cam2_pos))
+                                                                                   position=int(cam2_pos), distance=30)
 
                 if stream_type == "camera" \
                         and not camera[which_cam].if_error() \
