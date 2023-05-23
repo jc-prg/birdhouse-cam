@@ -1589,7 +1589,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         while self._running:
             self._start_time = time.time()
 
-            if self.active and self.stream_raw is not None \
+            if self.active and self.stream_raw is not None and self.stream_raw.active \
                     and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
                 try:
                     raw = self.read_raw_and_edit(stream=True, stream_id=self._stream_id_base, return_error_image=True)
