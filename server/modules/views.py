@@ -461,7 +461,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="views", config=config)
-        self.thread_set_priority(4)
+        self.thread_set_priority(5)
 
         self.active_cams = None
         self.camera = camera
