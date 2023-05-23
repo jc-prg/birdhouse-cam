@@ -21,7 +21,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, "SENSORS", "sensors", sensor_id, config)
-        self.thread_set_priority(4)
+        self.thread_set_priority(5)
 
         self.config.update["sensor_"+self.id] = False
         self.param = self.config.param["devices"]["sensors"][sensor_id]
