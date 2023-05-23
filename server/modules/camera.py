@@ -1808,14 +1808,12 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                     raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
                                                    color=(0, 0, 255), thickness=1)
 
-                inactive = ""
-                if not self.active:
-                    inactive = "!!! device not activated"
-                line_position += 30
-                msg = "Last tried reconnect: " + str(round(time.time() - self.reload_tried)) + "s " + inactive
+                line_position += 40
+                msg = "Last tried reconnect: " + str(round(time.time() - self.reload_tried)) + "s "
                 raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
                                                color=(0, 0, 255), thickness=1)
 
+                line_position += 30
                 reload_success = round(time.time() - self.reload_success)
                 if reload_success > 1000000000:
                     msg = "Last successful reconnect: not since server started!"
