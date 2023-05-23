@@ -1,7 +1,6 @@
 import threading
 import python_weather
 import asyncio
-import logging
 import time
 import requests
 from geopy.geocoders import Nominatim
@@ -47,7 +46,7 @@ class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="weather-py", config=config)
-        self.thread_set_priority(4)
+        self.thread_set_priority(5)
 
         self.weather_location = location
         self.weather_empty = birdhouse_weather.copy()
@@ -69,6 +68,7 @@ class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
         run thread
         """
         self.logging.info("Starting weather process 'python_weather' ...")
+        self.logging.info(" - Location: " + str(self.weather_location))
         last_update = 0
         while self._running:
 
@@ -112,12 +112,12 @@ class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
                 else:
                     message = "Error extracting icon: " + str(icon_object)
                     self.raise_error(message)
-                    return message
+                    return "N/A"
 
         else:
             message = "Error extracting icon: " + str(icon_object)
             self.raise_error(message)
-            return message
+            return "N/A"
 
     async def _get_weather(self):
         """
@@ -125,7 +125,7 @@ class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
         https://pypi.org/project/python-weather/
         """
         # declare the client. format defaults to the metric system (celcius, km/h, etc.)
-        async with python_weather.Client(format=python_weather.METRIC) as client:
+        async with python_weather.Client(unit=python_weather.METRIC) as client:
 
             try:
                 # fetch a weather forecast from a city
@@ -166,14 +166,16 @@ class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
             "description": current.description,
             "description_icon": self._extract_icon("type", self.weather.current),
             "wind_speed": current.wind_speed,
-            "uv_index": current.uv_index,
             "pressure": current.pressure,
-            "humidity": current.humidity,
-            "wind_direction": current.wind_direction,
-            "precipitation": current.precipitation,
-            "time": str(current.local_time.time()),
-            "date": str(current.local_time.date())
+            "humidity": current.humidity
         }
+        # "wind_direction": current.wind_direction,
+        # "precipitation": current.precipitation,
+        # "time": str(current.local_time.time()),
+        # "date": str(current.local_time.date())
+        # "uv_index": current.uv_index,
+
+        self.logging.info(" ... " + str(self.weather_info["current"]))
 
         self.weather_info["forecast"] = {}
 
@@ -195,14 +197,15 @@ class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
                     "cloud_cover": hourly.cloud_cover,
                     "description": hourly.description,
                     "description_icon": self._extract_icon("type", hourly),
-                    "wind_speed": hourly.wind_speed,
-                    "uv_index": hourly.uv_index,
-                    "chance_of_sunshine": hourly.chance_of_sunshine,
-                    "chance_of_windy": hourly.chance_of_windy,
-                    "pressure": hourly.pressure,
-                    "wind_direction": hourly.wind_direction,
-                    "precipitation": hourly.precipitation
+                    "wind_speed": hourly.wind_speed
                 }
+                # "uv_index": hourly.uv_index,
+                # "chance_of_sunshine": hourly.chance_of_sunshine,
+                # "chance_of_windy": hourly.chance_of_windy,
+                # "pressure": hourly.pressure,
+                # "wind_direction": hourly.wind_direction,
+                # "precipitation": hourly.precipitation
+
                 self.weather_info["forecast"][str(forecast.date)]["hourly"][str(hourly.time)] = hourly_forecast
 
         today = self.config.local_time().strftime("%Y-%m-%d")
@@ -225,7 +228,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="weather-om", config=config)
-        self.thread_set_priority(4)
+        self.thread_set_priority(5)
 
         self.weather_location = gps_location
         self.weather_empty = birdhouse_weather.copy()
