@@ -1262,6 +1262,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         self._last_activity_per_stream = {}
         self._start_time = None
         self._start_delay_stream = 1
+        self._connected = False
 
     def run(self) -> None:
         """
@@ -1272,6 +1273,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
             time.sleep(0.1)
 
         self.reset_error()
+        self._connected = True
         self.logging.info("Starting CAMERA raw stream for '"+self.id+"' ...")
 
         while self._running:
@@ -1453,6 +1455,9 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         else:
             return True
 
+    def if_connected(self):
+        return self._connected
+
     def kill(self, stream_id="default"):
         """
         kill continuous stream creation
@@ -1580,7 +1585,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self.reset_error()
         #while not self.stream_raw.if_ready() and not self.param["active"]:
         #while not self.stream_raw.if_running():
-        while not self.stream_raw.if_ready():
+        while not self.stream_raw.if_connected():
             time.sleep(0.1)
 
         self.image = self.stream_raw.image
