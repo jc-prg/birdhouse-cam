@@ -1591,13 +1591,14 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
         time.sleep(1)
         self._connected = True
+        self.logging.info("Starting CAMERA edited stream for '"+self.id+"/"+self.type+"/"+self.resolution+"' ...")
+
         self.image = self.stream_raw.image
         if not self._init_error_images():
             self.raise_error("Could not initialize, error images not found in ./data/: " + str(self.img_error_files))
             self.stop()
             return
 
-        self.logging.info("Starting CAMERA edited stream for '"+self.id+"/"+self.type+"/"+self.resolution+"' ...")
         while self._running:
             self._start_time = time.time()
 
