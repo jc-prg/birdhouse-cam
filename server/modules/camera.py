@@ -1446,7 +1446,9 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         """
         check if stream is ready to deliver images, connection to camera exists
         """
-        if self.camera is not None and self.camera.if_connected() or not self.param["active"]:
+        if self.camera is None:
+            return False
+        elif not self.camera.if_connected() or not self.param["active"]:
             return False
         else:
             return True
