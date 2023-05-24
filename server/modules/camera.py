@@ -1535,6 +1535,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self._size_lowres = None
         self._start_delay_stream = 2
         self._error_wait = True
+        self._connected = False
 
         self.fps = None
         self.fps_max = 12
@@ -1588,6 +1589,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         while not self.stream_raw.if_connected():
             time.sleep(0.1)
 
+        time.sleep(1)
+        self._connected = True
         self.image = self.stream_raw.image
         if not self._init_error_images():
             self.raise_error("Could not initialize, error images not found in ./data/: " + str(self.img_error_files))
@@ -2073,8 +2076,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
     def kill(self):
         self._last_activity = 0
 
-    def stop(self):
-        self._running = False
+    def if_connected(self):
+        return self._connected
 
 
 class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
