@@ -1573,6 +1573,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             for image in self.img_error_files:
                 filename = os.path.join(self.config.main_directory, self.config.directories["data"],
                                         self.img_error_files[image])
+                if not os.path.exists(filename):
+                    raise Exception("File '" + filename + "' not found.")
                 raw = cv2.imread(filename)
                 raw, area = self.image.crop_raw(raw=raw, crop_area=area, crop_type="absolute")
                 self.img_error_raw[image] = raw.copy()
@@ -1584,12 +1586,10 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
     def run(self) -> None:
         self.reset_error()
-        #while not self.stream_raw.if_ready() and not self.param["active"]:
-        #while not self.stream_raw.if_running():
         while not self.stream_raw.if_connected():
             time.sleep(0.1)
 
-        time.sleep(1)
+        #time.sleep(1)
         self._connected = True
         self.logging.info("Starting CAMERA edited stream for '"+self.id+"/"+self.type+"/"+self.resolution+"' ...")
 
