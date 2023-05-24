@@ -1268,7 +1268,8 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         create a continuous stream while active; use buffer if empty answer
         """
         circle_in_cache = False
-        time.sleep(2)
+        while not self.if_ready():
+            time.sleep(0.1)
 
         self.reset_error()
         self.logging.info("Starting CAMERA raw stream for '"+self.id+"' ...")
