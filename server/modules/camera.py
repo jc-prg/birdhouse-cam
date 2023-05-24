@@ -1729,7 +1729,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 wait_time += 1
 
         if self._stream_image_id == 0:
-            self.raise_error("sRaw: read_stream: got no image from source '" + self.id + "' yet!")
+            self.raise_warning("sEdit: read_stream: got no image from raw stream '" + self.id + "' yet!")
 
         if self._stream is not None and len(self._stream) > 0:
             stream_img = self._stream.copy()
