@@ -1576,7 +1576,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
     def run(self) -> None:
         self.reset_error()
         #while not self.stream_raw.if_ready() and not self.param["active"]:
-        while not self.stream_raw.if_running():
+        #while not self.stream_raw.if_running():
+        while not self.stream_raw.if_ready():
             time.sleep(0.1)
 
         self.image = self.stream_raw.image
