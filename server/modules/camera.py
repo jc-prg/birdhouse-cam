@@ -1586,8 +1586,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
     def run(self) -> None:
         self.reset_error()
-        #while not self.stream_raw.if_ready() and not self.param["active"]:
-        while not self.stream_raw.if_running():
+        while not self.stream_raw.if_connected():
             time.sleep(0.1)
 
         self._connected = True
@@ -1617,14 +1616,6 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
                 except Exception as e:
                     self.raise_error("Error reading EDIT stream for '" + self.id + "/" + self.type + "': " + str(e))
-                    #if self._stream_last is not None:
-                    #    if not circle_in_cache:
-                    #        try:
-                    #            #self._stream_last = cv2.circle(self._stream_last, (25, 50), 4, circle_color, 6)
-                    #            self._stream_last = self.edit_add_warning_bullet(self._stream_last.copy())
-                    #            circle_in_cache = True
-                    #        except cv2.error as e:
-                    #            self._stream = self._stream_last.copy()
 
             else:
                 self.active = False
@@ -1796,33 +1787,66 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=1,
                                            color=(0, 0, 255), thickness=2)
 
-            line_position += 40
-            msg = "Device: type=" + self.param["type"] + ", active=" + str(self.param["active"]) + ", source=" + str(
-                self.param["source"])
-            msg += ", resolution=" + self.param["image"]["resolution"]
-            raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
-                                           color=(0, 0, 255), thickness=1)
+            if self.param["active"]:
+                line_position += 40
+                source = self.param["source"]
+                if source == "":
+                    source = "!!! not set !!!"
+                msg = "Device: active=" + str(self.param["active"]) + \
+                      ", source=" + str(source) + ", resolution=" + self.param["image"]["resolution"]
+                raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
+                                               color=(0, 0, 255), thickness=1)
+                line_position += 10
 
-            if len(error_msg) > 0:
-                line_position += 30
-                msg = "Last Cam Error: " + error_msg[len(error_msg) - 1] + " [#" + str(len(error_msg)) + "]"
+                if self.stream_raw.camera is None:
+                    line_position += 30
+                    msg = "Error Camera: Not yet connected!"
+                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
+                                                   color=(0, 0, 255), thickness=1)
+
+                elif len(self.stream_raw.camera.error_msg) > 0:
+                    line_position += 30
+                    msg = "Error Camera: " + self.stream_raw.camera.error_msg[-1] + \
+                          " [#" + str(len(self.stream_raw.camera.error_msg)) + "]"
+                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
+                                                   color=(0, 0, 255), thickness=1)
+
+                if len(self.stream_raw.error_msg) > 0:
+                    line_position += 30
+                    msg = "Error Raw-Stream: " + self.stream_raw.error_msg[-1] + \
+                          " [#" + str(len(self.stream_raw.error_msg)) + "]"
+                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
+                                                   color=(0, 0, 255), thickness=1)
+
+                if len(self.error_msg) > 0:
+                    line_position += 30
+                    msg = "Error Edit-Stream: " + self.error_msg[-1] + " [#" + str(len(self.error_msg)) + "]"
+                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
+                                                   color=(0, 0, 255), thickness=1)
+
+                line_position += 40
+                msg = "Last tried reconnect: " + str(round(time.time() - self.reload_tried)) + "s "
                 raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
                                                color=(0, 0, 255), thickness=1)
 
-            if len(self.error_msg) > 0:
                 line_position += 30
-                msg = "Last Img Error: " + self.error_msg[len(self.error_msg) - 1] + " [#" + str(len(error_msg)) + "]"
+                reload_success = round(time.time() - self.reload_success)
+                if reload_success > 1000000000:
+                    msg = "Last successful reconnect: not since server started!"
+                else:
+                    msg = "Last successful reconnect: " + str(reload_success) + "s"
                 raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
                                                color=(0, 0, 255), thickness=1)
 
-            line_position += 30
-            msg = "Last Reconnect: " + str(round(time.time() - self.reload_time)) + "s"
-            raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
-                                           color=(0, 0, 255), thickness=1)
+            else:
+                line_position += 40
+                msg = "Devices is not activated, change settings."
+                raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
+                                               color=(0, 0, 255), thickness=1)
 
             details = True
             if details:
-                line_position += 30
+                line_position += 40
                 msg = "CPU Usage: " + str(psutil.cpu_percent(interval=1, percpu=False)) + "% "
                 msg += "(" + str(psutil.cpu_count()) + " CPU)"
                 raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
@@ -2361,64 +2385,75 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             stamp = current_time.strftime('%H%M%S')
             self.config_update = self.config.update["camera_" + self.id]
 
-            # reset some settings end of the day
-            if self.date_last != self.config.local_time().strftime("%Y-%m-%d"):
-                self.record_temp_threshold = None
-                self.date_last = self.config.local_time().strftime("%Y-%m-%d")
-
-            if self._stream_errors > self._stream_errors_max_accepted and self._stream_errors_restart:
-                self.logging.warning("....... Reload CAMERA '" + self.id + "' due to stream errors: " +
-                                     str(self._stream_errors) + " errors.")
-
-            # if error reload from time to time
-            if self.active and self.if_error() and (reload_time + self._interval_reload_if_error) < time.time():
-                self.logging.warning("....... Reload CAMERA '" + self.id + "' due to errors --> " +
-                                     str(round(reload_time, 1)) + " + " +
-                                     str(round(self._interval_reload_if_error, 1)) + " > " +
-                                     str(round(time.time(), 1)))
-                self.logging.warning("        " + self.if_error(details=True))
-                reload_time = time.time()
-                self.config_update = True
-                self.reload_camera = True
-
-            # start or reload camera connection
-            if (self.config_update or self.reload_camera) and self.active:
-                self.logging.info("Updating CAMERA configuration (" + self.id + ") ...")
-                self.update_main_config()
-                if self.active:
-                    self.camera_reconnect(directly=True)
-                else:
-                    self.logging.info(" - CAMERA is set inactive, no restart (" + self.id + ") ...")
-
-            # check if camera is paused, wait with all processes ...
-            if not self._paused:
-                count_paused = 0
-            while self._paused and self._running:
-                if count_paused == 0:
-                    self.logging.info("Recording images with " + self.id + " paused ...")
-                    count_paused += 1
-                time.sleep(1)
-
-            # Video recording
             if self.active:
-                if self.video.recording:
-                    self.video_recording(current_time)
+
+                # reset some settings end of the day
+                if self.date_last != self.config.local_time().strftime("%Y-%m-%d"):
+                    self.record_temp_threshold = None
+                    self.date_last = self.config.local_time().strftime("%Y-%m-%d")
+
+                if self._stream_errors > self._stream_errors_max_accepted and self._stream_errors_restart:
+                    self.logging.warning("....... Reload CAMERA '" + self.id + "' due to stream errors: " +
+                                         str(self._stream_errors) + " errors.")
+
+                # if error reload from time to time
+                if self.if_error() and (reload_time + self._interval_reload_if_error) < time.time():
+                    self.logging.warning("....... Reload CAMERA '" + self.id + "' due to errors --> " +
+                                         str(round(reload_time, 1)) + " + " +
+                                         str(round(self._interval_reload_if_error, 1)) + " > " +
+                                         str(round(time.time(), 1)))
+                    self.logging.warning("        " + self.if_error(details=True))
+                    reload_time = time.time()
+                    self.config_update = True
+                    self.reload_camera = True
+
+                # start or reload camera connection
+                if self.config_update or self.reload_camera:
+                    self.logging.info("Updating CAMERA configuration (" + self.id + ") ...")
+                    self.update_main_config()
+                    self.set_streams_active(active=True)
+                    self.camera_reconnect(directly=True)
+
+                # check if camera is paused, wait with all processes ...
+                if not self._paused:
+                    count_paused = 0
+                while self._paused and self._running:
+                    if count_paused == 0:
+                        self.logging.info("Recording images with " + self.id + " paused ...")
+                        count_paused += 1
+                    time.sleep(1)
+
+                # Video recording
+                    if self.video.recording:
+                        self.video_recording(current_time)
+
+
+                # Check and record active streams
+                self.measure_usage(current_time, stamp)
 
             # Video Recording
-            if self.if_other_prio_process(self.id) or self.if_only_lowres() or self.video.processing:
+            if self.if_other_prio_process(self.id) or self.if_only_lowres() or self.video.processing \
+                    or self.error or not self.active:
+
+                self.logging.debug("prio=" + str(self.if_other_prio_process(self.id)) + "; " +
+                                   "lowres=" + str(self.if_only_lowres()) + "; " +
+                                   "processing=" + str(self.video.processing) + "; " +
+                                   "error=" + str(self.error) + "; " +
+                                   "active=" + str(self.active))
+
                 self.slow_down_streams(True)
             else:
                 self.slow_down_streams(False)
 
             # Image Recording (if not video recording)
-            if self.active and self.record and not self.video.recording:
-                time.sleep(self._interval)
+            if self.active and self.record and not self.video.recording and not self.error:
+                self.thread_set_priority(0)
                 self.image_recording(current_time, stamp, similarity, sensor_last)
 
-            # Check and record active streams
-            if self.active:
-                self.measure_usage(current_time, stamp)
+            elif not self.active or self.error:
+                self.thread_set_priority(5)
 
+            self.thread_wait()
             self.thread_control()
 
         self.logging.info("Stopped camera (" + self.id + "/" + self.type + ").")
