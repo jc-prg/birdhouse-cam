@@ -1493,6 +1493,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self.type_available = ["raw", "normalized", "camera", "setting"]
         self.resolution = stream_resolution
         self.resolution_available = ["lowres", "hires"]
+        self.active = False
 
         if self.type not in self.type_available:
             self.raise_error("Could not initialize: " + self.type + " not available (" + str(self.type_available) + ")")
@@ -1534,6 +1535,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self._size_lowres = None
         self._start_delay_stream = 2
         self._error_wait = True
+        self._connected = False
 
         self.fps = None
         self.fps_max = 12
@@ -1544,7 +1546,6 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self.duration_max = 1 / (self.fps_max + 1)
         self.duration_slow = 1 / self.fps_slow
         self.slow_stream = False
-        self.active = False
         self.system_status = {
             "active": False,
             "color": "default",
@@ -1553,6 +1554,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         }
         self.maintenance_mode = False
         self.reload_time = 0
+        self.reload_tried = 0
+        self.reload_success = 0
 
     def _init_error_images(self):
         """
@@ -1570,6 +1573,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             for image in self.img_error_files:
                 filename = os.path.join(self.config.main_directory, self.config.directories["data"],
                                         self.img_error_files[image])
+                if not os.path.exists(filename):
+                    raise Exception("File '" + filename + "' not found.")
                 raw = cv2.imread(filename)
                 raw, area = self.image.crop_raw(raw=raw, crop_area=area, crop_type="absolute")
                 self.img_error_raw[image] = raw.copy()
@@ -1585,13 +1590,15 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         while not self.stream_raw.if_running():
             time.sleep(0.1)
 
+        self._connected = True
+        self.logging.info("Starting CAMERA edited stream for '"+self.id+"/"+self.type+"/"+self.resolution+"' ...")
+
         self.image = self.stream_raw.image
         if not self._init_error_images():
-            self.raise_error("Could not initialize, error images not found in ./data/: " + str(self.img_error_files))
+            self.raise_error("Could not initialize error images!")
             self.stop()
             return
 
-        self.logging.info("Starting CAMERA edited stream for '"+self.id+"/"+self.type+"/"+self.resolution+"' ...")
         while self._running:
             self._start_time = time.time()
 
@@ -1735,7 +1742,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 wait_time += 1
 
         if self._stream_image_id == 0:
-            self.raise_error("sRaw: read_stream: got no image from source '" + self.id + "' yet!")
+            self.raise_error("sEdit: read_stream: got no image from raw stream '" + self.id + "' yet!")
 
         if self._stream is not None and len(self._stream) > 0:
             stream_img = self._stream.copy()
@@ -1764,7 +1771,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
         if self.type == "setting":
             image = self.img_error_raw["setting"]
-            image = self.edit_error_add_info(image, error_msg, reload_time=0, info_type="setting")
+            image = self.edit_error_add_info(image, [error_msg], reload_time=0, info_type="setting")
         elif self.resolution == "lowres":
             image = self.img_error_raw["lowres"]
             image = self.edit_create_lowres(image)
@@ -2049,8 +2056,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
     def kill(self):
         self._last_activity = 0
 
-    def stop(self):
-        self._running = False
+    def if_connected(self):
+        return self._connected
 
 
 class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
