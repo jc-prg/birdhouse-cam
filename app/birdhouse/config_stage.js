@@ -1,14 +1,7 @@
 //--------------------------------
-// Configure stage details
+// Configure stage details (2023-07-03 12:48:29)
 //---------------------------------
-// Please edit not here, but the orginial configuration file. This files is created using a template.
-
+// Please edit not here, but in .env-File
 var test		= false;
-var rollout	 	= 'prod';
-var server_port 	= '';
-var log_level          = 'info';
-
-LANG                    = 'DE';
-
-if (rollout === "test")	{ test = true; }
+var server_port = '8007';
 

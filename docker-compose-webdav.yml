@@ -1,0 +1,21 @@
+#--------------------------------------------
+# Birdhouse Server and Database
+#----------------------------------------
+
+version: '2'
+
+services:
+  birdhouse_webdav:
+    container_name: birdhouse_webdav
+    build: ./config/webdav
+    ports:
+      - "${BIRDHOUSE_WEBDAV_PORT}:80"
+    volumes:
+      - "./data/images:/media/images"
+      - "./data/videos:/media/videos"
+    environment:
+      - USERNAME=${WEBDAV_USER}
+      - PASSWORD=${WEBDAV_PWD}
+      - UID=1000
+      - GID=1000
+      - TZ=Europe/Berlin

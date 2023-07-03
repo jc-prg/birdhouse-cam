@@ -6,6 +6,9 @@ psutil
 setuptools
 wheel
 ffmpeg-python
+#python-ffmpeg
+#better-ffmpeg-progress
+ffmpeg-progress
 couchdb
 requests
 python_weather

@@ -4,9 +4,9 @@
 // additional functions 
 //--------------------------------------
 
-function birdhouse_edit_field(id, field, type="input", options="", data_type="string") {
+function birdhouse_edit_field(id, field, type="input", options="", data_type="string", on_change="") {
     var fields = field.split(":");
-    var settings = app_data["DATA"]["settings"];
+    var settings = app_data["SETTINGS"];
     var data   = "";
     var html   = "";
     var style  = "";
@@ -21,26 +21,35 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
     if (data_type == "json") { data = JSON.stringify(data); }
     if (data_type == "integer" || data_type == "float") { style += "width:60px;" }
     if (type == "input") {
-        html += "<input id='"+id+"' value='"+data+"' style='"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");'>";
+        html += "<input id='"+id+"' value='"+data+"' style='"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");' onchange='"+on_change+"'>";
     }
     else if (type == "select_dict") {
-        html += "<select id='"+id+"'>";
+        var exists = false;
+        html += "<select id='"+id+"' onchange='"+on_change+"'>";
+        html += "<option value=''>(empty)</option>";
+        if (data == true || data == false) { data_str = data.toString(); }
+        else { data_str = data; }
         Object.keys(options).forEach (key => {
-            if (data == true || data == false) { data_str = data.toString(); }
-            else { data_str = data; }
-            if (data_str == key)  { html += "<option selected='selected' value='"+key+"'>"+options[key]+"</option>"; }
+            if (data_str == key)  { html += "<option selected='selected' value='"+key+"'>"+options[key]+"</option>"; exists = true; }
             else                  { html += "<option value='"+key+"'>"+options[key]+"</option>"; }
             });
+        if (!exists) {
+            html += "<option selected='selected'>"+data_str+"</option>";
+            }
         html += "</select>";
         }
     else if (type == "select") {
         var values = options.split(",");
-        html += "<select id='"+id+"'>";
+        var exists = false;
+        html += "<select id='"+id+"' onchange='"+on_change+"'>";
+        if (data == true || data == false) { data_str = data.toString(); }
+        else { data_str = data; }
         for (var i=0;i<values.length;i++) {
-            if (data == true || data == false) { data_str = data.toString(); }
-            else { data_str = data; }
-            if (data_str == values[i])  { html += "<option selected='selected'>"+values[i]+"</option>"; }
+            if (data_str == values[i])  { html += "<option selected='selected'>"+values[i]+"</option>"; exists = true;}
             else                        { html += "<option>"+values[i]+"</option>"; }
+            }
+        if (!exists) {
+            html += "<option selected='selected'>"+data_str+"</option>";
             }
         html += "</select>";
         }
@@ -51,9 +60,9 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         on_set    = "document.getElementById(\""+id+"\").value = this.value;";
         on_value  = "document.getElementById(\""+id+"_range\").value = this.value;";
         html += "<div class='bh-slidecontainer' style='float:left;width:100px;height:auto;'>";
-        html += "<input id='"+id+"_range' class='bh-slider' type='range' name='' min='"+range[0]+"' max='"+range[1]+"' style='"+style+"' onchange='"+on_set+"'>";
+        html += "<input id='"+id+"_range' class='bh-slider' type='range' name='' min='"+range[0]+"' max='"+range[1]+"' style='"+style+"' onchange='"+on_set+on_change+"'>";
         html += "</div><div style='float:left;margin-left:12px;'>";
-        html += "<input id='"+id+"' class='bh-slidervalue' style='width:30px;' onchange='"+on_value+"'>";
+        html += "<input id='"+id+"' class='bh-slider-value' style='width:30px;' onchange='"+on_value+"'>";
         html += "</div>";
         }
     html += "<input id='"+id+"_data' style='display:none' value='"+field+"'>\n";
@@ -61,9 +70,9 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
     return html;
 }
 
-function birdhouse_edit_save(id, id_list, text="") {
+function birdhouse_edit_save(id, id_list, camera="", text="") {
     var ids = id_list.split(":");
-    var html = "<button onclick='birdhouse_edit_send(\""+id_list+"\");' style='background:gray;width:100px;'>"+lang("SAVE")+"</button>";
+    var html = "<button onclick='birdhouse_edit_send(\""+id_list+"\", \""+camera+"\");' style='background:gray;width:100px;'>"+lang("SAVE")+"</button>";
     return html;
 }
 
@@ -77,7 +86,7 @@ function birdhouse_edit_check_values(id, data_type) {
     var error = false;
     var error_msg = "";
 
-    input.style.backgroundColor = "white";
+    input.style.backgroundColor = "";
 
     if (data_type == "json") {
         try { var json_test = JSON.parse(value); }
@@ -111,7 +120,7 @@ function birdhouse_edit_check_values(id, data_type) {
     return [error, error_msg ];
 }
 
-function birdhouse_edit_send(id_list) {
+function birdhouse_edit_send(id_list, camera) {
     var ids = id_list.split(":");
     var info = "";
     var error = false;
@@ -122,7 +131,9 @@ function birdhouse_edit_send(id_list) {
             var data_type = document.getElementById(ids[i]+"_data_type").value;
             var field_name = document.getElementById(ids[i]+"_data").value.split(":");
             var field_data = document.getElementById(ids[i]).value;
+
             field_name = field_name[(field_name.length-1)];
+            field_data = field_data.replaceAll("/dev/", "-dev-")
 
             var field_error = birdhouse_edit_check_values(ids[i], data_type);
             if (field_error[0]) { error = true; error_msg += field_error[1]; }
@@ -137,7 +148,7 @@ function birdhouse_edit_send(id_list) {
         }
     }
     if (error) { alert(error_msg); }
-    else { birdhouse_editData(info); }
+    else { birdhouse_editData(info, camera); }
 }
 
 
@@ -156,6 +167,33 @@ function birdhouse_tooltip( tooltip_element, tooltip_content, name, left="" ) {
 	result = button_tooltip.create( tooltip_element, tooltip_content, name, left );
 	return result;
 	}
+
+
+function birdhouse_view_images_threshold(threshold) {
+    group_list = document.getElementById("group_list").innerHTML.split(" ");
+    image_list = [];
+    image_list_active = [];
+    for (var i=0;i<group_list.length;i++) {
+        image_ids_in_group = document.getElementById("group_ids_"+group_list[i]).innerHTML.split(" ");
+        image_list = image_list.concat(image_ids_in_group);
+        for (a=0;a<image_ids_in_group.length;a++) {
+            if (image_list[a] != "") {
+                image_threshold = document.getElementById(image_ids_in_group[a]+"_similarity");
+                image_container = image_ids_in_group[a] + "_container";
+                if (image_threshold && image_threshold.value+0 <= threshold+0) {
+                    image_list_active.push(image_ids_in_group[a]);
+                    elementVisible(image_container);
+                }
+                else {
+                    elementHidden(image_container);
+                }
+            }
+        }
+    }
+
+    setTextById("info_set_threshold", "Threshold = " + threshold + "%: " + image_list_active.length + " of " + image_list.length + " selected.")
+    //alert("birdhouse_view_images_threshold: threshold=" + threshold + "; all=" + image_list.length + "; select=" + image_list_active.length);
+}
 
 
 function birdhouse_frameHeader(title, status_id="") {
@@ -185,17 +223,21 @@ function birdhouse_table () {
     };
 
     this.update_settings = function () {
+        this.style_table_string = "";
         for (let key in this.style_table) {
             var setting_string = key+":"+this.style_table[key]+";";
-            if (this.style_table_string.indexOf(setting_string) < 0) {this.style_table_string += setting_string; }
+            this.style_table_string += setting_string;
         }
+        this.style_rows_string = "";
         for (let key in this.style_rows)  {
             var setting_string = key+":"+this.style_rows[key]+";";
-            if (this.style_rows_string.indexOf(setting_string) < 0) {this.style_rows_string += setting_string; }
+            this.style_rows_string += setting_string;
         }
+
+        this.style_cells_string = "";
         for (let key in this.style_cells) {
             var setting_string = key+":"+this.style_cells[key]+";";
-            if (this.style_cells_string.indexOf(setting_string) < 0) {this.style_cells_string += setting_string; }
+            this.style_cells_string += setting_string;
         }
     }
 
@@ -230,6 +272,9 @@ function birdhouse_Links(link_list) {
 
 function birdhouse_imageOverlay(filename, description="", favorite="", to_be_deleted="", image_id="overlay_image") {
 
+        if (document.getElementById("overlay_content")) { existing = true; }
+        else                                            { existing = false; }
+
         var overlay = "<div id=\"overlay_content\" class=\"overlay_content\" onclick=\"birdhouse_overlayHide();\"><!--overlay--></div>";
         setTextById("overlay_content",overlay);
         document.getElementById("overlay").style.display         = "block";
@@ -243,10 +288,26 @@ function birdhouse_imageOverlay(filename, description="", favorite="", to_be_del
         html += "<img id='"+image_id+"' src='"+filename+"'>";
         html += "<br/>&nbsp;<br/>"+description+"</div>";
         document.getElementById("overlay_content").innerHTML = html;
-        
+
         myElement = document.getElementById("overlay_content");
-	    pz = new PinchZoom.default(myElement);
+        if (existing) { delete pz; }
+	    var pz = new PinchZoom.default(myElement);
+ 	    setTimeout(function() {
+	        pz.update.bind(pz);
+	    }, 1000);
+
+
 /*
+        //destroy an object
+
+        var namespace = {};
+        namespace.someClassObj = {};
+        delete namespace.someClassObj;
+
+        // -----
+        // or: https://www.delftstack.com/howto/javascript/javascript-destroy-object/
+        // pz = undefined;
+
 	    pz.zoomFactor = 1;
 	    pz.offset = { x: 0, y: 0 };
 	    pz.update();
@@ -337,7 +398,9 @@ function birdhouse_groupOpen(id) {
             img      = document.getElementById(image_list[i]);
             if (img != undefined) {
                 img_file = img.getAttribute('data-src');
-                img.src  = img_file;
+                if (img_file) {
+                    img.src  = img_file;
+                }
             }
         }
     }

@@ -1,11 +1,11 @@
 import os
 import time
-import logging
 import threading
 from sys import getsizeof
 from datetime import datetime, timedelta
 import modules.presets as presets
 from modules.presets import *
+from modules.bh_class import BirdhouseClass
 
 
 view_logging = logging.getLogger("view-head")
@@ -58,14 +58,25 @@ def print_links_json(link_list, cam=""):
     return json
 
 
-class BirdhouseViewCreate(object):
+def get_directories(main_directory):
+    """
+    grab sub-directories in a directory
+    """
+    dir_list = []
+    file_list = os.listdir(main_directory)
+    for entry in file_list:
+        if "." not in entry:
+            if os.path.isdir(os.path.join(main_directory, entry)):
+                dir_list.append(entry)
+    return dir_list
+
+
+class BirdhouseViewCreate(BirdhouseClass):
 
     def __init__(self, config):
-        self.config = config
-        self.logging = logging.getLogger("view-creat")
-        self.logging.setLevel(birdhouse_loglevel_module["view-creat"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting backup handler ...")
+        BirdhouseClass.__init__(self, class_id="view-creat", config=config)
+
+        self.logging.info("Connected creation handler.")
 
     def chart_data_new(self, data_image, data_sensor=None, data_weather=None, date=None, cameras=None):
         """
@@ -119,8 +130,9 @@ class BirdhouseViewCreate(object):
                     hour_to = "00"
 
                 stamp = hour_to + minute_to + "00"
+                activity_dict[cam][stamp] = []
                 if stamp not in activity_dict:
-                    activity_dict[cam][stamp] = []
+                    pass
                 activity_dict[cam][stamp].append(key)
 
             # create data structure activity
@@ -416,37 +428,56 @@ class BirdhouseViewCreate(object):
 
         return weather
 
+    def statistic_data(self, data):
+        """
+        create chart format out of statistic data
+        ----
+        titles - cam1_active, cam1_fps, cam2_active, cam2_fps
+        data - {"HHMM": [cam1_active, cam1_fps, cam2_active, cam2_fps], "HHMM": [cam1_active, cam1_fps, cam2_active, cam2_fps], ...}
+        """
+        self.logging.debug("create_statistic_data")
+        chart = {"titles": [], "data": {}}
+        main_keys = list(data.keys())
+        sub_keys = {"active_streams": "Streams", "stream_framerate": "Framerate"}
 
-class BirdhouseViews(threading.Thread):
+        for main_key in main_keys:
+            for sub_key in sub_keys:
+                chart["titles"].append(main_key + ": " + sub_keys[sub_key])
+
+        for entry_key in data[main_keys[0]]:
+            chart["data"][entry_key] = []
+            for main_key in main_keys:
+                for sub_key in sub_keys:
+                    chart["data"][entry_key].append(data[main_key][entry_key][sub_key])
+
+        return chart
+
+
+class BirdhouseViews(threading.Thread, BirdhouseClass):
 
     def __init__(self, camera, config):
         """
         Initialize new thread and set initial parameters
         """
         threading.Thread.__init__(self)
+        BirdhouseClass.__init__(self, class_id="views", config=config)
+        self.thread_set_priority(5)
 
-        self.logging = logging.getLogger("views")
-        self.logging.setLevel(birdhouse_loglevel_module["views"])
-        self.logging.addHandler(birdhouse_loghandler)
-        self.logging.info("Starting views thread ...")
-
-        self.server = None
         self.active_cams = None
-        self._running = True
-        self.health_check = time.time()
-        self.name = "Views"
         self.camera = camera
-        self.config = config
         self.which_cam = ""
+        self.force_reload = False
+
         self.archive_views = {}
         self.archive_loading = "started"
         self.archive_dir_size = 0
+
         self.today_dir_size = 0             # not implemented yet
         self.favorite_views = {}
         self.favorite_loading = "started"
+
         self.create_archive = True
         self.create_favorites = True
-        self.force_reload = False
         self.create = BirdhouseViewCreate(config)
 
     def run(self):
@@ -458,21 +489,17 @@ class BirdhouseViews(threading.Thread):
 
         self.logging.info("Starting HTML views and REST API for GET ...")
         while self._running:
-            # if shutdown
-            if self.config.shut_down:
-                self.stop()
-
             # if archive to be read again (from time to time and depending on user activity)
             if self.create_archive and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
-                if not self.config.shut_down:
+                if not self.if_shutdown():
                     self.archive_list_create()
                     self.create_archive = False
 
             # if favorites to be read again (from time to time and depending on user activity)
             if self.create_favorites and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
-                if not self.config.shut_down:
+                if not self.if_shutdown():
                     self.favorite_list_create()
                     self.create_favorites = False
 
@@ -485,104 +512,39 @@ class BirdhouseViews(threading.Thread):
             if self.config.user_activity():
                 count += 1
 
-            self.health_check = time.time()
-            time.sleep(1)
+            self.thread_control()
+            self.thread_wait()
 
         self.logging.info("Stopped HTML views and REST API for GET.")
 
-    def stop(self):
-        """
-        Do nothing at the moment
-        """
-        self._running = False
-
-    def admin_allowed(self):
-        """
-        Check if administration is allowed based on the IP4 the request comes from
-        """
-        if self.server is None:
-            return False
-
-        self.logging.debug("Check if administration is allowed: " + self.server.address_string() + " / " + str(
-            self.config.param["server"]["ip4_admin_deny"]))
-
-        if self.server.address_string() in self.config.param["server"]["ip4_admin_deny"]:
-            return False
-        else:
-            return True
-
-    def selected_camera(self, check_path=""):
-        """
-        Check path, which cam has been selected
-        """
-        which_cam = "cam1"
-        further_param = ""
-        complete_cam = ""
-
-        if check_path == "":
-            path = self.server.path
-        else:
-            path = check_path
-
-        if "/api" in path and "/api/status" not in path and "/api/version" not in path:
-            param = path.split("/")
-            if len(param) > 3:
-                complete_cam = param[3]
-                which_cam = param[3]
-            if "+" in complete_cam:
-                which_cam = complete_cam.split("+")[0]
-            if which_cam not in self.camera or len(param) <= 3:
-                self.logging.warning("Unknown camera requested (%s).", path)
-                which_cam = "cam1"
-        elif "?" in path and "index.html" not in path:
-            param = path.split("?")
-            param = param[1].split("&")
-            which_cam = param[0]
-            complete_cam = param[0]
-            if "+" in complete_cam:
-                which_cam = complete_cam.split("+")[0]
-            further_param = param
-
-        self.active_cams = []
-        for key in self.camera:
-            if self.camera[key].active:
-                self.active_cams.append(key)
-
-        if not self.camera[which_cam].active and self.active_cams:
-            which_cam = self.active_cams[0]
-
-        if check_path == "":
-            self.logging.debug("Selected CAM = " + which_cam + " (" + self.server.path + ")")
-        else:
-            self.logging.debug("Selected CAM = " + which_cam + " (" + check_path + ")")
-
-        self.which_cam = which_cam
-        return path, complete_cam, further_param
-
-    def index(self, server):
+    def index_view(self, param):
         """
         Index page with live-streaming pictures
         """
-        self.server = server
-        path, which_cam, further_param = self.selected_camera()
+        self.logging.debug("Create data for Index View.")
+        which_cam = param["which_cam"]
         content = {
             "active_cam": which_cam,
             "view": "index"
         }
-        if self.admin_allowed():
+        if param["admin_allowed"]:
             content["links"] = print_links_json(link_list=("favorit", "today", "backup", "cam_info"))
         else:
             content["links"] = print_links_json(link_list=("favorit", "today", "backup"))
 
         return content
 
-    def list(self, server):
+    def list(self, param):
         """
         Page with pictures (and videos) of a single day
         """
-        self.server = server
-        param = server.path.split("/")
-        path, which_cam, further_param = self.selected_camera()
+        path = param["path"]
+        which_cam = param["which_cam"]
+        further_param = param["parameter"]
+        date_backup = ""
+        if len(further_param) > 0:
+            date_backup = param["parameter"][0]
+
         time_now = self.config.local_time().strftime('%H%M%S')
         check_similarity = True
         backup = False
@@ -592,17 +554,6 @@ class BirdhouseViews(threading.Thread):
         files_images = {}
         files_weather = None
         files_sensor = None
-
-        if param[1] != "api":
-            if len(param) > 2:
-                date_backup = param[2]
-            else:
-                date_backup = ""
-        else:
-            if len(param) > 4:
-                date_backup = param[4]
-            else:
-                date_backup = ""
 
         content = {
             "active_cam": which_cam,
@@ -664,7 +615,7 @@ class BirdhouseViews(threading.Thread):
             subdirectory = ""
 
             content["subtitle"] = presets.birdhouse_pages["today"][0]
-            if self.admin_allowed():
+            if param["admin_allowed"]:
                 content["links"] = print_links_json(
                     link_list=("live", "favorit", "today_complete", "videos", "backup"), cam=which_cam)
             else:
@@ -685,6 +636,8 @@ class BirdhouseViews(threading.Thread):
                     files_all[stamp]["datestamp"] = date_backup
                 if "date" not in files_all[stamp]:
                     files_all[stamp]["date"] = date_backup[6:8] + "." + date_backup[4:6] + "." + date_backup[0:4]
+                if "time" not in files_all[stamp]:
+                    files_all[stamp]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
 
                 if ((int(stamp) < int(time_now) or time_now == "000000")
                         and files_all[stamp]["datestamp"] == date_today) or backup:
@@ -718,7 +671,7 @@ class BirdhouseViews(threading.Thread):
                         if "type" in files_today[stamp] and files_today[stamp]["type"] != "data":
                             count += 1
 
-                        if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
+                        if "type" in files_today[stamp] and files_today[stamp]["type"] == "image":
                             files_images[stamp] = files_today[stamp].copy()
                             if "weather" in files_images[stamp]:
                                 del files_images[stamp]["weather"]
@@ -740,7 +693,7 @@ class BirdhouseViews(threading.Thread):
             # Yesterday
             files_yesterday = {}
             stamps = list(reversed(sorted(files_all.keys())))
-            if not backup and not self.config.param["server"]["daily_clean_up"]:
+            if not backup and not birdhouse_env["database_cleanup"]:
                 for stamp in stamps:
                     if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
                         if "datestamp" not in files_all[stamp]:
@@ -766,7 +719,7 @@ class BirdhouseViews(threading.Thread):
 
             # To be deleted
             files_recycle = {}
-            if self.admin_allowed():
+            if param["admin_allowed"]:
                 for stamp in stamps:
                     if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
                         if "to_be_deleted" in files_all[stamp] and int(files_all[stamp]["to_be_deleted"]) == 1:
@@ -807,53 +760,204 @@ class BirdhouseViews(threading.Thread):
 
         return content
 
-    def archive_list(self, camera):
+    def archive_list(self, param):
         """
         Return data for list of archive folders (or an empty list if still loading)
         """
+        camera = param["which_cam"]
         if camera in self.archive_views:
             content = self.archive_views[camera]
         else:
             content = {}
-        if self.admin_allowed():
+        if param["admin_allowed"]:
             content["links"] = print_links_json(link_list=("live", "favorit", "today", "today_complete", "videos"), cam=camera)
         else:
             content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos"), cam=camera)
         return content
+
+    def archive_list_update(self, force=False):
+        """
+        Trigger recreation of the archive list
+        """
+        self.create_archive = True
+        if force:
+            self.force_reload = True
+
+    def archive_list_preview(self, cam, image_title, directory, file_data):
+        # first favorit as image or ...
+        first_img = ""
+        first_img_temp = ""
+        sorted_file_keys = list(sorted(file_data["files"].keys()))
+
+        if "preview_fav" in self.config.param["backup"] and self.config.param["backup"]["preview_fav"]:
+            self.logging.debug(" ......... Preview-FAVORITE: ")
+            for file in sorted_file_keys:
+                entry = file_data["files"][file]
+                if "camera" in entry and entry["camera"] == cam and "favorit" in entry \
+                        and int(entry["favorit"]) == 1 and "lowres" in entry:
+                    if "type" not in entry or ("type" in entry and entry["type"] == "image"):
+                        first_img = file
+                        self.logging.debug(" ......... 1=" + first_img)
+                        break
+
+            # or take first image with detected image, not full hour
+            if first_img == "":
+                for file in sorted_file_keys:
+                    entry = file_data["files"][file]
+                    if "camera" in entry and entry["camera"] == cam and "lowres" in entry \
+                            and file[2:4] != "00":
+                        if "to_be_deleted" not in entry or int(entry["to_be_deleted"]) != 1:
+                            if "type" not in entry or ("type" in entry and entry["type"] == "image"):
+                                first_img = file
+                                self.logging.debug(" ......... 2=" + first_img)
+                                break
+
+            # or take first image with detected image
+            if first_img == "":
+                for file in sorted_file_keys:
+                    entry = file_data["files"][file]
+                    if "camera" in entry and entry["camera"] == cam and "lowres" in entry:
+                        if "to_be_deleted" not in entry or int(entry["to_be_deleted"]) != 1:
+                            if "type" not in entry or ("type" in entry and entry["type"] == "image"):
+                                first_img = file
+                                self.logging.debug(" ......... 3=" + first_img)
+                                break
+
+        # select preview image
+        elif "preview_fav" not in self.config.param["backup"] \
+                or ("preview_fav" in self.config.param["backup"]
+                    and not self.config.param["backup"]["preview_fav"]):
+            self.logging.debug(" ......... Preview-TIME=" + image_title[0:4] + ":")
+
+            for file in sorted_file_keys:
+                entry = file_data["files"][file]
+                if image_title[0:4] == file[0:4] and "camera" in entry and entry["camera"] == cam \
+                        and "lowres" in entry:
+                    if "to_be_deleted" not in entry or int(entry["to_be_deleted"]) != 1:
+                        self.logging.debug(" ......... 4=" + first_img)
+                        first_img_temp = file
+                        break
+            if first_img_temp != "":
+                first_img = first_img_temp
+
+        # or take first image as title image
+        if first_img == "":
+            for file in sorted_file_keys:
+                entry = file_data["files"][file]
+                if "camera" in entry and entry["camera"] == cam and "lowres" in entry:
+                    if "to_be_deleted" not in entry or int(entry["to_be_deleted"]) != 1:
+                        self.logging.debug(" ......... 5=" + first_img)
+                        first_img = file
+                        break
+
+        if first_img in file_data["files"]:
+            image_preview = os.path.join(directory, file_data["files"][first_img]["lowres"])
+        else:
+            image_preview = ""
+
+        return image_preview
+
+    def archive_list_entry(self, cam, content, directory, dir_size, file_data):
+        """
+        create entry per archive directory, measure file sizes
+        """
+        count = 0
+        dir_size_cam = 0
+        dir_count_cam = 0
+        dir_count_delete = 0
+        dir_count_data = 0
+
+        for file in file_data["files"]:
+            if self.if_other_prio_process("archive_view"):
+                time.sleep(0.1)
+
+            file_info = file_data["files"][file]
+            if ("datestamp" in file_info and file_info["datestamp"] == directory) or "datestamp" not in file_info:
+                if "type" not in file_info or file_info["type"] == "image":
+                    count += 1
+                else:
+                    dir_count_data += 1
+
+                if "size" in file_info and "lowres" in file_info:
+                    dir_size += float(file_info["size"])
+                    lowres_file = os.path.join(self.config.db_handler.directory(config="backup"),
+                                               directory, file_info["lowres"])
+                    if os.path.isfile(lowres_file):
+                        dir_size += os.path.getsize(lowres_file)
+
+                if ("camera" in file_info and file_info["camera"] == cam) or "camera" not in file_info:
+                    if "size" in file_info and "float" in str(type(file_info["size"])):
+                        dir_size_cam += file_info["size"]
+                    elif "lowres" in file_info:
+                        lowres_file = os.path.join(self.config.db_handler.directory(config="backup"),
+                                                   directory, file_info["lowres"])
+                        if os.path.isfile(lowres_file):
+                            dir_size_cam += os.path.getsize(lowres_file)
+                            # self.logging.debug("lowres size: "+str(os.path.getsize(lowres_file)))
+                        if "lowres_size" in file_info:
+                            if file_info["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
+                                content["max_image_size"]["lowres"][0] = file_info["lowres_size"][0]
+                            if file_info["lowres_size"][1] > content["max_image_size"]["lowres"][1]:
+                                content["max_image_size"]["lowres"][1] = file_info["lowres_size"][1]
+
+                        if "hires" in file_info:
+                            hires_file = os.path.join(self.config.db_handler.directory(config="backup"),
+                                                      directory, file_info["hires"])
+                            if os.path.isfile(hires_file):
+                                dir_size_cam += os.path.getsize(hires_file)
+                                # self.logging.debug("hires size: " + str(os.path.getsize(hires_file)))
+                        if "hires_size" in file_info:
+                            if file_info["hires_size"][0] > content["max_image_size"]["hires"][0]:
+                                content["max_image_size"]["hires"][0] = file_info["hires_size"][0]
+                            if file_info["lowres_size"][1] > content["max_image_size"]["hires"][1]:
+                                content["max_image_size"]["hires"][1] = file_info["hires_size"][1]
+
+                    if "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
+                        dir_count_delete += 1
+
+                    if "type" not in file_info or file_info["type"] == "image":
+                        dir_count_cam += 1
+
+        dir_size_cam = round(dir_size_cam / 1024 / 1024, 1)
+        dir_size = round(dir_size / 1024 / 1024, 1)
+
+        content["entries"][directory] = {
+            "directory": "/" + self.config.directories["backup"] + directory + "/",
+            "type": "directory",
+            "camera": cam,
+            "date": file_data["info"]["date"],
+            "datestamp": directory,
+            "count": count,
+            "count_delete": dir_count_delete,
+            "count_cam": dir_count_cam,
+            "count_data": dir_count_data,
+            "dir_size": 0,
+            "dir_size_cam": dir_size_cam,
+            "lowres": ""
+        }
+
+        return content.copy(), dir_size
 
     def archive_list_create(self):
         """
         Page with backup/archive directory
         """
         count = 0
-        dir_size = 0
-        dir_size_cam = 0
         dir_size_total = 0
-        dir_count_cam = 0
-        dir_count_data = 0
-        dir_count_delete = 0
-        archive_info = {}
         start_time = time.time()
 
         self.archive_loading = "in progress"
-        self.logging.info("Create data for archive view from '" +
-                          self.config.db_handler.directory(config="backup")+"' ...")
-
         main_directory = self.config.db_handler.directory(config="backup")
-        self.logging.info("- Get archive directory information (" + self.config.db_handler.db_type + " | " +
-                          main_directory + ") ...")
+        db_type = self.config.db_handler.db_type
+        dir_list = get_directories(main_directory)
 
-        dir_list = []
-        file_list = os.listdir(main_directory)
-        for entry in file_list:
-            if "." not in entry:
-                if os.path.isdir(os.path.join(main_directory, entry)):
-                    dir_list.append(entry)
+        archive_info = {}
+        archive_info = self.config.db_handler.read("backup_info", "")
+
+        self.logging.info("Create data for archive view from '" + main_directory + "' ...")
+        self.logging.info("- Get archive directory information (" + db_type + " | " + main_directory + ") ...")
         self.logging.info("- Found " + str(len(dir_list)) + " archive directories.")
         self.logging.debug("  -> " + str(dir_list))
-
-        # dir_list = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
-        # dir_list.sort(reverse=True)
 
         for cam in self.camera:
             content = {
@@ -861,29 +965,28 @@ class BirdhouseViews(threading.Thread):
                 "view": "backup",
                 "entries": {},
                 "groups": {},
-                "max_image_size": {
-                    "lowres": [0, 0],
-                    "hires": [0, 0]
+                "max_image_size": {"lowres": [0, 0], "hires": [0, 0]}
                 }
-            }
             dir_total_size = 0
             files_total = 0
 
-            if self.config.shut_down:
-                self.logging.info("Interrupt create favorite list.")
+            if self.if_shutdown():
+                self.logging.info("Interrupt creating the archive list.")
                 return
 
             image_title = str(self.config.param["backup"]["preview"])
-            # + str(self.camera[cam].param["image_save"]["seconds"][0])
             image_today = self.config.filename_image(image_type="lowres", timestamp=image_title, camera=cam)
-            image = os.path.join(self.config.db_handler.directory(config="images"), image_today)
+            image_preview = os.path.join(self.config.db_handler.directory(config="images"), image_today)
 
             self.logging.info("- Scan " + str(len(dir_list)) + " directories for " + cam + " ...")
+            dir_list = sorted(dir_list)
+            directory_data_change = False
             for directory in dir_list:
+                dir_size = 0
                 group_name = directory[0:4] + "-" + directory[4:6]
                 self.logging.debug("  -> Directory: " + directory + " | " + group_name)
 
-                if self.config.shut_down:
+                if self.if_shutdown():
                     self.logging.info("Interrupt create favorite list.")
                     return
 
@@ -892,38 +995,41 @@ class BirdhouseViews(threading.Thread):
                 if group_name not in content["groups"]:
                     content["groups"][group_name] = []
 
-                available = False
+                db_available = False
                 config_file = ""
                 config_available = False
+
+                # check if DB and config file available
                 if self.config.db_handler.db_type == "couch" or self.config.db_handler.db_type == "both":
-                    available = self.config.db_handler.exists(config="backup", date=directory)
+                    db_available = self.config.db_handler.exists(config="backup", date=directory)
                     config_file = self.config.db_handler.file_path(config="backup", date=directory)
                     config_available = os.path.isfile(config_file)
-                    if not available or not config_available:
-                        self.logging.warning("  -> Check CouchDB: available=" + str(available))
+                    if not db_available or not config_available:
+                        self.logging.warning("  -> Check CouchDB: available=" + str(db_available))
                         self.logging.warning("  -> Check JSON: config_file=" + str(config_available))
-
                 elif self.config.db_handler.db_type == "json":
-                    available = self.config.db_handler.exists(config="backup", date=directory)
-                    if not available:
+                    db_available = self.config.db_handler.exists(config="backup", date=directory)
+                    if not db_available:
                         self.logging.error("  -> Check JSON: config_file=" + str(config_available))
 
+                # read data depending on available sources
                 file_data = {}
-                if available:
+                if db_available:
                     self.logging.debug("  -> read from DB")
                     file_data = self.config.db_handler.read_cache(config="backup", date=directory)
-
-                elif not available and config_available:
+                elif not db_available and config_available:
                     self.logging.debug("  -> read from file")
                     file_data = self.config.db_handler.json.read(config_file)
                     if file_data != {}:
                         self.logging.debug("  -> write to DB: " + str(file_data.keys()))
+                        file_data["info"]["changed"] = False
                         self.config.db_handler.write(config="backup", date=directory, data=file_data, create=True)
-                        available = True
+                        db_available = True
                     else:
                         self.logging.error("  -> got empty data")
 
-                if available:
+                # read or create data
+                if db_available:
                     self.logging.debug("  -> Check CONFIG")
                     content["groups"][group_name].append(directory)
 
@@ -934,156 +1040,55 @@ class BirdhouseViews(threading.Thread):
                         content["entries"][directory]["error"] = True
                         self.logging.error("  -> Read JSON: Wrong file format - " + config_file)
 
-                    else:
-                        count = 0  # file_data["info"]["count"]
-                        first_img = ""
-                        dir_size_cam = 0
-                        dir_size = 0
-                        dir_count_cam = 0
-                        dir_count_delete = 0
-                        dir_count_data = 0
-                        first_img_temp = ""
-                        sorted_file_keys = list(sorted(file_data["files"].keys()))
+                    elif "info" in file_data and "changed" in file_data["info"] and not file_data["info"]["changed"] \
+                            and directory in archive_info[cam]["entries"]:
 
-                        # first favorit as image or ...
-                        if "preview_fav" in self.config.param["backup"] and self.config.param["backup"]["preview_fav"]:
-                            self.logging.debug(" ......... Preview-FAVORITE: ")
-                            for file in sorted_file_keys:
-                                entry = file_data["files"][file]
-                                if "camera" in entry and entry["camera"] == cam and "favorit" in entry \
-                                        and int(entry["favorit"]) == 1 and "lowres" in entry:
-                                    first_img = file
-                                    self.logging.debug(" ......... 1=" + first_img)
-                                    break
-
-                            # or take first image with detected image, not full hour
-                            if first_img == "":
-                                for file in sorted_file_keys:
-                                    entry = file_data["files"][file]
-                                    if "camera" in entry and entry["camera"] == cam and "lowres" in entry \
-                                            and file[2:4] != "00":
-                                        first_img = file
-                                        self.logging.debug(" ......... 2=" + first_img)
-                                        break
-
-                            # or take first image with detected image
-                            if first_img == "":
-                                for file in sorted_file_keys:
-                                    entry = file_data["files"][file]
-                                    if "camera" in entry and entry["camera"] == cam and "lowres" in entry:
-                                        first_img = file
-                                        self.logging.debug(" ......... 3=" + first_img)
-                                        break
-
-                        # select preview image
-                        elif "preview_fav" not in self.config.param["backup"] \
-                                or ("preview_fav" in self.config.param["backup"]
-                                    and not self.config.param["backup"]["preview_fav"]):
-                            self.logging.debug(" ......... Preview-TIME=" + image_title[0:4] + ":")
-
-                            for file in sorted_file_keys:
-                                entry = file_data["files"][file]
-                                if image_title[0:4] == file[0:4] and "camera" in entry and entry["camera"] == cam \
-                                        and "lowres" in entry:
-                                    self.logging.debug(" ......... 4=" + first_img)
-                                    first_img_temp = file
-                                    break
-                            if first_img_temp != "":
-                                first_img = first_img_temp
-
-                        # or take first image as title image
-                        if first_img == "":
-                            for file in sorted_file_keys:
-                                entry = file_data["files"][file]
-                                if "camera" in entry and entry["camera"] == cam and "lowres" in entry:
-                                    self.logging.debug(" ......... 5=" + first_img)
-                                    first_img = file
-                                    break
-
-                        if first_img in file_data["files"]:
-                            image = os.path.join(directory, file_data["files"][first_img]["lowres"])
-                        else:
-                            image = ""
-
-                    if "files" in file_data:
-                        for file in file_data["files"]:
-                            file_info = file_data["files"][file]
-                            if ("datestamp" in file_info and file_info["datestamp"] == directory) or "datestamp" not in file_info:
-                                if "type" not in file_info or file_info["type"] == "image":
-                                    count += 1
-                                else:
-                                    dir_count_data += 1
-
-                                if "size" in file_info and "float" in str(type(file_info["size"])):
-                                    dir_size += file_info["size"]
-
-                                if ("camera" in file_info and file_info["camera"] == cam) or "camera" not in file_info:
-                                    if "size" in file_info and "float" in str(type(file_info["size"])):
-                                        dir_size_cam += file_info["size"]
-                                    elif "lowres" in file_info:
-                                        lowres_file = os.path.join(self.config.db_handler.directory(config="backup"),
-                                                                   directory, file_info["lowres"])
-                                        if os.path.isfile(lowres_file):
-                                            dir_size_cam += os.path.getsize(lowres_file)
-                                            # self.logging.debug("lowres size: "+str(os.path.getsize(lowres_file)))
-                                        if "lowres_size" in file_info:
-                                            if file_info["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
-                                                content["max_image_size"]["lowres"][0] = file_info["lowres_size"][0]
-                                            if file_info["lowres_size"][1] > content["max_image_size"]["lowres"][1]:
-                                                content["max_image_size"]["lowres"][1] = file_info["lowres_size"][1]
-
-                                        if "hires" in file_info:
-                                            hires_file = os.path.join(self.config.db_handler.directory(config="backup"),
-                                                                      directory, file_info["hires"])
-                                            if os.path.isfile(hires_file):
-                                                dir_size_cam += os.path.getsize(hires_file)
-                                                # self.logging.debug("hires size: " + str(os.path.getsize(hires_file)))
-                                        if "hires_size" in file_info:
-                                            if file_info["hires_size"][0] > content["max_image_size"]["hires"][0]:
-                                                content["max_image_size"]["hires"][0] = file_info["hires_size"][0]
-                                            if file_info["lowres_size"][1] > content["max_image_size"]["hires"][1]:
-                                                content["max_image_size"]["hires"][1] = file_info["hires_size"][1]
-
-                                    if "to_be_deleted" in file_info and int(file_info["to_be_deleted"]) == 1:
-                                        dir_count_delete += 1
-
-                                    if "type" not in file_info or file_info["type"] == "image":
-                                        dir_count_cam += 1
-
-                        dir_size += dir_size_cam
-                        dir_size = round(dir_size / 1024 / 1024, 1)
-                        dir_size_cam = round(dir_size_cam / 1024 / 1024, 1)
+                        content["entries"][directory] = archive_info[cam]["entries"][directory].copy()
+                        dir_size = content["entries"][directory]["dir_size"]
+                        dir_size_cam = content["entries"][directory]["dir_size_cam"]
                         dir_total_size += dir_size
-                        files_total += count
+                        files_total += content["entries"][directory]["count"]
+                        count = content["entries"][directory]["count"]
+
+                        self.logging.info("  -> Archive " + directory + "*: " + str(round(dir_total_size, 1)) +
+                                          " MB / " + cam + ": " + str(dir_size_cam) + " MB in " + str(count) + " files")
+
+                    # analyze files and create archive entry
+                    elif "files" in file_data:
+                        # identify preview image
+                        image_preview = self.archive_list_preview(cam=cam, image_title=image_title,
+                                                                  directory=directory, file_data=file_data)
+
+                        image_preview = os.path.join(self.config.directories["backup"], image_preview)
+                        image_file = image_preview.replace(directory + "/", "")
+                        image_file = image_file.replace(self.config.directories["backup"], "")
+
+                        content, dir_size = self.archive_list_entry(cam=cam, content=content.copy(),
+                                                                    directory=directory,
+                                                                    dir_size=dir_size, file_data=file_data)
+
+                        dir_total_size += dir_size
+                        dir_size_cam = content["entries"][directory]["dir_size_cam"]
+                        files_total += content["entries"][directory]["count"]
+                        count = files_total
+                        content["entries"][directory]["lowres"] = image_file
+
+                        file_data["info"]["changed"] = False
+                        self.config.db_handler.write(config="backup", date=directory, data=file_data.copy())
 
                         self.logging.info("  -> Archive " + directory + ": " + str(round(dir_total_size, 1)) +
                                           " MB / " + cam + ": " + str(dir_size_cam) + " MB in " + str(count) + " files")
 
-                        image = os.path.join(self.config.directories["backup"], image)
-                        image_file = image.replace(directory + "/", "")
-                        image_file = image_file.replace(self.config.directories["backup"], "")
-
-                        content["entries"][directory] = {
-                            "directory": "/" + self.config.directories["backup"] + directory + "/",
-                            "type": "directory",
-                            "camera": cam,
-                            "date": file_data["info"]["date"],
-                            "datestamp": directory,
-                            "count": count,
-                            "count_delete": dir_count_delete,
-                            "count_cam": dir_count_cam,
-                            "count_data": dir_count_data,
-                            "dir_size": dir_size,
-                            "dir_size_cam": dir_size_cam,
-                            "lowres": image_file
-                        }
                     else:
                         self.logging.error("  -> Archive: config file available but empty/in wrong format: /backup/" + directory)
 
-                elif available:
+                elif db_available:
                     self.logging.info("  -> Archive available in CouchDB")
                 else:
                     self.logging.error("  -> No config file available: /backup/" + directory)
+
+                if directory in content["entries"]:
+                    content["entries"][directory]["dir_size"] = dir_size
 
             content["view_count"] = []
             content["subtitle"] = presets.birdhouse_pages["backup"][0] + " (" + self.camera[cam].name + ")"
@@ -1091,7 +1096,6 @@ class BirdhouseViews(threading.Thread):
             self.archive_views[cam] = content.copy()
 
             if self.config.db_handler.db_type == "couch":
-                del content["entries"]
                 archive_info[cam] = content.copy()
 
             dir_size_total += dir_total_size
@@ -1101,21 +1105,13 @@ class BirdhouseViews(threading.Thread):
         self.archive_loading = "done"
         self.logging.info("Create data for archive view done ("+str(round(time.time()-start_time, 1))+"s)")
 
-    def archive_list_update(self, force=False):
-        """
-        Trigger recreation of the archive list
-        """
-        self.create_archive = True
-        if force:
-            self.force_reload = True
-
-    def complete_list_today(self, server):
+    def complete_list_today(self, param):
         """
         Page with all pictures of the current day
         """
         self.logging.debug("CompleteListToday: Start - "+self.config.local_time().strftime("%H:%M:%S"))
-        self.server = server
-        path, which_cam, further_param = self.selected_camera()
+        which_cam = param["which_cam"]
+
         content = {
             "active_cam": which_cam,
             "view": "list_complete",
@@ -1128,12 +1124,7 @@ class BirdhouseViews(threading.Thread):
         }
 
         count = 0
-        param = server.path.split("/")
-        if "app-v1" in param:
-            del param[1]
-
         category = "/current/"
-        path = self.config.db_handler.directory(config="images")
         files_all = self.config.db_handler.read_cache(config="images")
         data_weather = self.config.db_handler.read_cache(config="weather")
         data_sensor = self.config.db_handler.read_cache(config="sensor")
@@ -1194,7 +1185,6 @@ class BirdhouseViews(threading.Thread):
         content["view_count"] = ["all", "star", "detect", "recycle", "data"]
         content["subtitle"] = presets.birdhouse_pages["today_complete"][0] + " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
         content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"), cam=which_cam)
-        # content["chart_data"] = self.create.chart_data(content["entries"].copy(), self.config)
         content["chart_data"] = self.create.chart_data_new(data_image=content["entries"].copy(),
                                                            data_sensor=data_sensor,
                                                            data_weather=data_weather,
@@ -1207,14 +1197,15 @@ class BirdhouseViews(threading.Thread):
                            " (" + str(length) + " kB)")
         return content
 
-    def favorite_list(self, camera):
+    def favorite_list(self, param):
         """
         Return data for list of favorites from cache
         """
+        camera = param["which_cam"]
         content = self.favorite_views
         content["active_cam"] = camera
 
-        if self.admin_allowed():
+        if param["admin_allowed"]:
             content["links"] = print_links_json(link_list=("live", "today", "today_complete", "videos", "backup"), cam=camera)
         else:
             content["links"] = print_links_json(link_list=("live", "today", "videos", "backup"), cam=camera)
@@ -1314,9 +1305,12 @@ class BirdhouseViews(threading.Thread):
             category = "/backup/" + directory + "/"
             favorites[directory] = {}
 
-            if self.config.shut_down:
+            if self.if_shutdown():
                 self.logging.info("Interrupt create favorite list.")
                 return
+
+            if self.if_other_prio_process("favorite_view"):
+                time.sleep(0.2)
 
             if self.config.db_handler.exists(config="backup", date=directory):
                 files_data = self.config.db_handler.read_cache(config="backup", date=directory)
@@ -1377,21 +1371,13 @@ class BirdhouseViews(threading.Thread):
         if force:
             self.force_reload = True
 
-    def video_list(self, server):
+    def video_list(self, param):
         """
-        Page with all videos
+        Return data for page with all videos
         """
-        self.server = server
-        path, which_cam, further_param = self.selected_camera()
+        which_cam = param["which_cam"]
         content = {"active_cam": which_cam, "view": "list_videos"}
-        param = server.path.split("/")
-        if "app-v1" in param:
-            del param[1]
 
-        directory = self.config.db_handler.directory(config="videos")
-        category = "/videos/"  # self.config.directories["videos"]
-
-        files_all = {}
         files_delete = {}
         files_show = {}
         content["entries"] = {}
@@ -1399,8 +1385,8 @@ class BirdhouseViews(threading.Thread):
         if self.config.db_handler.exists("videos"):
             files_all = self.config.db_handler.read_cache(config="videos")
             for file in files_all:
-                files_all[file]["directory"] = "http://"+self.config.param["server"]["ip4_stream_video"]
-                files_all[file]["directory"] += ":"+str(self.config.param["server"]["port_video"])+"/"
+                files_all[file]["directory"] = "http://"+birdhouse_env["server_audio"] ### need for action
+                files_all[file]["directory"] += ":"+str(birdhouse_env["port_video"])+"/"
                 files_all[file]["type"] = "video"
                 files_all[file]["path"] = self.config.directories["videos"]
                 files_all[file]["category"] = "/videos/" + file
@@ -1409,33 +1395,29 @@ class BirdhouseViews(threading.Thread):
                 else:
                     files_show[file] = files_all[file]
 
-            if len(files_show) > 0:                           content["entries"] = files_show
-            if len(files_delete) > 0 and self.admin_allowed(): content["entries_delete"] = files_delete
+            if len(files_show) > 0:
+                content["entries"] = files_show
+            if len(files_delete) > 0 and param["admin_allowed"]:
+                content["entries_delete"] = files_delete
 
         content["view_count"] = ["all", "star", "detect", "recycle"]
-        content["subtitle"] = presets.birdhouse_pages["videos"][
-            0]  # + " (" + self.camera[which_cam].name +", " + str(len(files_all)) + " Videos)"
+        content["subtitle"] = presets.birdhouse_pages["videos"][0]
 
-        if self.admin_allowed():
+        if param["admin_allowed"]:
             content["links"] = print_links_json(link_list=("live", "favorit", "cam_info", "today", "backup"))
         else:
             content["links"] = print_links_json(link_list=("live", "favorit", "today", "backup"))
 
         return content
 
-    def camera_list(self, server):
+    def camera_list(self, param):
         """
-        Page with all videos
+        Return data for page with all cameras
         """
-        self.server = server
-        path, which_cam, further_param = self.selected_camera()
+        which_cam = param["which_cam"]
         content = {"active_cam": which_cam, "view": "list_cameras", "entries": {}}
-        param = server.path.split("/")
-        if "app-v1" in param: del param[1]
-        count = 0
 
         for cam in self.camera:
-            info = self.camera[cam].param
             content["entries"][cam] = self.camera[cam].param
             content["entries"][cam]["video"]["stream"] = "/stream.mjpg?" + cam
             content["entries"][cam]["video"]["stream_detect"] = "/detection/stream.mjpg?" + cam
@@ -1449,31 +1431,22 @@ class BirdhouseViews(threading.Thread):
 
         return content.copy()
 
-    def detail_view_video(self, server):
+    def detail_view_video(self, param):
         """
         Show details and edit options for a video file
         """
-        self.server = server
-        path, which_cam, further_param = self.selected_camera()
+        which_cam = param["which_cam"]
+        video_id = param["parameter"][0]
+
         content = {"active_cam": which_cam, "view": "detail_video", "entries": {}}
-        param = server.path.split("/")
-        if "app-v1" in param:
-            del param[1]
-        count = 0
-
-        if "api" in param:
-            video_id = param[4]
-        else:
-            video_id = param[1]
-
         config_data = self.config.db_handler.read_cache(config="videos")
-        if video_id in config_data and "video_file" in config_data[video_id]:
 
+        if video_id in config_data and "video_file" in config_data[video_id]:
             data = config_data[video_id]
             content["entries"][video_id] = data
             description = ""
 
-            if self.admin_allowed():
+            if param["admin_allowed"]:
                 if self.config.param["server"]["ip4_stream_video"] != "":
                     video_server = self.config.param["server"]["ip4_stream_video"]
                 elif self.config.param["server"]["ip4_address"] != "":
@@ -1481,7 +1454,6 @@ class BirdhouseViews(threading.Thread):
                 else:
                     video_server = "<!--CURRENT_SERVER-->"
                 files = {
-                    # "VIDEOFILE": self.camera[which_cam].param["video"]["streaming_server"] + data["video_file"],
                     "VIDEOFILE": "http://"+video_server+":"+str(self.config.param["server"]["port_video"])+"/",
                     "THUMBNAIL": data["thumbnail"],
                     "LENGTH": str(data["length"]),

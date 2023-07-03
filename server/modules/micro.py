@@ -1,0 +1,322 @@
+import pyaudio
+import threading
+import time
+import wave
+import os
+from modules.presets import *
+from modules.bh_class import BirdhouseClass
+
+
+class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
+
+    def __init__(self, device_id, config):
+        """
+        Initialize new thread and set initial parameters
+        """
+        threading.Thread.__init__(self)
+        BirdhouseClass.__init__(self, class_id=device_id + "-main", class_log="mic-main",
+                                device_id=device_id, config=config)
+        self.thread_set_priority(1)
+
+        self.count = None
+        self.param = config.param["devices"]["microphones"][device_id]
+        self.config.update["micro_" + self.id] = False
+        self.audio = None
+        self.device = None
+        self.info = None
+        self.stream = None
+        self.connected = False
+        self.chunk = None
+
+        self.recording = False
+        self.recording_processing = False
+        self.recording_filename = ""
+        self.recording_default_path = os.path.join(os.path.dirname(__file__), "../../data",
+                                                   birdhouse_directories["audio_temp"])
+        self.recording_default_filename = "recording_" + self.id + ".wav"
+        self.recording_frames = []
+        self.record_start_time = None
+
+        self.last_active = time.time()
+        self.last_reload = time.time()
+        self.restart_stream = True
+        self.timeout = 3
+
+        self.FORMAT = pyaudio.paInt16
+        self.CHANNELS = 1
+        self.RATE = 16000
+        self.CHUNK = 1024
+        self.CHUNK_default = 1024
+        self.DEVICE = 2
+        self.BITS_PER_SAMPLE = 16
+
+    def run(self):
+        """
+        Start streaming
+        """
+        self.logging.info("Start microphone handler for '" + self.id + "' ...")
+        self.connect()
+        self.count = 0
+
+        while self._running:
+            # Pause if not used for a while
+            if self.last_active + self.timeout < time.time():
+                self._paused = True
+            if self.restart_stream:
+                self._paused = False
+
+            # reconnect if config data were updated
+            if self.config.update["micro_" + self.id]:
+                self.connect()
+                self.config.update["micro_" + self.id] = False
+
+            # read data from device and store in a var
+            if self.connected and not self.error and not self._paused:
+                try:
+                    self.chunk = self.stream.read(self.CHUNK, exception_on_overflow=False)
+                    if len(self.chunk) > 0:
+                        self.count += 1
+                        if self.recording:
+                            self.recording_frames.append(self.chunk)
+
+                except Exception as err:
+                    self.raise_error("Could not read chunk: " + str(err))
+                    self.count = 0
+
+            else:
+                self.count = 0
+                time.sleep(0.1)
+
+            # start processing if trigger is set
+            if self.recording_processing:
+                self.record_process()
+
+            self.thread_control()
+
+        if self.stream is not None:
+            if not self.stream.is_stopped():
+                self.stream.stop_stream()
+            self.stream.close()
+        self.logging.info("Stopped microphone '" + self.id + "'.")
+
+    def connect(self):
+        """
+        connect to microphone
+        """
+        self.reset_error()
+        self.connected = False
+        self.param = self.config.param["devices"]["microphones"][self.id]
+        self.logging.info("AUDIO device " + self.id + " (" + str(self.param["device_id"]) + "; " +
+                          self.param["device_name"] + "; " + str(self.param["sample_rate"]) + ")")
+
+        self.CHUNK = self.CHUNK_default
+        self.DEVICE = int(self.param["device_id"])
+
+        if "sample_rate" in self.param:
+            self.RATE = self.param["sample_rate"]
+        if "chunk_size" in self.param:
+            self.CHUNK = self.CHUNK * self.param["chunk_size"]
+        if "channels" in self.param:
+            self.CHANNELS = self.param["channels"]
+
+        if self.audio is None:
+            self.audio = pyaudio.PyAudio()
+        elif self.stream is not None and not self.stream.is_stopped():
+            self.stream.stop_stream()
+            self.stream.close()
+            self.audio.terminate()
+            time.sleep(1)
+            self.audio = pyaudio.PyAudio()
+            #self.audio = pyaudio.PyAudio()
+
+        self.info = self.audio.get_host_api_info_by_index(0)
+        num_devices = self.info.get('deviceCount')
+        self.logging.info("Identified " + str(num_devices) + " audio devices:")
+        for i in range(0, num_devices):
+            self.logging.info(" - " + str(i) + " - " +
+                              str(self.audio.get_device_info_by_host_api_device_index(0, i).get('name')))
+
+        if not self.param["active"]:
+            self.logging.info("Device '" + self.id + "' is inactive, did not connect.")
+            return
+
+        if self.DEVICE not in range(0, num_devices):
+            self.raise_error("... AUDIO device '" + str(self.DEVICE) + "' not available (range: 0, " +
+                             str(num_devices)+")")
+            return
+
+        self.device = self.audio.get_device_info_by_host_api_device_index(0, self.DEVICE)
+        if self.device.get('input') == 0:
+            self.raise_error("... AUDIO device '" + str(self.DEVICE) + "' is not a microphone / has no input (" +
+                             self.device.get('name') + ")")
+            return
+
+        if self.device.get('name') != self.param["device_name"]:
+            self.raise_warning("... AUDIO device '" + str(self.DEVICE) + "' not the same as expected: " +
+                               self.device.get('name') + " != " + self.param["device_name"])
+
+        try:
+            self.stream = self.audio.open(format=self.FORMAT, channels=int(self.CHANNELS),
+                                          rate=int(self.RATE), input=True, input_device_index=int(self.DEVICE),
+                                          frames_per_buffer=self.CHUNK)
+        except Exception as err:
+            self.raise_error("- Could not initialize audio stream (device:" + str(self.DEVICE) + "): " + str(err))
+            self.raise_error("- open: channels=" + str(self.CHANNELS) + ", rate=" + str(self.RATE) +
+                             ", input_device_index=" + str(self.DEVICE) + ", frames_per_buffer=" + str(self.CHUNK))
+            self.raise_error("- device: " + str(self.info))
+            return
+
+        self.connected = True
+        self.last_reload = time.time()
+        self.logging.info("Microphone connected.")
+
+    def update_config(self):
+        """
+        update configuration and trigger reconnect
+        """
+        self.param = self.config.param["devices"]["microphones"][self.id]
+        self.connect()
+
+    def file_header(self, size=False, duration=1800):
+        """
+        create file header for streaming file (duration in seconds, default = 1800s / 30min)
+        info: https://docs.fileformat.com/audio/wav/
+        """
+        datasize = duration * self.RATE * self.CHANNELS * self.BITS_PER_SAMPLE // 8
+        sample_rate = int(self.RATE)
+        bits_per_sample = int(self.BITS_PER_SAMPLE)
+        channels = int(self.CHANNELS)
+
+        if size:
+            return datasize + 36
+
+        o = bytes("RIFF", 'ascii')  # (4byte) Marks file as RIFF
+        o += (datasize + 36).to_bytes(4, 'little')  # (4byte) File size in bytes excluding this and RIFF marker
+        o += bytes("WAVE", 'ascii')  # (4byte) File type
+        o += bytes("fmt ", 'ascii')  # (4byte) Format Chunk Marker
+        o += (16).to_bytes(4, 'little')  # (4byte) Length of above format data
+        o += (1).to_bytes(2, 'little')  # (2byte) Format type (1 - PCM)
+        o += (channels).to_bytes(2, 'little')  # (2byte)
+        o += (sample_rate).to_bytes(4, 'little')  # (4byte)
+        o += (sample_rate * channels * bits_per_sample // 8).to_bytes(4, 'little')  # (4byte)
+        o += (channels * bits_per_sample // 8).to_bytes(2, 'little')  # (2byte)
+        o += (bits_per_sample).to_bytes(2, 'little')  # (2byte)
+        o += bytes("data", 'ascii')  # (4byte) Data Chunk Marker
+        o += (datasize).to_bytes(4, 'little')  # (4byte) Data size in bytes
+        return o
+
+    def get_device_information(self, i=None):
+        """
+        return device list or single device information
+        """
+        empty = {
+            "id": None,
+            "name": "none",
+            "maxInputChannels": 0,
+            "maxOutputChannels": 0,
+            "defaultSampleRate": 0
+        }
+
+        if self.audio is None:
+            return empty
+
+        if i is None:
+            return self.audio.get_host_api_info_by_index(0)
+        else:
+            info = self.audio.get_host_api_info_by_index(0)
+            num_devices = info.get('deviceCount')
+            if i in range(0, num_devices):
+                return self.audio.get_device_info_by_host_api_device_index(0, i)
+            else:
+                return empty
+
+    def get_chunk(self):
+        data = None
+        self.last_active = time.time()
+        if self.connected and not self.error and len(self.chunk) > 0:
+            data = self.chunk
+        return data
+
+    def get_first_chunk(self):
+        self.logging.info("Start new stream ...")
+        self.last_active = time.time()
+        self.restart_stream = True
+        data = self.file_header()
+        if self.chunk is not None:
+            data += self.chunk
+            return data
+
+    def get_device_status(self):
+        """
+        return status information
+        """
+        answer = {
+            "active": self.param["active"],
+            "active_streaming": not self._paused,
+            "connected": self.connected,
+            "running": self.if_running(),
+
+            "error": self.error,
+            "error_msg": self.error_msg,
+
+            "last_reload": time.time() - self.last_reload,
+            "last_active": time.time() - self.last_active
+        }
+        return answer
+
+    def record_start(self, filename):
+        """
+        empty cache and start recording
+        """
+        self.logging.info("Start recording '" + filename + "' ...")
+        self.record_start_time = time.time()
+        self.logging.info(" --- " + self.id + " --> " + str(time.time()))
+        self.last_active = time.time()
+        self.recording_frames = []
+        self.recording_filename = os.path.join(self.recording_default_path, filename)
+        self.recording = True
+        self.config.record_audio_info = {
+            "id": self.id,
+            "path": self.recording_default_path,
+            "file": filename,
+            "sample_rate": self.RATE,
+            "channels": self.CHANNELS,
+            "chunk_size": self.CHUNK,
+            "status": "starting",
+            "stamp_start": self.last_active,
+        }
+
+        return {"filename": self.recording_filename}
+
+    def record_stop(self):
+        """
+        stop recording and write to file
+        inspired by https://realpython.com/playing-and-recording-sound-python/#pyaudio_1
+        """
+        self.recording = False
+        self.recording_processing = True
+        self.config.record_audio_info["status"] = "processing"
+        self.logging.info("Stopping recording of '" + self.recording_filename + "' with " +
+                          str(len(self.recording_frames)) + " chunks ...")
+
+    def record_process(self):
+        """
+        write to file
+        """
+        self.logging.info(" <-- " + self.id + " --- " + str(time.time()) + " ... (" +
+                          str(round(time.time() - self.record_start_time, 3)) + ")")
+        self.config.record_audio_info["stamp_end"] = time.time()
+        self.config.record_audio_info["length_record"] = round(time.time() - self.record_start_time, 3)
+
+        self.recording_processing = False
+        wf = wave.open(self.recording_filename, 'wb')
+        wf.setnchannels(self.CHANNELS)
+        wf.setsampwidth(self.audio.get_sample_size(self.FORMAT))
+        wf.setframerate(self.RATE)
+        wf.writeframes(b''.join(self.recording_frames))
+        wf.close()
+
+        self.config.record_audio_info["length"] = len(self.recording_frames) * self.CHUNK / self.BITS_PER_SAMPLE / float(self.RATE)
+        self.config.record_audio_info["status"] = "finished"
+        self.recording_frames = []
+        self.logging.info("Stopped recording of '" + self.recording_filename + "'.")

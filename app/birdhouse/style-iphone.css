@@ -36,12 +36,13 @@
 
         .camera_info_image .image_container img {
             min-height  : 200px;
-            max-height  : 250px;
+            max-height  : 230px;
         }
 
         .camera_info_image.video_edit .image_container img {
-            min-height  : none;
-            max-height  : none;
+            min-height  : auto;
+            max-height  : 230px;
+            max-width   : 230px;
         }
 }
 

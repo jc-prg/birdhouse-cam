@@ -17,12 +17,11 @@ RUN apt-get -y install v4l-utils
 #RUN apt-get install 'ffmpeg'\
 #    'libsm6'\
 #    'libxext6'  -y
-
-
 COPY ./requirements.txt ./requirements.txt
 RUN pip3 install --upgrade pip
 RUN python3 -m pip install -r requirements.txt
 
+RUN apt -y install python3-pyaudio
 RUN apt -y install locales
 ENV PYTHONIOENCODING=utf-8
 ENV LANG=en_US.UTF-8

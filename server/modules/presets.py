@@ -1,5 +1,6 @@
 import os
 import logging
+import time
 from dotenv import load_dotenv
 from logging.handlers import RotatingFileHandler
 
@@ -13,31 +14,56 @@ load_dotenv(path)
 
 
 birdhouse_env = {
+    "database_type": get_env("DATABASE_TYPE"),
+    "database_cleanup": get_env("DATABASE_DAILY_CLEANUP").lower() in ("true", "1", "yes"),
+
+    "rpi_active": get_env("RPI_ACTIVE").lower() in ("true", "1", "yes"),
+
+    "couchdb_server": get_env("COUCHDB_SERVER"),
     "couchdb_user": get_env("COUCHDB_USER"),
     "couchdb_password": get_env("COUCHDB_PASSWORD"),
     "couchdb_port": get_env("COUCHDB_PORT"),
+
+    "http_server": get_env("BIRDHOUSE_HTTP_SERVER"),
     "port_http": get_env("BIRDHOUSE_HTTP_PORT"),
+    "port_api": get_env("BIRDHOUSE_API_PORT"),
     "port_video": get_env("BIRDHOUSE_VIDEO_PORT"),
+
+    "server_audio": get_env("BIRDHOUSE_AUDIO_SERVER"),
     "port_audio": get_env("BIRDHOUSE_AUDIO_PORT"),
+
     "dir_project": get_env("BIRDHOUSE_DIR_PROJECT"),
-    "dir_logging": get_env("BIRDHOUSE_DIR_LOGGING")
+    "dir_logging": get_env("BIRDHOUSE_DIR_LOGGING"),
+
+    "admin_ip4_deny": get_env("ADMIN_IP4_DENY"),
+    "admin_ip4_allow": get_env("ADMIN_IP4_ALLOW"),
+    "admin_password": get_env("ADMIN_PASSWORD"),
+    "admin_login": get_env("ADMIN_LOGIN")
 }
 
 
 birdhouse_log_into_file = True
 birdhouse_loglevel = logging.INFO
+birdhouse_loglevel_modules_info = ["mic-main", "server"]
+birdhouse_loglevel_modules_debug = []
+birdhouse_loglevel_modules_warning = []
+birdhouse_loglevel_modules_error = []
 birdhouse_loglevel_module = {
     "backup": birdhouse_loglevel,
     "cam-main": birdhouse_loglevel,
     "cam-img": birdhouse_loglevel,
+    "cam-ffmpg": birdhouse_loglevel,
     "cam-video": birdhouse_loglevel,
     "cam-out": birdhouse_loglevel,
     "cam-other": birdhouse_loglevel,
+    "cam-stream": birdhouse_loglevel,
     "config": birdhouse_loglevel,
     "config-Q": birdhouse_loglevel,
+    "DB-text": birdhouse_loglevel,
     "DB-json": birdhouse_loglevel,
     "DB-couch": birdhouse_loglevel,
     "DB-handler": birdhouse_loglevel,
+    "mic-main": birdhouse_loglevel,
     "sensors": birdhouse_loglevel,
     "server": birdhouse_loglevel,
     "srv-info": birdhouse_loglevel,
@@ -50,6 +76,16 @@ birdhouse_loglevel_module = {
     "weather-py": birdhouse_loglevel,
     "weather-om": birdhouse_loglevel,
 }
+
+for module in birdhouse_loglevel_modules_info:
+    birdhouse_loglevel_module[module] = logging.INFO
+for module in birdhouse_loglevel_modules_debug:
+    birdhouse_loglevel_module[module] = logging.DEBUG
+for module in birdhouse_loglevel_modules_warning:
+    birdhouse_loglevel_module[module] = logging.WARNING
+for module in birdhouse_loglevel_modules_error:
+    birdhouse_loglevel_module[module] = logging.ERROR
+
 birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
                                          datefmt='%m/%d %H:%M:%S')
 birdhouse_log_filename = str(os.path.join(os.path.dirname(__file__), "../../log", "server.log"))
@@ -59,6 +95,14 @@ birdhouse_loghandler = RotatingFileHandler(filename=birdhouse_log_filename, mode
 birdhouse_loghandler.setFormatter(birdhouse_log_format)
 
 
+birdhouse_couchdb = {
+    "db_usr": birdhouse_env["couchdb_user"],
+    "db_pwd": birdhouse_env["couchdb_password"],
+    "db_server_ip": "192.168.202.3",
+    "db_server": "birdhouse_db",
+    "db_port": 5984,
+    "db_basedir": "/usr/src/app/data/"
+}
 birdhouse_pages = {
     "live":             ("Live-Stream", "/index.html",       "INDEX"),
     "backup":           ("Archiv",      "/list_backup.html", "ARCHIVE"),
@@ -76,23 +120,26 @@ birdhouse_databases = {
     "today_images": {},
     "today_weather": {},
     "today_sensors": {},
+    "today_statistics": {},
     "archive_images": {},
     "archive_sensors": {},
     "archive_weather": {},
     "archive_videos": {}
 }
 birdhouse_directories = {
+    "backup": "images/",
+    "backup_info": "images/",
     "html": "../app/",
     "data": "../data/",
     "main": "",
-    "sensor": "images/",
     "images": "images/",
-    "weather": "images/",
-    "backup": "images/",
-    "backup_info": "images/",
     "favorites": "images/",
+    "sensor": "images/",
+    "statistics": "images/",
     "videos": "videos/",
-    "videos_temp": "videos/images2video/"
+    "videos_temp": "videos/images2video/",
+    "audio_temp": "videos/images2video/",
+    "weather": "images/"
 }
 birdhouse_files = {
     "main": "config.json",
@@ -102,6 +149,7 @@ birdhouse_files = {
     "images": "config_images.json",
     "videos": "config_videos.json",
     "sensor": "config_sensor.json",
+    "statistics": "config_statistics.json",
     "weather": "config_weather.json"
 }
 birdhouse_dir_to_database = {
@@ -109,12 +157,14 @@ birdhouse_dir_to_database = {
     "images/config_images":         "today_images",
     "images/config_sensor":         "today_sensors",
     "images/config_weather":        "today_weather",
+    "images/config_statistics":     "today_statistics",
     "images/config_backup":         "archive_images",
     "images/config_favorites":      "favorites",
     "videos/config_videos":         "archive_videos",
-    "images/<DATE>/config_images":  "archive_images",
-    "images/<DATE>/config_sensors": "archive_sensors",
-    "images/<DATE>/config_weather": "archive_weather"
+    "images/<DATE>/config_statistics": "archive_statistics",
+    "images/<DATE>/config_images":     "archive_images",
+    "images/<DATE>/config_sensors":    "archive_sensors",
+    "images/<DATE>/config_weather":    "archive_weather"
 }
 
 
@@ -146,6 +196,7 @@ birdhouse_default_cam = {
     "source": "/dev/video0",
     "active": True,
     "record": True,
+    "record_micro": "",
     "image": {
         "crop": (0.1, 0.0, 0.85, 1.0),
         "resolution": "800x600",
@@ -156,7 +207,6 @@ birdhouse_default_cam = {
         "contrast": -1,
         "exposure": -1,
         "rotation": 0,
-        "reconnect_to_calibrate": False,
         "preview_scale": 18,
         "date_time": True,
         "date_time_position": (10, 20),
@@ -187,6 +237,7 @@ birdhouse_default_cam = {
 birdhouse_default_cam1 = birdhouse_default_cam.copy()
 birdhouse_default_cam1["name"] = "Inside"
 birdhouse_default_cam1["source"] = "/dev/video0"
+birdhouse_default_cam1["record_micro"] = "mic1"
 
 birdhouse_default_cam2 = birdhouse_default_cam.copy()
 birdhouse_default_cam2["name"] = "Outside"
@@ -198,9 +249,15 @@ birdhouse_default_cam2["image_save"]["record_to"] = "sunset+0"
 birdhouse_default_micro = {
     "active": True,
     "name": "Inside",
+    "device_id": 0,
+    "device_name": "none",
+    "sample_rate": 16000,
+    "chunk_size": 1,
+    "channels": 1,
     "type": "usb",
     "port": 5002
 }
+
 birdhouse_default_sensor = {
     "active": True,
     "name": "Inside",
@@ -235,24 +292,17 @@ birdhouse_preset = {
         "timezone": "UTC+1",
         "weather_active": True
     },
-    "server": {
-        "ip4_admin_deny":   ["192.168.1.31"],  # put in the IP address of your proxy or router if you don't want to allow edits from outside
-        "ip4_address":      "192.168.1.20",
+    "server": {                     # set vars in the .env file
+        "ip4_admin_deny":   [""],
+        "ip4_address":      "",
         "ip4_stream_audio": "",
         "ip4_stream_video": "",
-        "rpi_active":       False,
-        "port":             8000,              # http-port
-        "port_video":       8008,
-        "database_type":    "json",             # can be "json" or "couchdb"
-        "database_port":    5100,
-        "database_server":  "",
-        "daily_clean_up":   True,
         "initial_setup":    True
     },
     "title": "jc://birdhouse/",
     "views": {
         "index": {
-            "type": "default",
+            "type": "overlay",
             "lowres_position": 1
         }
     },
@@ -264,6 +314,18 @@ birdhouse_preset = {
         "available_sources": ["Python-Weather", "Open-Metheo"]
     }
 }
+
+birdhouse_client_presets = {
+    "filename": "config_stage.js",
+    "directory": os.path.join(os.path.dirname(__file__), "../../app/birdhouse/"),
+    "content": "//--------------------------------\n" +
+               "// Configure stage details (" + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + ")\n" +
+               "//---------------------------------\n" +
+               "// Please edit not here, but in .env-File\n" +
+               "var test		= false;\n" +
+               "var server_port = '" + birdhouse_env["port_api"] + "';\n\n"
+}
+
 
 file_types = {
     '.css': 'text/css',

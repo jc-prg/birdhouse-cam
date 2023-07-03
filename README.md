@@ -12,9 +12,10 @@ mark favorites, analyze weather data, ...
    * [Install directly](#install-directly)
    * [First run and device configuration](#first-run-and-device-configuration)
    * [Finalize database setup](#finalize-database-setup)
-   * [Add audio streaming](#add-audio-streaming)
+   * [Access images via WebDAV](Access-images-via-WebDAV)
    * [Optimize system configuration (Ubuntu 22.04)](#optimize-system-configuration--ubuntu-)
    * [Optimize system configuration (Raspbian / Raspberry OS)](#optimize-system-configuration--raspberry-os-)
+   * [Sample proxy server configuration](#Sample-proxy-server-configuration)
 5. [Helping stuff](#helping-stuff)
 6. [Sources](#sources)
 7. [Impressions](#impressions)
@@ -34,9 +35,9 @@ mark favorites, analyze weather data, ...
   * Small USB Microphone
   * DHT11 / DHT22 Sensor
 * Software
-  * Python 3, CV2, imutils, JSON, Flask
+  * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio 
   * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
-  * HTML, CSS, JavaScript, Pinch-Zoom, ffmpeg 
+  * HTML, CSS, JavaScript, Pinch-Zoom
   * jc://modules/, jc://app-framework/
 
 ## Main Software Features
@@ -56,20 +57,21 @@ mark favorites, analyze weather data, ...
   * Delete marked photos
   * Archive photos with movement and favorite photos once a day
 * **Record and stream videos**
-  * create mp4 video, works with iOS devices
+  * create mp4 video incl. audio, works with iOS devices
   * Create video from all pictures of the current day
   * Trim videos
 * Get, archive, and visualize **weather data**:
-  * from sensors connected to the Raspberry Pi (DHT11/DHT22)
   * via internet for a defined location (python_weather OR [Open Meteo](https://open-meteo.com/))
+  * from sensors connected to the Raspberry Pi (DHT11/DHT22)
   * GPS lookup for cities or addresses via GeoPy to set weather location
 * Connect to **audio stream** from microphone
   * under construction, currently browser only (no iPhone)
 * **Admin functionality** via app
-  * Deny recording and admin functionality for specific IP addresses (e.g. router or proxy, to deny for access from the internet)
+  * Deny recording and admin functionality for specific IP addresses (e.g. router or proxy, to deny for access from the internet) or use password to login as administrator
   * edit server settings (partly, other settings define in file .env)
-  * edit device settings (devices must be added via config file)
-  * edit camera and image settings
+  * edit device settings, reconnect devices (devices must be added via config file)
+  * edit camera and image settings (contrast, saturation, hue, brightness ...)
+  * see amount of currently active streams
 
 ## Software Installation
 
@@ -148,13 +150,12 @@ The default configuration of the database works without change but produces seve
 To remove those open the admin tool via http://your-hostname:5100/_utils/ and login (default user:birdhouse, pwd:birdhouse).
 Go to the settings and create a single node.
 
-### Add audio streaming
+### Access images via WebDAV
 
-* _under construction, not running on iOS devices yet_
-* To start the audio streaming edit and link the file [stream.service](config/install/stream.service) to the folder /etc/systemd/systems and start as root (see instructions in the file):
+To access image and video files via WebDAV define credentials and port in the .env-file and start docker container.
 
-``` bash
-$ systemctl start stream.service
+```
+$ sudo docker-compose -f docker-compose-webdav.yml up -d
 ```
 
 ### Optimize system configuration (Ubuntu)
@@ -182,6 +183,18 @@ CONF_SWAPFACTOR=2
 
 $ sudo systemctl restart dphys-swapfile
 ```
+
+### Sample proxy server configuration
+
+If you want to give access via internet you properly want to use a proxy such as NGINX. 
+Therefor it's required to enable access to the following ports (if not changed default port settings):
+
+* **App**: 80, 443
+* **API**: 8007
+* **Videostream**: 8008
+* **Audiostream**: 8009
+
+See a sample configuration (e.g. to forward http://birdhouse.your.domain:443 to http://your-server-ip:8000) here: [sample.nginx.conf](sample.nginx.conf). Ensure, that all used ports are publicly shared via your router.
 
 ## Helping stuff
 
