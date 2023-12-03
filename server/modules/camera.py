@@ -1262,34 +1262,23 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         self._last_activity_per_stream = {}
         self._start_time = None
         self._start_delay_stream = 1
-        self._connected = False
 
     def run(self) -> None:
         """
         create a continuous stream while active; use buffer if empty answer
         """
         circle_in_cache = False
-        while not self.if_ready():
-            time.sleep(0.1)
+        time.sleep(2)
 
         self.reset_error()
-        self._connected = True
         self.logging.info("Starting CAMERA raw stream for '"+self.id+"' ...")
 
         while self._running:
             self._start_time = time.time()
 
-            #self.logging.error("active=" + str(self.param["active"]))
-            #self.logging.error("cam.connect=" + str(self.camera.if_connected()))
-            #self.logging.error("cam.mt=" + str(self.maintenance_mode))
-            #self.logging.error("l_act=" + str(self._last_activity))
-
             if self.param["active"] and not self.maintenance_mode \
                     and self.camera is not None and self.camera.if_connected() \
                     and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
-
-                self.logging.error("cam.read=OK")
-
                 try:
                     raw = self.read_from_camera()
                     if raw is None or len(raw) == 0:
@@ -1456,15 +1445,10 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         """
         check if stream is ready to deliver images, connection to camera exists
         """
-        if self.camera is None:
-            return False
-        elif not self.camera.if_connected() or not self.param["active"]:
+        if self.camera is not None and self.camera.if_connected() or not self.param["active"]:
             return False
         else:
             return True
-
-    def if_connected(self):
-        return self._connected
 
     def kill(self, stream_id="default"):
         """
@@ -1524,8 +1508,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             }
         self.img_error_raw = {
             "setting": None,
-            "camera": None,
-            "lowres": None
+            "camera": None
             }
 
         self._active_streams = 0
@@ -1544,7 +1527,6 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self._size_lowres = None
         self._start_delay_stream = 2
         self._error_wait = True
-        self._connected = False
 
         self.fps = None
         self.fps_max = 12
@@ -1582,8 +1564,6 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             for image in self.img_error_files:
                 filename = os.path.join(self.config.main_directory, self.config.directories["data"],
                                         self.img_error_files[image])
-                if not os.path.exists(filename):
-                    raise Exception("File '" + filename + "' not found.")
                 raw = cv2.imread(filename)
                 raw, area = self.image.crop_raw(raw=raw, crop_area=area, crop_type="absolute")
                 self.img_error_raw[image] = raw.copy()
@@ -1595,26 +1575,21 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
     def run(self) -> None:
         self.reset_error()
-        while not self.stream_raw.if_connected():
+        #while not self.stream_raw.if_ready() and not self.param["active"]:
+        while not self.stream_raw.if_running():
             time.sleep(0.1)
-
-        self._connected = True
-        self.logging.info("Starting CAMERA edited stream for '"+self.id+"/"+self.type+"/"+self.resolution+"' ...")
 
         self.image = self.stream_raw.image
         if not self._init_error_images():
-            self.raise_error("Could not initialize error images!")
+            self.raise_error("Could not initialize, error images not found in ./data/: " + str(self.img_error_files))
             self.stop()
             return
 
+        self.logging.info("Starting CAMERA edited stream for '"+self.id+"/"+self.type+"/"+self.resolution+"' ...")
         while self._running:
             self._start_time = time.time()
 
-            #self.logging.error("active=" + str(self.param["active"]))
-            #self.logging.error("raw.active=" + str(self.stream_raw.active))
-            #self.logging.error("l_act=" + str(self._last_activity))
-
-            if self.param["active"] and self.stream_raw is not None and self.stream_raw.active \
+            if self.active and self.stream_raw is not None \
                     and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
                 try:
                     raw = self.read_raw_and_edit(stream=True, stream_id=self._stream_id_base, return_error_image=True)
@@ -1625,13 +1600,11 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                     self._stream_last = raw.copy()
                     self._stream_image_id += 1
                     self._stream_last_time = time.time()
-                    self.active = True
 
                 except Exception as e:
                     self.raise_error("Error reading EDIT stream for '" + self.id + "/" + self.type + "': " + str(e))
 
             else:
-                self.active = False
                 self._stream = None
                 self._last_activity = 0
                 self._last_activity_count = 0
@@ -1732,6 +1705,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         if not wait:
             self._error_wait = False
 
+        duration = time.time() - self._last_activity
         self._last_activity = time.time()
         self._last_activity_count += 1
         self._last_activity_per_stream[stream_id] = time.time()
@@ -1741,11 +1715,9 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             while self._stream_image_id == 0 and wait_time <= self._timeout:
                 time.sleep(1)
                 wait_time += 1
-            if self._stream_image_id == 0:
-                self.logging.error("WAIT .... !!!")
 
         if self._stream_image_id == 0:
-            self.raise_error("sEdit: read_stream: got no image from raw stream '" + self.id + "' yet!")
+            self.raise_error("sRaw: read_stream: got no image from source '" + self.id + "' yet!")
 
         if self._stream is not None and len(self._stream) > 0:
             stream_img = self._stream.copy()
@@ -2092,8 +2064,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
     def kill(self):
         self._last_activity = 0
 
-    def if_connected(self):
-        return self._connected
+    def stop(self):
+        self._running = False
 
 
 class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
@@ -2438,8 +2410,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     time.sleep(1)
 
                 # Video recording
-                if self.video.recording:
-                    self.video_recording(current_time)
+                    if self.video.recording:
+                        self.video_recording(current_time)
 
 
                 # Check and record active streams
@@ -2993,9 +2965,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         set all streams active or inactive
         """
         #self.camera_stream_raw.active = active
-        #for stream_id in self.camera_streams:
-        #    self.camera_streams[stream_id].active = active
-        pass
+        for stream_id in self.camera_streams:
+            self.camera_streams[stream_id].active = active
 
     def get_camera_status(self, info="all"):
         """
