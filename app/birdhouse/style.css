@@ -361,6 +361,18 @@ img .play_button  {
     border           : 1px solid white;
 }
 
+.button-settings-api {
+    background-color    : lightgray;
+    color               : black;
+    width               : 90px;
+    height              : 40px;
+    max-height          : 40px;
+    margin              :  3px;
+    padding             :  2px;
+    overflow            : hidden;
+    float               : left;
+}
+
 /* weather fields */
 
 .weather_hide_if_small {

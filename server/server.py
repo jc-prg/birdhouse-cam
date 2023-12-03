@@ -27,8 +27,8 @@ from modules.sensors import BirdhouseSensor
 from modules.bh_class import BirdhouseClass
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v1.0.1"}
-app_framework = "v1.0.1"
+api_description = {"name": "BirdhouseCAM", "version": "v1.0.2"}
+app_framework = "v1.0.2"
 srv_audio = None
 
 
@@ -764,6 +764,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             views.archive_list_update(force=True)
             views.favorite_list_update(force=True)
             response = {"update_views": "started"}
+        elif param["command"] == "update-views-complete":
+            views.archive_list_update(force=True, complete=True)
+            views.favorite_list_update(force=True)
+            response = {"update-views-complete": "started"}
         elif param["command"] == "force-backup":
             backup.start_backup()
             response = {"backup": "started"}

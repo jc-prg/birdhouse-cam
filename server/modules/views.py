@@ -477,6 +477,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.favorite_loading = "started"
 
         self.create_archive = True
+        self.create_archive_complete = False
         self.create_favorites = True
         self.create = BirdhouseViewCreate(config)
 
@@ -493,8 +494,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             if self.create_archive and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
                 if not self.if_shutdown():
-                    self.archive_list_create()
+                    self.archive_list_create(self.create_archive_complete)
                     self.create_archive = False
+                    self.create_archive_complete = False
 
             # if favorites to be read again (from time to time and depending on user activity)
             if self.create_favorites and (count > count_rebuild or self.force_reload):
@@ -775,11 +777,12 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos"), cam=camera)
         return content
 
-    def archive_list_update(self, force=False):
+    def archive_list_update(self, force=False, complete=False):
         """
         Trigger recreation of the archive list
         """
         self.create_archive = True
+        self.create_archive_complete = complete
         if force:
             self.force_reload = True
 
@@ -938,7 +941,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         return content.copy(), dir_size
 
-    def archive_list_create(self):
+    def archive_list_create(self, complete=False):
         """
         Page with backup/archive directory
         """
@@ -951,7 +954,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         db_type = self.config.db_handler.db_type
         dir_list = get_directories(main_directory)
 
-        archive_info = {}
+        archive_changed = {}
         archive_info = self.config.db_handler.read("backup_info", "")
 
         self.logging.info("Create data for archive view from '" + main_directory + "' ...")
@@ -960,6 +963,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.logging.debug("  -> " + str(dir_list))
 
         for cam in self.camera:
+            archive_changed[cam] = {}
             content = {
                 "active_cam": cam,
                 "view": "backup",
@@ -974,13 +978,10 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 self.logging.info("Interrupt creating the archive list.")
                 return
 
-            image_title = str(self.config.param["backup"]["preview"])
-            image_today = self.config.filename_image(image_type="lowres", timestamp=image_title, camera=cam)
-            image_preview = os.path.join(self.config.db_handler.directory(config="images"), image_today)
-
             self.logging.info("- Scan " + str(len(dir_list)) + " directories for " + cam + " ...")
+            image_title = str(self.config.param["backup"]["preview"])
             dir_list = sorted(dir_list)
-            directory_data_change = False
+
             for directory in dir_list:
                 dir_size = 0
                 group_name = directory[0:4] + "-" + directory[4:6]
@@ -1007,6 +1008,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     if not db_available or not config_available:
                         self.logging.warning("  -> Check CouchDB: available=" + str(db_available))
                         self.logging.warning("  -> Check JSON: config_file=" + str(config_available))
+
                 elif self.config.db_handler.db_type == "json":
                     db_available = self.config.db_handler.exists(config="backup", date=directory)
                     if not db_available:
@@ -1016,7 +1018,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 file_data = {}
                 if db_available:
                     self.logging.debug("  -> read from DB")
-                    file_data = self.config.db_handler.read_cache(config="backup", date=directory)
+                    file_data = self.config.db_handler.read(config="backup", date=directory)
+
                 elif not db_available and config_available:
                     self.logging.debug("  -> read from file")
                     file_data = self.config.db_handler.json.read(config_file)
@@ -1027,6 +1030,12 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                         db_available = True
                     else:
                         self.logging.error("  -> got empty data")
+
+                # check if data format is complete
+                if "info" not in file_data:
+                    file_data["info"] = {}
+                if "changed" not in file_data["info"]:
+                    file_data["info"]["changed"] = True
 
                 # read or create data
                 if db_available:
@@ -1040,8 +1049,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                         content["entries"][directory]["error"] = True
                         self.logging.error("  -> Read JSON: Wrong file format - " + config_file)
 
-                    elif "info" in file_data and "changed" in file_data["info"] and not file_data["info"]["changed"] \
-                            and directory in archive_info[cam]["entries"]:
+                    # if not changed use data from DB
+                    elif (directory in archive_info[cam]["entries"] and "info" in file_data
+                          and "changed" in file_data["info"] and not file_data["info"]["changed"]) and not complete:
 
                         content["entries"][directory] = archive_info[cam]["entries"][directory].copy()
                         dir_size = content["entries"][directory]["dir_size"]
@@ -1051,7 +1061,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                         count = content["entries"][directory]["count"]
 
                         self.logging.info("  -> Archive " + directory + "*: " + str(round(dir_total_size, 1)) +
-                                          " MB / " + cam + ": " + str(dir_size_cam) + " MB in " + str(count) + " files")
+                                          " MB / " + cam + ": " + str(dir_size_cam) + " MB in " + str(count) +
+                                          " files [from Database]")
 
                     # analyze files and create archive entry
                     elif "files" in file_data:
@@ -1073,11 +1084,12 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                         count = files_total
                         content["entries"][directory]["lowres"] = image_file
 
-                        file_data["info"]["changed"] = False
+                        archive_changed[cam][directory] = file_data.copy()
                         self.config.db_handler.write(config="backup", date=directory, data=file_data.copy())
 
                         self.logging.info("  -> Archive " + directory + ": " + str(round(dir_total_size, 1)) +
-                                          " MB / " + cam + ": " + str(dir_size_cam) + " MB in " + str(count) + " files")
+                                          " MB / " + cam + ": " + str(dir_size_cam) + " MB in " + str(count) +
+                                          " files [from Files]")
 
                     else:
                         self.logging.error("  -> Archive: config file available but empty/in wrong format: /backup/" + directory)
@@ -1099,6 +1111,13 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 archive_info[cam] = content.copy()
 
             dir_size_total += dir_total_size
+
+        # save in data that chances are reflected
+        for cam in archive_changed:
+            for directory in archive_changed[cam]:
+                file_data = archive_changed[cam][directory]
+                file_data["info"]["changed"] = False
+                self.config.db_handler.write(config="backup", date=directory, data=file_data.copy())
 
         self.archive_dir_size = dir_size_total
         self.config.db_handler.write("backup_info", "", archive_info)

@@ -183,32 +183,32 @@ function birdhouse_app_settings (name="Settings") {
 	    var api_call        = "";
         var cameras         = app_data["SETTINGS"]["devices"]["cameras"];
         var microphones     = app_data["SETTINGS"]["devices"]["microphones"];
-        var button_style    = "background-color:lightgray;color:black;width:90px;margin:3px;";
         delete this.tab.style_cells["width"];
         var html_entry      = this.tab.start();
 
-        api_call    = "<button onclick='window.open(\"" + RESTurl + "api/no-id/list/\",\"_blank\");' style='"+button_style+"';>REST API</button>";
-        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/INDEX/\",\"_blank\");' style='"+button_style+"';>INDEX</button>";
+        api_call    = "<button onclick='window.open(\"" + RESTurl + "api/no-id/list/\",\"_blank\");' class='button-settings-api';>REST API</button>";
+        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/INDEX/\",\"_blank\");' class='button-settings-api';>INDEX</button>";
         html_entry += this.tab.row("API Calls", api_call);
 
-        api_call    = "<button onclick='birdhouse_forceBackup();' style='"+button_style+"';>Force Backup</button>";
-        api_call   += "<button onclick='birdhouse_forceRestart();' style='"+button_style+"';>Force Restart</button>";
-        api_call   += "<button onclick='birdhouse_forceUpdateViews();' style='"+button_style+"';>Update Views</button>";
-        api_call   += "<button onclick='birdhouse_recreateImageConfig();' style='"+button_style+"';>NewImgCfg</button>";
-        api_call   += "<button onclick='birdhouse_removeDataToday();' style='"+button_style+"';>CleanAllToday</button>";
-        api_call   += "<button onclick='birdhouse_checkTimeout();' style='"+button_style+"';>Timeout</button>";
+        api_call    = "<button onclick='birdhouse_forceBackup();' class='button-settings-api';>Force Backup</button>";
+        api_call   += "<button onclick='birdhouse_forceRestart();' class='button-settings-api';>Force Restart</button>";
+        api_call   += "<button onclick='birdhouse_forceUpdateViews();' class='button-settings-api';>Update Views</button>";
+        api_call   += "<button onclick='birdhouse_forceUpdateViews(true);' class='button-settings-api';>Update Views Complete</button>";
+        api_call   += "<button onclick='birdhouse_recreateImageConfig();' class='button-settings-api';>NewImgCfg</button>";
+        api_call   += "<button onclick='birdhouse_removeDataToday();' class='button-settings-api';>CleanAllToday</button>";
+        api_call   += "<button onclick='birdhouse_checkTimeout();' class='button-settings-api';>Timeout</button>";
         html_entry += this.tab.row("API Commands", api_call);
 
 	    for (let camera in cameras) {
-	        api_call  = "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Today "+camera.toUpperCase()+"</button>";
-	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Compl. "+camera.toUpperCase()+"</button>";
-	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/ARCHIVE/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Archive "+camera.toUpperCase()+"</button>";
+	        api_call  = "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY/"+camera+"/\",\"_blank\");' class='button-settings-api';>Today "+camera.toUpperCase()+"</button>";
+	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' class='button-settings-api';>Compl. "+camera.toUpperCase()+"</button>";
+	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/ARCHIVE/"+camera+"/\",\"_blank\");' class='button-settings-api';>Archive "+camera.toUpperCase()+"</button>";
             html_entry += this.tab.row("API "+camera, api_call);
         }
 
         for (let micro in microphones) {
-            api_call    = "<button onclick='birdhouse_recordStartAudio(\""+micro+"\");' style='"+button_style+"';>Record "+micro+"</button>";
-            api_call   += "<button onclick='birdhouse_recordStopAudio(\""+micro+"\");' style='"+button_style+"';>Stop "+micro+"</button>";
+            api_call    = "<button onclick='birdhouse_recordStartAudio(\""+micro+"\");' class='button-settings-api';>Record "+micro+"</button>";
+            api_call   += "<button onclick='birdhouse_recordStopAudio(\""+micro+"\");' class='button-settings-api';>Stop "+micro+"</button>";
             html_entry += this.tab.row("API "+micro, api_call);
         }
         html_entry += this.tab.end();
