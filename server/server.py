@@ -27,7 +27,7 @@ from modules.sensors import BirdhouseSensor
 from modules.bh_class import BirdhouseClass
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v1.0.0"}
+api_description = {"name": "BirdhouseCAM", "version": "v1.0.1"}
 app_framework = "v1.0.0"
 srv_audio = None
 
@@ -1399,6 +1399,9 @@ if __name__ == "__main__":
 
     # set logging
     if len(sys.argv) > 0 and "--logfile" in sys.argv or birdhouse_log_into_file:
+
+        print("Starting ...")
+        print("Using logfile "+birdhouse_log_filename+" ...")
 
         srv_logging = logging.getLogger('root')
         srv_logging.setLevel(birdhouse_loglevel_module["server"])

@@ -1,5 +1,5 @@
 //--------------------------------
-// Configure stage details (2023-07-03 12:48:29)
+// Configure stage details (2023-12-03 11:19:43)
 //---------------------------------
 // Please edit not here, but in .env-File
 var test		= false;
