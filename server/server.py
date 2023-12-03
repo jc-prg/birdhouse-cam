@@ -1400,6 +1400,9 @@ if __name__ == "__main__":
     # set logging
     if len(sys.argv) > 0 and "--logfile" in sys.argv or birdhouse_log_into_file:
 
+        print("Starting ...")
+        print("Using logfile "+birdhouse_log_filename+" ...")
+
         srv_logging = logging.getLogger('root')
         srv_logging.setLevel(birdhouse_loglevel_module["server"])
         srv_logging.addHandler(birdhouse_loghandler)

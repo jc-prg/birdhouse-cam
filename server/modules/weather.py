@@ -381,7 +381,13 @@ class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
         current_time = self.weather_info["current"]["time"].split("T")[1]
         self.weather_info["current"]["time"] = current_time
         self.weather_info["current"]["date"] = current_date
-        self.weather_info["current"]["humidity"] = self.weather_info["forecast"][current_date]["hourly"][current_time]["humidity"]
+        current_time_hour = current_time.split(":")[0] + ":00"
+        if current_time in self.weather_info["forecast"][current_date]["hourly"]:
+            self.weather_info["current"]["humidity"] = self.weather_info["forecast"][current_date]["hourly"][current_time]["humidity"]
+        elif current_time_hour in self.weather_info["forecast"][current_date]["hourly"]:
+            self.weather_info["current"]["humidity"] = self.weather_info["forecast"][current_date]["hourly"][current_time_hour]["humidity"]
+        else:
+            self.weather_info["current"]["humidity"] = "N/A"
 
     def set_location(self, settings):
         """

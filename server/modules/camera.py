@@ -1279,10 +1279,10 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         while self._running:
             self._start_time = time.time()
 
-            self.logging.error("active=" + str(self.param["active"]))
-            self.logging.error("cam.connect=" + str(self.camera.if_connected()))
-            self.logging.error("cam.mt=" + str(self.maintenance_mode))
-            self.logging.error("l_act=" + str(self._last_activity))
+            #self.logging.error("active=" + str(self.param["active"]))
+            #self.logging.error("cam.connect=" + str(self.camera.if_connected()))
+            #self.logging.error("cam.mt=" + str(self.maintenance_mode))
+            #self.logging.error("l_act=" + str(self._last_activity))
 
             if self.param["active"] and not self.maintenance_mode \
                     and self.camera is not None and self.camera.if_connected() \
@@ -1524,7 +1524,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             }
         self.img_error_raw = {
             "setting": None,
-            "camera": None
+            "camera": None,
+            "lowres": None
             }
 
         self._active_streams = 0
@@ -1609,9 +1610,9 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         while self._running:
             self._start_time = time.time()
 
-            self.logging.error("active=" + str(self.param["active"]))
-            self.logging.error("raw.active=" + str(self.stream_raw.active))
-            self.logging.error("l_act=" + str(self._last_activity))
+            #self.logging.error("active=" + str(self.param["active"]))
+            #self.logging.error("raw.active=" + str(self.stream_raw.active))
+            #self.logging.error("l_act=" + str(self._last_activity))
 
             if self.param["active"] and self.stream_raw is not None and self.stream_raw.active \
                     and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
@@ -1731,7 +1732,6 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         if not wait:
             self._error_wait = False
 
-        duration = time.time() - self._last_activity
         self._last_activity = time.time()
         self._last_activity_count += 1
         self._last_activity_per_stream[stream_id] = time.time()
@@ -1741,7 +1741,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             while self._stream_image_id == 0 and wait_time <= self._timeout:
                 time.sleep(1)
                 wait_time += 1
-            self.logging.error("WAIT .... !!!")
+            if self._stream_image_id == 0:
+                self.logging.error("WAIT .... !!!")
 
         if self._stream_image_id == 0:
             self.raise_error("sEdit: read_stream: got no image from raw stream '" + self.id + "' yet!")
@@ -2437,8 +2438,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     time.sleep(1)
 
                 # Video recording
-                    if self.video.recording:
-                        self.video_recording(current_time)
+                if self.video.recording:
+                    self.video_recording(current_time)
 
 
                 # Check and record active streams
