@@ -35,6 +35,39 @@ var app_frame_index     = "frame4";
 var app_first_load      = true;
 var app_2nd_load        = true;
 
+var birdhouse_js = [
+    "birdhouse.js",
+    "birdhouse-devices.js",
+    "birdhouse-audio.js",
+    "birdhouse-views.js",
+    "birdhouse-views-index.js",
+    "birdhouse-image.js",
+    "birdhouse-status.js",
+    "birdhouse-weather.js",
+    "birdhouse-charts.js",
+    "birdhouse-functions.js",
+    "birdhouse-settings.js",
+    "birdhouse-api-requests.js",
+    "video-player-template.js",
+    "pinch-zoom.umd.js",
+    "config_language.js",
+    "config_main.js",
+    "config_stage.js"
+];
+
+var birdhouse_css = [
+    "style.css",
+    "style-streams.css",
+    "video-player.css",
+    "style-settings.css",
+    "style-laptop.css",
+    "style-iphone.css",
+    "style-ipad.css",
+    "style-dark.css",
+    "style-slider.css",
+    "style-slider-dark.css",
+];
+
 function birdhousePrint_load(view="INDEX", camera="", date="") {
 
 	if (app_first_load || app_2nd_load) {

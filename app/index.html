@@ -2,18 +2,23 @@
 <!doctype html>
 <html><!-- manifest="cache.manifest"> -->
 <head>
-<title id="title">jc://app/</title>
+    <title id="title">jc://app/</title>
 
-<META charset="utf-8"> 
-<META http-equiv="content-type" content="text/html; charset=utf-8">
-<META name="apple-mobile-web-app-capable" content="yes"></META>
-<META name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.3, maximum-scale=1.0"></META>
+    <META charset="utf-8">
+    <META http-equiv="content-type" content="text/html; charset=utf-8">
+    <META name="apple-mobile-web-app-capable" content="yes"></META>
+    <META name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.3, maximum-scale=1.0"></META>
 
-<LINK rel=apple-touch-icon             href="favicon.png"></LINK>
-<LINK rel=apple-touch-icon-precomposed href="favicon.png"></LINK>
+    <LINK rel=apple-touch-icon             href="favicon.png"></LINK>
+    <LINK rel=apple-touch-icon-precomposed href="favicon.png"></LINK>
+
+    <script src="/modules/modules_1.1.js"></script>
+    <script src="/framework/app-fw.js"></script>
+    <script src="/birdhouse/birdhouse.js"></script>
+
 
 <!-- jcResources START -->
-
+<!--
 <script src="modules/jc-app/jc-app-1.4.4.js"></script>
 <script src="modules/jc-functions/jc-functions-0.1.6.js"></script><link href="modules/jc-functions/jc-functions-0.1.6.css" rel="stylesheet">
 <script src="modules/jc-cookie/jc-cookie.js"></script>
@@ -21,9 +26,10 @@
 <script src="modules/jc-player/jc-player-0.1.6.js"></script><link href="modules/jc-player/jc-player-0.1.6.css" rel="stylesheet">
 <script src="modules/jc-player/jc-volume-slider-0.1.1.js"></script><link href="modules/jc-player/jc-volume-slider-0.1.1.css" rel="stylesheet" >
 <script src="modules/jc-upload/upload.js"></script><link href="modules/jc-upload/upload.css" rel="stylesheet">
+-->
 
 <!-- jcAppFramework START -->
-
+<!--
 <script src="framework/app-fw/app-functions.js"></script>
 <script src="framework/app-fw/app-html-elements.js"></script>
 <script src="framework/app-fw/app-language.js"></script>
@@ -47,9 +53,11 @@
 
 <link rel="stylesheet" href="framework/app-fw/style-main-dark.css">
 <link rel="stylesheet" href="framework/app-fw/style-menu-dark.css">
+-->
 
 <!-- APP specific scripts and style sheets // START -->
 
+    <!--
 <script src="birdhouse/birdhouse.js"></script>
 <script src="birdhouse/birdhouse-devices.js"></script>
 <script src="birdhouse/birdhouse-audio.js"></script>
@@ -79,7 +87,7 @@
 <link rel="stylesheet" href="birdhouse/style-slider-dark.css" />
 
 <!-- APP specific scripts and style sheets // END -->
-
+-->
 </head>
 <body>
 
@@ -141,7 +149,22 @@
 
 <!-- APP specific  html elements // END -->
 
-<script src="framework/app-fw/app-main.js"></script>
+<script>
+
+    loadScripts("/modules/",   modules_js);
+    loadCss("/modules/",       modules_css);
+
+    loadScripts("/framework/", app_js);
+    loadCss("/framework/",     app_css);
+
+    loadScripts("/birdhouse/", birdhouse_js);
+    loadCss("/birdhouse/",     birdhouse_css);
+
+    setTimeout( function() {
+        startApp();
+    }, 500 );
+
+</script>
 
 &nbsp;<br/>
 &nbsp;<br/>
