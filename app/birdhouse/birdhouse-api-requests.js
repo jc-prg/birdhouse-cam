@@ -61,11 +61,13 @@ function birdhouse_loginReturn(data) {
 }
 
 function birdhouse_adminAnswer(set=true) {
-    if (set) {
-        intervalAdmin = setInterval(function() { birdhouse_adminAnswerRequest(); }, 3000 );
-        }
+    if (set == true) {
+        if (intervalAdmin == undefined) {
+            intervalAdmin = setInterval(function() { birdhouse_adminAnswerRequest(); }, 3000 );
+        } }
     else {
         window.clearInterval(intervalAdmin);
+        intervalAdmin = undefined;
     }
 }
 
