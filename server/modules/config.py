@@ -246,32 +246,36 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         write data to DB
         """
-        self.logging.debug("Write: " + config + " / " + date + " / " + self.db_type)
-        self.wait_if_paused()
-        if data is None:
-            self.logging.error("Write: No data given (" + str(config) + "/" + str(date) + ")")
-            return
-        if create:
-            self.directory(config, date)
-        filename = self.file_path(config, date)
-        if self.db_type == "json":
-            self.json.write(filename, data)
-            self.write_cache(config, date, data)
-        elif self.db_type == "couch" and "config.json" in filename:
-            self.couch.write(filename, data, create)
-            self.json.write(filename, data)
-            self.write_cache(config, date, data)
-        elif self.db_type == "couch":
-            self.couch.write(filename, data, create)
-            if save_json:
+        filename = ""
+        try:
+            self.logging.debug("Write: " + config + " / " + date + " / " + self.db_type)
+            self.wait_if_paused()
+            if data is None:
+                self.logging.error("Write: No data given (" + str(config) + "/" + str(date) + ")")
+                return
+            if create:
+                self.directory(config, date)
+            filename = self.file_path(config, date)
+            if self.db_type == "json":
                 self.json.write(filename, data)
-            self.write_cache(config, date, data)
-        elif self.db_type == "both":
-            self.couch.write(filename, data, create)
-            self.json.write(filename, data)
-            self.write_cache(config, date, data)
-        else:
-            self.raise_error("Unknown DB type (" + str(self.db_type) + ")")
+                self.write_cache(config, date, data)
+            elif self.db_type == "couch" and "config.json" in filename:
+                self.couch.write(filename, data, create)
+                self.json.write(filename, data)
+                self.write_cache(config, date, data)
+            elif self.db_type == "couch":
+                self.couch.write(filename, data, create)
+                if save_json:
+                    self.json.write(filename, data)
+                self.write_cache(config, date, data)
+            elif self.db_type == "both":
+                self.couch.write(filename, data, create)
+                self.json.write(filename, data)
+                self.write_cache(config, date, data)
+            else:
+                self.raise_error("Unknown DB type (" + str(self.db_type) + ")")
+        except Exception as e:
+            self.logging.error("Error writing file " + filename + " - " + str(e))
 
     def write_copy(self, config, date="", add="copy"):
         """
@@ -392,6 +396,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         self.db_handler = db_handler
         self.edit_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": [], "statistics": []}
         self.status_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": [], "statistics": []}
+        self.queue_in_progress = False
+        self.queue_timeout = 25
         self.queue_wait = 5
         self.queue_wait_max = 30
         self.queue_wait_min = 5
@@ -436,6 +442,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                 entries_available = True
 
                 if entries_available:
+                    self.queue_in_progress = True
                     self.logging.debug("... Entries available in the queue (" +
                                        str(round(time.time() - start_time, 2)) + "s)")
                     for config_file in config_files:
@@ -514,6 +521,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                                 count_edit = 0
                                 while len(self.edit_queue[config_file][date]) > 0:
+
+                                    self.logging.info("Queue POP (1): " + str(self.status_queue[config_file][-1]))
                                     [key, entry, command] = self.edit_queue[config_file][date].pop()
                                     count_entries += 1
 
@@ -561,7 +570,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                             count_files += 1
                             while len(self.status_queue[config_file]) > 0:
-                                self.logging.info("Queue POP: " + str(self.status_queue[config_file][-1]))
+
+                                self.logging.info("Queue POP (2): " + str(self.status_queue[config_file][-1]))
                                 [date, key, change_status, status] = self.status_queue[config_file].pop()
                                 count_entries += 1
 
@@ -575,10 +585,12 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                             self.db_handler.unlock(config_file)
                             self.db_handler.write(config_file, "", entries)
 
-                        # STATUS QUEUE: backup (with date)
+                        # STATUS QUEUE: backup (with date) # !!! RuntimeError: dictionary changed size during iteration
+                        # self.status_queue[config_file]
                         elif config_file == "backup":
                             for date in self.status_queue[config_file]:
 
+                                self.logging.info("Queue POP (3): " + str(self.status_queue[config_file][-1]))
                                 entry_data = self.db_handler.read_cache(config_file, date)
                                 entries = entry_data["files"]
                                 self.db_handler.lock(config_file, date)
@@ -595,6 +607,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                                     if change_status == "RANGE_END":
                                         self.config.async_answers.append(["RANGE_DONE"])
+                                    elif change_status == "DELETE_RANGE_END":
+                                        self.config.async_answers.append(["DELETE_RANGE_DONE"])
                                     elif key in entries:
                                         entries[key][change_status] = status
 
@@ -613,6 +627,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                        " config files (" + str(round(time.time() - start_time, 2)) + "s/" +
                                        ",".join(active_files) + ")")
 
+                    self.queue_in_progress = False
                     self.queue_wait_duration = time.time() - start_time
                     if self.queue_wait < self.queue_wait_duration:
                         if self.queue_wait < self.queue_wait_max:
@@ -649,6 +664,12 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         add status change to queue
         """
+        start = time.time()
+        while self.queue_in_progress:  # and start + self.queue_timeout > time.time():
+            time.sleep(1)
+            self.logging.info("WAIT add_to_status_queue: " + str(date) + "|" + str(key) + "|" + str(change_status))
+        self.logging.debug("ADD add_to_status_queue: " + str(date) + "|" + str(key) + "|" + str(change_status))
+
         if config != "backup":
             self.status_queue[config].append([date, key, change_status, status])
         elif config == "backup":
@@ -660,6 +681,12 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         add, remove or edit complete entry using a queue
         """
+        start = time.time()
+        while self.queue_in_progress:  # and start + self.queue_timeout > time.time():
+            time.sleep(1)
+            self.logging.info("WAIT add_to_edit_queue: " + config + "|" + date + "|" + key + "|" + command)
+        self.logging.debug("ADD add_to_edit_queue: " + config + "|" + date + "|" + key + "|" + command)
+
         if config != "backup":
             self.edit_queue[config].append([key, entry, command])
         elif config == "backup":
@@ -714,7 +741,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         set / unset recycling -> redesigned
         """
-        self.logging.debug("Status recycle: " + str(param))
+        self.logging.info("Status recycle: " + str(param))
 
         response = {}
         config_data = {}
@@ -750,6 +777,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                 self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="favorit",
                                          status=0)
         else:
+            self.logging.debug("- NOT OK " + entry_id)
             response["error"] = "no entry found with stamp " + entry_id
 
         return response
@@ -796,7 +824,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         set / unset recycling -> range from-to
         """
         self.logging.info("Start to identify RECYCLE range ...")
-        self.logging.debug("Status recycle range: " + str(param))
+        self.logging.info("Status recycle range: " + str(param))
 
         response = {}
         config_data = {}
@@ -829,6 +857,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         last_stamp = ""
         response["command"] = ["mark/unmark for deletion", entry_from, entry_to]
         if entry_from in config_data and entry_to in config_data:
+
             relevant = False
             stamps = list(reversed(sorted(config_data.keys())))
             camera = config_data[entry_from]["camera"]
@@ -858,7 +887,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         else:
             response["error"] = "no entry found with stamp " + entry_from + "/" + entry_to
 
-        self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="RANGE_END", status=0)
+        self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
+                                 change_status="RANGE_END", status=0)
 
         self.logging.info("Send RECYCLE range to queue ...")
         return response

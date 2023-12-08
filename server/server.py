@@ -695,6 +695,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_logging.info("RECYCLE THRESHOLD")
             response = config.queue.set_status_recycle_threshold(param, which_cam)
         elif param["command"] == "recycle-range":
+            config.logging.info("--------------------?")
             response = config.queue.set_status_recycle_range(param)
         elif param["command"] == "create-short-video":
             response = camera[which_cam].video.create_video_trimmed_queue(param)
