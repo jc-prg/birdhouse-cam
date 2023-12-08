@@ -667,8 +667,9 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         start = time.time()
         while self.queue_in_progress:  # and start + self.queue_timeout > time.time():
             time.sleep(0.2)
-            self.logging.info("WAIT add_to_status_queue: " + str(date) + "|" + str(key) + "|" + str(change_status))
-        self.logging.debug("ADD add_to_status_queue: " + str(date) + "|" + str(key) + "|" + str(change_status))
+        if time.time() - start > 1:
+            self.logging.info("WAIT add_to_status_queue: " + str(date) + "|" + str(key) + "|" + str(change_status) +
+                              " ... " + str(time.time() - start))
 
         if config != "backup":
             self.status_queue[config].append([date, key, change_status, status])
@@ -684,8 +685,9 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         start = time.time()
         while self.queue_in_progress:  # and start + self.queue_timeout > time.time():
             time.sleep(0.2)
-            self.logging.info("WAIT add_to_edit_queue: " + config + "|" + date + "|" + key + "|" + command)
-        self.logging.debug("ADD add_to_edit_queue: " + config + "|" + date + "|" + key + "|" + command)
+        if time.time() - start > 1:
+            self.logging.info("WAIT add_to_edit_queue: " + config + "|" + date + "|" + key + "|" + command +
+                              " ... " + str(time.time() - start))
 
         if config != "backup":
             self.edit_queue[config].append([key, entry, command])
