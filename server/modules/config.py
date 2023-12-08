@@ -522,7 +522,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                 count_edit = 0
                                 while len(self.edit_queue[config_file][date]) > 0:
 
-                                    self.logging.info("Queue POP (1): " + str(self.status_queue[config_file][date][-1]))
+                                    self.logging.info("Queue POP (1): " + str(self.edit_queue[config_file][date][-1]))
                                     [key, entry, command] = self.edit_queue[config_file][date].pop()
                                     count_entries += 1
 
