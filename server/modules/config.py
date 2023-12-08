@@ -522,7 +522,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                 count_edit = 0
                                 while len(self.edit_queue[config_file][date]) > 0:
 
-                                    self.logging.info("Queue POP (1): " + str(self.status_queue[config_file][-1]))
+                                    self.logging.info("Queue POP (1): " + str(self.status_queue[config_file][date][-1]))
                                     [key, entry, command] = self.edit_queue[config_file][date].pop()
                                     count_entries += 1
 
@@ -590,7 +590,6 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                         elif config_file == "backup":
                             for date in self.status_queue[config_file]:
 
-                                self.logging.info("Queue POP (3): " + str(self.status_queue[config_file][-1]))
                                 entry_data = self.db_handler.read_cache(config_file, date)
                                 entries = entry_data["files"]
                                 self.db_handler.lock(config_file, date)
@@ -602,6 +601,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                     self.status_queue[config_file][date] = []
 
                                 while len(self.status_queue[config_file][date]) > 0:
+                                    self.logging.info("Queue POP (3): " + str(self.status_queue[config_file][date][-1]))
                                     [date, key, change_status, status] = self.status_queue[config_file][date].pop()
                                     count_entries += 1
 
