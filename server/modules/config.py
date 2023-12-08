@@ -522,7 +522,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                 count_edit = 0
                                 while len(self.edit_queue[config_file][date]) > 0:
 
-                                    self.logging.info("Queue POP (1): " + str(self.edit_queue[config_file][date][-1]))
+                                    self.logging.debug("Queue POP (1): " + str(self.edit_queue[config_file][date][-1]))
                                     [key, entry, command] = self.edit_queue[config_file][date].pop()
                                     count_entries += 1
 
@@ -571,7 +571,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                             count_files += 1
                             while len(self.status_queue[config_file]) > 0:
 
-                                self.logging.info("Queue POP (2): " + str(self.status_queue[config_file][-1]))
+                                self.logging.debug("Queue POP (2): " + str(self.status_queue[config_file][-1]))
                                 [date, key, change_status, status] = self.status_queue[config_file].pop()
                                 count_entries += 1
 
@@ -601,7 +601,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                     self.status_queue[config_file][date] = []
 
                                 while len(self.status_queue[config_file][date]) > 0:
-                                    self.logging.info("Queue POP (3): " + str(self.status_queue[config_file][date][-1]))
+                                    self.logging.debug("Queue POP (3): " + str(self.status_queue[config_file][date][-1]))
                                     [date, key, change_status, status] = self.status_queue[config_file][date].pop()
                                     count_entries += 1
 
@@ -666,7 +666,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         start = time.time()
         while self.queue_in_progress:  # and start + self.queue_timeout > time.time():
-            time.sleep(1)
+            time.sleep(0.2)
             self.logging.info("WAIT add_to_status_queue: " + str(date) + "|" + str(key) + "|" + str(change_status))
         self.logging.debug("ADD add_to_status_queue: " + str(date) + "|" + str(key) + "|" + str(change_status))
 
@@ -683,7 +683,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         start = time.time()
         while self.queue_in_progress:  # and start + self.queue_timeout > time.time():
-            time.sleep(1)
+            time.sleep(0.2)
             self.logging.info("WAIT add_to_edit_queue: " + config + "|" + date + "|" + key + "|" + command)
         self.logging.debug("ADD add_to_edit_queue: " + config + "|" + date + "|" + key + "|" + command)
 
