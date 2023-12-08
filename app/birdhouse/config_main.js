@@ -41,6 +41,10 @@ function app_menu_entries(data) {
     }
 
 	if (app_admin_allowed) {
+	    birdhouse_adminAnswer(true);
+        }
+
+	if (app_admin_allowed) {
 		app_menu = app_menu.concat([
 		["LINE"],
 		[lang("TODAY_COMPLETE"),"script", hideSettings+"birdhousePrint_load('TODAY_COMPLETE','"+app_active_cam+"');"],
@@ -76,6 +80,7 @@ function app_initialize(data) {
 
 	var settings = data["SETTINGS"];
     if (settings["localization"]["language"]) { LANG = settings["localization"]["language"]; }
+
 	}
 
 //--------------------------------
