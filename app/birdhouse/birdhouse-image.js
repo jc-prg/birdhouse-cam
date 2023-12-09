@@ -282,6 +282,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var settings     = app_data["SETTINGS"];
 	var settings_cam = app_data["SETTINGS"]["devices"]["camera"];
 	var img_url      = ""; // RESTurl;
+	var img_missing  = false;
 
 	console.log(app_active_page);
 
@@ -316,24 +317,32 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		edit            = true;
     }
 	else if (entry["type"] == "directory") {
-		var lowres      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
-		var onclick     = "birdhousePrint_load(view=\"TODAY\", camera = \""+entry["camera"]+"\", date=\""+entry["datestamp"]+"\");";
-		var description = "";
-		if (entry["count_cam"] != entry["count"]) {
-            description += "<b>" + entry["date"] + "</b><br/>" + entry["count_cam"] + " / " + entry["count"];
-            description += "<br/><i>[" + entry["dir_size"] + " MB]</i>";
-            }
+
+        var description = "";
+    	if (entry["lowres"] == "" && entry["count_cam"] == 0) {
+            description += "<b>" + entry["date"] + "</b><br/>";
+            description += "<i>"+lang("NO_IMAGE_IN_ARCHIVE_2")+"</i>";
+            img_missing = true;
+    	    }
         else {
-            description += "<b>" + entry["date"] + "</b><br/>" + entry["count_cam"];
-            description += "<br/><i>[" + entry["dir_size"] + " MB]</i>";
+            var lowres      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
+            var onclick     = "birdhousePrint_load(view=\"TODAY\", camera = \""+entry["camera"]+"\", date=\""+entry["datestamp"]+"\");";
+            if (entry["count_cam"] != entry["count"]) {
+                description += "<b>" + entry["date"] + "</b><br/>" + entry["count_cam"] + " / " + entry["count"];
+                description += "<br/><i>[" + entry["dir_size"] + " MB]</i>";
+                }
+            else {
+                description += "<b>" + entry["date"] + "</b><br/>" + entry["count_cam"];
+                description += "<br/><i>[" + entry["dir_size"] + " MB]</i>";
+                }
             }
-    }
+        }
 	else if (entry["type"] == "addon") {
 		var lowres      = birdhouse_ImageURL(img_url + entry["lowres"]);
 		var lowres      = birdhouse_StreamURL(app_active_cam, entry["stream"], "stream_list_5", true);
 		var onclick     = "birdhousePrint_load(view=\"INDEX\", camera = \""+entry["camera"]+"\");";
 		var description = lang("LIVESTREAM");
-    }
+        }
 	else if (entry["type"] == "camera") {
 		var description = title;
 		//var lowres      = entry["video"]["stream"];
@@ -457,11 +466,18 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	html += "  <div class='star'>"+star+"</div>";
 	html += "  <div class='recycle'>"+recycle+"</div>";
     html += "  <div class='thumbnail_container' style='" + thumb_container_style + "'>";
-	html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id2+"' class='thumbnail' style='"+style+"'/></a>";
-	if (entry["similarity"]) {
-	    html += "    <input id='"+img_id2+"_similarity' value='"+entry["similarity"]+"' style='display:none;'>";
-	    }
-	html +=      play_button;
+    if (!img_missing) {
+        html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id2+"' class='thumbnail' style='"+style+"'/></a>";
+        if (entry["similarity"]) {
+            html += "    <input id='"+img_id2+"_similarity' value='"+entry["similarity"]+"' style='display:none;'>";
+            }
+        html +=      play_button;
+        }
+    else {
+        if (style == "") { style = "width:125px;height:140px;"; }
+        html += "<div style='border:#AA0000 1px solid;background:#AAAAAA;text-align:center;vertical-align:middle;color:#AA0000;"+style+"'>";
+        html += "&nbsp;<br>&nbsp;<br>"+lang("NO_IMAGE_IN_ARCHIVE")+"</div>";
+        }
 	html += "    <br/><center><small>"+description+"</small></center>";
 	html += "  </div>";
 	html += "</div>";
