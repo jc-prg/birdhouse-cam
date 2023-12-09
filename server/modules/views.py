@@ -1150,7 +1150,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                         archive_changed[cam]["groups"][backup_group].append(date)
 
                     # add additional information
-                    archive_changed[cam]["view_count"] = []
+                    archive_changed[cam]["view_count"] = ["all", "star", "detect", "recycle", "data"]
                     archive_changed[cam]["subtitle"] = (presets.birdhouse_pages["backup"][0] + " (" +
                                                         self.camera[cam].name + ")")
                     archive_changed[cam]["chart_data"] = {"data": {}, "titles": ["Activity"], "info": "not implemented"}
