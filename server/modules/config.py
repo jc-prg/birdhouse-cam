@@ -395,8 +395,11 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         self.views = None
         self.db_handler = db_handler
         self.edit_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": [], "statistics": []}
+        self.edit_queue_in_progress = False
+        self.range_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": [], "statistics": []}
+        self.range_queue_in_progress = False
         self.status_queue = {"images": [], "videos": [], "backup": {}, "sensor": [], "weather": [], "statistics": []}
-        self.queue_in_progress = False
+        self.status_queue_in_progress = False
         self.queue_timeout = 25
         self.queue_wait = 5
         self.queue_wait_max = 30
@@ -421,8 +424,9 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
             if start_time + self.queue_wait < time.time():
                 self.logging.debug("... Check Queue (" + str(self.queue_wait) + "s)")
-                self.logging.debug("    ... " + str(self.edit_queue))
-                self.logging.debug("    ... " + str(self.status_queue))
+                self.logging.debug("    ... edit:   " + str(len(self.edit_queue)))
+                self.logging.debug("    ... range:  " + str(len(self.range_queue)))
+                self.logging.debug("    ... status: " + str(len(self.status_queue)))
 
                 start_time = time.time()
 
@@ -442,192 +446,28 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                 entries_available = True
 
                 if entries_available:
-                    self.queue_in_progress = True
                     self.logging.debug("... Entries available in the queue (" +
                                        str(round(time.time() - start_time, 2)) + "s)")
-                    for config_file in config_files:
-                        file_start_time = time.time()
-                        self.logging.debug("    -> Queue: " + config_file + " ... (" +
-                                           str(len(self.edit_queue[config_file])) + " entries / " +
-                                           str(round(time.time() - start_time, 2)) + "s)")
 
-                        # Check if DB connection
-                        wait_for_db = 0
-                        while not self.db_handler.get_db_status()["db_connected"]:
-                            self.logging.warning("Waiting for DB Connection (" +
-                                                 str(len(self.edit_queue[config_file])) + " entries in the Queue)")
-                            wait_for_db += 1
-                            if wait_for_db > 6:
-                                self.db_handler.connect(self.db_handler.db_type)
-                            time.sleep(5)
+                    # Check if DB connection
+                    wait_for_db = 0
+                    while not self.db_handler.get_db_status()["db_connected"]:
+                        self.logging.warning("Waiting for DB Connection ...")
+                        wait_for_db += 1
+                        if wait_for_db > 6:
+                            self.db_handler.connect(self.db_handler.db_type)
+                        time.sleep(5)
 
-                        # EDIT QUEUE: today, video (without date)
-                        if config_file != "backup" and len(self.edit_queue[config_file]) > 0:
-                            self.logging.debug("       .start (" + str(round(time.time() - file_start_time, 2)) + "s)")
-                            active_files.append(config_file)
-                            entries = self.db_handler.read_cache(config_file)
-                            self.db_handler.lock(config_file)
-                            self.logging.debug("       .read (" + str(round(time.time() - file_start_time, 2)) + "s)")
-
-                            count_files += 1
-                            count_edit = 0
-                            while len(self.edit_queue[config_file]) > 0:
-                                [key, entry, command] = self.edit_queue[config_file].pop()
-                                count_entries += 1
-                                if command == "add" or command == "edit":
-                                    entries[key] = entry
-                                    count_edit += 1
-                                elif command == "delete" and key in entries:
-                                    del entries[key]
-                                    count_edit += 1
-                                elif command == "keep_data":
-                                    entries[key]["type"] = "data"
-                                    if "hires" in entries[key]:
-                                        del entries[key]["hires"]
-                                    if "lowres" in entries[key]:
-                                        del entries[key]["lowres"]
-                                    if "directory" in entries[key]:
-                                        del entries[key]["directory"]
-                                    if "compare" in entries[key]:
-                                        del entries[key]["compare"]
-                                    if "favorit" in entries[key]:
-                                        del entries[key]["favorit"]
-                                    if "to_be_deleted" in entries[key]:
-                                        del entries[key]["to_be_deleted"]
-
-                            self.logging.debug("       .edit (" + str(round(time.time() - file_start_time, 2)) + "s)")
-                            self.db_handler.unlock(config_file)
-                            self.db_handler.write(config_file, "", entries)
-                            self.logging.debug(
-                                "       .write (" + str(round(time.time() - file_start_time, 2)) + "s / " +
-                                str(round(sys.getsizeof(entries) / 1024, 1)) + "kB)")
-
-                            if count_edit > 0 and self.views is not None:
-                                self.views.favorite_list_update()
-
-                        # EDIT QUEUE: backup (with date)
-                        elif config_file == "backup":
-                            for date in self.edit_queue[config_file]:
-                                if "backup" not in active_files:
-                                    active_files.append(config_file)
-                                entry_data = self.db_handler.read_cache(config_file, date)
-                                entries = entry_data["files"]
-                                self.db_handler.lock(config_file, date)
-
-                                if date in self.edit_queue[config_file] and len(self.edit_queue[config_file][date]) > 0:
-                                    count_files += 1
-                                elif date not in self.edit_queue[config_file]:
-                                    self.edit_queue[config_file][date] = []
-
-                                count_edit = 0
-                                while len(self.edit_queue[config_file][date]) > 0:
-
-                                    self.logging.debug("Queue POP (1): " + str(self.edit_queue[config_file][date][-1]))
-                                    [key, entry, command] = self.edit_queue[config_file][date].pop()
-                                    count_entries += 1
-
-                                    self.logging.info(" +++> " + command + " +++ " + key)
-
-                                    if command == "add" or command == "edit":
-                                        entries[key] = entry
-                                        count_edit += 1
-                                    elif command == "delete" and key in entries:
-                                        del entries[key]
-                                        count_edit += 1
-                                    elif command == "keep_data":
-                                        entries[key]["type"] = "data"
-                                        if "hires" in entries[key]:
-                                            del entries[key]["hires"]
-                                        if "hires_size" in entries[key]:
-                                            del entries[key]["hires_size"]
-                                        if "lowres" in entries[key]:
-                                            del entries[key]["lowres"]
-                                        if "lowres_size" in entries[key]:
-                                            del entries[key]["lowres_size"]
-                                        if "directory" in entries[key]:
-                                            del entries[key]["directory"]
-                                        if "compare" in entries[key]:
-                                            del entries[key]["compare"]
-                                        if "favorit" in entries[key]:
-                                            del entries[key]["favorit"]
-                                        if "to_be_deleted" in entries[key]:
-                                            del entries[key]["to_be_deleted"]
-
-                                if count_edit > 0 and self.views is not None:
-                                    self.views.favorite_list_update()
-
-                                entry_data["files"] = entries
-                                entry_data["info"]["changed"] = True
-                                update_views = True
-
-                                self.db_handler.unlock(config_file, date)
-                                self.db_handler.write(config_file, date, entry_data)
-
-                        # STATUS QUEUE: today, video (without date)
-                        if config_file != "backup" and len(self.status_queue[config_file]) > 0:
-                            entries = self.db_handler.read_cache(config_file)
-                            self.db_handler.lock(config_file)
-
-                            count_files += 1
-                            while len(self.status_queue[config_file]) > 0:
-
-                                self.logging.debug("Queue POP (2): " + str(self.status_queue[config_file][-1]))
-                                [date, key, change_status, status] = self.status_queue[config_file].pop()
-                                count_entries += 1
-
-                                if change_status == "RANGE_END":
-                                    self.config.async_answers.append(["RANGE_DONE"])
-                                elif change_status == "DELETE_RANGE_END":
-                                    self.config.async_answers.append(["DELETE_RANGE_DONE"])
-                                elif key in entries:
-                                    entries[key][change_status] = status
-
-                            self.db_handler.unlock(config_file)
-                            self.db_handler.write(config_file, "", entries)
-
-                        # STATUS QUEUE: backup (with date) # !!! RuntimeError: dictionary changed size during iteration
-                        # self.status_queue[config_file]
-                        elif config_file == "backup":
-                            for date in self.status_queue[config_file]:
-
-                                entry_data = self.db_handler.read_cache(config_file, date)
-                                entries = entry_data["files"]
-                                self.db_handler.lock(config_file, date)
-
-                                if date in self.status_queue[config_file] and len(
-                                        self.status_queue[config_file][date]) > 0:
-                                    count_files += 1
-                                else:
-                                    self.status_queue[config_file][date] = []
-
-                                while len(self.status_queue[config_file][date]) > 0:
-                                    self.logging.debug("Queue POP (3): " + str(self.status_queue[config_file][date][-1]))
-                                    [date, key, change_status, status] = self.status_queue[config_file][date].pop()
-                                    count_entries += 1
-
-                                    if change_status == "RANGE_END":
-                                        self.config.async_answers.append(["RANGE_DONE"])
-                                    elif change_status == "DELETE_RANGE_END":
-                                        self.config.async_answers.append(["DELETE_RANGE_DONE"])
-                                    elif key in entries:
-                                        entries[key][change_status] = status
-
-                                entry_data["files"] = entries
-                                entry_data["info"]["changed"] = True
-                                update_views = True
-
-                                self.db_handler.unlock(config_file, date)
-                                self.db_handler.write(config_file, date, entry_data)
-
-                        self.logging.debug("    -> Queue: " + config_file + " done. " +
-                                           " (" + str(round(time.time() - start_time, 2)) + "s)")
+                    if self.execute_edit_queue():
+                        update_views = True
+                    if self.execute_status_queue():
+                        update_views = True
 
                     check_count_entries += count_entries
-                    self.logging.debug("Queue: wrote " + str(count_entries) + " entries to " + str(count_files) +
-                                       " config files (" + str(round(time.time() - start_time, 2)) + "s/" +
-                                       ",".join(active_files) + ")")
+                    self.logging.debug("Queue execution: wrote " + str(count_entries) + " entries to " +
+                                       str(count_files) + " config files (" + str(round(time.time() - start_time, 2)) +
+                                       "s)")
 
-                    self.queue_in_progress = False
                     self.queue_wait_duration = time.time() - start_time
                     if self.queue_wait < self.queue_wait_duration:
                         if self.queue_wait < self.queue_wait_max:
@@ -660,12 +500,204 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
         self.logging.info("Stopped Config Queue.")
 
+    def execute_edit_queue(self):
+        """
+        execute entries in edit_queue if exist
+        """
+        config_files = ["images", "videos", "backup", "sensor", "weather", "statistics"]
+        count_files = 0
+        count_entries = 0
+        update_views = False
+
+        self.edit_queue_in_progress = True
+        for config_file in config_files:
+
+            if len(self.edit_queue[config_file]) == 0:
+                continue
+            else:
+                self.logging.debug("    -> Execute edit queue: " + config_file + " ... (" +
+                                   str(len(self.edit_queue[config_file])) + " entries)")
+
+            # EDIT QUEUE: today, video (without date)
+            if config_file != "backup" and len(self.edit_queue[config_file]) > 0:
+
+                entries = self.db_handler.read_cache(config_file)
+                self.db_handler.lock(config_file)
+
+                count_files += 1
+                count_edit = 0
+
+                while len(self.edit_queue[config_file]) > 0:
+                    self.logging.debug("Edit queue POP (1): " + str(self.edit_queue[config_file][-1]))
+                    [key, entry, command] = self.edit_queue[config_file].pop()
+                    count_entries += 1
+                    if command == "add" or command == "edit":
+                        entries[key] = entry
+                        count_edit += 1
+                    elif command == "delete" and key in entries:
+                        del entries[key]
+                        count_edit += 1
+                    elif command == "keep_data":
+                        entries[key]["type"] = "data"
+                        if "hires" in entries[key]:
+                            del entries[key]["hires"]
+                        if "lowres" in entries[key]:
+                            del entries[key]["lowres"]
+                        if "directory" in entries[key]:
+                            del entries[key]["directory"]
+                        if "compare" in entries[key]:
+                            del entries[key]["compare"]
+                        if "favorit" in entries[key]:
+                            del entries[key]["favorit"]
+                        if "to_be_deleted" in entries[key]:
+                            del entries[key]["to_be_deleted"]
+
+                self.db_handler.unlock(config_file)
+                self.db_handler.write(config_file, "", entries)
+
+                if count_edit > 0 and self.views is not None:
+                    self.views.favorite_list_update()
+
+            # EDIT QUEUE: backup (with date)
+            elif config_file == "backup":
+
+                for date in self.edit_queue[config_file]:
+
+                    entry_data = self.db_handler.read_cache(config_file, date)
+                    self.db_handler.lock(config_file, date)
+                    entries = entry_data["files"]
+
+                    if date in self.edit_queue[config_file] and len(self.edit_queue[config_file][date]) > 0:
+                        count_files += 1
+
+                    count_edit = 0
+                    while len(self.edit_queue[config_file][date]) > 0:
+
+                        self.logging.debug("Edit queue POP (2): " + str(self.edit_queue[config_file][date][-1]))
+                        [key, entry, command] = self.edit_queue[config_file][date].pop()
+                        count_entries += 1
+
+                        self.logging.info(" +++> " + command + " +++ " + key)
+
+                        if command == "add" or command == "edit":
+                            entries[key] = entry
+                            count_edit += 1
+                        elif command == "delete" and key in entries:  # !!! check, if also for keep_data?!
+                            del entries[key]
+                            count_edit += 1
+                        elif command == "keep_data":
+                            entries[key]["type"] = "data"
+                            if "hires" in entries[key]:
+                                del entries[key]["hires"]
+                            if "hires_size" in entries[key]:
+                                del entries[key]["hires_size"]
+                            if "lowres" in entries[key]:
+                                del entries[key]["lowres"]
+                            if "lowres_size" in entries[key]:
+                                del entries[key]["lowres_size"]
+                            if "directory" in entries[key]:
+                                del entries[key]["directory"]
+                            if "compare" in entries[key]:
+                                del entries[key]["compare"]
+                            if "favorit" in entries[key]:
+                                del entries[key]["favorit"]
+                            if "to_be_deleted" in entries[key]:
+                                del entries[key]["to_be_deleted"]
+
+                    if count_edit > 0 and self.views is not None:
+                        self.views.favorite_list_update()
+
+                    entry_data["files"] = entries
+                    entry_data["info"]["changed"] = True
+                    update_views = True
+
+                    self.db_handler.unlock(config_file, date)
+                    self.db_handler.write(config_file, date, entry_data)
+
+            self.logging.debug("    -> Edit queue: " + config_file + " done.)")
+
+        self.edit_queue_in_progress = False
+        return update_views
+
+    def execute_status_queue(self):
+        """
+        execute entries in status_queue if exist
+        """
+        config_files = ["images", "videos", "backup", "sensor", "weather", "statistics"]
+        count_files = 0
+        count_entries = 0
+        update_views = False
+
+        self.status_queue_in_progress = True
+        for config_file in config_files:
+
+            # STATUS QUEUE: today, video (without date)
+            if config_file != "backup" and len(self.status_queue[config_file]) > 0:
+
+                entries = self.db_handler.read_cache(config_file)
+                self.db_handler.lock(config_file)
+
+                count_files += 1
+                while len(self.status_queue[config_file]) > 0:
+
+                    self.logging.debug("Queue POP (2): " + str(self.status_queue[config_file][-1]))
+                    [date, key, change_status, status] = self.status_queue[config_file].pop()
+                    count_entries += 1
+
+                    if change_status == "RANGE_END":
+                        self.config.async_answers.append(["RANGE_DONE"])
+                    elif change_status == "DELETE_RANGE_END":
+                        self.config.async_answers.append(["DELETE_RANGE_DONE"])
+                    elif key in entries:
+                        entries[key][change_status] = status
+
+                self.db_handler.unlock(config_file)
+                self.db_handler.write(config_file, "", entries)
+
+            # STATUS QUEUE: backup (with date)
+            elif config_file == "backup":
+                for date in self.status_queue[config_file]:
+
+                    entry_data = self.db_handler.read_cache(config_file, date)
+                    entries = entry_data["files"]
+                    self.db_handler.lock(config_file, date)
+
+                    if len(self.status_queue[config_file][date]) > 0:
+                        count_files += 1
+
+                    while len(self.status_queue[config_file][date]) > 0:
+                        self.logging.debug("Queue POP (3): " + str(self.status_queue[config_file][date][-1]))
+                        [date, key, change_status, status] = self.status_queue[config_file][date].pop()
+                        count_entries += 1
+
+                        if change_status == "RANGE_END":
+                            self.config.async_answers.append(["RANGE_DONE"])
+                        elif change_status == "DELETE_RANGE_END":
+                            self.config.async_answers.append(["DELETE_RANGE_DONE"])
+                        elif key in entries:
+                            entries[key][change_status] = status
+
+                    entry_data["files"] = entries
+                    entry_data["info"]["changed"] = True
+                    update_views = True
+
+                    self.db_handler.unlock(config_file, date)
+                    self.db_handler.write(config_file, date, entry_data)
+
+            self.logging.debug("    -> Edit queue: " + config_file + " done.)")
+
+        self.status_queue_in_progress = False
+        return update_views
+
+    def execute_range_queue(self):
+        pass
+
     def add_to_status_queue(self, config, date, key, change_status, status):
         """
         add status change to queue
         """
         start = time.time()
-        while self.queue_in_progress:  # and start + self.queue_timeout > time.time():
+        while self.status_queue_in_progress:  # and start + self.queue_timeout > time.time():
             time.sleep(0.2)
         if time.time() - start > 1:
             self.logging.info("WAIT add_to_status_queue: " + str(date) + "|" + str(key) + "|" + str(change_status) +
@@ -683,7 +715,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         add, remove or edit complete entry using a queue
         """
         start = time.time()
-        while self.queue_in_progress:  # and start + self.queue_timeout > time.time():
+        while self.edit_queue_in_progress:  # and start + self.queue_timeout > time.time():
             time.sleep(0.2)
         if time.time() - start > 1:
             self.logging.info("WAIT add_to_edit_queue: " + config + "|" + date + "|" + key + "|" + command +
@@ -695,6 +727,24 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
             if date not in self.edit_queue[config]:
                 self.edit_queue[config][date] = []
             self.edit_queue[config][date].append([key, entry, command])
+
+    def add_to_range_queue(self, config, date, key, entry, command):
+        """
+        add, remove or edit complete entry using a queue
+        """
+        start = time.time()
+        while self.range_queue_in_progress:  # and start + self.queue_timeout > time.time():
+            time.sleep(0.2)
+        if time.time() - start > 1:
+            self.logging.info("WAIT add_to_range_queue: " + config + "|" + date + "|" + key + "|" + command +
+                              " ... " + str(time.time() - start))
+
+        if config != "backup":
+            self.range_queue[config].append([key, entry, command])
+        elif config == "backup":
+            if date not in self.range_queue[config]:
+                self.range_queue[config][date] = []
+            self.range_queue[config][date].append([key, entry, command])
 
     def set_status_favorite(self, param):
         """
