@@ -609,12 +609,19 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                     entry_data["files"] = entries
                     entry_data["info"]["changed"] = True
-                    update_views = True
 
                     self.db_handler.unlock(config_file, date)
                     self.db_handler.write(config_file, date, entry_data)
 
-            self.logging.debug("    -> Edit queue: " + config_file + " done.)")
+                    backup_info = self.db_handler.read_cache("backup_info", "")
+                    if "changes" not in backup_info:
+                        backup_info["changes"] = {}
+                    backup_info["changes"][date] = True
+                    self.db_handler.write("backup_info", "", backup_info)
+
+                    update_views = True
+
+        self.logging.debug("    -> Edit queue: " + config_file + " done.)")
 
         self.edit_queue_in_progress = False
         return update_views
@@ -640,7 +647,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                 count_files += 1
                 while len(self.status_queue[config_file]) > 0:
 
-                    self.logging.debug("Queue POP (2): " + str(self.status_queue[config_file][-1]))
+                    self.logging.debug("Status queue POP (1): " + str(self.status_queue[config_file][-1]))
                     [date, key, change_status, status] = self.status_queue[config_file].pop()
                     count_entries += 1
 
@@ -679,12 +686,19 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                     entry_data["files"] = entries
                     entry_data["info"]["changed"] = True
-                    update_views = True
 
                     self.db_handler.unlock(config_file, date)
                     self.db_handler.write(config_file, date, entry_data)
 
-            self.logging.debug("    -> Edit queue: " + config_file + " done.)")
+                    backup_info = self.db_handler.read("backup_info", "")
+                    if "changes" not in backup_info:
+                        backup_info["changes"] = {}
+                    backup_info["changes"][date] = True
+                    self.db_handler.write("backup_info", "", backup_info)
+
+                    update_views = True
+
+            self.logging.debug("    -> Status queue: " + config_file + " done.)")
 
         self.status_queue_in_progress = False
         return update_views
@@ -777,7 +791,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         elif category == "videos":
             config_data = self.db_handler.read_cache(config="videos")
 
-        response["command"] = ["mark/unmark as favorit", entry_id]
+        response["command"] = ["mark/unmark as favorite", entry_id]
         if entry_id in config_data:
             self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="favorit",
                                      status=entry_value)

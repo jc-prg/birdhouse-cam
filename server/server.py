@@ -798,7 +798,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 camera[which_cam].record_temp_threshold = param["parameter"]
         elif param["command"] == "kill-stream":
             srv_logging.debug(self.path)
-            srv_logging.info(str(param["parameter"]))
+            srv_logging.debug(str(param["parameter"]))
             stream_id = param["parameter"][0]
             if "&" in stream_id:
                 stream_id_kill = stream_id.split("&")[-1]

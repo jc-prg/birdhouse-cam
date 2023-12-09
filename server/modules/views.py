@@ -494,7 +494,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             if self.create_archive and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
                 if not self.if_shutdown():
-                    self.archive_list_create(self.create_archive_complete)
+                    self.archive_list_create(True, self.create_archive_complete)
                     self.create_archive = False
                     self.create_archive_complete = False
 
@@ -786,8 +786,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         if force:
             self.force_reload = True
 
-    def archive_list_preview(self, cam, image_title, directory, file_data):
-        # first favorit as image or ...
+    def _archive_list_preview(self, cam, image_title, directory, file_data):
+        # first favorite as image or ...
         first_img = ""
         first_img_temp = ""
         sorted_file_keys = list(sorted(file_data["files"].keys()))
@@ -860,7 +860,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         return image_preview
 
-    def archive_list_entry(self, cam, content, directory, dir_size, file_data):
+    def _archive_list_entry(self, cam, content, directory, dir_size, file_data):
         """
         create entry per archive directory, measure file sizes
         """
@@ -941,12 +941,92 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         return content.copy(), dir_size
 
-    def archive_list_create(self, complete=False):
+    def _archive_list_create_database_ok(self, date):
+        """
+        check availability of couch db and/or json db
+        """
+        database_ok = False
+        database_type = self.config.db_handler.db_type
+        database_available = self.config.db_handler.exists(config="backup", date=date)
+        self.logging.debug("  -> Check CouchDB: available=" + str(database_available))
+        config_available = os.path.isfile(self.config.db_handler.file_path(config="backup", date=date))
+        self.logging.debug("  -> Check JSON: config_file=" + str(config_available))
+        if database_type == "couch" and database_available:
+            database_ok = True
+        elif database_type == "both" and database_available or config_available:
+            database_ok = True
+        elif database_type == "json" and config_available:
+            database_ok = True
+        if not database_ok:
+            self.logging.warning("  -> DB Check for '" + date + "': JSON=" + str(config_available) + ", COUCH=" +
+                                 str(database_available) + ", DB-TYPE=" + database_type)
+        return database_ok
+
+    def _archive_list_create_file_data(self, directory, database_ok):
+        """
+        get data from existing database or return empty value
+        """
+        file_data = {}
+        config_available = os.path.isfile(self.config.db_handler.file_path(config="backup", date=directory))
+
+        if database_ok:
+            self.logging.debug("  -> read from DB")
+            file_data = self.config.db_handler.read(config="backup", date=directory)
+
+        elif not database_ok and config_available:
+            self.logging.debug("  -> read from file")
+            file_data = self.config.db_handler.json.read(config_file)
+            if file_data != {}:
+                self.logging.debug("  -> write to DB: " + str(file_data.keys()))
+                file_data["info"]["changed"] = False
+                self.config.db_handler.write(config="backup", date=directory, data=file_data, create=True)
+            else:
+                self.logging.error("  -> got empty data")
+
+        # check if data format is complete
+        if "info" not in file_data:
+            file_data["info"] = {}
+            file_data["info"]["date"] = directory[6:8] + "." + directory[4:6] + "." + directory[0:4]
+        if "files" not in file_data:
+            file_data["files"] = {}
+        if "chart_data" not in file_data:
+            file_data["chart_data"] = {}
+        if "weather_data" not in file_data:
+            file_data["weather_data"] = {}
+
+        return file_data.copy()
+
+    def _archive_list_create_from_database(self, cam, content, directory, file_data):
+        """
+        create archive entry from files
+        """
+        dir_size = 0
+        image_preview = self._archive_list_preview(cam=cam, image_title=str(self.config.param["backup"]["preview"]),
+                                                   directory=directory, file_data=file_data)
+        image_preview = os.path.join(str(self.config.directories["backup"]), str(image_preview))
+        image_file = image_preview.replace(directory + "/", "")
+        image_file = image_file.replace(self.config.directories["backup"], "")
+
+        content, dir_size = self._archive_list_entry(cam=cam, content=content.copy(), directory=directory,
+                                                     dir_size=dir_size, file_data=file_data)
+        content["entries"][directory]["lowres"] = image_file
+
+        files_count = content["entries"][directory]["count_cam"]
+        files_size = content["entries"][directory]["dir_size_cam"]
+
+        self.logging.info("                 -> from_database " + directory + "/" + cam + ": " +
+                          str(files_size) + " MB in " + str(files_count) + " files")
+
+        return content["entries"][directory].copy()
+
+    def archive_list_create(self, from_directories=True, complete=False):
         """
         Page with backup/archive directory
         """
         count = 0
         dir_size_total = 0
+        archive_total_size = 0
+        archive_total_count = 0
         start_time = time.time()
 
         self.archive_loading = "in progress"
@@ -956,173 +1036,141 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         archive_changed = {}
         archive_info = self.config.db_handler.read("backup_info", "")
+        archive_template = {
+                    "active_cam": "",
+                    "view": "backup",
+                    "entries": {},
+                    "groups": {},
+                    "view_count": [],
+                    "max_image_size": {"lowres": [0, 0], "hires": [0, 0]}
+                    }
 
         self.logging.info("Create data for archive view from '" + main_directory + "' ...")
         self.logging.info("- Get archive directory information (" + db_type + " | " + main_directory + ") ...")
         self.logging.info("- Found " + str(len(dir_list)) + " archive directories.")
         self.logging.debug("  -> " + str(dir_list))
 
+        # prepare data
+        backup_entries = {}
         for cam in self.camera:
-            archive_changed[cam] = {}
-            content = {
-                "active_cam": cam,
-                "view": "backup",
-                "entries": {},
-                "groups": {},
-                "max_image_size": {"lowres": [0, 0], "hires": [0, 0]}
-                }
-            dir_total_size = 0
-            files_total = 0
 
+            # create new values in archive file if they don't exist
+            if cam not in archive_info or archive_info[cam] == {}:
+                archive_info[cam] = archive_template.copy()
+                archive_info[cam]["active_cam"] = cam
+            archive_changed[cam] = {}
+
+            # create list per data (from lists per camera) and check if entries in databases have been changed
+            for date in archive_info[cam]["entries"]:
+                if date not in backup_entries:
+                    backup_entries[date] = {}
+                backup_entries[date][cam] = archive_info[cam]["entries"][date].copy()
+                if "changes" in archive_info and date in archive_info["changes"]:
+                    backup_entries[date]["changed"] = True
+                    backup_entries[date]["exists"] = True
+                if "changed" not in backup_entries[date]:
+                    backup_entries[date]["changed"] = False
+                if "exists" not in backup_entries[date]:
+                    backup_entries[date]["exists"] = False
+
+            # check if new directories are available
+            for directory in dir_list:
+                if (len(directory) == 8 and directory not in backup_entries) or cam not in backup_entries[directory]:
+                    if directory not in backup_entries:
+                        backup_entries[directory] = {}
+                    if cam not in backup_entries[directory]:
+                        backup_entries[directory][cam] = {}
+                    backup_entries[directory] = {"changed": True, "exists": False}
+
+            # stop if shutdown signal was send
             if self.if_shutdown():
                 self.logging.info("Interrupt creating the archive list.")
                 return
 
-            self.logging.info("- Scan " + str(len(dir_list)) + " directories for " + cam + " ...")
-            image_title = str(self.config.param["backup"]["preview"])
-            dir_list = sorted(dir_list)
+        # update data for those dates where necessary + measure total size
+        count_entries = 0
+        for date in backup_entries:
 
-            for directory in dir_list:
-                dir_size = 0
-                group_name = directory[0:4] + "-" + directory[4:6]
-                self.logging.debug("  -> Directory: " + directory + " | " + group_name)
+            # check availability of couch db and/or json db
+            database_ok = self._archive_list_create_database_ok(date)
 
-                if self.if_shutdown():
-                    self.logging.info("Interrupt create favorite list.")
-                    return
+            # update for those dates where necessary
+            for cam in self.camera:
+                count_entries += 1
 
-                if "groups" not in content:
-                    content["groups"] = {}
-                if group_name not in content["groups"]:
-                    content["groups"][group_name] = []
+                # if directory doesn't exist yet read entries from database of the respective date
+                if (backup_entries[date]["changed"] and not backup_entries[date]["exists"]) or not database_ok:
+                    log_info = "new [database_ok=" + str(database_ok) + "]"
+                    self.logging.info("                 -> from_database " + directory + "/" + cam + ": " +
+                                      "not yet implemented")
+                    pass
 
-                db_available = False
-                config_file = ""
-                config_available = False
+                # if just change re-read entries from database of the respective date
+                elif backup_entries[date]["changed"] and backup_entries[date]["exists"]:
+                    log_info = "changed"
+                    file_data = self._archive_list_create_file_data(date, database_ok)
+                    backup_entries[date][cam] = self._archive_list_create_from_database(cam, archive_info[cam], date,
+                                                                                        file_data)
 
-                # check if DB and config file available
-                if self.config.db_handler.db_type == "couch" or self.config.db_handler.db_type == "both":
-                    db_available = self.config.db_handler.exists(config="backup", date=directory)
-                    config_file = self.config.db_handler.file_path(config="backup", date=directory)
-                    config_available = os.path.isfile(config_file)
-                    if not db_available or not config_available:
-                        self.logging.warning("  -> Check CouchDB: available=" + str(db_available))
-                        self.logging.warning("  -> Check JSON: config_file=" + str(config_available))
-
-                elif self.config.db_handler.db_type == "json":
-                    db_available = self.config.db_handler.exists(config="backup", date=directory)
-                    if not db_available:
-                        self.logging.error("  -> Check JSON: config_file=" + str(config_available))
-
-                # read data depending on available sources
-                file_data = {}
-                if db_available:
-                    self.logging.debug("  -> read from DB")
-                    file_data = self.config.db_handler.read(config="backup", date=directory)
-
-                elif not db_available and config_available:
-                    self.logging.debug("  -> read from file")
-                    file_data = self.config.db_handler.json.read(config_file)
-                    if file_data != {}:
-                        self.logging.debug("  -> write to DB: " + str(file_data.keys()))
-                        file_data["info"]["changed"] = False
-                        self.config.db_handler.write(config="backup", date=directory, data=file_data, create=True)
-                        db_available = True
-                    else:
-                        self.logging.error("  -> got empty data")
-
-                # check if data format is complete
-                if "info" not in file_data:
-                    file_data["info"] = {}
-                if "changed" not in file_data["info"]:
-                    file_data["info"]["changed"] = True
-
-                # read or create data
-                if db_available:
-                    self.logging.debug("  -> Check CONFIG")
-                    content["groups"][group_name].append(directory)
-
-                    # check if config file in correct format
-                    if "info" not in file_data or "files" not in file_data:
-                        if directory not in content["entries"]:
-                            content["entries"][directory] = {}
-                        content["entries"][directory]["error"] = True
-                        self.logging.error("  -> Read JSON: Wrong file format - " + config_file)
-
-                    # if not changed use data from DB
-                    elif (directory in archive_info[cam]["entries"] and "info" in file_data
-                          and "changed" in file_data["info"] and not file_data["info"]["changed"]) and not complete:
-
-                        content["entries"][directory] = archive_info[cam]["entries"][directory].copy()
-                        dir_size = content["entries"][directory]["dir_size"]
-                        dir_size_cam = content["entries"][directory]["dir_size_cam"]
-                        dir_total_size += dir_size
-                        files_total += content["entries"][directory]["count"]
-                        count = content["entries"][directory]["count"]
-
-                        self.logging.info("  -> Archive " + directory + "*: " + str(round(dir_total_size, 1)) +
-                                          " MB / " + cam + ": " + str(dir_size_cam) + " MB in " + str(count) +
-                                          " files [from Database]")
-
-                    # analyze files and create archive entry
-                    elif "files" in file_data:
-                        # identify preview image
-                        image_preview = self.archive_list_preview(cam=cam, image_title=image_title,
-                                                                  directory=directory, file_data=file_data)
-
-                        image_preview = os.path.join(self.config.directories["backup"], image_preview)
-                        image_file = image_preview.replace(directory + "/", "")
-                        image_file = image_file.replace(self.config.directories["backup"], "")
-
-                        content, dir_size = self.archive_list_entry(cam=cam, content=content.copy(),
-                                                                    directory=directory,
-                                                                    dir_size=dir_size, file_data=file_data)
-
-                        dir_total_size += dir_size
-                        dir_size_cam = content["entries"][directory]["dir_size_cam"]
-                        files_total += content["entries"][directory]["count"]
-                        count = files_total
-                        content["entries"][directory]["lowres"] = image_file
-
-                        archive_changed[cam][directory] = file_data.copy()
-                        self.config.db_handler.write(config="backup", date=directory, data=file_data.copy())
-
-                        self.logging.info("  -> Archive " + directory + ": " + str(round(dir_total_size, 1)) +
-                                          " MB / " + cam + ": " + str(dir_size_cam) + " MB in " + str(count) +
-                                          " files [from Files]")
-
-                    else:
-                        self.logging.error("  -> Archive: config file available but empty/in wrong format: /backup/" + directory)
-
-                elif db_available:
-                    self.logging.info("  -> Archive available in CouchDB")
+                # else stay with the existing data
                 else:
-                    self.logging.error("  -> No config file available: /backup/" + directory)
+                    log_info = "keep"
+                    pass
 
-                if directory in content["entries"]:
-                    content["entries"][directory]["dir_size"] = dir_size
+                self.logging.info("  -> Archive " + str(count_entries).zfill(4) + ": " +
+                                  date + "/" + cam + " ... " + log_info)
 
-            content["view_count"] = []
-            content["subtitle"] = presets.birdhouse_pages["backup"][0] + " (" + self.camera[cam].name + ")"
-            content["chart_data"] = self.create.chart_data(content["entries"].copy())
-            self.archive_views[cam] = content.copy()
+            # stop if shutdown signal was send
+            if self.if_shutdown():
+                self.logging.info("Interrupt creating the archive list.")
+                return
 
-            if self.config.db_handler.db_type == "couch":
-                archive_info[cam] = content.copy()
+        # process data to be saved
+        for date in backup_entries:
+            for cam in self.camera:
+                archive_changed[cam] = archive_template.copy()
+                archive_changed[cam]["active_cam"] = cam
 
-            dir_size_total += dir_total_size
+                if cam in backup_entries[date]:
 
-        # save in data that chances are reflected
-        for cam in archive_changed:
-            for directory in archive_changed[cam]:
-                file_data = archive_changed[cam][directory]
-                file_data["info"]["changed"] = False
-                self.config.db_handler.write(config="backup", date=directory, data=file_data.copy())
+                    # copy entries to new dict that will be saved
+                    archive_changed[cam]["entries"][date] = backup_entries[date][cam].copy()
 
-        self.archive_dir_size = dir_size_total
-        self.config.db_handler.write("backup_info", "", archive_info)
+                    # calculate total values
+                    backup_entry = backup_entries[date][cam].copy()
+                    if "dir_size_cam" in backup_entry and "count_cam" in backup_entry:
+                        archive_total_size += backup_entry["dir_size_cam"]
+                        archive_total_count += backup_entry["count_cam"]
+
+                    # create groups
+                    backup_group = date[0:4] + "-" + date[4:6]
+                    if backup_group not in archive_changed[cam]["groups"]:
+                        archive_changed[cam]["groups"][backup_group] = []
+                    if date not in archive_changed[cam]["groups"][backup_group]:
+                        archive_changed[cam]["groups"][backup_group].append(date)
+
+                    # add additional information
+                    archive_changed[cam]["view_count"] = []
+                    archive_changed[cam]["subtitle"] = (presets.birdhouse_pages["backup"][0] + " (" +
+                                                        self.camera[cam].name + ")")
+                    archive_changed[cam]["chart_data"] = {"data": {}, "titles": ["Activity"], "info": "not implemented"}
+
+                self.archive_views[cam] = archive_changed[cam].copy()
+
+            # stop if shutdown signal was send
+            if self.if_shutdown():
+                self.logging.info("Interrupt creating the archive list.")
+                return
+
+        # save data in backup database
+        archive_changed["changes"] = {}
+        self.archive_dir_size = archive_total_size
+        self.config.db_handler.write("backup_info", "", archive_changed)
         self.archive_loading = "done"
-        self.logging.info("Create data for archive view done ("+str(round(time.time()-start_time, 1))+"s)")
+
+        self.logging.info("  => Total archive size: " + str(round(archive_total_size, 2)) + " MByte in " +
+                          str(round(archive_total_count, 2)) + " files and " + str(count_entries) + " directories")
+        self.logging.info("     Time required for loading: "+str(round(time.time()-start_time, 1))+"s")
 
     def complete_list_today(self, param):
         """
