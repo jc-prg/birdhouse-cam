@@ -1056,7 +1056,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             if cam not in archive_info or archive_info[cam] == {}:
                 archive_info[cam] = archive_template.copy()
                 archive_info[cam]["active_cam"] = cam
-            archive_changed[cam] = {}
+
+            archive_changed[cam] = archive_template.copy()
+            archive_changed[cam]["active_cam"] = cam
 
             # create list per data (from lists per camera) and check if entries in databases have been changed
             for date in archive_info[cam]["entries"]:
@@ -1104,7 +1106,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     pass
 
                 # if just change re-read entries from database of the respective date
-                elif backup_entries[date]["changed"] and backup_entries[date]["exists"]:
+                elif (backup_entries[date]["changed"] and backup_entries[date]["exists"]) or complete:
                     log_info = "changed"
                     file_data = self._archive_list_create_file_data(date, database_ok)
                     backup_entries[date][cam] = self._archive_list_create_from_database(cam, archive_info[cam], date,
@@ -1127,9 +1129,6 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         for date in backup_entries:
             dir_size_date = 0
             for cam in self.camera:
-                archive_changed[cam] = archive_template.copy()
-                archive_changed[cam]["active_cam"] = cam
-
                 if cam in backup_entries[date]:
 
                     # copy entries to new dict that will be saved
