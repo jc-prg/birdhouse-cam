@@ -1156,7 +1156,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     archive_changed[cam]["chart_data"] = {"data": {}, "titles": ["Activity"], "info": "not implemented"}
 
             for cam in self.camera:
-                archive_changed[cam]["entries"][date]["dir_size"] = dir_size_date
+                if date in archive_changed[cam]["entries"]:
+                    archive_changed[cam]["entries"][date]["dir_size"] = dir_size_date
                 self.archive_views[cam] = archive_changed[cam].copy()
 
             # stop if shutdown signal was send
