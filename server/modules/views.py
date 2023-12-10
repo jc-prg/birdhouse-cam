@@ -1099,8 +1099,21 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 # if directory doesn't exist yet read entries from database of the respective date
                 if (backup_entries[date]["changed"] and not backup_entries[date]["exists"]) or not database_ok:
                     log_info = "new [database_ok=" + str(database_ok) + "]"
-                    self.logging.info("                 -> from_database " + directory + "/" + cam + ": " +
-                                      "not yet implemented")
+                    backup_entries[date][cam] = {
+                        "camera": cam,
+                        "count": 0,
+                        "count_delete": 0,
+                        "count_cam": 0,
+                        "count_data": 0,
+                        "datestamp": date,
+                        "date": date[6:8] + "." + date[4:6] + "." + date[0:4],
+                        "directory": "/images/" + date + "/",
+                        "dir_size": 0,
+                        "dir_size_cam": 0,
+                        "lowres": "",
+                        "type": "directory"
+                    }
+                    self.logging.info("                 -> from_database " + date + "/" + cam + ": " + "not implemented")
                     pass
 
                 # if just change re-read entries from database of the respective date
