@@ -452,6 +452,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         for cam in self.config.param["devices"]["cameras"]:
             filename_last = ""
             image_current = ""
+            image_hires = ""
             image_last = ""
             if cam not in files_new_cam:
                 continue
@@ -461,33 +462,56 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             for i in tqdm(range(0, keys_count), desc="Reloading images "+cam+" ..."):
                 key = files_keys[i]
                 if key in files_new and files_new[key]["camera"] == cam:
-                    filename_current = files_new[key]["lowres"]
+                    height_h = 0
+                    height_l = 0
+                    width_h = 0
+                    width_l = 0
+                    filename = ""
+                    filename_hires = files_new[key]["hires"]
+                    filename_lowres = files_new[key]["lowres"]
                     try:
                         filename = os.path.join(self.config.db_handler.directory(config="images"),
-                                                subdir, filename_current)
+                                                subdir, filename_lowres)
                         image_current = cv2.imread(filename)
                         image_current = cv2.cvtColor(image_current, cv2.COLOR_BGR2GRAY)
+                        height_l, width_l = image_current.shape[:2]
+
+                        filename = os.path.join(self.config.db_handler.directory(config="images"),
+                                                subdir, filename_hires)
+                        image_hires = cv2.imread(filename)
+                        height_h, width_h = image_hires.shape[:2]
+
                     except Exception as e:
                         self.raise_error("Could not load image: " + filename + " ... "+str(e))
+
+                    files_new[key]["to_be_deleted"] = 0
+                    files_new[key]["favorit"] = 0
+                    files_new[key]["size"] = len(image_hires)
+                    files_new[key]["hires_size"] = [width_h, height_h]
+                    files_new[key]["lowres_size"] = [width_l, height_l]
+                    files_new[key]["datestamp"] = subdir
+                    files_new[key]["date"] = subdir[6:8] + "." + subdir[4:6] + "." + subdir[0:4]
+                    files_new[key]["directory"] = "images/" + subdir
+                    files_new[key]["type"] = "image"
 
                     if len(filename_last) > 0:
                         detection_area = self.camera[cam].param["similarity"]["detection_area"]
                         score = self.camera[cam].image.compare_raw(image_current, image_last, detection_area)
-                        files_new[key]["compare"] = (filename_current, filename_last)
+                        files_new[key]["compare"] = (filename_lowres, filename_last)
                         files_new[key]["similarity"] = score
                         count += 1
                     else:
-                        files_new[key]["compare"] = filename_current
+                        files_new[key]["compare"] = filename_lowres
                         files_new[key]["similarity"] = 0
 
                     if init:
                         sensor_str = ""
                         if "sensor" in files_new[key]:
                             sensor_str = str(files_new[key]["sensor"])
-                        self.logging.debug(" - " + cam + ": " + filename_current + "  " + str(count) + "/" + str(len(files)) +
+                        self.logging.debug(" - " + cam + ": " + filename_lowres + "  " + str(count) + "/" + str(len(files)) +
                                      " - " + str(files_new[key]["similarity"]) + "%  "+sensor_str)
 
-                    filename_last = filename_current
+                    filename_last = filename_lowres
                     image_last = image_current
 
                     self.config.queue.entry_add(config="images", date=subdir, key=key, entry=files_new[key])
