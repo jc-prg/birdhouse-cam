@@ -330,11 +330,11 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
             if (entry["count_cam"] != entry["count"]) {
                 description += "<b>" + entry["date"] + "</b><br/>" + entry["count_cam"] + " / " + entry["count"];
                 if (entry["count_delete"] > 0) { description += "*"; }
-                description += "<br/><i>[" + entry["dir_size"] + " MB]</i>";
+                description += "<br/><i>[" + Math.round(entry["dir_size"]*10)/10 + " MB]</i>";
                 }
             else {
                 description += "<b>" + entry["date"] + "</b><br/>" + entry["count_cam"];
-                description += "<br/><i>[" + entry["dir_size"] + " MB]</i>";
+                description += "<br/><i>[" + Math.round(entry["dir_size"]*10)/10 + " MB]</i>";
                 }
             }
         }
