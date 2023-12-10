@@ -786,7 +786,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         if force:
             self.force_reload = True
 
-    def _archive_list_preview(self, cam, image_title, directory, file_data):
+    def _archive_list_create_preview(self, cam, image_title, directory, file_data):
         # first favorite as image or ...
         first_img = ""
         first_img_temp = ""
@@ -860,7 +860,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         return image_preview
 
-    def _archive_list_entry(self, cam, content, directory, dir_size, file_data):
+    def _archive_list_create_entry(self, cam, content, directory, dir_size, file_data):
         """
         create entry per archive directory, measure file sizes
         """
@@ -1001,14 +1001,14 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         create archive entry from files
         """
         dir_size = 0
-        image_preview = self._archive_list_preview(cam=cam, image_title=str(self.config.param["backup"]["preview"]),
-                                                   directory=directory, file_data=file_data)
+        image_preview = self._archive_list_create_preview(cam=cam, image_title=str(self.config.param["backup"]["preview"]),
+                                                          directory=directory, file_data=file_data)
         image_preview = os.path.join(str(self.config.directories["backup"]), str(image_preview))
         image_file = image_preview.replace(directory + "/", "")
         image_file = image_file.replace(self.config.directories["backup"], "")
 
-        content, dir_size = self._archive_list_entry(cam=cam, content=content.copy(), directory=directory,
-                                                     dir_size=dir_size, file_data=file_data)
+        content, dir_size = self._archive_list_create_entry(cam=cam, content=content.copy(), directory=directory,
+                                                            dir_size=dir_size, file_data=file_data)
         content["entries"][directory]["lowres"] = image_file
 
         files_count = content["entries"][directory]["count_cam"]
@@ -1023,8 +1023,6 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         Page with backup/archive directory
         """
-        count = 0
-        dir_size_total = 0
         archive_total_size = 0
         archive_total_count = 0
         start_time = time.time()
@@ -1127,6 +1125,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         # process data to be saved
         for date in backup_entries:
+            dir_size_date = 0
             for cam in self.camera:
                 archive_changed[cam] = archive_template.copy()
                 archive_changed[cam]["active_cam"] = cam
@@ -1139,6 +1138,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     # calculate total values
                     backup_entry = backup_entries[date][cam].copy()
                     if "dir_size_cam" in backup_entry and "count_cam" in backup_entry:
+                        dir_size_date += backup_entry["dir_size_cam"]
                         archive_total_size += backup_entry["dir_size_cam"]
                         archive_total_count += backup_entry["count_cam"]
 
@@ -1155,6 +1155,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                                                         self.camera[cam].name + ")")
                     archive_changed[cam]["chart_data"] = {"data": {}, "titles": ["Activity"], "info": "not implemented"}
 
+            for cam in self.camera:
+                self.archive_changed[cam]["entries"][date]["dir_size"] = dir_size_date
                 self.archive_views[cam] = archive_changed[cam].copy()
 
             # stop if shutdown signal was send
