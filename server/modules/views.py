@@ -1034,14 +1034,6 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         archive_changed = {}
         archive_info = self.config.db_handler.read("backup_info", "")
-        archive_template = {
-                    "active_cam": "",
-                    "view": "backup",
-                    "entries": {},
-                    "groups": {},
-                    "view_count": [],
-                    "max_image_size": {"lowres": [0, 0], "hires": [0, 0]}
-                    }
 
         self.logging.info("Create data for archive view from '" + main_directory + "' ...")
         self.logging.info("- Get archive directory information (" + db_type + " | " + main_directory + ") ...")
@@ -1057,8 +1049,14 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 archive_info[cam] = archive_template.copy()
                 archive_info[cam]["active_cam"] = cam
 
-            archive_changed[cam] = archive_template.copy()
-            archive_changed[cam]["active_cam"] = cam
+            archive_changed[cam] = {
+                    "active_cam": cam,
+                    "view": "backup",
+                    "entries": {},
+                    "groups": {},
+                    "view_count": [],
+                    "max_image_size": {"lowres": [0, 0], "hires": [0, 0]}
+                    }
 
             # create list per data (from lists per camera) and check if entries in databases have been changed
             for date in archive_info[cam]["entries"]:
@@ -1117,6 +1115,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     log_info = "keep"
                     pass
 
+                if cam in backup_entries[date] and "dir_size_cam" in backup_entries[date][cam]:
+                    log_info += "    ("+str(backup_entries[date][cam]["dir_size_cam"]).rjust(5) + " MB)"
+
                 self.logging.info("  -> Archive " + str(count_entries).zfill(4) + ": " +
                                   date + "/" + cam + " ... " + log_info)
 
@@ -1153,6 +1154,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     archive_changed[cam]["subtitle"] = (presets.birdhouse_pages["backup"][0] + " (" +
                                                         self.camera[cam].name + ")")
                     archive_changed[cam]["chart_data"] = {"data": {}, "titles": ["Activity"], "info": "not implemented"}
+
+                else:
+                    archive_changed[cam]["entries"][date] = {}
 
             for cam in self.camera:
                 if date in archive_changed[cam]["entries"]:
