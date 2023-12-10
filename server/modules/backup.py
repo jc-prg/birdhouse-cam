@@ -54,6 +54,12 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             else:
                 backup_started = False
 
+            if len(self.views.archive_config_recreate) > 0:
+                self.views.archive_config_recreate_progress = True
+                date = self.views.archive_config_recreate.pop()
+                self.create_image_config_save(date)
+                self.views.archive_config_recreate_progress = False
+
             self.thread_control()
             self.thread_wait()
 
@@ -194,10 +200,10 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                                                       os.path.getsize(os.path.join(dir_source, file_hires)))
                                 backup_size += update_new["size"]
 
-                                os.popen('cp ' + os.path.join(dir_source, file_lowres) + ' ' +
-                                         os.path.join(directory, file_lowres))
-                                os.popen('cp ' + os.path.join(dir_source, file_hires) + ' ' +
-                                         os.path.join(directory, file_hires))
+                                os.popen('cp ' + os.path.join(str(dir_source), file_lowres) + ' ' +
+                                         os.path.join(str(directory), file_lowres))
+                                os.popen('cp ' + os.path.join(str(dir_source), file_hires) + ' ' +
+                                         os.path.join(str(directory), file_hires))
 
                                 save_entry = True
 
@@ -258,6 +264,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
             self.config.db_handler.write(config="backup", date=directory, data=files_backup,
                                          create=True, save_json=True)
+            self.config.set_status_changed(date=directory)
 
         self.backup_running = False
 
@@ -349,11 +356,51 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         file_list = [f for f in os.listdir(path) if "_big" not in f and (f.endswith(".jpg") or f.endswith("jpeg"))]
 
         file_list.sort(reverse=True)
-        files = self.create_image_config_analyze(file_list=file_list, init=True, subdir=date)
+        files = self._create_image_config_analyze(file_list=file_list, init=True, subdir=date)
         self.logging.info("Done.")
         return files
 
-    def create_image_config_api(self, param):
+    def create_image_config_save(self, date=""):
+        """
+        create and save image config
+        """
+        camera_list = []
+        for cam in self.camera:
+            camera_list.append(cam)
+
+        directory = self.config.db_handler.directory(config="images", date=date)
+
+        if self.config.db_handler.exists(config="weather", date=date):
+            data_weather = self.config.db_handler.read(config="weather", date=date)
+        else:
+            data_weather = {}
+
+        if self.config.db_handler.exists(config="sensor", date=date):
+            data_sensor = self.config.db_handler.read(config="sensor", date=date)
+        else:
+            data_sensor = {}
+
+        files = self.create_image_config(date, True)
+        files_backup = {
+            "files": files,
+            "info": {},
+            "chart_data": self.views.create.chart_data_new(data_image=files,
+                                                           data_sensor=data_sensor, data_weather=data_weather,
+                                                           date=date, cameras=camera_list),
+            "weather_data": self.views.create.weather_data_new(data_weather=data_weather)
+        }
+        files_backup["info"]["count"] = len(files)
+        files_backup["info"]["threshold"] = {}
+        for cam in self.camera:
+            files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
+        files_backup["info"]["date"] = date[6:8] + "." + date[4:6] + "." + date[0:4]
+        files_backup["info"]["size"] = sum(
+            os.path.getsize(os.path.join(directory, f)) for f in os.listdir(directory) if
+            f.endswith(".jpeg") or f.endswith(".jpg") or f.endswith(".json"))
+        self.config.db_handler.write(config="backup", date=date, data=files_backup,
+                                     create=True, save_json=True)
+
+    def _create_image_config_api(self, param):
         """
         Call (re)creation via API and return JSON answer
         """
@@ -361,7 +408,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         self.create_image_config(date="", recreate=True)
         return response
 
-    def create_image_config_analyze(self, file_list, init=False, subdir=""):
+    def _create_image_config_analyze(self, file_list, init=False, subdir=""):
         """
         Compare image files and write to config file (incl. sensor data if exist)
         """
@@ -375,7 +422,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             files = self.config.db_handler.read_cache(config='images')
         else:
             files = {}
-            files = self.create_image_config_get_filelist(file_list=file_list, files=files, subdir=subdir)
+            files = self._create_image_config_get_filelist(file_list=file_list, files=files, subdir=subdir)
 
             if os.path.isfile(self.config.db_handler.file_path("sensor")):
                 sensor_data = self.config.db_handler.read_cache(config="sensor")
@@ -450,7 +497,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         self._processing = False
         return files_new
 
-    def create_image_config_get_filelist(self, file_list, files, subdir=""):
+    def _create_image_config_get_filelist(self, file_list, files, subdir=""):
         """
         get image date from file
         """

@@ -606,7 +606,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 param["which_cam"] = complete_cam
 
             param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup",
-                            "last-answer", "favorit", "recycle"]
+                            "last-answer", "favorit", "recycle", "update-views"]
             if "command" in param and param["command"] not in param_no_cam:
                 if param["which_cam"] not in views.camera:
                     srv_logging.warning("Unknown camera requested: " + param["which_cam"] + " (" + self.path + ")")
@@ -699,7 +699,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif param["command"] == "create-short-video":
             response = camera[which_cam].video.create_video_trimmed_queue(param)
         elif param["command"] == "recreate-image-config":
-            response = backup.create_image_config_api(param)
+            response = backup._create_image_config_api(param)
         elif param["command"] == "create-day-video":
             response = camera[which_cam].video.create_video_day_queue(param)
         elif param["command"] == "remove":
@@ -1207,7 +1207,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         create video stream
         """
-        srv_logging.info("VIDEO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
+        srv_logging.debug("VIDEO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
 
         if ":" in which_cam and "+" in which_cam:
             pip_cam, cam2_pos = which_cam.split(":")
@@ -1345,7 +1345,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         which_cam = param.split("&")[0]
         session_id = param.split("&")[-1]
 
-        srv_logging.info("AUDIO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + session_id)
+        srv_logging.debug("AUDIO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + session_id)
 
         if which_cam not in microphones:
             srv_logging.error("AUDIO device '" + which_cam + "' does not exist.")

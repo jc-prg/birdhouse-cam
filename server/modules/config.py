@@ -184,6 +184,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         if_exists = False
         filename = self.file_path(config, date)
+        self.logging.debug(filename)
 
         if self.db_type == "json":
             if_exists = os.path.isfile(filename)
@@ -612,12 +613,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                     self.db_handler.unlock(config_file, date)
                     self.db_handler.write(config_file, date, entry_data)
-
-                    backup_info = self.db_handler.read_cache("backup_info", "")
-                    if "changes" not in backup_info:
-                        backup_info["changes"] = {}
-                    backup_info["changes"][date] = True
-                    self.db_handler.write("backup_info", "", backup_info)
+                    self.set_status_changed(date)
 
                     update_views = True
 
@@ -689,12 +685,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                     self.db_handler.unlock(config_file, date)
                     self.db_handler.write(config_file, date, entry_data)
-
-                    backup_info = self.db_handler.read("backup_info", "")
-                    if "changes" not in backup_info:
-                        backup_info["changes"] = {}
-                    backup_info["changes"][date] = True
-                    self.db_handler.write("backup_info", "", backup_info)
+                    self.set_status_changed(date)
 
                     update_views = True
 
@@ -958,6 +949,16 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
         self.logging.info("Send RECYCLE range to queue ...")
         return response
+
+    def set_status_changed(self, date):
+        """
+        set status of an archive entry to changed
+        """
+        backup_info = self.db_handler.read_cache("backup_info", "")
+        if "changes" not in backup_info:
+            backup_info["changes"] = {}
+        backup_info["changes"][date] = True
+        self.db_handler.write("backup_info", "", backup_info)
 
     def entry_add(self, config, date, key, entry):
         """

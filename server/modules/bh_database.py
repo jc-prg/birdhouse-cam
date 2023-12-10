@@ -168,7 +168,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         """
         create a database in couch_db
         """
-        self.logging.info("   -> create DB " + db_key)
+        self.logging.debug("   -> create DB " + db_key)
         if db_key in self.database:
             self.logging.warning("   -> DB " + db_key + " exists.")
             db = self.database[db_key]
@@ -200,7 +200,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
                 return
 
         # success
-        self.logging.info("  -> DB created: " + db_key + " " + str(time.time()))
+        self.logging.info("   -> DB created: " + db_key + " " + str(time.time()))
         return
 
     def filename2keys(self, filename):
@@ -313,6 +313,8 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         [db_key, date] = self.filename2keys(filename)
         self.logging.debug("-----> CHECK DB: " + db_key + "/" + date)
 
+        if db_key == "":
+            return False
         if db_key in self.database:
             database = self.database[db_key]
             doc = database.get("main")
