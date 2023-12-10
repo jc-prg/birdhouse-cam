@@ -300,6 +300,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             self.logging.error("CouchDB ERROR save: " + db_key + " " + str(e))
             self.logging.error("  -> dict entries: " + str(len(doc["data"])))
             self.logging.error("  -> dict size: " + str(sys.getsizeof(doc["data"])))
+            #self.logging.error(str(doc["data"]))
             return
 
         self.changed_data = True
