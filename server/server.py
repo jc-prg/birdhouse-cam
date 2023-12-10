@@ -665,7 +665,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         param = self.path_split()
         which_cam = param["which_cam"]
 
-        srv_logging.info("POST API request with '" + self.path + "'.")
+        srv_logging.debug("POST API request with '" + self.path + "'.")
         srv_logging.debug(str(param))
 
         api_response = {

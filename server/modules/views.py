@@ -1314,7 +1314,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         for directory in dir_list:
             favorites_dir = self._favorite_list_create_images(directory)
             for key in favorites_dir:
-                favorites[key] = favorites_dir[key]
+                favorites[key] = favorites_dir[key].copy()
 
         return favorites.copy()
 
@@ -1322,17 +1322,21 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         get favorites from current day
         """
+        files = {}
+        category = "/not_found/"
+
         if date == "":
             today = True
             category = "/current/"
             date = self.config.local_time().strftime("%Y%m%d")
-            files = self.config.db_handler.read_cache(config="images", date=date)
-        else:
+            files = self.config.db_handler.read(config="images")
+
+        elif self.config.db_handler.exists(config="images", date=date):
             today = False
             category = "/" + date + "/"
-            files = self.config.db_handler.read_cache(config="images", date=date)
-            if "files" in files:
-                files = files["files"].copy()
+            files_complete = self.config.db_handler.read(config="images", date=date)
+            if "files" in files_complete:
+                files = files_complete["files"].copy()
             else:
                 files["error"] = True
 
@@ -1400,6 +1404,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         Page with pictures (and videos) marked as favorites and sorted by date
         """
+
         start_time = time.time()
         self.logging.info("Create data for favorite view  ...")
         self.favorite_loading = "in Progress"
@@ -1407,7 +1412,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         favorites = {}
         content = {
             "active_cam": "none",
-            "view": "favorits",
+            "view": "favorites",
             "view_count": ["star"],
             "subtitle": presets.birdhouse_pages["favorit"][0],
             "entries": {},
@@ -1418,9 +1423,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         files_images = self._favorite_list_create_images()
         if len(files_images) > 0:
             content["groups"]["today"] = []
-            for entry in files_images:
-                content["entries"][entry] = files_images[entry]
-                content["groups"]["today"].append(entry)
+            for stamp in files_images:
+                content["entries"][stamp] = files_images[stamp].copy()
+                content["groups"]["today"].append(stamp)
 
         # videos
         files_videos = self._favorite_list_create_videos()
@@ -1429,7 +1434,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 group = entry[0:4] + "-" + entry[4:6]
                 if group not in content["groups"]:
                     content["groups"][group] = []
-                content["entries"][entry] = files_videos[entry]
+                content["entries"][entry] = files_videos[entry].copy()
                 content["groups"][group].append(entry)
 
         files_archive = self._favorite_list_create_archive()
@@ -1438,96 +1443,11 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 group = entry[0:4] + "-" + entry[4:6]
                 if group not in content["groups"]:
                     content["groups"][group] = []
-                content["entries"][entry] = files_archive[entry]
+                content["entries"][entry] = files_archive[entry].copy()
                 content["groups"][group].append(entry)
 
-        if_try = True
-        if if_try:
-            self.favorite_views = content
-            self.logging.info("Create data for favorite view done (" + str(round(time.time() - start_time, 1)) + "s)")
-            self.config.db_handler.write("favorites", "", content)
-            self.favorite_loading = "done"
-            return
-
-        # ---------------------------------------------------------------------
-        # other days
-        file_other_count = 0
-        other_data = self.config.db_handler.read_cache(config="backup")
-        dir_list = other_data.keys()
-        dir_list = list(reversed(sorted(dir_list)))
-        self.logging.info("  -> OTHER Directories: " + str(len(dir_list)))
-
-        # main_directory = self.config.db_handler.directory(config="backup")
-        # dir_list = [f for f in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, f))]
-
-        video_list = []
-        for file_date in files_videos:
-            if file_date not in dir_list:
-                dir_list.append(file_date)
-                video_list.append(file_date)
-
-        dir_list = list(reversed(sorted(dir_list)))
-
-        for directory in dir_list:
-            date = ""
-            category = "/backup/" + directory + "/"
-            favorites[directory] = {}
-
-            if self.if_shutdown():
-                self.logging.info("Interrupt create favorite list.")
-                return
-
-            if self.if_other_prio_process("favorite_view"):
-                time.sleep(0.2)
-
-            if self.config.db_handler.exists(config="backup", date=directory):
-                files_data = self.config.db_handler.read_cache(config="backup", date=directory)
-                if "info" in files_data and "files" in files_data:
-                    files = files_data["files"]
-                    date = directory[6:8] + "." + directory[4:6] + "." + directory[0:4]
-
-                    if directory not in video_list:
-                        for stamp in files:
-                            if "datestamp" in files[stamp] and files[stamp]["datestamp"] == directory:
-                                if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
-                                    new = directory + "_" + stamp
-                                    favorites[directory][new] = files[stamp]
-                                    favorites[directory][new]["source"] = ("backup", directory)
-                                    favorites[directory][new]["date"] = date
-                                    favorites[directory][new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
-                                    favorites[directory][new]["date2"] = favorites[directory][new]["date"]
-                                    if "type" not in favorites[directory][new]:
-                                        favorites[directory][new]["type"] = "image"
-                                    favorites[directory][new]["category"] = category + stamp
-                                    favorites[directory][new]["directory"] = "/" + self.config.directories[
-                                        "backup"] + directory + "/"
-                                    file_other_count += 1
-
-            if directory in files_videos:
-                for stamp in files_videos[directory]:
-                    new = stamp
-                    date = directory[6:8] + "." + directory[4:6] + "." + directory[0:4]
-                    favorites[directory][new] = files_videos[directory][stamp]
-                    favorites[directory][new]["source"] = ("videos", "")
-                    favorites[directory][new]["date"] = date  # ?????
-                    favorites[directory][new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
-                    favorites[directory][new]["type"] = "video"
-                    favorites[directory][new]["category"] = "/videos/" + stamp
-                    favorites[directory][new]["directory"] = "/" + self.config.directories["videos"]
-
-            if len(favorites[directory]) > 0:
-                content["groups"][date] = []
-                for entry in favorites[directory]:
-                    content["entries"][entry] = favorites[directory][entry]
-                    content["groups"][date].append(entry)
-
-        self.logging.info("  -> OTHER Favorites: " + str(file_other_count))
-
-        content["view_count"] = ["star"]
-        content["subtitle"] = presets.birdhouse_pages["favorit"][0]
-
         self.favorite_views = content
-        self.logging.info("Create data for favorite view done ("+str(round(time.time()-start_time, 1))+"s)")
+        self.logging.info("Create data for favorite view done (" + str(round(time.time() - start_time, 1)) + "s)")
         self.config.db_handler.write("favorites", "", content)
         self.favorite_loading = "done"
 
