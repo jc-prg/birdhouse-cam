@@ -473,8 +473,8 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
         html += play_button;
         }
     else {
-        if (style == "") { style = "width:125px;height:140px;"; }
-        html += "<div style='border:#AA0000 1px solid;background:#AAAAAA;text-align:center;vertical-align:middle;color:#AA0000;"+style+"'>";
+        if (style == "") { style = "height:140px;"; }
+        html += "<div class='thumbnail' style='border:#AA0000 1px solid;background:#AAAAAA;text-align:center;vertical-align:middle;color:#AA0000;"+style+"'>";
         html += "&nbsp;<br>&nbsp;<br>"+lang("NO_IMAGE_IN_ARCHIVE")+"</div>";
         }
 	html += "    <br/><center><small>"+description+"</small></center>";
