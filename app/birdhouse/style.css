@@ -373,6 +373,13 @@ img .play_button  {
     float               : left;
 }
 
+.button-back-and-forth {
+    border-radius       : 5px;
+    cursor              : pointer;
+    padding             : 5px;
+    margin              : 10px;
+}
+
 /* weather fields */
 
 .weather_hide_if_small {

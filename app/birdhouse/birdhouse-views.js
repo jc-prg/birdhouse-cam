@@ -256,11 +256,11 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var link_day_forward   = "";
 	if (data_list["data"]["day_back"] != "")    {
 	    var onclick_back    = "birdhousePrint_load(view=\"TODAY\", camera=\""+camera+"\", date=\""+data_list["data"]["day_back"]+"\");";
-	    link_day_back       = "<button onclick='" + onclick_back + "'  style='border:1;float:right;'>" + lang("DAY_BACK") + " &gt;&gt;</button>";
+	    link_day_back       = "<div onclick='" + onclick_back + "' class='button-back-and-forth' style='float:right;'>" + lang("DAY_BACK") + " &#187;</div>";
 	    }
 	if (data_list["data"]["day_forward"] != "") {
 	    var onclick_forward = "birdhousePrint_load(view=\"TODAY\", camera=\""+camera+"\", date=\""+data_list["data"]["day_forward"]+"\");";
-	    link_day_forward    = "<button onclick='" + onclick_forward + "' style='border:1;float:left;'>&lt;&lt; " + lang("DAY_FORWARD") + "</button>";
+	    link_day_forward    = "<div onclick='" + onclick_forward + "' class='button-back-and-forth' style='float:left;'>&#171; " + lang("DAY_FORWARD") + "</div>";
 	    }
 
 	if (active_page == "VIDEOS")                           { entry_category = [ "video" ]; }
