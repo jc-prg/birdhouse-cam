@@ -747,8 +747,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         content["entries_total"] = len(files_today)
         content["view_count"] = ["all", "star", "detect", "data"]
 
-        self.logging.info("_____ TODAY _____")
-
+        # add chart and weather data
         if backup:
             if "chart_data" not in content:
                 content["chart_data"] = self.create.chart_data(data=files_all.copy())
@@ -767,6 +766,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 content["weather_data"] = self.create.weather_data_new(data_weather=files_weather.copy(),
                                                                        date=self.config.local_time().strftime("%Y%m%d"))
 
+        # add navigation information for archive (next day, last day)
         if which_cam in self.archive_views and self.archive_views[which_cam] != {} and date_backup != "":
             archived_days = list(self.archive_views[which_cam]["entries"].keys())
             if len(archived_days) > 0:

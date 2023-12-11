@@ -436,7 +436,10 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	else {
 		entries_available = false;
 		if (active_date != undefined && active_date != "") {
-		    title = active_date;
+		    title = active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4);
+        }
+        else if (title.length == 8) {
+            title = title.substring(6,8) + "." + title.substring(4,6) + "." + title.substring(0,4);
         }
         if (entries != undefined &&  Object.keys(entries).length > 0) {
             html += birdhouse_ImageGroup(title, entries, entry_count, entry_category, header_open, admin, video_short,
