@@ -219,8 +219,8 @@ function birdhouse_removeDataToday_exec() {
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_removeDataToday');
 }
 
-function birdhouse_recreateImageConfig() {
-	commands = ["recreate-image-config"];
+function birdhouse_recreateImageConfig(date="") {
+	commands = ["recreate-image-config", date=""];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRecreateImageConfig,'','birdhouse_recreateImageConfig');
 	}
 

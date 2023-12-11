@@ -217,6 +217,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var data_list         = data["DATA"];
 	var status_data       = app_data["STATUS"]["devices"]["cameras"][camera];
 
+	var active_page       = data_list["active"]["active_page"];
 	var entries           = data_list["data"]["entries"];
 	var entries_yesterday = data_list["data"]["entries_yesterday"];
 	var entries_delete    = data_list["data"]["entries_delete"];
@@ -250,6 +251,17 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var video_short       = true;
 	var page_title        = "";
 	var page_status       = "";
+
+	var link_day_back      = "";
+	var link_day_forward   = "";
+	if (data_list["data"]["day_back"] != "")    {
+	    var onclick_back    = "birdhousePrint_load(view=\"TODAY\", camera=\""+camera+"\", date=\""+data_list["data"]["day_back"]+"\");";
+	    link_day_back       = "<button onclick='" + onclick_back + "'  style='border:1;float:right;'>" + lang("DAY_BACK") + " &gt;&gt;</button>";
+	    }
+	if (data_list["data"]["day_forward"] != "") {
+	    var onclick_forward = "birdhousePrint_load(view=\"TODAY\", camera=\""+camera+"\", date=\""+data_list["data"]["day_forward"]+"\");";
+	    link_day_forward    = "<button onclick='" + onclick_forward + "' style='border:1;float:left;'>&lt;&lt; " + lang("DAY_FORWARD") + "</button>";
+	    }
 
 	if (active_page == "VIDEOS")                           { entry_category = [ "video" ]; }
 	else if (active_page == "TODAY" && active_date == "")  { entry_category = [ "today" ]; }
@@ -354,8 +366,15 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             chart_titles.push(title_s);
         }
         var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
-        chart    += birdhouseChart_weatherOverview(weather_data)+"<br/>&nbsp;";
-        html += birdhouse_OtherGroup( "chart", lang("WEATHER"), chart, true );
+        chart    += birdhouseChart_weatherOverview(weather_data); // + "<br/>";
+
+        if (active_page == "TODAY") {
+            chart += "<hr/><div style='width:100%'>" + link_day_forward + " &nbsp; " + link_day_back + "</div><br/>&nbsp;";
+            }
+        else {
+            chart += "<br/>&nbsp;";
+            }
+        html     += birdhouse_OtherGroup( "chart", lang("WEATHER"), chart, true );
     }
 
     if (active_page != "FAVORITES" && app_active_page != "VIDEOS" && app_active_page != "ARCHIVE") {

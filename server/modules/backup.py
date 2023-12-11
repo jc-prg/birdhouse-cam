@@ -400,7 +400,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         self.config.db_handler.write(config="backup", date=date, data=files_backup,
                                      create=True, save_json=True)
 
-    def _create_image_config_api(self, param):
+    def create_image_config_api(self, param):
         """
         Call (re)creation via API and return JSON answer
         """

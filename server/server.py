@@ -27,8 +27,8 @@ from modules.sensors import BirdhouseSensor
 from modules.bh_class import BirdhouseClass
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v1.0.2"}
-app_framework = "v1.0.2"
+api_description = {"name": "BirdhouseCAM", "version": "v1.0.3"}
+app_framework = "v1.0.3"
 srv_audio = None
 
 
@@ -699,7 +699,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif param["command"] == "create-short-video":
             response = camera[which_cam].video.create_video_trimmed_queue(param)
         elif param["command"] == "recreate-image-config":
-            response = backup._create_image_config_api(param)
+            response = backup.create_image_config_api(param)
         elif param["command"] == "create-day-video":
             response = camera[which_cam].video.create_video_day_queue(param)
         elif param["command"] == "remove":
@@ -1058,7 +1058,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
         if command in cmd_views:
-            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups", "chart_data", "weather_data"]
+            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups",
+                                "chart_data", "weather_data", "days_available", "day_back", "day_forward"]
             for key in param_to_publish:
                 if key in content:
                     api_data["data"][key] = content[key]

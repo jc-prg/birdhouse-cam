@@ -566,6 +566,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             "entries": {},
             "entries_delete": {},
             "entries_yesterday": {},
+            "day_back": "",
+            "day_forward": "",
+            "days_available": [],
             "links": {},
             "subtitle": "",
             "max_image_size": {
@@ -761,6 +764,18 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             if "weather_data" not in content:
                 content["weather_data"] = self.create.weather_data_new(data_weather=files_weather.copy(),
                                                                        date=self.config.local_time().strftime("%Y%m%d"))
+
+        if which_cam in self.archive_views and self.archive_views[which_cam] != {}:
+            archived_days = list(self.archive_views[which_cam]["entries"].keys())
+            if len(archived_days) > 0:
+                archived_days = sorted(archived_days, reverse=True)
+            content["days_available"] = archived_days
+            position_date_backup = archived_days.index(date_backup)
+            if position_date_backup >= 0:
+                if position_date_backup > 0:
+                    content["day_forward"] = archived_days[position_date_backup-1]
+                if position_date_backup < len(archived_days)-1:
+                    content["day_back"] = archived_days[position_date_backup+1]
 
         return content
 
