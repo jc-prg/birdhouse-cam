@@ -881,7 +881,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             directory = self.config.db_handler.directory(config="images", date=date)
 
             # if archive directory doesn't exist any more
-            if not os.path.isfile(directory):
+            if not os.path.isdir(directory):
                 self.logging.warning("Directory '" + directory + "' doesn't exist, remove DB entry.")
                 deleted_dates.append(date)
 

@@ -376,7 +376,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             camera_list.append(cam)
 
         directory = self.config.db_handler.directory(config="images", date=date)
-        if not os.path.isfile(directory):
+        if not os.path.isdir(directory):
             self.logging.warning("Directory '" + directory + "' doesn't exist.")
             return
 
