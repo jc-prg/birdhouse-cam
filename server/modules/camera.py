@@ -1957,6 +1957,10 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         add date and time
         """
+        if not len(raw) > 0:
+            self.logging.error("edit_add_datetime: empty image")
+            return raw
+
         offset = None
         if self.type == "setting":
             offset = self.param["image"]["crop_area"]
@@ -1969,6 +1973,10 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         add framerate into the image (bottom left)
         """
+        if not len(raw) > 0:
+            self.logging.error("edit_add_framerate: empty image")
+            return raw
+
         if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"] \
                 and self.resolution != "lowres":
             framerate = round(self.stream_raw.fps, 1)
@@ -1983,6 +1991,10 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         add information if recording or processing to image
         """
+        if not len(raw) > 0:
+            self.logging.error("edit_add_system_info: empty image")
+            return raw
+
         image = raw.copy()
         lowres_position = self.config.param["views"]["index"]["lowres_position"]
 
