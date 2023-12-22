@@ -248,13 +248,11 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             files_backup["chart_data"] = self.views.create.chart_data_new(data_image=files_chart,
                                                                           data_sensor=data_sensor,
                                                                           data_weather=data_weather,
-                                                                          date=self.config.local_time().strftime(
-                                                                              "%Y%m%d"),
+                                                                          date=backup_date,
                                                                           cameras=camera_list)
             # extract relevant weather data for archive
             files_backup["weather_data"] = self.views.create.weather_data_new(data_weather=data_weather,
-                                                                              date=self.config.local_time().strftime(
-                                                                                  "%Y%m%d"))
+                                                                              date=backup_date)
 
             files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
             files_backup["info"]["count"] = count
@@ -378,6 +376,9 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             camera_list.append(cam)
 
         directory = self.config.db_handler.directory(config="images", date=date)
+        if not os.path.isfile(directory):
+            self.logging.warning("Directory '" + directory + "' doesn't exist.")
+            return
 
         if self.config.db_handler.exists(config="weather", date=date):
             data_weather = self.config.db_handler.read(config="weather", date=date)
