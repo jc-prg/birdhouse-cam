@@ -57,7 +57,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             if len(self.views.archive_config_recreate) > 0:
                 self.views.archive_config_recreate_progress = True
                 date = self.views.archive_config_recreate.pop()
-                self.create_image_config_save(date)
+                self._create_image_config_save(date)
                 self.views.archive_config_recreate_progress = False
 
             self.thread_control()
@@ -126,7 +126,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             self.config.db_handler.directory_create(config="images", date=backup_date)
             files = self.config.db_handler.read_cache(config="images")
             files_chart = files.copy()
-            files_backup = {"files": {}, "chart_data": {}, "info": {}}
+            files_backup = {"files": {}, "chart_data": {}, "info": {}, "weather_data": {}}
 
             file_sensor = self.config.db_handler.file_path(config="sensor")
             file_sensor_copy = os.path.join(self.config.db_handler.directory(config="images", date=backup_date),
@@ -146,11 +146,11 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             backup_size = 0
 
             if os.path.isfile(file_sensor):
-                os.popen("cp "+file_sensor+" "+file_sensor_copy)
+                os.popen("cp " + file_sensor + " " + str(file_sensor_copy))
             if os.path.isfile(file_weather):
-                os.popen("cp "+file_weather+" "+file_weather_copy)
+                os.popen("cp " + file_weather + " " + str(file_weather_copy))
             if os.path.isfile(file_stats):
-                os.popen("cp "+file_stats+" "+file_stats_copy)
+                os.popen("cp " + file_stats + " " + str(file_stats_copy))
 
             info = True
             for cam in self.camera:
@@ -175,7 +175,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                         # create copy of entry (to modify without damage in original data)
                         update_new = files[stamp].copy()
 
-                        # if images are to archived
+                        # if images are to be archived
                         if self.camera[cam].image_to_select(timestamp=stamp, file_info=files[stamp].copy()):
 
                             count += 1
@@ -244,13 +244,14 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                 self.logging.info(cam + ": " + str(count_data) + " Data entries")
                 self.logging.info(cam + ": " + str(count_other_date) + " not saved (other date)")
 
-            # files_backup["chart_data"] = self.views.create.chart_data(data=files_backup["files"], config=self.config)
+            # create chart data from sensor and weather data vor archive
             files_backup["chart_data"] = self.views.create.chart_data_new(data_image=files_chart,
                                                                           data_sensor=data_sensor,
                                                                           data_weather=data_weather,
                                                                           date=self.config.local_time().strftime(
                                                                               "%Y%m%d"),
                                                                           cameras=camera_list)
+            # extract relevant weather data for archive
             files_backup["weather_data"] = self.views.create.weather_data_new(data_weather=data_weather,
                                                                               date=self.config.local_time().strftime(
                                                                                   "%Y%m%d"))
@@ -360,7 +361,15 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         self.logging.info("Done.")
         return files
 
-    def create_image_config_save(self, date=""):
+    def create_image_config_api(self, param):
+        """
+        Call (re)creation via API and return JSON answer
+        """
+        response = {"command": ["recreate main image config file", param["parameter"]]}
+        self.create_image_config(date="", recreate=True)
+        return response
+
+    def _create_image_config_save(self, date=""):
         """
         create and save image config
         """
@@ -399,14 +408,6 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             f.endswith(".jpeg") or f.endswith(".jpg") or f.endswith(".json"))
         self.config.db_handler.write(config="backup", date=date, data=files_backup,
                                      create=True, save_json=True)
-
-    def create_image_config_api(self, param):
-        """
-        Call (re)creation via API and return JSON answer
-        """
-        response = {"command": ["recreate main image config file", param["parameter"]]}
-        self.create_image_config(date="", recreate=True)
-        return response
 
     def _create_image_config_analyze(self, file_list, init=False, subdir=""):
         """
@@ -588,12 +589,12 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             response["error"] = "not clear, which files shall be deleted"
 
         if "error" not in response:
-            response = self.delete_marked_files_exec(config=config, date=date, delete_not_used=delete_not_used)
+            response = self._delete_marked_files_exec(config=config, date=date, delete_not_used=delete_not_used)
             self.config.queue.add_to_status_queue(config=config, date=date, key="end",
                                                   change_status="DELETE_RANGE_END", status=0)
         return response
 
-    def delete_marked_files_exec(self, config="images", date="", delete_not_used=False):
+    def _delete_marked_files_exec(self, config="images", date="", delete_not_used=False):
         """
         delete files which are marked to be recycled for a specific date + database entry
         """

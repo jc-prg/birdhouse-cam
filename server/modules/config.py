@@ -318,7 +318,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 if self.config_cache_changed[config]:
                     filename = self.file_path(config=config, date="")
                     self.json.write(filename=filename, data=self.config_cache[config])
-                    self.logging.info("   -> backup: " + config + " (" + str(round(time.time() - start_time, 1)) + "s)")
+                    self.logging.info("   -> backup2json: " + config + " (" + str(round(time.time() - start_time, 1)) + "s)")
                     self.config_cache_changed[config] = False
             else:
                 for date in self.config_cache[config]:
@@ -326,7 +326,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                             and self.config_cache_changed[config + "_" + date]:
                         filename = self.file_path(config=config, date=date)
                         self.json.write(filename=filename, data=self.config_cache[config][date])
-                        self.logging.info("   -> backup: " + config + " / " + date +
+                        self.logging.info("   -> backup2json: " + config + " / " + date +
                                           " (" + str(round(time.time() - start_time, 1)) + "s)")
                         self.config_cache_changed[config + "_" + date] = False
         self._processing = False
@@ -528,30 +528,33 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                 count_files += 1
                 count_edit = 0
 
-                while len(self.edit_queue[config_file]) > 0:
-                    self.logging.debug("Edit queue POP (1): " + str(self.edit_queue[config_file][-1]))
-                    [key, entry, command] = self.edit_queue[config_file].pop()
-                    count_entries += 1
-                    if command == "add" or command == "edit":
-                        entries[key] = entry
-                        count_edit += 1
-                    elif command == "delete" and key in entries:
-                        del entries[key]
-                        count_edit += 1
-                    elif command == "keep_data":
-                        entries[key]["type"] = "data"
-                        if "hires" in entries[key]:
-                            del entries[key]["hires"]
-                        if "lowres" in entries[key]:
-                            del entries[key]["lowres"]
-                        if "directory" in entries[key]:
-                            del entries[key]["directory"]
-                        if "compare" in entries[key]:
-                            del entries[key]["compare"]
-                        if "favorit" in entries[key]:
-                            del entries[key]["favorit"]
-                        if "to_be_deleted" in entries[key]:
-                            del entries[key]["to_be_deleted"]
+                entries_in_queue = len(self.edit_queue[config_file]) > 0
+                while entries_in_queue:
+                    entries_in_queue = len(self.edit_queue[config_file]) > 0
+                    if entries_in_queue:
+                        self.logging.debug("Edit queue POP (1): " + str(self.edit_queue[config_file][-1]))
+                        [key, entry, command] = self.edit_queue[config_file].pop()
+                        count_entries += 1
+                        if command == "add" or command == "edit":
+                            entries[key] = entry
+                            count_edit += 1
+                        elif command == "delete" and key in entries:
+                            del entries[key]
+                            count_edit += 1
+                        elif command == "keep_data":
+                            entries[key]["type"] = "data"
+                            if "hires" in entries[key]:
+                                del entries[key]["hires"]
+                            if "lowres" in entries[key]:
+                                del entries[key]["lowres"]
+                            if "directory" in entries[key]:
+                                del entries[key]["directory"]
+                            if "compare" in entries[key]:
+                                del entries[key]["compare"]
+                            if "favorit" in entries[key]:
+                                del entries[key]["favorit"]
+                            if "to_be_deleted" in entries[key]:
+                                del entries[key]["to_be_deleted"]
 
                 self.db_handler.unlock(config_file)
                 self.db_handler.write(config_file, "", entries)
@@ -572,38 +575,40 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                         count_files += 1
 
                     count_edit = 0
-                    while len(self.edit_queue[config_file][date]) > 0:
+                    entries_in_queue = len(self.edit_queue[config_file][date]) > 0
+                    while entries_in_queue:
+                        entries_in_queue = len(self.edit_queue[config_file][date]) > 0
+                        if entries_in_queue:
+                            self.logging.debug("Edit queue POP (2): " + str(self.edit_queue[config_file][date][-1]))
+                            [key, entry, command] = self.edit_queue[config_file][date].pop()
+                            count_entries += 1
 
-                        self.logging.debug("Edit queue POP (2): " + str(self.edit_queue[config_file][date][-1]))
-                        [key, entry, command] = self.edit_queue[config_file][date].pop()
-                        count_entries += 1
+                            self.logging.info(" +++> " + command + " +++ " + key)
 
-                        self.logging.info(" +++> " + command + " +++ " + key)
-
-                        if command == "add" or command == "edit":
-                            entries[key] = entry
-                            count_edit += 1
-                        elif command == "delete" and key in entries:  # !!! check, if also for keep_data?!
-                            del entries[key]
-                            count_edit += 1
-                        elif command == "keep_data":
-                            entries[key]["type"] = "data"
-                            if "hires" in entries[key]:
-                                del entries[key]["hires"]
-                            if "hires_size" in entries[key]:
-                                del entries[key]["hires_size"]
-                            if "lowres" in entries[key]:
-                                del entries[key]["lowres"]
-                            if "lowres_size" in entries[key]:
-                                del entries[key]["lowres_size"]
-                            if "directory" in entries[key]:
-                                del entries[key]["directory"]
-                            if "compare" in entries[key]:
-                                del entries[key]["compare"]
-                            if "favorit" in entries[key]:
-                                del entries[key]["favorit"]
-                            if "to_be_deleted" in entries[key]:
-                                del entries[key]["to_be_deleted"]
+                            if command == "add" or command == "edit":
+                                entries[key] = entry
+                                count_edit += 1
+                            elif command == "delete" and key in entries:  # !!! check, if also for keep_data?!
+                                del entries[key]
+                                count_edit += 1
+                            elif command == "keep_data":
+                                entries[key]["type"] = "data"
+                                if "hires" in entries[key]:
+                                    del entries[key]["hires"]
+                                if "hires_size" in entries[key]:
+                                    del entries[key]["hires_size"]
+                                if "lowres" in entries[key]:
+                                    del entries[key]["lowres"]
+                                if "lowres_size" in entries[key]:
+                                    del entries[key]["lowres_size"]
+                                if "directory" in entries[key]:
+                                    del entries[key]["directory"]
+                                if "compare" in entries[key]:
+                                    del entries[key]["compare"]
+                                if "favorit" in entries[key]:
+                                    del entries[key]["favorit"]
+                                if "to_be_deleted" in entries[key]:
+                                    del entries[key]["to_be_deleted"]
 
                     if count_edit > 0 and self.views is not None:
                         self.views.favorite_list_update()
@@ -641,18 +646,20 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                 self.db_handler.lock(config_file)
 
                 count_files += 1
-                while len(self.status_queue[config_file]) > 0:
+                entries_in_queue = len(self.status_queue[config_file]) > 0
+                while entries_in_queue:
+                    entries_in_queue = len(self.status_queue[config_file]) > 0
+                    if entries_in_queue:
+                        self.logging.debug("Status queue POP (1): " + str(self.status_queue[config_file][-1]))
+                        [date, key, change_status, status] = self.status_queue[config_file].pop()
+                        count_entries += 1
 
-                    self.logging.debug("Status queue POP (1): " + str(self.status_queue[config_file][-1]))
-                    [date, key, change_status, status] = self.status_queue[config_file].pop()
-                    count_entries += 1
-
-                    if change_status == "RANGE_END":
-                        self.config.async_answers.append(["RANGE_DONE"])
-                    elif change_status == "DELETE_RANGE_END":
-                        self.config.async_answers.append(["DELETE_RANGE_DONE"])
-                    elif key in entries:
-                        entries[key][change_status] = status
+                        if change_status == "RANGE_END":
+                            self.config.async_answers.append(["RANGE_DONE"])
+                        elif change_status == "DELETE_RANGE_END":
+                            self.config.async_answers.append(["DELETE_RANGE_DONE"])
+                        elif key in entries:
+                            entries[key][change_status] = status
 
                 self.db_handler.unlock(config_file)
                 self.db_handler.write(config_file, "", entries)
@@ -668,17 +675,20 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                     if len(self.status_queue[config_file][date]) > 0:
                         count_files += 1
 
-                    while len(self.status_queue[config_file][date]) > 0:
-                        self.logging.debug("Queue POP (3): " + str(self.status_queue[config_file][date][-1]))
-                        [date, key, change_status, status] = self.status_queue[config_file][date].pop()
-                        count_entries += 1
+                    entries_in_queue = len(self.status_queue[config_file][date]) > 0
+                    while entries_in_queue:
+                        entries_in_queue = len(self.status_queue[config_file][date]) > 0
+                        if entries_in_queue:
+                            self.logging.debug("Queue POP (3): " + str(self.status_queue[config_file][date][-1]))
+                            [date, key, change_status, status] = self.status_queue[config_file][date].pop()
+                            count_entries += 1
 
-                        if change_status == "RANGE_END":
-                            self.config.async_answers.append(["RANGE_DONE"])
-                        elif change_status == "DELETE_RANGE_END":
-                            self.config.async_answers.append(["DELETE_RANGE_DONE"])
-                        elif key in entries:
-                            entries[key][change_status] = status
+                            if change_status == "RANGE_END":
+                                self.config.async_answers.append(["RANGE_DONE"])
+                            elif change_status == "DELETE_RANGE_END":
+                                self.config.async_answers.append(["DELETE_RANGE_DONE"])
+                            elif key in entries:
+                                entries[key][change_status] = status
 
                     entry_data["files"] = entries
                     entry_data["info"]["changed"] = True
@@ -701,12 +711,12 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         add status change to queue
         """
-        start = time.time()
-        while self.status_queue_in_progress:  # and start + self.queue_timeout > time.time():
-            time.sleep(0.2)
-        if time.time() - start > 1:
-            self.logging.info("WAIT add_to_status_queue: " + str(date) + "|" + str(key) + "|" + str(change_status) +
-                              " ... " + str(time.time() - start))
+        #start = time.time()
+        #while self.status_queue_in_progress:  # and start + self.queue_timeout > time.time():
+        #    time.sleep(0.2)
+        #if time.time() - start > 1:
+        #    self.logging.info("WAIT add_to_status_queue: " + str(date) + "|" + str(key) + "|" + str(change_status) +
+        #                      " ... " + str(time.time() - start))
 
         if config != "backup":
             self.status_queue[config].append([date, key, change_status, status])
@@ -719,12 +729,12 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         add, remove or edit complete entry using a queue
         """
-        start = time.time()
-        while self.edit_queue_in_progress:  # and start + self.queue_timeout > time.time():
-            time.sleep(0.2)
-        if time.time() - start > 1:
-            self.logging.info("WAIT add_to_edit_queue: " + config + "|" + date + "|" + key + "|" + command +
-                              " ... " + str(time.time() - start))
+        #start = time.time()
+        #while self.edit_queue_in_progress:  # and start + self.queue_timeout > time.time():
+        #    time.sleep(0.2)
+        #if time.time() - start > 1:
+        #    self.logging.info("WAIT add_to_edit_queue: " + config + "|" + date + "|" + key + "|" + command +
+        #                      " ... " + str(time.time() - start))
 
         if config != "backup":
             self.edit_queue[config].append([key, entry, command])
@@ -737,12 +747,12 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         add, remove or edit complete entry using a queue
         """
-        start = time.time()
-        while self.range_queue_in_progress:  # and start + self.queue_timeout > time.time():
-            time.sleep(0.2)
-        if time.time() - start > 1:
-            self.logging.info("WAIT add_to_range_queue: " + config + "|" + date + "|" + key + "|" + command +
-                              " ... " + str(time.time() - start))
+        #start = time.time()
+        #while self.range_queue_in_progress:  # and start + self.queue_timeout > time.time():
+        #    time.sleep(0.2)
+        #if time.time() - start > 1:
+        #    self.logging.info("WAIT add_to_range_queue: " + config + "|" + date + "|" + key + "|" + command +
+        #                      " ... " + str(time.time() - start))
 
         if config != "backup":
             self.range_queue[config].append([key, entry, command])
