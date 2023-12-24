@@ -424,3 +424,17 @@ img .play_button  {
     border-right: 10px solid transparent;
     border-bottom: 10px solid white;
 }
+
+/* labels for object detection */
+
+.detection_label {
+    float         : left;
+    background    : blue;
+    border-radius :  8px;
+    height        : 12px;
+    max-height    : 12px;
+    margin        :  5px;
+    padding       :  4px;
+    cursor        : pointer;
+    font-size     : 11px;
+}

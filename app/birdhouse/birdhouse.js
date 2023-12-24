@@ -68,6 +68,9 @@ var birdhouse_css = [
     "style-slider-dark.css",
 ];
 
+loadingImage = "birdhouse/img/bird.gif";
+
+
 function birdhousePrint_load(view="INDEX", camera="", date="") {
 
 	if (app_first_load || app_2nd_load) {
