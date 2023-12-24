@@ -263,7 +263,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
             self.config.db_handler.write(config="backup", date=directory, data=files_backup,
                                          create=True, save_json=True)
-            self.config.set_status_changed(date=directory)
+            self.config.queue.set_status_changed(date=directory)
 
         self.backup_running = False
 
@@ -390,6 +390,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         else:
             data_sensor = {}
 
+        # !!! Recreation of chart_data and weather_data seems not to work correctly
         files = self.create_image_config(date, True)
         files_backup = {
             "files": files,

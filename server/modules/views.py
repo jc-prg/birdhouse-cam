@@ -910,17 +910,26 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                             "type": "directory"
                         }
 
-                        start_time = time.time()
-                        self.logging.info("        -> Start recreation of config file ...")
-                        self.archive_config_recreate_progress = True
-                        self.archive_config_recreate.append(date)
-                        while self.archive_config_recreate_progress or start_time + 10 > time.time():
-                            time.sleep(0.1)
-                        self.logging.info("        -> Recreated of config file.")
+                        # Trigger recreation of config file, if config file doesn't exist
+                        config_images = self.config.db_handler.read("backup", date)
+                        if config_images == {}:
+                            start_time = time.time()
+                            self.logging.info("        -> Start recreation of config file for " + date + " ...")
+                            self.archive_config_recreate_progress = True
+                            self.archive_config_recreate.append(date)
 
+                            while self.archive_config_recreate_progress or start_time + 20 > time.time():
+                                time.sleep(0.2)
+                            if self.archive_config_recreate_progress:
+                                self.logging.warning("        -> Recreation of config file for " + date +
+                                                     " takes longer than expected, don't wait longer here.")
+                            else:
+                                self.logging.info("        -> Recreated of config file for " + date + ".")
+
+                        # Extract data from config file
                         file_data = self._archive_list_create_file_data(date, True)
-                        backup_entries[date][cam] = self._archive_list_create_from_database(cam, archive_info[cam], date,
-                                                                                            file_data)
+                        backup_entries[date][cam] = self._archive_list_create_from_database(cam, archive_info[cam],
+                                                                                            date, file_data)
 
                     # if just change re-read entries from database of the respective date
                     elif (backup_entries[date]["changed"] and backup_entries[date]["exists"]) or complete:
