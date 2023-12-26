@@ -130,12 +130,12 @@ function birdhouseDevices_cameras(data) {
 		html_temp += "</div>";
 		html_temp += "<div class='camera_info_text'>";
 
+        var device_options = app_data["STATUS"]["system"]["video_devices_02"];
 		html_temp += tab.start();
-		html_temp += tab.row("Name:", birdhouse_edit_field(id="set_name_"+camera, field="devices:cameras:"+camera+":name", type="input"));
-        var options = app_data["STATUS"]["system"]["video_devices_02"];
-        html_temp += tab.row("Source:", birdhouse_edit_field(id="set_source_"+camera, field="devices:cameras:"+camera+":source", type="select_dict", options=options, data_type="string"));
-        html_temp += tab.row("Active:", birdhouse_edit_field(id="set_active_"+camera, field="devices:cameras:"+camera+":active", type="select", options="true,false", data_type="boolean"));
-		html_temp += tab.row("Micro:", birdhouse_edit_field(id="set_micro_"+camera, field="devices:cameras:"+camera+":record_micro", type="select", options=micros, data_type="boolean"));
+		html_temp += tab.row("Name:",       birdhouse_edit_field(id="set_name_"+camera, field="devices:cameras:"+camera+":name", type="input"));
+        html_temp += tab.row("Source:",     birdhouse_edit_field(id="set_source_"+camera, field="devices:cameras:"+camera+":source", type="select_dict", options=device_options, data_type="string"));
+        html_temp += tab.row("Active:",     birdhouse_edit_field(id="set_active_"+camera, field="devices:cameras:"+camera+":active", type="select", options="true,false", data_type="boolean"));
+		html_temp += tab.row("Micro:",      birdhouse_edit_field(id="set_micro_"+camera, field="devices:cameras:"+camera+":record_micro", type="select", options=micros, data_type="boolean"));
 		html_temp += tab.end();
 		html_temp += "&nbsp;<br/>";
 		id_list += "set_name_"+camera+":set_active_"+camera+":set_source_"+camera+":"+":set_micro_"+camera+":";
@@ -157,50 +157,61 @@ function birdhouseDevices_cameras(data) {
         html_temp += birdhouse_OtherGroup( camera+"_image", "Image Settings", html_entry, false );
 
         html_entry = tab.start();
-		html_entry += tab.row("- Area:", birdhouse_edit_field(id="set_area_"+camera, field="devices:cameras:"+camera+":similarity:detection_area", type="input", options="", data_type="json"));
+		html_entry += tab.row("- Area:",      birdhouse_edit_field(id="set_area_"+camera, field="devices:cameras:"+camera+":similarity:detection_area", type="input", options="", data_type="json"));
 		html_entry += tab.row("- Threshold:", birdhouse_edit_field(id="set_threshold_"+camera, field="devices:cameras:"+camera+":similarity:threshold", type="input", options="", data_type="float") + " %");
         html_entry += tab.end();
 
 		id_list += "set_area_"+camera+":set_threshold_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_detect", "Image Similarity Detection", html_entry, false );
 
+        var model_options = app_data["STATUS"]["detection_models"].join(",");
+        html_entry = tab.start();
+		html_entry += tab.row("- Active:",              birdhouse_edit_field(id="set_detect_active_"+camera, field="devices:cameras:"+camera+":object_detection:active", type="select", options="true,false", data_type="boolean"));
+		html_entry += tab.row("- Threshold:",           birdhouse_edit_field(id="set_detect_threshold_"+camera, field="devices:cameras:"+camera+":object_detection:threshold", type="input", options="", data_type="float") + " %");
+		html_entry += tab.row("- Classes:",             birdhouse_edit_field(id="set_detect_classes_"+camera, field="devices:cameras:"+camera+":object_detection:classes", type="input", options="", data_type="json"));
+		html_entry += tab.row("- Model:",               birdhouse_edit_field(id="set_detect_models_"+camera, field="devices:cameras:"+camera+":object_detection:model", type="select", options=model_options, data_type="string"));
+        html_entry += tab.end();
+
+		id_list += "set_detect_active_"+camera+":set_detect_threshold_"+camera+":";
+        html_temp += birdhouse_OtherGroup( camera+"_detect_object", "Image Object Detection", html_entry, false );
+
 		hours = "00,01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24";
         html_entry = tab.start();
-		html_entry += tab.row("- Record:", birdhouse_edit_field(id="set_record_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
-		html_entry += tab.row("- Rhythm:", "record every " + birdhouse_edit_field(id="set_record_rhythm_"+camera, field="devices:cameras:"+camera+":image_save:rhythm", type="select", options="05,10,15,20", data_type="string") + " s");
-		html_entry += tab.row("- Record time:",
-		    "from " + birdhouse_edit_field(id="set_record_from_"+camera, field="devices:cameras:"+camera+":image_save:record_from", type="select", options="sunrise-1,sunrise+0,sunrise+1,"+hours, data_type="string") + " &nbsp; " +
-		    "to " + birdhouse_edit_field(id="set_record_to_"+camera, field="devices:cameras:"+camera+":image_save:record_to", type="select", options="sunset-1,sunset+0,sunset+1,"+hours, data_type="string")
+		html_entry += tab.row("- Record:",              birdhouse_edit_field(id="set_record_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
+		html_entry += tab.row("- Rhythm:",              "record every " + birdhouse_edit_field(id="set_record_rhythm_"+camera, field="devices:cameras:"+camera+":image_save:rhythm", type="select", options="05,10,15,20", data_type="string") + " s");
+		html_entry += tab.row("- Record time:",         "from " + birdhouse_edit_field(id="set_record_from_"+camera, field="devices:cameras:"+camera+":image_save:record_from", type="select", options="sunrise-1,sunrise+0,sunrise+1,"+hours, data_type="string") + " &nbsp; " +
+		                                                "to " + birdhouse_edit_field(id="set_record_to_"+camera, field="devices:cameras:"+camera+":image_save:record_to", type="select", options="sunset-1,sunset+0,sunset+1,"+hours, data_type="string")
 		    );
 		html_entry += tab.row("", "<text id='get_record_image_time_"+camera+"'></text>");
-		html_entry += tab.row("- Record offset:", birdhouse_edit_field(id="set_record_offset_"+camera, field="devices:cameras:"+camera+":image_save:rhythm_offset", type="select", options="0,3,6,12", data_type="string"));
+		html_entry += tab.row("- Record offset:",       birdhouse_edit_field(id="set_record_offset_"+camera, field="devices:cameras:"+camera+":image_save:rhythm_offset", type="select", options="0,3,6,12", data_type="string"));
 		html_entry += tab.end();
 
 		id_list += "set_record_"+camera+":set_record_rhythm_"+camera+":set_record_from_"+camera+":set_record_to_"+camera+":set_record_offset_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_record_image", "Image Recording", html_entry, false );
 
         html_entry = tab.start();
-		html_entry += tab.row("- Recording active:", birdhouse_edit_field(id="set_video_active_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
-		html_entry += tab.row("- Max length:", birdhouse_edit_field(id="set_video_max_"+camera, field="devices:cameras:"+camera+":video:max_length", type="select", options="60,120,180,240,300", data_type="integer") + " seconds");
+		html_entry += tab.row("- Recording active:",    birdhouse_edit_field(id="set_video_active_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
+		html_entry += tab.row("- Max length:",          birdhouse_edit_field(id="set_video_max_"+camera, field="devices:cameras:"+camera+":video:max_length", type="select", options="60,120,180,240,300", data_type="integer") + " seconds");
         html_entry += tab.end();
 
 		id_list += "set_video_active__"+camera+":set_video_max_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_record_video", "Video Recording", html_entry, false );
 
         html_entry = tab.start();
-		html_entry += tab.row("- Show Time:", birdhouse_edit_field(id="set_time_"+camera, field="devices:cameras:"+camera+":image:date_time", type="select", options="true,false", data_type="boolean"));
-		html_entry += tab.row("- Position:", birdhouse_edit_field(id="set_time_pos_"+camera, field="devices:cameras:"+camera+":image:date_time_position", type="input", options="", data_type="json"));
-		html_entry += tab.row("- Font Size:", birdhouse_edit_field(id="set_time_size_"+camera, field="devices:cameras:"+camera+":image:date_time_size", type="input", options="", data_type="float"));
-		html_entry += tab.row("- Font Color:", birdhouse_edit_field(id="set_time_color_"+camera, field="devices:cameras:"+camera+":image:date_time_color", type="input", options="", data_type="json"));
+		html_entry += tab.row("- Show Time:",           birdhouse_edit_field(id="set_time_"+camera, field="devices:cameras:"+camera+":image:date_time", type="select", options="true,false", data_type="boolean"));
+		html_entry += tab.row("- Position:",            birdhouse_edit_field(id="set_time_pos_"+camera, field="devices:cameras:"+camera+":image:date_time_position", type="input", options="", data_type="json"));
+		html_entry += tab.row("- Font Size:",           birdhouse_edit_field(id="set_time_size_"+camera, field="devices:cameras:"+camera+":image:date_time_size", type="input", options="", data_type="float"));
+		html_entry += tab.row("- Font Color:",          birdhouse_edit_field(id="set_time_color_"+camera, field="devices:cameras:"+camera+":image:date_time_color", type="input", options="", data_type="json"));
         html_entry += tab.end();
 
 		id_list += ":set_time_"+camera+":set_time_size_"+camera+":set_time_pos_"+camera+":set_time_color_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_time", "Time Information", html_entry, false );
 
         html_entry = tab.start();
-        html_entry += tab.row("Last Recorded:", "<div id='last_image_recorded_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
-        html_entry += tab.row("Error Streams:", "<div id='error_streams_"+camera+"'></div>");
+        html_entry += tab.row("Last Recorded:",         "<div id='last_image_recorded_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
+        html_entry += tab.row("Error Streams:",         "<div id='error_streams_"+camera+"'></div>");
         html_entry += tab.end();
+
         html_temp += birdhouse_OtherGroup( camera+"_error", "Status", html_entry, false );
 
         var create = "";

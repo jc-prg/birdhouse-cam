@@ -413,6 +413,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
                     if (value["detections"]) {
                         for (var i=0;i<value["detections"].length;i++) {
                             label = value["detections"][i]["label"];
+                            if (label == "") { label = "without-label"; }
                             if (!labels[label]) { labels[label] = []; }
                             labels[label].push(key);
                             }
@@ -420,13 +421,15 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
                 });
 
             // create labels
-            Object.entries(labels).forEach(([key, value]) => {
+            Object.entries(labels).sort().forEach(([key, value]) => {
                 console.log("     - " + key + ": " + value.length);
-                var onclick = "alert(\"filter for &gt;" +  key + "&lt; - not implemented yet\");";
+                var onclick = "birdhouse_view_images_objects(\""+key+"\")";
                 label_information += "<div class='detection_label' onclick='" + onclick + "'>&nbsp;" + key + " (" + value.length + ")&nbsp;</div>";
                 });
 
             if (label_information != "") {
+                    var onclick = "birdhouse_view_images_objects(\"\")";
+                    label_information = "<div class='detection_label' onclick='" + onclick + "'>&nbsp;" + lang("ALL_IMAGES") + " (" + Object.entries(entries).length + ")&nbsp;</div>" + label_information;
                     html += birdhouse_OtherGroup("detection", lang("DETECTION"), label_information + "<div style='width:100%;height:25px;float:left;'></div>", true );
                 }
             }

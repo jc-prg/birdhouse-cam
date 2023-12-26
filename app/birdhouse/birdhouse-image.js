@@ -470,7 +470,18 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
     html += "  <div class='thumbnail_container' style='" + thumb_container_style + "'>";
     if (!img_missing) {
         html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id2+"' class='thumbnail' style='"+style+"'/></a>";
-        if (entry["similarity"]) {html += "<input id='"+img_id2+"_similarity' value='"+entry["similarity"]+"' style='display:none;'>";}
+        if (entry["similarity"]) {
+            html += "<input id='"+img_id2+"_similarity' value='"+entry["similarity"]+"' style='display:none;'>";
+            }
+        if (entry["detections"]) {
+            var labels = "";
+            for (var i=0;i<entry["detections"].length;i++) {
+                var label = entry["detections"][i]["label"];
+                if (label == "") { label = "without-label"; }
+                if (labels.indexOf(label) < 0) { labels += label + ","; }
+                }
+            html += "<input id='"+img_id2+"_objects' value='"+labels+"' style='display:none;'>";
+            }
         html += play_button;
         }
     else {

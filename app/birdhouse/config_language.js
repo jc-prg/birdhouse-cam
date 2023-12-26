@@ -9,6 +9,7 @@
 var language_app = {
 	"DE" : {
 	    "ACTIVITY"              : "Aktivit&auml;t",
+	    "ALL_IMAGES"            : "Alle Bilder",
 	    "ANALYTICS"             : "Analyse",
 		"APP_TRANSLATION"       : "App spezifische Übersetzungen",
 		"ARCHIVE"               : "Archiv",
@@ -117,8 +118,9 @@ var language_app = {
 
 	"EN" : {
 	    "ACTIVITY"              : "Activity",
+	    "ALL_IMAGES"            : "All images",
 	    "ANALYTICS"             : "Analytics",
-		"APP_TRANSLATION"       : "App specific Translations",
+		"APP_TRANSLATION"       : "App specific translations",
 		"ARCHIVE"               : "Archive",
 		"CAMERA"                : "Camera",
 		"CAMERAS"               : "Cameras",

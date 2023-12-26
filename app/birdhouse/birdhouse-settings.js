@@ -221,7 +221,7 @@ function birdhouse_app_settings (name="Settings") {
 		html_entry += this.tab.row("App:",	"<a href='/app/index.html?INFO' target='_blank'>"+ app_title + "</a>");
 		html_entry += this.tab.row("Versions:",
 						"App: " 		+ app_version + "<br/>" +
-						"API: " 		+ app_data["API"]["version"] + "<br/>" +
+						"Server: "      + app_data["API"]["version"] + "<br/>" +
 						"jcMsg: " 		+ appMsg.appVersion + "<br/>" +
 						"jcApp: "		+ appFW.appVersion);
 		html_entry += this.tab.row("Source:","<a href='https://github.com/jc-prg/birdhouse-cam/' target='_blank'>https://github.com/jc-prg/birdhouse-cam/</a>");
