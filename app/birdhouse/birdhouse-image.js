@@ -283,6 +283,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var settings_cam = app_data["SETTINGS"]["devices"]["camera"];
 	var img_url      = ""; // RESTurl;
 	var img_missing  = false;
+	var detect_sign  = "";
 
 	console.log(app_active_page);
 
@@ -304,8 +305,9 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		    description = hour + ":" + minute + " (" + entry["similarity"] + "%)";
         }
 
-        if (entry["hires_detect"])  { var onclick = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\", \""+birdhouse_ImageURL(img_url + entry["directory"] + entry["hires_detect"])+"\");"; }
-		else                        { var onclick = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");"; }
+        if (entry["hires_detect"] && entry["detections"] && entry["detections"].length > 0)
+                    { var onclick = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\", \""+birdhouse_ImageURL(img_url + entry["directory"] + entry["hires_detect"])+"\");"; detect_sign = "<sup>D</sup>"; }
+		else        { var onclick = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");"; entry["hires_detect"] = ""; }
 		description     = description.replace(/\[br\/\]/g,"<br/>");
 
         if (admin && entry["compare"][1] != "000000" && app_active_page == "TODAY_COMPLETE") {
@@ -482,6 +484,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
                 }
             html += "<input id='"+img_id2+"_objects' value='"+labels+"' style='display:none;'>";
             }
+
         html += play_button;
         }
     else {
@@ -489,7 +492,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
         html += "<div class='thumbnail' style='border:#AA0000 1px solid;background:#AAAAAA;text-align:center;vertical-align:middle;color:#AA0000;"+style+"'>";
         html += "&nbsp;<br>&nbsp;<br>"+lang("NO_IMAGE_IN_ARCHIVE")+"</div>";
         }
-	html += "    <br/><center><small>"+description+"</small></center>";
+	html += "    <br/><center><small>" + description + detect_sign + "</small></center>";
 	html += "  </div>";
 	html += "</div>";
 

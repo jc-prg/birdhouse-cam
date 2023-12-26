@@ -335,7 +335,7 @@ function birdhouse_imageOverlay(filename, description="", overlay_replace="", ov
             var onmouseout   = "document.getElementById(\""+overlay_id+"\").style.display = \"block\";";
             onmouseout      += "document.getElementById(\""+overlay_id+"_replace\").style.display = \"none\";";
 
-            html += "  <div id=\"overlay_replace\" onmouseover='"+onmouseover+"' onmouseout='"+onmouseout+"' onclick='"+onmouseover+"'>[O]</div>";
+            html += "  <div id=\"overlay_replace\" onmouseover='"+onmouseover+"' onmouseout='"+onmouseout+"' onclick='"+onmouseover+"'>[D]</div>";
             html += "  <img id='"+overlay_id+"_replace' src='"+overlay_replace+"' style='display:none;'/>";
             }
         else {
