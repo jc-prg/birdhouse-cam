@@ -15,3 +15,5 @@ python_weather
 suntime
 geopy
 python-dotenv
+torch
+torchvision
