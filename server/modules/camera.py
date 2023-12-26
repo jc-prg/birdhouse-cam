@@ -9,6 +9,7 @@ from modules.presets import *
 from modules.bh_class import BirdhouseCameraClass
 from modules.image import BirdhouseImageProcessing
 from modules.video import BirdhouseVideoProcessing
+from modules.detection.detection import DetectionModel, ImageHandling
 
 
 class BirdhouseCameraHandler(BirdhouseCameraClass):
@@ -1176,6 +1177,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.config_update = None
         self.config.update["camera_" + self.id] = False
 
+        self.name = self.param["name"]
+        self.active = self.param["active"]
+        self.source = self.param["source"]
+        self.type = self.param["type"]
+
         self.image = None
         self.video = None
         self.camera = None
@@ -1187,12 +1193,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.weather_active = self.config.param["weather"]["active"]
         self.weather_sunrise = None
         self.weather_sunset = None
-
-        self.name = self.param["name"]
-        self.active = self.param["active"]
-        self.source = self.param["source"]
-        self.type = self.param["type"]
-        self.max_resolution = None
+        self.detect_objects = None
+        self.detect_birds = None
+        self.detect_visualize = None
+        self.detect_live = False
+        self.detect_settings = self.param["object_detection"]
 
         self._interval = 0.2
         self._interval_reload_if_error = 60*3
@@ -1224,6 +1229,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.image_streams = {}
         self.image_streams_to_kill = {}
         self.image_to_select_last = "xxxxxx"
+        self.max_resolution = None
 
         self.previous_image = None
         self.previous_stamp = "000000"
@@ -1256,6 +1262,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             time.sleep(1)
             self._init_camera(init=True)
         self._init_microphone()
+        self._init_analytics()
 
     def _init_image_processing(self):
         """
@@ -1446,6 +1453,24 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 return
         self.micro = None
         self.logging.warning("- Could not connect a microphone to camera '" + self.id + "'!")
+
+    def _init_analytics(self):
+        """
+        initialize models for object detection
+        """
+        if self.detect_settings["active"]:
+
+            if self.detect_settings["model"] is None or self.detect_settings["model"] == "":
+                self.logging.warning("No detection model defined. Check device configuration in the app.")
+
+            else:
+                self.logging.info("Initialize object detection model (" + self.name + ") ...")
+                self.logging.info(" -> '" + self.detect_settings["model"] + "'")
+                self.detect_objects = DetectionModel(self.detect_settings["model"])
+                self.detect_visualize = ImageHandling()
+                self.detect_live = self.detect_settings["live"]
+        else:
+            self.logging.info("Object detection inactive (" + self.name + ")")
 
     def run(self):
         """
@@ -1649,7 +1674,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.logging.info("- Automatically stop VIDEO recording ...")
             self.video.record_stop()
 
-
         else:
             image_id = self.camera_streams["camera_hires"].read_stream_image_id()
 
@@ -1709,6 +1733,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             return
 
         self.logging.debug(" ...... check if recording")
+        start_time = time.time()
         if self.image_recording_active(current_time=current_time):
 
             self.logging.debug(" ...... record now!")
@@ -1734,8 +1759,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     "compare": (stamp, self.previous_stamp),
                     "date": current_time.strftime("%d.%m.%Y"),
                     "datestamp": current_time.strftime("%Y%m%d"),
+                    "detections": [],
                     "hires": self.config.filename_image("hires", stamp, self.id),
                     "hires_size": self.image_size,
+                    "info": {},
                     "lowres": self.config.filename_image("lowres", stamp, self.id),
                     "lowres_size": self.image_size_lowres,
                     "similarity": similarity,
@@ -1754,6 +1781,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 sensor_data = {}
                 image_info = {}
 
+            # get data from dht-sensors
             for key in self.sensor:
                 if self.sensor[key].if_running():
                     sensor_data[key] = self.sensor[key].get_values()
@@ -1761,6 +1789,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     # image_info["sensor"][key] = sensor_data[key]
 
             sensor_stamp = current_time.strftime("%H%M") + "00"
+            image_info["info"]["duration_1"] = round(time.time() - start_time, 3)
             self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
 
             if int(self.config.local_time().strftime("%M")) % 5 == 0 and sensor_stamp != sensor_last:
@@ -1779,6 +1808,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.write_image(filename=path_lowres, image=image_hires,
                                  scale_percent=self.param["image"]["preview_scale"])
 
+                if self.detect_settings["active"]:
+                    self.image_object_detection(path_hires, image_hires, image_info, start_time)
+
                 self.record_image_error = False
                 self.record_image_error_msg = []
                 self.record_image_last = time.time()
@@ -1786,6 +1818,37 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
             time.sleep(self._interval)
             self.previous_stamp = stamp
+
+    def image_object_detection(self, path_hires, image_hires, image_info, start_time):
+        """
+        analyze image for objects, save in metadata incl. image with labels if detected
+        """
+        stamp = image_info["datestamp"]
+        start_time = time.time()
+        if self.detect_objects.loaded:
+            img, detect_info = self.detect_objects.analyze(path_hires, -1, False)
+            img = self.detect_visualize.render_detection(image_hires, detect_info, 1, self.detect_settings["threshold"])
+            self.logging.debug("Current detection for " + stamp + ": " + str(detect_info))
+
+            if len(detect_info["detections"]) > 0:
+                detections_to_save = []
+                for detect in detect_info["detections"]:
+                    if float(detect["confidence"] * 100) >= float(self.detect_settings["threshold"]):
+                        self.logging.info("TRUE")
+                        detections_to_save.append(detect)
+
+                if len(detections_to_save) > 0:
+                    image_info["detections"] = detections_to_save
+                    image_info["hires_detect"] = image_info["hires"].replace(".jpeg", "_detect.jpeg")
+                    path_hires_detect = path_hires.replace(".jpeg", "_detect.jpeg")
+                    self.write_image(filename=path_hires_detect, image=img)
+
+            image_info["detection_threshold"] = self.detect_settings["threshold"]
+            image_info["info"]["duration_2"] = round(time.time() - start_time, 3)
+            self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
+
+        else:
+            self.logging.debug("Object detection not loaded (" + stamp + ")")
 
     def image_recording_active(self, current_time=-1, check_in_general=False):
         """
@@ -2237,6 +2300,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.source = self.param["source"]
         self.type = self.param["type"]
         self.record = self.param["record"]
+        self.detect_settings = self.param["object_detection"]
 
         self.image_size = [0, 0]
         self.image_size_lowres = [0, 0]

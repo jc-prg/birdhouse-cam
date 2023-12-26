@@ -1,16 +1,11 @@
 #!/usr/bin/python3
 
-import os
 import threading
-import time
 import json
 import signal
 import sys
 import psutil
 import subprocess
-
-import logging
-from logging.handlers import RotatingFileHandler
 
 import socketserver
 from http import server
@@ -27,8 +22,8 @@ from modules.sensors import BirdhouseSensor
 from modules.bh_class import BirdhouseClass
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v1.0.3"}
-app_framework = "v1.0.3"
+api_description = {"name": "BirdhouseCAM", "version": "v1.0.4"}
+app_framework = "v1.0.4"
 srv_audio = None
 
 
@@ -935,7 +930,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "active_date": "",
                     "active_page": command
                 },
-                "database": {}
+                "database": {},
+                "detection_models": detection_models
             },
             "SETTINGS": {
                 "backup": {},

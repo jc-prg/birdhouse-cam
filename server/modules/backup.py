@@ -181,6 +181,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                             count += 1
                             file_lowres = self.config.filename_image(image_type="lowres", timestamp=stamp, camera=cam)
                             file_hires = self.config.filename_image(image_type="hires", timestamp=stamp, camera=cam)
+                            file_hires_detect = file_hires.replace(".jpeg", "_detect.jpeg")
 
                             if "similarity" not in update_new:
                                 update_new["similarity"] = 100
@@ -204,6 +205,10 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                                          os.path.join(str(directory), file_lowres))
                                 os.popen('cp ' + os.path.join(str(dir_source), file_hires) + ' ' +
                                          os.path.join(str(directory), file_hires))
+
+                                if os.path.isfile(os.path.join(dir_source, file_hires_detect)):
+                                    os.popen('cp ' + os.path.join(str(dir_source), file_hires_detect) + ' ' +
+                                             os.path.join(str(directory), file_hires_detect))
 
                                 save_entry = True
 

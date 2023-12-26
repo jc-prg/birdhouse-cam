@@ -1,4 +1,5 @@
 import os
+import glob
 import logging
 import time
 from dotenv import load_dotenv
@@ -38,7 +39,11 @@ birdhouse_env = {
     "admin_ip4_deny": get_env("ADMIN_IP4_DENY"),
     "admin_ip4_allow": get_env("ADMIN_IP4_ALLOW"),
     "admin_password": get_env("ADMIN_PASSWORD"),
-    "admin_login": get_env("ADMIN_LOGIN")
+    "admin_login": get_env("ADMIN_LOGIN"),
+
+    "detect_live": (get_env("DETECT_LIVE").upper() == "ON"),
+    "detect_default": get_env("DETECT_DEFAULT"),
+    "detect_birds": get_env("DETECT_BIRDS")
 }
 
 
@@ -227,6 +232,13 @@ birdhouse_default_cam = {
         "threshold": 95,
         "detection_area": (0.1, 0.1, 0.8, 0.8)
     },
+    "object_detection": {
+        "active": False,
+        "live": False,
+        "model": "yolov5m",
+        "classes": [],
+        "threshold": 50
+    },
     "video": {
         "allow_recording": True,
         "max_length": 180,
@@ -339,6 +351,15 @@ file_types = {
     '.jpg': 'image/jpg',
     '.jpeg': 'image/jpg',
 }
+
+detection_default_models = ["yolov5n", "yolov5s", "yolov5m", "yolov5l", "yolov5x",
+                            "yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6", "yolov5x6"]
+detection_custom_model_path = "server/modules/detection/custom_models/"
+detection_custom_models = glob.glob(detection_custom_model_path + "*.pt")
+detection_models = detection_default_models
+for directory in detection_custom_models:
+    directory = directory.replace(detection_custom_model_path, "")
+    detection_models.append(directory)
 
 # http://codes.wmo.int/bufr4/codeflag/_0-20-003 (parts used by open-meteo.com)
 birdhouse_weather_descriptions = {
