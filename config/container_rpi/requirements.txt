@@ -16,3 +16,4 @@ python_weather
 board
 geopy
 python-dotenv
+torch
