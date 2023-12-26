@@ -285,7 +285,15 @@ img .play_button  {
 
 #overlay_close {
     position : relative;
-    top      : 30px;
+    top      : 40px;
+    right    : -45%;
+    z-index  : 74;
+    cursor   : pointer;
+}
+
+#overlay_replace {
+    position : relative;
+    top      : 45px;
     right    : -45%;
     z-index  : 74;
     cursor   : pointer;
@@ -307,17 +315,27 @@ img .play_button  {
 #overlay_image {
     max-width        : 95vw;
     max-height       : 95vh;
-    transform: scale(0.98);
+    //transform        : scale(0.98);
     margin           : auto;
     background-color : white;
     border           : 5px solid white;
     z-index          : 73;
   }
   
+#overlay_image_replace {
+    max-width        : 95vw;
+    max-height       : 95vh;
+    //transform        : scale(0.98);
+    margin           : auto;
+    background-color : white;
+    border           : 5px solid white;
+    z-index          : 73;
+  }
+
 #overlay_video {
     max-width        : 95vw;
     max-height       : 95vh;
-    transform: scale(0.98);
+    transform        : scale(0.98);
     margin           : auto;
     background-color : white;
     border           : 5px solid white;

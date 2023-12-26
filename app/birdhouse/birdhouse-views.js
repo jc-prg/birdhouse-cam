@@ -403,7 +403,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
     }
 
     // show labels of detected birds / objects
-    if (admin && active_page == "TODAY" && active_date != "" && active_date != undefined) {
+    if (admin && ((active_page == "TODAY" && active_date != "" && active_date != undefined) || (active_page == "TODAY_COMPLETE"))) {
         if (entries != undefined &&  Object.keys(entries).length > 0) {
             var labels = {};
             var label_information = "";

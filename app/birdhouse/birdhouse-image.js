@@ -304,7 +304,8 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		    description = hour + ":" + minute + " (" + entry["similarity"] + "%)";
         }
 
-		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
+        if (entry["hires_detect"])  { var onclick = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\", \""+birdhouse_ImageURL(img_url + entry["directory"] + entry["hires_detect"])+"\");"; }
+		else                        { var onclick = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");"; }
 		description     = description.replace(/\[br\/\]/g,"<br/>");
 
         if (admin && entry["compare"][1] != "000000" && app_active_page == "TODAY_COMPLETE") {
@@ -356,7 +357,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		//var lowres      = entry["video"]["stream_detect"];
 		var lowres      = birdhouse_StreamURL(entry["id"], entry["video"]["stream_detect"], "image_stream_detect", true);
 		var hires       = lowres;
-		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\", \"\", \"\", \"stream_overlay_"+entry["id"]+"\");";
+		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\", \"\", \"stream_overlay_"+entry["id"]+"\");";
     }
 	else if (entry["type"] == "video") {
 		var note        = "";
