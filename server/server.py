@@ -1417,6 +1417,9 @@ if __name__ == "__main__":
     srv_logging.info('Starting ...')
     srv_logging.info('-------------------------------------------')
 
+    check_submodules()
+    read_error_images()
+
     # set system signal handler
     signal.signal(signal.SIGINT, on_exit)
     signal.signal(signal.SIGTERM, on_kill)
