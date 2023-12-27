@@ -55,7 +55,7 @@ birdhouse_git_submodules = {
 for key in birdhouse_git_submodules:
     module_path = os.path.join(os.getcwd(), birdhouse_git_submodules[key], "README.md")
     if not os.path.exists(module_path):
-        print("ERROR: Submodule from git not installed: https://github.com/" + key + " - " +
+        print("ERROR: Submodule from git not installed: https://github.com/" + key + " in directory " +
               birdhouse_git_submodules[key])
         print("-> Try: 'sudo git submodule update --init --recursive' in the root directory.")
         sys.exit()
