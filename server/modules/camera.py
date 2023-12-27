@@ -562,7 +562,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             return
 
         self.stream_raw = stream_raw
-        self.image = None
+        self.image = self.stream_raw.image
 
         self.img_error_files = {
             "setting": "camera_error_settings.jpg",
@@ -571,6 +571,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             }
         self.img_error_raw = {
             "setting": None,
+            "lowres": None,
             "camera": None
             }
 
@@ -630,7 +631,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                                         self.img_error_files[image])
                 if not os.path.exists(filename):
                     raise Exception("File '" + filename + "' not found.")
-                raw = cv2.imread(filename)
+                #raw = cv2.imread(filename)
+                raw = birdhouse_error_images_raw[image].copy()
                 raw, area = self.image.crop_raw(raw=raw, crop_area=area, crop_type="absolute")
                 self.img_error_raw[image] = raw.copy()
             return True
@@ -820,16 +822,27 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
         if self.type == "setting":
             image = self.img_error_raw["setting"]
+            #image = birdhouse_error_images_raw["setting"]
             image = self.edit_error_add_info(image, [error_msg], reload_time=0, info_type="setting")
         elif self.resolution == "lowres":
-            image = self.img_error_raw["lowres"]
+            # !!! Error image is None
+            #image = self.img_error_raw["lowres"]
+            image = birdhouse_error_images_raw["lowres"]
+            #image = self.img_error_raw["camera"]
             image = self.edit_create_lowres(image)
             image = self.edit_error_add_info(image, error_msg, reload_time=0, info_type="lowres")
         else:
             image = self.img_error_raw["camera"]
+            #image = birdhouse_error_images_raw["camera"]
             image = self.edit_error_add_info(image, error_msg, reload_time=0, info_type="camera")
 
-        return image.copy()
+        # !!! Produces Error when image is None -> assumption: lowres
+        if image is None:
+            for err_img in self.img_error_raw:
+                print(".... " + self.resolution + " - " + str(error_msg) + " - " + str(type(self.img_error_raw[err_img])))
+                self.logging.error(".... " + self.resolution + " - " + str(error_msg) + " - " + str(type(self.img_error_raw[err_img])))
+        else:
+            return image.copy()
 
     def edit_error_add_info(self, raw, error_msg, reload_time=0, info_type="empty"):
         """
