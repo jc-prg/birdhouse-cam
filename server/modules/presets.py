@@ -3,6 +3,7 @@ import glob
 import sys
 import logging
 import time
+import cv2
 from dotenv import load_dotenv
 from logging.handlers import RotatingFileHandler
 
