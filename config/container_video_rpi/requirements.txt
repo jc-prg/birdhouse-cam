@@ -5,3 +5,4 @@ requests
 python_weather
 geopy
 python-dotenv
+cv2
