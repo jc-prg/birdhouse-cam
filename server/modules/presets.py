@@ -12,13 +12,8 @@ def get_env(var_name):
 
 
 def read_error_images():
+    global birdhouse_error_images_raw, birdhouse_error_images
     import cv2
-    birdhouse_error_images_raw = {}
-    birdhouse_error_images = {
-        "setting": "camera_error_settings.jpg",
-        "camera": "camera_error_hires.jpg",
-        "lowres": "camera_error_lowres.png"
-    }
     for key in birdhouse_error_images:
         image_path = os.path.join(os.getcwd(), "data", birdhouse_error_images[key])
         if os.path.exists(image_path):
@@ -29,11 +24,7 @@ def read_error_images():
 
 
 def check_submodules():
-    birdhouse_git_submodules = {
-        "jc-prg/bird-detection": "server/modules/detection",
-        "jc-prg/modules": "app/modules",
-        "jc-prg/app-framework": "app/framework"
-    }
+    global birdhouse_git_submodules
 
     for key in birdhouse_git_submodules:
         module_path = os.path.join(os.getcwd(), birdhouse_git_submodules[key], "README.md")
@@ -46,6 +37,19 @@ def check_submodules():
 
 path = os.path.join(os.path.dirname(__file__), "../../.env")
 load_dotenv(path)
+
+birdhouse_error_images_raw = {}
+birdhouse_error_images = {
+    "setting": "camera_error_settings.jpg",
+    "camera": "camera_error_hires.jpg",
+    "lowres": "camera_error_lowres.png"
+}
+
+birdhouse_git_submodules = {
+    "jc-prg/bird-detection": "server/modules/detection",
+    "jc-prg/modules": "app/modules",
+    "jc-prg/app-framework": "app/framework"
+}
 
 birdhouse_env = {
     "database_type": get_env("DATABASE_TYPE"),
