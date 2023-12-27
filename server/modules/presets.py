@@ -357,7 +357,7 @@ birdhouse_preset = {
     "weather": {
         "active": True,
         "location": "Munich",
-        "gps_location": [48.14, 11.58],
+        "gps_location": [48.14, 11.58, "Munich"],
         "source": "Open-Metheo",
         "available_sources": ["Python-Weather", "Open-Metheo"]
     }
