@@ -812,6 +812,14 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         archive_total_size = 0
         archive_total_count = 0
         start_time = time.time()
+        archive_template = {
+            "active_cam": "",
+            "view": "backup",
+            "entries": {},
+            "groups": {},
+            "view_count": [],
+            "max_image_size": {"lowres": [0, 0], "hires": [0, 0]}
+        }
 
         self.archive_loading = "in progress"
         main_directory = self.config.db_handler.directory(config="backup")
@@ -835,14 +843,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 archive_info[cam] = archive_template.copy()
                 archive_info[cam]["active_cam"] = cam
 
-            archive_changed[cam] = {
-                    "active_cam": cam,
-                    "view": "backup",
-                    "entries": {},
-                    "groups": {},
-                    "view_count": [],
-                    "max_image_size": {"lowres": [0, 0], "hires": [0, 0]}
-                    }
+            archive_changed[cam] = archive_template.copy()
+            archive_changed[cam]["active_cam"] = cam
 
             # create list per data (from lists per camera) and check if entries in databases have been changed
             for date in archive_info[cam]["entries"]:
