@@ -1104,7 +1104,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_address"]
                     else:
                         camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_stream_video"]
-                    camera_data[key]["video"]["stream_server"] += ":" + str(config.param["server"]["port_video"])
+                    camera_data[key]["video"]["stream_server"] += ":" + str(birdhouse_env["port_video"])
             request_times["8_status_camera"] = round(time.time() - request_start, 3)
 
             # get sensor data
