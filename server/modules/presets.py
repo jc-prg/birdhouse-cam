@@ -1,5 +1,6 @@
 import os
 import glob
+import sys
 import logging
 import time
 from dotenv import load_dotenv
@@ -12,7 +13,6 @@ def get_env(var_name):
 
 path = os.path.join(os.path.dirname(__file__), "../../.env")
 load_dotenv(path)
-
 
 birdhouse_env = {
     "database_type": get_env("DATABASE_TYPE"),
@@ -46,6 +46,19 @@ birdhouse_env = {
     "detect_birds": get_env("DETECT_BIRDS")
 }
 
+birdhouse_git_submodules = {
+    "jc-prg/bird-detection": "server/modules/detection",
+    "jc-prg/modules": "app/modules",
+    "jc-prg/app-framework": "app/framework"
+}
+
+for key in birdhouse_git_submodules:
+    module_path = os.path.join(os.getcwd(), birdhouse_git_submodules[key], "README.md")
+    if not os.path.exists(module_path):
+        print("ERROR: Submodule from git not installed: https://github.com/" + key + " - " +
+              birdhouse_git_submodules[key])
+        print("-> Try: 'sudo git submodule update --init --recursive' in the root directory.")
+        sys.exit()
 
 birdhouse_log_into_file = True
 birdhouse_loglevel = logging.INFO
