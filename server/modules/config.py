@@ -1216,7 +1216,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
 
         if config == "main":
             self.param = self.db_handler.read(config, date)
-            self.db_handler.set_db_type(db_type=self.param["server"]["database_type"])
+            # self.db_handler.set_db_type(db_type=self.param["server"]["database_type"])
+            self.db_handler.set_db_type(db_type=birdhouse_env["database_type"])
 
             for key in self.update:
                 self.update[key] = True
