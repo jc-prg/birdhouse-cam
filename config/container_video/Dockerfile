@@ -5,7 +5,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 RUN apt-get -y upgrade
 RUN apt-get -y install python3 python3-distutils python3-pip python3-apt apt-utils
-RUN apt-get -y install python3-opencv
 
 COPY ./requirements.txt ./requirements.txt
 RUN pip3 install --upgrade pip

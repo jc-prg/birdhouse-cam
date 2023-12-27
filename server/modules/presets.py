@@ -3,13 +3,45 @@ import glob
 import sys
 import logging
 import time
-import cv2
 from dotenv import load_dotenv
 from logging.handlers import RotatingFileHandler
 
 
 def get_env(var_name):
     return os.environ.get(var_name)
+
+
+def read_error_images():
+    import cv2
+    birdhouse_error_images_raw = {}
+    birdhouse_error_images = {
+        "setting": "camera_error_settings.jpg",
+        "camera": "camera_error_hires.jpg",
+        "lowres": "camera_error_lowres.png"
+    }
+    for key in birdhouse_error_images:
+        image_path = os.path.join(os.getcwd(), "data", birdhouse_error_images[key])
+        if os.path.exists(image_path):
+            birdhouse_error_images_raw[key] = cv2.imread(image_path)
+        else:
+            print("Could not load error image " + image_path)
+            sys.exit()
+
+
+def check_submodules():
+    birdhouse_git_submodules = {
+        "jc-prg/bird-detection": "server/modules/detection",
+        "jc-prg/modules": "app/modules",
+        "jc-prg/app-framework": "app/framework"
+    }
+
+    for key in birdhouse_git_submodules:
+        module_path = os.path.join(os.getcwd(), birdhouse_git_submodules[key], "README.md")
+        if not os.path.exists(module_path):
+            print("ERROR: Submodule from git not installed: https://github.com/" + key + " in directory " +
+                  birdhouse_git_submodules[key])
+            print("-> Try: 'sudo git submodule update --init --recursive' in the root directory.")
+            sys.exit()
 
 
 path = os.path.join(os.path.dirname(__file__), "../../.env")
@@ -46,34 +78,6 @@ birdhouse_env = {
     "detect_default": get_env("DETECT_DEFAULT"),
     "detect_birds": get_env("DETECT_BIRDS")
 }
-
-birdhouse_git_submodules = {
-    "jc-prg/bird-detection": "server/modules/detection",
-    "jc-prg/modules": "app/modules",
-    "jc-prg/app-framework": "app/framework"
-}
-
-for key in birdhouse_git_submodules:
-    module_path = os.path.join(os.getcwd(), birdhouse_git_submodules[key], "README.md")
-    if not os.path.exists(module_path):
-        print("ERROR: Submodule from git not installed: https://github.com/" + key + " in directory " +
-              birdhouse_git_submodules[key])
-        print("-> Try: 'sudo git submodule update --init --recursive' in the root directory.")
-        sys.exit()
-
-birdhouse_error_images_raw = {}
-birdhouse_error_images = {
-    "setting": "camera_error_settings.jpg",
-    "camera": "camera_error_hires.jpg",
-    "lowres": "camera_error_lowres.png"
-}
-for key in birdhouse_error_images:
-    image_path = os.path.join(os.getcwd(), "data", birdhouse_error_images[key])
-    if os.path.exists(image_path):
-        birdhouse_error_images_raw[key] = cv2.imread(image_path)
-    else:
-        print("Could not load error image " + image_path)
-        sys.exit()
 
 birdhouse_log_into_file = True
 birdhouse_loglevel = logging.INFO
