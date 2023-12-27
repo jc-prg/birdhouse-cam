@@ -60,6 +60,20 @@ for key in birdhouse_git_submodules:
         print("-> Try: 'sudo git submodule update --init --recursive' in the root directory.")
         sys.exit()
 
+birdhouse_error_images_raw = {}
+birdhouse_error_images = {
+    "setting": "camera_error_settings.jpg",
+    "camera": "camera_error_hires.jpg",
+    "lowres": "camera_error_lowres.png"
+}
+for key in birdhouse_error_images:
+    image_path = os.path.join(os.getcwd(), "data", birdhouse_error_images[key])
+    if os.path.exists(image_path):
+        birdhouse_error_images_raw[key] = cv2.imread(image_path)
+    else:
+        print("Could not load error image " + image_path)
+        sys.exit()
+
 birdhouse_log_into_file = True
 birdhouse_loglevel = logging.INFO
 birdhouse_loglevel_modules_info = ["mic-main", "server"]
