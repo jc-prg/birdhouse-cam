@@ -41,7 +41,7 @@ function birdhouseWeather( data ) {
     }
     var current_weather = tab.start();
     if (weather["info_position"].length <= 2) {
-        current_weather += tab.row(lang("LOCATION") + ":",  status["devices"]["weather"]["gps_location"]);
+        current_weather += tab.row(lang("LOCATION") + ":",  settings["devices"]["weather"]["gps_location"]);
         }
     else {
         current_weather += tab.row(lang("GPS_LOCATION")+":", weather["info_position"][2]);
