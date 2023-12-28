@@ -40,25 +40,30 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         self.interval = 10
         self.interval_reconnect = 60
         self.initial_load = True
+        self.connected = False
 
-        if not error_module:
-            self.connect()
-        else:
-            self.logging.error(error_module_msg)
-            self.logging.error("- Requires Raspberry and installation of this module.")
-            self.logging.error("- To install module, try 'sudo apt-get -y install rpi.gpio'.")
-            self.error_connect = True
-            self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-            self.error_msg += " - " + error_module_msg
-            self.running = False
+        if self.param["active"]:
+            if not error_module:
+                self.connect()
+            else:
+                self.logging.error(error_module_msg)
+                self.logging.error("- Requires Raspberry and installation of this module.")
+                self.logging.error("- To install module, try 'sudo apt-get -y install rpi.gpio'.")
+                self.error_connect = True
+                self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+                self.error_msg += " - " + error_module_msg
+                self.running = False
 
     def run(self):
         """
         Start recording from sensors
         """
         count = 0
-        self.logging.info("- Starting sensor handler (" + self.id + "/" + str(self.pin) + "/" +
+        self.reset_error()
+        self.logging.info("Starting sensor handler (" + self.id + "/" + str(self.pin) + "/" +
                           self.param["type"] + ") ...")
+        if not self.param["active"]:
+            self.logging.info("-> Sensor " + self.id + " is inactive.")
 
         while self._running:
             p_count = 0
@@ -70,6 +75,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                 self.param = self.config.param["devices"]["sensors"][self.id]
                 self.config.update["sensor_"+self.id] = False
                 self.active = self.param["active"]
+                self.reset_error()
 
             # operation and error handling if active
             if self.param["active"]:
@@ -82,7 +88,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                     time.sleep(1)
 
                 # reconnect if error and active
-                if self.error_connect:
+                if self.error_connect or not self.connected:
                     self.logging.info("....... Reload SENSOR '"+self.id+"' due to errors.")
                     self.connect()
                     self.error_connect = False
@@ -150,6 +156,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         temp = ""
         self.reset_error()
         self.error_connect = False
+        self.connected = False
 
         if birdhouse_env["rpi_active"] and self.param["active"]:
             try:
@@ -196,8 +203,10 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
             if not self.error:
                 self.logging.info("Loaded Sensor: "+self.id)
                 self.logging.info("- Initial values: "+str(temp))
-            self.raise_error(message="No sensor available: requires Raspberry Pi / activate" +
-                                     " 'rpi_active' in config file.", connect=True)
+                self.connected = True
+            else:
+                self.raise_error(message="No sensor available: requires Raspberry Pi / activate" +
+                                         " 'rpi_active' in config file.", connect=True)
 
         else:
             pass
@@ -218,13 +227,17 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         """
         return all error status information
         """
+        global error_module
         error = {
             "running": self._running,
             "rpi_active": birdhouse_env["rpi_active"],
             "last_read": time.time() - self.last_read_time,
             "error": self.error,
             "error_msg": self.error_msg,
-            "error_module": self.error_module,
             "error_connect": self.error_connect
             }
+        if self.param["active"] and error_module:
+            error["error_module"] = True
+        else:
+            error["error_module"] = False
         return error

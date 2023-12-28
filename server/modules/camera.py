@@ -1835,7 +1835,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 detections_to_save = []
                 for detect in detect_info["detections"]:
                     if float(detect["confidence"] * 100) >= float(self.detect_settings["threshold"]):
-                        self.logging.info("TRUE")
                         detections_to_save.append(detect)
 
                 if len(detections_to_save) > 0:
