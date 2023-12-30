@@ -235,7 +235,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
 class ServerInformation(threading.Thread, BirdhouseClass):
 
-    def __init__(self):
+    def __init__(self, initial_camera_scan):
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="srv-info", config=config)
         self.thread_set_priority(4)
@@ -243,6 +243,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         self._system_status = {}
         self._device_status = {}
         self._srv_info_time = 0
+        self.initial_camera_scan = initial_camera_scan
 
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
         self.microphones = None
@@ -330,17 +331,25 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         last_key = "none"
         system["video_devices"] = {}
         system["video_devices_02"] = {}
+        system["video_devices_03"] = self.initial_camera_scan["video_devices_03"]
         for value in output_2:
             if ":" in value:
                 system["video_devices"][value] = []
                 last_key = value
             elif value != "":
                 value = value.replace("\t", "")
+                check_text = "NEW"
+                if value in system["video_devices_03"]:
+                    check = system["video_devices_03"][value]
+                    if check["image"]:
+                        check_text = "OK"
+                    else:
+                        check_text = "ERROR"
                 system["video_devices"][last_key].append(value)
                 info = last_key.split(":")
-                system["video_devices_02"][value] = value + " (" + info[0] + ")"
-        system["audio_devices"] = {}
+                system["video_devices_02"][value] = value + " (" + check_text + ": " + info[0] + ")"
 
+        system["audio_devices"] = {}
         if microphones != {}:
             first_mic = list(microphones.keys())[0]
             if microphones[first_mic].connected:
@@ -1447,14 +1456,20 @@ if __name__ == "__main__":
         microphones[mic].start()
 
     # start cameras
+    camera_first = True
+    camera_scan = {}
     camera = {}
     for cam in config.param["devices"]["cameras"]:
         settings = config.param["devices"]["cameras"][cam]
-        camera[cam] = BirdhouseCamera(camera_id=cam, config=config, sensor=sensor, microphones=microphones)
+        camera[cam] = BirdhouseCamera(camera_id=cam, config=config, sensor=sensor,
+                                      microphones=microphones, first_cam=camera_first)
         camera[cam].start()
+        if camera_first:
+            camera_scan = camera[cam].camera.available_devices
+            camera_first = False
 
     # system information
-    sys_info = ServerInformation()
+    sys_info = ServerInformation(camera_scan)
     sys_info.start()
 
     # start views and commands

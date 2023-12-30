@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import psutil
 import threading
+import subprocess
 
 from datetime import datetime
 
@@ -14,7 +15,7 @@ from modules.detection.detection import DetectionModel, ImageHandling
 
 class BirdhouseCameraHandler(BirdhouseCameraClass):
 
-    def __init__(self, camera_id, source, config):
+    def __init__(self, camera_id, source, config, first_cam=False):
         BirdhouseCameraClass.__init__(self, class_id=camera_id+"-ctrl", class_log="cam-other",
                                       camera_id=camera_id, config=config)
 
@@ -28,6 +29,11 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         self.properties_not_used = None
         self.properties_set = None
         self.connected = False
+        self.first_cam = first_cam
+
+        self.available_devices = {}
+        if first_cam:
+            self.get_available_devices()
 
         self.logging.info("Starting CAMERA support for '"+self.id+":"+source+"' ...")
 
@@ -41,6 +47,9 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         self.logging.info("Try to connect camera '" + self.id + "' ...")
         try:
             self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
+            if not self.stream.isOpened():
+                self.raise_error("- Can' connect to camera '" + self.source + "': not isOpen()")
+                return False
             time.sleep(0.5)
         except Exception as err:
             self.raise_error("- Can' connect to camera '" + self.source + "': " + str(err))
@@ -269,6 +278,61 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         width = self.stream.get(cv2.CAP_PROP_FRAME_WIDTH)
         height = self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)
         return [width, height]
+
+    def get_available_devices(self):
+        """
+        identify available video devices
+        """
+        self.logging.info("Identify available video devices:")
+        system = {"video_devices": {}, "video_devices_02": {}, "video_devices_03": {}}
+
+        try:
+            process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
+            output = process.communicate()[0]
+            output = output.decode()
+            output_2 = output.split("\n")
+        except Exception as e:
+            self.logging.error("Could not grab video devices. Check, if v4l2-ctl is installed.")
+            return system
+
+        last_key = "none"
+        for value in output_2:
+            if ":" in value:
+                system["video_devices"][value] = []
+                last_key = value
+            elif value != "":
+                value = value.replace("\t", "")
+                system["video_devices"][last_key].append(value)
+                info = last_key.split(":")
+                system["video_devices_02"][value] = value + " (" + info[0] + ")"
+                system["video_devices_03"][value] = {"dev": value, "info": info[0], "image": False}
+
+        for key in system["video_devices_02"]:
+
+            try:
+                self.logging.info(" - " + key + " ... " + system["video_devices_03"][key]["info"])
+                camera = cv2.VideoCapture(key, cv2.CAP_V4L)
+                if not camera.isOpened():
+                    system["video_devices_03"][key]["error"] = "Error opening video."
+                else:
+                    time.sleep(0.5)
+                    ref, raw = camera.read()
+                    check = str(type(raw))
+                    if not ref:
+                        system["video_devices_03"][key]["error"] = "Error reading image."
+                    elif "NoneType" in check or len(raw) == 0:
+                        system["video_devices_03"][key]["error"] = "Returned empty image."
+                    else:
+                        self.logging.info(" - " + key + " OK: " + str(ref))
+                        system["video_devices_03"][key]["image"] = True
+            except cv2.error as e:
+                system["video_devices_03"][key]["error"] = e
+
+            if "error" in system["video_devices_03"][key]:
+                self.logging.error(" - " + key + " ERROR: " + str(system["video_devices_03"][key]["error"]))
+
+        self.available_devices = system
+        return system
 
     def if_connected(self):
         """
@@ -1165,7 +1229,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
 class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
-    def __init__(self, camera_id, config, sensor, microphones):
+    def __init__(self, camera_id, config, sensor, microphones, first_cam=False):
         """
         Initialize new thread and set initial parameters
         """
@@ -1199,6 +1263,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.detect_visualize = None
         self.detect_live = False
         self.detect_settings = self.param["object_detection"]
+        self.first_cam = first_cam
 
         self._interval = 0.2
         self._interval_reload_if_error = 60*3
@@ -1370,7 +1435,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.reset_error_all()
         if init:
-            self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source, config=self.config)
+            self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source, config=self.config,
+                                                 first_cam=self.first_cam)
             self.connected = self.camera.connect()
         else:
             self.connected = self.camera.reconnect()
