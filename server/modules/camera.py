@@ -12,6 +12,11 @@ from modules.image import BirdhouseImageProcessing
 from modules.video import BirdhouseVideoProcessing
 from modules.detection.detection import DetectionModel, ImageHandling
 
+if birdhouse_env["rpi_active"]:
+    from pivideostream import PiVideoStream
+
+# https://pyimagesearch.com/2016/01/04/unifying-picamera-and-cv2-videocapture-into-a-single-class-with-opencv/
+
 
 class BirdhouseCameraHandler(BirdhouseCameraClass):
 
@@ -290,13 +295,16 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
             output = process.communicate()[0]
             output = output.decode()
-            output_2 = output.split("\n")
+            output = output.split("\n")
         except Exception as e:
-            self.logging.error("Could not grab video devices. Check, if v4l2-ctl is installed.")
+            self.logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
             return system
 
         last_key = "none"
-        for value in output_2:
+        if birdhouse_env["rpi_active"]:
+            output.append("/dev/picam")
+
+        for value in output:
             if ":" in value:
                 system["video_devices"][value] = []
                 last_key = value
@@ -308,11 +316,14 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
                 system["video_devices_03"][value] = {"dev": value, "info": info[0], "image": False}
 
         for key in system["video_devices_02"]:
-
             try:
                 self.logging.info(" - " + key + " ... " + system["video_devices_03"][key]["info"])
-                camera = cv2.VideoCapture(key, cv2.CAP_V4L)
-                if not camera.isOpened():
+                if key == "/dev/picam":
+                    camera = PiVideoStream().start()
+                else:
+                    camera = cv2.VideoCapture(key, cv2.CAP_V4L)
+
+                if key != "/dev/picam" and not camera.isOpened():
                     system["video_devices_03"][key]["error"] = "Error opening video."
                 else:
                     time.sleep(0.5)
