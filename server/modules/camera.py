@@ -12,8 +12,8 @@ from modules.image import BirdhouseImageProcessing
 from modules.video import BirdhouseVideoProcessing
 from modules.detection.detection import DetectionModel, ImageHandling
 
-if birdhouse_env["rpi_active"]:
-    from pivideostream import PiVideoStream
+#if birdhouse_env["rpi_active"]:
+#    from pivideostream import PiVideoStream
 
 # https://pyimagesearch.com/2016/01/04/unifying-picamera-and-cv2-videocapture-into-a-single-class-with-opencv/
 
