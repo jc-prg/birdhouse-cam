@@ -26,6 +26,8 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
 
         if "/dev/" not in str(source):
             source = "/dev/video" + str(source)
+        elif "/dev/picam" in source:
+            source = 0
 
         self.source = source
         self.stream = None
@@ -319,7 +321,9 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             try:
                 self.logging.info(" - " + key + " ... " + system["video_devices_03"][key]["info"])
                 if key == "/dev/picam":
-                    camera = PiVideoStream().start()
+                    camera = cv2.VideoCapture(0)
+                    #camera = PiVideoStream().start()
+                    pass
                 else:
                     camera = cv2.VideoCapture(key, cv2.CAP_V4L)
 
