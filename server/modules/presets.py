@@ -24,7 +24,7 @@ def read_error_images():
 
 
 def check_submodules():
-    global birdhouse_git_submodules
+    global birdhouse_git_submodules, birdhouse_git_submodules_installed
 
     for key in birdhouse_git_submodules:
         module_path = os.path.join(os.getcwd(), birdhouse_git_submodules[key], "README.md")
@@ -33,6 +33,7 @@ def check_submodules():
                   birdhouse_git_submodules[key])
             print("-> Try: 'sudo git submodule update --init --recursive' in the root directory.")
             sys.exit()
+    birdhouse_git_submodules_installed = True
 
 
 path = os.path.join(os.path.dirname(__file__), "../../.env")
@@ -45,6 +46,7 @@ birdhouse_error_images = {
     "lowres": "camera_error_lowres.png"
 }
 
+birdhouse_git_submodules_installed = False
 birdhouse_git_submodules = {
     "jc-prg/bird-detection": "server/modules/detection",
     "jc-prg/modules": "app/modules",
