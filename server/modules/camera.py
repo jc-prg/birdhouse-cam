@@ -22,8 +22,10 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
 
         if "/dev/" not in str(source):
             source = "/dev/video" + str(source)
+        elif "/dev/picam" in source and birdhouse_env["rpi_64bit"]:
+            source = "picamera2"
         elif "/dev/picam" in source:
-            source = 0
+            source = "picamera"
 
         self.source = source
         self.stream = None
@@ -2277,10 +2279,19 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         for key in system["video_devices_02"]:
             try:
                 self.logging.info(" - " + key + " ... " + system["video_devices_03"][key]["info"])
-                if key == "/dev/picam":
-                    camera = cv2.VideoCapture(0)
-                    #camera = PiVideoStream().start()
-                    pass
+                if key == "/dev/picam" and birdhouse_env["rpi_64bit"]:
+                    try:
+                        from picamera2 import Picamera2
+                        picam2_test = Picamera2()
+                        picam2_test.start()
+                        image = picam2_test.capture_array()
+                        if "None" in str(tye(image)) or len(image) == 0:
+                            system["video_devices_03"][key]["error"] = "Returned empty image."
+                        else:
+                            self.logging.info(" - " + key + " OK: " + str(image))
+                    except Exception as e:
+                        system["video_devices_03"][key]["error"] = "Error connecting camera:" + str(e)
+
                 else:
                     camera = cv2.VideoCapture(key, cv2.CAP_V4L)
 

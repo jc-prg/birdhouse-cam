@@ -13,6 +13,7 @@ RUN apt-get -y install python3-opencv
 RUN apt-get -y install python3-skimage
 RUN apt-get -y install --reinstall libraspberrypi0 libraspberrypi-dev libraspberrypi-bin
 RUN apt-get -y install v4l-utils
+RUN apt-get -y install libcap-dev python3-libcamera python3-kms++
 
 COPY ./requirements.txt ./requirements.txt
 RUN pip3 install --upgrade pip

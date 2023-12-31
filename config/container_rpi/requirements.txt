@@ -17,3 +17,6 @@ board
 geopy
 python-dotenv
 torch
+picamera2
+psutil
+tqdm
