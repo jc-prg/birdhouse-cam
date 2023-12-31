@@ -1466,7 +1466,7 @@ if __name__ == "__main__":
                                       microphones=microphones, first_cam=camera_first)
         camera[cam].start()
         if camera_first:
-            camera_scan = camera[cam].camera.available_devices
+            camera_scan = camera[cam].get_available_devices()
             camera_first = False
 
     # system information

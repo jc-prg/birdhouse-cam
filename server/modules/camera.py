@@ -16,7 +16,7 @@ from modules.video import BirdhouseVideoProcessing
 
 class BirdhouseCameraHandler(BirdhouseCameraClass):
 
-    def __init__(self, camera_id, source, config, first_cam=False):
+    def __init__(self, camera_id, source, config):
         BirdhouseCameraClass.__init__(self, class_id=camera_id+"-ctrl", class_log="cam-other",
                                       camera_id=camera_id, config=config)
 
@@ -32,11 +32,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         self.properties_not_used = None
         self.properties_set = None
         self.connected = False
-        self.first_cam = first_cam
-
         self.available_devices = {}
-        if first_cam:
-            self.get_available_devices()
 
         self.logging.info("Starting CAMERA support for '"+self.id+":"+source+"' ...")
 
@@ -281,69 +277,6 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         width = self.stream.get(cv2.CAP_PROP_FRAME_WIDTH)
         height = self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)
         return [width, height]
-
-    def get_available_devices(self):
-        """
-        identify available video devices
-        """
-        self.logging.info("Identify available video devices:")
-        system = {"video_devices": {}, "video_devices_02": {}, "video_devices_03": {}}
-
-        try:
-            process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
-            output = process.communicate()[0]
-            output = output.decode()
-            output = output.split("\n")
-        except Exception as e:
-            self.logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
-            return system
-
-        last_key = "none"
-        if birdhouse_env["rpi_active"]:
-            output.append("/dev/picam")
-
-        for value in output:
-            if ":" in value:
-                system["video_devices"][value] = []
-                last_key = value
-            elif value != "":
-                value = value.replace("\t", "")
-                system["video_devices"][last_key].append(value)
-                info = last_key.split(":")
-                system["video_devices_02"][value] = value + " (" + info[0] + ")"
-                system["video_devices_03"][value] = {"dev": value, "info": info[0], "image": False}
-
-        for key in system["video_devices_02"]:
-            try:
-                self.logging.info(" - " + key + " ... " + system["video_devices_03"][key]["info"])
-                if key == "/dev/picam":
-                    camera = cv2.VideoCapture(0)
-                    #camera = PiVideoStream().start()
-                    pass
-                else:
-                    camera = cv2.VideoCapture(key, cv2.CAP_V4L)
-
-                if key != "/dev/picam" and not camera.isOpened():
-                    system["video_devices_03"][key]["error"] = "Error opening video."
-                else:
-                    time.sleep(0.5)
-                    ref, raw = camera.read()
-                    check = str(type(raw))
-                    if not ref:
-                        system["video_devices_03"][key]["error"] = "Error reading image."
-                    elif "NoneType" in check or len(raw) == 0:
-                        system["video_devices_03"][key]["error"] = "Returned empty image."
-                    else:
-                        self.logging.info(" - " + key + " OK: " + str(ref))
-                        system["video_devices_03"][key]["image"] = True
-            except cv2.error as e:
-                system["video_devices_03"][key]["error"] = e
-
-            if "error" in system["video_devices_03"][key]:
-                self.logging.error(" - " + key + " ERROR: " + str(system["video_devices_03"][key]["error"]))
-
-        self.available_devices = system
-        return system
 
     def if_connected(self):
         """
@@ -1326,6 +1259,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.camera_stream_raw = None
         self.camera_streams = {}
+        self.available_devices = {}
 
         self.date_last = self.config.local_time().strftime("%Y-%m-%d")
         self.usage_time = time.time()
@@ -1448,8 +1382,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.reset_error_all()
         if init:
-            self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source, config=self.config,
-                                                 first_cam=self.first_cam)
+            self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source, config=self.config)
             self.connected = self.camera.connect()
         else:
             self.connected = self.camera.reconnect()
@@ -2309,6 +2242,69 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         show system info in specific streams
         """
         self.camera_streams["camera_hires"].set_system_info(active, line1, line2, color)
+
+    def get_available_devices(self):
+        """
+        identify available video devices
+        """
+        self.logging.info("Identify available video devices:")
+        system = {"video_devices": {}, "video_devices_02": {}, "video_devices_03": {}}
+
+        try:
+            process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
+            output = process.communicate()[0]
+            output = output.decode()
+            output = output.split("\n")
+        except Exception as e:
+            self.logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
+            return system
+
+        last_key = "none"
+        if birdhouse_env["rpi_active"]:
+            output.append("/dev/picam")
+
+        for value in output:
+            if ":" in value:
+                system["video_devices"][value] = []
+                last_key = value
+            elif value != "":
+                value = value.replace("\t", "")
+                system["video_devices"][last_key].append(value)
+                info = last_key.split(":")
+                system["video_devices_02"][value] = value + " (" + info[0] + ")"
+                system["video_devices_03"][value] = {"dev": value, "info": info[0], "image": False}
+
+        for key in system["video_devices_02"]:
+            try:
+                self.logging.info(" - " + key + " ... " + system["video_devices_03"][key]["info"])
+                if key == "/dev/picam":
+                    camera = cv2.VideoCapture(0)
+                    #camera = PiVideoStream().start()
+                    pass
+                else:
+                    camera = cv2.VideoCapture(key, cv2.CAP_V4L)
+
+                if key != "/dev/picam" and not camera.isOpened():
+                    system["video_devices_03"][key]["error"] = "Error opening video."
+                else:
+                    time.sleep(0.5)
+                    ref, raw = camera.read()
+                    check = str(type(raw))
+                    if not ref:
+                        system["video_devices_03"][key]["error"] = "Error reading image."
+                    elif "NoneType" in check or len(raw) == 0:
+                        system["video_devices_03"][key]["error"] = "Returned empty image."
+                    else:
+                        self.logging.info(" - " + key + " OK: " + str(ref))
+                        system["video_devices_03"][key]["image"] = True
+            except cv2.error as e:
+                system["video_devices_03"][key]["error"] = e
+
+            if "error" in system["video_devices_03"][key]:
+                self.logging.error(" - " + key + " ERROR: " + str(system["video_devices_03"][key]["error"]))
+
+        self.available_devices = system
+        return system
 
     def write_image(self, filename, image, scale_percent=100):
         """
