@@ -78,9 +78,7 @@ birdhouse_env = {
     "admin_password": get_env("ADMIN_PASSWORD"),
     "admin_login": get_env("ADMIN_LOGIN"),
 
-    "detect_live": (get_env("DETECT_LIVE").upper() == "ON"),
-    "detect_default": get_env("DETECT_DEFAULT"),
-    "detect_birds": get_env("DETECT_BIRDS")
+    "detection_active": (get_env("OBJECT_DETECTION").upper() == "ON")
 }
 
 birdhouse_log_into_file = True

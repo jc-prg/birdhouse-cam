@@ -10,10 +10,9 @@ from modules.presets import *
 from modules.bh_class import BirdhouseCameraClass
 from modules.image import BirdhouseImageProcessing
 from modules.video import BirdhouseVideoProcessing
-from modules.detection.detection import DetectionModel, ImageHandling
 
-#if birdhouse_env["rpi_active"]:
-#    from pivideostream import PiVideoStream
+if birdhouse_env["detection_active"]:
+    from modules.detection.detection import DetectionModel, ImageHandling
 
 # https://pyimagesearch.com/2016/01/04/unifying-picamera-and-cv2-videocapture-into-a-single-class-with-opencv/
 
@@ -1278,6 +1277,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.detect_visualize = None
         self.detect_live = False
         self.detect_settings = self.param["object_detection"]
+        self.detect_active = birdhouse_env["detection_active"]
         self.first_cam = first_cam
 
         self._interval = 0.2
@@ -1343,7 +1343,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             time.sleep(1)
             self._init_camera(init=True)
         self._init_microphone()
-        self._init_analytics()
+        if self.detect_active:
+            self._init_analytics()
 
     def _init_image_processing(self):
         """
@@ -1540,19 +1541,22 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         initialize models for object detection
         """
-        if self.detect_settings["active"]:
+        if self.detect_active:
+            if self.detect_settings["active"]:
 
-            if self.detect_settings["model"] is None or self.detect_settings["model"] == "":
-                self.logging.warning("No detection model defined. Check device configuration in the app.")
+                if self.detect_settings["model"] is None or self.detect_settings["model"] == "":
+                    self.logging.warning("No detection model defined. Check device configuration in the app.")
 
+                else:
+                    self.logging.info("Initialize object detection model (" + self.name + ") ...")
+                    self.logging.info(" -> '" + self.detect_settings["model"] + "'")
+                    self.detect_objects = DetectionModel(self.detect_settings["model"])
+                    self.detect_visualize = ImageHandling()
+                    self.detect_live = self.detect_settings["live"]
             else:
-                self.logging.info("Initialize object detection model (" + self.name + ") ...")
-                self.logging.info(" -> '" + self.detect_settings["model"] + "'")
-                self.detect_objects = DetectionModel(self.detect_settings["model"])
-                self.detect_visualize = ImageHandling()
-                self.detect_live = self.detect_settings["live"]
+                self.logging.info("Object detection inactive (" + self.name + "), see settings.")
         else:
-            self.logging.info("Object detection inactive (" + self.name + ")")
+            self.logging.info("Object detection inactive (" + self.name + "), see .env-file.")
 
     def run(self):
         """
@@ -1890,7 +1894,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.write_image(filename=path_lowres, image=image_hires,
                                  scale_percent=self.param["image"]["preview_scale"])
 
-                if self.detect_settings["active"]:
+                if self.detect_active and self.detect_settings["active"]:
                     self.image_object_detection(path_hires, image_hires, image_info, start_time)
 
                 self.record_image_error = False

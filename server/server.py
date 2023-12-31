@@ -1145,7 +1145,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "ip4_admin_deny": birdhouse_env["admin_ip4_deny"],
                 "ip4_admin_allow": birdhouse_env["admin_ip4_allow"],
                 "admin_login": birdhouse_env["admin_login"],
-                "rpi_active": birdhouse_env["rpi_active"]
+                "rpi_active": birdhouse_env["rpi_active"],
+                "detection_active": birdhouse_env["detection_active"]
             }
             api_response["SETTINGS"]["server"] = server_config
 
