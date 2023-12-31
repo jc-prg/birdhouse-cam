@@ -11,9 +11,6 @@ from modules.bh_class import BirdhouseCameraClass
 from modules.image import BirdhouseImageProcessing
 from modules.video import BirdhouseVideoProcessing
 
-if birdhouse_env["detection_active"] and birdhouse_git_submodules_installed:
-    from modules.detection.detection import DetectionModel, ImageHandling
-
 # https://pyimagesearch.com/2016/01/04/unifying-picamera-and-cv2-videocapture-into-a-single-class-with-opencv/
 
 
@@ -1542,6 +1539,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         initialize models for object detection
         """
         if self.detect_active:
+            from modules.detection.detection import DetectionModel, ImageHandling
             if self.detect_settings["active"]:
 
                 if self.detect_settings["model"] is None or self.detect_settings["model"] == "":
