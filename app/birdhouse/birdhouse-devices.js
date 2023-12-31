@@ -91,7 +91,7 @@ function birdhouseDevices_status(index, show_button) {
 
 function birdhouseDevices_cameras(data) {
 	var cameras	= data["SETTINGS"]["devices"]["cameras"];
-	var settings = data["SETTINGS"]
+	var settings = app_data["SETTINGS"]
 	var micros  = "," + Object.keys(data["SETTINGS"]["devices"]["microphones"]).join(",");
 	var admin 	= data["STATUS"]["admin_allowed"];
 	var html	= "";
@@ -165,7 +165,7 @@ function birdhouseDevices_cameras(data) {
 		id_list += "set_area_"+camera+":set_threshold_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_detect", "Image Similarity Detection", html_entry, false );
 
-        if (settings["detection_active"]) {
+        if (settings["server"]["detection_active"]) {
             var model_options = app_data["STATUS"]["detection_models"].join(",");
             html_entry = tab.start();
             html_entry += tab.row("- Image Detection:",     birdhouse_edit_field(id="set_detect_active_"+camera, field="devices:cameras:"+camera+":object_detection:active", type="select", options="true,false", data_type="boolean"));

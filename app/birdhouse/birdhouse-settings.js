@@ -142,9 +142,9 @@ function birdhouse_app_settings (name="Settings") {
 
     this.server_side_settings = function() {
         var settings = app_data["SETTINGS"];
-        if (settings["rpi_active"]) { rpi_active = "true"; } else { rpi_active = "false"; }
-        if (settings["detection_active"]) { detection_active = "true"; } else { detection_active = "false"; }
-        if (settings["server"]["daily_clean_up"]) { daily_clean_up = "true"; } else { daily_clean_up = "false"; }
+        if (settings["server"]["rpi_active"])           { rpi_active = "true"; } else { rpi_active = "false"; }
+        if (settings["server"]["detection_active"])     { detection_active = "true"; } else { detection_active = "false"; }
+        if (settings["server"]["daily_clean_up"])       { daily_clean_up = "true"; } else { daily_clean_up = "false"; }
 
         if (settings["server"]["database_server"] && settings["server"]["database_server"] != "") {
             var link = "http://"+settings["server"]["database_server"]+":"+settings["server"]["database_port"]+"/_utils/";
