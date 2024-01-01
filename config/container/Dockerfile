@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get -y upgrade
 RUN apt-get -y install locales --fix-missing
-RUN apt-get -y install python3 python3-distutils python3-pip python3-apt apt-utils
+RUN apt-get -y install python3.11 python3-distutils python3-pip python3-apt apt-utils
 RUN apt-get -y install python3-opencv python3-skimage python3-pyaudio
 RUN apt-get -y install iputils-ping
 RUN apt-get -y install libgpiod2

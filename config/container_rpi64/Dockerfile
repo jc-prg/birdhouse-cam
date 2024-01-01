@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update
 RUN apt-get -y upgrade
-RUN apt-get -y install python3 python3-distutils python3-pip python3-apt apt-utils
+RUN apt-get -y install python3.11 python3-distutils python3-pip python3-apt apt-utils
 RUN apt-get -y install rpi.gpio
 RUN apt-get -y install iputils-ping
 RUN apt-get -y install libgpiod2
@@ -24,6 +24,7 @@ RUN apt-get -y install v4l-utils
 #    && ninja -C build install
 #RUN apt-get remove meson cmake
 
+RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 COPY ./requirements.txt ./requirements.txt
 RUN pip3 install --upgrade pip --break-system-packages
 RUN python3 -m pip install -r requirements.txt --break-system-packages
