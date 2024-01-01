@@ -466,7 +466,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        #self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "*")
         self.end_headers()
 
     def stream_audio_header(self, size):
@@ -479,7 +480,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        #self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "*")
 
         self.send_header("Connection", "Keep-Alive")
         # self.send_header('Age', '0')
