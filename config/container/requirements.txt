@@ -16,4 +16,3 @@ suntime
 geopy
 python-dotenv
 torch
-torchvision
