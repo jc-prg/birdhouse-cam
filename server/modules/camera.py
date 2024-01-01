@@ -2307,11 +2307,12 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 ref, raw = camera.read()
                 check = str(type(raw))
                 if not ref:
-                    system["video_devices_03"][key]["error"] = "Error reading image."
+                    if not system["video_devices_03"][key]["error"]:
+                        system["video_devices_03"][key]["error"] = "Error reading image."
                 elif "NoneType" in check or len(raw) == 0:
-                    system["video_devices_03"][key]["error"] = "Returned empty image."
+                    if not system["video_devices_03"][key]["error"]:
+                        system["video_devices_03"][key]["error"] = "Returned empty image."
                 else:
-                    self.logging.error("- OK:    " + str(key) + " " + str(system["video_devices_03"][key]["info"]))
                     system["video_devices_03"][key]["image"] = True
                     del system["video_devices_03"][key]["error"]
 
@@ -2319,8 +2320,12 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 system["video_devices_03"][key]["error"] = str(e)
 
             if "error" in system["video_devices_03"][key]:
-                self.logging.error("- ERROR: " + str(key) + " " + str(system["video_devices_03"][key]["info"]) +
+                self.logging.error(" - ERROR: " + str(key).ljust(12) + "  " +
+                                   str(system["video_devices_03"][key]["info"]) +
                                    " " + str(system["video_devices_03"][key]["error"]))
+            else:
+                self.logging.error(" - OK:    " + str(key).ljust(12) + "  " +
+                                   str(system["video_devices_03"][key]["info"]))
 
         self.available_devices = system
         return system
