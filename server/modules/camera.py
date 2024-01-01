@@ -2280,8 +2280,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         for key in system["video_devices_02"]:
             try:
-                self.logging.info(" - " + str(key) + " ... " + str(system["video_devices_03"][key]["info"]))
-
                 # experimental = using PiCamera2 to connect a picamera, not working in a docker container yet
                 #                and not implemented for image capturing yet
                 if key == "/dev/picam" and birdhouse_env["rpi_64bit"]:
@@ -2313,7 +2311,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 elif "NoneType" in check or len(raw) == 0:
                     system["video_devices_03"][key]["error"] = "Returned empty image."
                 else:
-                    self.logging.info(" - " + str(key) + " OK: " + str(ref))
+                    self.logging.error("- OK:    " + str(key) + " " + str(system["video_devices_03"][key]["info"]))
                     system["video_devices_03"][key]["image"] = True
                     del system["video_devices_03"][key]["error"]
 
@@ -2321,7 +2319,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 system["video_devices_03"][key]["error"] = str(e)
 
             if "error" in system["video_devices_03"][key]:
-                self.logging.error(" - " + str(key) + " ERROR: " + str(system["video_devices_03"][key]["error"]))
+                self.logging.error("- ERROR: " + str(key) + " " + str(system["video_devices_03"][key]["info"]) +
+                                   " " + str(system["video_devices_03"][key]["error"]))
 
         self.available_devices = system
         return system
