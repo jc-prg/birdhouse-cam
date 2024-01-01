@@ -1260,6 +1260,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.record_image_error = False
         self.record_image_error_msg = []
         self.record_temp_threshold = None
+        self.recording = False
 
         self.camera_stream_raw = None
         self.camera_streams = {}

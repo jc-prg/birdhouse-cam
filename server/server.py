@@ -1337,7 +1337,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                 time.sleep(stream_wait_while_streaming)
                 for key in camera:
-                    if not camera[key].error:
+                    if not camera[key].error and camera[key].video:
                         if camera[key].video.processing:
                             time.sleep(stream_wait_while_recording)
                             break
