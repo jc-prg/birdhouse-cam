@@ -55,9 +55,10 @@ birdhouse_git_submodules = {
 
 birdhouse_env = {
     "database_type": get_env("DATABASE_TYPE"),
-    "database_cleanup": get_env("DATABASE_DAILY_CLEANUP").lower() in ("true", "1", "yes"),
+    "database_cleanup": get_env("DATABASE_DAILY_CLEANUP").lower() in ("true", "1", 1, "yes", "on"),
 
-    "rpi_active": get_env("RPI_ACTIVE").lower() in ("true", "1", "yes"),
+    "rpi_active": get_env("RPI_ACTIVE").lower() in ("true", "1", 1, "yes", "on"),
+    "rpi_64bit": get_env("RPI_64BIT").lower() in ("yes", "1", 1, "true", "on"),
 
     "couchdb_server": get_env("COUCHDB_SERVER"),
     "couchdb_user": get_env("COUCHDB_USER"),
@@ -80,7 +81,7 @@ birdhouse_env = {
     "admin_password": get_env("ADMIN_PASSWORD"),
     "admin_login": get_env("ADMIN_LOGIN"),
 
-    "detection_active": (get_env("OBJECT_DETECTION").upper() == "ON")
+    "detection_active": (get_env("OBJECT_DETECTION").upper() in ("ON", "1", 1, "TRUE", "YES"))
 }
 
 birdhouse_log_into_file = True

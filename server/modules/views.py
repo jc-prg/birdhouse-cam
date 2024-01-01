@@ -370,7 +370,7 @@ class BirdhouseViewCreate(BirdhouseClass):
             if int(sunrise_hour) < int(hour) < int(sunset_hour):
                 stamp = hour + "0000"
                 if stamp in data_weather:
-                    if date is not None and data_weather[stamp]["date"] != date_us:
+                    if date is not None and "date" in data_weather[stamp] and data_weather[stamp]["date"] != date_us:
                         continue
                     weather[stamp] = data_weather[stamp]
                     weather[stamp]["time"] = hour + ":00"

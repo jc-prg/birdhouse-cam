@@ -2279,6 +2279,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         for key in system["video_devices_02"]:
             try:
                 self.logging.info(" - " + key + " ... " + system["video_devices_03"][key]["info"])
+
+                # experimental = using PiCamera2 to connect a picamera, not working in a docker container yet
+                #                and not implemented for image capturing yet
                 if key == "/dev/picam" and birdhouse_env["rpi_64bit"]:
                     try:
                         from picamera2 import Picamera2
@@ -2292,6 +2295,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     except Exception as e:
                         system["video_devices_03"][key]["error"] = "Error connecting camera:" + str(e)
 
+                # default = using cv2
                 else:
                     camera = cv2.VideoCapture(key, cv2.CAP_V4L)
 
