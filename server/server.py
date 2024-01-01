@@ -1463,7 +1463,7 @@ if __name__ == "__main__":
         camera[cam] = BirdhouseCamera(camera_id=cam, config=config, sensor=sensor,
                                       microphones=microphones, first_cam=camera_first)
         if camera_first:
-            camera_scan = camera[cam].get_available_devices()
+            camera_scan = camera[cam].camera_scan
             camera_first = False
         camera[cam].start()
 
