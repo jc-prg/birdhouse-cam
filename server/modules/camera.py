@@ -2137,6 +2137,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         return all status and error information
         """
+        if not self.video:
+            return {}
+
         recording_active = self.image_recording_active(current_time=-1, check_in_general=True)
         if self.record and time.time() - self.record_image_last > 120 \
                 and not self.video.recording and not self.video.processing \

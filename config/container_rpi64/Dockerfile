@@ -35,7 +35,7 @@ ENV PYTHONIOENCODING=utf-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
-ENV LD_PRELOAD=/usr/local/lib/python3.8/dist-packages/torch.libs/libgomp-6e1a1d1b.so.1.0.0
+ENV LD_PRELOAD=/usr/local/lib/python3.11/dist-packages/torch.libs/libgomp-6e1a1d1b.so.1.0.0
 
 WORKDIR /usr/src/app
 CMD [ "/usr/bin/python3", "./server/server.py" ]
