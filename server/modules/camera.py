@@ -2251,7 +2251,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         identify available video devices
         """
-        self.logging.info("Identify available video devices:")
+        self.logging.info("Identify available video devices ...")
         system = {"video_devices": {}, "video_devices_02": {}, "video_devices_03": {}}
 
         try:
@@ -2267,16 +2267,20 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if birdhouse_env["rpi_active"]:
             output.append("/dev/picam")
 
+        devices = []
         for value in output:
             if ":" in value:
                 system["video_devices"][value] = []
                 last_key = value
             elif value != "":
+                devices.append(value)
                 value = value.replace("\t", "")
                 system["video_devices"][last_key].append(value)
                 info = last_key.split(":")
                 system["video_devices_02"][value] = value + " (" + info[0] + ")"
                 system["video_devices_03"][value] = {"dev": value, "info": last_key, "image": False}
+
+        self.logging.info("Found "+str(len(devices))+" devices.")
 
         for key in system["video_devices_02"]:
             try:
@@ -2314,7 +2318,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                         system["video_devices_03"][key]["error"] = "Returned empty image."
                 else:
                     system["video_devices_03"][key]["image"] = True
-                    del system["video_devices_03"][key]["error"]
+                    if "error" in system["video_devices_03"][key]:
+                        del system["video_devices_03"][key]["error"]
 
             except cv2.error as e:
                 system["video_devices_03"][key]["error"] = str(e)
