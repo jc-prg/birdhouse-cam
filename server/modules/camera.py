@@ -1269,18 +1269,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.usage_time = time.time()
         self.usage_interval = 60
 
-        self._init_image_processing()
-        self._init_video_processing()
-        self._init_stream_raw()
-        self._init_streams()
-        if self.active:
-            self.set_streams_active(active=True)
-            time.sleep(1)
-            self._init_camera(init=True)
-        self._init_microphone()
-        if self.detect_active:
-            self._init_analytics()
-
     def _init_image_processing(self):
         """
         start image processing
@@ -1497,6 +1485,18 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         Start recording for livestream and save images every x seconds
         """
+        self._init_image_processing()
+        self._init_video_processing()
+        self._init_stream_raw()
+        self._init_streams()
+        if self.active:
+            self.set_streams_active(active=True)
+            time.sleep(1)
+            self._init_camera(init=True)
+        self._init_microphone()
+        if self.detect_active:
+            self._init_analytics()
+
         similarity = 0
         count_paused = 0
         reload_time = time.time()
@@ -2281,7 +2281,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 system["video_devices_03"][value] = {"dev": value, "info": last_key, "image": False}
 
         self.logging.info("Found "+str(len(devices))+" devices.")
-
         for key in system["video_devices_02"]:
             try:
                 # experimental = using PiCamera2 to connect a picamera, not working in a docker container yet
