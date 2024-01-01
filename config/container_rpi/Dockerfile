@@ -15,6 +15,7 @@ RUN apt-get -y install --reinstall libraspberrypi0 libraspberrypi-dev libraspber
 RUN apt-get -y install v4l-utils
 
 COPY ./requirements.txt ./requirements.txt
+RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 RUN pip3 install --upgrade pip --break-system-packages
 RUN python3 -m pip install -r requirements.txt --break-system-packages
 

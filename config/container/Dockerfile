@@ -17,6 +17,7 @@ RUN apt-get -y install v4l-utils
 #RUN apt-get install 'ffmpeg'\
 #    'libsm6'\
 #    'libxext6'  -y
+RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 COPY ./requirements.txt ./requirements.txt
 RUN export PYTHONPATH=/usr/bin/python3 \
     && pip3 install --upgrade pip \
