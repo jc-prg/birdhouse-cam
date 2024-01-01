@@ -42,6 +42,7 @@ load_dotenv(path)
 logger_list = []
 loggers = {}
 logger_exists = {}
+camera_list = []
 
 birdhouse_error_images_raw = {}
 birdhouse_error_images = {

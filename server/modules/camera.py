@@ -915,7 +915,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
             else:
                 line_position += 40
-                msg = "Device is not activated, change settings."
+                msg = "Device '"+self.id+"' is not activated, change settings."
                 raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
                                                color=(0, 0, 255), thickness=1)
 
@@ -1539,13 +1539,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     self.config_update = True
                     self.reload_camera = True
 
-                # start or reload camera connection
-                if self.config_update or self.reload_camera:
-                    self.logging.info("Updating CAMERA configuration (" + self.id + ") ...")
-                    self.update_main_config()
-                    self.set_streams_active(active=True)
-                    self.camera_reconnect(directly=True)
-
                 # check if camera is paused, wait with all processes ...
                 if not self._paused:
                     count_paused = 0
@@ -1562,19 +1555,28 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 # Check and record active streams
                 self.measure_usage(current_time, stamp)
 
-            # Video Recording
-            if self.if_other_prio_process(self.id) or self.if_only_lowres() or self.video.processing \
-                    or self.error or not self.active:
+                # Video Recording
+                if self.if_other_prio_process(self.id) or self.if_only_lowres() or self.video.processing \
+                        or self.error or not self.active:
 
-                self.logging.debug("prio=" + str(self.if_other_prio_process(self.id)) + "; " +
-                                   "lowres=" + str(self.if_only_lowres()) + "; " +
-                                   "processing=" + str(self.video.processing) + "; " +
-                                   "error=" + str(self.error) + "; " +
-                                   "active=" + str(self.active))
+                    self.logging.debug("prio=" + str(self.if_other_prio_process(self.id)) + "; " +
+                                       "lowres=" + str(self.if_only_lowres()) + "; " +
+                                       "processing=" + str(self.video.processing) + "; " +
+                                       "error=" + str(self.error) + "; " +
+                                       "active=" + str(self.active))
 
-                self.slow_down_streams(True)
-            else:
-                self.slow_down_streams(False)
+                    self.slow_down_streams(True)
+                else:
+                    self.slow_down_streams(False)
+
+            # start or reload camera connection
+            if self.config_update or self.reload_camera:
+                self.logging.info("Updating CAMERA configuration (" + self.id + "/" +
+                                  self.param["name"] + "/" + str(self.param["active"]) + "/" +
+                                  ") ...")
+                self.update_main_config()
+                self.set_streams_active(active=True)
+                self.camera_reconnect(directly=True)
 
             # Image Recording (if not video recording)
             if self.active and self.record and not self.video.recording and not self.error:
@@ -2410,6 +2412,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
     def update_main_config(self):
         self.logging.info("- Update data from main configuration file for camera " + self.id)
         temp_data = self.config.db_handler.read("main")
+
+        self.config_update = False
+        self.reload_camera = False
 
         self.param = temp_data["devices"]["cameras"][self.id]
         self.name = self.param["name"]
