@@ -222,6 +222,19 @@ $ amixer -c 2 -q set 'Mic',0 100%
 $ watch 'head -n 2 log/server.log | tail -n 40 log/server.log'
 ```
 
+* administrate docker
+
+```bash
+# show running containers
+$ sudo docker ps
+
+# check storage used by docker stuff
+$ sudo docker system df
+$ sudo docker system df -v
+
+# clean up unused container, images, build cache, networks
+$ sudo docker system prune
+```
 
 ## Sources
 
