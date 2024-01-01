@@ -1213,6 +1213,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.detect_settings = self.param["object_detection"]
         self.detect_active = birdhouse_env["detection_active"]
         self.first_cam = first_cam
+        self.initialized = False
 
         self._interval = 0.2
         self._interval_reload_if_error = 60*3
@@ -1497,6 +1498,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self._init_microphone()
         if self.detect_active:
             self._init_analytics()
+        self.initialized = True
 
         similarity = 0
         count_paused = 0
@@ -2137,7 +2139,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         return all status and error information
         """
-        if not self.video:
+        if not self.initialized:
             return {}
 
         recording_active = self.image_recording_active(current_time=-1, check_in_general=True)
