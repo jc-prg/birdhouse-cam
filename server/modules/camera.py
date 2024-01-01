@@ -2276,7 +2276,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 system["video_devices"][last_key].append(value)
                 info = last_key.split(":")
                 system["video_devices_02"][value] = value + " (" + info[0] + ")"
-                system["video_devices_03"][value] = {"dev": value, "info": info[0], "image": False}
+                system["video_devices_03"][value] = {"dev": value, "info": info, "image": False}
 
         for key in system["video_devices_02"]:
             try:
@@ -2304,17 +2304,19 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
                 if key != "/dev/picam" and not camera.isOpened():
                     system["video_devices_03"][key]["error"] = "Error opening video."
+
+                time.sleep(0.5)
+                ref, raw = camera.read()
+                check = str(type(raw))
+                if not ref:
+                    system["video_devices_03"][key]["error"] = "Error reading image."
+                elif "NoneType" in check or len(raw) == 0:
+                    system["video_devices_03"][key]["error"] = "Returned empty image."
                 else:
-                    time.sleep(0.5)
-                    ref, raw = camera.read()
-                    check = str(type(raw))
-                    if not ref:
-                        system["video_devices_03"][key]["error"] = "Error reading image."
-                    elif "NoneType" in check or len(raw) == 0:
-                        system["video_devices_03"][key]["error"] = "Returned empty image."
-                    else:
-                        self.logging.info(" - " + key + " OK: " + str(ref))
-                        system["video_devices_03"][key]["image"] = True
+                    self.logging.info(" - " + key + " OK: " + str(ref))
+                    system["video_devices_03"][key]["image"] = True
+                    del system["video_devices_03"][key]["error"]
+
             except cv2.error as e:
                 system["video_devices_03"][key]["error"] = e
 
