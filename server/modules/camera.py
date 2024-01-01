@@ -2307,10 +2307,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 ref, raw = camera.read()
                 check = str(type(raw))
                 if not ref:
-                    if not system["video_devices_03"][key]["error"]:
+                    if "error" not in system["video_devices_03"][key]:
                         system["video_devices_03"][key]["error"] = "Error reading image."
                 elif "NoneType" in check or len(raw) == 0:
-                    if not system["video_devices_03"][key]["error"]:
+                    if "error" not in system["video_devices_03"][key]:
                         system["video_devices_03"][key]["error"] = "Returned empty image."
                 else:
                     system["video_devices_03"][key]["image"] = True
