@@ -2318,7 +2318,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     del system["video_devices_03"][key]["error"]
 
             except cv2.error as e:
-                system["video_devices_03"][key]["error"] = e
+                system["video_devices_03"][key]["error"] = str(e)
 
             if "error" in system["video_devices_03"][key]:
                 self.logging.error(" - " + key + " ERROR: " + str(system["video_devices_03"][key]["error"]))
