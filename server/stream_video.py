@@ -5,18 +5,15 @@ import re
 from modules.presets import *
 from flask import Flask
 from flask import Response, request
+import modules.bh_logging as bh_logging
+
 app = Flask(__name__)
 
 
 directories = birdhouse_directories
 main_directory = os.path.dirname(os.path.abspath(__file__))
 media_path = os.path.join(main_directory, directories["data"], directories["videos"])
-
-video_logging = logging.getLogger("video-srv")
-video_logging.setLevel(birdhouse_loglevel_module["video-srv"])
-video_logging.addHandler(birdhouse_loghandler)
-video_logging.info("Starting Streaming Server (directory: '" + media_path + "', port: " +
-                   str(birdhouse_env["port_video"]) + ") ...")
+video_logging = bh_logging.Logging("video-srv", birdhouse_log_as_file)
 
 
 def serve_ios(full_path):

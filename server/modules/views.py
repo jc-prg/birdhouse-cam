@@ -4,13 +4,12 @@ import threading
 from sys import getsizeof
 from datetime import datetime, timedelta
 import modules.presets as presets
+import modules.bh_logging as bh_logging
 from modules.presets import *
 from modules.bh_class import BirdhouseClass
 
 
-view_logging = logging.getLogger("view-head")
-view_logging.setLevel(birdhouse_loglevel_module["view-head"])
-view_logging.addHandler(birdhouse_loghandler)
+view_logging = bh_logging.Logging("view-head", birdhouse_log_as_file)
 
 
 def read_html(filename, content=None):
@@ -22,6 +21,7 @@ def read_html(filename, content=None):
 
     if not os.path.isfile(filename):
         view_logging.warning("File '" + filename + "' does not exist!")
+        # print("File '" + filename + "' does not exist!")
         return ""
 
     with open(filename, "r") as page:

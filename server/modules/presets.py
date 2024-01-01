@@ -39,6 +39,10 @@ def check_submodules():
 path = os.path.join(os.path.dirname(__file__), "../../.env")
 load_dotenv(path)
 
+logger_list = []
+loggers = {}
+logger_exists = {}
+
 birdhouse_error_images_raw = {}
 birdhouse_error_images = {
     "setting": "camera_error_settings.jpg",
@@ -91,6 +95,7 @@ birdhouse_loglevel_modules_debug = []
 birdhouse_loglevel_modules_warning = []
 birdhouse_loglevel_modules_error = []
 birdhouse_loglevel_module = {
+    "root": birdhouse_loglevel,
     "backup": birdhouse_loglevel,
     "cam-main": birdhouse_loglevel,
     "cam-img": birdhouse_loglevel,
@@ -105,11 +110,13 @@ birdhouse_loglevel_module = {
     "DB-json": birdhouse_loglevel,
     "DB-couch": birdhouse_loglevel,
     "DB-handler": birdhouse_loglevel,
+    "image": birdhouse_loglevel,
     "mic-main": birdhouse_loglevel,
     "sensors": birdhouse_loglevel,
     "server": birdhouse_loglevel,
     "srv-info": birdhouse_loglevel,
     "srv-health": birdhouse_loglevel,
+    "video": birdhouse_loglevel,
     "video-srv": birdhouse_loglevel,
     "views": birdhouse_loglevel,
     "view-head": birdhouse_loglevel,
@@ -131,10 +138,12 @@ for module in birdhouse_loglevel_modules_error:
 birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
                                          datefmt='%m/%d %H:%M:%S')
 birdhouse_log_filename = str(os.path.join(os.path.dirname(__file__), "../../log", "server.log"))
-birdhouse_loghandler = RotatingFileHandler(filename=birdhouse_log_filename, mode='a',
-                                           maxBytes=int(2.5 * 1024 * 1024),
-                                           backupCount=2, encoding=None, delay=False)
-birdhouse_loghandler.setFormatter(birdhouse_log_format)
+birdhouse_log_as_file = True
+
+# birdhouse_loghandler = RotatingFileHandler(filename=birdhouse_log_filename, mode='a',
+#                                            maxBytes=int(2.5 * 1024 * 1024),
+#                                            backupCount=2, encoding=None, delay=False)
+# birdhouse_loghandler.setFormatter(birdhouse_log_format)
 
 
 birdhouse_couchdb = {
