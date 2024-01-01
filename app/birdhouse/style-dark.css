@@ -50,4 +50,8 @@
         border-bottom: 10px solid black;
     }
 
+    .detection_label {
+        background    : blue;
+        color         : white;
+    }
 }
