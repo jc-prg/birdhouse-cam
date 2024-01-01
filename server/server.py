@@ -668,6 +668,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         REST API for javascript commands e.g. to change values in runtime
         """
+        global camera
+
         config.user_activity("set")
         param = self.path_split()
         which_cam = param["which_cam"]
@@ -797,8 +799,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     data[key] = decode_url_string(data[key])
             srv_logging.info(str(data))
             config.main_config_edit("main", data)
-            if which_cam in camera:
-                camera[which_cam].config_update = True
+            for key in camera_list:
+                camera[key].config_update = True
         elif param["command"] == "set-temp-threshold":
             srv_logging.info("Set temporary threshold to camera '"+which_cam+"': " + str(param["parameter"]))
             if which_cam in camera:
@@ -1466,6 +1468,7 @@ if __name__ == "__main__":
             camera_scan = camera[cam].camera_scan
             camera_first = False
         camera[cam].start()
+        camera_list.append(cam)
 
     # system information
     sys_info = ServerInformation(camera_scan)
