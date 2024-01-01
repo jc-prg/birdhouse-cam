@@ -1460,10 +1460,10 @@ if __name__ == "__main__":
         settings = config.param["devices"]["cameras"][cam]
         camera[cam] = BirdhouseCamera(camera_id=cam, config=config, sensor=sensor,
                                       microphones=microphones, first_cam=camera_first)
-        camera[cam].start()
         if camera_first:
             camera_scan = camera[cam].get_available_devices()
             camera_first = False
+        camera[cam].start()
 
     # system information
     sys_info = ServerInformation(camera_scan)

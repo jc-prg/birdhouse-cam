@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import cv2
 import psutil
@@ -2298,6 +2300,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 # default = using cv2
                 else:
                     camera = cv2.VideoCapture(key, cv2.CAP_V4L)
+                    time.sleep(0.1)
 
                 if key != "/dev/picam" and not camera.isOpened():
                     system["video_devices_03"][key]["error"] = "Error opening video."
