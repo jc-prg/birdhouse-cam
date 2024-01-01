@@ -15,6 +15,7 @@ else
   sudo apt-get -y install python3-dev
   sudo apt-get -y install python3 python3-pip
   sudo pip3 install --upgrade pip
+  sudo rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 
   curl https://sh.rustup.rs -sSf | sh
   source "$HOME/.cargo/env"
@@ -27,7 +28,6 @@ else
   docker version
 
   # install docker-compose (versions work with raspbian OS)
-  sudo pip3 install PyYAML==5.3
-  sudo pip3 install docker-compose==1.28
+  sudo pip3 install PyYAML==5.3 docker-compose==1.28
 
 fi
