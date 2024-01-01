@@ -915,7 +915,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
             else:
                 line_position += 40
-                msg = "Devices is not activated, change settings."
+                msg = "Device is not activated, change settings."
                 raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
                                                color=(0, 0, 255), thickness=1)
 
