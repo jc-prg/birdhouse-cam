@@ -66,7 +66,7 @@ mark favorites, analyze weather data, ...
   * GPS lookup for cities or addresses via GeoPy to set weather location
 * Connect to **audio stream** from microphone
   * under construction, currently browser only (no iPhone)
-* **Object / Bird detection** via PyTorch
+* **Object / Bird detection** via PyTorch (only if just USB Cameras)
 * **Admin functionality** via app
   * Deny recording and admin functionality for specific IP addresses (e.g. router or proxy, to deny for access from the internet) or use password to login as administrator
   * edit server settings (partly, other settings define in file .env)
@@ -79,7 +79,11 @@ mark favorites, analyze weather data, ...
 * Build a birdhouse incl. a Raspberry Pi or USB Camera inside the birdhouse (additional cameras and sensors are optional)
 * Prepare a Raspberry Pi 3B or newer
   * Install a fresh image on an SDCard (https://www.raspberrypi.com/software/)
-  * Recommend OS: Raspbian OS Lite (64bit)
+  * Recommended OS (due to restrictions: PyTorch require 64bit, picamera doesn't support 64bit any more, 
+    and picamera2 + libcamera doesn't work in docker container yet (requires Raspbian OS 64bit > bullseye)) 
+    * Raspbian OS Lite 64bit for **object detection** using PyTorch
+    * Raspbian OS Lite 32bit if you want to use a **PiCamera**  
+      
   * Install git: ```sudo apt-get install git```
   * Install raspi-config: ```sudo apt-get install raspi-config```
   * Install v4l2-ctl: ```sudo apt-get install v4l-utils```
