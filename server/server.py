@@ -88,9 +88,9 @@ def on_exception(exc_type, value, tb):
     """
     grab all exceptions and write them to the logfile (if active)
     """
-    srv_logging.exception("Uncaught exception: {0}".format(str(value)))
-    srv_logging.exception("                    {0}".format(str(exc_type)))
-    srv_logging.exception("                    {0}".format(str(tb)))
+    srv_logging.exception("Uncaught exception: " + str(value))
+    srv_logging.exception("                    " + str(exc_type))
+    srv_logging.exception("                    " + str(tb))
 
 
 def on_exception_setting():
@@ -1394,8 +1394,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         return
 
 
-on_exception_setting()
-sys.excepthook = on_exception
+#on_exception_setting()
+#sys.excepthook = on_exception
 
 
 if __name__ == "__main__":
