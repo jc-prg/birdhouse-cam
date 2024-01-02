@@ -6,6 +6,7 @@ import signal
 import sys
 import psutil
 import subprocess
+import os
 
 import socketserver
 from http import server
@@ -1232,6 +1233,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         stream_pip = False
         stream_active = True
+        stream_object = ("/object/" in self.path)
         stream_id_int = datetime.now().timestamp()
         stream_id_ext = param["session_id"]
 
@@ -1267,10 +1269,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if frame_id != camera[which_cam].get_stream_image_id() \
                     or camera[which_cam].if_error() or camera[which_cam].camera_stream_raw.if_error():
 
-                frame_raw = camera[which_cam].get_stream(stream_id=stream_id_int,
-                                                         stream_type=stream_type,
-                                                         stream_resolution=stream_resolution,
-                                                         system_info=True)
+                if stream_object:
+                    frame_raw = camera[which_cam].get_stream_object_detection(stream_id=stream_id_int,
+                                                                              stream_type=stream_type,
+                                                                              stream_resolution=stream_resolution,
+                                                                              system_info=True)
+                else:
+                    frame_raw = camera[which_cam].get_stream(stream_id=stream_id_int,
+                                                             stream_type=stream_type,
+                                                             stream_resolution=stream_resolution,
+                                                             system_info=True)
                 frame_id = camera[which_cam].get_stream_image_id()
 
                 if frame_raw is not None and len(frame_raw) > 0:
@@ -1515,7 +1523,7 @@ if __name__ == "__main__":
         address = ('0.0.0.0', int(birdhouse_env["port_api"]))
         server = StreamingServer(address, StreamingHandler)
         srv_logging.info("Starting WebServer on port " + str(birdhouse_env["port_api"]) + " ...")
-        srv_logging.info(" -----------------------------> GO! ")
+        srv_logging.info(" -----------------------------> GO!\n")
         server.serve_forever()
         srv_logging.info("STOPPED SERVER.")
 
@@ -1540,11 +1548,18 @@ if __name__ == "__main__":
         srv_logging.info("Stopped WebServer.")
         srv_logging.info("-------------------------------------------")
 
+        count_running_threads = 0
         for thread in threading.enumerate():
             if thread.name != "MainThread":
+                count_running_threads += 1
                 if thread.class_id and thread.id:
-                    srv_logging.error("Could not stop: " + thread.name + " = " +
+                    srv_logging.error("Could not stop correctly: " + thread.name + " = " +
                                       thread.class_id + " (" + thread.id + ")")
                 else:
-                    srv_logging.error("Could not stop: " + thread.name)
-                thread.stop()
+                    srv_logging.error("Could not stop correctly: " + thread.name)
+
+        if count_running_threads > 0:
+            srv_logging.info("-> Kill the " + str(count_running_threads) + " threads that could not be stopped ...")
+        srv_logging.info("-------------------------------------------")
+        os._exit(os.EX_OK)
+

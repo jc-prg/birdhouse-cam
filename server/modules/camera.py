@@ -2056,26 +2056,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                            " -> " + str(select))
         return select
 
-    def get_stream(self, stream_id, stream_type, stream_resolution="", system_info=False, wait=True):
-        """
-        get image from new streams
-        """
-        stream = stream_type
-        if stream_resolution != "":
-            stream += "_" + stream_resolution
-
-        if stream not in self.camera_streams:
-            error_msg = "Stream '" + stream + "' does not exist."
-            image = self.camera_streams[stream].read_error_image(error_msg)
-            self.raise_error(error_msg)
-            return image
-        else:
-            image = self.camera_streams[stream].read_stream(stream_id, system_info, wait)
-
-        if self.if_error() or self.camera_streams[stream].if_error():
-            image = self.camera_streams[stream].read_error_image()
-        return image
-
     def get_image_raw(self):
         """
         get image and convert to raw
@@ -2096,6 +2076,54 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             error_msg = "Can't grab image from camera '" + self.id + "': " + str(e)
             self.image.raise_error(error_msg)
             return ""
+
+    def get_stream(self, stream_id, stream_type, stream_resolution="", system_info=False, wait=True):
+        """
+        get image from new streams
+        """
+        stream = stream_type
+        if stream_resolution != "":
+            stream += "_" + stream_resolution
+
+        if stream not in self.camera_streams:
+            error_msg = "Stream '" + stream + "' does not exist."
+            image = self.camera_streams[stream].read_error_image(error_msg)
+            self.raise_error(error_msg)
+            return image
+        else:
+            image = self.camera_streams[stream].read_stream(stream_id, system_info, wait)
+
+        if self.if_error() or self.camera_streams[stream].if_error():
+            image = self.camera_streams[stream].read_error_image()
+        return image
+
+    def get_stream_object_detection(self, stream_id, stream_type, stream_resolution="", system_info=False, wait=True):
+        """
+        get image with rendered labels of detected objects
+        """
+        image = self.get_stream(stream_id, stream_type, stream_resolution, system_info, wait)
+
+        if self.detect_objects and self.detect_objects.loaded and not self.if_error():
+            path_hires = str(os.path.join(self.config.db_handler.directory("images"),
+                                          "_temp_"+str(self.id)+"_"+str(stream_id)+".jpg"))
+            try:
+                cv2.imwrite(path_hires, image)
+                img, detect_info = self.detect_objects.analyze(path_hires, -1, False)
+                img = self.detect_visualize.render_detection(image, detect_info, 1, self.detect_settings["threshold"])
+                if os.path.exists(path_hires):
+                    os.remove(path_hires)
+                return img
+            except Exception as e:
+                msg = "Object detection error: " + str(e)
+                self.logging.error(msg)
+                image = self.image.draw_text_raw(raw=image, text=msg, position=(20, -40), font=None, scale=0.6,
+                                                 color=(255, 255, 255), thickness=1)
+
+        elif not self.detect_objects or not self.detect_objects.loaded:
+            msg = "Object detection not loaded."
+            image = self.image.draw_text_raw(raw=image, text=msg, position=(20, -40), font=None, scale=0.6,
+                                             color=(255, 255, 255), thickness=1)
+        return image
 
     def get_stream_image_id(self):
         """
