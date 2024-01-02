@@ -51,7 +51,6 @@ index_template["admin"] = `
     <td>
         <table border="0" width="100%">
             <tr>
-                <!-- <td width="30%">Status&nbsp;&quot;<!--CAM1_ID-->&quot;:</td> -->
                 <td>
                     <div style="width:30%;float:left;height:20px;"><b>Status&nbsp;&quot;<!--CAM1_ID-->&quot;:</b></div>
                     <div style="float:left;">
@@ -63,7 +62,6 @@ index_template["admin"] = `
                 </td>
             </tr>
              <tr>
-                <!-- <td width="30%">Status&nbsp;&quot;<!--CAM2_ID-->&quot;:</td> -->
                 <td>
                     <div style="width:30%;float:left;height:20px;"><b>Status&nbsp;&quot;<!--CAM2_ID-->&quot;:</b></div>
                     <div style="float:left;">
@@ -75,7 +73,6 @@ index_template["admin"] = `
                 </td>
             </tr>
             <tr>
-                <!-- <td width="30%">Status&nbsp;&quot;Client&quot;:</td> -->
                 <td>
                     <div style="width:30%;float:left;height:20px;"><b>Status&nbsp;&quot;Client&quot;:</b></div>
                     <div style="float:left;">
