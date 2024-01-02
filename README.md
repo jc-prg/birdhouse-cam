@@ -1,4 +1,4 @@
-# Birdhouse Camera
+# Birdhouse Camera v1.0.5
 
 Raspberry Pi project to observe our birdhouse with multiple webcams: live stream, record images, detect activity, record videos, 
 mark favorites, analyze weather data, ...
@@ -13,8 +13,8 @@ mark favorites, analyze weather data, ...
    * [First run and device configuration](#first-run-and-device-configuration)
    * [Finalize database setup](#finalize-database-setup)
    * [Access images via WebDAV](Access-images-via-WebDAV)
-   * [Optimize system configuration (Ubuntu 22.04)](#optimize-system-configuration--ubuntu-)
    * [Optimize system configuration (Raspbian / Raspberry OS)](#optimize-system-configuration--raspberry-os-)
+   * [Optimize system configuration (Ubuntu 22.04)](#optimize-system-configuration--ubuntu-)
    * [Sample proxy server configuration](#Sample-proxy-server-configuration)
 5. [Helping stuff](#helping-stuff)
 6. [Sources](#sources)
@@ -66,7 +66,9 @@ mark favorites, analyze weather data, ...
   * GPS lookup for cities or addresses via GeoPy to set weather location
 * Connect to **audio stream** from microphone
   * under construction, currently browser only (no iPhone)
-* **Object / Bird detection** via PyTorch (only if just USB Cameras)
+* **Object / Bird detection** via PyTorch (while recording images)
+  * only if just USB Cameras & a 64bit OS, RPi4 or newer recommended
+  * live detection is experimental and very slow on RPi 4 (admin view)
 * **Admin functionality** via app
   * Deny recording and admin functionality for specific IP addresses (e.g. router or proxy, to deny for access from the internet) or use password to login as administrator
   * edit server settings (partly, other settings define in file .env)
@@ -91,8 +93,8 @@ mark favorites, analyze weather data, ...
 * Install software as docker version or directly
 * Connect camera (and optional devices) with the Raspberry, start and enjoy
 
-_NOTE: For an upgrade of an existing older version from v0.x to v1.x it is required
-to rename (or remove) the file 'data/config.json' and restart after the update. 
+_NOTE: For an upgrade of an existing older version to v1.0.5 it is required
+to rename (or remove) the files 'data/config.json' and '.env' and restart after the update. 
 Then change the new default configuration to your needs ..._
 
 ### Clone sources to your project directory
@@ -127,20 +129,26 @@ $ docker-compose up --build
 
 ### Install directly
 
+_NOTE: This option hasn't used and improved for a while. It's recommended to use the 
+docker version on a recommended OS such as Raspbian OS 64bit._
+
 * Install birdhouse-cam:
 ```bash 
 # Install required Python modules and ffmpeg (this may take a while)
-$ sudo ./config/install/install
-$ sudo ./config/install/install_ffmpeg
+$ sudo ./config/install/install       # for installation on x86
+$ sudo ./config/install/install_rpi   # for installation on Raspberry Pi
+                                      # $ sudo ./config/install/install_ffmpeg
 
 # Initial start, will create a config file
 $ ./server/server.py
 ```
 * Add the following lines to crontab (start on boot):
+
 ```bash 
 @reboot /usr/bin/python3 /<path_to_script>/server/server.py --logfile
 @reboot /usr/bin/python3 /<path_to_script>/server/stream_video.py
 ```
+
 ### First run and device configuration
 
 * Open your client (usually via http://your-hostname:8000/). 
