@@ -1483,20 +1483,26 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         initialize models for object detection
         """
         if self.detect_active:
-            from modules.detection.detection import DetectionModel, ImageHandling
-            if self.detect_settings["active"]:
+            try:
+                from modules.detection.detection import DetectionModel, ImageHandling
+                if self.detect_settings["active"]:
 
-                if self.detect_settings["model"] is None or self.detect_settings["model"] == "":
-                    self.logging.warning("No detection model defined. Check device configuration in the app.")
+                    if self.detect_settings["model"] is None or self.detect_settings["model"] == "":
+                        self.logging.warning("No detection model defined. Check device configuration in the app.")
 
+                    else:
+                        self.logging.info("Initialize object detection model (" + self.name + ") ...")
+                        self.logging.info(" -> '" + self.detect_settings["model"] + "'")
+                        self.detect_objects = DetectionModel(self.detect_settings["model"])
+                        self.detect_visualize = ImageHandling()
+                        self.detect_live = self.detect_settings["live"]
+                        birdhouse_status["object_detection"] = True
                 else:
-                    self.logging.info("Initialize object detection model (" + self.name + ") ...")
-                    self.logging.info(" -> '" + self.detect_settings["model"] + "'")
-                    self.detect_objects = DetectionModel(self.detect_settings["model"])
-                    self.detect_visualize = ImageHandling()
-                    self.detect_live = self.detect_settings["live"]
-            else:
-                self.logging.info("Object detection inactive (" + self.name + "), see settings.")
+                    self.logging.info("Object detection inactive (" + self.name + "), see settings.")
+
+            except Exception as e:
+                self.logging.error("Could not load 'modules.detection': " + str(e))
+                birdhouse_status["object_detection"] = False
         else:
             self.logging.info("Object detection inactive (" + self.name + "), see .env-file.")
 

@@ -931,6 +931,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "backup_process_running": backup.backup_running,
                     "queue_waiting_time": config.queue.queue_wait,
                     "health_check": health_check.status(),
+                    "object_detection": birdhouse_status["object_detection"],
                     "last_answer": ""
                 },
                 "devices": {
@@ -1111,6 +1112,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                                               "+{2nd-camera-key}:{2nd-camera-pos}"
                     camera_data[key]["video"]["stream_lowres"] = "/lowres/stream.mjpg?" + key
                     camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
+                    camera_data[key]["video"]["stream_object"] = "/object/stream.mjpg?" + key
                     camera_data[key]["device"] = "camera"
                     camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
                     camera_data[key]["image"]["current_streams"] = camera[key].get_stream_count()

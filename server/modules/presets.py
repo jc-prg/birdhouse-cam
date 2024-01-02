@@ -58,6 +58,10 @@ birdhouse_git_submodules = {
     "jc-prg/app-framework": "app/framework"
 }
 
+birdhouse_status = {
+    "object_detection": False
+}
+
 birdhouse_env = {
     "database_type": get_env("DATABASE_TYPE"),
     "database_cleanup": get_env("DATABASE_DAILY_CLEANUP").lower() in ("true", "1", 1, "yes", "on"),
