@@ -2113,7 +2113,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             path_hires = str(os.path.join(self.config.db_handler.directory("images"),
                                           "_temp_"+str(self.id)+"_"+str(stream_id)+".jpg"))
             try:
-                cv2.imwrite(path_hires, image)
+                self.write_image(path_hires, image, scale_percent=40)
                 img, detect_info = self.detect_objects.analyze(path_hires, -1, False)
                 img = self.detect_visualize.render_detection(image, detect_info, 1, self.detect_settings["threshold"])
                 if os.path.exists(path_hires):
