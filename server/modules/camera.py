@@ -1245,6 +1245,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.image_streams = {}
         self.image_streams_to_kill = {}
         self.image_to_select_last = "xxxxxx"
+        self.image_size_object_detection = 40
         self.max_resolution = None
 
         self.previous_image = None
@@ -1862,8 +1863,13 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         stamp = image_info["datestamp"]
         start_time = time.time()
         if self.detect_objects.loaded:
+
+            path_hires = path_hires.replace(".jpeg", "_temp.jpeg")
+            self.write_image(path_hires, image, scale_percent=self.image_size_object_detection)
             img, detect_info = self.detect_objects.analyze(path_hires, -1, False)
             img = self.detect_visualize.render_detection(image_hires, detect_info, 1, self.detect_settings["threshold"])
+            if os.path.exists(path_hires):
+                os.remove(path_hires)
             self.logging.debug("Current detection for " + stamp + ": " + str(detect_info))
 
             if len(detect_info["detections"]) > 0:
@@ -2113,7 +2119,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             path_hires = str(os.path.join(self.config.db_handler.directory("images"),
                                           "_temp_"+str(self.id)+"_"+str(stream_id)+".jpg"))
             try:
-                self.write_image(path_hires, image, scale_percent=40)
+                self.write_image(path_hires, image, scale_percent=self.image_size_object_detection)
                 img, detect_info = self.detect_objects.analyze(path_hires, -1, False)
                 img = self.detect_visualize.render_detection(image, detect_info, 1, self.detect_settings["threshold"])
                 if os.path.exists(path_hires):
