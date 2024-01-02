@@ -285,9 +285,10 @@ birdhouse_default_cam = {
     },
     "object_detection": {
         "active": False,
+        "classes": [],
+        "detection_size": 40,
         "live": False,
         "model": "yolov5m",
-        "classes": [],
         "threshold": 50
     },
     "video": {

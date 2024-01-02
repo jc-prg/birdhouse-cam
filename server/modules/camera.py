@@ -1245,7 +1245,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.image_streams = {}
         self.image_streams_to_kill = {}
         self.image_to_select_last = "xxxxxx"
-        self.image_size_object_detection = 40
+        self.image_size_object_detection = self.detect_settings["detection_size"]
         self.max_resolution = None
 
         self.previous_image = None
@@ -2476,6 +2476,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.image_fps = {}
         self.image_streams = {}
         self.image_streams_to_kill = {}
+        self.image_size_object_detection = self.detect_settings["detection_size"]
+
         self.previous_image = None
         self.previous_stamp = "000000"
 
