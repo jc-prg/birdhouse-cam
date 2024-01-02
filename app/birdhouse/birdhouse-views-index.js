@@ -52,7 +52,7 @@ index_template["admin"] = `
         <table border="0" width="100%">
             <tr>
                 <td>
-                    <div style="width:30%;float:left;height:20px;"><b>Status&nbsp;&quot;<!--CAM1_ID-->&quot;:</b></div>
+                    <div style="width:30%;float:left;height:20px;padding:5px;"><b>Status&nbsp;&quot;<!--CAM1_ID-->&quot;:</b></div>
                     <div style="float:left;">
                         <div id="status_error_<!--CAM1_ID-->" style="float:left;height:20px;"><div id="black"></div></div>
                         <div id="status_error_record_<!--CAM1_ID-->" style="float:left;height:20px;"><div id="black"></div></div>
@@ -61,9 +61,9 @@ index_template["admin"] = `
                     </div>
                 </td>
             </tr>
-             <tr>
+             <tr id="admin_status_index">
                 <td>
-                    <div style="width:30%;float:left;height:20px;"><b>Status&nbsp;&quot;<!--CAM2_ID-->&quot;:</b></div>
+                    <div style="width:30%;float:left;height:20px;padding:5px;"><b>Status&nbsp;&quot;<!--CAM2_ID-->&quot;:</b></div>
                     <div style="float:left;">
                         <div id="status_error_<!--CAM2_ID-->" style="float:left;height:20px;"><div id="black"></div></div>
                         <div id="status_error_record_<!--CAM2_ID-->" style="float:left;height:20px;"><div id="black"></div></div>
@@ -74,7 +74,7 @@ index_template["admin"] = `
             </tr>
             <tr>
                 <td>
-                    <div style="width:30%;float:left;height:20px;"><b>Status&nbsp;&quot;Client&quot;:</b></div>
+                    <div style="width:30%;float:left;height:20px;padding:5px;"><b>Status&nbsp;&quot;Client&quot;:</b></div>
                     <div style="float:left;">
                         <div style="float:left;padding:5px;height:20px;"><font id="show_stream_count_client">0</font> Streams&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
                     </div>
