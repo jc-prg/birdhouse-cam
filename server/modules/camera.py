@@ -1865,7 +1865,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if self.detect_objects.loaded:
 
             path_hires = path_hires.replace(".jpeg", "_temp.jpeg")
-            self.write_image(path_hires, image, scale_percent=self.image_size_object_detection)
+            self.write_image(path_hires, image_hires, scale_percent=self.image_size_object_detection)
             img, detect_info = self.detect_objects.analyze(path_hires, -1, False)
             img = self.detect_visualize.render_detection(image_hires, detect_info, 1, self.detect_settings["threshold"])
             if os.path.exists(path_hires):
