@@ -297,7 +297,9 @@ function birdhouse_app_settings (name="Settings") {
 		link = RESTurl + "lowres/stream.mjpg?cam1";
 		html_entry += this.tab.row("Stream LowRes:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
 		link = RESTurl + "detection/stream.mjpg?cam1";
-		html_entry += this.tab.row("Stream Detection:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+		html_entry += this.tab.row("Stream Detection Areas:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+		link = RESTurl + "object/stream.mjpg?cam1";
+		html_entry += this.tab.row("Stream Object Detection:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
 		link = RESTurl + "pip/stream.mjpg?cam1+cam2:1";
 		html_entry += this.tab.row("Stream Picture-in-Picture:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
 		html_entry += this.tab.row("&nbsp;");

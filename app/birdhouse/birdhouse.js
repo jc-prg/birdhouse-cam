@@ -95,7 +95,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 	}
 	
 function birdhousePrint(data) {
-    // app_data = data;
+    //app_data = data;
 	console.debug("Request->Print ...");
 
 	window.scrollTo(0,0);
