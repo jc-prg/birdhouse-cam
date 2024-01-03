@@ -898,7 +898,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                       ", source=" + str(source) + ", resolution=" + self.param["image"]["resolution"]
                 raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
                                                scale=font_scale_text, color=font_color, thickness=1)
-                self.logging.warning(str(self.initial_connect_msg) + ".............")
+                self.logging.debug(str(self.initial_connect_msg) + ".............")
 
                 if source in self.initial_connect_msg:
                     line_position += 3 * line_scale
