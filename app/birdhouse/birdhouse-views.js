@@ -31,7 +31,7 @@ function birdhouse_INDEX(data, camera, object=false) {
                 active_cam  = {
                     "name"        : key,
                     "stream"      : cameras[key]["video"]["stream"],
-                    "description" : key.toUpperCase + ": " + cameras[key]["camera_name"],
+                    "description" : key.toUpperCase() + ": " + cameras[key]["name"],
                     "object"      : cameras[key]["object_detection"]["active"],
                     "error"       : camera_status[key]["error"]
                     }
@@ -40,7 +40,7 @@ function birdhouse_INDEX(data, camera, object=false) {
                 var other_cam  = {
                     "name"        : key,
                     "stream"      : cameras[key]["video"]["stream"],
-                    "description" : key.toUpperCase + ": " + cameras[key]["camera_name"],
+                    "description" : key.toUpperCase() + ": " + cameras[key]["name"],
                     "object"      : "",
                     "error"       : camera_status[key]["error"]
                     }
@@ -65,7 +65,6 @@ function birdhouse_INDEX(data, camera, object=false) {
 	}
 
     console.log("---> birdhouse_INDEX: selected:" + camera + " / app_active:" + app_active_cam + " / view_active:" + active_camera + " / view:" + index_view["type"] + " / other:" + other_cams.length );
-    console.log("---> birdhouse_INDEX: selected:" + active_cam["name"] );
 
     if (active_cam != {} && active_cam["name"]) {
         var replace_tags = {};
@@ -75,17 +74,17 @@ function birdhouse_INDEX(data, camera, object=false) {
         else        { replace_tags["CAM1_URL"]        = stream_server + app_camera_source[active_cam["name"]]; }
 
         if (index_view["type"] != "picture-in-picture" || other_cams.length == 0) {
-            if (object) { replace_tags["CAM1_URL"], stream_uid1 = birdhouse_StreamURL(active_cam["name"], stream_server + app_camera_source["object_"+active_cam["name"]], "main", true); }
-            else        { replace_tags["CAM1_URL"], stream_uid1 = birdhouse_StreamURL(active_cam["name"], stream_server + app_camera_source[active_cam["name"]], "main", true); }
+            if (object) { [replace_tags["CAM1_URL"], stream_uid1] = birdhouse_StreamURL(active_cam["name"], stream_server + app_camera_source["object_"+active_cam["name"]], "main", true); }
+            else        { [replace_tags["CAM1_URL"], stream_uid1] = birdhouse_StreamURL(active_cam["name"], stream_server + app_camera_source[active_cam["name"]], "main", true); }
             }
         if (index_view["type"] == "picture-in-picture" && other_cams.length > 0) {
-            replace_tags["CAM1_PIP_URL"], stream_uid1 = birdhouse_StreamURL(other_cams[0]["name"], stream_server + cameras[active_cam["name"]]["video"]["stream_pip"], "main_pip", true);
-            replace_tags["CAM1_PIP_URL"]    = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-key}", other_cams[0]["name"]);
-            replace_tags["CAM1_PIP_URL"]    = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-pos}", index_view["lowres_position"]);
+            [replace_tags["CAM1_PIP_URL"], stream_uid1] = birdhouse_StreamURL(other_cams[0]["name"], stream_server + cameras[active_cam["name"]]["video"]["stream_pip"], "main_pip", true);
+            replace_tags["CAM1_PIP_URL"]  = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-key}", other_cams[0]["name"]);
+            replace_tags["CAM1_PIP_URL"]  = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-pos}", index_view["lowres_position"]);
         }
         if (index_view["type"] != "picture-in-picture" && other_cams.length > 0) {
             replace_tags["CAM2_ID"]         = other_cams[0]["name"];
-            replace_tags["CAM2_LOWRES_URL"], stream_uid2 = birdhouse_StreamURL(other_cams[0]["name"], stream_server + cameras[other_cams[0]["name"]]["video"]["stream_lowres"], "2nd_lowres", true);
+            [replace_tags["CAM2_LOWRES_URL"], stream_uid2] = birdhouse_StreamURL(other_cams[0]["name"], stream_server + cameras[other_cams[0]["name"]]["video"]["stream_lowres"], "2nd_lowres", true);
             replace_tags["CAM2_LOWRES_POS"] = index_lowres_position[index_view["lowres_position"].toString()];
         }
 

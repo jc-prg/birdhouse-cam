@@ -51,7 +51,7 @@ function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false) {
 
 	stream_link = stream_link.replaceAll("//", '/');
 	stream_link = stream_link.replace(":/","://");
-    return stream_link, stream_id_ext;
+    return [stream_link, stream_id_ext];
     }
 
 function birdhouse_Camera( main, view, onclick, camera, stream_server, admin_allowed=false ) {
@@ -61,7 +61,7 @@ function birdhouse_Camera( main, view, onclick, camera, stream_server, admin_all
 	if (main) { var container = 'main'; }
 	else      { var container = '2nd'; }
 
-    var stream_link, stream_uid  = birdhouse_StreamURL(camera["name"], camera["stream"], "stream_main", true);
+    var [stream_link, stream_uid]  = birdhouse_StreamURL(camera["name"], camera["stream"], "stream_main", true);
 	var livestream     = "<img src='"+stream_link+"' id='stream_"+camera["name"]+"' class='livestream_"+container+"'/>";
 	var command_record = "birdhouse_recordStart(\""+camera["name"]+"\");"; //requestAPI(\"/stop/recording/cam2\");
 	var command_stop   = "birdhouse_recordStop(\""+camera["name"]+"\");"; //requestAPI(\"/stop/recording/cam2\");
@@ -343,21 +343,21 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
         }
 	else if (entry["type"] == "addon") {
 		var lowres = birdhouse_ImageURL(img_url + entry["lowres"]);
-		var lowres, stream_uid  = birdhouse_StreamURL(app_active_cam, entry["stream"], "stream_list_5", true);
+		var [lowres, stream_uid]  = birdhouse_StreamURL(app_active_cam, entry["stream"], "stream_list_5", true);
 		var onclick     = "birdhousePrint_load(view=\"INDEX\", camera = \""+entry["camera"]+"\");";
 		var description = lang("LIVESTREAM");
         }
 	else if (entry["type"] == "camera") {
 		var description = title;
 		//var lowres      = entry["video"]["stream"];
-		var lowres, stream_uid = birdhouse_StreamURL(entry["id"], entry["video"]["stream"], "image_stream", true);
+		var [lowres, stream_uid] = birdhouse_StreamURL(entry["id"], entry["video"]["stream"], "image_stream", true);
 		var hires       = lowres;
 		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
     }
 	else if (entry["type"] == "detection") {
 		var description = title;
 		//var lowres      = entry["video"]["stream_detect"];
-		var lowres, stream_uid = birdhouse_StreamURL(entry["id"], entry["video"]["stream_detect"], "image_stream_detect", true);
+		var [lowres, stream_uid] = birdhouse_StreamURL(entry["id"], entry["video"]["stream_detect"], "image_stream_detect", true);
 		var hires       = lowres;
 		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\", \"\", \"stream_overlay_"+entry["id"]+"\");";
     }
