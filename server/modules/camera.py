@@ -2553,6 +2553,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         for stream in self.camera_streams:
             self.camera_streams[stream].param = self.param
             self.camera_streams[stream].source = self.param["source"]
+            self.camera_streams[stream].initial_connect_msg = self.initial_connect_msg
         self.image.param = self.param
         self.video.param = self.param
 
