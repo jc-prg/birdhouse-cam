@@ -871,6 +871,11 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             self.logging.error("edit_error_add_info: empty image")
             return raw
 
+        font_scale_headline = 1
+        font_scale_text = 0.5
+        font_color = (0, 0, 255)
+        line_scale = 8
+
         raw = raw.copy()
         lowres_position = self.config.param["views"]["index"]["lowres_position"]
 
@@ -878,45 +883,45 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             line_position = 160
 
             msg = self.id + ": " + self.param["name"]
-            raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=1,
-                                           color=(0, 0, 255), thickness=2)
+            raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
+                                           scale=font_scale_headline, color=(0, 0, 255), thickness=2)
 
             if self.param["active"]:
-                line_position += 40
+                line_position += 4 * line_scale
                 source = self.param["source"]
                 if source == "":
                     source = "!!! not set !!!"
                 msg = "Device: active=" + str(self.param["active"]) + \
                       ", source=" + str(source) + ", resolution=" + self.param["image"]["resolution"]
-                raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
-                                               color=(0, 0, 255), thickness=1)
-                line_position += 10
+                raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
+                                               scale=font_scale_text, color=font_color, thickness=1)
+                line_position += 1 * line_scale
 
                 if source in self.initial_connect_msg:
                     msg = self.initial_connect_msg[source]
                     raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
-                                                   scale=0.6, color=(0, 0, 255), thickness=1)
-                    line_position += 30
+                                                   scale=font_scale_text, color=font_color, thickness=1)
+                    line_position += 3 * line_scale
 
                 if self.stream_raw.camera is None:
-                    line_position += 30
+                    line_position += 3 * line_scale
                     msg = "Error Camera: Not yet connected!"
-                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
-                                                   color=(0, 0, 255), thickness=1)
+                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
+                                                   scale=font_scale_text, color=font_color, thickness=1)
 
                 elif len(self.stream_raw.camera.error_msg) > 0:
-                    line_position += 30
+                    line_position += 3 * line_scale
                     msg = "Error Camera: " + self.stream_raw.camera.error_msg[-1] + \
                           " [#" + str(len(self.stream_raw.camera.error_msg)) + "]"
-                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
-                                                   color=(0, 0, 255), thickness=1)
+                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
+                                                   scale=font_scale_text, color=font_color, thickness=1)
 
                 if len(self.stream_raw.error_msg) > 0:
-                    line_position += 30
+                    line_position += 3 * line_scale
                     msg = "Error Raw-Stream: " + self.stream_raw.error_msg[-1] + \
                           " [#" + str(len(self.stream_raw.error_msg)) + "]"
-                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
-                                                   color=(0, 0, 255), thickness=1)
+                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
+                                                   scale=font_scale_text, color=font_color, thickness=1)
 
                 if len(self.error_msg) > 0:
                     line_position += 30
@@ -924,19 +929,19 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                     raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
                                                    color=(0, 0, 255), thickness=1)
 
-                line_position += 40
+                line_position += 4 * line_scale
                 msg = "Last tried reconnect: " + str(round(time.time() - self.reload_tried)) + "s "
-                raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
-                                               color=(0, 0, 255), thickness=1)
+                raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
+                                               scale=font_scale_text, color=font_color, thickness=1)
 
-                line_position += 30
+                line_position += 3 * line_scale
                 reload_success = round(time.time() - self.reload_success)
                 if reload_success > 1000000000:
                     msg = "Last successful reconnect: not since server started!"
                 else:
                     msg = "Last successful reconnect: " + str(reload_success) + "s"
-                raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
-                                               color=(0, 0, 255), thickness=1)
+                raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
+                                               scale=font_scale_text, color=font_color, thickness=1)
 
             else:
                 line_position += 40
