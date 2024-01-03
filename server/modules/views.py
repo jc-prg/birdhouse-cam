@@ -838,8 +838,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         # prepare data
         backup_entries = {}
-        #for cam in self.camera:
-        for cam in camera_settings:
+        for cam in self.camera:
 
             # create new values in archive file if they don't exist
             if cam not in archive_info or archive_info[cam] == {}:
@@ -893,8 +892,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             # if archive directory still exists
             else:
                 # update for those dates where necessary
-                #for cam in self.camera:
-                for cam in camera_settings:
+                for cam in self.camera:
                     count_entries += 1
 
                     # if directory doesn't exist yet read entries from database of the respective date
@@ -934,7 +932,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                             else:
                                 self.logging.info("     * Recreated of config file for " + date + ".")
                         else:
-                            self.logging.info("     * Use existing file for " + date + " (" + config_images_file + ")")
+                            self.logging.info("     * DB " + date + " available (" + config_images_file + ")")
 
                         # Extract data from config file
                         file_data = self._archive_list_create_file_data(date, True)
@@ -974,11 +972,12 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             for cam in self.camera:
                 if cam in backup_entries[date]:
 
+                    backup_entry = backup_entries[date][cam].copy()
+
                     # copy entries to new dict that will be saved
-                    archive_changed[cam]["entries"][date] = backup_entries[date][cam].copy()
+                    archive_changed[cam]["entries"][date] = backup_entry
 
                     # calculate total values
-                    backup_entry = backup_entries[date][cam].copy()
                     if "dir_size_cam" in backup_entry and "count_cam" in backup_entry:
                         dir_size_date += backup_entry["dir_size_cam"]
                         archive_total_size += backup_entry["dir_size_cam"]
@@ -992,7 +991,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                         archive_changed[cam]["groups"][backup_group].append(date)
 
                     # add additional information
-                    archive_changed[cam]["view_count"] = ["all", "star", "detect", "recycle", "data"]
+                    archive_changed[cam]["view_count"] = ["all"]
                     archive_changed[cam]["subtitle"] = (presets.birdhouse_pages["backup"][0] + " (" +
                                                         self.camera[cam].name + ")")
                     archive_changed[cam]["chart_data"] = {"data": {}, "titles": ["Activity"], "info": "not implemented"}
@@ -1003,7 +1002,6 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             for cam in self.camera:
                 if date in archive_changed[cam]["entries"]:
                     archive_changed[cam]["entries"][date]["dir_size"] = dir_size_date
-                self.archive_views[cam] = archive_changed[cam].copy()
 
             # stop if shutdown signal was send
             if self.if_shutdown():
@@ -1012,6 +1010,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         # save data in backup database
         archive_changed["changes"] = {}
+        self.archive_views = archive_changed.copy()
         self.archive_dir_size = archive_total_size
         self.config.db_handler.write("backup_info", "", archive_changed)
         self.archive_loading = "done"
@@ -1249,7 +1248,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         files_count = content["entries"][directory]["count_cam"]
         files_size = content["entries"][directory]["dir_size_cam"]
 
-        self.logging.info("     * from_database " + directory + "/" + cam + ": " +
+        self.logging.info("     * DB " + directory + "/" + cam + " entries: " +
                           str(files_size) + " MB in " + str(files_count) + " files")
 
         return content["entries"][directory].copy()
