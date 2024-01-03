@@ -349,7 +349,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
                         check_text = "ERROR"
                 system["video_devices"][last_key].append(value)
                 info = last_key.split(":")
-                system["video_devices_02"][value] = value + " (" + check_text + ": " + info[0] + ")"
+                system["video_devices_02"][value] = check_text + ": " + value + " (" + info[0] + ")"
 
         system["audio_devices"] = {}
         if microphones != {}:
@@ -614,7 +614,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 param["which_cam"] = complete_cam
 
             param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup",
-                            "last-answer", "favorit", "recycle", "update-views"]
+                            "last-answer", "favorit", "recycle", "update-views", "update-views-complete"]
             if "command" in param and param["command"] not in param_no_cam:
                 if param["which_cam"] not in views.camera:
                     srv_logging.warning("Unknown camera requested: " + param["which_cam"] + " (" + self.path + ")")
