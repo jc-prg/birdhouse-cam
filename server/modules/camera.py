@@ -51,11 +51,11 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         try:
             self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
             if not self.stream.isOpened():
-                self.raise_error("- Can' connect to camera '" + self.source + "': not isOpen()")
+                self.raise_error("- Can't connect to camera '" + self.source + "': not isOpen()")
                 return False
             time.sleep(0.5)
         except Exception as err:
-            self.raise_error("- Can' connect to camera '" + self.source + "': " + str(err))
+            self.raise_error("- Can't connect to camera '" + self.source + "': " + str(err))
             return False
 
         if self.stream is None:
@@ -2509,8 +2509,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.video.max_length = self.param["video"]["max_length"]
 
         self.camera_stream_raw.param = self.param
+        self.camera_streams_raw.source = self.param["source"]
         for stream in self.camera_streams:
             self.camera_streams[stream].param = self.param
+            self.camera_streams[stream].source = self.param["source"]
         self.image.param = self.param
         self.video.param = self.param
 
