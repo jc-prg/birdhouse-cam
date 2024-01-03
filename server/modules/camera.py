@@ -884,7 +884,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
             msg = self.id + ": " + self.param["name"]
             raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
-                                           scale=font_scale_headline, color=(0, 0, 255), thickness=2)
+                                           scale=font_scale_headline, color=font_color, thickness=2)
 
             if self.param["active"]:
                 line_position += 4 * line_scale
@@ -896,6 +896,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
                                                scale=font_scale_text, color=font_color, thickness=1)
                 line_position += 1 * line_scale
+
+                self.logging.warning(str(self.initial_connect_msg) + ".............")
 
                 if source in self.initial_connect_msg:
                     msg = self.initial_connect_msg[source]
@@ -924,10 +926,10 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                                                    scale=font_scale_text, color=font_color, thickness=1)
 
                 if len(self.error_msg) > 0:
-                    line_position += 30
+                    line_position += 3 * line_scale
                     msg = "Error Edit-Stream: " + self.error_msg[-1] + " [#" + str(len(self.error_msg)) + "]"
-                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
-                                                   color=(0, 0, 255), thickness=1)
+                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
+                                                   scale=font_scale_text, color=font_color, thickness=1)
 
                 line_position += 4 * line_scale
                 msg = "Last tried reconnect: " + str(round(time.time() - self.reload_tried)) + "s "
@@ -944,31 +946,31 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                                                scale=font_scale_text, color=font_color, thickness=1)
 
             else:
-                line_position += 40
+                line_position += 4 * line_scale
                 msg = "Device '"+self.id+"' is not activated, change settings."
-                raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
-                                               color=(0, 0, 255), thickness=1)
+                raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
+                                               scale=font_scale_text, color=font_color, thickness=1)
 
             details = True
             if details:
-                line_position += 40
+                line_position += 4 * line_scale
                 msg = "CPU Usage: " + str(psutil.cpu_percent(interval=1, percpu=False)) + "% "
                 msg += "(" + str(psutil.cpu_count()) + " CPU)"
-                raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
-                                               color=(0, 0, 255), thickness=1)
+                raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
+                                               scale=font_scale_text, color=font_color, thickness=1)
 
-                line_position += 30
+                line_position += 3 * line_scale
                 total = psutil.virtual_memory().total
                 total = round(total / 1024 / 1024)
                 used = psutil.virtual_memory().used
                 used = round(used / 1024 / 1024)
                 percentage = psutil.virtual_memory().percent
                 msg = "Memory: total=" + str(total) + "MB, used=" + str(used) + "MB (" + str(percentage) + "%)"
-                raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
-                                               color=(0, 0, 255), thickness=1)
+                raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
+                                               scale=font_scale_text, color=font_color, thickness=1)
 
-            line_position += 40
-            raw = self.image.draw_date_raw(raw=raw, overwrite_color=(0, 0, 255), overwrite_position=(20, line_position))
+            line_position += 4 * line_scale
+            raw = self.image.draw_date_raw(raw=raw, overwrite_color=font_color, overwrite_position=(20, line_position))
 
         elif info_type == "camera":
             if int(lowres_position) != 1:
