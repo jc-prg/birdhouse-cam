@@ -2122,7 +2122,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         current_frame_id = self.get_stream_image_id()
         if stream_id in self.detect_fps_last:
             self.detect_fps = round((1 / (time.time() - self.detect_fps_last[stream_id])), 1)
-            self.logging.info("--> " + str(self.detect_fps) + "fps / " +
+            self.logging.debug("--> " + str(self.detect_fps) + "fps / " +
                               str(round((time.time() - self.detect_fps_last[stream_id]), 2))+"s / " +
                               str(current_frame_id-self.detect_frame_id_last) + " frames difference / " +
                               str(self.image_size_object_detection) + "%")
