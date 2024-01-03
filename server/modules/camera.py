@@ -49,8 +49,8 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
 
         self.logging.info("Try to connect camera '" + self.id + "/" + self.source + "' ...")
         try:
-            if self.stream.isOpened():
-                self.raise_error("- Seem to be open ... release.")
+            if self.stream is not None and self.stream.isOpened():
+                self.raise_error("- Seems to be open ... try to release.")
                 self.stream.release()
             self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
             if not self.stream.isOpened():
