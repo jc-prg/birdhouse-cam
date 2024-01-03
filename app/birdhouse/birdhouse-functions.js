@@ -324,7 +324,9 @@ function birdhouse_imageOverlay(filename, description="", overlay_replace="", ov
         document.getElementById("overlay_content").style.display = "block";
         document.getElementById("overlay_parent").style.display  = "block";
         
-        description = description.replace(/\[br\/\]/g,"<br/>");
+        description = description.replaceAll(/\[br\/\]/g,"<br/>");
+        description = description.replaceAll(/\[/g,"<");
+        description = description.replaceAll(/\]/g,">");
         html  = "";
         html += "<div id=\"overlay_image_container\">";
         html += "  <div id=\"overlay_close\" onclick='birdhouse_overlayHide();'>[X]</div>";

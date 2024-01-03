@@ -305,10 +305,20 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		    description = hour + ":" + minute + " (" + entry["similarity"] + "%)";
         }
 
-        if (entry["hires_detect"] && entry["detections"] && entry["detections"].length > 0)
-                    { var onclick = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\", \""+birdhouse_ImageURL(img_url + entry["directory"] + entry["hires_detect"])+"\");"; detect_sign = "<sup>D</sup>"; }
-		else        { var onclick = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");"; entry["hires_detect"] = ""; }
-		description     = description.replace(/\[br\/\]/g,"<br/>");
+        if (entry["hires_detect"] && entry["detections"] && entry["detections"].length > 0) {
+            var description_labels = "[center][div style=align:center;][br/][hr/]";
+            var hires_description = description;
+            for (var i=0;i<entry["detections"].length;i++) {
+                description_labels += "[div class=detection_label style=cursor:default]&nbsp;"+entry["detections"][i]["label"]+"&nbsp;[/div]";
+                }
+            description_labels += "[/div][/center]";
+            hires_description += description_labels;
+            var onclick = "birdhouse_imageOverlay(\""+hires+"\",\""+hires_description+"\", \""+birdhouse_ImageURL(img_url + entry["directory"] + entry["hires_detect"])+"\");"; detect_sign = "<sup>D</sup>";
+            }
+		else {
+		    var onclick = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");"; entry["hires_detect"] = "";
+		    }
+		description = description.replace(/\[br\/\]/g,"<br/>");
 
         if (admin && entry["compare"][1] != "000000" && app_active_page == "TODAY_COMPLETE") {
             var diff_image      = RESTurl + "compare/"+entry["compare"][0]+"/"+entry["compare"][1]+"/"+entry["similarity"]+"/image.jpg?"+entry["camera"];
