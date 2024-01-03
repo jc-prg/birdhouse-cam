@@ -1413,7 +1413,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.camera_streams[stream].reload_success = self.reload_success
             self.camera_streams[stream].reload_tried = self.reload_tried
             self.camera_streams[stream].reload_time = self.reload_time
-            self.camera_streams[stream].initial_connect_msg = self.initial_connect_msg
+            self.camera_streams[stream].initial_connect_msg = birdhouse_initial_connect_msg
 
     def _init_camera(self, init=False):
         """
@@ -2435,13 +2435,13 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             except cv2.error as e:
                 system["video_devices_03"][key]["error"] = str(e)
 
-            self.initial_connect_msg[key] = ("initial_connect=" + str() + ", info=" +
-                                             system["video_devices_03"][key]["info"])
+            birdhouse_initial_connect_msg[key] = ("initial_connect=" + str() + ", info=" +
+                                                  system["video_devices_03"][key]["info"])
             if "error" in system["video_devices_03"][key]:
                 self.logging.error(" - ERROR: " + str(key).ljust(12) + "  " +
                                    str(system["video_devices_03"][key]["info"]) +
                                    " " + str(system["video_devices_03"][key]["error"]))
-                self.initial_connect_msg[key] += ", error='" + str(system["video_devices_03"][key]["error"]) + "'"
+                birdhouse_initial_connect_msg[key] += ", error='" + str(system["video_devices_03"][key]["error"]) + "'"
             else:
                 self.logging.error(" - OK:    " + str(key).ljust(12) + "  " +
                                    str(system["video_devices_03"][key]["info"]))

@@ -44,6 +44,7 @@ loggers = {}
 logger_exists = {}
 camera_list = []
 
+birdhouse_initial_connect_msg = {}
 birdhouse_error_images_raw = {}
 birdhouse_error_images = {
     "setting": "camera_error_settings.jpg",
