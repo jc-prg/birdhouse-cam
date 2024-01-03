@@ -975,8 +975,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             for cam in self.camera:
                 if cam in backup_entries[date]:
 
-                    self.logging.info("........" + str(cam) + "/" + backup_entries[date][cam]["camera"])
-                    self.logging.info("........" + str(backup_entries[date][cam]))
+                    self.logging.debug("........" + str(cam) + "/" + backup_entries[date][cam]["camera"])
+                    self.logging.debug("........" + str(backup_entries[date][cam]))
 
                     backup_entry = backup_entries[date][cam].copy()
 
@@ -1005,8 +1005,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 else:
                     archive_changed[cam]["entries"][date] = {}
 
-                self.logging.info("........" + str(archive_changed[cam]["entries"][date]))
-                self.logging.info("........" + cam + "\n")
+                self.logging.debug("........" + str(archive_changed[cam]["entries"][date]))
+                self.logging.debug("........" + cam + "\n")
 
             for cam in self.camera:
                 if date in archive_changed[cam]["entries"]:
@@ -1017,7 +1017,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 self.logging.info("Interrupt creating the archive list.")
                 return
 
-        self.logging.info(":::::::::::" + str(archive_changed))
+        self.logging.debug(":::::::::::" + str(archive_changed))
         self.archive_views = archive_changed.copy()
 
         # save data in backup database
