@@ -966,11 +966,17 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         for date in deleted_dates:
             del backup_entries[date]
 
+        for cam in archive_changed:
+            archive_changed[cam]["entries"] = {}
+
         # process data to be saved
         for date in backup_entries:
             dir_size_date = 0
             for cam in self.camera:
                 if cam in backup_entries[date]:
+
+                    self.logging.info("........" + str(cam) + "/" + backup_entries[date][cam]["camera"])
+                    self.logging.info("........" + str(backup_entries[date][cam]))
 
                     backup_entry = backup_entries[date][cam].copy()
 
@@ -999,6 +1005,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 else:
                     archive_changed[cam]["entries"][date] = {}
 
+                self.logging.info("........" + str(archive_changed[cam]["entries"][date]))
+                self.logging.info("........" + cam + "\n")
+
             for cam in self.camera:
                 if date in archive_changed[cam]["entries"]:
                     archive_changed[cam]["entries"][date]["dir_size"] = dir_size_date
@@ -1008,9 +1017,11 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 self.logging.info("Interrupt creating the archive list.")
                 return
 
+        self.logging.info(":::::::::::" + str(archive_changed))
+        self.archive_views = archive_changed.copy()
+
         # save data in backup database
         archive_changed["changes"] = {}
-        self.archive_views = archive_changed.copy()
         self.archive_dir_size = archive_total_size
         self.config.db_handler.write("backup_info", "", archive_changed)
         self.archive_loading = "done"
