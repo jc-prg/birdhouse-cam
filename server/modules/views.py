@@ -894,7 +894,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     count_entries += 1
 
                     # if directory doesn't exist yet read entries from database of the respective date
-                    if (backup_entries[date]["changed"] and not backup_entries[date]["exists"]) or not database_ok:
+                    if ((backup_entries[date]["changed"] and not backup_entries[date]["exists"])
+                            or not database_ok or self.create_archive_complete):
 
                         log_info = "new [database_ok=" + str(database_ok) + "]"
                         backup_entries[date][cam] = {
@@ -1007,6 +1008,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.archive_dir_size = archive_total_size
         self.config.db_handler.write("backup_info", "", archive_changed)
         self.archive_loading = "done"
+        self.create_archive_complete = False
 
         self.logging.info("  => Total archive size: " + str(round(archive_total_size, 2)) + " MByte in " +
                           str(round(archive_total_count, 2)) + " files and " + str(count_entries) + " directories")
