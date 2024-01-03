@@ -1814,7 +1814,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             image_hires = self.camera_streams["camera_hires"].read_image(return_error_image=False)
 
             # retry once if image could not be read
-            if self.image.error or len(image_hires) == 0:
+            if image_hires is None or self.image.error or len(image_hires) == 0:
                 self.image.error = False
                 image_hires = self.camera_streams["camera_hires"].read_image(return_error_image=False)
 
@@ -2443,8 +2443,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             else:
                 self.logging.error(" - OK:    " + str(key).ljust(12) + "  " +
                                    str(system["video_devices_03"][key]["info"]))
-
-
 
         self.available_devices = system
         return system
