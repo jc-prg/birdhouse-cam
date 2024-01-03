@@ -895,15 +895,14 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                       ", source=" + str(source) + ", resolution=" + self.param["image"]["resolution"]
                 raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
                                                scale=font_scale_text, color=font_color, thickness=1)
-                line_position += 1 * line_scale
-
                 self.logging.warning(str(self.initial_connect_msg) + ".............")
 
                 if source in self.initial_connect_msg:
+                    line_position += 3 * line_scale
                     msg = self.initial_connect_msg[source]
                     raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
                                                    scale=font_scale_text, color=font_color, thickness=1)
-                    line_position += 3 * line_scale
+                line_position += 1 * line_scale
 
                 if self.stream_raw.camera is None:
                     line_position += 3 * line_scale
@@ -2429,6 +2428,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                         system["video_devices_03"][key]["error"] = "Returned empty image."
                 else:
                     system["video_devices_03"][key]["image"] = True
+                    system["video_devices_03"][key]["shape"] = raw.shape
                     if "error" in system["video_devices_03"][key]:
                         del system["video_devices_03"][key]["error"]
 
@@ -2437,6 +2437,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
             birdhouse_initial_connect_msg[key] = ("initial_connect=" + str() + ", info=" +
                                                   system["video_devices_03"][key]["info"])
+            if "shape" in system["video_devices_03"][key]:
+                birdhouse_initial_connect_msg[key] += ", shape=" + str(system["video_devices_03"][key]["shape"])
             if "error" in system["video_devices_03"][key]:
                 self.logging.error(" - ERROR: " + str(key).ljust(12) + "  " +
                                    str(system["video_devices_03"][key]["info"]) +
