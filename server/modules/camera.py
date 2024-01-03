@@ -900,7 +900,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 if source in self.initial_connect_msg:
                     line_position += 3 * line_scale
                     msg = self.initial_connect_msg[source]
-                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(160*font_scale_text, line_position),
+                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(85, line_position),
                                                    font=None, scale=font_scale_text, color=font_color, thickness=1)
                 line_position += 1 * line_scale
 
@@ -2430,7 +2430,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     system["video_devices_03"][key]["image"] = True
                     system["video_devices_03"][key]["shape"] = raw.shape
                     path_raw = str(os.path.join(self.config.db_handler.directory(config="images"),
-                                            "..", "test_connect_" + key + ".jpg"))
+                                            "..", "test_connect_" + key.replace("/", "_") + ".jpg"))
                     cv2.imwrite(path_raw, raw)
                     if "error" in system["video_devices_03"][key]:
                         del system["video_devices_03"][key]["error"]
