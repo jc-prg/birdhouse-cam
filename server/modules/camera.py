@@ -625,6 +625,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self.reload_time = 0
         self.reload_tried = 0
         self.reload_success = 0
+        self.initial_connect_msg = {}
 
         self._init_error_images()
 
@@ -890,6 +891,12 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None, scale=0.6,
                                                color=(0, 0, 255), thickness=1)
                 line_position += 10
+
+                if source in self.initial_connect_msg:
+                    msg = self.initial_connect_msg[source]
+                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
+                                                   scale=0.6, color=(0, 0, 255), thickness=1)
+                    line_position += 30
 
                 if self.stream_raw.camera is None:
                     line_position += 30
@@ -1294,6 +1301,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.date_last = self.config.local_time().strftime("%Y-%m-%d")
         self.usage_time = time.time()
         self.usage_interval = 60
+        self.initial_connect_msg = {}
 
         self.camera_scan = {}
         if first_cam:
@@ -1398,6 +1406,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.camera_streams[stream].reload_success = self.reload_success
             self.camera_streams[stream].reload_tried = self.reload_tried
             self.camera_streams[stream].reload_time = self.reload_time
+            self.camera_streams[stream].initial_connect_msg = self.initial_connect_msg
 
     def _init_camera(self, init=False):
         """
@@ -2419,13 +2428,18 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             except cv2.error as e:
                 system["video_devices_03"][key]["error"] = str(e)
 
+            self.initial_connect_msg[key] = ("initial_connect=" + str() + ", info=" +
+                                             system["video_devices_03"][key]["info"])
             if "error" in system["video_devices_03"][key]:
                 self.logging.error(" - ERROR: " + str(key).ljust(12) + "  " +
                                    str(system["video_devices_03"][key]["info"]) +
                                    " " + str(system["video_devices_03"][key]["error"]))
+                self.initial_connect_msg[key] += ", error='" + str(system["video_devices_03"][key]["error"]) + "'"
             else:
                 self.logging.error(" - OK:    " + str(key).ljust(12) + "  " +
                                    str(system["video_devices_03"][key]["info"]))
+
+
 
         self.available_devices = system
         return system
