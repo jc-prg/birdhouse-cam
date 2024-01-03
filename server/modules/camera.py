@@ -47,8 +47,11 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         self.reset_error()
         self.connected = False
 
-        self.logging.info("Try to connect camera '" + self.id + "' ...")
+        self.logging.info("Try to connect camera '" + self.id + "/" + self.source + "' ...")
         try:
+            if self.stream.isOpened():
+                self.raise_error("- Seem to be open ... release.")
+                self.stream.release()
             self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
             if not self.stream.isOpened():
                 self.raise_error("- Can't connect to camera '" + self.source + "': not isOpen()")
@@ -2420,6 +2423,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
                 time.sleep(0.5)
                 ref, raw = camera.read()
+                camera.release()
                 check = str(type(raw))
                 if not ref:
                     if "error" not in system["video_devices_03"][key]:
