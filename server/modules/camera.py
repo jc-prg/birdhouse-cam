@@ -900,7 +900,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 if source in self.initial_connect_msg:
                     line_position += 3 * line_scale
                     msg = self.initial_connect_msg[source]
-                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(160*font_scale_text, line_position),
+                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(80, line_position),
                                                    font=None, scale=font_scale_text, color=font_color, thickness=1)
                 line_position += 1 * line_scale
 
@@ -1820,7 +1820,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 image_hires = self.camera_streams["camera_hires"].read_image(return_error_image=False)
 
             # if no error format and analyze image
-            if image_hires is not None or not self.image.error and len(image_hires) > 0:
+            if image_hires is not None and not self.image.error and len(image_hires) > 0:
                 image_compare = self.image.convert_to_gray_raw(image_hires)
 
                 if self.previous_image is not None:
@@ -2438,8 +2438,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             except cv2.error as e:
                 system["video_devices_03"][key]["error"] = str(e)
 
-            birdhouse_initial_connect_msg[key] = ("initial_connect=" + str() + ", info=" +
-                                                  system["video_devices_03"][key]["info"])
+            birdhouse_initial_connect_msg[key] = ("initial_connect=" + str(system["video_devices_03"][key]["image"]) +
+                                                  ", info=" + system["video_devices_03"][key]["info"])
             if "shape" in system["video_devices_03"][key]:
                 birdhouse_initial_connect_msg[key] += ", shape=" + str(system["video_devices_03"][key]["shape"])
             if "error" in system["video_devices_03"][key]:
