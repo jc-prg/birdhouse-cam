@@ -53,30 +53,31 @@ index_template["admin"] = `
             <tr>
                 <td>
                     <div style="width:30%;float:left;height:20px;padding:5px;"><b>Status&nbsp;&quot;<!--CAM1_ID-->&quot;:</b></div>
-                    <div style="float:left;">
+                    <div style="float:left;width:250px;">
                         <div id="status_error_<!--CAM1_ID-->" style="float:left;height:20px;"><div id="black"></div></div>
                         <div id="status_error_record_<!--CAM1_ID-->" style="float:left;height:20px;"><div id="black"></div></div>
-                        <div style="float:left;padding:5px;height:20px;"><font id="show_stream_count_<!--CAM1_ID-->">0</font> Streams</div>
-                        <div style="float:left;padding:5px;height:20px;">(<font id="show_stream_fps_<!--CAM1_ID-->">0</font> fps)</div>
+                        <div style="float:left;padding:5px;height:20px;" id="show_stream_count_<!--CAM1_ID-->">0 Streams</div>
+                        <div style="float:left;padding:5px;height:20px;display:block;width:70px;" id="show_stream_fps_<!--CAM1_ID-->">(0 fps)</div>
+                        <div style="float:left;padding:5px;height:20px;display:none;width:70px;" id="show_stream_object_fps_<!--CAM1_ID-->">(0&nbsp;fps)</div>
                     </div>
                 </td>
             </tr>
              <tr id="admin_status_index">
                 <td>
                     <div style="width:30%;float:left;height:20px;padding:5px;"><b>Status&nbsp;&quot;<!--CAM2_ID-->&quot;:</b></div>
-                    <div style="float:left;">
+                    <div style="float:left;width:250px;">
                         <div id="status_error_<!--CAM2_ID-->" style="float:left;height:20px;"><div id="black"></div></div>
                         <div id="status_error_record_<!--CAM2_ID-->" style="float:left;height:20px;"><div id="black"></div></div>
-                        <div style="float:left;padding:5px;height:20px;"><font id="show_stream_count_<!--CAM2_ID-->">0</font> Streams</div>
-                        <div style="float:left;padding:5px;height:20px;">(<font id="show_stream_fps_<!--CAM2_ID-->">0</font> fps)</div>
+                        <div style="float:left;padding:5px;height:20px;" id="show_stream_count_<!--CAM2_ID-->">0 Streams</div>
+                        <div style="float:left;padding:5px;height:20px;" id="show_stream_fps_<!--CAM2_ID-->">(0 fps)</div>
                     </div>
                 </td>
             </tr>
             <tr>
                 <td>
                     <div style="width:30%;float:left;height:20px;padding:5px;"><b>Status&nbsp;&quot;Client&quot;:</b></div>
-                    <div style="float:left;">
-                        <div style="float:left;padding:5px;height:20px;"><font id="show_stream_count_client">0</font> Streams&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                    <div style="float:left;width:250px;">
+                        <div style="float:left;padding:5px;height:20px;"><font id="show_stream_count_client">0 Streams</font></div>
                     </div>
                 </td>
             </tr>

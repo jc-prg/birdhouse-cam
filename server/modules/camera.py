@@ -609,6 +609,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self.fps_max = 12
         self.fps_max_lowres = 3
         self.fps_slow = 2
+        self.fps_object_detection = None
         if self.resolution == "lowres":
             self.fps_max = self.fps_max_lowres
         self.duration_max = 1 / (self.fps_max + 1)
@@ -1206,12 +1207,17 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.weather_active = self.config.param["weather"]["active"]
         self.weather_sunrise = None
         self.weather_sunset = None
+
         self.detect_objects = None
         self.detect_birds = None
         self.detect_visualize = None
         self.detect_live = False
         self.detect_settings = self.param["object_detection"]
         self.detect_active = birdhouse_env["detection_active"]
+        self.detect_fps = None
+        self.detect_fps_last = {}
+        self.detect_frame_last = None
+        self.detect_frame_id_last = None
         self.first_cam = first_cam
         self.initialized = False
 
@@ -2113,7 +2119,23 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         get image with rendered labels of detected objects
         """
+        current_frame_id = self.get_stream_image_id()
+        if stream_id in self.detect_fps_last:
+            self.detect_fps = round((1 / (time.time() - self.detect_fps_last[stream_id])), 1)
+            self.logging.info("--> " + str(self.detect_fps) + "fps / " +
+                              str(round((time.time() - self.detect_fps_last[stream_id]), 2))+"s / " +
+                              str(current_frame_id-self.detect_frame_id_last) + " frames difference / " +
+                              str(self.image_size_object_detection) + "%")
+
+        # !!! Return values > 12 fps, expected are values < 6 fps --> check self.get_stream() also!
+
+        self.detect_fps_last[stream_id] = time.time()
+        if self.detect_frame_id_last == current_frame_id and self.detect_frame_last is not None:
+            return self.detect_frame_last
+
         image = self.get_stream(stream_id, stream_type, stream_resolution, system_info, wait)
+        self.detect_frame_last = image
+        self.detect_frame_id_last = self.get_stream_image_id()
 
         if self.detect_objects and self.detect_objects.loaded and not self.if_error():
             path_hires = str(os.path.join(self.config.db_handler.directory("images"),
@@ -2135,6 +2157,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             msg = "Object detection not loaded."
             image = self.image.draw_text_raw(raw=image, text=msg, position=(20, -40), font=None, scale=0.6,
                                              color=(255, 255, 255), thickness=1)
+
         return image
 
     def get_stream_image_id(self):
@@ -2219,6 +2242,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             "record_image_start": self.record_image_start,
             "record_image_end": self.record_image_end,
             "stream_raw_fps": self.camera_stream_raw.get_framerate(),
+            "stream_object_fps": self.detect_fps,
 
             "properties": {},
             "properties_image": {}

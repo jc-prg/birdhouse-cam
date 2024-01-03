@@ -82,8 +82,10 @@ function birdhouseStatus_cameras(data) {
     for (let camera in cameras) {
         if (camera_status[camera]) {
             //console.error(camera_status);
-            setTextById("show_stream_count_"+camera, camera_status[camera]["active_streams"]);
-            setTextById("show_stream_fps_"+camera,   camera_status[camera]["stream_raw_fps"]);
+            if (camera_status[camera]["active_streams"] == 1) { stream = lang("STREAM"); } else { stream = lang("STREAMS"); }
+            setTextById("show_stream_count_"+camera, camera_status[camera]["active_streams"] + " " + stream);
+            setTextById("show_stream_fps_"+camera,   "("+camera_status[camera]["stream_raw_fps"]+" fps)");
+            setTextById("show_stream_object_fps_"+camera,   "("+camera_status[camera]["stream_object_fps"]+" fps)");
             camera_streams += cameras[camera]["image"]["current_streams"];
 
             // consolidate error messages
@@ -180,7 +182,8 @@ function birdhouseStatus_cameras(data) {
 
     // client stream information
     count_client_streams = birdhouse_CountActiveStreams();
-    setTextById("show_stream_count_client", count_client_streams);
+    if (count_client_streams == 1) { stream = lang("STREAM"); } else { stream = lang("STREAMS"); }
+    setTextById("show_stream_count_client", count_client_streams + " " + stream);
     setTextById("system_active_streams", camera_streams);
 }
 
