@@ -1,4 +1,4 @@
-# Birdhouse Camera v1.0.5
+# Birdhouse Camera v1.0.6
 
 Raspberry Pi project to observe our birdhouse with multiple webcams: live stream, record images, detect activity, record videos, 
 mark favorites, analyze weather data, ...
@@ -28,12 +28,13 @@ mark favorites, analyze weather data, ...
 
 ## Technology
 
-* Hardware
-  * Raspberry Pi 3B+ (or newer)
-  * Camera module for RPi / HD with IR sensor
+* IT Hardware
+  * Raspberry Pi 3B+, Raspberry Pi 4 (recommended)
+  * Micro SD with 64 GByte
   * USB camera
-  * Small USB Microphone
-  * DHT11 / DHT22 Sensor
+  * _optional:_ PiCamera with IR (only 32bit OS, no object detection)
+  * _optional:_ Small USB Microphone
+  * _optional:_ DHT11 / DHT22 Sensor
 * Software
   * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, PyTorch
   * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
@@ -67,8 +68,10 @@ mark favorites, analyze weather data, ...
 * Connect to **audio stream** from microphone
   * under construction, currently browser only (no iPhone)
 * **Object / Bird detection** via PyTorch (while recording images)
+  * labels in archive and for admins in complete view of current day
   * only if just USB Cameras & a 64bit OS, RPi4 or newer recommended
-  * live detection is experimental and very slow on RPi 4 (admin view)
+  * _live detection is experimental and slow on RPi 4 (admin view)_
+  * _no label editing via app yet_
 * **Admin functionality** via app
   * Deny recording and admin functionality for specific IP addresses (e.g. router or proxy, to deny for access from the internet) or use password to login as administrator
   * edit server settings (partly, other settings define in file .env)

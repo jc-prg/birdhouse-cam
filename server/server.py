@@ -24,8 +24,8 @@ from modules.bh_class import BirdhouseClass
 import modules.bh_logging as bh_logging
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v1.0.5"}
-app_framework = "v1.0.5"
+api_description = {"name": "BirdhouseCAM", "version": "v1.0.6"}
+app_framework = "v1.0.6"
 srv_audio = None
 
 
