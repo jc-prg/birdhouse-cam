@@ -709,7 +709,11 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 raw = self.edit_crop_area(raw, start_zero=True)
             if self.resolution != "lowres":
                 raw = self.edit_add_system_info(raw)
-            return raw.copy()
+
+            if raw is not None:
+                return raw.copy()
+            else:
+                return raw
 
         if stream:
             raw = self.stream_raw.read_stream(self._stream_id_base + stream_id, self._error_wait)
@@ -725,7 +729,10 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 raw = self.edit_create_lowres(raw)
                 raw = self.edit_check_error(raw, "Error reading 'self.stream_raw.edit_create_lowres(raw)' " +
                                             "in read_raw_and_edit()", return_error_image)
-            return raw.copy()
+            if raw is not None:
+                return raw.copy()
+            else:
+                return raw
 
         elif self.type == "normalized":
             normalized = self.edit_normalize(raw)
@@ -735,7 +742,11 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 normalized = self.edit_create_lowres(normalized)
                 normalized = self.edit_check_error(normalized, "Error reading 'self.stream_raw.edit_create_lowres" +
                                                    "(normalized)' in read_raw_and_edit()", return_error_image)
-            return normalized.copy()
+
+            if normalized is not None:
+                return normalized.copy()
+            else:
+                return normalized
 
         elif self.type == "camera":
             normalized = self.edit_normalize(raw)
@@ -753,7 +764,10 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 camera = self.edit_create_lowres(camera)
                 camera = self.edit_check_error(camera, "Error reading 'self.stream_raw.edit_create_lowres" +
                                                "(camera)' in read_raw_and_edit()", return_error_image)
-            return camera.copy()
+            if camera is not None:
+                return camera.copy()
+            else:
+                return camera
 
         elif self.type == "setting":
             normalized = self.edit_normalize(raw)
@@ -771,7 +785,10 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 setting = self.edit_create_lowres(setting)
                 setting = self.edit_check_error(setting, "Error reading 'self.stream_raw.edit_create_lowres" +
                                                 "(setting)' in read_raw_and_edit()", return_error_image)
-            return setting.copy()
+            if setting is not None:
+                return setting.copy()
+            else:
+                return setting
 
     def read_image(self, return_error_image=True):
         """
@@ -1780,12 +1797,12 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if self.image_recording_active(current_time=current_time):
 
             self.logging.debug(" ...... record now!")
-            image_hires = self.camera_streams["camera_hires"].read_image()
+            image_hires = self.camera_streams["camera_hires"].read_image(return_error_image=False)
 
             # retry once if image could not be read
             if self.image.error or len(image_hires) == 0:
                 self.image.error = False
-                image_hires = self.camera_streams["camera_hires"].read_image()
+                image_hires = self.camera_streams["camera_hires"].read_image(return_error_image=False)
 
             # if no error format and analyze image
             if not self.image.error and len(image_hires) > 0:
