@@ -1811,7 +1811,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if self.image_recording_active(current_time=current_time):
 
             self.logging.debug(" ...... record now!")
-            image_hires = self.camera_streams["camera_hires"].read_image(return_error_image=False)
+            image_hires = self.camera_streams["camera_hires"].read_image()
 
             # retry once if image could not be read
             if image_hires is None or self.image.error or len(image_hires) == 0:
