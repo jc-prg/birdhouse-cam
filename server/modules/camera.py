@@ -2525,6 +2525,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if "video" in self.param and "max_length" in self.param["video"]:
             self.video.max_length = self.param["video"]["max_length"]
 
+        self.camera.source = self.param["source"]
         self.camera_stream_raw.param = self.param
         self.camera_stream_raw.source = self.param["source"]
         for stream in self.camera_streams:
