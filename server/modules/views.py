@@ -809,6 +809,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         Page with backup/archive directory
         """
+        camera_settings = self.config.param["devices"]["cameras"]
         archive_total_size = 0
         archive_total_count = 0
         start_time = time.time()
@@ -829,14 +830,16 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         archive_changed = {}
         archive_info = self.config.db_handler.read("backup_info", "")
 
-        self.logging.info("Create data for archive view from '" + main_directory + "' ...")
+        self.logging.info("Create data for archive view from '" + main_directory +
+                          "' (complete="+str(self.create_archive_complete)+") ...")
         self.logging.info("- Get archive directory information (" + db_type + " | " + main_directory + ") ...")
         self.logging.info("- Found " + str(len(dir_list)) + " archive directories.")
         self.logging.debug("  -> " + str(dir_list))
 
         # prepare data
         backup_entries = {}
-        for cam in self.camera:
+        #for cam in self.camera:
+        for cam in camera_settings:
 
             # create new values in archive file if they don't exist
             if cam not in archive_info or archive_info[cam] == {}:
@@ -890,7 +893,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             # if archive directory still exists
             else:
                 # update for those dates where necessary
-                for cam in self.camera:
+                #for cam in self.camera:
+                for cam in camera_settings:
                     count_entries += 1
 
                     # if directory doesn't exist yet read entries from database of the respective date
@@ -913,21 +917,24 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                             "type": "directory"
                         }
 
-                        # Trigger recreation of config file, if config file doesn't exist
+                        # Trigger recreation of config file in date-directory, if config file doesn't exist
                         config_images = self.config.db_handler.read("backup", date)
+                        config_images_file = self.config.db_handler.file_path("backup", date)
                         if config_images == {}:
                             start_time = time.time()
-                            self.logging.info("        -> Start recreation of config file for " + date + " ...")
+                            self.logging.info("     * Start recreation of config file for " + date + " ...")
                             self.archive_config_recreate_progress = True
                             self.archive_config_recreate.append(date)
 
                             while self.archive_config_recreate_progress or start_time + 20 > time.time():
                                 time.sleep(0.2)
                             if self.archive_config_recreate_progress:
-                                self.logging.warning("        -> Recreation of config file for " + date +
+                                self.logging.warning("     * Recreation of config file for " + date +
                                                      " takes longer than expected, don't wait longer here.")
                             else:
-                                self.logging.info("        -> Recreated of config file for " + date + ".")
+                                self.logging.info("     * Recreated of config file for " + date + ".")
+                        else:
+                            self.logging.info("     * Use existing file for " + date + " (" + config_images_file + ")")
 
                         # Extract data from config file
                         file_data = self._archive_list_create_file_data(date, True)
@@ -1242,7 +1249,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         files_count = content["entries"][directory]["count_cam"]
         files_size = content["entries"][directory]["dir_size_cam"]
 
-        self.logging.info("        -> from_database " + directory + "/" + cam + ": " +
+        self.logging.info("     * from_database " + directory + "/" + cam + ": " +
                           str(files_size) + " MB in " + str(files_count) + " files")
 
         return content["entries"][directory].copy()
