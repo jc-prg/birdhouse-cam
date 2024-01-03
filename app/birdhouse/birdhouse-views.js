@@ -126,20 +126,18 @@ function birdhouse_INDEX(data, camera, object=false) {
 
 	if (active_cam["object"] && object_detect && selected_view != "picture-in-picture") {
 	    elementVisible("button_object_detection");
+        if (object)  {
+            document.getElementById("show_stream_fps_"+replace_tags["CAM1_ID"]).style.display = "none";
+            document.getElementById("show_stream_object_fps_"+replace_tags["CAM1_ID"]).style.display = "block";
+            }
+        else  {
+            document.getElementById("show_stream_fps_"+replace_tags["CAM1_ID"]).style.display = "block";
+            document.getElementById("show_stream_object_fps_"+replace_tags["CAM1_ID"]).style.display = "none";
+            }
 	    }
 
     if (other_cams.length == 0)                                { elementHidden("admin_status_index"); }
     if (!cameras[active_camera]["video"]["allow_recording"])   { elementHidden("admin_record_index"); }
-
-    if (object)  {
-        document.getElementById("show_stream_fps_"+replace_tags["CAM1_ID"]).style.display = "none";
-        document.getElementById("show_stream_object_fps_"+replace_tags["CAM1_ID"]).style.display = "block";
-        }
-    else  {
-        document.getElementById("show_stream_fps_"+replace_tags["CAM1_ID"]).style.display = "block";
-        document.getElementById("show_stream_object_fps_"+replace_tags["CAM1_ID"]).style.display = "none";
-        }
-
 }
 
 function birdhouse_VIDEO_DETAIL( title, data ) {
