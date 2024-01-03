@@ -1858,6 +1858,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     self.record_image_error_msg = ["img_error=" + str(self.image.error) + "; img_len=" + str(len(image))]
                 sensor_data = {}
                 image_info = {}
+                self.previous_stamp = stamp
+                return
 
             # get data from dht-sensors
             for key in self.sensor:
