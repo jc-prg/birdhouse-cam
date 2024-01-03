@@ -43,41 +43,45 @@ index_template["admin"] = `
     <center>
     <table border="0" width="100%">
     <tr>
-    <td width="35%" align="center">
-        <div style="width:100%;text-align:center;" id="admin_record_index">
-            <button onclick="birdhouse_recordStart('<!--CAM1_ID-->');" class="button-video-record">Record (<!--CAM1_ID-->)</button><br/><button onclick="birdhouse_recordStop('<!--CAM1_ID-->');" class="button-video-record">Stop (<!--CAM1_ID-->)</button>
-        </div>
+    <td width="35%" align="center" valign="top">
+            <button onclick="birdhouse_recordStart('<!--CAM1_ID-->');" class="button-video-record">Record (<!--CAM1_ID-->)</button><br/>
+            <button onclick="birdhouse_recordStop('<!--CAM1_ID-->');" class="button-video-record">Stop (<!--CAM1_ID-->)</button><br/>
+            <div id="button_object_detection" style="display:none;"><button onclick="<!--OBJECT-->" class="button-video-record">Objects <!--OBJECT_BUTTON--></button></div>
     </td>
     <td>
         <table border="0" width="100%">
             <tr>
-                <td width="30%">Status&nbsp;&quot;<!--CAM1_ID-->&quot;:</td>
-                <td><div>
-                    <div id="status_error_<!--CAM1_ID-->" style="float:left;"><div id="black"></div></div>
-                    <div id="status_error_record_<!--CAM1_ID-->" style="float:left;"><div id="black"></div></div>
-                    <div style="float:left;padding:5px;"><font id="show_stream_count_<!--CAM1_ID-->">0</font> Streams</div>
-                    <div style="float:left;padding:5px;">(<font id="show_stream_fps_<!--CAM1_ID-->">0</font> fps)</div>
-                </div></td>
+                <td>
+                    <div style="width:30%;float:left;height:20px;padding:5px;"><b>Status&nbsp;&quot;<!--CAM1_ID-->&quot;:</b></div>
+                    <div style="float:left;width:250px;">
+                        <div id="status_error_<!--CAM1_ID-->" style="float:left;height:20px;"><div id="black"></div></div>
+                        <div id="status_error_record_<!--CAM1_ID-->" style="float:left;height:20px;"><div id="black"></div></div>
+                        <div style="float:left;padding:5px;height:20px;" id="show_stream_count_<!--CAM1_ID-->">0 Streams</div>
+                        <div style="float:left;padding:5px;height:20px;display:block;width:70px;" id="show_stream_fps_<!--CAM1_ID-->">(0 fps)</div>
+                        <div style="float:left;padding:5px;height:20px;display:none;width:70px;" id="show_stream_object_fps_<!--CAM1_ID-->">(0&nbsp;fps)</div>
+                    </div>
+                </td>
             </tr>
-        </table>
-        <table border="0" width="100%" id="admin_status_index">
+             <tr id="admin_status_index">
+                <td>
+                    <div style="width:30%;float:left;height:20px;padding:5px;"><b>Status&nbsp;&quot;<!--CAM2_ID-->&quot;:</b></div>
+                    <div style="float:left;width:250px;">
+                        <div id="status_error_<!--CAM2_ID-->" style="float:left;height:20px;"><div id="black"></div></div>
+                        <div id="status_error_record_<!--CAM2_ID-->" style="float:left;height:20px;"><div id="black"></div></div>
+                        <div style="float:left;padding:5px;height:20px;" id="show_stream_count_<!--CAM2_ID-->">0 Streams</div>
+                        <div style="float:left;padding:5px;height:20px;" id="show_stream_fps_<!--CAM2_ID-->">(0 fps)</div>
+                    </div>
+                </td>
+            </tr>
             <tr>
-                <td width="30%">Status&nbsp;&quot;<!--CAM2_ID-->&quot;:</td>
-                <td><div style="text-align:center;">
-                    <div id="status_error_<!--CAM2_ID-->" style="float:left;"><div id="black"></div></div>
-                    <div id="status_error_record_<!--CAM2_ID-->" style="float:left;"><div id="black"></div></div>
-                    <div style="float:left;padding:5px;"><font id="show_stream_count_<!--CAM2_ID-->">0</font> Streams</div>
-                    <div style="float:left;padding:5px;">(<font id="show_stream_fps_<!--CAM2_ID-->">0</font> fps)</div>
-                </div></td>
+                <td>
+                    <div style="width:30%;float:left;height:20px;padding:5px;"><b>Status&nbsp;&quot;Client&quot;:</b></div>
+                    <div style="float:left;width:250px;">
+                        <div style="float:left;padding:5px;height:20px;"><font id="show_stream_count_client">0 Streams</font></div>
+                    </div>
+                </td>
             </tr>
-        </table>
-        <table border="0" width="100%">
-            <tr>
-                <td width="30%">Status&nbsp;&quot;Client&quot;:</td>
-                <td><div style="text-align:center;">
-                    <div style="float:left;padding:5px;"><font id="show_stream_count_client">0</font> Streams</div>
-                </div></td>
-            </tr>
+            <tr><td height="20px">&nbsp;</td></tr>
         </table>
 
     </td></tr></table>

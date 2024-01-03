@@ -8,7 +8,7 @@ var app_setting_count     = 4;
 var app_setting_style     = "frame_column wide";
 var app_last_load         = 0;
 var app_title             = "jc://birdhouse/";
-var app_version           = "v1.0.0";
+var app_version           = "v1.0.5";
 var app_api_version       = "N/A";
 var app_api_dir           = "api/";
 var app_api_status        = "status";
@@ -39,6 +39,10 @@ function app_menu_entries(data) {
 	if (weather_active) {
 	    app_menu.push([lang("WEATHER"),      "script", hideSettings+"birdhousePrint_load('WEATHER', '"+app_active_cam+"');"]);
     }
+
+	if (app_admin_allowed) {
+	    birdhouse_adminAnswer(true);
+        }
 
 	if (app_admin_allowed) {
 		app_menu = app_menu.concat([
@@ -76,6 +80,7 @@ function app_initialize(data) {
 
 	var settings = data["SETTINGS"];
     if (settings["localization"]["language"]) { LANG = settings["localization"]["language"]; }
+
 	}
 
 //--------------------------------

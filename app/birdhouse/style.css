@@ -285,7 +285,15 @@ img .play_button  {
 
 #overlay_close {
     position : relative;
-    top      : 30px;
+    top      : 40px;
+    right    : -45%;
+    z-index  : 74;
+    cursor   : pointer;
+}
+
+#overlay_replace {
+    position : relative;
+    top      : 45px;
     right    : -45%;
     z-index  : 74;
     cursor   : pointer;
@@ -307,17 +315,27 @@ img .play_button  {
 #overlay_image {
     max-width        : 95vw;
     max-height       : 95vh;
-    transform: scale(0.98);
+    //transform        : scale(0.98);
     margin           : auto;
     background-color : white;
     border           : 5px solid white;
     z-index          : 73;
   }
   
+#overlay_image_replace {
+    max-width        : 95vw;
+    max-height       : 95vh;
+    //transform        : scale(0.98);
+    margin           : auto;
+    background-color : white;
+    border           : 5px solid white;
+    z-index          : 73;
+  }
+
 #overlay_video {
     max-width        : 95vw;
     max-height       : 95vh;
-    transform: scale(0.98);
+    transform        : scale(0.98);
     margin           : auto;
     background-color : white;
     border           : 5px solid white;
@@ -359,6 +377,25 @@ img .play_button  {
     margin           : 2px;
     color            : black;
     border           : 1px solid white;
+}
+
+.button-settings-api {
+    background-color    : lightgray;
+    color               : black;
+    width               : 90px;
+    height              : 40px;
+    max-height          : 40px;
+    margin              :  3px;
+    padding             :  2px;
+    overflow            : hidden;
+    float               : left;
+}
+
+.button-back-and-forth {
+    border-radius       : 5px;
+    cursor              : pointer;
+    padding             : 5px;
+    margin              : 10px;
 }
 
 /* weather fields */
@@ -404,4 +441,20 @@ img .play_button  {
     border-left: 10px solid transparent;
     border-right: 10px solid transparent;
     border-bottom: 10px solid white;
+}
+
+/* labels for object detection */
+
+.detection_label {
+    float         : left;
+    border-radius :  8px;
+    height        : 12px;
+    max-height    : 12px;
+    margin        :  5px;
+    padding       :  4px;
+    cursor        : pointer;
+    font-size     : 11px;
+
+    background    : #bbbbff;
+    color         : black;
 }

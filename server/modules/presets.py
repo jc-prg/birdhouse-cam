@@ -1,4 +1,6 @@
 import os
+import glob
+import sys
 import logging
 import time
 from dotenv import load_dotenv
@@ -9,15 +11,64 @@ def get_env(var_name):
     return os.environ.get(var_name)
 
 
+def read_error_images():
+    global birdhouse_error_images_raw, birdhouse_error_images
+    import cv2
+    for key in birdhouse_error_images:
+        image_path = os.path.join(os.getcwd(), "data", birdhouse_error_images[key])
+        if os.path.exists(image_path):
+            birdhouse_error_images_raw[key] = cv2.imread(image_path)
+        else:
+            print("Could not load error image " + image_path)
+            sys.exit()
+
+
+def check_submodules():
+    global birdhouse_git_submodules, birdhouse_git_submodules_installed
+
+    for key in birdhouse_git_submodules:
+        module_path = os.path.join(os.getcwd(), birdhouse_git_submodules[key], "README.md")
+        if not os.path.exists(module_path):
+            print("ERROR: Submodule from git not installed: https://github.com/" + key + " in directory " +
+                  birdhouse_git_submodules[key])
+            print("-> Try: 'sudo git submodule update --init --recursive' in the root directory.")
+            sys.exit()
+    birdhouse_git_submodules_installed = True
+
+
 path = os.path.join(os.path.dirname(__file__), "../../.env")
 load_dotenv(path)
 
+logger_list = []
+loggers = {}
+logger_exists = {}
+camera_list = []
+
+birdhouse_initial_connect_msg = {}
+birdhouse_error_images_raw = {}
+birdhouse_error_images = {
+    "setting": "camera_error_settings.jpg",
+    "camera": "camera_error_hires.jpg",
+    "lowres": "camera_error_lowres.png"
+}
+
+birdhouse_git_submodules_installed = False
+birdhouse_git_submodules = {
+    "jc-prg/bird-detection": "server/modules/detection",
+    "jc-prg/modules": "app/modules",
+    "jc-prg/app-framework": "app/framework"
+}
+
+birdhouse_status = {
+    "object_detection": False
+}
 
 birdhouse_env = {
     "database_type": get_env("DATABASE_TYPE"),
-    "database_cleanup": get_env("DATABASE_DAILY_CLEANUP").lower() in ("true", "1", "yes"),
+    "database_cleanup": get_env("DATABASE_DAILY_CLEANUP").lower() in ("true", "1", 1, "yes", "on"),
 
-    "rpi_active": get_env("RPI_ACTIVE").lower() in ("true", "1", "yes"),
+    "rpi_active": get_env("RPI_ACTIVE").lower() in ("true", "1", 1, "yes", "on"),
+    "rpi_64bit": get_env("RPI_64BIT").lower() in ("yes", "1", 1, "true", "on"),
 
     "couchdb_server": get_env("COUCHDB_SERVER"),
     "couchdb_user": get_env("COUCHDB_USER"),
@@ -38,9 +89,10 @@ birdhouse_env = {
     "admin_ip4_deny": get_env("ADMIN_IP4_DENY"),
     "admin_ip4_allow": get_env("ADMIN_IP4_ALLOW"),
     "admin_password": get_env("ADMIN_PASSWORD"),
-    "admin_login": get_env("ADMIN_LOGIN")
-}
+    "admin_login": get_env("ADMIN_LOGIN"),
 
+    "detection_active": (get_env("OBJECT_DETECTION").upper() in ("ON", "1", 1, "TRUE", "YES"))
+}
 
 birdhouse_log_into_file = True
 birdhouse_loglevel = logging.INFO
@@ -49,6 +101,7 @@ birdhouse_loglevel_modules_debug = []
 birdhouse_loglevel_modules_warning = []
 birdhouse_loglevel_modules_error = []
 birdhouse_loglevel_module = {
+    "root": birdhouse_loglevel,
     "backup": birdhouse_loglevel,
     "cam-main": birdhouse_loglevel,
     "cam-img": birdhouse_loglevel,
@@ -63,11 +116,13 @@ birdhouse_loglevel_module = {
     "DB-json": birdhouse_loglevel,
     "DB-couch": birdhouse_loglevel,
     "DB-handler": birdhouse_loglevel,
+    "image": birdhouse_loglevel,
     "mic-main": birdhouse_loglevel,
     "sensors": birdhouse_loglevel,
     "server": birdhouse_loglevel,
     "srv-info": birdhouse_loglevel,
     "srv-health": birdhouse_loglevel,
+    "video": birdhouse_loglevel,
     "video-srv": birdhouse_loglevel,
     "views": birdhouse_loglevel,
     "view-head": birdhouse_loglevel,
@@ -89,10 +144,12 @@ for module in birdhouse_loglevel_modules_error:
 birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
                                          datefmt='%m/%d %H:%M:%S')
 birdhouse_log_filename = str(os.path.join(os.path.dirname(__file__), "../../log", "server.log"))
-birdhouse_loghandler = RotatingFileHandler(filename=birdhouse_log_filename, mode='a',
-                                           maxBytes=int(2.5 * 1024 * 1024),
-                                           backupCount=2, encoding=None, delay=False)
-birdhouse_loghandler.setFormatter(birdhouse_log_format)
+birdhouse_log_as_file = True
+
+# birdhouse_loghandler = RotatingFileHandler(filename=birdhouse_log_filename, mode='a',
+#                                            maxBytes=int(2.5 * 1024 * 1024),
+#                                            backupCount=2, encoding=None, delay=False)
+# birdhouse_loghandler.setFormatter(birdhouse_log_format)
 
 
 birdhouse_couchdb = {
@@ -227,6 +284,14 @@ birdhouse_default_cam = {
         "threshold": 95,
         "detection_area": (0.1, 0.1, 0.8, 0.8)
     },
+    "object_detection": {
+        "active": False,
+        "classes": [],
+        "detection_size": 40,
+        "live": False,
+        "model": "yolov5m",
+        "threshold": 50
+    },
     "video": {
         "allow_recording": True,
         "max_length": 180,
@@ -309,7 +374,7 @@ birdhouse_preset = {
     "weather": {
         "active": True,
         "location": "Munich",
-        "gps_location": [48.14, 11.58],
+        "gps_location": [48.14, 11.58, "Munich"],
         "source": "Open-Metheo",
         "available_sources": ["Python-Weather", "Open-Metheo"]
     }
@@ -339,6 +404,15 @@ file_types = {
     '.jpg': 'image/jpg',
     '.jpeg': 'image/jpg',
 }
+
+detection_default_models = ["yolov5n", "yolov5s", "yolov5m", "yolov5l", "yolov5x",
+                            "yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6", "yolov5x6"]
+detection_custom_model_path = "server/modules/detection/custom_models/"
+detection_custom_models = glob.glob(detection_custom_model_path + "*.pt")
+detection_models = detection_default_models
+for directory in detection_custom_models:
+    directory = directory.replace(detection_custom_model_path, "")
+    detection_models.append(directory)
 
 # http://codes.wmo.int/bufr4/codeflag/_0-20-003 (parts used by open-meteo.com)
 birdhouse_weather_descriptions = {

@@ -9,14 +9,10 @@ ffmpeg-python
 #python-ffmpeg
 #better-ffmpeg-progress
 ffmpeg-progress
-adafruit-circuitpython-dht
 couchdb
 requests
 python_weather
-board
+suntime
 geopy
 python-dotenv
-#torch
-#picamera2
-#psutil
-#tqdm
+torch

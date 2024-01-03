@@ -4,3 +4,6 @@
 [submodule "app/framework"]
 	path = app/framework
 	url = https://github.com/jc-prg/app-framework.git
+[submodule "server/modules/detection"]
+	path = server/modules/detection
+	url = https://github.com/jc-prg/bird-detection.git

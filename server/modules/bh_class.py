@@ -1,7 +1,8 @@
 import time
 import logging
-
+from random import random
 from modules.presets import *
+import modules.bh_logging as bh_logging
 
 
 class BirdhouseClass(object):
@@ -26,7 +27,7 @@ class BirdhouseClass(object):
         self._paused = False
         self._processing = False
         self._thread_priority = 3                      # range 0..4 (1..5 via self.threat_set_priority)
-        self._thread_waiting_times = [0.2, 0.5, 1, 2, 4, 8]  # to be used depending on priority
+        self._thread_waiting_times = [0.2, 0.5, 1, 2, 4, 8, 16, 32]  # to be used depending on priority
         self._thread_slowdown = False
         self._health_check = time.time()
 
@@ -42,13 +43,7 @@ class BirdhouseClass(object):
             self.config = config
             self.thread_register(init=True)
 
-        self.logging = logging.getLogger(class_id)
-        if class_log not in birdhouse_loglevel_module:
-            self.logging.setLevel(logging.INFO)
-            self.logging.error("Key '" + class_id + "' is not defined in preset.py in 'birdhouse_loglevel_module'.")
-        else:
-            self.logging.setLevel(birdhouse_loglevel_module[class_log])
-        self.logging.addHandler(birdhouse_loghandler)
+        self.logging = bh_logging.Logging(class_log, birdhouse_log_as_file)
 
     def stop(self):
         """

@@ -61,15 +61,18 @@ function birdhouse_loginReturn(data) {
 }
 
 function birdhouse_adminAnswer(set=true) {
-    if (set) {
-        intervalAdmin = setInterval(function() { birdhouse_adminAnswerRequest(); }, 5000 );
-        }
+    if (set == true) {
+        if (intervalAdmin == undefined) {
+            intervalAdmin = setInterval(function() { birdhouse_adminAnswerRequest(); }, 3000 );
+        } }
     else {
         window.clearInterval(intervalAdmin);
+        intervalAdmin = undefined;
     }
 }
 
 function birdhouse_adminAnswerRequest() {
+
     birdhouse_apiRequest("GET", ["last-answer"], "", birdhouse_adminAnswerReturn, "", "birdhouse_adminLastAnswer");
 }
 
@@ -166,8 +169,9 @@ function birdhouse_forceBackup(camera) {
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
 	}
 
-function birdhouse_forceUpdateViews() {
-	commands = ["update-views"];
+function birdhouse_forceUpdateViews(complete=false) {
+    if (complete)   { commands = ["update-views-complete"]; }
+	else            { commands = ["update-views"]; }
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceUpdateViews');
 	}
 
@@ -215,8 +219,8 @@ function birdhouse_removeDataToday_exec() {
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_removeDataToday');
 }
 
-function birdhouse_recreateImageConfig() {
-	commands = ["recreate-image-config"];
+function birdhouse_recreateImageConfig(date="") {
+	commands = ["recreate-image-config", date=""];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRecreateImageConfig,'','birdhouse_recreateImageConfig');
 	}
 

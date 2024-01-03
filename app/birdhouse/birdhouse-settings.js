@@ -142,8 +142,9 @@ function birdhouse_app_settings (name="Settings") {
 
     this.server_side_settings = function() {
         var settings = app_data["SETTINGS"];
-        if (settings["rpi_active"]) { rpi_active = "true"; } else { rpi_active = "false"; }
-        if (settings["server"]["daily_clean_up"]) { daily_clean_up = "true"; } else { daily_clean_up = "false"; }
+        if (settings["server"]["rpi_active"])           { rpi_active = "true"; } else { rpi_active = "false"; }
+        if (settings["server"]["detection_active"])     { detection_active = "true"; } else { detection_active = "false"; }
+        if (settings["server"]["daily_clean_up"])       { daily_clean_up = "true"; } else { daily_clean_up = "false"; }
 
         if (settings["server"]["database_server"] && settings["server"]["database_server"] != "") {
             var link = "http://"+settings["server"]["database_server"]+":"+settings["server"]["database_port"]+"/_utils/";
@@ -167,6 +168,7 @@ function birdhouse_app_settings (name="Settings") {
         html_internal += this.tab.row("Audio stream server:&nbsp;",settings["server"]["server_audio"]);
         html_internal += this.tab.row("Audio stream port:&nbsp;",  settings["server"]["port_audio"]);
         html_internal += this.tab.row("RPi Active:&nbsp;",         rpi_active);
+        html_internal += this.tab.row("Object detection:&nbsp;",   detection_active);
 
         html_internal += this.tab.row("<hr>");
         html_internal += this.tab.row("Admin access via:&nbsp;",   settings["server"]["admin_login"]);
@@ -183,32 +185,32 @@ function birdhouse_app_settings (name="Settings") {
 	    var api_call        = "";
         var cameras         = app_data["SETTINGS"]["devices"]["cameras"];
         var microphones     = app_data["SETTINGS"]["devices"]["microphones"];
-        var button_style    = "background-color:lightgray;color:black;width:90px;margin:3px;";
         delete this.tab.style_cells["width"];
         var html_entry      = this.tab.start();
 
-        api_call    = "<button onclick='window.open(\"" + RESTurl + "api/no-id/list/\",\"_blank\");' style='"+button_style+"';>REST API</button>";
-        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/INDEX/\",\"_blank\");' style='"+button_style+"';>INDEX</button>";
+        api_call    = "<button onclick='window.open(\"" + RESTurl + "api/no-id/list/\",\"_blank\");' class='button-settings-api';>REST API</button>";
+        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/INDEX/\",\"_blank\");' class='button-settings-api';>INDEX</button>";
         html_entry += this.tab.row("API Calls", api_call);
 
-        api_call    = "<button onclick='birdhouse_forceBackup();' style='"+button_style+"';>Force Backup</button>";
-        api_call   += "<button onclick='birdhouse_forceRestart();' style='"+button_style+"';>Force Restart</button>";
-        api_call   += "<button onclick='birdhouse_forceUpdateViews();' style='"+button_style+"';>Update Views</button>";
-        api_call   += "<button onclick='birdhouse_recreateImageConfig();' style='"+button_style+"';>NewImgCfg</button>";
-        api_call   += "<button onclick='birdhouse_removeDataToday();' style='"+button_style+"';>CleanAllToday</button>";
-        api_call   += "<button onclick='birdhouse_checkTimeout();' style='"+button_style+"';>Timeout</button>";
+        api_call    = "<button onclick='birdhouse_forceBackup();' class='button-settings-api'>Force Backup</button>";
+        api_call   += "<button onclick='birdhouse_forceRestart();' class='button-settings-api'>Force Restart</button>";
+        api_call   += "<button onclick='birdhouse_forceUpdateViews();' class='button-settings-api'>Update Views</button>";
+        api_call   += "<button onclick='birdhouse_forceUpdateViews(true);' class='button-settings-api'>Update Views Complete</button>";
+        api_call   += "<button onclick='birdhouse_recreateImageConfig();' class='button-settings-api'>NewImgCfg</button>";
+        api_call   += "<button onclick='birdhouse_removeDataToday();' class='button-settings-api'>CleanAllToday</button>";
+        api_call   += "<button onclick='birdhouse_checkTimeout();' class='button-settings-api'>Timeout</button>";
         html_entry += this.tab.row("API Commands", api_call);
 
 	    for (let camera in cameras) {
-	        api_call  = "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Today "+camera.toUpperCase()+"</button>";
-	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Compl. "+camera.toUpperCase()+"</button>";
-	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/ARCHIVE/"+camera+"/\",\"_blank\");' style='"+button_style+"';>Archive "+camera.toUpperCase()+"</button>";
+	        api_call  = "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY/"+camera+"/\",\"_blank\");' class='button-settings-api'>Today "+camera.toUpperCase()+"</button>";
+	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' class='button-settings-api'>Compl. "+camera.toUpperCase()+"</button>";
+	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/ARCHIVE/"+camera+"/\",\"_blank\");' class='button-settings-api'>Archive "+camera.toUpperCase()+"</button>";
             html_entry += this.tab.row("API "+camera, api_call);
         }
 
         for (let micro in microphones) {
-            api_call    = "<button onclick='birdhouse_recordStartAudio(\""+micro+"\");' style='"+button_style+"';>Record "+micro+"</button>";
-            api_call   += "<button onclick='birdhouse_recordStopAudio(\""+micro+"\");' style='"+button_style+"';>Stop "+micro+"</button>";
+            api_call    = "<button onclick='birdhouse_recordStartAudio(\""+micro+"\");' class='button-settings-api'>Record "+micro+"</button>";
+            api_call   += "<button onclick='birdhouse_recordStopAudio(\""+micro+"\");' class='button-settings-api'>Stop "+micro+"</button>";
             html_entry += this.tab.row("API "+micro, api_call);
         }
         html_entry += this.tab.end();
@@ -221,7 +223,7 @@ function birdhouse_app_settings (name="Settings") {
 		html_entry += this.tab.row("App:",	"<a href='/app/index.html?INFO' target='_blank'>"+ app_title + "</a>");
 		html_entry += this.tab.row("Versions:",
 						"App: " 		+ app_version + "<br/>" +
-						"API: " 		+ app_data["API"]["version"] + "<br/>" +
+						"Server: "      + app_data["API"]["version"] + "<br/>" +
 						"jcMsg: " 		+ appMsg.appVersion + "<br/>" +
 						"jcApp: "		+ appFW.appVersion);
 		html_entry += this.tab.row("Source:","<a href='https://github.com/jc-prg/birdhouse-cam/' target='_blank'>https://github.com/jc-prg/birdhouse-cam/</a>");
@@ -295,7 +297,9 @@ function birdhouse_app_settings (name="Settings") {
 		link = RESTurl + "lowres/stream.mjpg?cam1";
 		html_entry += this.tab.row("Stream LowRes:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
 		link = RESTurl + "detection/stream.mjpg?cam1";
-		html_entry += this.tab.row("Stream Detection:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+		html_entry += this.tab.row("Stream Detection Areas:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+		link = RESTurl + "object/stream.mjpg?cam1";
+		html_entry += this.tab.row("Stream Object Detection:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
 		link = RESTurl + "pip/stream.mjpg?cam1+cam2:1";
 		html_entry += this.tab.row("Stream Picture-in-Picture:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
 		html_entry += this.tab.row("&nbsp;");

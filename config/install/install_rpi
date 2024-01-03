@@ -12,6 +12,7 @@ sudo apt-get -y install iputils-ping
 sudo apt-get -y install libgpiod2
 sudo apt-get -y install ffmpeg
 sudo apt-get -y install v4l-utils
+sudo apt-get -y install rpi.gpio
 
 pip3 install --upgrade pip
 pip3 install -r requirements.txt

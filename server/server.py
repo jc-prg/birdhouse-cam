@@ -1,16 +1,12 @@
 #!/usr/bin/python3
 
-import os
 import threading
-import time
 import json
 import signal
 import sys
 import psutil
 import subprocess
-
-import logging
-from logging.handlers import RotatingFileHandler
+import os
 
 import socketserver
 from http import server
@@ -25,10 +21,11 @@ from modules.presets import *
 from modules.views import BirdhouseViews
 from modules.sensors import BirdhouseSensor
 from modules.bh_class import BirdhouseClass
+import modules.bh_logging as bh_logging
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v1.0.1"}
-app_framework = "v1.0.0"
+api_description = {"name": "BirdhouseCAM", "version": "v1.0.5"}
+app_framework = "v1.0.5"
 srv_audio = None
 
 
@@ -92,9 +89,9 @@ def on_exception(exc_type, value, tb):
     """
     grab all exceptions and write them to the logfile (if active)
     """
-    srv_logging.exception("Uncaught exception: {0}".format(str(value)))
-    srv_logging.exception("                    {0}".format(str(exc_type)))
-    srv_logging.exception("                    {0}".format(str(tb)))
+    srv_logging.exception("Uncaught exception: " + str(value))
+    srv_logging.exception("                    " + str(exc_type))
+    srv_logging.exception("                    " + str(tb))
 
 
 def on_exception_setting():
@@ -240,7 +237,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
 class ServerInformation(threading.Thread, BirdhouseClass):
 
-    def __init__(self):
+    def __init__(self, initial_camera_scan):
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="srv-info", config=config)
         self.thread_set_priority(4)
@@ -248,6 +245,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         self._system_status = {}
         self._device_status = {}
         self._srv_info_time = 0
+        self.initial_camera_scan = initial_camera_scan
 
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
         self.microphones = None
@@ -335,17 +333,25 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         last_key = "none"
         system["video_devices"] = {}
         system["video_devices_02"] = {}
+        system["video_devices_03"] = self.initial_camera_scan["video_devices_03"]
         for value in output_2:
             if ":" in value:
                 system["video_devices"][value] = []
                 last_key = value
             elif value != "":
                 value = value.replace("\t", "")
+                check_text = "NEW"
+                if value in system["video_devices_03"]:
+                    check = system["video_devices_03"][value]
+                    if check["image"]:
+                        check_text = "OK"
+                    else:
+                        check_text = "ERROR"
                 system["video_devices"][last_key].append(value)
                 info = last_key.split(":")
-                system["video_devices_02"][value] = value + " (" + info[0] + ")"
-        system["audio_devices"] = {}
+                system["video_devices_02"][value] = check_text + ": " + value + " (" + info[0] + ")"
 
+        system["audio_devices"] = {}
         if microphones != {}:
             first_mic = list(microphones.keys())[0]
             if microphones[first_mic].connected:
@@ -461,7 +467,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        #self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "*")
         self.end_headers()
 
     def stream_audio_header(self, size):
@@ -474,7 +481,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        #self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "*")
 
         self.send_header("Connection", "Keep-Alive")
         # self.send_header('Age', '0')
@@ -606,7 +614,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 param["which_cam"] = complete_cam
 
             param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup",
-                            "last-answer", "favorit", "recycle"]
+                            "last-answer", "favorit", "recycle", "update-views", "update-views-complete"]
             if "command" in param and param["command"] not in param_no_cam:
                 if param["which_cam"] not in views.camera:
                     srv_logging.warning("Unknown camera requested: " + param["which_cam"] + " (" + self.path + ")")
@@ -661,11 +669,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         REST API for javascript commands e.g. to change values in runtime
         """
+        global camera
+
         config.user_activity("set")
         param = self.path_split()
         which_cam = param["which_cam"]
 
-        srv_logging.info("POST API request with '" + self.path + "'.")
+        srv_logging.debug("POST API request with '" + self.path + "'.")
         srv_logging.debug(str(param))
 
         api_response = {
@@ -764,6 +774,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             views.archive_list_update(force=True)
             views.favorite_list_update(force=True)
             response = {"update_views": "started"}
+        elif param["command"] == "update-views-complete":
+            views.archive_list_update(force=True, complete=True)
+            views.favorite_list_update(force=True)
+            response = {"update-views-complete": "started"}
         elif param["command"] == "force-backup":
             backup.start_backup()
             response = {"backup": "started"}
@@ -786,15 +800,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     data[key] = decode_url_string(data[key])
             srv_logging.info(str(data))
             config.main_config_edit("main", data)
-            if which_cam in camera:
-                camera[which_cam].config_update = True
+            for key in camera_list:
+                camera[key].config_update = True
         elif param["command"] == "set-temp-threshold":
             srv_logging.info("Set temporary threshold to camera '"+which_cam+"': " + str(param["parameter"]))
             if which_cam in camera:
                 camera[which_cam].record_temp_threshold = param["parameter"]
         elif param["command"] == "kill-stream":
-            srv_logging.info(self.path)
-            srv_logging.info(str(param["parameter"]))
+            srv_logging.debug(self.path)
+            srv_logging.debug(str(param["parameter"]))
             stream_id = param["parameter"][0]
             if "&" in stream_id:
                 stream_id_kill = stream_id.split("&")[-1]
@@ -917,6 +931,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "backup_process_running": backup.backup_running,
                     "queue_waiting_time": config.queue.queue_wait,
                     "health_check": health_check.status(),
+                    "object_detection": birdhouse_status["object_detection"],
                     "last_answer": ""
                 },
                 "devices": {
@@ -931,7 +946,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "active_date": "",
                     "active_page": command
                 },
-                "database": {}
+                "database": {},
+                "detection_models": detection_models
             },
             "SETTINGS": {
                 "backup": {},
@@ -1054,7 +1070,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
         if command in cmd_views:
-            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups", "chart_data", "weather_data"]
+            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups",
+                                "chart_data", "weather_data", "days_available", "day_back", "day_forward"]
             for key in param_to_publish:
                 if key in content:
                     api_data["data"][key] = content[key]
@@ -1095,6 +1112,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                                               "+{2nd-camera-key}:{2nd-camera-pos}"
                     camera_data[key]["video"]["stream_lowres"] = "/lowres/stream.mjpg?" + key
                     camera_data[key]["video"]["stream_detect"] = "/detection/stream.mjpg?" + key
+                    camera_data[key]["video"]["stream_object"] = "/object/stream.mjpg?" + key
                     camera_data[key]["device"] = "camera"
                     camera_data[key]["image"]["resolution_max"] = camera[key].max_resolution
                     camera_data[key]["image"]["current_streams"] = camera[key].get_stream_count()
@@ -1103,7 +1121,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_address"]
                     else:
                         camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_stream_video"]
-                    camera_data[key]["video"]["stream_server"] += ":" + str(config.param["server"]["port_video"])
+                    camera_data[key]["video"]["stream_server"] += ":" + str(birdhouse_env["port_video"])
             request_times["8_status_camera"] = round(time.time() - request_start, 3)
 
             # get sensor data
@@ -1135,7 +1153,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "ip4_admin_deny": birdhouse_env["admin_ip4_deny"],
                 "ip4_admin_allow": birdhouse_env["admin_ip4_allow"],
                 "admin_login": birdhouse_env["admin_login"],
-                "rpi_active": birdhouse_env["rpi_active"]
+                "rpi_active": birdhouse_env["rpi_active"],
+                "detection_active": birdhouse_env["detection_active"]
             }
             api_response["SETTINGS"]["server"] = server_config
 
@@ -1203,7 +1222,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         create video stream
         """
-        srv_logging.info("VIDEO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
+        srv_logging.debug("VIDEO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
 
         if ":" in which_cam and "+" in which_cam:
             pip_cam, cam2_pos = which_cam.split(":")
@@ -1216,6 +1235,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         stream_pip = False
         stream_active = True
+        stream_object = ("/object/" in self.path)
         stream_id_int = datetime.now().timestamp()
         stream_id_ext = param["session_id"]
 
@@ -1251,10 +1271,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if frame_id != camera[which_cam].get_stream_image_id() \
                     or camera[which_cam].if_error() or camera[which_cam].camera_stream_raw.if_error():
 
-                frame_raw = camera[which_cam].get_stream(stream_id=stream_id_int,
-                                                         stream_type=stream_type,
-                                                         stream_resolution=stream_resolution,
-                                                         system_info=True)
+                if stream_object:
+                    frame_raw = camera[which_cam].get_stream_object_detection(stream_id=stream_id_int,
+                                                                              stream_type=stream_type,
+                                                                              stream_resolution=stream_resolution,
+                                                                              system_info=True)
+                else:
+                    frame_raw = camera[which_cam].get_stream(stream_id=stream_id_int,
+                                                             stream_type=stream_type,
+                                                             stream_resolution=stream_resolution,
+                                                             system_info=True)
                 frame_id = camera[which_cam].get_stream_image_id()
 
                 if frame_raw is not None and len(frame_raw) > 0:
@@ -1325,7 +1351,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                 time.sleep(stream_wait_while_streaming)
                 for key in camera:
-                    if not camera[key].error:
+                    if not camera[key].error and camera[key].video:
                         if camera[key].video.processing:
                             time.sleep(stream_wait_while_recording)
                             break
@@ -1341,7 +1367,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         which_cam = param.split("&")[0]
         session_id = param.split("&")[-1]
 
-        srv_logging.info("AUDIO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + session_id)
+        srv_logging.debug("AUDIO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + session_id)
 
         if which_cam not in microphones:
             srv_logging.error("AUDIO device '" + which_cam + "' does not exist.")
@@ -1391,7 +1417,8 @@ if __name__ == "__main__":
     # help
     if len(sys.argv) > 0 and "--help" in sys.argv:
         print("jc://birdhouse/\n\nArguments:")
-        print("--logfile    Write logging output to logfile 'stream.log'")
+        print("--help       Write this information")
+        print("--logfile    Write logging output to logfile '"+birdhouse_log_filename+"'")
         print("--backup     Start backup directly (current date, delete directory before)")
         exit()
 
@@ -1399,22 +1426,19 @@ if __name__ == "__main__":
 
     # set logging
     if len(sys.argv) > 0 and "--logfile" in sys.argv or birdhouse_log_into_file:
-
-        print("Starting ...")
+        print('-------------------------------------------')
+        print('Starting ...')
+        print('-------------------------------------------')
         print("Using logfile "+birdhouse_log_filename+" ...")
+        birdhouse_log_as_file = True
 
-        srv_logging = logging.getLogger('root')
-        srv_logging.setLevel(birdhouse_loglevel_module["server"])
-        srv_logging.addHandler(birdhouse_loghandler)
-    else:
-        logging.basicConfig(format='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
-                            datefmt='%m/%d %H:%M:%S',
-                            level=birdhouse_loglevel)
-        srv_logging = logging.getLogger('root')
-
+    srv_logging = bh_logging.Logging('root', birdhouse_log_as_file)
     srv_logging.info('-------------------------------------------')
     srv_logging.info('Starting ...')
     srv_logging.info('-------------------------------------------')
+
+    check_submodules()
+    read_error_images()
 
     # set system signal handler
     signal.signal(signal.SIGINT, on_exit)
@@ -1443,14 +1467,21 @@ if __name__ == "__main__":
         microphones[mic].start()
 
     # start cameras
+    camera_first = True
+    camera_scan = {}
     camera = {}
     for cam in config.param["devices"]["cameras"]:
         settings = config.param["devices"]["cameras"][cam]
-        camera[cam] = BirdhouseCamera(camera_id=cam, config=config, sensor=sensor, microphones=microphones)
+        camera[cam] = BirdhouseCamera(camera_id=cam, config=config, sensor=sensor,
+                                      microphones=microphones, first_cam=camera_first)
+        if camera_first:
+            camera_scan = camera[cam].camera_scan
+            camera_first = False
         camera[cam].start()
+        camera_list.append(cam)
 
     # system information
-    sys_info = ServerInformation()
+    sys_info = ServerInformation(camera_scan)
     sys_info.start()
 
     # start views and commands
@@ -1494,7 +1525,7 @@ if __name__ == "__main__":
         address = ('0.0.0.0', int(birdhouse_env["port_api"]))
         server = StreamingServer(address, StreamingHandler)
         srv_logging.info("Starting WebServer on port " + str(birdhouse_env["port_api"]) + " ...")
-        srv_logging.info(" -----------------------------> GO! ")
+        srv_logging.info(" -----------------------------> GO!\n")
         server.serve_forever()
         srv_logging.info("STOPPED SERVER.")
 
@@ -1519,11 +1550,18 @@ if __name__ == "__main__":
         srv_logging.info("Stopped WebServer.")
         srv_logging.info("-------------------------------------------")
 
+        count_running_threads = 0
         for thread in threading.enumerate():
             if thread.name != "MainThread":
+                count_running_threads += 1
                 if thread.class_id and thread.id:
-                    srv_logging.error("Could not stop: " + thread.name + " = " +
+                    srv_logging.error("Could not stop correctly: " + thread.name + " = " +
                                       thread.class_id + " (" + thread.id + ")")
                 else:
-                    srv_logging.error("Could not stop: " + thread.name)
-                thread.stop()
+                    srv_logging.error("Could not stop correctly: " + thread.name)
+
+        if count_running_threads > 0:
+            srv_logging.info("-> Kill the " + str(count_running_threads) + " threads that could not be stopped ...")
+        srv_logging.info("-------------------------------------------")
+        os._exit(os.EX_OK)
+

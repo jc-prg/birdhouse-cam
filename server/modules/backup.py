@@ -54,6 +54,12 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             else:
                 backup_started = False
 
+            if len(self.views.archive_config_recreate) > 0:
+                self.views.archive_config_recreate_progress = True
+                date = self.views.archive_config_recreate.pop()
+                self._create_image_config_save(date)
+                self.views.archive_config_recreate_progress = False
+
             self.thread_control()
             self.thread_wait()
 
@@ -120,7 +126,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             self.config.db_handler.directory_create(config="images", date=backup_date)
             files = self.config.db_handler.read_cache(config="images")
             files_chart = files.copy()
-            files_backup = {"files": {}, "chart_data": {}, "info": {}}
+            files_backup = {"files": {}, "chart_data": {}, "info": {}, "weather_data": {}}
 
             file_sensor = self.config.db_handler.file_path(config="sensor")
             file_sensor_copy = os.path.join(self.config.db_handler.directory(config="images", date=backup_date),
@@ -140,11 +146,11 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             backup_size = 0
 
             if os.path.isfile(file_sensor):
-                os.popen("cp "+file_sensor+" "+file_sensor_copy)
+                os.popen("cp " + file_sensor + " " + str(file_sensor_copy))
             if os.path.isfile(file_weather):
-                os.popen("cp "+file_weather+" "+file_weather_copy)
+                os.popen("cp " + file_weather + " " + str(file_weather_copy))
             if os.path.isfile(file_stats):
-                os.popen("cp "+file_stats+" "+file_stats_copy)
+                os.popen("cp " + file_stats + " " + str(file_stats_copy))
 
             info = True
             for cam in self.camera:
@@ -169,12 +175,13 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                         # create copy of entry (to modify without damage in original data)
                         update_new = files[stamp].copy()
 
-                        # if images are to archived
+                        # if images are to be archived
                         if self.camera[cam].image_to_select(timestamp=stamp, file_info=files[stamp].copy()):
 
                             count += 1
                             file_lowres = self.config.filename_image(image_type="lowres", timestamp=stamp, camera=cam)
                             file_hires = self.config.filename_image(image_type="hires", timestamp=stamp, camera=cam)
+                            file_hires_detect = file_hires.replace(".jpeg", "_detect.jpeg")
 
                             if "similarity" not in update_new:
                                 update_new["similarity"] = 100
@@ -194,10 +201,14 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                                                       os.path.getsize(os.path.join(dir_source, file_hires)))
                                 backup_size += update_new["size"]
 
-                                os.popen('cp ' + os.path.join(dir_source, file_lowres) + ' ' +
-                                         os.path.join(directory, file_lowres))
-                                os.popen('cp ' + os.path.join(dir_source, file_hires) + ' ' +
-                                         os.path.join(directory, file_hires))
+                                os.popen('cp ' + os.path.join(str(dir_source), file_lowres) + ' ' +
+                                         os.path.join(str(directory), file_lowres))
+                                os.popen('cp ' + os.path.join(str(dir_source), file_hires) + ' ' +
+                                         os.path.join(str(directory), file_hires))
+
+                                if os.path.isfile(os.path.join(dir_source, file_hires_detect)):
+                                    os.popen('cp ' + os.path.join(str(dir_source), file_hires_detect) + ' ' +
+                                             os.path.join(str(directory), file_hires_detect))
 
                                 save_entry = True
 
@@ -238,16 +249,15 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                 self.logging.info(cam + ": " + str(count_data) + " Data entries")
                 self.logging.info(cam + ": " + str(count_other_date) + " not saved (other date)")
 
-            # files_backup["chart_data"] = self.views.create.chart_data(data=files_backup["files"], config=self.config)
+            # create chart data from sensor and weather data vor archive
             files_backup["chart_data"] = self.views.create.chart_data_new(data_image=files_chart,
                                                                           data_sensor=data_sensor,
                                                                           data_weather=data_weather,
-                                                                          date=self.config.local_time().strftime(
-                                                                              "%Y%m%d"),
+                                                                          date=backup_date,
                                                                           cameras=camera_list)
+            # extract relevant weather data for archive
             files_backup["weather_data"] = self.views.create.weather_data_new(data_weather=data_weather,
-                                                                              date=self.config.local_time().strftime(
-                                                                                  "%Y%m%d"))
+                                                                              date=backup_date)
 
             files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
             files_backup["info"]["count"] = count
@@ -258,6 +268,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
             self.config.db_handler.write(config="backup", date=directory, data=files_backup,
                                          create=True, save_json=True)
+            self.config.queue.set_status_changed(date=directory)
 
         self.backup_running = False
 
@@ -349,7 +360,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         file_list = [f for f in os.listdir(path) if "_big" not in f and (f.endswith(".jpg") or f.endswith("jpeg"))]
 
         file_list.sort(reverse=True)
-        files = self.create_image_config_analyze(file_list=file_list, init=True, subdir=date)
+        files = self._create_image_config_analyze(file_list=file_list, init=True, subdir=date)
         self.logging.info("Done.")
         return files
 
@@ -361,7 +372,51 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         self.create_image_config(date="", recreate=True)
         return response
 
-    def create_image_config_analyze(self, file_list, init=False, subdir=""):
+    def _create_image_config_save(self, date=""):
+        """
+        create and save image config
+        """
+        camera_list = []
+        for cam in self.camera:
+            camera_list.append(cam)
+
+        directory = self.config.db_handler.directory(config="images", date=date)
+        if not os.path.isdir(directory):
+            self.logging.warning("Directory '" + directory + "' doesn't exist.")
+            return
+
+        if self.config.db_handler.exists(config="weather", date=date):
+            data_weather = self.config.db_handler.read(config="weather", date=date)
+        else:
+            data_weather = {}
+
+        if self.config.db_handler.exists(config="sensor", date=date):
+            data_sensor = self.config.db_handler.read(config="sensor", date=date)
+        else:
+            data_sensor = {}
+
+        # !!! Recreation of chart_data and weather_data seems not to work correctly
+        files = self.create_image_config(date, True)
+        files_backup = {
+            "files": files,
+            "info": {},
+            "chart_data": self.views.create.chart_data_new(data_image=files,
+                                                           data_sensor=data_sensor, data_weather=data_weather,
+                                                           date=date, cameras=camera_list),
+            "weather_data": self.views.create.weather_data_new(data_weather=data_weather)
+        }
+        files_backup["info"]["count"] = len(files)
+        files_backup["info"]["threshold"] = {}
+        for cam in self.camera:
+            files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
+        files_backup["info"]["date"] = date[6:8] + "." + date[4:6] + "." + date[0:4]
+        files_backup["info"]["size"] = sum(
+            os.path.getsize(os.path.join(directory, f)) for f in os.listdir(directory) if
+            f.endswith(".jpeg") or f.endswith(".jpg") or f.endswith(".json"))
+        self.config.db_handler.write(config="backup", date=date, data=files_backup,
+                                     create=True, save_json=True)
+
+    def _create_image_config_analyze(self, file_list, init=False, subdir=""):
         """
         Compare image files and write to config file (incl. sensor data if exist)
         """
@@ -375,7 +430,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             files = self.config.db_handler.read_cache(config='images')
         else:
             files = {}
-            files = self.create_image_config_get_filelist(file_list=file_list, files=files, subdir=subdir)
+            files = self._create_image_config_get_filelist(file_list=file_list, files=files, subdir=subdir)
 
             if os.path.isfile(self.config.db_handler.file_path("sensor")):
                 sensor_data = self.config.db_handler.read_cache(config="sensor")
@@ -405,6 +460,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         for cam in self.config.param["devices"]["cameras"]:
             filename_last = ""
             image_current = ""
+            image_hires = ""
             image_last = ""
             if cam not in files_new_cam:
                 continue
@@ -414,33 +470,56 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             for i in tqdm(range(0, keys_count), desc="Reloading images "+cam+" ..."):
                 key = files_keys[i]
                 if key in files_new and files_new[key]["camera"] == cam:
-                    filename_current = files_new[key]["lowres"]
+                    height_h = 0
+                    height_l = 0
+                    width_h = 0
+                    width_l = 0
+                    filename = ""
+                    filename_hires = files_new[key]["hires"]
+                    filename_lowres = files_new[key]["lowres"]
                     try:
                         filename = os.path.join(self.config.db_handler.directory(config="images"),
-                                                subdir, filename_current)
+                                                subdir, filename_lowres)
                         image_current = cv2.imread(filename)
                         image_current = cv2.cvtColor(image_current, cv2.COLOR_BGR2GRAY)
+                        height_l, width_l = image_current.shape[:2]
+
+                        filename = os.path.join(self.config.db_handler.directory(config="images"),
+                                                subdir, filename_hires)
+                        image_hires = cv2.imread(filename)
+                        height_h, width_h = image_hires.shape[:2]
+
                     except Exception as e:
                         self.raise_error("Could not load image: " + filename + " ... "+str(e))
+
+                    files_new[key]["to_be_deleted"] = 0
+                    files_new[key]["favorit"] = 0
+                    files_new[key]["size"] = len(image_hires)
+                    files_new[key]["hires_size"] = [width_h, height_h]
+                    files_new[key]["lowres_size"] = [width_l, height_l]
+                    files_new[key]["datestamp"] = subdir
+                    files_new[key]["date"] = subdir[6:8] + "." + subdir[4:6] + "." + subdir[0:4]
+                    files_new[key]["directory"] = "images/" + subdir
+                    files_new[key]["type"] = "image"
 
                     if len(filename_last) > 0:
                         detection_area = self.camera[cam].param["similarity"]["detection_area"]
                         score = self.camera[cam].image.compare_raw(image_current, image_last, detection_area)
-                        files_new[key]["compare"] = (filename_current, filename_last)
+                        files_new[key]["compare"] = (filename_lowres, filename_last)
                         files_new[key]["similarity"] = score
                         count += 1
                     else:
-                        files_new[key]["compare"] = filename_current
+                        files_new[key]["compare"] = filename_lowres
                         files_new[key]["similarity"] = 0
 
                     if init:
                         sensor_str = ""
                         if "sensor" in files_new[key]:
                             sensor_str = str(files_new[key]["sensor"])
-                        self.logging.debug(" - " + cam + ": " + filename_current + "  " + str(count) + "/" + str(len(files)) +
+                        self.logging.debug(" - " + cam + ": " + filename_lowres + "  " + str(count) + "/" + str(len(files)) +
                                      " - " + str(files_new[key]["similarity"]) + "%  "+sensor_str)
 
-                    filename_last = filename_current
+                    filename_last = filename_lowres
                     image_last = image_current
 
                     self.config.queue.entry_add(config="images", date=subdir, key=key, entry=files_new[key])
@@ -450,7 +529,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         self._processing = False
         return files_new
 
-    def create_image_config_get_filelist(self, file_list, files, subdir=""):
+    def _create_image_config_get_filelist(self, file_list, files, subdir=""):
         """
         get image date from file
         """
@@ -517,12 +596,12 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             response["error"] = "not clear, which files shall be deleted"
 
         if "error" not in response:
-            response = self.delete_marked_files_exec(config=config, date=date, delete_not_used=delete_not_used)
+            response = self._delete_marked_files_exec(config=config, date=date, delete_not_used=delete_not_used)
             self.config.queue.add_to_status_queue(config=config, date=date, key="end",
                                                   change_status="DELETE_RANGE_END", status=0)
         return response
 
-    def delete_marked_files_exec(self, config="images", date="", delete_not_used=False):
+    def _delete_marked_files_exec(self, config="images", date="", delete_not_used=False):
         """
         delete files which are marked to be recycled for a specific date + database entry
         """

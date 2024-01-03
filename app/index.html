@@ -1,90 +1,28 @@
 <?xml version=„1.0“ encoding=„utf-8“?>
 <!doctype html>
-<html><!-- manifest="cache.manifest"> -->
+<html>
 <head>
-<title id="title">jc://app/</title>
+    <title id="title">jc://app/</title>
 
-<META charset="utf-8"> 
-<META http-equiv="content-type" content="text/html; charset=utf-8">
-<META name="apple-mobile-web-app-capable" content="yes"></META>
-<META name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.3, maximum-scale=1.0"></META>
+    <META charset="utf-8">
+    <META http-equiv="content-type" content="text/html; charset=utf-8">
 
-<LINK rel=apple-touch-icon             href="favicon.png"></LINK>
-<LINK rel=apple-touch-icon-precomposed href="favicon.png"></LINK>
+    <meta name="theme-color" content="#000000"></meta>
+    <meta name="apple-mobile-web-app-capable" content="yes"></meta>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black"></meta>
+    <META name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.3, maximum-scale=1.0"></META>
 
-<!-- jcResources START -->
+    <LINK rel=apple-touch-icon             href="favicon.png"></LINK>
+    <LINK rel=apple-touch-icon-precomposed href="favicon.png"></LINK>
 
-<script src="modules/jc-app/jc-app-1.4.4.js"></script>
-<script src="modules/jc-functions/jc-functions-0.1.6.js"></script><link href="modules/jc-functions/jc-functions-0.1.6.css" rel="stylesheet">
-<script src="modules/jc-cookie/jc-cookie.js"></script>
-<script src="modules/jc-msg/jc-msg-1.1.6.js"></script><link href="modules/jc-msg/jc-msg-1.1.6.css" rel="stylesheet">
-<script src="modules/jc-player/jc-player-0.1.6.js"></script><link href="modules/jc-player/jc-player-0.1.6.css" rel="stylesheet">
-<script src="modules/jc-player/jc-volume-slider-0.1.1.js"></script><link href="modules/jc-player/jc-volume-slider-0.1.1.css" rel="stylesheet" >
-<script src="modules/jc-upload/upload.js"></script><link href="modules/jc-upload/upload.css" rel="stylesheet">
-
-<!-- jcAppFramework START -->
-
-<script src="framework/app-fw/app-functions.js"></script>
-<script src="framework/app-fw/app-html-elements.js"></script>
-<script src="framework/app-fw/app-language.js"></script>
-
-<script src="birdhouse/config_stage.js"></script>
-<script src="birdhouse/config_language.js"></script>
-<script src="birdhouse/config_main.js"></script>
-
-<script src="framework/app-fw/app-conf.js"></script>
-<script src="framework/app-fw/app-menu.js"></script>
-
-<link rel="stylesheet" href="framework/app-fw/style-main.css">
-<link rel="stylesheet" href="framework/app-fw/style-menu.css">
-<link rel="stylesheet" href="framework/app-fw/style-frame.css">
-<link rel="stylesheet" href="framework/app-fw/style-status.css">
-
-<link rel="stylesheet" href="framework/app-fw/style-main-laptop.css">
-<link rel="stylesheet" href="framework/app-fw/style-frame-laptop.css">
-<link rel="stylesheet" href="framework/app-fw/style-main-iphone.css">
-<link rel="stylesheet" href="framework/app-fw/style-frame-iphone.css">
-
-<link rel="stylesheet" href="framework/app-fw/style-main-dark.css">
-<link rel="stylesheet" href="framework/app-fw/style-menu-dark.css">
-
-<!-- APP specific scripts and style sheets // START -->
-
-<script src="birdhouse/birdhouse.js"></script>
-<script src="birdhouse/birdhouse-devices.js"></script>
-<script src="birdhouse/birdhouse-audio.js"></script>
-<script src="birdhouse/birdhouse-views.js"></script>
-<script src="birdhouse/birdhouse-views-index.js"></script>
-<script src="birdhouse/birdhouse-image.js"></script>
-<script src="birdhouse/birdhouse-status.js"></script>
-<script src="birdhouse/birdhouse-weather.js"></script>
-<script src="birdhouse/birdhouse-charts.js"></script>
-<script src="birdhouse/birdhouse-functions.js"></script>
-<script src="birdhouse/birdhouse-settings.js"></script>
-<script src="birdhouse/birdhouse-api-requests.js"></script>
-<script src="birdhouse/video-player-template.js"></script>
-<script src="birdhouse/pinch-zoom.umd.js"></script>
-
-<link rel="stylesheet" href="birdhouse/style.css" />
-<link rel="stylesheet" href="birdhouse/style-streams.css" />
-<link rel="stylesheet" href="birdhouse/video-player.css" />
-<link rel="stylesheet" href="birdhouse/style-settings.css" />
-
-<link rel="stylesheet" href="birdhouse/style-laptop.css" />
-<link rel="stylesheet" href="birdhouse/style-iphone.css" />
-<link rel="stylesheet" href="birdhouse/style-ipad.css" />
-
-<link rel="stylesheet" href="birdhouse/style-dark.css" />
-<link rel="stylesheet" href="birdhouse/style-slider.css" />
-<link rel="stylesheet" href="birdhouse/style-slider-dark.css" />
-
-<!-- APP specific scripts and style sheets // END -->
+    <script src="/modules/modules_1.1.js"></script>
+    <script src="/framework/app-fw.js"></script>
+    <script src="/birdhouse/birdhouse.js"></script>
 
 </head>
 <body>
 
 <!-- APP specific html elements // START -->
-
 
 <!-- APP specific  html elements // END -->
 
@@ -141,13 +79,28 @@
 
 <!-- APP specific  html elements // END -->
 
-<script src="framework/app-fw/app-main.js"></script>
+<script>
+
+    loadScripts("/modules/",   modules_js);
+    loadCss("/modules/",       modules_css);
+
+    loadScripts("/framework/", app_js);
+    loadCss("/framework/",     app_css);
+
+    loadScripts("/birdhouse/", birdhouse_js);
+    loadCss("/birdhouse/",     birdhouse_css);
+
+    setTimeout( function() {
+        startApp();
+    }, 500 );
+
+</script>
 
 &nbsp;<br/>
 &nbsp;<br/>
 &nbsp;<br/>
 &nbsp;<br/>
 &nbsp;<br/>
-
+</div>
 </body>
 </html>

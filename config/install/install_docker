@@ -1,25 +1,33 @@
 #!/bin/bash
 
-# update / upgrade
-sudo apt-get update
-sudo apt-get upgrade
+user=`whoami`
+if [[ $user != "root" ]]; then
+  echo "execute as root"
+else
 
-# install prerequisites
-sudo apt-get -y install libffi-dev
-sudo apt-get -y install libssl-dev
-sudo apt-get -y install python3-dev
-sudo apt-get -y install python3 python3-pip
-sudo pip3 install --upgrade pip
+  # update / upgrade
+  sudo apt-get update
+  sudo apt-get upgrade
 
-curl https://sh.rustup.rs -sSf | sh
-source "$HOME/.cargo/env"
+  # install prerequisites
+  sudo apt-get -y install libffi-dev
+  sudo apt-get -y install libssl-dev
+  sudo apt-get -y install python3-dev
+  sudo apt-get -y install python3 python3-pip
+  sudo pip3 install --upgrade pip
+  sudo rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 
-# install docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo usermod -aG docker ${USER}
-sudo su - ${USER}
-docker version
+  curl https://sh.rustup.rs -sSf | sh
+  source "$HOME/.cargo/env"
 
-# install docker-compose
-sudo pip3 install docker-compose
+  # install docker
+  curl -fsSL https://get.docker.com -o get-docker.sh
+  sudo sh get-docker.sh
+  sudo usermod -aG docker ${USER}
+  sudo su - ${USER}
+  docker version
+
+  # install docker-compose (versions work with raspbian OS)
+  sudo pip3 install PyYAML==5.3 docker-compose==1.28
+
+fi

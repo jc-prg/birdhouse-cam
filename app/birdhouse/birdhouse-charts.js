@@ -145,7 +145,7 @@ function birdhouseChart_weatherOverview (entries, title_key="time", title_column
     html += "<tr style='font-size:11px;'>" + html_row2 + "</tr>";
     html +="</table>"
     console.debug(weather_data);
-    html += "&nbsp;<br/>&nbsp;";
+    //html += "&nbsp;<br/>&nbsp;";
     return html;
 }
 
