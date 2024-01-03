@@ -72,10 +72,10 @@ function birdhouseDevices_status(index, show_button) {
                 action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;height:24px;width:24px;'></div>";
             }
             if (!show_button && (index[i][key]["type"] == "camera" || index[i][key]["type"] == "microphone")) {
-                action += "<div style='float:left;padding:5px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0</font> Streams</div>";
+                action += "<div style='float:left;padding:5px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
             }
             else if (index[i][key]["type"] == "camera" || index[i][key]["type"] == "microphone") {
-                action += "<br/><div style='padding:5px;width:100%;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0</font> Streams</div>";
+                action += "<br/><div style='padding:5px;width:100%;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
             }
             action += "</div>";
             html_index += tab.row(key, action);
