@@ -2429,6 +2429,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 else:
                     system["video_devices_03"][key]["image"] = True
                     system["video_devices_03"][key]["shape"] = raw.shape
+                    cv2.imwrite("test_connect_" + key + ".jpg", raw)
                     if "error" in system["video_devices_03"][key]:
                         del system["video_devices_03"][key]["error"]
 
