@@ -1912,12 +1912,12 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         start_time = time.time()
         if self.detect_objects.loaded:
 
-            path_hires = path_hires.replace(".jpeg", "_temp.jpeg")
-            self.write_image(path_hires, image_hires, scale_percent=self.image_size_object_detection)
-            img, detect_info = self.detect_objects.analyze(path_hires, -1, False)
+            path_hires_temp = path_hires.replace(".jpeg", "_temp.jpeg")
+            self.write_image(path_hires_temp, image_hires, scale_percent=self.image_size_object_detection)
+            img, detect_info = self.detect_objects.analyze(path_hires_temp, -1, False)
             img = self.detect_visualize.render_detection(image_hires, detect_info, 1, self.detect_settings["threshold"])
-            if os.path.exists(path_hires):
-                os.remove(path_hires)
+            if os.path.exists(path_hires_temp):
+                os.remove(path_hires_temp)
             self.logging.debug("Current detection for " + stamp + ": " + str(detect_info))
 
             if len(detect_info["detections"]) > 0:
@@ -2565,6 +2565,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.camera_stream_raw.source = self.param["source"]
         for stream in self.camera_streams:
             self.camera_streams[stream].param = self.param
+            self.camera_streams[stream].image.param = self.param
             self.camera_streams[stream].source = self.param["source"]
             self.camera_streams[stream].initial_connect_msg = self.initial_connect_msg
         self.image.param = self.param

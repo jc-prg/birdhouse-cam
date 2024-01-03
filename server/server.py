@@ -776,7 +776,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = {"update_views": "started"}
         elif param["command"] == "update-views-complete":
             views.archive_list_update(force=True, complete=True)
-            views.favorite_list_update(force=True)
+            views.favorite_list_update(force=True, complete=True)
             response = {"update-views-complete": "started"}
         elif param["command"] == "force-backup":
             backup.start_backup()

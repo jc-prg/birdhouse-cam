@@ -615,6 +615,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                     entry_data["files"] = entries
                     entry_data["info"]["changed"] = True
+                    entry_data["info"]["changed_fav"] = True
 
                     self.db_handler.unlock(config_file, date)
                     self.db_handler.write(config_file, date, entry_data)
@@ -692,6 +693,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                     entry_data["files"] = entries
                     entry_data["info"]["changed"] = True
+                    entry_data["info"]["changed_fav"] = True
 
                     self.db_handler.unlock(config_file, date)
                     self.db_handler.write(config_file, date, entry_data)
