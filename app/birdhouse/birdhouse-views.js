@@ -456,6 +456,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
                     if (value["detections"]) {
                         for (var i=0;i<value["detections"].length;i++) {
                             label = value["detections"][i]["label"];
+                            label = label.replace(/^\s+/, '');
                             if (label == "") { label = "without-label"; }
                             if (!labels[label]) { labels[label] = []; }
                             labels[label].push(key);

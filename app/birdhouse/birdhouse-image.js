@@ -308,9 +308,15 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
         if (entry["hires_detect"] && entry["detections"] && entry["detections"].length > 0) {
             var description_labels = "[center][div style=align:center;][br/][hr/]";
             var hires_description = description;
+            var counted_labels = {}
             for (var i=0;i<entry["detections"].length;i++) {
-                description_labels += "[div class=detection_label style=cursor:default]&nbsp;"+entry["detections"][i]["label"]+"&nbsp;[/div]";
+                if (!counted_labels[entry["detections"][i]["label"]]) { counted_labels[entry["detections"][i]["label"]] = 1; }
+                else                                                  { counted_labels[entry["detections"][i]["label"]] += 1; }
                 }
+            Object.keys(counted_labels).forEach( key => {
+                var amount = counted_labels[key];
+                description_labels += "[div class=detection_label style=cursor:default]&nbsp;"+key+"&nbsp;("+counted_labels[key]+")&nbsp;[/div]";
+                });
             description_labels += "[/div][/center]";
             hires_description += description_labels;
             var onclick = "birdhouse_imageOverlay(\""+hires+"\",\""+hires_description+"\", \""+birdhouse_ImageURL(img_url + entry["directory"] + entry["hires_detect"])+"\");"; detect_sign = "<sup>D</sup>";
