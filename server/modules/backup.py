@@ -85,7 +85,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         for cam in self.camera:
             camera_list.append(cam)
 
-        directory = self.config.db_handler.directory(config="images", date=backup_date)
+        directory = self.config.db_handler.directory(config="backup", date=backup_date)
         data_weather = self.config.db_handler.read(config="weather")
         data_sensor = self.config.db_handler.read(config="sensor")
 
@@ -98,6 +98,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                 files_backup = {
                     "files": files,
                     "info": {},
+                    "favorite": {},
                     "chart_data": self.views.create.chart_data_new(data_image=files,
                                                                    data_sensor=data_sensor,
                                                                    data_weather=data_weather,
@@ -167,7 +168,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
                     # if files are to be archived
                     if "datestamp" not in files[stamp]:
-                        self.logging.warning("Wrong entry format:" + str(files[stamp]))
+                        self.logging.warning("Wrong entry format [1]:" + str(files[stamp]))
 
                     if "_" not in stamp and stamp in files and "datestamp" in files[stamp] and \
                             files[stamp]["datestamp"] == backup_date and files[stamp]["camera"] == cam:

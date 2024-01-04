@@ -966,7 +966,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         set status of an archive entry to changed
         """
-        backup_info = self.db_handler.read_cache("backup_info", "")
+        backup_info = self.db_handler.read("backup_info", "")
         if "changes" not in backup_info:
             backup_info["changes"] = {}
         backup_info["changes"][date] = True

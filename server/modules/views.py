@@ -705,7 +705,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 for stamp in stamps:
                     if "type" in files_all[stamp] and files_all[stamp]["type"] == "image":
                         if "datestamp" not in files_all[stamp]:
-                            self.logging.warning("Wrong entry format:" + str(files_all[stamp]))
+                            self.logging.warning("Wrong entry format [2]:" + str(files_all[stamp]))
 
                         if (int(stamp) >= int(time_now) and time_now != "000000") and "datestamp" in files_all[stamp] and \
                                 files_all[stamp]["datestamp"] == date_yesterday:
@@ -881,17 +881,19 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         deleted_dates = []
         for date in backup_entries:
 
-            # check availability of couch db and/or json db
-            database_ok = self._archive_list_create_database_ok(date)
-            directory = self.config.db_handler.directory(config="images", date=date)
+            # check if archive directory still exists
+            archive_directory = self.config.db_handler.directory(config="backup", date=date)
 
-            # if archive directory doesn't exist any more
-            if not os.path.isdir(directory):
-                self.logging.warning("Directory '" + directory + "' doesn't exist, remove DB entry.")
+            # if archive directory doesn't exist anymore, remove
+            if not os.path.isdir(archive_directory):
+                self.logging.warning("Directory '" + archive_directory + "' doesn't exist, remove DB entry.")
                 deleted_dates.append(date)
 
             # if archive directory still exists
             else:
+                # check availability of couch db and/or json db
+                database_ok = self._archive_list_create_database_ok(date)
+
                 # update for those dates where necessary
                 for cam in self.camera:
                     count_entries += 1
@@ -1369,24 +1371,31 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         category = "/not_found/"
         files_complete = {}
         fields_not_required = ["similarity", "source", "datestamp"]
+        fields_not_required = []
         from_file = False
+        save_file = False
 
         if date == "":
             today = True
             category = "/current/"
             date = self.config.local_time().strftime("%Y%m%d")
             files = self.config.db_handler.read(config="images")
-            files_complete["files"] = files
+            files_complete["files"] = files.copy()
 
-        elif self.config.db_handler.exists(config="images", date=date):
+        elif self.config.db_handler.exists(config="backup", date=date):
             today = False
             category = "/backup/" + date + "/"
-            files_complete = self.config.db_handler.read(config="images", date=date)
+            files_complete = self.config.db_handler.read(config="backup", date=date)
+            self.logging.info("  -> " + category + " ... " + str(files_complete.keys()))
 
             if "files" in files_complete:
                 files = files_complete["files"].copy()
+                save_file = True
             else:
                 files["error"] = True
+        else:
+            self.logging.warning("  -> Could not read favorites from " + category + ", no data available.")
+            return {}
 
         if complete:
             from_file = True
@@ -1401,7 +1410,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             return files_complete["favorites"]
 
         if "error" in files or files == {}:
-            self.logging.warning("Could not read favorites from " + category)
+            self.logging.warning("  -> Could not read favorites from " + category + ", wrong data format.")
             return {}
 
         favorites = {}
@@ -1410,7 +1419,10 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             stamp = str(stamp)
             if "favorit" in files[stamp] and int(files[stamp]["favorit"]) == 1:
                 new = date + "_" + stamp
-                favorites[new] = files[stamp].copy()
+                favorites[new] = {}
+                for key in files[stamp]:
+                    favorites[new][key] = files[stamp][key]
+                # favorites[new] = files[stamp].copy()
                 favorites[new]["source"] = ("images", date)
                 favorites[new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
                 if "type" not in favorites[new]:
@@ -1425,11 +1437,11 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 favorites[new]["directory"] = favorites[new]["directory"].replace("//", "/")
                 files_today_count += 1
 
-        if date != "":
-            files_complete["favorites"] = favorites
+        if save_file:
+            files_complete["favorites"] = favorites.copy()
             if "info" in files_complete:
                 files_complete["info"]["changed_fav"] = False
-            self.config.db_handler.write(config="images", date=date, data=files_complete, create=False, save_json=True)
+            self.config.db_handler.write(config="backup", date=date, data=files_complete, create=False, save_json=True)
 
         self.logging.info("  -> Favorites " + category + ": " + str(files_today_count) + "/" + str(len(files)) +
                           " - from file")
