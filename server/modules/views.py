@@ -1386,7 +1386,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             today = False
             category = "/backup/" + date + "/"
             files_complete = self.config.db_handler.read(config="backup", date=date)
-            self.logging.info("  -> " + category + " ... " + str(files_complete.keys()))
+            self.logging.debug("  -> " + category + " ... " + str(files_complete.keys()))
 
             if "files" in files_complete:
                 files = files_complete["files"].copy()

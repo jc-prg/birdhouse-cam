@@ -1894,7 +1894,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                  scale_percent=self.param["image"]["preview_scale"])
 
                 if self.detect_active and self.detect_settings["active"]:
-                    self.image_object_detection(path_hires, image_hires, image_info, start_time)
+                    self.image_object_detection(stamp, path_hires, image_hires, image_info, start_time)
 
                 self.record_image_error = False
                 self.record_image_error_msg = []
@@ -1904,11 +1904,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             time.sleep(self._interval)
             self.previous_stamp = stamp
 
-    def image_object_detection(self, path_hires, image_hires, image_info, start_time):
+    def image_object_detection(self, stamp, path_hires, image_hires, image_info, start_time):
         """
         analyze image for objects, save in metadata incl. image with labels if detected
         """
-        stamp = image_info["datestamp"]
         start_time = time.time()
         if self.detect_objects.loaded:
 
@@ -1916,6 +1915,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.write_image(path_hires_temp, image_hires, scale_percent=self.image_size_object_detection)
             img, detect_info = self.detect_objects.analyze(path_hires_temp, -1, False)
             img = self.detect_visualize.render_detection(image_hires, detect_info, 1, self.detect_settings["threshold"])
+            img = self.image.draw_text_raw(img, stamp, (-80, -40), None, 0.5, (255, 255, 255), 1)
             if os.path.exists(path_hires_temp):
                 os.remove(path_hires_temp)
             self.logging.debug("Current detection for " + stamp + ": " + str(detect_info))
