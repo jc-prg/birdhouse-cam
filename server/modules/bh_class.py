@@ -141,10 +141,11 @@ class BirdhouseClass(object):
         """
         set priority
         """
-        if 0 <= int(priority) <= 5:
+        priorities = len(self._thread_waiting_times)
+        if 0 <= int(priority) <= priorities:
             self._thread_priority = priority
         else:
-            self.raise_warning("Could not priority, out of range (0..5): " + str(priority))
+            self.raise_warning("Could not priority, out of range (0.."+str(priorities-1)+"): " + str(priority))
 
     def thread_prio_process(self, start, pid):
         """
