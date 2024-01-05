@@ -659,6 +659,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                             self.config.async_answers.append(["RANGE_DONE"])
                         elif change_status == "DELETE_RANGE_END":
                             self.config.async_answers.append(["DELETE_RANGE_DONE"])
+                        elif change_status == "OBJECT_DETECTION_END":
+                            self.config.async_answers.append(["OBJECT_DETECTION_DONE"])
                         elif key in entries:
                             entries[key][change_status] = status
 
@@ -688,6 +690,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                 self.config.async_answers.append(["RANGE_DONE"])
                             elif change_status == "DELETE_RANGE_END":
                                 self.config.async_answers.append(["DELETE_RANGE_DONE"])
+                            elif change_status == "OBJECT_DETECTION_END":
+                                self.config.async_answers.append(["OBJECT_DETECTION_DONE"])
                             elif key in entries:
                                 entries[key][change_status] = status
 

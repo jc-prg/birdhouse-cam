@@ -139,6 +139,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         detect objects for an archived day, replaces  detections if exist
         """
         response = {"command": ["archive object detection"], "camera": self.id}
+        self._processing = True
         if self.detect_objects is not None and self.detect_objects.loaded:
             self.logging.info("Starting object detection for " + self.id + " / " + date + " ...")
             archive_data = self.config.db_handler.read(config="backup", date=date)
@@ -167,6 +168,9 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                         archive_entries[stamp]["hires_detect"] = ""
                     self.config.queue.entry_add(config="backup", date=date, key=stamp, entry=archive_entries[stamp])
 
+            self.config.queue.set_status_changed(date=date)
+            self.config.queue.add_to_status_queue(config="backup", date=date, key="end",
+                                                  change_status="OBJECT_DETECTION_END", status=0)
             msg = "Object detection for " + date + " done, datasets are going to be saved."
             self.logging.info(msg)
             response["status"] = msg
@@ -175,4 +179,5 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             response["error"] = msg
             self.logging.info(msg)
 
+        self._processing = False
         return response

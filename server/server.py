@@ -716,7 +716,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = backup.delete_marked_files_api(param)
         elif param["command"] == "archive-object-detection":
             [cam_id, date] = param["parameter"]
-            response = camera[cam_id].object.analyze_archive_images(date)
+            response = camera[cam_id].object.analyze_archive_images_start(date)
         elif param["command"] == "archive-remove-day":
             msg = "API CALL '" + param["command"] + "' not implemented yet (" + str(self.path) + ")"
             srv_logging.info(msg)
