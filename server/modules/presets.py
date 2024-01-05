@@ -63,52 +63,47 @@ birdhouse_status = {
     "object_detection": False
 }
 try:
-    birdhouse_env_pre = {
-        "DATABASE_DAILY_CLEANUP": get_env("DATABASE_DAILY_CLEANUP"),
-        "RPI_ACTIVE": get_env("RPI_ACTIVE"),
-        "RPI_64BIT": get_env("RPI_64BIT"),
-        "OBJECT_DETECTION": get_env("OBJECT_DETECTION"),
-        "BIRDHOUSE_INSTANCE": get_env("BIRDHOUSE_INSTANCE"),
+    # !!! REWORK !!!
+    # birdhouse_env_pre = { "internal_name": "EXTERNAL_NAME", ... }
+    # -> get_env, if None raise Exception
+    # -> calculate the 5 special values
+
+    birdhouse_env_keys = {
+        "database_type": "DATABASE_TYPE",
+        "database_cleanup": "DATABASE_DAILY_CLEANUP",
+        "rpi_active": "RPI_ACTIVE",
+        "rpi_64bit": "RPI_64BIT",
+        "couchdb_server": "COUCHDB_SERVER",
+        "couchdb_user": "COUCHDB_USER",
+        "couchdb_password": "COUCHDB_PASSWORD",
+        "couchdb_port": "COUCHDB_PORT",
+        "http_server": "BIRDHOUSE_HTTP_SERVER",
+        "port_http": "BIRDHOUSE_HTTP_PORT",
+        "port_api": "BIRDHOUSE_API_PORT",
+        "port_video": "BIRDHOUSE_VIDEO_PORT",
+        "server_audio": "BIRDHOUSE_AUDIO_SERVER",
+        "port_audio": "BIRDHOUSE_AUDIO_PORT",
+        "dir_project": "BIRDHOUSE_DIR_PROJECT",
+        "dir_logging": "BIRDHOUSE_DIR_LOGGING",
+        "admin_ip4_deny": "ADMIN_IP4_DENY",
+        "admin_ip4_allow": "ADMIN_IP4_ALLOW",
+        "admin_password": "ADMIN_PASSWORD",
+        "admin_login": "ADMIN_LOGIN",
+        "detection_active": "OBJECT_DETECTION",
+        "test_instance": "BIRDHOUSE_INSTANCE",
+        "which_instance": "BIRDHOUSE_INSTANCE"
     }
-    for key in birdhouse_env_pre:
-        if birdhouse_env_pre[key] is None:
+
+    birdhouse_env = {}
+    for key in birdhouse_env_keys:
+        birdhouse_env[key] = get_env(birdhouse_env_keys[key])
+        if birdhouse_env[key] is None:
             raise ValueError('Value in .env not found: ' + key)
 
-    birdhouse_env = {
-        "database_type": get_env("DATABASE_TYPE"),
-        "database_cleanup": birdhouse_env_pre["DATABASE_DAILY_CLEANUP"] in ("true", "1", 1, "yes", "on"),
+    for key in ["database_cleanup", "rpi_active", "rpi_64bit", "detection_active"]:
+        birdhouse_env[key] = str(birdhouse_env[key]).lower() in ("true", "1", "yes", "on")
 
-        "rpi_active": birdhouse_env_pre["RPI_ACTIVE"] in ("true", "1", 1, "yes", "on"),
-        "rpi_64bit": birdhouse_env_pre["RPI_64BIT"] in ("yes", "1", 1, "true", "on"),
-
-        "couchdb_server": get_env("COUCHDB_SERVER"),
-        "couchdb_user": get_env("COUCHDB_USER"),
-        "couchdb_password": get_env("COUCHDB_PASSWORD"),
-        "couchdb_port": get_env("COUCHDB_PORT"),
-
-        "http_server": get_env("BIRDHOUSE_HTTP_SERVER"),
-        "port_http": get_env("BIRDHOUSE_HTTP_PORT"),
-        "port_api": get_env("BIRDHOUSE_API_PORT"),
-        "port_video": get_env("BIRDHOUSE_VIDEO_PORT"),
-
-        "server_audio": get_env("BIRDHOUSE_AUDIO_SERVER"),
-        "port_audio": get_env("BIRDHOUSE_AUDIO_PORT"),
-
-        "dir_project": get_env("BIRDHOUSE_DIR_PROJECT"),
-        "dir_logging": get_env("BIRDHOUSE_DIR_LOGGING"),
-
-        "admin_ip4_deny": get_env("ADMIN_IP4_DENY"),
-        "admin_ip4_allow": get_env("ADMIN_IP4_ALLOW"),
-        "admin_password": get_env("ADMIN_PASSWORD"),
-        "admin_login": get_env("ADMIN_LOGIN"),
-
-        "detection_active": (birdhouse_env_pre["OBJECT_DETECTION"].upper() in ("ON", "1", 1, "TRUE", "YES")),
-        "test_instance": str(birdhouse_env_pre["BIRDHOUSE_INSTANCE"].upper() == "TEST").lower(),
-        "which_instance": get_env("BIRDHOUSE_INSTANCE")
-    }
-    for key in birdhouse_env:
-        if birdhouse_env[key] is None:
-            raise ValueError('Value in .env not found: ' + key.upper())
+    birdhouse_env["test_instance"] = str(birdhouse_env["test_instance"].upper() == "TEST").lower()
 
 except Exception as e:
     logging.error("Error reading configuration defined in the file '.env': " + str(e))
