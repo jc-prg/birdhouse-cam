@@ -63,12 +63,23 @@ birdhouse_status = {
     "object_detection": False
 }
 try:
+    birdhouse_env_pre = {
+        "DATABASE_DAILY_CLEANUP": get_env("DATABASE_DAILY_CLEANUP"),
+        "RPI_ACTIVE": get_env("RPI_ACTIVE"),
+        "RPI_64BIT": get_env("RPI_64BIT"),
+        "OBJECT_DETECTION": get_env("OBJECT_DETECTION"),
+        "BIRDHOUSE_INSTANCE": get_env("BIRDHOUSE_INSTANCE"),
+    }
+    for key in birdhouse_env_pre:
+        if birdhouse_env_pre[key] is None:
+            raise ValueError('Value in .env not found: ' + key)
+
     birdhouse_env = {
         "database_type": get_env("DATABASE_TYPE"),
-        "database_cleanup": get_env("DATABASE_DAILY_CLEANUP").lower() in ("true", "1", 1, "yes", "on"),
+        "database_cleanup": birdhouse_env_pre["DATABASE_DAILY_CLEANUP"] in ("true", "1", 1, "yes", "on"),
 
-        "rpi_active": get_env("RPI_ACTIVE").lower() in ("true", "1", 1, "yes", "on"),
-        "rpi_64bit": get_env("RPI_64BIT").lower() in ("yes", "1", 1, "true", "on"),
+        "rpi_active": birdhouse_env_pre["RPI_ACTIVE"] in ("true", "1", 1, "yes", "on"),
+        "rpi_64bit": birdhouse_env_pre["RPI_64BIT"] in ("yes", "1", 1, "true", "on"),
 
         "couchdb_server": get_env("COUCHDB_SERVER"),
         "couchdb_user": get_env("COUCHDB_USER"),
@@ -91,13 +102,18 @@ try:
         "admin_password": get_env("ADMIN_PASSWORD"),
         "admin_login": get_env("ADMIN_LOGIN"),
 
-        "detection_active": (get_env("OBJECT_DETECTION").upper() in ("ON", "1", 1, "TRUE", "YES")),
-        "test_instance": str(get_env("BIRDHOUSE_INSTANCE").upper() == "TEST").lower(),
+        "detection_active": (birdhouse_env_pre["OBJECT_DETECTION"].upper() in ("ON", "1", 1, "TRUE", "YES")),
+        "test_instance": str(birdhouse_env_pre["BIRDHOUSE_INSTANCE"].upper() == "TEST").lower(),
         "which_instance": get_env("BIRDHOUSE_INSTANCE")
     }
+    for key in birdhouse_env:
+        if birdhouse_env[key] is None:
+            raise ValueError('Value in .env not found: ' + key.upper())
+
 except Exception as e:
-    svr_logging.error("Error reading configuration defined in the file '.env': " + str(e))
-    svr_logging.error("Check or rebuild your configuration file based on the file 'sample.env'.")
+    logging.error("Error reading configuration defined in the file '.env': " + str(e))
+    logging.error("Check or rebuild your configuration file based on the file 'sample.env'.")
+    os._exit(os.EX_CONFIG)
 
 birdhouse_log_into_file = True
 birdhouse_loglevel = logging.INFO
