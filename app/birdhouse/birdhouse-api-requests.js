@@ -144,6 +144,21 @@ function birdhouse_recycleThreshold(category, date, threshold, del, camera) {
     birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerEditSend,"","birdhouse_editData");
 }
 
+function birdhouse_archiveObjectDetection(camera, date) {
+    commands = ["archive-object-detection", camera, date];
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
+    }
+
+function birdhouse_archiveDayDelete(date_stamp, date) {
+
+    appMsg.confirm(lang("DELETE_ARCHIVE_DAY", [date]), "birdhouse_archiveDayDelete_exec('"+date_stamp+"');", 250);
+    }
+
+function birdhouse_archiveDayDelete_exec(date_stamp) {
+    commands = ["archive-remove-day", date_stamp];
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
+    }
+
 function birdhouse_recordStart(camera) {
     commands = ["start-recording", camera];
     birdhouse_apiRequest('POST',commands,"","","","birdhouse_recordStart");
