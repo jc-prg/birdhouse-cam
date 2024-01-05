@@ -714,6 +714,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = camera[which_cam].video.create_video_day_queue(param)
         elif param["command"] == "remove":
             response = backup.delete_marked_files_api(param)
+        elif param["command"] == "archive-object-detection":
+            [cam_id, date] = param["parameter"]
+            response = camera[cam_id].object.analyze_archive_images(date)
+        elif param["command"] == "archive-remove-day":
+            msg = "API CALL '" + param["command"] + "' not implemented yet (" + str(self.path) + ")"
+            srv_logging.info(msg)
+            srv_logging.info(str(param))
+            response = {"info": msg}
         elif param["command"] == "reconnect-camera":
             response = camera[which_cam].camera_reconnect()
         elif param["command"] == "camera-settings":
@@ -824,6 +832,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 response["check-pwd"] = True
             else:
                 response["check-pwd"] = False
+        elif param["command"] == "--template-to-implement-new-POST-command--":
+            msg = "API CALL '" + param["command"] + "' not implemented yet (" + str(self.path) + ")"
+            srv_logging.info(msg)
+            srv_logging.info(str(param))
+            response = {"info": msg}
         else:
             self.error_404()
             return

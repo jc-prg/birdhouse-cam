@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import os
 
 from skimage.metrics import structural_similarity as ssim
 from modules.bh_class import BirdhouseCameraClass
@@ -403,6 +404,44 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         except Exception as e:
             self.raise_warning("Could not analyze image (" + str(e) + ")")
             return [0, 0]
+
+    def write(self, filename, image, scale_percent=100):
+        """
+        Scale image and write to file
+        """
+        image_path = os.path.join(self.config.main_directory, filename)
+        self.logging.debug("Write image: " + image_path)
+
+        try:
+            if scale_percent != 100:
+                width = int(image.shape[1] * float(scale_percent) / 100)
+                height = int(image.shape[0] * float(scale_percent) / 100)
+                image = cv2.resize(image, (width, height))
+            return cv2.imwrite(image_path, image)
+
+        except Exception as e:
+            error_msg = "Can't save image and/or create thumbnail '" + image_path + "': " + str(e)
+            self.image.raise_error(error_msg)
+            return ""
+
+    def read(self, filename):
+        """
+        read image with given filename
+        """
+        image_path = os.path.join(self.config.main_directory, filename)
+        self.logging.info("Read image: " + image_path)
+
+        try:
+            image = cv2.imread(image_path)
+            self.logging.debug(" --> " + str(image.shape))
+            return image
+
+        except Exception as e:
+            error_msg = "Can't read image '" + image_path + "': " + str(e)
+            self.image.raise_error(error_msg)
+            return ""
+
+
 
     def size_raw(self, raw, scale_percent=100):
         """

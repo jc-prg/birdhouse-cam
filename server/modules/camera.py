@@ -1,3 +1,4 @@
+import os.path
 import time
 
 import numpy as np
@@ -12,6 +13,7 @@ from modules.presets import *
 from modules.bh_class import BirdhouseCameraClass
 from modules.image import BirdhouseImageProcessing
 from modules.video import BirdhouseVideoProcessing
+from modules.object import BirdhouseObjectDetection
 
 # https://pyimagesearch.com/2016/01/04/unifying-picamera-and-cv2-videocapture-into-a-single-class-with-opencv/
 
@@ -1234,6 +1236,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.image = None
         self.video = None
         self.camera = None
+        self.object = None
+
         self.cam_param = None
         self.cam_param_image = None
         self.sensor = sensor
@@ -1327,8 +1331,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             time.sleep(1)
             self._init_camera(init=True)
         self._init_microphone()
-        if self.detect_active:
-            self._init_analytics()
+
+        self.object = BirdhouseObjectDetection(self.id, self.config)
+        self.object.start()
         self.initialized = True
 
     def _init_image_processing(self):
@@ -1521,34 +1526,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 return
         self.micro = None
         self.logging.warning("- Could not connect a microphone to camera '" + self.id + "'!")
-
-    def _init_analytics(self):
-        """
-        initialize models for object detection
-        """
-        if self.detect_active:
-            try:
-                from modules.detection.detection import DetectionModel, ImageHandling
-                if self.detect_settings["active"]:
-
-                    if self.detect_settings["model"] is None or self.detect_settings["model"] == "":
-                        self.logging.warning("No detection model defined. Check device configuration in the app.")
-
-                    else:
-                        self.logging.info("Initialize object detection model (" + self.name + ") ...")
-                        self.logging.info(" -> '" + self.detect_settings["model"] + "'")
-                        self.detect_objects = DetectionModel(self.detect_settings["model"])
-                        self.detect_visualize = ImageHandling()
-                        self.detect_live = self.detect_settings["live"]
-                        birdhouse_status["object_detection"] = True
-                else:
-                    self.logging.info("Object detection inactive (" + self.name + "), see settings.")
-
-            except Exception as e:
-                self.logging.error("Could not load 'modules.detection': " + str(e))
-                birdhouse_status["object_detection"] = False
-        else:
-            self.logging.info("Object detection inactive (" + self.name + "), see .env-file.")
 
     def run(self):
         """
@@ -1896,7 +1873,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                  scale_percent=self.param["image"]["preview_scale"])
 
                 if self.detect_active and self.detect_settings["active"]:
-                    self.image_object_detection(stamp, path_hires, image_hires, image_info, start_time)
+                    self.object.analyze_image(stamp, path_hires, image_hires, image_info)
 
                 self.record_image_error = False
                 self.record_image_error_msg = []
@@ -1905,43 +1882,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
             time.sleep(self._interval)
             self.previous_stamp = stamp
-
-    def image_object_detection(self, stamp, path_hires, image_hires, image_info, start_time):
-        """
-        analyze image for objects, save in metadata incl. image with labels if detected
-        """
-        start_time = time.time()
-        if self.detect_objects.loaded:
-
-            path_hires_temp = path_hires.replace(".jpeg", "_temp.jpeg")
-            self.write_image(path_hires_temp, image_hires, scale_percent=self.image_size_object_detection)
-            img, detect_info = self.detect_objects.analyze(path_hires_temp, -1, False)
-            img = self.detect_visualize.render_detection(image_hires, detect_info, 1, self.detect_settings["threshold"])
-            img = self.image.draw_text_raw(img, stamp, (-80, -40), None, 0.5, (255, 255, 255), 1)
-
-            if os.path.exists(path_hires_temp):
-                os.remove(path_hires_temp)
-            self.logging.debug("Current detection for " + stamp + ": " + str(detect_info))
-
-            if len(detect_info["detections"]) > 0:
-                detections_to_save = []
-                for detect in detect_info["detections"]:
-                    if float(detect["confidence"] * 100) >= float(self.detect_settings["threshold"]):
-                        detections_to_save.append(detect.copy())
-
-                if len(detections_to_save) > 0:
-                    image_info["detections"] = detections_to_save
-                    image_info["hires_detect"] = image_info["hires"].replace(".jpeg", "_detect.jpeg")
-                    path_hires_detect = path_hires.replace(".jpeg", "_detect.jpeg")
-                    self.write_image(filename=path_hires_detect, image=img)
-
-            image_info["detection_threshold"] = self.detect_settings["threshold"]
-            image_info["info"]["duration_2"] = round(time.time() - start_time, 3)
-
-            self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
-
-        else:
-            self.logging.debug("Object detection not loaded (" + stamp + ")")
 
     def image_recording_active(self, current_time=-1, check_in_general=False):
         """
