@@ -62,39 +62,42 @@ birdhouse_git_submodules = {
 birdhouse_status = {
     "object_detection": False
 }
+try:
+    birdhouse_env = {
+        "database_type": get_env("DATABASE_TYPE"),
+        "database_cleanup": get_env("DATABASE_DAILY_CLEANUP").lower() in ("true", "1", 1, "yes", "on"),
 
-birdhouse_env = {
-    "database_type": get_env("DATABASE_TYPE"),
-    "database_cleanup": get_env("DATABASE_DAILY_CLEANUP").lower() in ("true", "1", 1, "yes", "on"),
+        "rpi_active": get_env("RPI_ACTIVE").lower() in ("true", "1", 1, "yes", "on"),
+        "rpi_64bit": get_env("RPI_64BIT").lower() in ("yes", "1", 1, "true", "on"),
 
-    "rpi_active": get_env("RPI_ACTIVE").lower() in ("true", "1", 1, "yes", "on"),
-    "rpi_64bit": get_env("RPI_64BIT").lower() in ("yes", "1", 1, "true", "on"),
+        "couchdb_server": get_env("COUCHDB_SERVER"),
+        "couchdb_user": get_env("COUCHDB_USER"),
+        "couchdb_password": get_env("COUCHDB_PASSWORD"),
+        "couchdb_port": get_env("COUCHDB_PORT"),
 
-    "couchdb_server": get_env("COUCHDB_SERVER"),
-    "couchdb_user": get_env("COUCHDB_USER"),
-    "couchdb_password": get_env("COUCHDB_PASSWORD"),
-    "couchdb_port": get_env("COUCHDB_PORT"),
+        "http_server": get_env("BIRDHOUSE_HTTP_SERVER"),
+        "port_http": get_env("BIRDHOUSE_HTTP_PORT"),
+        "port_api": get_env("BIRDHOUSE_API_PORT"),
+        "port_video": get_env("BIRDHOUSE_VIDEO_PORT"),
 
-    "http_server": get_env("BIRDHOUSE_HTTP_SERVER"),
-    "port_http": get_env("BIRDHOUSE_HTTP_PORT"),
-    "port_api": get_env("BIRDHOUSE_API_PORT"),
-    "port_video": get_env("BIRDHOUSE_VIDEO_PORT"),
+        "server_audio": get_env("BIRDHOUSE_AUDIO_SERVER"),
+        "port_audio": get_env("BIRDHOUSE_AUDIO_PORT"),
 
-    "server_audio": get_env("BIRDHOUSE_AUDIO_SERVER"),
-    "port_audio": get_env("BIRDHOUSE_AUDIO_PORT"),
+        "dir_project": get_env("BIRDHOUSE_DIR_PROJECT"),
+        "dir_logging": get_env("BIRDHOUSE_DIR_LOGGING"),
 
-    "dir_project": get_env("BIRDHOUSE_DIR_PROJECT"),
-    "dir_logging": get_env("BIRDHOUSE_DIR_LOGGING"),
+        "admin_ip4_deny": get_env("ADMIN_IP4_DENY"),
+        "admin_ip4_allow": get_env("ADMIN_IP4_ALLOW"),
+        "admin_password": get_env("ADMIN_PASSWORD"),
+        "admin_login": get_env("ADMIN_LOGIN"),
 
-    "admin_ip4_deny": get_env("ADMIN_IP4_DENY"),
-    "admin_ip4_allow": get_env("ADMIN_IP4_ALLOW"),
-    "admin_password": get_env("ADMIN_PASSWORD"),
-    "admin_login": get_env("ADMIN_LOGIN"),
-
-    "detection_active": (get_env("OBJECT_DETECTION").upper() in ("ON", "1", 1, "TRUE", "YES")),
-    "test_instance": str(get_env("BIRDHOUSE_INSTANCE").upper() == "TEST").lower(),
-    "which_instance": get_env("BIRDHOUSE_INSTANCE")
-}
+        "detection_active": (get_env("OBJECT_DETECTION").upper() in ("ON", "1", 1, "TRUE", "YES")),
+        "test_instance": str(get_env("BIRDHOUSE_INSTANCE").upper() == "TEST").lower(),
+        "which_instance": get_env("BIRDHOUSE_INSTANCE")
+    }
+except Exception as e:
+    svr_logging.error("Error reading configuration defined in the file '.env': " + str(e))
+    svr_logging.error("Check or rebuild your configuration file based on the file 'sample.env'.")
 
 birdhouse_log_into_file = True
 birdhouse_loglevel = logging.INFO
