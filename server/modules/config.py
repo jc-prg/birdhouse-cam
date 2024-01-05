@@ -149,20 +149,20 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         return directory of config file
         """
-        path = os.path.join(self.main_directory, self.directories["data"], self.directories[config], date)
-        if ".." in path:
-            elements = path.split("/")
+        dir_path = os.path.join(self.main_directory, self.directories["data"], self.directories[config], date)
+        if ".." in dir_path:
+            elements = dir_path.split("/")
             path_new = []
             for element in elements:
                 if element == ".." and len(path_new) > 0:
                     path_new.pop(-1)
                 else:
                     path_new.append(element)
-            path = ""
+            dir_path = ""
             for element in path_new:
-                path += "/" + element
-            path = path.replace("//", "/")
-        return path
+                dir_path += "/" + element
+            dir_path = dir_path.replace("//", "/")
+        return dir_path
 
     def directory_create(self, config, date=""):
         """
@@ -614,12 +614,9 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                         self.views.favorite_list_update()
 
                     entry_data["files"] = entries
-                    entry_data["info"]["changed"] = True
-                    entry_data["info"]["changed_fav"] = True
-
                     self.db_handler.unlock(config_file, date)
                     self.db_handler.write(config_file, date, entry_data)
-                    self.set_status_changed(date)
+                    self.set_status_changed(date=date, change="all")
 
                     update_views = True
 
@@ -696,12 +693,9 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                 entries[key][change_status] = status
 
                     entry_data["files"] = entries
-                    entry_data["info"]["changed"] = True
-                    entry_data["info"]["changed_fav"] = True
-
                     self.db_handler.unlock(config_file, date)
                     self.db_handler.write(config_file, date, entry_data)
-                    self.set_status_changed(date)
+                    self.set_status_changed(date=date, change="all")
 
                     update_views = True
 
@@ -717,13 +711,6 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         add status change to queue
         """
-        #start = time.time()
-        #while self.status_queue_in_progress:  # and start + self.queue_timeout > time.time():
-        #    time.sleep(0.2)
-        #if time.time() - start > 1:
-        #    self.logging.info("WAIT add_to_status_queue: " + str(date) + "|" + str(key) + "|" + str(change_status) +
-        #                      " ... " + str(time.time() - start))
-
         if config != "backup":
             self.status_queue[config].append([date, key, change_status, status])
         elif config == "backup":
@@ -966,15 +953,54 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         self.logging.info("Send RECYCLE range to queue ...")
         return response
 
-    def set_status_changed(self, date):
+    def set_status_changed(self, date, change="archive", is_changed=True):
         """
-        set status of an archive entry to changed
+        set status of an archive entry to changed - in central file and in date specific backup file
         """
+        allowed_status = ["favorites", "archive", "objects"]
+        if change == "all":
+            status_keys = allowed_status
+        elif change in allowed_status:
+            status_keys = [change]
+        else:
+            self.logging.error("Key '"+str(change)+"' not allowed for 'set_status_changed()'.")
+            return
+
         backup_info = self.db_handler.read("backup_info", "")
+        backup_file = self.db_handler.read("backup", date)
         if "changes" not in backup_info:
             backup_info["changes"] = {}
-        backup_info["changes"][date] = True
+        if "info" not in backup_file:
+            backup_file["info"] = {}
+
+        for status_key in status_keys:
+            if status_key not in backup_info["changes"]:
+                backup_info["changes"][status_key] = {}
+            if is_changed:
+                backup_info["changes"][status_key][date] = True
+                backup_file["info"]["changed_"+change] = True
+            elif status_key in backup_info["changes"] and date in backup_info["changes"][status_key]:
+                del backup_info["changes"][status_key][date]
+            if not is_changed and "info" in backup_file:
+                backup_file["info"]["changed_"+change] = False
         self.db_handler.write("backup_info", "", backup_info)
+
+    def get_status_changed(self, date, change="archive"):
+        """
+        get status, if changed - from central file and from date specific backup file
+        """
+        return_value = False
+        backup_info = self.db_handler.read_cache("backup_info", "")
+        backup_file = self.db_handler.read_cache("backup", date)
+        if "changes" in backup_info:
+            if (change in backup_info["changes"] and date in backup_info["changes"][change]
+                    and backup_info["changes"][change]):
+                return_value = True
+        if ("info" in backup_file and "changed_"+change in backup_file["info"]
+                and backup_file["info"]["changed_"+change]):
+            return_value = True
+        self.logging.debug("get_status_changed: " + change + "/" + date + "/" + str(return_value))
+        return return_value
 
     def entry_add(self, config, date, key, entry):
         """

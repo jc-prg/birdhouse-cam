@@ -168,7 +168,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                         archive_entries[stamp]["hires_detect"] = ""
                     self.config.queue.entry_add(config="backup", date=date, key=stamp, entry=archive_entries[stamp])
 
-            self.config.queue.set_status_changed(date=date)
+            self.config.queue.set_status_changed(date=date, change="objects")
             self.config.queue.add_to_status_queue(config="backup", date=date, key="end",
                                                   change_status="OBJECT_DETECTION_END", status=0)
             msg = "Object detection for " + date + " done, datasets are going to be saved."

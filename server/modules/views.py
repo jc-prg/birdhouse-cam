@@ -854,7 +854,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 if date not in backup_entries:
                     backup_entries[date] = {}
                 backup_entries[date][cam] = archive_info[cam]["entries"][date].copy()
-                if "changes" in archive_info and date in archive_info["changes"]:
+                if self.config.queue.get_status_changed(date=date, change="archive"):
                     backup_entries[date]["changed"] = True
                     backup_entries[date]["exists"] = True
                 if "changed" not in backup_entries[date]:
@@ -1015,6 +1015,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 if date in archive_changed[cam]["entries"]:
                     archive_changed[cam]["entries"][date]["dir_size"] = dir_size_date
 
+            self.config.queue.set_status_changed(date=date, change="archive", is_changed=False)
+
             # stop if shutdown signal was send
             if self.if_shutdown():
                 self.logging.info("Interrupt creating the archive list.")
@@ -1023,8 +1025,11 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.logging.debug(":::::::::::" + str(archive_changed))
         self.archive_views = archive_changed.copy()
 
+        # get information what has been changed
+        changed_values = self.config.db_handler.read("backup_info", "")["changes"]
+        archive_changed["changes"] = changed_values
+
         # save data in backup database
-        archive_changed["changes"] = {}
         self.archive_dir_size = archive_total_size
         self.config.db_handler.write("backup_info", "", archive_changed)
         self.archive_loading = "done"
@@ -1397,12 +1402,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             self.logging.warning("  -> Could not read favorites from " + category + ", no data available.")
             return {}
 
-        if complete:
+        if complete or self.config.queue.get_status_changed(date=date, change="favorites"):
             from_file = True
         elif "favorites" not in files_complete:
-            from_file = True
-        elif ("info" in files_complete and "changed_fav" in files_complete["info"]
-              and files_complete["info"]["changed_fav"]):
             from_file = True
 
         if not from_file:
@@ -1439,10 +1441,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         if save_file:
             files_complete["favorites"] = favorites.copy()
-            if "info" in files_complete:
-                files_complete["info"]["changed_fav"] = False
             self.config.db_handler.write(config="backup", date=date, data=files_complete, create=False, save_json=True)
 
+        self.config.queue.set_status_changed(date=date, change="favorites", is_changed=False)
         self.logging.info("  -> Favorites " + category + ": " + str(files_today_count) + "/" + str(len(files)) +
                           " - from file")
         return favorites.copy()

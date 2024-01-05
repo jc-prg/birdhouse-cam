@@ -2514,6 +2514,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.camera_streams[stream].initial_connect_msg = self.initial_connect_msg
         self.image.param = self.param
         self.video.param = self.param
+        self.object.param = self.param
 
         self.config.update["camera_" + self.id] = False
         self.reload_camera = True

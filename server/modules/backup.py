@@ -269,7 +269,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
             self.config.db_handler.write(config="backup", date=directory, data=files_backup,
                                          create=True, save_json=True)
-            self.config.queue.set_status_changed(date=directory)
+            self.config.queue.set_status_changed(date=directory, change="archive")
 
         self.backup_running = False
 
@@ -277,11 +277,11 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         """
         recreate video config file, if not exists
         """
-        path = self.config.db_handler.directory(config="videos")
+        video_path = self.config.db_handler.directory(config="videos")
         self.logging.info("Create video list for video directory ...")
-        self.logging.debug("Reading files from path: " + path)
-        file_list = [f for f in os.listdir(path) if f.endswith(".mp4") and "short" not in f and
-                     os.path.isfile(os.path.join(path, f))]
+        self.logging.debug("Reading files from path: " + video_path)
+        file_list = [f for f in os.listdir(video_path) if f.endswith(".mp4") and "short" not in f and
+                     os.path.isfile(os.path.join(video_path, f))]
         file_list.sort(reverse=True)
         files = {}
         for file in file_list:
@@ -299,7 +299,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             # https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-get
             # -------------------------
 
-            cap = cv2.VideoCapture(os.path.join(path, file))
+            cap = cv2.VideoCapture(os.path.join(video_path, file))
             frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             fps = cap.get(cv2.CAP_PROP_FPS)
             length = float(frames) / fps
@@ -307,9 +307,9 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
             file_name_short = param[0] + "_" + param[1] + "_" + param[2] + "_" + param[3] + "_short.mp4"
-            if os.path.isfile(os.path.join(path, file_name_short)):
+            if os.path.isfile(os.path.join(video_path, file_name_short)):
                 file_short = file_name_short
-                cap = cv2.VideoCapture(os.path.join(path, file_short))
+                cap = cv2.VideoCapture(os.path.join(video_path, file_short))
                 file_short_length = cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS)
 
             streaming_server = self.config.param["server"]["ip4_stream_video"]
