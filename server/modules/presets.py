@@ -403,7 +403,7 @@ birdhouse_client_presets = {
                "// Configure stage details (" + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + ")\n" +
                "//---------------------------------\n" +
                "// Please edit not here, but in .env-File\n" +
-               "var test		= '" + birdhouse_env["test_instance"] + "';\n" +
+               "var test		= " + birdhouse_env["test_instance"] + ";\n" +
                "var instance	= '" + birdhouse_env["which_instance"] + "';\n" +
                "var server_port = '" + birdhouse_env["port_api"] + "';\n\n"
 }
