@@ -221,19 +221,22 @@ function birdhouse_view_images_objects(object) {
     for (var i=0;i<group_list.length;i++) {
         image_ids_in_group = document.getElementById("group_ids_"+group_list[i]).innerHTML.split(" ");
         image_list = image_list.concat(image_ids_in_group);
-        for (a=0;a<image_ids_in_group.length;a++) {
-            if (image_list[a] != "") {
-                image_objects = document.getElementById(image_ids_in_group[a]+"_objects");
-                image_container = image_ids_in_group[a] + "_container";
-                if ((image_objects && image_objects.value && image_objects.value.indexOf(object) >= 0) || (object == "")) {
-                    image_list_active.push(image_ids_in_group[a]);
-                    elementVisible(image_container);
-                }
-                else {
-                    elementHidden(image_container);
-                }
+        }
+    console.log(image_list);
+
+    for (a=0;a<image_list.length;a++) {
+        if (image_list[a] != "") {
+            image_objects = document.getElementById(image_list[a]+"_objects");
+            image_container = image_list[a] + "_container";
+            if ((image_objects && image_objects.value && image_objects.value.indexOf(object) >= 0) || (object == "")) {
+                image_list_active.push(image_list[a]);
+                elementVisible(image_container);
+            }
+            else {
+                elementHidden(image_container);
             }
         }
+
     }
 
     console.log("birdhouse_view_images_objects: OBJECT=" + object + ", FOUND=" + image_list_active.length  + ", TOTAL=" + image_list.length);

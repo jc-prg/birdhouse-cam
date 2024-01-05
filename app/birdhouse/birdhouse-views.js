@@ -455,7 +455,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
     }
 
     // show labels of detected birds / objects
-    if (admin && ((active_page == "TODAY" && active_date != "" && active_date != undefined) || (active_page == "TODAY_COMPLETE"))) {
+    if ((active_page == "TODAY" && active_date != "" && active_date != undefined) || active_page == "TODAY_COMPLETE" || active_page == "FAVORITES") {
         if (entries != undefined &&  Object.keys(entries).length > 0) {
             var labels = {};
             var label_information = "";
@@ -471,6 +471,11 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
                             labels[label].push(key);
                             }
                         }
+                if (active_page == "FAVORITES" && value["type"] == "video") {
+                    label = "video";
+                    if (!labels[label]) { labels[label] = []; }
+                    labels[label].push(key);
+                    }
                 });
 
             // create labels
