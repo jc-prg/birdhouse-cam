@@ -91,7 +91,9 @@ birdhouse_env = {
     "admin_password": get_env("ADMIN_PASSWORD"),
     "admin_login": get_env("ADMIN_LOGIN"),
 
-    "detection_active": (get_env("OBJECT_DETECTION").upper() in ("ON", "1", 1, "TRUE", "YES"))
+    "detection_active": (get_env("OBJECT_DETECTION").upper() in ("ON", "1", 1, "TRUE", "YES")),
+    "test_instance": str(get_env("BIRDHOUSE_INSTANCE").upper() == "TEST").lower(),
+    "which_instance": get_env("BIRDHOUSE_INSTANCE")
 }
 
 birdhouse_log_into_file = True
@@ -387,7 +389,8 @@ birdhouse_client_presets = {
                "// Configure stage details (" + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + ")\n" +
                "//---------------------------------\n" +
                "// Please edit not here, but in .env-File\n" +
-               "var test		= false;\n" +
+               "var test		= '" + birdhouse_env["test_instance"] + "';\n" +
+               "var instance	= '" + birdhouse_env["which_instance"] + "';\n" +
                "var server_port = '" + birdhouse_env["port_api"] + "';\n\n"
 }
 
