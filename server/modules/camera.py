@@ -2358,56 +2358,62 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.logging.info("Found "+str(len(devices))+" devices.")
         for key in system["video_devices_02"]:
-            try:
-                # experimental = using PiCamera2 to connect a picamera, not working in a docker container yet
-                #                and not implemented for image capturing yet
-                if key == "/dev/picam" and birdhouse_env["rpi_64bit"]:
-                    try:
-                        from picamera2 import Picamera2
-                        picam2_test = Picamera2()
-                        picam2_test.start()
-                        time.sleep(1)
-                        image = picam2_test.capture_array()
-                        print(image)
-                        if image is None or len(image) == 0:
-                            system["video_devices_03"][key]["error"] = "Returned empty image."
-                        else:
-                            if "error" in system["video_devices_03"][key]:
-                                del system["video_devices_03"][key]["error"]
-                            system["video_devices_03"][key]["image"] = True
-                    except Exception as e:
-                        system["video_devices_03"][key]["error"] = "Error connecting camera:" + str(e)
 
-                # default = using cv2
-                else:
+            # if Picamera2 - requires Raspbain OS 64bit without docker
+            if key == "/dev/picam" and birdhouse_env["rpi_64bit"]:
+                try:
+                    from picamera2 import Picamera2
+                    picam2_test = Picamera2()
+                    picam2_test.start()
+                    time.sleep(0.5)
+                    image = picam2_test.capture_array()
+
+                    if image is None or len(image) == 0:
+                        system["video_devices_03"][key]["error"] = "Returned empty image."
+                    else:
+                        path_raw = str(os.path.join(self.config.db_handler.directory(config="images"),
+                                                    "..", "test_connect_" + key.replace("/", "_") + ".jpeg"))
+                        cv2.imwrite(path_raw, image)
+                        if "error" in system["video_devices_03"][key]:
+                            del system["video_devices_03"][key]["error"]
+                        system["video_devices_03"][key]["image"] = True
+
+                except Exception as e:
+                    system["video_devices_03"][key]["error"] = "Error connecting camera:" + str(e)
+
+            # default = using cv2
+            else:
+                try:
                     camera = cv2.VideoCapture(key, cv2.CAP_V4L)
                     time.sleep(0.1)
 
-                if key != "/dev/picam" and not camera.isOpened():
-                    system["video_devices_03"][key]["error"] = "Error opening video."
+                    if not camera.isOpened():
+                        system["video_devices_03"][key]["error"] = "Error opening video."
 
-                time.sleep(0.5)
-                ref, raw = camera.read()
-                camera.release()
-                check = str(type(raw))
-                if not ref:
-                    if "error" not in system["video_devices_03"][key]:
-                        system["video_devices_03"][key]["error"] = "Error reading image."
-                elif "NoneType" in check or len(raw) == 0:
-                    if "error" not in system["video_devices_03"][key]:
-                        system["video_devices_03"][key]["error"] = "Returned empty image."
-                else:
-                    system["video_devices_03"][key]["image"] = True
-                    system["video_devices_03"][key]["shape"] = raw.shape
-                    path_raw = str(os.path.join(self.config.db_handler.directory(config="images"),
-                                   "..", "test_connect_" + key.replace("/", "_") + ".jpeg"))
-                    cv2.imwrite(path_raw, raw)
+                    time.sleep(0.5)
+                    ref, raw = camera.read()
+                    camera.release()
+                    check = str(type(raw))
+                    if not ref:
+                        if "error" not in system["video_devices_03"][key]:
+                            system["video_devices_03"][key]["error"] = "Error reading image."
 
-                    if "error" in system["video_devices_03"][key]:
-                        del system["video_devices_03"][key]["error"]
+                    elif "NoneType" in check or len(raw) == 0:
+                        if "error" not in system["video_devices_03"][key]:
+                            system["video_devices_03"][key]["error"] = "Returned empty image."
+                    else:
+                        system["video_devices_03"][key]["image"] = True
+                        system["video_devices_03"][key]["shape"] = raw.shape
 
-            except cv2.error as e:
-                system["video_devices_03"][key]["error"] = str(e)
+                        path_raw = str(os.path.join(self.config.db_handler.directory(config="images"),
+                                       "..", "test_connect_" + key.replace("/", "_") + ".jpeg"))
+                        cv2.imwrite(path_raw, raw)
+
+                        if "error" in system["video_devices_03"][key]:
+                            del system["video_devices_03"][key]["error"]
+
+                except cv2.error as e:
+                    system["video_devices_03"][key]["error"] = str(e)
 
             birdhouse_initial_connect_msg[key] = ("initial_connect=" + str(system["video_devices_03"][key]["image"]) +
                                                   ", info=" + system["video_devices_03"][key]["info"])
