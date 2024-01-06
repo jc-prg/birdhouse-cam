@@ -18,19 +18,253 @@ from modules.object import BirdhouseObjectDetection
 # https://pyimagesearch.com/2016/01/04/unifying-picamera-and-cv2-videocapture-into-a-single-class-with-opencv/
 
 
+class BirdhousePiCameraHandler(BirdhouseCameraClass):
+
+    def __init__(self, camera_id, source, config):
+        """
+        create instance for PiCamera2
+        documentation: https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf
+        """
+        BirdhouseCameraClass.__init__(self, class_id=camera_id+"-pi", class_log="cam-pi",
+                                      camera_id=camera_id, config=config)
+        self.source = source
+        self.stream = None
+        self.transform = None
+        self.configuration = {}
+        self.property_keys = None
+        self.properties_get = None
+        self.properties_not_used = None
+        self.properties_set = None
+        self.connected = False
+        self.available_devices = {}
+
+        self.logging.info("Starting PiCamera2 support for '"+self.id+":"+source+"' ...")
+
+    def connect(self):
+        """
+        connect with PiCamera
+        """
+        self.reset_error()
+        self.connected = False
+
+        self.logging.info("Try to connect PiCamera2 '" + self.id + "/" + self.source + "' ...")
+        try:
+            from picamera2 import Picamera2
+            # from libcamera import Transform
+            # self.transform = Transform
+            # self.transform(hflip=1, vflip=1)
+            self.stream = Picamera2()
+            self.stream.start()
+            time.sleep(0.5)
+
+        except Exception as err:
+            self.raise_error("- Can't connect to PiCamera2 '" + self.source + "': " + str(err))
+            return False
+
+        if self.stream is None:
+            self.raise_error("- Can't connect to camera '" + self.source + "': Unknown error.")
+            return False
+        else:
+            self.logging.info("- Connected.")
+            self.get_properties(key="init")
+            self.set_properties(key="init")
+            self.connected = True
+
+        try:
+            image = self.stream.capture_array()
+            if image is None or len(image) == 0:
+                raise Exception("Returned empty image.")
+            return True
+
+        except Exception as err:
+            self.raise_warning("- Error reading first image from PiCamera '"+self.source+"': " + str(err))
+            return "WARNING"
+
+    def reconnect(self):
+        """
+        reconnect camera
+        """
+        self.disconnect()
+        return self.connect()
+
+    def disconnect(self):
+        """
+        disconnect camera
+        """
+        self.connected = False
+        if self.stream is not None:
+            try:
+                self.stream.stop()
+            except Exception as err:
+                self.logging.debug("- Release of PiCamera2 did not work: " + str(err))
+        else:
+            self.logging.debug("- PiCamera2 not yet connected.")
+
+    def read(self, stream="not set"):
+        """
+        read image from camera
+        """
+        try:
+            raw = self.stream.capture_array("main")
+            if raw is None or len(raw) == 0:
+                raise Exception("Returned empty image.")
+            return raw
+        except Exception as err:
+            self.raise_error("- Error reading image from PiCamera2 '" + self.source +
+                             "' by stream '" + stream + "': " + str(err))
+            return
+
+    def set_properties(self, key, value=""):
+        """
+        set configuration for picamera2 using "Picamera2.create_still_configuration"
+        """
+        pass
+
+    def get_properties_available(self, keys="get"):
+        """
+        get properties from Picamera,
+
+        picam2.set_controls({"ExposureTime": 10000, "AnalogueGain": 1.0})
+        print(picam.controls)
+
+        metadata = picam2.capture_metadata()
+        {
+        'SensorTimestamp': 9784996188000,
+        'ColourCorrectionMatrix': (1.88217031955719, -0.26385337114334106, -0.6183169484138489, -0.6379863619804382,
+                                   2.1166977882385254, -0.47871148586273193, -0.13631515204906464, -0.9951226711273193,
+                                   2.1314477920532227),
+        'FocusFoM': 859,
+        'ColourTemperature': 2585,
+        'ColourGains': (1.0264559984207153, 2.126723289489746),
+        'AeLocked': False,
+        'Lux': 54.87057876586914,
+        'FrameDuration': 66773,
+        'SensorBlackLevels': (1024, 1024, 1024, 1024),
+        'DigitalGain': 1.000415325164795,
+        'AnalogueGain': 8.0,
+        'ScalerCrop': (16, 0, 2560, 1920),
+        'ExposureTime': 66638
+        }
+
+        ----
+        sample output from 'self.stream.camera_properties'
+        {
+            'Model': 'ov5647',
+            'UnitCellSize': (1400, 1400),
+            'Location': 2,
+            'Rotation': 0,
+            'PixelArraySize': (2592, 1944),
+            'PixelArrayActiveAreas': [(16, 6, 2592, 1944)],
+            'ColorFilterArrangement': 2,
+            'ScalerCropMaximum': (16, 0, 2560, 1920),
+            'SystemDevices': (20754, 20741, 20743, 20744),
+            'SensorSensitivity': 1.0
+        }
+        picam2.camera_configuration()
+        picam2.sensor_modes example
+        [
+            {'bit_depth': 10, 'crop_limits': (696, 528, 2664, 1980), 'exposure_limits': (31, 66512892),
+            'format': SRGGB10_CSI2P, 'fps': 120.05, 'size': (1332, 990), 'unpacked': 'SRGGB10'},
+            {'bit_depth': 12, 'crop_limits': (0, 440, 4056, 2160), 'exposure_limits': (60, 127156999),
+            'format': SRGGB12_CSI2P, 'fps': 50.03, 'size': (2028, 1080), 'unpacked': 'SRGGB12'}, ...
+        ]
+        picam2.create_preview_configuration()
+        picam2.create_still_configuration()
+        picam2.create_video_configuration()
+        picam2.preview_configuration.main.size = (800, 600)
+        picam2.configure("preview")
+        configuration_object.enable_lores()
+        configuration_object.enable_raw()
+
+        self.configuration = {
+            {"size": (808, 606)},
+            raw={'format': 'SRGGB12'},
+            sensor={'output_size': mode['size'], 'bit_depth': mode['bit_depth']},
+            lores={"size": (320, 240)},
+            encode="lores",
+            colour_space=ColorSpace.Sycc()
+        }
+        stream: 'main', 'raw', 'lores', 'video', ...
+
+        ----
+        return keys for all properties that are implemented at the moment
+        """
+        if keys == "get":
+            return list(self.properties_get.keys())
+        elif keys == "set":
+            return self.properties_set
+        return self.property_keys
+
+    def get_properties(self, key=""):
+        """
+        get properties from camera
+        """
+        properties_not_used = ["pos_msec", "pos_frames", "pos_avi_ratio", "convert_rgb", "fourcc", "format", "mode",
+                               "frame_count", "frame_width", "frame_height"]
+        properties_get_array = ["brightness", "saturation", "contrast", "hue", "gain", "gamma",
+                                "exposure", "auto_exposure", "auto_wb", "wb_temperature", "temperature",
+                                "fps", "focus", "autofocus", "zoom"]
+
+        if key == "init":
+            self.properties_get = {}
+        # not implemented yet
+        pass
+
+    def get_properties_image(self):
+        """
+        read image and get properties
+        """
+        image_properties = {}
+        return image_properties
+
+        # not implemented yet
+        pass
+
+    def set_black_white(self):
+        """
+        set saturation to 0
+        """
+        try:
+            self.stream.set_controls({"Saturation": 0})
+            return True
+        except Exception as err:
+            self.raise_error("Could not set to black and white: " + str(err))
+            return False
+
+    def set_resolution(self, width, height):
+        """
+        set camera resolution
+        """
+        try:
+            config = self.stream.create_still_configuration({"size": (width, height)})
+            self.stream.configure(config)
+            return True
+        except Exception as err:
+            self.raise_error("Could not set resolution: " + str(err))
+            return False
+
+    def get_resolution(self, maximum=False):
+        """
+        get resolution of the device
+        """
+        if maximum:
+            (width, height) = self.stream.camera_properties['PixelArraySize']
+        else:
+            (width, height) = self.stream.still_configuration.main.size
+        return [width, height]
+
+    def if_connected(self):
+        """
+        check if camera is connected
+        """
+        return self.connected
+
+
 class BirdhouseCameraHandler(BirdhouseCameraClass):
 
     def __init__(self, camera_id, source, config):
         BirdhouseCameraClass.__init__(self, class_id=camera_id+"-ctrl", class_log="cam-other",
                                       camera_id=camera_id, config=config)
-
-        if "/dev/" not in str(source):
-            source = "/dev/video" + str(source)
-        elif "/dev/picam" in source and birdhouse_env["rpi_64bit"]:
-            source = "picamera2"
-        elif "/dev/picam" in source:
-            source = "picamera"
-
         self.source = source
         self.stream = None
         self.property_keys = None
@@ -88,10 +322,16 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             return "WARNING"
 
     def reconnect(self):
+        """
+        reconnect camera
+        """
         self.disconnect()
         return self.connect()
 
     def disconnect(self):
+        """
+        disconnect camera
+        """
         self.connected = False
         if self.stream is not None:
             try:
@@ -1430,7 +1670,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.reset_error_all()
         if init:
-            self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source, config=self.config)
+            if self.source == "/dev/picamera":
+                self.camera = BirdhousePiCameraHandler(camera_id=self.id, source=self.source, config=self.config)
+            else:
+                self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source, config=self.config)
             self.connected = self.camera.connect()
         else:
             self.connected = self.camera.reconnect()
@@ -2127,8 +2370,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                str(current_frame_id-self.detect_frame_id_last) + " frames difference / " +
                                str(self.image_size_object_detection) + "%")
 
-        # !!! Return values > 12 fps, expected are values < 6 fps --> check self.get_stream() also!
-
         self.detect_fps_last[stream_id] = time.time()
         if self.detect_frame_id_last == current_frame_id and self.detect_frame_last is not None:
             return self.detect_frame_last
@@ -2381,7 +2622,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 except Exception as e:
                     system["video_devices_03"][key]["error"] = "Error connecting camera:" + str(e)
 
-            # default = using cv2
+            # else use open-cv2 as default
             else:
                 try:
                     camera = cv2.VideoCapture(key, cv2.CAP_V4L)
@@ -2404,6 +2645,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     else:
                         system["video_devices_03"][key]["image"] = True
                         system["video_devices_03"][key]["shape"] = raw.shape
+                        birdhouse_picamera = True
 
                         path_raw = str(os.path.join(self.config.db_handler.directory(config="images"),
                                        "..", "test_connect_" + key.replace("/", "_") + ".jpeg"))

@@ -144,6 +144,7 @@ birdhouse_git_submodules = {
 camera_list = []
 birdhouse_env = {}
 birdhouse_status = {"object_detection": False}
+birdhouse_picamera = False
 
 set_global_configuration()
 
