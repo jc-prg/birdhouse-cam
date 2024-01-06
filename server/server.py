@@ -127,7 +127,7 @@ def read_html(directory, filename, content=""):
         filename = filename[1:len(filename)]
     if directory.startswith("/"):
         directory = directory[1:len(directory)]
-    file = os.path.join(birdhouse_main_directories["project"], directory, filename)
+    file = os.path.join(birdhouse_main_directories["server"], directory, filename)
 
     if not os.path.isfile(file):
         srv_logging.warning("File '" + file + "' does not exist!")
@@ -155,7 +155,9 @@ def read_image(directory, filename):
         filename = filename[1:len(filename)]
     if directory.startswith("/"):
         directory = directory[1:len(directory)]
-    file = os.path.join(birdhouse_main_directories["project"], directory, filename)
+
+    filename = filename.replace("app/", "")
+    file = os.path.join(birdhouse_main_directories["server"], directory, filename)
     file = file.replace("backup/", "")
 
     if not os.path.isfile(file):
@@ -899,10 +901,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif file_ending in file_types:
             if "/images/" in self.path or "/videos/" in self.path or "/archive/" in self.path:
                 file_path = birdhouse_directories["data"]
-                # file_path = birdhouse_main_directories["data"]
             else:
-                file_path = ""
-                #file_path = birdhouse_main_directories["project"]
+                file_path = birdhouse_directories["html"]
+
             if "text" in file_types[file_ending]:
                 self.stream_file(filetype=file_types[file_ending],
                                  content=read_html(directory=file_path, filename=self.path))
@@ -1571,11 +1572,15 @@ if __name__ == "__main__":
         for thread in threading.enumerate():
             if thread.name != "MainThread":
                 count_running_threads += 1
-                if thread.class_id and thread.id:
-                    srv_logging.error("Could not stop correctly: " + thread.name + " = " +
-                                      thread.class_id + " (" + thread.id + ")")
-                else:
-                    srv_logging.error("Could not stop correctly: " + thread.name)
+                try:
+                    if thread.class_id and thread.id:
+                        srv_logging.error("Could not stop correctly: " + thread.name + " = " +
+                                          thread.class_id + " (" + thread.id + ")")
+                    else:
+                        srv_logging.error("Could not stop correctly: " + thread.name)
+                except Exception as e:
+                    srv_logging.error("Could not stop thread correctly, no further information (" +
+                                      str(count_running_threads) + ").")
 
         if count_running_threads > 0:
             srv_logging.info("-> Kill the " + str(count_running_threads) + " threads that could not be stopped ...")
