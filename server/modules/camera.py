@@ -2368,11 +2368,12 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                         image = picam2_test.capture_array()
                         if "None" in str(type(image)) or len(image) == 0:
                             system["video_devices_03"][key]["error"] = "Returned empty image."
+                            #self.logging.warning(" - ERROR: " + key + "   Returned empty image.")
                         else:
-                            self.logging.info(" - " + key + " OK: " + str(image))
+                            self.logging.info(" - OK:    " + key + "   PiCamera. ")
                     except Exception as e:
                         system["video_devices_03"][key]["error"] = "Error connecting camera:" + str(e)
-                        self.logging.info(" - " + key + " ERROR: " + str(image))
+                        #self.logging.warning(" - ERROR: " + key + "   " + str(e))
 
                 # default = using cv2
                 else:
@@ -2407,16 +2408,18 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
             birdhouse_initial_connect_msg[key] = ("initial_connect=" + str(system["video_devices_03"][key]["image"]) +
                                                   ", info=" + system["video_devices_03"][key]["info"])
+
             if "shape" in system["video_devices_03"][key]:
                 birdhouse_initial_connect_msg[key] += ", shape=" + str(system["video_devices_03"][key]["shape"])
+
             if "error" in system["video_devices_03"][key]:
-                self.logging.error(" - ERROR: " + str(key).ljust(12) + "  " +
-                                   str(system["video_devices_03"][key]["info"]) +
-                                   " " + str(system["video_devices_03"][key]["error"]))
+                self.logging.warning(" - ERROR: " + str(key).ljust(12) + "  " +
+                                     str(system["video_devices_03"][key]["info"]) +
+                                     " " + str(system["video_devices_03"][key]["error"]))
                 birdhouse_initial_connect_msg[key] += ", error='" + str(system["video_devices_03"][key]["error"]) + "'"
             else:
-                self.logging.error(" - OK:    " + str(key).ljust(12) + "  " +
-                                   str(system["video_devices_03"][key]["info"]))
+                self.logging.info(" - OK:    " + str(key).ljust(12) + "  " +
+                                  str(system["video_devices_03"][key]["info"]))
 
         for key in system["video_devices_03"]:
             if system["video_devices_03"][key]["image"]:
