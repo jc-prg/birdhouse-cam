@@ -2327,7 +2327,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         identify available video devices
         """
         self.logging.info("Identify available video devices ...")
-        system = {"video_devices": {}, "video_devices_02": {}, "video_devices_03": {}}
+        system = {"video_devices": {}, "video_devices_02": {}, "video_devices_03": {}, "video_devices_04": {}}
 
         try:
             process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
@@ -2416,6 +2416,35 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             else:
                 self.logging.error(" - OK:    " + str(key).ljust(12) + "  " +
                                    str(system["video_devices_03"][key]["info"]))
+
+        for key in system["video_devices_03"]:
+            if system["video_devices_03"][key]["image"]:
+                system["video_devices_04"][key] = system["video_devices_03"][key].copy()
+
+                try:
+                    process = subprocess.Popen(["v4l2-ctl -d "+key+" --list-formats-ext"], stdout=subprocess.PIPE, shell=True)
+                    output = process.communicate()[0]
+                    output = output.decode()
+                    output = output.split("\n")
+
+                    output_dict = {}
+                    for line in output:
+                        if "[" in line:
+                            resolution_key = line.replace("\t", "")
+                            resolution_key = resolution_key.split(": ")[1]
+                            resolution_key = resolution_key.split("'")[1]
+                            output_dict[resolution_key] = []
+                        elif "Size: Discrete " in line:
+                            value_size = line.split("Size: Discrete ")[1]
+                            output_dict[resolution_key].append(value_size)
+
+                    system["video_devices_04"][key]["resolutions"] = output_dict.copy()
+                    system["video_devices_03"][key]["resolutions"] = output_dict.copy()
+                    self.logging.info(" .... " + key + " .... " + str(output_dict))
+
+                except Exception as e:
+                    self.logging.error("Could not grab video device resolutions. Check, if v4l2-ctl is installed. " + str(e))
+                    return system
 
         self.available_devices = system
         return system

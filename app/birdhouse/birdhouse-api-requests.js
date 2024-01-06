@@ -146,7 +146,7 @@ function birdhouse_recycleThreshold(category, date, threshold, del, camera) {
 
 function birdhouse_archiveObjectDetection(camera, date_stamp, date) {
     var message = lang("OBJECT_DETECTION_REQUEST", [date, getTextById("image_count_all_" + date)]);
-    appMsg.confirm(message, "birdhouse_archiveObjectDetection_exec('"+date_stamp+"');", 150);
+    appMsg.confirm(message, "birdhouse_archiveObjectDetection_exec('"+camera+"', '"+date_stamp+"');", 150);
     }
 
 function birdhouse_archiveObjectDetection_exec(camera, date) {
