@@ -2340,6 +2340,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         last_key = "none"
         if birdhouse_env["rpi_active"]:
+            output.append("PiCamera:")
             output.append("/dev/picam")
 
         devices = []
@@ -2369,8 +2370,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                         if "None" in str(type(image)) or len(image) == 0:
                             system["video_devices_03"][key]["error"] = "Returned empty image."
                             #self.logging.warning(" - ERROR: " + key + "   Returned empty image.")
-                        else:
-                            self.logging.info(" - OK:    " + key + "   PiCamera. ")
+                        #else:
+                        #    self.logging.info(" - OK:    " + key + "   PiCamera. ")
                     except Exception as e:
                         system["video_devices_03"][key]["error"] = "Error connecting camera:" + str(e)
                         #self.logging.warning(" - ERROR: " + key + "   " + str(e))
