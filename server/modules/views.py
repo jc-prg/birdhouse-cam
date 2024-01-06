@@ -1026,7 +1026,11 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.archive_views = archive_changed.copy()
 
         # get information what has been changed
-        changed_values = self.config.db_handler.read("backup_info", "")["changes"]
+        backup_info = self.config.db_handler.read("backup_info", "")
+        if "changes" in backup_info:
+            changed_values = backup_info["changes"]
+        else:
+            changed_values = {}
         archive_changed["changes"] = changed_values
 
         # save data in backup database
