@@ -87,6 +87,15 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.disconnect()
         return self.connect()
 
+        #self.logging.info("Try to reconnect PiCamera2 '" + self.id + "/" + self.source + "' ...")
+        #try:
+        #    self.stream.close()
+        #    time.sleep(1)
+        #    self.stream.start()
+        #    return True
+        #except Exception as e:
+        #    return False
+
     def disconnect(self):
         """
         disconnect camera
@@ -1672,6 +1681,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.reset_error_all()
         if init:
+            if self.camera is not None:
+                self.camera.disconnect()
             if "/dev/picam" in self.source:
                 self.camera = BirdhousePiCameraHandler(camera_id=self.id, source=self.source, config=self.config)
             else:
