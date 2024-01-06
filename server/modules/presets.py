@@ -103,6 +103,20 @@ def check_submodules():
             sys.exit()
     birdhouse_git_submodules_installed = True
 
+
+# ------------------------------------
+# absolute paths
+# ------------------------------------
+
+birdhouse_main_directories = {
+    "modules": os.path.dirname(os.path.abspath(__file__)),
+    "working": os.path.dirname(os.path.abspath(__name__)),
+    "server": os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."),
+    "project": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."),
+    "app": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "app"),
+    "data": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data")
+}
+
 # ------------------------------------
 # error handling
 # ------------------------------------
@@ -173,15 +187,15 @@ birdhouse_couchdb = {
     "db_basedir": "/usr/src/app/data/"
 }
 birdhouse_pages = {
-    "live":             ("Live-Stream", "/index.html",       "INDEX"),
-    "backup":           ("Archiv",      "/list_backup.html", "ARCHIVE"),
-    "today":            ("Heute",       "/list_short.html",  "TODAY"),
-    "today_complete":   ("Alle heute",  "/list_new.html",    "TODAY_COMPLETE"),
-    "favorit":          ("Favoriten",   "/list_star.html",   "FAVORITES"),
-    "cam_info":         ("Ger&auml;te", "/cameras.html",     "DEVICES"),
-    "video_info":       ("Video Info",  "/video-info.html",  ""),
-    "videos":           ("Videos",      "/videos.html",      "VIDEOS"),
-    "save":             ("Speichern",   "/image.jpg",        "")
+    "live": ("Live-Stream", "/index.html", "INDEX"),
+    "backup": ("Archiv", "/list_backup.html", "ARCHIVE"),
+    "today": ("Heute", "/list_short.html", "TODAY"),
+    "today_complete": ("Alle heute", "/list_new.html", "TODAY_COMPLETE"),
+    "favorit": ("Favoriten", "/list_star.html", "FAVORITES"),
+    "cam_info": ("Ger&auml;te", "/cameras.html", "DEVICES"),
+    "video_info": ("Video Info", "/video-info.html", ""),
+    "videos": ("Videos", "/videos.html", "VIDEOS"),
+    "save": ("Speichern", "/image.jpg", "")
 }
 birdhouse_databases = {
     "config": {},
@@ -222,18 +236,18 @@ birdhouse_files = {
     "weather": "config_weather.json"
 }
 birdhouse_dir_to_database = {
-    "config":                       "config",
-    "images/config_images":         "today_images",
-    "images/config_sensor":         "today_sensors",
-    "images/config_weather":        "today_weather",
-    "images/config_statistics":     "today_statistics",
-    "images/config_backup":         "archive_images",
-    "images/config_favorites":      "favorites",
-    "videos/config_videos":         "archive_videos",
+    "config": "config",
+    "images/config_images": "today_images",
+    "images/config_sensor": "today_sensors",
+    "images/config_weather": "today_weather",
+    "images/config_statistics": "today_statistics",
+    "images/config_backup": "archive_images",
+    "images/config_favorites": "favorites",
+    "videos/config_videos": "archive_videos",
     "images/<DATE>/config_statistics": "archive_statistics",
-    "images/<DATE>/config_images":     "archive_images",
-    "images/<DATE>/config_sensors":    "archive_sensors",
-    "images/<DATE>/config_weather":    "archive_weather"
+    "images/<DATE>/config_images": "archive_images",
+    "images/<DATE>/config_sensors": "archive_sensors",
+    "images/<DATE>/config_weather": "archive_weather"
 }
 
 # ------------------------------------
@@ -349,8 +363,8 @@ birdhouse_default_sensor = {
 }
 birdhouse_preset = {
     "backup": {
-        "preview": "0700",               # HHMM
-        "preview_fav": True,               # HHMM
+        "preview": "0700",  # HHMM
+        "preview_fav": True,  # HHMM
         "time": "2000"
     },
     "devices": {
@@ -371,12 +385,12 @@ birdhouse_preset = {
         "timezone": "UTC+1",
         "weather_active": True
     },
-    "server": {                     # set vars in the .env file
-        "ip4_admin_deny":   [""],
-        "ip4_address":      "",
+    "server": {  # set vars in the .env file
+        "ip4_admin_deny": [""],
+        "ip4_address": "",
         "ip4_stream_audio": "",
         "ip4_stream_video": "",
-        "initial_setup":    True
+        "initial_setup": True
     },
     "title": "jc://birdhouse/",
     "views": {
@@ -405,7 +419,6 @@ birdhouse_client_presets = {
                "var instance	= '" + birdhouse_env["which_instance"] + "';\n" +
                "var server_port = '" + birdhouse_env["port_api"] + "';\n\n"
 }
-
 
 file_types = {
     '.css': 'text/css',
