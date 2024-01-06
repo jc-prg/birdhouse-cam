@@ -95,7 +95,7 @@ def check_submodules():
     global birdhouse_git_submodules, birdhouse_git_submodules_installed
 
     for key in birdhouse_git_submodules:
-        module_path = os.path.join(os.getcwd(), birdhouse_git_submodules[key], "README.md")
+        module_path = os.path.join(birdhouse_main_directories["project"], birdhouse_git_submodules[key], "README.md")
         if not os.path.exists(module_path):
             print("ERROR: Submodule from git not installed: https://github.com/" + key + " in directory " +
                   birdhouse_git_submodules[key])
