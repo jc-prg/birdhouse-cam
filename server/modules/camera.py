@@ -58,11 +58,11 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             time.sleep(0.5)
 
         except Exception as err:
-            self.raise_error("- Can't connect to PiCamera2 '" + self.source + "': " + str(err))
+            self.raise_error("Can't connect to PiCamera2 '" + self.source + "': " + str(err))
             return False
 
         if self.stream is None:
-            self.raise_error("- Can't connect to camera '" + self.source + "': Unknown error.")
+            self.raise_error("Can't connect to PiCamera2 '" + self.source + "': Unknown error.")
             return False
         else:
             self.logging.info("- Connected.")
@@ -94,7 +94,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.connected = False
         if self.stream is not None:
             try:
-                self.stream.stop()
+                self.stream.close()
             except Exception as err:
                 self.logging.debug("- Release of PiCamera2 did not work: " + str(err))
         else:
@@ -236,8 +236,10 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         set camera resolution
         """
         try:
-            config = self.stream.create_still_configuration({"size": (width, height)})
+            config = self.stream.create_still_configuration({"size": (int(width), int(height))})
+            self.stream.stop()
             self.stream.configure(config)
+            self.stream.start()
             return True
         except Exception as err:
             self.raise_error("Could not set resolution: " + str(err))
@@ -1660,17 +1662,17 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.reload_time = time.time()
 
         if not init:
-            self.logging.info("Restarting CAMERA (" + self.id + ") ...")
+            self.logging.info("Restarting CAMERA (" + self.id + ":" + self.source + ") ...")
             for stream in relevant_streams:
                 if stream in self.camera_streams:
                     self.camera_streams[stream].set_maintenance_mode(True, "Restart camera", self.id)
             time.sleep(1)
         else:
-            self.logging.info("Starting CAMERA (" + self.id + ") ...")
+            self.logging.info("Starting CAMERA (" + self.id + ":" + self.source + ") ...")
 
         self.reset_error_all()
         if init:
-            if self.source == "/dev/picamera":
+            if "/dev/picam" in self.source:
                 self.camera = BirdhousePiCameraHandler(camera_id=self.id, source=self.source, config=self.config)
             else:
                 self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source, config=self.config)
@@ -2598,7 +2600,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 system["video_devices_03"][value] = {"dev": value, "info": last_key, "image": False}
 
         self.logging.info("Found "+str(len(devices))+" devices.")
-        for key in system["video_devices_02"]:
+
+        #device_keys = list(system["video_devices_02"].keys()).sort()
+        #for key in device_keys:
+
+        for key in system["video_devices_02"].sort():
 
             # if Picamera2 - requires Raspbain OS 64bit without docker
             if key == "/dev/picam" and birdhouse_env["rpi_64bit"]:
@@ -2618,6 +2624,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                         if "error" in system["video_devices_03"][key]:
                             del system["video_devices_03"][key]["error"]
                         system["video_devices_03"][key]["image"] = True
+                        picam2_test.stop()
+                        picam2_test.close()
 
                 except Exception as e:
                     system["video_devices_03"][key]["error"] = "Error connecting camera:" + str(e)

@@ -163,7 +163,7 @@ birdhouse_log_filename = str(os.path.join(os.path.dirname(__file__), "../../log"
 birdhouse_loglevel_default = logging.INFO
 birdhouse_loglevel_module = {}
 birdhouse_loglevel_modules_all = [
-    'root', 'backup', 'cam-main', 'cam-img', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object',
+    'root', 'backup', 'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object',
     'cam-stream', 'config', 'config-Q', 'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
     'server', 'srv-info', 'srv-health', 'video', 'video-srv', 'views', 'view-head', 'view-creat',
     'weather', 'weather-py', 'weather-om']

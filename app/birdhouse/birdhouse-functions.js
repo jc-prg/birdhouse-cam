@@ -25,7 +25,17 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
 
         html += "<input id='"+id+"' value='"+data+"' style='"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");' onchange='"+on_change+"'>";
     }
-    else if (type == "select_dict") {
+    else if (type == "select_dict" || type == "select_dict_sort") {
+
+        if (type == "select_dict_sort") {
+            var options_sorted = Object.entries(options);
+            options_sorted.sort(function(a, b) { return a[1] - b[1]; });
+            var option_keys = options_sorted.map((e) => { return e[0] });
+            }
+        else {
+            var option_keys = "";
+            }
+
         var exists = false;
         html += "<select id='"+id+"' onchange='"+on_change+"'>";
         html += "<option value=''>(empty)</option>";
@@ -40,10 +50,15 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
                 }
             }
         else  {
-            Object.keys(options).forEach (key => {
+            if (option_keys == "") { option_keys = Object.keys(options); }
+            //Object.entries(option_keys).forEach (key => {
+            for (var a=0;a<option_keys.length;a++) {
+            //option_keys.forEach (key => {
+                key = option_keys[a];
                 if (data_str == key)  { html += "<option selected='selected' value='"+key+"'>"+options[key]+"</option>"; exists = true; }
                 else                  { html += "<option value='"+key+"'>"+options[key]+"</option>"; }
-                });
+                }
+                //});
             }
         if (!exists) {
             html += "<option selected='selected'>"+data_str+"</option>";
