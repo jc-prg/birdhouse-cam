@@ -111,10 +111,10 @@ def check_submodules():
 birdhouse_main_directories = {
     "modules": os.path.dirname(os.path.abspath(__file__)),
     "working": os.path.dirname(os.path.abspath(__name__)),
-    "server": os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."),
-    "project": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."),
-    "app": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "app"),
-    "data": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data")
+    "server": os.path.join("/", os.path.dirname(os.path.abspath(__file__)), ".."),
+    "project": os.path.join("/", os.path.dirname(os.path.abspath(__file__)), "..", ".."),
+    "app": os.path.join("/", os.path.dirname(os.path.abspath(__file__)), "..", "..", "app"),
+    "data": os.path.join("/", os.path.dirname(os.path.abspath(__file__)), "..", "..", "data")
 }
 
 # ------------------------------------
