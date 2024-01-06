@@ -127,7 +127,8 @@ def read_html(directory, filename, content=""):
         filename = filename[1:len(filename)]
     if directory.startswith("/"):
         directory = directory[1:len(directory)]
-    file = os.path.join(config.main_directory, directory, filename)
+    # file = os.path.join(config.main_directory, directory, filename)
+    file = os.path.join(directory, filename)
 
     if not os.path.isfile(file):
         srv_logging.warning("File '" + file + "' does not exist!")
@@ -151,9 +152,12 @@ def read_image(directory, filename):
     """
     read image file and return for stream via webserver
     """
-    if filename.startswith("/"):  filename = filename[1:len(filename)]
-    if directory.startswith("/"): directory = directory[1:len(directory)]
-    file = os.path.join(config.main_directory, directory, filename)
+    if filename.startswith("/"):
+        filename = filename[1:len(filename)]
+    if directory.startswith("/"):
+        directory = directory[1:len(directory)]
+    # file = os.path.join(config.main_directory, directory, filename)
+    file = os.path.join(directory, filename)
     file = file.replace("backup/", "")
 
     if not os.path.isfile(file):
