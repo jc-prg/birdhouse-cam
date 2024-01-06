@@ -87,15 +87,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.disconnect()
         return self.connect()
 
-        #self.logging.info("Try to reconnect PiCamera2 '" + self.id + "/" + self.source + "' ...")
-        #try:
-        #    self.stream.close()
-        #    time.sleep(1)
-        #    self.stream.start()
-        #    return True
-        #except Exception as e:
-        #    return False
-
     def disconnect(self):
         """
         disconnect camera
@@ -207,17 +198,40 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
     def get_properties(self, key=""):
         """
         get properties from camera
+
+        ---
+        "saturation": "Saturation", [0.0 .. 32.0]
+        "brightness": "Brightness", [-1.0 .. 1.0]
+        "temperature": "ColourTemperature", [integer]
+        "gain": "ColourGains", [0.0 .. 32.0]
+        "contrast": "Contrast", [0.0 .. 32.0]
+        "sharpness": "Sharpness", [0.0 .. 16.0]
+        "exposure": "ExposureTime",
+        "noisereduction": "NoiseReductionMode" [Off, Fast, HighQuality]
+        ---
         """
-        properties_not_used = ["pos_msec", "pos_frames", "pos_avi_ratio", "convert_rgb", "fourcc", "format", "mode",
-                               "frame_count", "frame_width", "frame_height"]
-        properties_get_array = ["brightness", "saturation", "contrast", "hue", "gain", "gamma",
-                                "exposure", "auto_exposure", "auto_wb", "wb_temperature", "temperature",
-                                "fps", "focus", "autofocus", "zoom"]
+        picamera_properties = {
+            "saturation": ["Saturation", 0.0, 32.],
+            "brightness": ["Brightness", -1.0, 1.0],
+            "temperature": ["ColourTemperature", "INTEGER"],
+            "contrast": ["Contrast", 0.0, 32.0],
+            "gain": ["ColourGains", 0.0, 32.0],
+            "sharpness": ["Sharpness", 0.0, 16.0],
+            "exposure": ["ExposureTime", "INTEGER"],
+            "noise_reduction": ["NoiseReductionMode", ["Off", "Fast", "HighQuality"]],
+            "auto_wb": ["AwbEnable"]
+        }
+        properties_not_used = ["exposure", "auto_wb", "temperature", "noise_reduction"]
+        properties_get_array = ["brightness", "saturation", "contrast", "gain", "sharpness"]
 
         if key == "init":
             self.properties_get = {}
-        # not implemented yet
-        pass
+
+        for key in properties_get_array:
+            if key in picamera_properties:
+                self.properties_get[key] = picamera_properties[key]
+
+        return self.properties_get
 
     def get_properties_image(self):
         """
