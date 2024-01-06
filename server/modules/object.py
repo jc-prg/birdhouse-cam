@@ -169,6 +169,10 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             archive_entries = archive_data["files"]
             for stamp in archive_entries:
                 if archive_entries[stamp]["camera"] == self.id and "hires" in archive_entries[stamp]:
+
+                    if "to_be_deleted" in archive_entries[stamp] and str(archive_entries[stamp]["to_be_delete"]) == 1:
+                        continue
+
                     path_hires = str(os.path.join(self.config.db_handler.directory("backup", date),
                                                   archive_entries[stamp]["hires"]))
                     path_hires_detect = str(path_hires.replace(".jpeg", "_detect.jpeg"))

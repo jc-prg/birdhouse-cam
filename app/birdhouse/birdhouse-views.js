@@ -275,6 +275,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var group_list        = [];
 	var tab               = new birdhouse_table();
 	tab.style_cells["vertical-align"] = "top";
+	tab.style_cells["padding"] = "3px";
 
 	if (data_list["view"]["max_image_size"]) {
         var max_image_size_LR  = data_list["view"]["max_image_size"]["lowres"];
@@ -343,7 +344,6 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         threshold_slider           += "<div style='float:left;'><button class='bh-slider-button' onclick='"+threshold_onclick_try+"' style='float:none;'>Try</button>";
         threshold_slider           += "<button class='bh-slider-button' onclick='"+threshold_onclick_reset+"' style='float:none;'>Reset</button>";
         threshold_slider           += "<button class='bh-slider-button' onclick='"+threshold_onclick_set+"' style='float:none;'>"+threshold_onclick_set_cmd+"</button></div>";
-        threshold_slider           += "<div id='info_set_threshold' style='padding:5px;width:100%;float:left;'>&nbsp;</div>";
     }
 
 	// show details and settings for admins - TODAY COMPLETE
@@ -369,21 +369,23 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         html += birdhouse_OtherGroup( "info", lang("SETTINGS"), info_text, false );
 	}
 
-	// show settings for admins - BACKUP
+	// show settings for admins - ARCHIVE / BACKUP
 	if (admin && active_page == "TODAY" && active_date != "" && active_date != undefined) {
 
 	    var info_text    = "";
 	    // <button onclick='birdhouse_forceBackup();' class='button-settings-api'>Force Backup</button>";
 	    var detection_model = camera_settings[app_active_cam]["object_detection"]["model"]; // devices:cameras:"+camera+":object_detection:model
-	    var button_object_detection = "<button onclick='birdhouse_archiveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\");' class='bh-slider-button'>Start</button>";
-	    var button_archive_deletion = "<button onclick='birdhouse_archiveDayDelete(\""+active_date+"\", \""+active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4)+"\");' class='bh-slider-button'>Delete</button>";
+	    var detection_threshold = camera_settings[app_active_cam]["object_detection"]["threshold"];
+	    var detection_date = active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4);
+	    var button_object_detection = "<button onclick='birdhouse_archiveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button'>Start</button>";
+	    var button_archive_deletion = "<button onclick='birdhouse_archiveDayDelete(\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button'>Delete</button>";
 
         info_text += "&nbsp;";
 	    info_text += tab.start();
 	    info_text += tab.row("");
 	    info_text += tab.row(lang("THRESHOLD_FOR_ARCHIVE") + ":", threshold_slider );
         if (app_data["SETTINGS"]["server"]["detection_active"]) {
-    	    info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model]) + ":", button_object_detection );
+    	    info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model, detection_threshold]) + ":", button_object_detection );
     	    }
 	    info_text += tab.row(lang("DELETE_ARCHIVE") + ":", button_archive_deletion );
 	    info_text += tab.end();

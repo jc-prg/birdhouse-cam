@@ -243,31 +243,31 @@ function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 	info_count = 1;
 	if (count["all"] != undefined) {
 		if (count["all"] > 0) { color = color_code["default"]; } else { color = "gray"; }
-		info += "all: <font color='"+color+"'>"   + count["all"].toString().padStart(3,"0")     + "</font>";
+		info += "all: <font color='"+color+"' id='image_count_all_"+key+"'>"   + count["all"].toString().padStart(3,"0")     + "</font>";
 		if (info_count < Object.keys(count).length) { info += " | "; }
 		info_count += 1;
 		}
 	if (count["star"] != undefined) {
 		if (count["star"] > 0) { color = color_code["star"]; } else { color = "gray"; }
-		info += "star: <font color='"+color+"'>"   + count["star"].toString().padStart(2,"0")    + "</font>";
+		info += "star: <font color='"+color+"' id='image_count_star_"+key+"'>"   + count["star"].toString().padStart(2,"0")    + "</font>";
 		if (info_count < Object.keys(count).length) { info += " | "; }
 		info_count += 1;
 		}
 	if (count["detect"] != undefined) {
 		if (count["detect"] > 0) { color = color_code["detect"]; } else { color = "gray"; }
-		info += "detect: <font color='"+color+"'>" + count["detect"].toString().padStart(2,"0")  + "</font>";
+		info += "detect: <font color='"+color+"' id='image_count_detect_"+key+"'>" + count["detect"].toString().padStart(2,"0")  + "</font>";
 		if (info_count < Object.keys(count).length) { info += " | "; }
 		info_count += 1;
 		}
 	if (count["recycle"]  != undefined) {
 		if (count["recycle"] > 0) { color = color_code["recycle"]; } else { color = "gray"; }
-		info += "recycle: <font color='"+color+"'>" + count["recycle"].toString().padStart(2,"0") + "</font>";
+		info += "recycle: <font color='"+color+"' id='image_count_recycle_"+key+"'>" + count["recycle"].toString().padStart(2,"0") + "</font>";
 		if (info_count < Object.keys(count).length) { info += " | "; }
 		info_count += 1;
 		}
 	if (count["data"]  != undefined) {
 		if (count["data"] > 0) { color = color_code["data"]; } else { color = "gray"; }
-		info += "data: <font color='"+color+"'>" + count["data"].toString().padStart(2,"0") + "</font>";
+		info += "data: <font color='"+color+"' id='image_count_data_"+key+"'>" + count["data"].toString().padStart(2,"0") + "</font>";
 		}
 	if (info != "") { html += "[" + info + "]"; }
 
