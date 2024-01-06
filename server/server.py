@@ -901,7 +901,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 file_path = birdhouse_directories["data"]
                 # file_path = birdhouse_main_directories["data"]
             else:
-                file_path = "../"
+                file_path = ""
                 #file_path = birdhouse_main_directories["project"]
             if "text" in file_types[file_ending]:
                 self.stream_file(filetype=file_types[file_ending],
