@@ -1583,7 +1583,7 @@ if __name__ == "__main__":
                                       str(count_running_threads) + ").")
 
         if count_running_threads > 0:
-            srv_logging.info("-> Kill the " + str(count_running_threads) + " threads that could not be stopped ...")
+            srv_logging.info("-> Killing the " + str(count_running_threads) + " threads that could not be stopped ...")
         srv_logging.info("-------------------------------------------")
         os._exit(os.EX_OK)
 

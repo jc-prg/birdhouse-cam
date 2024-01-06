@@ -2372,6 +2372,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                         if image is None or len(image) == 0:
                             system["video_devices_03"][key]["error"] = "Returned empty image."
                         else:
+                            if "error" in system["video_devices_03"][key]:
+                                del system["video_devices_03"][key]["error"]
                             system["video_devices_03"][key]["image"] = True
                     except Exception as e:
                         system["video_devices_03"][key]["error"] = "Error connecting camera:" + str(e)
