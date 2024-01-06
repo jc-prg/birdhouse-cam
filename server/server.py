@@ -125,8 +125,8 @@ def read_html(directory, filename, content=""):
     """
     if filename.startswith("/"):
         filename = filename[1:len(filename)]
-    if directory.startswith("/"):
-        directory = directory[1:len(directory)]
+    #if directory.startswith("/"):
+    #    directory = directory[1:len(directory)]
     # file = os.path.join(config.main_directory, directory, filename)
     file = os.path.join(directory, filename)
 
@@ -154,8 +154,8 @@ def read_image(directory, filename):
     """
     if filename.startswith("/"):
         filename = filename[1:len(filename)]
-    if directory.startswith("/"):
-        directory = directory[1:len(directory)]
+    #if directory.startswith("/"):
+    #    directory = directory[1:len(directory)]
     # file = os.path.join(config.main_directory, directory, filename)
     file = os.path.join(directory, filename)
     file = file.replace("backup/", "")
