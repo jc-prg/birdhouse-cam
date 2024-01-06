@@ -723,7 +723,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_logging.info(str(param))
             response = {"info": msg}
         elif param["command"] == "reconnect-camera":
-            response = camera[which_cam].camera_reconnect()
+            response = camera[which_cam].reconnect()
         elif param["command"] == "camera-settings":
             response = camera[which_cam].get_camera_settings(param)
         elif param["command"] == "start-recording":
@@ -1279,7 +1279,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 stream_active = False
 
             if config.update["camera_" + which_cam]:
-                camera[which_cam].camera_reconnect()
+                camera[which_cam].reconnect()
 
             if frame_id != camera[which_cam].get_stream_image_id() \
                     or camera[which_cam].if_error() or camera[which_cam].camera_stream_raw.if_error():
@@ -1438,7 +1438,7 @@ if __name__ == "__main__":
     log_into_file = True
 
     # set logging
-    if len(sys.argv) > 0 and "--logfile" in sys.argv or birdhouse_log_into_file:
+    if len(sys.argv) > 0 and "--logfile" in sys.argv or birdhouse_log_as_file:
         print('-------------------------------------------')
         print('Starting ...')
         print('-------------------------------------------')
@@ -1451,7 +1451,7 @@ if __name__ == "__main__":
     srv_logging.info('-------------------------------------------')
 
     check_submodules()
-    read_error_images()
+    set_error_images()
 
     # set system signal handler
     signal.signal(signal.SIGINT, on_exit)

@@ -1,7 +1,7 @@
 import logging
 import time
 from logging.handlers import RotatingFileHandler
-from modules.presets import birdhouse_log_filename, birdhouse_log_format, birdhouse_loglevel_module, birdhouse_loglevel
+from modules.presets import birdhouse_log_filename, birdhouse_loglevel_module
 from modules.presets import logger_list, loggers, logger_exists
 
 
