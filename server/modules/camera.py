@@ -2366,12 +2366,13 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                         picam2_test = Picamera2()
                         picam2_test.start()
                         image = picam2_test.capture_array()
-                        if "None" in str(tye(image)) or len(image) == 0:
+                        if "None" in str(type(image)) or len(image) == 0:
                             system["video_devices_03"][key]["error"] = "Returned empty image."
                         else:
                             self.logging.info(" - " + key + " OK: " + str(image))
                     except Exception as e:
                         system["video_devices_03"][key]["error"] = "Error connecting camera:" + str(e)
+                        self.logging.info(" - " + key + " ERROR: " + str(image))
 
                 # default = using cv2
                 else:
