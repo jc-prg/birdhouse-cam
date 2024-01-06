@@ -37,6 +37,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.properties_set = None
         self.connected = False
         self.available_devices = {}
+        self.first_connect = True
 
         self.logging.info("Starting PiCamera2 support for '"+self.id+":"+source+"' ...")
 
@@ -49,11 +50,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         self.logging.info("Try to connect PiCamera2 '" + self.id + "/" + self.source + "' ...")
         try:
-            from picamera2 import Picamera2
-            # from libcamera import Transform
-            # self.transform = Transform
-            # self.transform(hflip=1, vflip=1)
-            self.stream = Picamera2()
+            if self.first_connect:
+                from picamera2 import Picamera2
+                self.stream = Picamera2()
             self.stream.start()
             time.sleep(0.5)
 
@@ -68,6 +67,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.logging.info("- Connected.")
             self.get_properties(key="init")
             self.set_properties(key="init")
+            self.first_connect = False
             self.connected = True
 
         try:
