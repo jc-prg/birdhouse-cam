@@ -2367,14 +2367,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                         picam2_test = Picamera2()
                         picam2_test.start()
                         image = picam2_test.capture_array()
-                        if "None" in str(type(image)) or len(image) == 0:
+                        if image is None or len(image) == 0:
                             system["video_devices_03"][key]["error"] = "Returned empty image."
-                            #self.logging.warning(" - ERROR: " + key + "   Returned empty image.")
-                        #else:
-                        #    self.logging.info(" - OK:    " + key + "   PiCamera. ")
                     except Exception as e:
                         system["video_devices_03"][key]["error"] = "Error connecting camera:" + str(e)
-                        #self.logging.warning(" - ERROR: " + key + "   " + str(e))
 
                 # default = using cv2
                 else:
@@ -2433,6 +2429,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     output = output.split("\n")
 
                     output_dict = {}
+                    resolution_key = "0"
                     for line in output:
                         if "[" in line:
                             resolution_key = line.replace("\t", "")
