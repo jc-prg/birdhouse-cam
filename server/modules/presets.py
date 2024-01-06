@@ -83,7 +83,7 @@ def set_error_images():
     global birdhouse_error_images_raw, birdhouse_error_images
     import cv2
     for key in birdhouse_error_images:
-        image_path = os.path.join(os.getcwd(), "data", birdhouse_error_images[key])
+        image_path = os.path.join(birdhouse_main_directories["data"], birdhouse_error_images[key])
         if os.path.exists(image_path):
             birdhouse_error_images_raw[key] = cv2.imread(image_path)
         else:
