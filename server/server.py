@@ -334,7 +334,12 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         output = process.communicate()[0]
         output = output.decode()
         output_2 = output.split("\n")
+
         last_key = "none"
+        if birdhouse_env["rpi_active"]:
+            output_2.append("PiCamera:")
+            output_2.append("/dev/picam")
+
         system["video_devices"] = {}
         system["video_devices_02"] = {}
         system["video_devices_03"] = self.initial_camera_scan["video_devices_03"]
