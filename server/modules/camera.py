@@ -2604,7 +2604,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         #device_keys = list(system["video_devices_02"].keys()).sort()
         #for key in device_keys:
 
-        for key in system["video_devices_02"].sort():
+        for key in system["video_devices_02"]:
 
             # if Picamera2 - requires Raspbain OS 64bit without docker
             if key == "/dev/picam" and birdhouse_env["rpi_64bit"]:
