@@ -1217,7 +1217,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
     def __init__(self, camera_id, config, sensor, microphones, first_cam=False):
         """
-        Initialize new thread and set initial parameters
+        Create instance of this class and set initial parameters
         """
         threading.Thread.__init__(self)
         BirdhouseCameraClass.__init__(self, class_id=camera_id + "-main", class_log="cam-main",
@@ -1322,19 +1322,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if first_cam:
             self.camera_scan = self.get_available_devices()
 
-        self._init_image_processing()
-        self._init_video_processing()
-        self._init_stream_raw()
-        self._init_streams()
-        if self.active:
-            self.set_streams_active(active=True)
-            time.sleep(1)
-            self._init_camera(init=True)
-        self._init_microphone()
-
-        self.object = BirdhouseObjectDetection(self.id, self.config)
-        self.object.start()
-        self.initialized = True
+        self.connect()
 
     def _init_image_processing(self):
         """
@@ -1603,7 +1591,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                   ") ...")
                 self.update_main_config()
                 self.set_streams_active(active=True)
-                self.camera_reconnect(directly=True)
+                self.reconnect(directly=True)
 
             # Image Recording (if not video recording)
             if self.active and self.record and not self.video.recording and not self.error:
@@ -1688,16 +1676,42 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.camera_streams[stream_id].reset_error()
         self.record_image_error = False
 
-    def camera_reconnect(self, directly=False):
+    def connect(self):
+        """
+        initial connect of all relevant streams and devices
+        """
+        self._init_image_processing()
+        self._init_video_processing()
+        self._init_stream_raw()
+        self._init_streams()
+        if self.active:
+            self.set_streams_active(active=True)
+            time.sleep(1)
+            self._init_camera(init=True)
+        self._init_microphone()
+
+        self.object = BirdhouseObjectDetection(self.id, self.config)
+        self.object.start()
+        self.initialized = True
+
+    def reconnect(self, directly=False):
         """
         Reconnect after API call.
         """
         if directly and self.camera is not None:
-            self._init_camera()
+            if self.active:
+                self.set_streams_active(active=True)
+                time.sleep(1)
+                self._init_camera(init=True)
+            self.object.reconnect()
             self.reload_camera = False
         elif directly:
-            self._init_camera(init=True)
+            if self.active:
+                self.set_streams_active(active=True)
+                time.sleep(1)
+                self._init_camera(init=True)
             self._init_microphone()
+            self.object.reconnect()
             self.reload_camera = False
         else:
             self.reload_camera = True

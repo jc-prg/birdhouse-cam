@@ -10,6 +10,9 @@ from modules.image import BirdhouseImageProcessing
 class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
     def __init__(self, camera_id, config):
+        """
+        create instance of this class for a specific camera
+        """
         threading.Thread.__init__(self)
         BirdhouseCameraClass.__init__(self, class_id=camera_id + "-object", class_log="cam-object",
                                       camera_id=camera_id, config=config)
@@ -17,20 +20,22 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         self.image = BirdhouseImageProcessing(camera_id=self.id, config=self.config)
         self.image.resolution = self.param["image"]["resolution"]
 
-        self.detect_settings = self.param["object_detection"]
+        self.DetectionModel = None
         self.detect_active = birdhouse_env["detection_active"]
+        self.detect_settings = self.param["object_detection"]
         self.detect_live = False
         self.detect_loaded = False
         self.detect_objects = None
         self.detect_visualize = None
         self.detect_queue_archive = []
+        self.last_model = None
         self.image_size_object_detection = self.detect_settings["detection_size"]
 
         self.thread_set_priority(4)
 
     def run(self):
         """
-        queue to analyze pictures
+        queue to analyze pictures of archive days
         """
         if not self.detect_active:
             self.logging.info("Do not start OBJECT DETECTION, can be changed in file '.env'.")
@@ -48,13 +53,17 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.thread_control()
         self.logging.info("Stopped OBJECT DETECTION for '"+self.id+"'.")
 
-    def connect(self):
+    def connect(self, first_load=True):
         """
         initialize models for object detection
         """
         if self.detect_active:
             try:
-                from modules.detection.detection import DetectionModel, ImageHandling
+                if first_load or not birdhouse_status["object_detection"]:
+                    from modules.detection.detection import DetectionModel, ImageHandling
+                    self.DetectionModel = DetectionModel
+                    self.detect_visualize = ImageHandling()
+
                 if self.detect_settings["active"]:
 
                     if self.detect_settings["model"] is None or self.detect_settings["model"] == "":
@@ -66,24 +75,38 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                             model_to_load = os.path.join(detection_custom_model_path, model_to_load)
                         self.logging.info("Initialize object detection model (" + self.name + ") ...")
                         self.logging.info(" -> '" + model_to_load + "'")
-                        self.detect_objects = DetectionModel(model_to_load)
-                        self.detect_visualize = ImageHandling()
+                        self.detect_objects = self.DetectionModel(model_to_load)
                         self.detect_live = self.detect_settings["live"]
                         self.detect_loaded = True
+                        self.last_model = self.detect_settings["model"]
                         birdhouse_status["object_detection"] = True
+                        self.logging.info(" -> '" + model_to_load + "': OK")
                 else:
-                    self.logging.info("Object detection inactive (" + self.name + "), see settings.")
+                    self.logging.info(" -> Object detection inactive (" + self.name + "), see settings.")
 
             except Exception as e:
-                self.logging.error("Could not load 'modules.detection': " + str(e))
+                self.logging.error(" -> Could not load 'modules.detection': " + str(e))
                 self.detect_loaded = False
                 birdhouse_status["object_detection"] = False
         else:
             self.detect_loaded = False
-            self.logging.info("Object detection inactive (" + self.name + "), see .env-file.")
+            self.logging.info(" -> Object detection inactive (" + self.name + "), see .env-file.")
 
-    def reconnect(self):
-        pass
+    def reconnect(self, force_reload=False):
+        """
+        reconnect, e.g., when the model has been changed
+        """
+        if self.detect_active:
+            if self.last_model == self.detect_settings["model"] and self.detect_loaded and not force_reload:
+                self.logging.info("Object detection models has not change, don't reload the detection model yet.")
+                return
+
+            self.logging.info("Start reconnect of object detection model ...")
+            self.detect_objects = None
+            self.detect_loaded = False
+            self.detect_live = False
+            self.detect_settings = self.param["object_detection"]
+            self.connect(first_load=False)
 
     def analyze_image(self, stamp, path_hires, image_hires, image_info):
         """
