@@ -598,18 +598,22 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             self.properties_get[prop_key][0] = value
 
             if key == "init":
-                self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), -100000.0)
-                value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
-                if value > 0:
-                    self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 0.0)
+                try:
+                    self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), -100000.0)
                     value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
-                self.properties_get[prop_key][2] = value
+                    if value > 0:
+                        self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 0.0)
+                        value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
+                    self.properties_get[prop_key][2] = value
 
-                self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 100000.0)
-                value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
-                self.properties_get[prop_key][3] = value
+                    self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 100000.0)
+                    value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
+                    self.properties_get[prop_key][3] = value
 
-                self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), self.properties_get[prop_key][0])
+                    self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), self.properties_get[prop_key][0])
+
+                except Exception as e:
+                    self.properties_get[prop_key].append(str(e))
 
         return self.properties_get
 
