@@ -142,7 +142,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.connected = True
 
         try:
-            image = self.stream.capture_array()
+            image = self.stream.switch_mode_and_capture_array(self.configuration, "main")
+            #image = self.stream.capture_array()
             if image is None or len(image) == 0:
                 raise Exception("Returned empty image.")
             return True
@@ -176,7 +177,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         read image from camera
         """
         try:
-            raw = self.stream.capture_array("main")
+            raw = self.stream.switch_mode_and_capture_array(self.configuration, "main")
+            #raw = self.stream.capture_array("main")
             if raw is None or len(raw) == 0:
                 raise Exception("Returned empty image.")
             return raw
@@ -330,6 +332,13 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                     self.properties_get[picam_key][0] = -1
                     self.properties_get[picam_key].append(msg)
                     self.logging.warning(msg)
+
+            else:
+                try:
+                    value = eval("self.stream.still_configuration." + picam_key_full)
+                    self.properties_get[picam_key][0] = value
+                except Exception as e:
+                    self.logging.info("Value not set yet, stays on default for '" + picam_key + "'. (" + str(e) + ")")
 
         # !!! Assumption: start with default value, to be changed by configuration
         #     -> if set the value is, what has been set?! until there is a way to request data
