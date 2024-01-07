@@ -117,6 +117,13 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if self.first_connect:
                 from picamera2 import Picamera2
                 self.stream = Picamera2()
+                self.configuration = self.stream.create_still_configuration()
+                self.stream.configure(self.configuration)
+
+                self.logging.info("------------------")
+                self.logging.info(str(self.configuration))
+                self.logging.info("------------------")
+
             self.stream.start()
             time.sleep(0.5)
 
@@ -297,7 +304,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             "sharpness":        ["Sharpness",           "rw",  0.0, 16.0],
             "temperature":      ["ColourTemperature",   "r",   -1, -1],
             "exposure":         ["ExposureTime",        "r",   -1, -1],
-            "noise_reduction":  ["NoiseReductionMode",  "r",   ["Off", "Fast", "HighQuality"], -1],
+            "noise_reduction":  ["NoiseReductionMode",  "r",   -1, -1, ["Off", "Fast", "HighQuality"]],
             "auto_wb":          ["AwbEnable",           "r",   -1, -1]
         }
         properties_not_used = ["exposure", "auto_wb", "temperature", "noise_reduction"]
@@ -319,9 +326,10 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                         self.properties_get[picam_key][3] = max_exp
 
                 except Exception as e:
+                    msg = "Could not get data for '" + picam_key_full + "': " + str(e)
                     self.properties_get[picam_key][0] = -1
-                    self.properties_get[picam_key].append(str(e))
-                    self.logging.warning("Could not get data for '" + picam_key_full + "': " + str(e))
+                    self.properties_get[picam_key].append(msg)
+                    self.logging.warning(msg)
 
         # !!! Assumption: start with default value, to be changed by configuration
         #     -> if set the value is, what has been set?! until there is a way to request data
@@ -623,7 +631,9 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
                     self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), self.properties_get[prop_key][0])
 
                 except Exception as e:
-                    self.properties_get[prop_key].append(str(e))
+                    msg = "Could not get data for key '"+prop_key+"': " + str(e)
+                    self.logging.error(msg)
+                    self.properties_get[prop_key].append(msg)
 
         return self.properties_get
 
