@@ -182,16 +182,23 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         set configuration for picamera2 using "Picamera2.create_still_configuration"
         """
+        self.properties_set = []
+        if key == "init":
+            for prop_key in self.properties_get:
+                if "w" in self.properties_get[prop_key][1]:
+                    self.properties_set.append(prop_key)
+            return
+
         if key in self.properties_get:
             picam_key = self.properties_get[key][0]
             try:
                 self.stream.set_controls({picam_key: value})
                 return True
             except Exception as err:
-                self.raise_error("Could not set to value for '" + picam_key + "': " + str(err))
+                self.raise_error("Could not set to value for '" + str(picam_key) + "': " + str(err))
                 return False
         else:
-            self.raise_error("Key '" + key + "' is unknown!")
+            self.raise_error("Key '" + str(key) + "' is unknown!")
 
     def get_properties_available(self, keys="get"):
         """
