@@ -294,7 +294,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             picam_key = picamera_properties[key][0]
 
             if key == "init":
-                min_exp, max_exp, default_exp = picam2.camera_controls[picam_key]
+                min_exp, max_exp, default_exp = self.stream.camera_controls[picam_key]
                 self.properties_get[key][0] = default_exp
                 if self.properties_get[key][2] == -1:
                     self.properties_get[key][2] = min_exp
