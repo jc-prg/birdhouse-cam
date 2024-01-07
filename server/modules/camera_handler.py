@@ -182,7 +182,13 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         set configuration for picamera2 using "Picamera2.create_still_configuration"
         """
-        pass
+        picam_key = self.properties_get[key][0]
+        try:
+            self.stream.set_controls({picam_key: value})
+            return True
+        except Exception as err:
+            self.raise_error("Could not set to value for '" + picam_key + "': " + str(err))
+            return False
 
     def get_properties_available(self, keys="get"):
         """
@@ -304,6 +310,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
                 except Exception as e:
                     self.properties_get[picam_key][0] = -1
+                    self.properties_get[picam_key].append(str(e))
                     self.logging.warning("Could not get data for '" + picam_key_full + "': " + str(e))
 
         # !!! Assumption: start with default value, to be changed by configuration
