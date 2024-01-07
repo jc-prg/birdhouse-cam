@@ -294,12 +294,17 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             picam_key_full = picamera_properties[picam_key][0]
 
             if key == "init":
-                min_exp, max_exp, default_exp = self.stream.camera_controls[picam_key_full]
-                self.properties_get[picam_key][0] = default_exp
-                if self.properties_get[picam_key][2] == -1:
-                    self.properties_get[picam_key][2] = min_exp
-                if self.properties_get[picam_key][3] == -1:
-                    self.properties_get[picam_key][3] = max_exp
+                try:
+                    min_exp, max_exp, default_exp = self.stream.camera_controls[picam_key_full]
+                    self.properties_get[picam_key][0] = default_exp
+                    if self.properties_get[picam_key][2] == -1:
+                        self.properties_get[picam_key][2] = min_exp
+                    if self.properties_get[picam_key][3] == -1:
+                        self.properties_get[picam_key][3] = max_exp
+
+                except Exception as e:
+                    self.properties_get[picam_key][0] = -1
+                    self.logging.warning("Could not get data for '" + picam_key_full + "': " + str(e))
 
         # !!! Assumption: start with default value, to be changed by configuration
         #     -> if set the value is, what has been set?! until there is a way to request data
