@@ -265,13 +265,25 @@ function birdhouseDevices_cameraSettings (data) {
 	var tab     = new birdhouse_table();
 	tab.style_rows["height"] = "27px";
 
-	var camera_settings_write   = ["Brightness", "Contrast", "Gain", "Gamma", "Hue", "Saturation", "Exposure", "FPS"];
+	var camera_settings_write   = ["Brightness", "Contrast", "Gain", "Gamma", "Hue",
+	                               "Saturation", "Exposure", "FPS"];
 	var camera_settings_read    = ["Auto_WB", "Auto_Exposure", "WB_Temperature"];
 	var camera_settings_measure = ["Brightness", "Contrast", "Saturation"];
 
 	for (let camera in camera_settings) {
 	    id_list = "";
         info = {};
+
+        var camera_settings_write   = [];
+        var camera_settings_read    = [];
+        var camera_settings_measure = [];
+
+        Object.entries(camera_properties[camera]["properties"]).forEach(([key,value]) => {
+            if (value[1].indexOf("w") >= 0)      { camera_settings_write.push(key); }
+            else if (value[1].indexOf("r") >= 0) { camera_settings_read.push(key); }
+            if (value[1].indexOf("m") >= 0)      { camera_settings_measure.push(key); }
+            });
+
 	    Object.assign(info, camera_settings[camera]);
 	    info["type"]  = "detection";
 	    info["id"]    = camera + "_img";
@@ -299,9 +311,9 @@ function birdhouseDevices_cameraSettings (data) {
             var value = camera_settings_write[i].toLowerCase();
             var key   = camera_settings_write[i].replaceAll("_", " ");
 
-            if (camera_properties[camera] && camera_properties[camera]["properties"][value][1] != camera_properties[camera]["properties"][value][2]) {
-                var range       = camera_properties[camera]["properties"][value][1] + ":" + camera_properties[camera]["properties"][value][2];
-                var range_text  = "[" + camera_properties[camera]["properties"][value][1] + ".." + camera_properties[camera]["properties"][value][2] + "]";
+            if (camera_properties[camera] && camera_properties[camera]["properties"][value][2] != camera_properties[camera]["properties"][value][3]) {
+                var range       = camera_properties[camera]["properties"][value][2] + ":" + camera_properties[camera]["properties"][value][3];
+                var range_text  = "[" + camera_properties[camera]["properties"][value][2] + ".." + camera_properties[camera]["properties"][value][3] + "]";
                 var prop        = "";
 
                 if (camera_settings_measure.indexOf(camera_settings_write[i]) > -1) { prop += "<i>(image=<span id='img_"+value+"_"+camera+"'></span>)</i>"; }

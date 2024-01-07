@@ -262,7 +262,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
     def get_properties(self, key=""):
         """
         get properties from camera
-
         ---
         "saturation": "Saturation", [0.0 .. 32.0]
         "brightness": "Brightness", [-1.0 .. 1.0]
@@ -271,29 +270,39 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         "contrast": "Contrast", [0.0 .. 32.0]
         "sharpness": "Sharpness", [0.0 .. 16.0]
         "exposure": "ExposureTime",
-        "noisereduction": "NoiseReductionMode" [Off, Fast, HighQuality]
+        "noise_reduction": "NoiseReductionMode" [Off, Fast, HighQuality]
         ---
         """
         picamera_properties = {
-            "saturation": ["Saturation", 0.0, 32.],
-            "brightness": ["Brightness", -1.0, 1.0],
-            "temperature": ["ColourTemperature", "INTEGER"],
-            "contrast": ["Contrast", 0.0, 32.0],
-            "gain": ["ColourGains", 0.0, 32.0],
-            "sharpness": ["Sharpness", 0.0, 16.0],
-            "exposure": ["ExposureTime", "INTEGER"],
-            "noise_reduction": ["NoiseReductionMode", ["Off", "Fast", "HighQuality"]],
-            "auto_wb": ["AwbEnable"]
+            "saturation":       ["Saturation",          "rwm", 0.0, 32.],
+            "brightness":       ["Brightness",          "rwm", -1.0, 1.0],
+            "contrast":         ["Contrast",            "rwm", 0.0, 32.0],
+            "gain":             ["ColourGains",         "rw",  0.0, 32.0],
+            "sharpness":        ["Sharpness",           "rw",  0.0, 16.0],
+            "temperature":      ["ColourTemperature",   "r",   -1, -1],
+            "exposure":         ["ExposureTime",        "r",   -1, -1],
+            "noise_reduction":  ["NoiseReductionMode",  "r",   ["Off", "Fast", "HighQuality"], -1],
+            "auto_wb":          ["AwbEnable",           "r",   -1, -1]
         }
         properties_not_used = ["exposure", "auto_wb", "temperature", "noise_reduction"]
         properties_get_array = ["brightness", "saturation", "contrast", "gain", "sharpness"]
 
         if key == "init":
-            self.properties_get = {}
+            self.properties_get = picamera_properties.copy()
 
-        for key in properties_get_array:
-            if key in picamera_properties:
-                self.properties_get[key] = picamera_properties[key]
+        for key in picamera_properties:
+            picam_key = picamera_properties[key][0]
+
+            if key == "init":
+                min_exp, max_exp, default_exp = picam2.camera_controls[picam_key]
+                self.properties_get[key][0] = default_exp
+                if self.properties_get[key][2] == -1:
+                    self.properties_get[key][2] = min_exp
+                if self.properties_get[key][3] == -1:
+                    self.properties_get[key][3] = max_exp
+
+        # !!! Assumption: start with default value, to be changed by configuration
+        #     -> if set the value is, what has been set?! until there is a way to request data
 
         return self.properties_get
 
@@ -555,34 +564,39 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         properties_get_array = ["brightness", "saturation", "contrast", "hue", "gain", "gamma",
                                 "exposure", "auto_exposure", "auto_wb", "wb_temperature", "temperature",
                                 "fps", "focus", "autofocus", "zoom"]
+        camera_properties = {
+            "saturation":     [-1, "rwm", -1, -1],
+            "brightness":     [-1, "rwm", -1, -1],
+            "contrast":       [-1, "rwm", -1, -1],
+            "gain":           [-1, "rw",  -1, -1],
+            "gamma":          [-1, "rw",  -1, -1],
+            "hue":            [-1, "rw",  -1, -1],
+            "fps":            [-1, "rw",  -1, -1],
+            "exposure":       [-1, "rw",  -1, -1],
+            "auto_exposure":  [-1, "r",   -1, -1],
+            "wb_temperature": [-1, "r",   -1, -1],
+            "auto_wb":        [-1, "r",   -1, -1]
+        }
 
         if key == "init":
-            self.properties_get = {}
+            self.properties_get = camera_properties.copy()
 
-        for prop_key in properties_get_array:
+        for prop_key in self.properties_get:
             value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
-            if prop_key not in self.properties_get:
-                self.properties_get[prop_key] = [value, -1, -1]
-            else:
-                self.properties_get[prop_key][0] = value
+            self.properties_get[prop_key][0] = value
 
-        if key == "init":
-            for prop_key in properties_get_array:
-                # evaluate minimum
-                if not prop_key.startswith("frame_"):
-                    self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), -100000.0)
-                    value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
-                    if value > 0:
-                        self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 0.0)
-                        value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
-                    self.properties_get[prop_key][1] = value
-
-                # evaluate maximum
-                self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 100000.0)
+            if key == "init":
+                self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), -100000.0)
                 value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
+                if value > 0:
+                    self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 0.0)
+                    value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
                 self.properties_get[prop_key][2] = value
 
-                # set again current value
+                self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), 100000.0)
+                value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
+                self.properties_get[prop_key][3] = value
+
                 self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), self.properties_get[prop_key][0])
 
         return self.properties_get
