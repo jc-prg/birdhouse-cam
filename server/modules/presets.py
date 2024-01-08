@@ -191,6 +191,7 @@ birdhouse_couchdb = {
 if birdhouse_env["installation_type"].upper() != "DOCKER":
     birdhouse_couchdb["db_port"] = birdhouse_env["couchdb_port"]
     birdhouse_couchdb["db_server"] = birdhouse_env["couchdb_server"]
+    birdhouse_couchdb["db_basedir"] = birdhouse_env["dir_project"] + "/data/"
 
 birdhouse_pages = {
     "live": ("Live-Stream", "/index.html", "INDEX"),

@@ -241,7 +241,11 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         """
         data = {}
         [db_key, date] = self.filename2keys(filename)
-        self.logging.debug("-----> READ DB: " + db_key + "/" + date)
+        self.logging.debug("-----> READ DB: " + db_key + "/" + date + " - " + filename)
+
+        if db_key == "":
+            self.raise_error("CouchDB ERROR read, could not get db_key from filename ("+filename+")")
+            return {}
 
         if db_key in self.database:
             database = self.database[db_key]
