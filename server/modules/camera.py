@@ -926,16 +926,27 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             return raw
 
         image = raw.copy()
-        lowres_position = self.config.param["views"]["index"]["lowres_position"]
-
-        if int(lowres_position) != 3:
-            pos_line1 = (10, -70)
-            pos_line2 = (10, -50)
-        else:
-            pos_line1 = (-230, -70)
-            pos_line2 = (-230, -50)
 
         if self.system_status["active"]:
+            lowres_position = self.config.param["views"]["index"]["lowres_position"]
+            size = self.config.param["devices"]["cameras"][self.id]["image"]["resolution_cropped"]
+            self.logging.debug("...... " + self.name + " " + str(size))
+
+            [width, height] = [float(size[0]), float(size[1])]
+            if int(lowres_position) != 3:
+                pos_line1 = (15, -70)
+                pos_line2 = (15, -50)
+                size = [0.0, height-105.0, 400.0, height-35.0]
+            else:
+                pos_line1 = (-385, -70)
+                pos_line2 = (-385, -50)
+                size = [width-400.0, height-105.0, width, height-35.0]
+
+            self.logging.debug(".............. " + str(size))
+            [x1, y1, x2, y2] = map(int, size)
+
+            cv2.rectangle(image, (x1, y1), (x2, y2), (130, 130, 130), -1)
+            cv2.rectangle(image, (x1, y1), (x2, y2), (230, 230, 230), 1)
             image = self.image.draw_text_raw(raw=image, text=self.system_status["line1"],
                                              font=cv2.QT_FONT_NORMAL, color=self.system_status["color"],
                                              position=pos_line1, scale=1, thickness=2)
