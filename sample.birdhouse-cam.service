@@ -1,0 +1,20 @@
+# This service is useful if you're planning to run the server without docker containers. To handle the server as
+# a service which automatically starts on system startup and automatically restarts copy and this service
+# to /etc/systemd/system/birdhouse-cam.service. Start with the following commands:
+#
+# $ sudo systemctl daemon-reload
+# $ sudo systemctl enable birdhouse-cam.service
+
+[Unit]
+Description=Birdhouse-Cam Service
+After=network.target
+
+
+[Service]
+ExecStart=/projects/prod/birdhouse-cam/server/server.py
+ExecReload=/projects/prod/birdhouse-cam/server/server.py
+Type=notify
+Restart=always
+
+[Install]
+WantedBy=default.target
