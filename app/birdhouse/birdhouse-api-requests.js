@@ -161,7 +161,15 @@ function birdhouse_archiveDayDelete(date_stamp, date) {
 
 function birdhouse_archiveDayDelete_exec(date_stamp) {
     commands = ["archive-remove-day", date_stamp];
-	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
+	birdhouse_apiRequest('POST', commands, '', birdhouse_archiveDayDelete_done,'','birdhouse_forceBackup');
+    }
+
+function birdhouse_archiveDayDelete_done(data) {
+    window.setTimeout(function(){
+        app_active_page='ARCHIVE';
+        birdhouseReloadView();
+        appMsg.alert(lang("DONE") + "<br/>" + lang("MIGHT_TAKE_A_WHILE"));
+        },5000);
     }
 
 function birdhouse_recordStart(camera) {

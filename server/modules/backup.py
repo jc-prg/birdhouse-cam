@@ -709,3 +709,22 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         self.logging.info(" -> Deleted " + str(count_del_entry) + " marked files in " + directory + ".")
         return response
 
+    def delete_archived_day(self, param):
+        """
+        delete complete directory incl. files in it and trigger recreation of archive and favorite view
+        """
+        date = param["parameter"][0]
+        response = {"command": ["delete archived date '" + date + "'"]}
+
+        try:
+            archive_directory = str(os.path.join(birdhouse_main_directories["data"], birdhouse_directories["backup"], date))
+            command = "rm -rf " + archive_directory
+            os.system(command)
+            self.views.archive_list_update(force=True)
+            self.views.favorite_list_update(force=True)
+            self.logging.info("Deleted archived day '"+date+"' and triggered recreation of archive and favorite view")
+        except Exception as e:
+            self.logging.error("Error while trying to delete data from '" + date + "': " + str(e))
+
+        return response
+

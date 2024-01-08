@@ -730,7 +730,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             msg = "API CALL '" + param["command"] + "' not implemented yet (" + str(self.path) + ")"
             srv_logging.info(msg)
             srv_logging.info(str(param))
-            response = {"info": msg}
+            #response = {"info": msg}
+            response = backup.delete_archived_day(param)
         elif param["command"] == "reconnect-camera":
             response = camera[which_cam].reconnect()
         elif param["command"] == "camera-settings":
