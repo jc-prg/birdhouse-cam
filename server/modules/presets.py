@@ -42,7 +42,8 @@ def set_global_configuration():
             "admin_login": "ADMIN_LOGIN",
             "detection_active": "OBJECT_DETECTION",
             "test_instance": "BIRDHOUSE_INSTANCE",
-            "which_instance": "BIRDHOUSE_INSTANCE"
+            "which_instance": "BIRDHOUSE_INSTANCE",
+            "installation_type": "BIRDHOUSE_INSTALLATION_TYPE"
         }
 
         birdhouse_env = {}
@@ -187,6 +188,10 @@ birdhouse_couchdb = {
     "db_port": 5984,
     "db_basedir": "/usr/src/app/data/"
 }
+if birdhouse_env["installation_type"].upper() != "DOCKER":
+    birdhouse_couchdb["db_port"] = birdhouse_env["couchdb_port"]
+    birdhouse_couchdb["db_server"] = birdhouse_env["couchdb_server"]
+
 birdhouse_pages = {
     "live": ("Live-Stream", "/index.html", "INDEX"),
     "backup": ("Archiv", "/list_backup.html", "ARCHIVE"),
