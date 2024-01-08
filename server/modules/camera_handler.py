@@ -338,7 +338,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                     value = eval("self.stream.still_configuration." + picam_key_full)
                     self.properties_get[picam_key][0] = value
                 except Exception as e:
-                    self.logging.info("Value not set yet, stays on default for '" + picam_key + "'. (" + str(e) + ")")
+                    self.logging.debug("Value not set yet, stays on default for '" + picam_key + "'. (" + str(e) + ")")
 
         # !!! Assumption: start with default value, to be changed by configuration
         #     -> if set the value is, what has been set?! until there is a way to request data
@@ -347,13 +347,10 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
     def get_properties_image(self):
         """
-        read image and get properties
+        read image and get properties - not implemented yet
         """
         image_properties = {}
         return image_properties
-
-        # not implemented yet
-        pass
 
     def set_black_white(self):
         """
@@ -481,6 +478,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             return False
         else:
             self.logging.info("- Connected.")
+            self.reset_error()
             self.get_properties(key="init")
             self.set_properties(key="init")
             self.connected = True

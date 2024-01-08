@@ -52,7 +52,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         self._stream_last = None
         self._stream_last_time = None
         self._stream_image_id = 0
-        self._timeout = 3
+        self._timeout = 5
 
         self._last_activity = 0
         self._last_activity_count = 0
@@ -76,7 +76,10 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         while self._running:
             self._start_time = time.time()
 
-            if self.param["active"] and not self.maintenance_mode \
+            #if self.maintenance_mode:
+            #    pass
+
+            if self.param["active"] \
                     and self.camera is not None and self.camera.if_connected() \
                     and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
                 try:
@@ -319,7 +322,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
         self._active_streams = 0
         self._recording = False
-        self._timeout = 3
+        self._timeout = 6
         self._last_activity = 0
         self._last_activity_count = 0
         self._last_activity_per_stream = {}
@@ -401,7 +404,15 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             #         and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
             # !!!!! NEW STATEMENT above leads to an error !!!!!
 
-            if self.active and self.stream_raw is not None \
+            if self.maintenance_mode:
+                raw = self.read_maintenance_image()
+                self._stream = raw.copy()
+                self._stream_last = raw.copy()
+                self._stream_image_id += 1
+                self._stream_last_time = time.time()
+                time.sleep(1)
+
+            elif self.active and self.stream_raw is not None \
                     and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
                 try:
                     raw = self.read_raw_and_edit(stream=True, stream_id=self._stream_id_base, return_error_image=True)
@@ -564,7 +575,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         return self.stream_raw.read_stream_image_id()
 
-    def read_error_image(self, error_msg=""):
+    def read_error_image(self, error_msg="", error_trigger=""):
         """
         return error image, depending on settings
         """
@@ -577,14 +588,17 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
         if self.type == "setting":
             image = self.img_error_raw["setting"]
-            image = self.edit_error_add_info(image, [error_msg], reload_time=0, info_type="setting")
+            image = self.edit_error_add_info(image, [error_msg], reload_time=0, info_type="setting",
+                                             error_trigger=error_trigger)
         elif self.resolution == "lowres":
             image = self.img_error_raw["lowres"]
             image = self.edit_create_lowres(image)
-            image = self.edit_error_add_info(image, error_msg, reload_time=0, info_type="lowres")
+            image = self.edit_error_add_info(image, error_msg, reload_time=0, info_type="lowres",
+                                             error_trigger=error_trigger)
         else:
             image = self.img_error_raw["camera"]
-            image = self.edit_error_add_info(image, error_msg, reload_time=0, info_type="camera")
+            image = self.edit_error_add_info(image, error_msg, reload_time=0, info_type="camera",
+                                             error_trigger=error_trigger)
 
         if image is None:
             for err_img in self.img_error_raw:
@@ -593,7 +607,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         else:
             return image.copy()
 
-    def edit_error_add_info(self, raw, error_msg, reload_time=0, info_type="empty"):
+    def edit_error_add_info(self, raw, error_msg, reload_time=0, info_type="empty", error_trigger=""):
         """
         edit information to error image
         """
@@ -606,7 +620,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         font_color = (0, 0, 255)
         line_scale = 8
 
-        raw = raw.copy()
+        #raw = raw.copy()
         lowres_position = self.config.param["views"]["index"]["lowres_position"]
 
         if info_type == "setting":
@@ -633,6 +647,12 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                     raw = self.image.draw_text_raw(raw=raw, text=msg, position=(85, line_position),
                                                    font=None, scale=font_scale_text, color=font_color, thickness=1)
                 line_position += 1 * line_scale
+
+                if error_trigger != "":
+                    line_position += 3 * line_scale
+                    msg = "Error Trigger: " + error_trigger
+                    raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
+                                                   scale=font_scale_text, color=font_color, thickness=1)
 
                 if self.stream_raw.camera is None:
                     line_position += 3 * line_scale
@@ -714,6 +734,77 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
         return raw
 
+    def read_maintenance_image(self, error_msg=""):
+        """
+        return error image, depending on settings
+        """
+        if error_msg == "":
+            error_msg = self.if_error(message=True)
+            if len(error_msg) == 0:
+                error_msg = "no error :-)"
+            else:
+                error_msg = error_msg[-1]
+
+        if self.type == "setting":
+            image = self.img_error_raw["setting"]
+            image = self.edit_maintenance_add_info(image, [error_msg], reload_time=0, info_type="setting")
+        elif self.resolution == "lowres":
+            image = self.img_error_raw["lowres"]
+            image = self.edit_create_lowres(image)
+            image = self.edit_maintenance_add_info(image, error_msg, reload_time=0, info_type="lowres")
+        else:
+            image = self.img_error_raw["camera"]
+            image = self.edit_maintenance_add_info(image, error_msg, reload_time=0, info_type="camera")
+
+        if image is None:
+            for err_img in self.img_error_raw:
+                self.logging.error(".... " + self.resolution + " - " + str(error_msg) + " - " +
+                                   str(type(self.img_error_raw[err_img])))
+        else:
+            return image.copy()
+
+    def edit_maintenance_add_info(self, raw, error_msg, reload_time=0, info_type="empty"):
+        """
+        edit information to error image
+        """
+        if raw is None or len(raw) == 0:
+            self.logging.error("edit_error_add_info: empty image")
+            return raw
+
+        font_scale_headline = 1
+        font_scale_text = 0.5
+        font_color = (255, 0, 0)
+        line_scale = 8
+
+        #raw = raw.copy()
+        lowres_position = self.config.param["views"]["index"]["lowres_position"]
+
+        if info_type == "setting":
+            line_position = 160
+
+            msg = self.id + ": " + self.param["name"]
+            raw = self.image.draw_text_raw(raw=raw, text=msg, position=(20, line_position), font=None,
+                                           scale=font_scale_headline, color=font_color, thickness=2)
+
+            line_position += 4 * line_scale
+            msg = "Camera is in maintenance mode at the moment and will restart shortly..."
+            raw = self.image.draw_text_raw(raw=raw, text=msg, position=(85, line_position),
+                                           font=None, scale=font_scale_text, color=font_color, thickness=1)
+
+        elif info_type == "camera":
+            if int(lowres_position) != 1:
+                line_position = 40
+            else:
+                line_position = -70
+
+            raw = self.image.draw_text_raw(raw=raw, text=self.id.upper() + ": " + self.param["name"] + " / " +
+                                           "Maintenance Mode",
+                                           position=(20, line_position), color=(255, 255, 255), thickness=2)
+            raw = self.image.draw_date_raw(raw=raw, overwrite_color=(255, 255, 255),
+                                           overwrite_position=(20, line_position + 30))
+
+        return raw
+
     def edit_normalize(self, raw):
         """
         create normalized image
@@ -740,8 +831,10 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self.param["image"]["resolution_cropped"] = [area[2] - area[0], area[3] - area[1]]
         if cropped is not None:
             return cropped.copy()
-        else:
+        elif raw is not None:
             return raw.copy()
+        else:
+            return raw
 
     def edit_create_lowres(self, raw):
         """
@@ -750,12 +843,19 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         if self._size_lowres is None:
             self._size_lowres = self.image.size_raw(raw=raw, scale_percent=self.param["image"]["preview_scale"])
         lowres = self.image.resize_raw(raw=raw, scale_percent=100, scale_size=self._size_lowres)
-        return lowres.copy()
+
+        if lowres is not None:
+            return lowres.copy()
+        else:
+            return lowres
 
     def edit_add_areas(self, raw):
         """
         Draw a red rectangle into the image to show detection area / and a yellow to show the crop area
         """
+        if raw is None:
+            return raw
+
         color_detect = (0, 255, 255)
         color_crop = (0, 0, 255)
         frame_thickness = 4
@@ -1040,6 +1140,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.usage_time = time.time()
         self.usage_interval = 60
         self.initial_connect_msg = {}
+        self.maintenance_mode = False
 
         self.camera_scan = {}
         if first_cam:
@@ -1139,14 +1240,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         Try out new
         """
-        relevant_streams = ["camera_hires", "camera_lowres", "setting_hires", "setting_lowres"]
         self.reload_time = time.time()
+        self.set_maintenance_mode(True, "Restart camera", self.id)
 
         if not init:
             self.logging.info("Restarting CAMERA (" + self.id + ":" + self.source + ") ...")
-            for stream in relevant_streams:
-                if stream in self.camera_streams:
-                    self.camera_streams[stream].set_maintenance_mode(True, "Restart camera", self.id)
             time.sleep(1)
         else:
             self.logging.info("Starting CAMERA (" + self.id + ":" + self.source + ") ...")
@@ -1171,15 +1269,14 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
             self._init_camera_settings()
             self.camera_stream_raw.set_camera_handler(self.camera)
+            self.reset_error_all()
         else:
             self.raise_error("Could not connect camera, check error msg of camera handler.")
 
         if not init:
             self.logging.error(" ........ " + str(self.camera_streams.keys()))
-            for stream in relevant_streams:
-                if stream in self.camera_streams:
-                    self.camera_streams[stream].set_maintenance_mode(False)
 
+        self.set_maintenance_mode(False)
         for stream in self.camera_streams:
             self.camera_streams[stream].reload_success = self.reload_success
             self.camera_streams[stream].reload_tried = self.reload_tried
@@ -1833,14 +1930,19 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         if stream not in self.camera_streams:
             error_msg = "Stream '" + stream + "' does not exist."
-            image = self.camera_streams[stream].read_error_image(error_msg)
+            image = self.camera_streams[stream].read_error_image(error_msg, error_trigger="get_stream: stream '" +
+                                                                 stream + "' not in self.camera_streams")
             self.raise_error(error_msg)
             return image
         else:
             image = self.camera_streams[stream].read_stream(stream_id, system_info, wait)
 
-        if self.if_error() or self.camera_streams[stream].if_error():
-            image = self.camera_streams[stream].read_error_image()
+        if self.camera_streams[stream].if_error():
+            image = self.camera_streams[stream].read_error_image(error_msg="",
+                                                                 error_trigger="get_stream: self.camera_streams['" +
+                                                                 stream + "'].if_error()")
+        elif self.if_error():
+            image = self.camera_streams[stream].read_error_image(error_msg="", error_trigger="get_stream: if_error()")
         return image
 
     def get_stream_object_detection(self, stream_id, stream_type, stream_resolution="", system_info=False, wait=True):
@@ -2087,6 +2189,13 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.available_devices = system
         return system
+
+    def set_maintenance_mode(self, active=True, line1="", line2=""):
+        """
+        set maintenance_mode in all streams
+        """
+        for stream in self.camera_streams:
+            self.camera_streams[stream].set_maintenance_mode(active, line1, line2)
 
     def write_image(self, filename, image, scale_percent=100):
         """
