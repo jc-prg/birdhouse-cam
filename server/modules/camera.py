@@ -400,10 +400,6 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         while self._running:
             self._start_time = time.time()
 
-            # if self.param["active"] and self.stream_raw is not None and self.stream_raw.active \
-            #         and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
-            # !!!!! NEW STATEMENT above leads to an error !!!!!
-
             if self.maintenance_mode:
                 raw = self.read_maintenance_image()
                 self._stream = raw.copy()
