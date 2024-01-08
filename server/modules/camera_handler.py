@@ -152,6 +152,12 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.raise_warning("- Error reading first image from PiCamera '"+self.source+"': " + str(err))
             return "WARNING"
 
+    def stop(self):
+        super().stop()
+
+    def raise_error(self, message, connect=False):
+        super().raise_error(message, connect)
+
     def reconnect(self):
         """
         reconnect camera
@@ -177,8 +183,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         read image from camera
         """
         try:
-            raw = self.stream.switch_mode_and_capture_array(self.configuration, "main")
-            #raw = self.stream.capture_array("main")
+            #raw = self.stream.switch_mode_and_capture_array(self.configuration, "main")
+            raw = self.stream.capture_array("main")
             if raw is None or len(raw) == 0:
                 raise Exception("Returned empty image.")
             return raw
