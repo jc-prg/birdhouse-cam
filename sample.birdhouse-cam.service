@@ -9,7 +9,6 @@
 Description=Birdhouse-Cam Service
 After=network.target
 
-
 [Service]
 ExecStart=/projects/prod/birdhouse-cam/server/server.py
 ExecReload=/projects/prod/birdhouse-cam/server/server.py
