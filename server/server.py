@@ -18,6 +18,7 @@ from modules.camera import BirdhouseCamera
 from modules.micro import BirdhouseMicrophone
 from modules.config import BirdhouseConfig
 from modules.presets import *
+from modules.presets import srv_logging
 from modules.views import BirdhouseViews
 from modules.sensors import BirdhouseSensor
 from modules.bh_class import BirdhouseClass
@@ -1431,8 +1432,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         return
 
 
-on_exception_setting()
-sys.excepthook = on_exception
+#on_exception_setting()
+#sys.excepthook = on_exception
 
 
 if __name__ == "__main__":
@@ -1446,6 +1447,16 @@ if __name__ == "__main__":
         exit()
 
     set_server_logging(sys.argv)
+
+    srv_logging = set_logging('root')
+    ch_logging = set_logging('cam-handl')
+    view_logging = set_logging("view-head")
+
+    srv_logging.info('-------------------------------------------')
+    srv_logging.info('Starting ...')
+    srv_logging.info('-------------------------------------------')
+    srv_logging.info('Logging into File: ' + str(birdhouse_log_as_file))
+
     check_submodules()
     set_error_images()
 
@@ -1543,6 +1554,7 @@ if __name__ == "__main__":
 
     # Stop all processes to stop
     finally:
+        srv_logging.info("Start stopping threads ...")
         health_check.stop()
         sys_info.stop()
         config.stop()

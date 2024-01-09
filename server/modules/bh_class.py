@@ -49,6 +49,7 @@ class BirdhouseClass(object):
         """
         stop if thread (set self._running = False)
         """
+        self.logging.info("STOP SIGNAL SEND FROM SOMEWHERE ...")
         self._running = False
         self._processing = False
 

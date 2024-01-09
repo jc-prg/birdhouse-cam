@@ -146,7 +146,7 @@ def set_logging(name):
     log_as_file = birdhouse_log_as_file
 
     if loggers.get(name) or name in logger_list:
-        print("... logger already exists: " + name)
+        # print("... logger already exists: " + name)
         return loggers.get(name)
 
     else:
@@ -159,7 +159,8 @@ def set_logging(name):
             logger = logging.getLogger(name)
 
         if name not in birdhouse_loglevel_module:
-            logger.setLevel(logging.INFO)
+            log_level = birdhouse_loglevel_default
+            logger.setLevel(log_level)
             print("Key '" + name + "' is not defined in preset.py in 'birdhouse_loglevel_module'.")
         else:
             log_level = birdhouse_loglevel_module[name]
@@ -201,15 +202,6 @@ def set_server_logging(system_arguments):
         print('-------------------------------------------')
         print("Using logfile "+birdhouse_log_filename+" ...")
         birdhouse_log_as_file = True
-
-    srv_logging = set_logging('root')
-    ch_logging = set_logging('cam-handl')
-    view_logging = set_logging("view-head")
-
-    srv_logging.info('-------------------------------------------')
-    srv_logging.info('Starting ...')
-    srv_logging.info('-------------------------------------------')
-    srv_logging.info('Logging into File: ' + str(birdhouse_log_as_file))
 
 
 # ------------------------------------
@@ -358,7 +350,7 @@ birdhouse_loglevel_modules_all = [
     'root', 'backup', 'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object',
     'cam-stream', 'config', 'config-Q', 'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
     'server', 'srv-info', 'srv-health', 'video', 'video-srv', 'views', 'view-head', 'view-creat',
-    'weather', 'weather-py', 'weather-om', 'cam-handl']
+    'weather', 'weather-py', 'weather-om', 'cam-handl', 'cam-info']
 
 # add modules to the following lists to change their log_level
 birdhouse_loglevel_modules_info = ["server"]

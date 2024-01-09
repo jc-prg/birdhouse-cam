@@ -18,7 +18,7 @@ class CameraInformation:
 
     def __init__(self):
 
-        self.logging = set_logging("cam_info")
+        self.logging = set_logging("cam-info")
 
     def get_available_cameras(self):
         """
@@ -54,7 +54,7 @@ class CameraInformation:
                 devices["complete"][value] = {"dev": value, "info": last_key, "image": False, "shape": []}
 
         self.logging.info("Found "+str(len(devices["list"]))+" devices.")
-        self.logging.info(str(devices))
+        self.logging.debug(str(devices))
 
         return devices.copy()
 
@@ -157,12 +157,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         except Exception as err:
             self.raise_warning("- Error reading first image from PiCamera '"+self.source+"': " + str(err))
             return "WARNING"
-
-    def stop(self):
-        super().stop()
-
-    def raise_error(self, message, connect=False):
-        super().raise_error(message, connect)
 
     def reconnect(self):
         """

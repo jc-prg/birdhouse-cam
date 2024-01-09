@@ -5,6 +5,7 @@ from sys import getsizeof
 from datetime import datetime, timedelta
 import modules.presets as presets
 from modules.presets import *
+from modules.presets import view_logging
 from modules.bh_class import BirdhouseClass
 
 
