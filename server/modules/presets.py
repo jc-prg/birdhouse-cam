@@ -105,6 +105,36 @@ def check_submodules():
     birdhouse_git_submodules_installed = True
 
 
+def set_log_directory():
+    """
+    set logging directory and try to create if it doesn't exist
+    """
+    global birdhouse_main_directories, birdhouse_env, birdhouse_log_as_file, \
+        birdhouse_log_directory, birdhouse_log_filename
+
+    if birdhouse_env["dir_logging"] != "" and birdhouse_env["dir_logging"][0:1] == "/":
+        birdhouse_log_directory = birdhouse_env["dir_logging"]
+    elif birdhouse_env["dir_logging"] != "":
+        birdhouse_log_directory = str(os.path.join(birdhouse_main_directories["project"], birdhouse_env["dir_logging"]))
+    else:
+        birdhouse_log_directory = birdhouse_main_directories["log"]
+
+    try:
+        if not os.path.exists(birdhouse_log_directory):
+            print("Log directory doesn't exist yet. Created directory: " + birdhouse_log_directory)
+            os.makedirs(birdhouse_log_directory)
+    except Exception as e:
+        print("Could not create log directory: " + str(e))
+        print("Switch back to console logging.")
+        birdhouse_log_as_file = False
+    if not os.path.exists(birdhouse_log_directory):
+        print("Could not create log directory: " + str(e))
+        print("Switch back to console logging.")
+        birdhouse_log_as_file = False
+
+    birdhouse_log_filename = str(os.path.join(birdhouse_log_directory, "server.log"))
+
+
 # ------------------------------------
 # absolute paths
 # ------------------------------------
@@ -115,6 +145,7 @@ birdhouse_main_directories = {
     "server": os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."),
     "project": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."),
     "app": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "app"),
+    "log": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "log"),
     "data": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data")
 }
 
@@ -149,37 +180,11 @@ birdhouse_picamera = False
 
 set_global_configuration()
 
-# ------------------------------------
-# logging
-# ------------------------------------
-logger_list = []
-loggers = {}
-logger_exists = {}
-
-birdhouse_log_as_file = True
-birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
-                                         datefmt='%m/%d %H:%M:%S')
-birdhouse_log_filename = str(os.path.join(os.path.dirname(__file__), "../../log", "server.log"))
-
-birdhouse_loglevel_default = logging.INFO
-birdhouse_loglevel_module = {}
-birdhouse_loglevel_modules_all = [
-    'root', 'backup', 'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object',
-    'cam-stream', 'config', 'config-Q', 'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
-    'server', 'srv-info', 'srv-health', 'video', 'video-srv', 'views', 'view-head', 'view-creat',
-    'weather', 'weather-py', 'weather-om']
-
-# add modules to the following lists to change their log_level
-birdhouse_loglevel_modules_info = ["server"]
-birdhouse_loglevel_modules_debug = []
-birdhouse_loglevel_modules_warning = []
-birdhouse_loglevel_modules_error = []
-
-set_loglevel()
 
 # ------------------------------------
 # database configuration
 # ------------------------------------
+
 birdhouse_couchdb = {
     "db_usr": birdhouse_env["couchdb_user"],
     "db_pwd": birdhouse_env["couchdb_password"],
@@ -256,6 +261,36 @@ birdhouse_dir_to_database = {
     "images/<DATE>/config_sensors": "archive_sensors",
     "images/<DATE>/config_weather": "archive_weather"
 }
+
+# ------------------------------------
+# logging
+# ------------------------------------
+logger_list = []
+loggers = {}
+logger_exists = {}
+
+birdhouse_log_as_file = True
+birdhouse_log_directory = ""
+birdhouse_log_filename = ""
+birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
+                                         datefmt='%m/%d %H:%M:%S')
+
+birdhouse_loglevel_default = logging.INFO
+birdhouse_loglevel_module = {}
+birdhouse_loglevel_modules_all = [
+    'root', 'backup', 'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object',
+    'cam-stream', 'config', 'config-Q', 'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
+    'server', 'srv-info', 'srv-health', 'video', 'video-srv', 'views', 'view-head', 'view-creat',
+    'weather', 'weather-py', 'weather-om']
+
+# add modules to the following lists to change their log_level
+birdhouse_loglevel_modules_info = ["server"]
+birdhouse_loglevel_modules_debug = []
+birdhouse_loglevel_modules_warning = []
+birdhouse_loglevel_modules_error = []
+
+set_loglevel()
+set_log_directory()
 
 # ------------------------------------
 # device configuration
