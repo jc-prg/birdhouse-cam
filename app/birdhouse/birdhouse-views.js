@@ -118,7 +118,7 @@ function birdhouse_INDEX(data, camera, object=false) {
         });
         }
     else {
-        html = "<br/><br/><br/><center><i>"+lang("NO_ACTIVE_CAMERA")+"</i></center><br/><br/><br/>";
+        html = "<br/><br/><br/><center><img src='"+app_loading_image+"' width='250'><br/>&nbsp;<br/><i>"+lang("NO_ACTIVE_CAMERA")+"</i></center><br/><br/><br/>";
         }
 
 	setTextById(app_frame_content, html);

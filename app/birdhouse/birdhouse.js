@@ -104,7 +104,7 @@ function birdhousePrint(data) {
 
     birdhouseSetMainVars(data);
 
-    var initial_setup   = data_settings["server"]["initial_setup"];
+    var initial_setup   = data["STATUS"]["server"]["initial_setup"];
 	var date            = data_active["active_date"];
 	var camera          = data_active["active_cam"];
 	if (camera == "") 	{ camera = app_active_cam; }
@@ -193,7 +193,7 @@ function birdhouseLoadSettings(data) {
 function birdhouseSetMainVars(data) {
     //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
     var data_settings = data["SETTINGS"];
-    var initial_setup = data_settings["server"]["initial_setup"];
+    var initial_setup = data["STATUS"]["server"]["initial_setup"];
 
 	if (data_settings["devices"]["cameras"] != undefined) {
 	    for (let key in data_settings["devices"]["cameras"]) {

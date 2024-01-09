@@ -358,6 +358,8 @@ img .play_button  {
     border-radius    : 5px;
     color            : black;
     border           : 1px solid white;
+    overflow         : hidden;
+    float            : left;
 }
 
 .button-video-edit:disabled {

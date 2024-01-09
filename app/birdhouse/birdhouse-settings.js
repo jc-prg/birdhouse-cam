@@ -13,6 +13,10 @@ function birdhouse_app_settings (name="Settings") {
     this.create = function (type="SETTINGS") {
         this.setting_type = type;
         birdhouse_genericApiRequest("GET", ["status"], birdhouseStatus_print);
+        if (app_data["STATUS"]["server"]["initial_setup"]) {
+            html = "<center><br/>&nbsp;&nbsp;<br/><img src='"+app_loading_image+"' width='250'><br/>&nbsp;<br/>"+lang("PLEASE_WAIT")+"<br/>&nbsp;&nbsp;<br/>&nbsp;&nbsp;<br/></center>";
+            setTextById(app_frame_content, html);
+            }
       	setTimeout(function(){
       	    birdhouse_settings.create_exec();
 		}, 2000);
@@ -28,7 +32,7 @@ function birdhouse_app_settings (name="Settings") {
         var tab = this.tab;
 
         var html = "";
-        var initial_setup   = app_data["SETTINGS"]["server"]["initial_setup"];
+        var initial_setup   = app_data["STATUS"]["server"]["initial_setup"];
 
         var current_url     = window.location.href;
         var current_server  = current_url.split("//")[1];
@@ -101,7 +105,9 @@ function birdhouse_app_settings (name="Settings") {
 
         var html = "&nbsp;<br/><h2>&nbsp;<br/>"+lang("SETTINGS")+"</h2>";
         html += "<hr style='border:1px solid gray;'>"
-        html += "<div style='display:none'>Edit initial setup: "+birdhouse_edit_field(id="set_initial_setup", field="server:initial_setup", type="select", options="false", data_type="boolean")+"</div>";
+        html += "<div style='display:none'>Edit initial setup: <select id='set_initial_setup'><option selected>false</option></select>";
+        html += "<input id='set_initial_setup_data' value='server:initial_setup'>";
+        html += "<input id='set_initial_setup_data_type' value='boolean'></div>";
 
         html_entry = this.tab.start();
         html_entry += this.tab.row("Title:&nbsp;",              birdhouse_edit_field(id="set_title", field="title", type="input") );
@@ -120,12 +126,20 @@ function birdhouse_app_settings (name="Settings") {
         id_list    += "set_timezone:set_title:set_backup:set_preview:set_rpi:set_index_lowres:set_index_view";
         //id_list    += ":set_db_server:set_db_clean_up:set_db_type:set_ip4_video_port:set_weather_location:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:";
 
+        var button2 = "";
+        if (app_data["STATUS"]["server"]["initial_setup"]) {
+            button2 = "<button onclick='window.open(window.location.href.split(\"?\")[0]+\"?DEVICES\", \"_self\");' style='background:gray;width:100px;overflow:hidden;float:left;'>"+lang("DEVICE_SETTINGS")+"</button>";
+            }
+
         html_entry += this.tab.row("&nbsp;");
-        html_entry += this.tab.row("", birdhouse_edit_save("set_main",id_list) );
+        html_entry += this.tab.row("", birdhouse_edit_save("set_main",id_list) + "&nbsp;" + button2);
+
         html_entry += this.tab.row("&nbsp;");
         html_entry += this.tab.end();
 
-        html += birdhouse_OtherGroup( "server_settings", "Main Settings", html_entry, false );
+        var main_settings_open = false;
+        if (app_data["STATUS"]["server"]["initial_setup"]) {main_settings_open = true; }
+        html += birdhouse_OtherGroup( "server_settings", "Main Settings", html_entry, main_settings_open );
 
         var html_entry = this.api_calls();
         html_entry += "&nbsp;<br/>";
@@ -304,6 +318,14 @@ function birdhouse_app_settings (name="Settings") {
 		html_entry += this.tab.row("Stream Object Detection:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
 		link = RESTurl + "pip/stream.mjpg?cam1+cam2:1";
 		html_entry += this.tab.row("Stream Picture-in-Picture:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+
+        link = window.location.href.split("?")[0] + "?ARCHIVE";
+		html_entry += this.tab.row("Direct Link TODAY:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+        link = window.location.href.split("?")[0] + "?FAVORITES";
+		html_entry += this.tab.row("Direct Link TODAY:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+        link = window.location.href.split("?")[0] + "?TODAY";
+		html_entry += this.tab.row("Direct Link TODAY:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+
 		html_entry += this.tab.row("&nbsp;");
 		html_entry += this.tab.end();
         return html_entry;
