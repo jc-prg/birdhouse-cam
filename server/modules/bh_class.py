@@ -2,7 +2,7 @@ import time
 import logging
 from random import random
 from modules.presets import *
-import modules.bh_logging as bh_logging
+from modules.presets import birdhouse_log_as_file
 
 
 class BirdhouseClass(object):
@@ -43,7 +43,7 @@ class BirdhouseClass(object):
             self.config = config
             self.thread_register(init=True)
 
-        self.logging = bh_logging.Logging(class_log, birdhouse_log_as_file)
+        self.logging = set_logging(class_log)
 
     def stop(self):
         """

@@ -14,8 +14,7 @@ from modules.bh_class import BirdhouseCameraClass
 from modules.image import BirdhouseImageProcessing
 from modules.video import BirdhouseVideoProcessing
 from modules.object import BirdhouseObjectDetection
-from modules.camera_handler import BirdhousePiCameraHandler, BirdhouseCameraHandler
-from modules.camera_handler import get_available_camera_resolutions, get_available_cameras
+from modules.camera_handler import BirdhousePiCameraHandler, BirdhouseCameraHandler, CameraInformation
 # https://pyimagesearch.com/2016/01/04/unifying-picamera-and-cv2-videocapture-into-a-single-class-with-opencv/
 
 
@@ -1150,6 +1149,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.maintenance_mode = False
 
         self.camera_scan = {}
+        self.camera_info = CameraInformation()
         if first_cam:
             self.camera_scan = self.get_available_devices()
 
@@ -2162,8 +2162,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         identify available video devices
         """
         self.logging.info("Identify available video devices ...")
-        devices = get_available_cameras()
-        system  = {
+        devices = self.camera_info.get_available_cameras()
+        system = {
             "video_devices": devices["list"],
             "video_devices_02": devices["short"],
             "video_devices_03": devices["complete"],

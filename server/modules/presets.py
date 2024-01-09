@@ -36,6 +36,7 @@ def set_global_configuration():
             "port_audio": "BIRDHOUSE_AUDIO_PORT",
             "dir_project": "BIRDHOUSE_DIR_PROJECT",
             "dir_logging": "BIRDHOUSE_DIR_LOGGING",
+            "log_to_file": "BIRDHOUSE_LOG2FILE",
             "admin_ip4_deny": "ADMIN_IP4_DENY",
             "admin_ip4_allow": "ADMIN_IP4_ALLOW",
             "admin_password": "ADMIN_PASSWORD",
@@ -52,7 +53,7 @@ def set_global_configuration():
             if birdhouse_env[key] is None:
                 raise ValueError('Value in .env not found: ' + key)
 
-        for key in ["database_cleanup", "rpi_active", "rpi_64bit", "detection_active"]:
+        for key in ["database_cleanup", "rpi_active", "rpi_64bit", "detection_active", "log_to_file"]:
             birdhouse_env[key] = str(birdhouse_env[key]).lower() in ("true", "1", "yes", "on")
 
         birdhouse_env["test_instance"] = str(birdhouse_env["test_instance"].upper() == "TEST").lower()
@@ -61,23 +62,6 @@ def set_global_configuration():
         logging.error("Error reading configuration defined in the file '.env': " + str(e))
         logging.error("Check or rebuild your configuration file based on the file 'sample.env'.")
         os._exit(os.EX_CONFIG)
-
-
-def set_loglevel():
-    global birdhouse_loglevel_default, birdhouse_loglevel_modules_all, birdhouse_loglevel_module, \
-        birdhouse_loglevel_modules_error, birdhouse_loglevel_modules_warning, birdhouse_loglevel_modules_info, \
-        birdhouse_loglevel_modules_debug
-
-    for module in birdhouse_loglevel_modules_all:
-        birdhouse_loglevel_module[module] = birdhouse_loglevel_default
-    for module in birdhouse_loglevel_modules_info:
-        birdhouse_loglevel_module[module] = logging.INFO
-    for module in birdhouse_loglevel_modules_debug:
-        birdhouse_loglevel_module[module] = logging.DEBUG
-    for module in birdhouse_loglevel_modules_warning:
-        birdhouse_loglevel_module[module] = logging.WARNING
-    for module in birdhouse_loglevel_modules_error:
-        birdhouse_loglevel_module[module] = logging.ERROR
 
 
 def set_error_images():
@@ -133,6 +117,99 @@ def set_log_directory():
         birdhouse_log_as_file = False
 
     birdhouse_log_filename = str(os.path.join(birdhouse_log_directory, "server.log"))
+
+
+def set_loglevel():
+    global birdhouse_loglevel_default, birdhouse_loglevel_modules_all, birdhouse_loglevel_module, \
+        birdhouse_loglevel_modules_error, birdhouse_loglevel_modules_warning, birdhouse_loglevel_modules_info, \
+        birdhouse_loglevel_modules_debug
+
+    for module in birdhouse_loglevel_modules_all:
+        birdhouse_loglevel_module[module] = birdhouse_loglevel_default
+    for module in birdhouse_loglevel_modules_info:
+        birdhouse_loglevel_module[module] = logging.INFO
+    for module in birdhouse_loglevel_modules_debug:
+        birdhouse_loglevel_module[module] = logging.DEBUG
+    for module in birdhouse_loglevel_modules_warning:
+        birdhouse_loglevel_module[module] = logging.WARNING
+    for module in birdhouse_loglevel_modules_error:
+        birdhouse_loglevel_module[module] = logging.ERROR
+
+
+def set_logging(name):
+    """
+    set logger and ensure it exists only once
+    """
+    global logger_exists, logger_list, loggers, birdhouse_loglevel_module
+
+    init_time = time.time()
+    log_as_file = birdhouse_log_as_file
+
+    if loggers.get(name) or name in logger_list:
+        print("... logger already exists: " + name)
+        return loggers.get(name)
+
+    else:
+        logger_exists[name] = init_time
+        logger_list.append(name)
+
+        if log_as_file:
+            logger = logging.getLogger(name + str(init_time))
+        else:
+            logger = logging.getLogger(name)
+
+        if name not in birdhouse_loglevel_module:
+            logger.setLevel(logging.INFO)
+            print("Key '" + name + "' is not defined in preset.py in 'birdhouse_loglevel_module'.")
+        else:
+            log_level = birdhouse_loglevel_module[name]
+            logger.setLevel(log_level)
+
+        if log_as_file:
+            # log_format = logging.Formatter(fmt='%(asctime)s |' + str(len(logger_list)).zfill(
+            #    3) + '| %(levelname)-8s '+name.ljust(10)+' | %(message)s', # + "\n" + str(logger_list),
+            #                               datefmt='%m/%d %H:%M:%S')
+
+            log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s '+name.ljust(10)+' | %(message)s',
+                                           datefmt='%m/%d %H:%M:%S')
+            handler = RotatingFileHandler(filename=birdhouse_log_filename, mode='a',
+                                          maxBytes=int(2.5 * 1024 * 1024),
+                                          backupCount=2, encoding=None, delay=False)
+            handler.setFormatter(log_format)
+            logger.addHandler(handler)
+
+        else:
+            logging.basicConfig(format='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
+                                datefmt='%m/%d %H:%M:%S',
+                                level=log_level)
+
+        logger.debug("___ Init logger '" + name + "', into_file=" + str(log_as_file))
+        loggers[name] = logger
+        return logger
+
+
+def set_server_logging(system_arguments):
+    """
+    set function for global logging
+    """
+    global srv_logging, ch_logging, birdhouse_log_as_file, birdhouse_env, view_logging
+
+    # set logging
+    if (len(system_arguments) > 0 and "--logfile" in system_arguments) or birdhouse_env["log_to_file"]:
+        print('-------------------------------------------')
+        print('Starting ...')
+        print('-------------------------------------------')
+        print("Using logfile "+birdhouse_log_filename+" ...")
+        birdhouse_log_as_file = True
+
+    srv_logging = set_logging('root')
+    ch_logging = set_logging('cam-handl')
+    view_logging = set_logging("view-head")
+
+    srv_logging.info('-------------------------------------------')
+    srv_logging.info('Starting ...')
+    srv_logging.info('-------------------------------------------')
+    srv_logging.info('Logging into File: ' + str(birdhouse_log_as_file))
 
 
 # ------------------------------------
@@ -269,7 +346,7 @@ logger_list = []
 loggers = {}
 logger_exists = {}
 
-birdhouse_log_as_file = True
+birdhouse_log_as_file = False
 birdhouse_log_directory = ""
 birdhouse_log_filename = ""
 birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
@@ -281,13 +358,17 @@ birdhouse_loglevel_modules_all = [
     'root', 'backup', 'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object',
     'cam-stream', 'config', 'config-Q', 'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
     'server', 'srv-info', 'srv-health', 'video', 'video-srv', 'views', 'view-head', 'view-creat',
-    'weather', 'weather-py', 'weather-om']
+    'weather', 'weather-py', 'weather-om', 'cam-handl']
 
 # add modules to the following lists to change their log_level
 birdhouse_loglevel_modules_info = ["server"]
 birdhouse_loglevel_modules_debug = []
 birdhouse_loglevel_modules_warning = []
 birdhouse_loglevel_modules_error = []
+
+srv_logging = None
+ch_logging = None
+view_logging = None
 
 set_loglevel()
 set_log_directory()

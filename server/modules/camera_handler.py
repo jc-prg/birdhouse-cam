@@ -8,78 +8,84 @@ import threading
 import subprocess
 
 from modules.presets import *
+from modules.presets import ch_logging
 from modules.bh_class import BirdhouseCameraClass
 
 # https://pyimagesearch.com/2016/01/04/unifying-picamera-and-cv2-videocapture-into-a-single-class-with-opencv/
 
 
-def get_available_cameras():
-    """
-    use v4l2_ctl to identify available cameras
-    """
-    try:
-        process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
-        output = process.communicate()[0]
-        output = output.decode()
-        output = output.split("\n")
-    except Exception as e:
-        logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
-        return system
+class CameraInformation:
 
-    last_key = "none"
-    if birdhouse_env["rpi_active"]:
-        output.append("PiCamera:")
-        output.append("/dev/picam")
+    def __init__(self):
 
-    devices = {"list": {}, "short": {}, "complete": {}}
-    for value in output:
-        if ":" in value:
-            last_key = value
+        self.logging = set_logging("cam_info")
 
-        elif value != "":
-            value = value.replace("\t", "")
-            info = last_key.split(":")
+    def get_available_cameras(self):
+        """
+        use v4l2_ctl to identify available cameras
+        """
+        try:
+            process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
+            output = process.communicate()[0]
+            output = output.decode()
+            output = output.split("\n")
+        except Exception as e:
+            ch_logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
+            return system
 
-            if last_key not in devices["list"]:
-                devices["list"][last_key] = []
-            devices["list"][last_key].append(value)
-            devices["short"][value] = value + " (" + info[0] + ")"
-            devices["complete"][value] = {"dev": value, "info": last_key, "image": False, "shape": []}
+        last_key = "none"
+        if birdhouse_env["rpi_active"]:
+            output.append("PiCamera:")
+            output.append("/dev/picam")
 
-    logging.info("Found "+str(len(devices["list"]))+" devices.")
-    logging.info(str(devices))
+        devices = {"list": {}, "short": {}, "complete": {}}
+        for value in output:
+            if ":" in value:
+                last_key = value
 
-    return devices.copy()
+            elif value != "":
+                value = value.replace("\t", "")
+                info = last_key.split(":")
 
+                if last_key not in devices["list"]:
+                    devices["list"][last_key] = []
+                devices["list"][last_key].append(value)
+                devices["short"][value] = value + " (" + info[0] + ")"
+                devices["complete"][value] = {"dev": value, "info": last_key, "image": False, "shape": []}
 
-def get_available_camera_resolutions(source):
-    """
-    use v4l2_ctl to identify available camera resolutions
-    """
-    try:
-        process = subprocess.Popen(["v4l2-ctl -d " + source + " --list-formats-ext"],
-                                   stdout=subprocess.PIPE, shell=True)
-        output = process.communicate()[0]
-        output = output.decode()
-        output = output.split("\n")
+        self.logging.info("Found "+str(len(devices["list"]))+" devices.")
+        self.logging.info(str(devices))
 
-        output_dict = {}
-        resolution_key = "0"
-        for line in output:
-            if "[" in line:
-                resolution_key = line.replace("\t", "")
-                resolution_key = resolution_key.split(": ")[1]
-                resolution_key = resolution_key.split("'")[1]
-                output_dict[resolution_key] = []
-            elif "Size: Discrete " in line:
-                value_size = line.split("Size: Discrete ")[1]
-                output_dict[resolution_key].append(value_size)
-        return output_dict
+        return devices.copy()
 
-    except Exception as e:
-        logging.error("Could not grab video device resolutions for '" + source +
-                      "'. Check, if v4l2-ctl is installed. " + str(e))
-        return {}
+    def get_available_camera_resolutions(self, source):
+        """
+        use v4l2_ctl to identify available camera resolutions
+        """
+        try:
+            process = subprocess.Popen(["v4l2-ctl -d " + source + " --list-formats-ext"],
+                                       stdout=subprocess.PIPE, shell=True)
+            output = process.communicate()[0]
+            output = output.decode()
+            output = output.split("\n")
+
+            output_dict = {}
+            resolution_key = "0"
+            for line in output:
+                if "[" in line:
+                    resolution_key = line.replace("\t", "")
+                    resolution_key = resolution_key.split(": ")[1]
+                    resolution_key = resolution_key.split("'")[1]
+                    output_dict[resolution_key] = []
+                elif "Size: Discrete " in line:
+                    value_size = line.split("Size: Discrete ")[1]
+                    output_dict[resolution_key].append(value_size)
+            return output_dict
+
+        except Exception as e:
+            self.logging.error("Could not grab video device resolutions for '" + source +
+                          "'. Check, if v4l2-ctl is installed. " + str(e))
+            return {}
 
 
 class BirdhousePiCameraHandler(BirdhouseCameraClass):
@@ -450,6 +456,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         self.properties_set = None
         self.connected = False
         self.available_devices = {}
+        self.camera_info = CameraInformation()
 
         self.logging.info("Starting CAMERA support for '"+self.id+":"+source+"' ...")
 
@@ -748,7 +755,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
                 else:
                     camera_info["image"] = True
                     camera_info["shape"] = raw.shape
-                    camera_info["resolutions"] = get_available_camera_resolutions(source)
+                    camera_info["resolutions"] = self.camera_info.get_available_camera_resolutions(source)
                     birdhouse_picamera = True
 
                     path_raw = str(os.path.join(self.config.db_handler.directory(config="images"),

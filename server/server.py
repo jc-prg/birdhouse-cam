@@ -21,7 +21,6 @@ from modules.presets import *
 from modules.views import BirdhouseViews
 from modules.sensors import BirdhouseSensor
 from modules.bh_class import BirdhouseClass
-import modules.bh_logging as bh_logging
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 api_description = {"name": "BirdhouseCAM", "version": "v1.0.6"}
@@ -119,18 +118,18 @@ def on_exception_setting():
     threading.Thread.__init__ = init
 
 
-def read_html(directory, filename, content=""):
+def read_html(file_directory, filename, content=""):
     """
     read html file, replace placeholders and return for stream via webserver
     """
     if filename.startswith("/"):
         filename = filename[1:len(filename)]
-    if directory.startswith("/"):
-        directory = directory[1:len(directory)]
-    file = os.path.join(birdhouse_main_directories["server"], directory, filename)
+    if file_directory.startswith("/"):
+        file_directory = file_directory[1:len(file_directory)]
+    file = os.path.join(birdhouse_main_directories["server"], file_directory, filename)
 
     if not os.path.isfile(file):
-        srv_logging.warning("File '" + file + "' does not exist!")
+        srv_logging.warning("File '" + str(file) + "' does not exist!")
         return ""
 
     with open(file, "r") as page:
@@ -147,21 +146,21 @@ def read_html(directory, filename, content=""):
     return page
 
 
-def read_image(directory, filename):
+def read_image(file_directory, filename):
     """
     read image file and return for stream via webserver
     """
     if filename.startswith("/"):
         filename = filename[1:len(filename)]
-    if directory.startswith("/"):
-        directory = directory[1:len(directory)]
+    if file_directory.startswith("/"):
+        file_directory = file_directory[1:len(file_directory)]
 
     filename = filename.replace("app/", "")
-    file = os.path.join(birdhouse_main_directories["server"], directory, filename)
+    file = os.path.join(birdhouse_main_directories["server"], file_directory, filename)
     file = file.replace("backup/", "")
 
     if not os.path.isfile(file):
-        srv_logging.warning("Image '" + file + "' does not exist!")
+        srv_logging.warning("Image '" + str(file) + "' does not exist!")
         return ""
 
     with open(file, "rb") as image:
@@ -901,7 +900,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif '/audio.wav' in self.path:
             self.do_GET_stream_audio(self.path)
         elif self.path.endswith('favicon.ico'):
-            self.stream_file(filetype='image/ico', content=read_image(directory=birdhouse_directories["html"], filename=self.path))
+            self.stream_file(filetype='image/ico', content=read_image(file_directory=birdhouse_directories["html"], filename=self.path))
         elif self.path.startswith("/app/index.html"):
             self.stream_file(filetype=file_types[".html"], content=read_html(directory=birdhouse_directories["html"], filename="index.html"))
         elif file_ending in file_types:
@@ -918,7 +917,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                  content=read_html(directory=file_path, filename=self.path))
             else:
                 self.stream_file(filetype=file_types[file_ending],
-                                 content=read_image(directory=file_path, filename=self.path))
+                                 content=read_image(file_directory=file_path, filename=self.path))
         else:
             self.error_404()
 
@@ -1229,7 +1228,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             time.sleep(0.5)
             self.stream_file(filetype='image/jpeg',
-                             content=read_image(directory="../data/images/", filename=filename_diff))
+                             content=read_image(file_directory="../data/images/", filename=filename_diff))
 
         # extract and show single image (creates images with a longer delay ?)
         elif '/image.jpg' in self.path:
@@ -1240,7 +1239,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                                                                  stream_resolution="hires"))
             time.sleep(2)
             self.stream_file(filetype='image/jpeg',
-                             content=read_image(directory="../data/images/", filename=filename))
+                             content=read_image(file_directory="../data/images/", filename=filename))
 
     def do_GET_stream_video(self, which_cam, which_cam2, param):
         """
@@ -1446,21 +1445,7 @@ if __name__ == "__main__":
         print("--backup     Start backup directly (current date, delete directory before)")
         exit()
 
-    log_into_file = True
-
-    # set logging
-    if len(sys.argv) > 0 and "--logfile" in sys.argv or birdhouse_log_as_file:
-        print('-------------------------------------------')
-        print('Starting ...')
-        print('-------------------------------------------')
-        print("Using logfile "+birdhouse_log_filename+" ...")
-        birdhouse_log_as_file = True
-
-    srv_logging = bh_logging.Logging('root', birdhouse_log_as_file)
-    srv_logging.info('-------------------------------------------')
-    srv_logging.info('Starting ...')
-    srv_logging.info('-------------------------------------------')
-
+    set_server_logging(sys.argv)
     check_submodules()
     set_error_images()
 
