@@ -24,8 +24,8 @@ from modules.sensors import BirdhouseSensor
 from modules.bh_class import BirdhouseClass
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v1.0.6"}
-app_framework = "v1.0.6"
+api_description = {"name": "BirdhouseCAM", "version": "v1.0.7"}
+app_framework = "v1.0.7"
 srv_audio = None
 
 
