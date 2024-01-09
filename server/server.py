@@ -18,14 +18,14 @@ from modules.camera import BirdhouseCamera
 from modules.micro import BirdhouseMicrophone
 from modules.config import BirdhouseConfig
 from modules.presets import *
+from modules.presets import srv_logging
 from modules.views import BirdhouseViews
 from modules.sensors import BirdhouseSensor
 from modules.bh_class import BirdhouseClass
-import modules.bh_logging as bh_logging
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v1.0.5"}
-app_framework = "v1.0.5"
+api_description = {"name": "BirdhouseCAM", "version": "v1.0.7"}
+app_framework = "v1.0.7"
 srv_audio = None
 
 
@@ -119,18 +119,18 @@ def on_exception_setting():
     threading.Thread.__init__ = init
 
 
-def read_html(directory, filename, content=""):
+def read_html(file_directory, filename, content=""):
     """
     read html file, replace placeholders and return for stream via webserver
     """
     if filename.startswith("/"):
         filename = filename[1:len(filename)]
-    if directory.startswith("/"):
-        directory = directory[1:len(directory)]
-    file = os.path.join(config.main_directory, directory, filename)
+    if file_directory.startswith("/"):
+        file_directory = file_directory[1:len(file_directory)]
+    file = os.path.join(birdhouse_main_directories["server"], file_directory, filename)
 
     if not os.path.isfile(file):
-        srv_logging.warning("File '" + file + "' does not exist!")
+        srv_logging.warning("File '" + str(file) + "' does not exist!")
         return ""
 
     with open(file, "r") as page:
@@ -147,17 +147,21 @@ def read_html(directory, filename, content=""):
     return page
 
 
-def read_image(directory, filename):
+def read_image(file_directory, filename):
     """
     read image file and return for stream via webserver
     """
-    if filename.startswith("/"):  filename = filename[1:len(filename)]
-    if directory.startswith("/"): directory = directory[1:len(directory)]
-    file = os.path.join(config.main_directory, directory, filename)
+    if filename.startswith("/"):
+        filename = filename[1:len(filename)]
+    if file_directory.startswith("/"):
+        file_directory = file_directory[1:len(file_directory)]
+
+    filename = filename.replace("app/", "")
+    file = os.path.join(birdhouse_main_directories["server"], file_directory, filename)
     file = file.replace("backup/", "")
 
     if not os.path.isfile(file):
-        srv_logging.warning("Image '" + file + "' does not exist!")
+        srv_logging.warning("Image '" + str(file) + "' does not exist!")
         return ""
 
     with open(file, "rb") as image:
@@ -330,7 +334,12 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         output = process.communicate()[0]
         output = output.decode()
         output_2 = output.split("\n")
+
         last_key = "none"
+        if birdhouse_env["rpi_active"]:
+            output_2.append("PiCamera:")
+            output_2.append("/dev/picam")
+
         system["video_devices"] = {}
         system["video_devices_02"] = {}
         system["video_devices_03"] = self.initial_camera_scan["video_devices_03"]
@@ -714,8 +723,17 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = camera[which_cam].video.create_video_day_queue(param)
         elif param["command"] == "remove":
             response = backup.delete_marked_files_api(param)
+        elif param["command"] == "archive-object-detection":
+            [cam_id, date] = param["parameter"]
+            response = camera[cam_id].object.analyze_archive_images_start(date)
+        elif param["command"] == "archive-remove-day":
+            msg = "API CALL '" + param["command"] + "' not implemented yet (" + str(self.path) + ")"
+            srv_logging.info(msg)
+            srv_logging.info(str(param))
+            #response = {"info": msg}
+            response = backup.delete_archived_day(param)
         elif param["command"] == "reconnect-camera":
-            response = camera[which_cam].camera_reconnect()
+            response = camera[which_cam].reconnect()
         elif param["command"] == "camera-settings":
             response = camera[which_cam].get_camera_settings(param)
         elif param["command"] == "start-recording":
@@ -776,7 +794,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = {"update_views": "started"}
         elif param["command"] == "update-views-complete":
             views.archive_list_update(force=True, complete=True)
-            views.favorite_list_update(force=True)
+            views.favorite_list_update(force=True, complete=True)
             response = {"update-views-complete": "started"}
         elif param["command"] == "force-backup":
             backup.start_backup()
@@ -824,6 +842,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 response["check-pwd"] = True
             else:
                 response["check-pwd"] = False
+        elif param["command"] == "--template-to-implement-new-POST-command--":
+            msg = "API CALL '" + param["command"] + "' not implemented yet (" + str(self.path) + ")"
+            srv_logging.info(msg)
+            srv_logging.info(str(param))
+            response = {"info": msg}
         else:
             self.error_404()
             return
@@ -878,14 +901,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif '/audio.wav' in self.path:
             self.do_GET_stream_audio(self.path)
         elif self.path.endswith('favicon.ico'):
-            self.stream_file(filetype='image/ico', content=read_image(directory='../app', filename=self.path))
+            self.stream_file(filetype='image/ico', content=read_image(file_directory=birdhouse_directories["html"], filename=self.path))
         elif self.path.startswith("/app/index.html"):
-            self.stream_file(filetype=file_types[".html"], content=read_html(directory="../app", filename="index.html"))
+            self.stream_file(filetype=file_types[".html"], content=read_html(directory=birdhouse_directories["html"], filename="index.html"))
         elif file_ending in file_types:
             if "/images/" in self.path or "/videos/" in self.path or "/archive/" in self.path:
-                file_path = config.directories["data"]
+                file_path = birdhouse_directories["data"]
             else:
-                file_path = "../"
+                file_path = birdhouse_directories["html"]
+
             if "text" in file_types[file_ending]:
                 self.stream_file(filetype=file_types[file_ending],
                                  content=read_html(directory=file_path, filename=self.path))
@@ -894,7 +918,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                  content=read_html(directory=file_path, filename=self.path))
             else:
                 self.stream_file(filetype=file_types[file_ending],
-                                 content=read_image(directory=file_path, filename=self.path))
+                                 content=read_image(file_directory=file_path, filename=self.path))
         else:
             self.error_404()
 
@@ -932,6 +956,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "queue_waiting_time": config.queue.queue_wait,
                     "health_check": health_check.status(),
                     "object_detection": birdhouse_status["object_detection"],
+                    "initial_setup": config.param["server"]["initial_setup"],
                     "last_answer": ""
                 },
                 "devices": {
@@ -1205,7 +1230,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             time.sleep(0.5)
             self.stream_file(filetype='image/jpeg',
-                             content=read_image(directory="../data/images/", filename=filename_diff))
+                             content=read_image(file_directory="../data/images/", filename=filename_diff))
 
         # extract and show single image (creates images with a longer delay ?)
         elif '/image.jpg' in self.path:
@@ -1216,7 +1241,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                                                                  stream_resolution="hires"))
             time.sleep(2)
             self.stream_file(filetype='image/jpeg',
-                             content=read_image(directory="../data/images/", filename=filename))
+                             content=read_image(file_directory="../data/images/", filename=filename))
 
     def do_GET_stream_video(self, which_cam, which_cam2, param):
         """
@@ -1266,7 +1291,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 stream_active = False
 
             if config.update["camera_" + which_cam]:
-                camera[which_cam].camera_reconnect()
+                camera[which_cam].reconnect()
 
             if frame_id != camera[which_cam].get_stream_image_id() \
                     or camera[which_cam].if_error() or camera[which_cam].camera_stream_raw.if_error():
@@ -1408,8 +1433,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         return
 
 
-on_exception_setting()
-sys.excepthook = on_exception
+#on_exception_setting()
+#sys.excepthook = on_exception
 
 
 if __name__ == "__main__":
@@ -1422,23 +1447,19 @@ if __name__ == "__main__":
         print("--backup     Start backup directly (current date, delete directory before)")
         exit()
 
-    log_into_file = True
+    set_server_logging(sys.argv)
 
-    # set logging
-    if len(sys.argv) > 0 and "--logfile" in sys.argv or birdhouse_log_into_file:
-        print('-------------------------------------------')
-        print('Starting ...')
-        print('-------------------------------------------')
-        print("Using logfile "+birdhouse_log_filename+" ...")
-        birdhouse_log_as_file = True
+    srv_logging = set_logging('root')
+    ch_logging = set_logging('cam-handl')
+    view_logging = set_logging("view-head")
 
-    srv_logging = bh_logging.Logging('root', birdhouse_log_as_file)
     srv_logging.info('-------------------------------------------')
     srv_logging.info('Starting ...')
     srv_logging.info('-------------------------------------------')
+    srv_logging.info('Logging into File: ' + str(birdhouse_log_as_file))
 
     check_submodules()
-    read_error_images()
+    set_error_images()
 
     # set system signal handler
     signal.signal(signal.SIGINT, on_exit)
@@ -1534,6 +1555,7 @@ if __name__ == "__main__":
 
     # Stop all processes to stop
     finally:
+        srv_logging.info("Start stopping threads ...")
         health_check.stop()
         sys_info.stop()
         config.stop()
@@ -1554,14 +1576,18 @@ if __name__ == "__main__":
         for thread in threading.enumerate():
             if thread.name != "MainThread":
                 count_running_threads += 1
-                if thread.class_id and thread.id:
-                    srv_logging.error("Could not stop correctly: " + thread.name + " = " +
-                                      thread.class_id + " (" + thread.id + ")")
-                else:
-                    srv_logging.error("Could not stop correctly: " + thread.name)
+                try:
+                    if thread.class_id and thread.id:
+                        srv_logging.error("Could not stop correctly: " + thread.name + " = " +
+                                          thread.class_id + " (" + thread.id + ")")
+                    else:
+                        srv_logging.error("Could not stop correctly: " + thread.name)
+                except Exception as e:
+                    srv_logging.error("Could not stop thread correctly, no further information (" +
+                                      str(count_running_threads) + ").")
 
         if count_running_threads > 0:
-            srv_logging.info("-> Kill the " + str(count_running_threads) + " threads that could not be stopped ...")
+            srv_logging.info("-> Killing the " + str(count_running_threads) + " threads that could not be stopped ...")
         srv_logging.info("-------------------------------------------")
         os._exit(os.EX_OK)
 

@@ -1,16 +1,23 @@
 #!/bin/bash
 
-pip3 install ffmpeg-python
+user=`whoami`
+if [[ $user != "root" ]]; then
+  echo "execute as root or using 'sudo ./install_ffmpeg'"
 
-git clone --depth 1 https://code.videolan.org/videolan/x264
-cd x264
-./configure --host=arm-unknown-linux-gnueabi --enable-static --disable-opencl
-sudo make install
+else
+  pip3 install ffmpeg-python
+  pip3 install ffmpeg_progress
 
-cd ..
+  git clone --depth 1 https://code.videolan.org/videolan/x264
+  cd x264
+  ./configure --host=arm-unknown-linux-gnueabi --enable-static --disable-opencl
+  sudo make install
 
-git clone git://source.ffmpeg.org/ffmpeg --depth=1
-cd ffmpeg
-./configure --arch=armel --target-os=linux --enable-gpl --enable-libx264 --enable-nonfree
-make -j4
-sudo make install
+  cd ..
+
+  git clone git://source.ffmpeg.org/ffmpeg --depth=1
+  cd ffmpeg
+  ./configure --arch=armel --target-os=linux --enable-gpl --enable-libx264 --enable-nonfree
+  make -j4
+  sudo make install
+fi

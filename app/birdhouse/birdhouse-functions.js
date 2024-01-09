@@ -25,7 +25,17 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
 
         html += "<input id='"+id+"' value='"+data+"' style='"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");' onchange='"+on_change+"'>";
     }
-    else if (type == "select_dict") {
+    else if (type == "select_dict" || type == "select_dict_sort") {
+
+        if (type == "select_dict_sort") {
+            var options_sorted = Object.entries(options);
+            options_sorted.sort(function(a, b) { return a[1] - b[1]; });
+            var option_keys = options_sorted.map((e) => { return e[0] });
+            }
+        else {
+            var option_keys = "";
+            }
+
         var exists = false;
         html += "<select id='"+id+"' onchange='"+on_change+"'>";
         html += "<option value=''>(empty)</option>";
@@ -40,10 +50,15 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
                 }
             }
         else  {
-            Object.keys(options).forEach (key => {
+            if (option_keys == "") { option_keys = Object.keys(options); }
+            //Object.entries(option_keys).forEach (key => {
+            for (var a=0;a<option_keys.length;a++) {
+            //option_keys.forEach (key => {
+                key = option_keys[a];
                 if (data_str == key)  { html += "<option selected='selected' value='"+key+"'>"+options[key]+"</option>"; exists = true; }
                 else                  { html += "<option value='"+key+"'>"+options[key]+"</option>"; }
-                });
+                }
+                //});
             }
         if (!exists) {
             html += "<option selected='selected'>"+data_str+"</option>";
@@ -89,7 +104,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
 
 function birdhouse_edit_save(id, id_list, camera="", text="") {
     var ids = id_list.split(":");
-    var html = "<button onclick='birdhouse_edit_send(\""+id_list+"\", \""+camera+"\");' style='background:gray;width:100px;'>"+lang("SAVE")+"</button>";
+    var html = "<button onclick='birdhouse_edit_send(\""+id_list+"\", \""+camera+"\");' style='background:gray;width:100px;float:left;'>"+lang("SAVE")+"</button>";
     return html;
 }
 
@@ -221,19 +236,22 @@ function birdhouse_view_images_objects(object) {
     for (var i=0;i<group_list.length;i++) {
         image_ids_in_group = document.getElementById("group_ids_"+group_list[i]).innerHTML.split(" ");
         image_list = image_list.concat(image_ids_in_group);
-        for (a=0;a<image_ids_in_group.length;a++) {
-            if (image_list[a] != "") {
-                image_objects = document.getElementById(image_ids_in_group[a]+"_objects");
-                image_container = image_ids_in_group[a] + "_container";
-                if ((image_objects && image_objects.value && image_objects.value.indexOf(object) >= 0) || (object == "")) {
-                    image_list_active.push(image_ids_in_group[a]);
-                    elementVisible(image_container);
-                }
-                else {
-                    elementHidden(image_container);
-                }
+        }
+    console.log(image_list);
+
+    for (a=0;a<image_list.length;a++) {
+        if (image_list[a] != "") {
+            image_objects = document.getElementById(image_list[a]+"_objects");
+            image_container = image_list[a] + "_container";
+            if ((image_objects && image_objects.value && image_objects.value.indexOf(object) >= 0) || (object == "")) {
+                image_list_active.push(image_list[a]);
+                elementVisible(image_container);
+            }
+            else {
+                elementHidden(image_container);
             }
         }
+
     }
 
     console.log("birdhouse_view_images_objects: OBJECT=" + object + ", FOUND=" + image_list_active.length  + ", TOTAL=" + image_list.length);
@@ -324,7 +342,9 @@ function birdhouse_imageOverlay(filename, description="", overlay_replace="", ov
         document.getElementById("overlay_content").style.display = "block";
         document.getElementById("overlay_parent").style.display  = "block";
         
-        description = description.replace(/\[br\/\]/g,"<br/>");
+        description = description.replaceAll(/\[br\/\]/g,"<br/>");
+        description = description.replaceAll(/\[/g,"<");
+        description = description.replaceAll(/\]/g,">");
         html  = "";
         html += "<div id=\"overlay_image_container\">";
         html += "  <div id=\"overlay_close\" onclick='birdhouse_overlayHide();'>[X]</div>";

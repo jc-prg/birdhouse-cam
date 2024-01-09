@@ -2,7 +2,7 @@
 
 user=`whoami`
 if [[ $user != "root" ]]; then
-  echo "execute as root"
+  echo "execute as root or using 'sudo ./install_docker'"
 else
 
   # update / upgrade

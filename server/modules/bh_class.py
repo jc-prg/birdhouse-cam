@@ -2,7 +2,7 @@ import time
 import logging
 from random import random
 from modules.presets import *
-import modules.bh_logging as bh_logging
+from modules.presets import birdhouse_log_as_file
 
 
 class BirdhouseClass(object):
@@ -43,12 +43,13 @@ class BirdhouseClass(object):
             self.config = config
             self.thread_register(init=True)
 
-        self.logging = bh_logging.Logging(class_log, birdhouse_log_as_file)
+        self.logging = set_logging(class_log)
 
     def stop(self):
         """
         stop if thread (set self._running = False)
         """
+        self.logging.info("STOP SIGNAL SEND FROM SOMEWHERE ...")
         self._running = False
         self._processing = False
 
@@ -141,10 +142,11 @@ class BirdhouseClass(object):
         """
         set priority
         """
-        if 0 <= int(priority) <= 5:
+        priorities = len(self._thread_waiting_times)
+        if 0 <= int(priority) <= priorities:
             self._thread_priority = priority
         else:
-            self.raise_warning("Could not priority, out of range (0..5): " + str(priority))
+            self.raise_warning("Could not priority, out of range (0.."+str(priorities-1)+"): " + str(priority))
 
     def thread_prio_process(self, start, pid):
         """

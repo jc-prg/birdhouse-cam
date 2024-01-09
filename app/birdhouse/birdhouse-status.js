@@ -135,12 +135,12 @@ function birdhouseStatus_cameras(data) {
             for (let stream_id in camera_status[camera]["error_details"]) {
                 if (camera_status[camera]["error_details"][stream_id]) { error_count += 1; }
             }
-            if (camera_status[camera]["error"] || camera_status[camera]["error_details"]["stream_raw"]) {
+            if (camera_status[camera]["active"] && (camera_status[camera]["error"] || camera_status[camera]["error_details"]["stream_raw"])) {
                 setHeaderColor(header_id=camera+"_error", header_color=header_color_error);
                 setHeaderColor(header_id=camera, header_color=header_color_error);
                 setStatusColor(status_id="status_error_"+camera, "red");
             }
-            else if (error_count > 0) {
+            else if (camera_status[camera]["active"] && error_count > 0) {
                 setHeaderColor(header_id=camera+"_error", header_color=header_color_warning);
                 setHeaderColor(header_id=camera, header_color=header_color_warning);
                 setStatusColor(status_id="status_error_"+camera, "yellow");

@@ -11,11 +11,64 @@ def get_env(var_name):
     return os.environ.get(var_name)
 
 
-def read_error_images():
+def set_global_configuration():
+    """
+    read global vars from .env file
+    """
+    global birdhouse_env
+    path = os.path.join(os.path.dirname(__file__), "../../.env")
+    load_dotenv(path)
+    try:
+        birdhouse_env_keys = {
+            "database_type": "DATABASE_TYPE",
+            "database_cleanup": "DATABASE_DAILY_CLEANUP",
+            "rpi_active": "RPI_ACTIVE",
+            "rpi_64bit": "RPI_64BIT",
+            "couchdb_server": "COUCHDB_SERVER",
+            "couchdb_user": "COUCHDB_USER",
+            "couchdb_password": "COUCHDB_PASSWORD",
+            "couchdb_port": "COUCHDB_PORT",
+            "http_server": "BIRDHOUSE_HTTP_SERVER",
+            "port_http": "BIRDHOUSE_HTTP_PORT",
+            "port_api": "BIRDHOUSE_API_PORT",
+            "port_video": "BIRDHOUSE_VIDEO_PORT",
+            "server_audio": "BIRDHOUSE_AUDIO_SERVER",
+            "port_audio": "BIRDHOUSE_AUDIO_PORT",
+            "dir_project": "BIRDHOUSE_DIR_PROJECT",
+            "dir_logging": "BIRDHOUSE_DIR_LOGGING",
+            "log_to_file": "BIRDHOUSE_LOG2FILE",
+            "admin_ip4_deny": "ADMIN_IP4_DENY",
+            "admin_ip4_allow": "ADMIN_IP4_ALLOW",
+            "admin_password": "ADMIN_PASSWORD",
+            "admin_login": "ADMIN_LOGIN",
+            "detection_active": "OBJECT_DETECTION",
+            "test_instance": "BIRDHOUSE_INSTANCE",
+            "which_instance": "BIRDHOUSE_INSTANCE",
+            "installation_type": "BIRDHOUSE_INSTALLATION_TYPE"
+        }
+
+        birdhouse_env = {}
+        for key in birdhouse_env_keys:
+            birdhouse_env[key] = get_env(birdhouse_env_keys[key])
+            if birdhouse_env[key] is None:
+                raise ValueError('Value in .env not found: ' + key)
+
+        for key in ["database_cleanup", "rpi_active", "rpi_64bit", "detection_active", "log_to_file"]:
+            birdhouse_env[key] = str(birdhouse_env[key]).lower() in ("true", "1", "yes", "on")
+
+        birdhouse_env["test_instance"] = str(birdhouse_env["test_instance"].upper() == "TEST").lower()
+
+    except Exception as e:
+        logging.error("Error reading configuration defined in the file '.env': " + str(e))
+        logging.error("Check or rebuild your configuration file based on the file 'sample.env'.")
+        os._exit(os.EX_CONFIG)
+
+
+def set_error_images():
     global birdhouse_error_images_raw, birdhouse_error_images
     import cv2
     for key in birdhouse_error_images:
-        image_path = os.path.join(os.getcwd(), "data", birdhouse_error_images[key])
+        image_path = os.path.join(birdhouse_main_directories["data"], birdhouse_error_images[key])
         if os.path.exists(image_path):
             birdhouse_error_images_raw[key] = cv2.imread(image_path)
         else:
@@ -27,7 +80,7 @@ def check_submodules():
     global birdhouse_git_submodules, birdhouse_git_submodules_installed
 
     for key in birdhouse_git_submodules:
-        module_path = os.path.join(os.getcwd(), birdhouse_git_submodules[key], "README.md")
+        module_path = os.path.join(birdhouse_main_directories["project"], birdhouse_git_submodules[key], "README.md")
         if not os.path.exists(module_path):
             print("ERROR: Submodule from git not installed: https://github.com/" + key + " in directory " +
                   birdhouse_git_submodules[key])
@@ -36,14 +89,138 @@ def check_submodules():
     birdhouse_git_submodules_installed = True
 
 
-path = os.path.join(os.path.dirname(__file__), "../../.env")
-load_dotenv(path)
+def set_log_directory():
+    """
+    set logging directory and try to create if it doesn't exist
+    """
+    global birdhouse_main_directories, birdhouse_env, birdhouse_log_as_file, \
+        birdhouse_log_directory, birdhouse_log_filename
 
-logger_list = []
-loggers = {}
-logger_exists = {}
-camera_list = []
+    if birdhouse_env["dir_logging"] != "" and birdhouse_env["dir_logging"][0:1] == "/":
+        birdhouse_log_directory = birdhouse_env["dir_logging"]
+    elif birdhouse_env["dir_logging"] != "":
+        birdhouse_log_directory = str(os.path.join(birdhouse_main_directories["project"], birdhouse_env["dir_logging"]))
+    else:
+        birdhouse_log_directory = birdhouse_main_directories["log"]
 
+    try:
+        if not os.path.exists(birdhouse_log_directory):
+            print("Log directory doesn't exist yet. Created directory: " + birdhouse_log_directory)
+            os.makedirs(birdhouse_log_directory)
+    except Exception as e:
+        print("Could not create log directory: " + str(e))
+        print("Switch back to console logging.")
+        birdhouse_log_as_file = False
+    if not os.path.exists(birdhouse_log_directory):
+        print("Could not create log directory: " + str(e))
+        print("Switch back to console logging.")
+        birdhouse_log_as_file = False
+
+    birdhouse_log_filename = str(os.path.join(birdhouse_log_directory, "server.log"))
+
+
+def set_loglevel():
+    global birdhouse_loglevel_default, birdhouse_loglevel_modules_all, birdhouse_loglevel_module, \
+        birdhouse_loglevel_modules_error, birdhouse_loglevel_modules_warning, birdhouse_loglevel_modules_info, \
+        birdhouse_loglevel_modules_debug
+
+    for module in birdhouse_loglevel_modules_all:
+        birdhouse_loglevel_module[module] = birdhouse_loglevel_default
+    for module in birdhouse_loglevel_modules_info:
+        birdhouse_loglevel_module[module] = logging.INFO
+    for module in birdhouse_loglevel_modules_debug:
+        birdhouse_loglevel_module[module] = logging.DEBUG
+    for module in birdhouse_loglevel_modules_warning:
+        birdhouse_loglevel_module[module] = logging.WARNING
+    for module in birdhouse_loglevel_modules_error:
+        birdhouse_loglevel_module[module] = logging.ERROR
+
+
+def set_logging(name):
+    """
+    set logger and ensure it exists only once
+    """
+    global logger_exists, logger_list, loggers, birdhouse_loglevel_module
+
+    init_time = time.time()
+    log_as_file = birdhouse_log_as_file
+
+    if loggers.get(name) or name in logger_list:
+        # print("... logger already exists: " + name)
+        return loggers.get(name)
+
+    else:
+        logger_exists[name] = init_time
+        logger_list.append(name)
+
+        if log_as_file:
+            logger = logging.getLogger(name + str(init_time))
+        else:
+            logger = logging.getLogger(name)
+
+        if name not in birdhouse_loglevel_module:
+            log_level = birdhouse_loglevel_default
+            logger.setLevel(log_level)
+            print("Key '" + name + "' is not defined in preset.py in 'birdhouse_loglevel_module'.")
+        else:
+            log_level = birdhouse_loglevel_module[name]
+            logger.setLevel(log_level)
+
+        if log_as_file:
+            # log_format = logging.Formatter(fmt='%(asctime)s |' + str(len(logger_list)).zfill(
+            #    3) + '| %(levelname)-8s '+name.ljust(10)+' | %(message)s', # + "\n" + str(logger_list),
+            #                               datefmt='%m/%d %H:%M:%S')
+
+            log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s '+name.ljust(10)+' | %(message)s',
+                                           datefmt='%m/%d %H:%M:%S')
+            handler = RotatingFileHandler(filename=birdhouse_log_filename, mode='a',
+                                          maxBytes=int(2.5 * 1024 * 1024),
+                                          backupCount=2, encoding=None, delay=False)
+            handler.setFormatter(log_format)
+            logger.addHandler(handler)
+
+        else:
+            logging.basicConfig(format='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
+                                datefmt='%m/%d %H:%M:%S',
+                                level=log_level)
+
+        logger.debug("___ Init logger '" + name + "', into_file=" + str(log_as_file))
+        loggers[name] = logger
+        return logger
+
+
+def set_server_logging(system_arguments):
+    """
+    set function for global logging
+    """
+    global srv_logging, ch_logging, birdhouse_log_as_file, birdhouse_env, view_logging
+
+    # set logging
+    if (len(system_arguments) > 0 and "--logfile" in system_arguments) or birdhouse_env["log_to_file"]:
+        print('-------------------------------------------')
+        print('Starting ...')
+        print('-------------------------------------------')
+        print("Using logfile "+birdhouse_log_filename+" ...")
+        birdhouse_log_as_file = True
+
+
+# ------------------------------------
+# absolute paths
+# ------------------------------------
+
+birdhouse_main_directories = {
+    "modules": os.path.dirname(os.path.abspath(__file__)),
+    "working": os.path.dirname(os.path.abspath(__name__)),
+    "server": os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."),
+    "project": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."),
+    "app": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "app"),
+    "log": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "log"),
+    "data": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data")
+}
+
+# ------------------------------------
+# error handling
+# ------------------------------------
 birdhouse_initial_connect_msg = {}
 birdhouse_error_images_raw = {}
 birdhouse_error_images = {
@@ -52,6 +229,9 @@ birdhouse_error_images = {
     "lowres": "camera_error_lowres.png"
 }
 
+# ------------------------------------
+# git sub modules
+# ------------------------------------
 birdhouse_git_submodules_installed = False
 birdhouse_git_submodules = {
     "jc-prg/bird-detection": "server/modules/detection",
@@ -59,98 +239,20 @@ birdhouse_git_submodules = {
     "jc-prg/app-framework": "app/framework"
 }
 
-birdhouse_status = {
-    "object_detection": False
-}
+# ------------------------------------
+# global configuration
+# ------------------------------------
+camera_list = []
+birdhouse_env = {}
+birdhouse_status = {"object_detection": False}
+birdhouse_picamera = False
 
-birdhouse_env = {
-    "database_type": get_env("DATABASE_TYPE"),
-    "database_cleanup": get_env("DATABASE_DAILY_CLEANUP").lower() in ("true", "1", 1, "yes", "on"),
+set_global_configuration()
 
-    "rpi_active": get_env("RPI_ACTIVE").lower() in ("true", "1", 1, "yes", "on"),
-    "rpi_64bit": get_env("RPI_64BIT").lower() in ("yes", "1", 1, "true", "on"),
 
-    "couchdb_server": get_env("COUCHDB_SERVER"),
-    "couchdb_user": get_env("COUCHDB_USER"),
-    "couchdb_password": get_env("COUCHDB_PASSWORD"),
-    "couchdb_port": get_env("COUCHDB_PORT"),
-
-    "http_server": get_env("BIRDHOUSE_HTTP_SERVER"),
-    "port_http": get_env("BIRDHOUSE_HTTP_PORT"),
-    "port_api": get_env("BIRDHOUSE_API_PORT"),
-    "port_video": get_env("BIRDHOUSE_VIDEO_PORT"),
-
-    "server_audio": get_env("BIRDHOUSE_AUDIO_SERVER"),
-    "port_audio": get_env("BIRDHOUSE_AUDIO_PORT"),
-
-    "dir_project": get_env("BIRDHOUSE_DIR_PROJECT"),
-    "dir_logging": get_env("BIRDHOUSE_DIR_LOGGING"),
-
-    "admin_ip4_deny": get_env("ADMIN_IP4_DENY"),
-    "admin_ip4_allow": get_env("ADMIN_IP4_ALLOW"),
-    "admin_password": get_env("ADMIN_PASSWORD"),
-    "admin_login": get_env("ADMIN_LOGIN"),
-
-    "detection_active": (get_env("OBJECT_DETECTION").upper() in ("ON", "1", 1, "TRUE", "YES"))
-}
-
-birdhouse_log_into_file = True
-birdhouse_loglevel = logging.INFO
-birdhouse_loglevel_modules_info = ["mic-main", "server"]
-birdhouse_loglevel_modules_debug = []
-birdhouse_loglevel_modules_warning = []
-birdhouse_loglevel_modules_error = []
-birdhouse_loglevel_module = {
-    "root": birdhouse_loglevel,
-    "backup": birdhouse_loglevel,
-    "cam-main": birdhouse_loglevel,
-    "cam-img": birdhouse_loglevel,
-    "cam-ffmpg": birdhouse_loglevel,
-    "cam-video": birdhouse_loglevel,
-    "cam-out": birdhouse_loglevel,
-    "cam-other": birdhouse_loglevel,
-    "cam-stream": birdhouse_loglevel,
-    "config": birdhouse_loglevel,
-    "config-Q": birdhouse_loglevel,
-    "DB-text": birdhouse_loglevel,
-    "DB-json": birdhouse_loglevel,
-    "DB-couch": birdhouse_loglevel,
-    "DB-handler": birdhouse_loglevel,
-    "image": birdhouse_loglevel,
-    "mic-main": birdhouse_loglevel,
-    "sensors": birdhouse_loglevel,
-    "server": birdhouse_loglevel,
-    "srv-info": birdhouse_loglevel,
-    "srv-health": birdhouse_loglevel,
-    "video": birdhouse_loglevel,
-    "video-srv": birdhouse_loglevel,
-    "views": birdhouse_loglevel,
-    "view-head": birdhouse_loglevel,
-    "view-creat": birdhouse_loglevel,
-    "weather": birdhouse_loglevel,
-    "weather-py": birdhouse_loglevel,
-    "weather-om": birdhouse_loglevel,
-}
-
-for module in birdhouse_loglevel_modules_info:
-    birdhouse_loglevel_module[module] = logging.INFO
-for module in birdhouse_loglevel_modules_debug:
-    birdhouse_loglevel_module[module] = logging.DEBUG
-for module in birdhouse_loglevel_modules_warning:
-    birdhouse_loglevel_module[module] = logging.WARNING
-for module in birdhouse_loglevel_modules_error:
-    birdhouse_loglevel_module[module] = logging.ERROR
-
-birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
-                                         datefmt='%m/%d %H:%M:%S')
-birdhouse_log_filename = str(os.path.join(os.path.dirname(__file__), "../../log", "server.log"))
-birdhouse_log_as_file = True
-
-# birdhouse_loghandler = RotatingFileHandler(filename=birdhouse_log_filename, mode='a',
-#                                            maxBytes=int(2.5 * 1024 * 1024),
-#                                            backupCount=2, encoding=None, delay=False)
-# birdhouse_loghandler.setFormatter(birdhouse_log_format)
-
+# ------------------------------------
+# database configuration
+# ------------------------------------
 
 birdhouse_couchdb = {
     "db_usr": birdhouse_env["couchdb_user"],
@@ -160,16 +262,21 @@ birdhouse_couchdb = {
     "db_port": 5984,
     "db_basedir": "/usr/src/app/data/"
 }
+if birdhouse_env["installation_type"].upper() != "DOCKER":
+    birdhouse_couchdb["db_port"] = birdhouse_env["couchdb_port"]
+    birdhouse_couchdb["db_server"] = birdhouse_env["couchdb_server"]
+    birdhouse_couchdb["db_basedir"] = birdhouse_env["dir_project"] + "data/"
+
 birdhouse_pages = {
-    "live":             ("Live-Stream", "/index.html",       "INDEX"),
-    "backup":           ("Archiv",      "/list_backup.html", "ARCHIVE"),
-    "today":            ("Heute",       "/list_short.html",  "TODAY"),
-    "today_complete":   ("Alle heute",  "/list_new.html",    "TODAY_COMPLETE"),
-    "favorit":          ("Favoriten",   "/list_star.html",   "FAVORITES"),
-    "cam_info":         ("Ger&auml;te", "/cameras.html",     "DEVICES"),
-    "video_info":       ("Video Info",  "/video-info.html",  ""),
-    "videos":           ("Videos",      "/videos.html",      "VIDEOS"),
-    "save":             ("Speichern",   "/image.jpg",        "")
+    "live": ("Live-Stream", "/index.html", "INDEX"),
+    "backup": ("Archiv", "/list_backup.html", "ARCHIVE"),
+    "today": ("Heute", "/list_short.html", "TODAY"),
+    "today_complete": ("Alle heute", "/list_new.html", "TODAY_COMPLETE"),
+    "favorit": ("Favoriten", "/list_star.html", "FAVORITES"),
+    "cam_info": ("Ger&auml;te", "/cameras.html", "DEVICES"),
+    "video_info": ("Video Info", "/video-info.html", ""),
+    "videos": ("Videos", "/videos.html", "VIDEOS"),
+    "save": ("Speichern", "/image.jpg", "")
 }
 birdhouse_databases = {
     "config": {},
@@ -210,21 +317,57 @@ birdhouse_files = {
     "weather": "config_weather.json"
 }
 birdhouse_dir_to_database = {
-    "config":                       "config",
-    "images/config_images":         "today_images",
-    "images/config_sensor":         "today_sensors",
-    "images/config_weather":        "today_weather",
-    "images/config_statistics":     "today_statistics",
-    "images/config_backup":         "archive_images",
-    "images/config_favorites":      "favorites",
-    "videos/config_videos":         "archive_videos",
+    "config": "config",
+    "images/config_images": "today_images",
+    "images/config_sensor": "today_sensors",
+    "images/config_weather": "today_weather",
+    "images/config_statistics": "today_statistics",
+    "images/config_backup": "archive_images",
+    "images/config_favorites": "favorites",
+    "videos/config_videos": "archive_videos",
     "images/<DATE>/config_statistics": "archive_statistics",
-    "images/<DATE>/config_images":     "archive_images",
-    "images/<DATE>/config_sensors":    "archive_sensors",
-    "images/<DATE>/config_weather":    "archive_weather"
+    "images/<DATE>/config_images": "archive_images",
+    "images/<DATE>/config_sensors": "archive_sensors",
+    "images/<DATE>/config_weather": "archive_weather"
 }
 
+# ------------------------------------
+# logging
+# ------------------------------------
+logger_list = []
+loggers = {}
+logger_exists = {}
 
+birdhouse_log_as_file = False
+birdhouse_log_directory = ""
+birdhouse_log_filename = ""
+birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
+                                         datefmt='%m/%d %H:%M:%S')
+
+birdhouse_loglevel_default = logging.INFO
+birdhouse_loglevel_module = {}
+birdhouse_loglevel_modules_all = [
+    'root', 'backup', 'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object',
+    'cam-stream', 'config', 'config-Q', 'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
+    'server', 'srv-info', 'srv-health', 'video', 'video-srv', 'views', 'view-head', 'view-creat',
+    'weather', 'weather-py', 'weather-om', 'cam-handl', 'cam-info']
+
+# add modules to the following lists to change their log_level
+birdhouse_loglevel_modules_info = ["server"]
+birdhouse_loglevel_modules_debug = []
+birdhouse_loglevel_modules_warning = []
+birdhouse_loglevel_modules_error = []
+
+srv_logging = None
+ch_logging = None
+view_logging = None
+
+set_loglevel()
+set_log_directory()
+
+# ------------------------------------
+# device configuration
+# ------------------------------------
 birdhouse_weather = {
     "info_update": "none",
     "info_update_stamp": "none",
@@ -335,8 +478,8 @@ birdhouse_default_sensor = {
 }
 birdhouse_preset = {
     "backup": {
-        "preview": "0700",               # HHMM
-        "preview_fav": True,               # HHMM
+        "preview": "0700",  # HHMM
+        "preview_fav": True,  # HHMM
         "time": "2000"
     },
     "devices": {
@@ -357,12 +500,12 @@ birdhouse_preset = {
         "timezone": "UTC+1",
         "weather_active": True
     },
-    "server": {                     # set vars in the .env file
-        "ip4_admin_deny":   [""],
-        "ip4_address":      "",
+    "server": {  # set vars in the .env file
+        "ip4_admin_deny": [""],
+        "ip4_address": "",
         "ip4_stream_audio": "",
         "ip4_stream_video": "",
-        "initial_setup":    True
+        "initial_setup": True
     },
     "title": "jc://birdhouse/",
     "views": {
@@ -387,10 +530,10 @@ birdhouse_client_presets = {
                "// Configure stage details (" + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + ")\n" +
                "//---------------------------------\n" +
                "// Please edit not here, but in .env-File\n" +
-               "var test		= false;\n" +
+               "var test		= " + birdhouse_env["test_instance"] + ";\n" +
+               "var instance	= '" + birdhouse_env["which_instance"] + "';\n" +
                "var server_port = '" + birdhouse_env["port_api"] + "';\n\n"
 }
-
 
 file_types = {
     '.css': 'text/css',
@@ -409,10 +552,11 @@ detection_default_models = ["yolov5n", "yolov5s", "yolov5m", "yolov5l", "yolov5x
                             "yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6", "yolov5x6"]
 detection_custom_model_path = "server/modules/detection/custom_models/"
 detection_custom_models = glob.glob(detection_custom_model_path + "*.pt")
-detection_models = detection_default_models
+detection_models = []
 for directory in detection_custom_models:
     directory = directory.replace(detection_custom_model_path, "")
     detection_models.append(directory)
+detection_models.extend(detection_default_models)
 
 # http://codes.wmo.int/bufr4/codeflag/_0-20-003 (parts used by open-meteo.com)
 birdhouse_weather_descriptions = {

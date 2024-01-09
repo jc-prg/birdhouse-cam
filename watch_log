@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 
-LOGFILE="log/server.log"
+source .env
+
+LOGFILE="$BIRDHOUSE_DIR_LOGGING/server.log"
 PARAM=$1
 
 if [ ! $PARAM ]; then

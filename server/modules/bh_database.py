@@ -66,6 +66,8 @@ class BirdhouseJSON(BirdhouseDbClass):
             self.wait_if_locked(filename)
             with open(filename) as json_file:
                 data = json.load(json_file)
+            self.logging.debug("Read JSON file: " + filename)
+            self.logging.debug("                " + str(list(data.keys()))[:80])
             return data
 
         except Exception as e:
@@ -84,6 +86,7 @@ class BirdhouseJSON(BirdhouseDbClass):
                 json_file.close()
             self.locked[filename] = False
             self.logging.debug("Write JSON file: " + filename)
+            self.logging.debug("                 " + str(list(data.keys()))[:80])
 
         except Exception as e:
             self.locked[filename] = False
@@ -238,7 +241,11 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         """
         data = {}
         [db_key, date] = self.filename2keys(filename)
-        self.logging.debug("-----> READ DB: " + db_key + "/" + date)
+        self.logging.debug("-----> READ DB: " + db_key + "/" + date + " - " + filename)
+
+        if db_key == "":
+            self.raise_error("CouchDB ERROR read, could not get db_key from filename ("+filename+")")
+            return {}
 
         if db_key in self.database:
             database = self.database[db_key]
