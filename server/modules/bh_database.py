@@ -1,3 +1,4 @@
+import os.path
 import sys
 import time
 import json
@@ -51,14 +52,14 @@ class BirdhouseTEXT(BirdhouseDbClass):
 
 class BirdhouseJSON(BirdhouseDbClass):
 
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         BirdhouseDbClass.__init__(self, "JSON", "DB-json", config)
         self.locked = {}
         self.connected = True
 
         self.logging.info("Connected JSON handler.")
 
-    def read(self, filename):
+    def read(self, filename) -> dict:
         """
         read json file including check if locked
         """
@@ -74,7 +75,7 @@ class BirdhouseJSON(BirdhouseDbClass):
             self.raise_error("Could not read JSON file: " + filename + " - " + str(e))
             return {}
 
-    def write(self, filename, data):
+    def write(self, filename, data) -> None:
         """
         write json file including locking mechanism
         """
@@ -91,6 +92,14 @@ class BirdhouseJSON(BirdhouseDbClass):
         except Exception as e:
             self.locked[filename] = False
             self.raise_error("Could not write JSON file: " + filename + " - " + str(e))
+
+    def exists(self, filename) -> bool:
+        """
+        check if file exists
+        """
+        result = os.path.exists(filename)
+        self.logging.debug("File exists=" + str(result) + "; File=" + filename)
+        return result
 
 
 class BirdhouseCouchDB(BirdhouseDbClass):
@@ -119,7 +128,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         self.connected = self.connect()
         self.logging.info("Connected CouchDB handler (" + self.db_url + ").")
 
-    def connect(self):
+    def connect(self) -> bool:
         """
         connect to database incl. retry
         """
@@ -151,7 +160,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         self.logging.info("Connected.")
         return True
 
-    def check_db(self):
+    def check_db(self) -> None:
         """
         check if required DB exists or create (under construction)
         """
@@ -235,7 +244,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
 
         return [database, date]
 
-    def read(self, filename):
+    def read(self, filename) -> dict:
         """
         read data from DB
         """
@@ -263,7 +272,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             self.raise_error("CouchDB ERROR read (db_key): " + filename + " - " + db_key + "/" + date)
             return {}
 
-    def write(self, filename, data, create=False):
+    def write(self, filename, data, create=False) -> None:
         """
         read data from DB
         """
@@ -313,7 +322,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         self.changed_data = True
         return
 
-    def exists(self, filename):
+    def exists(self, filename) -> bool:
         """
         check if db exists
         """
