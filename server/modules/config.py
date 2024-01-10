@@ -198,6 +198,17 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         self.logging.debug("-----> Check DB exists: " + str(if_exists) + " (" + self.db_type + " | " + filename + ")")
         return if_exists
 
+    def exists_in_cache(self, config, date=""):
+        """
+        check if data are available in the cache
+        """
+        if config in self.config_cache:
+            if date == "":
+                return True
+            if date in self.config_cache[config]:
+                return True
+        return False
+
     def read(self, config, date=""):
         """
         read data from DB
@@ -254,7 +265,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         else:
             return self.config_cache[config][date].copy()
 
-    def write(self, config, date="", data=None, create=False, save_json=False):
+    def write(self, config, date="", data=None, create=False, save_json=False, no_cache=False):
         """
         write data to DB
         """
@@ -270,20 +281,24 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             filename = self.file_path(config, date)
             if self.db_type == "json":
                 self.json.write(filename, data)
-                self.write_cache(config, date, data)
+                if not self.exists_in_cache(config, date) and not no_cache:
+                    self.write_cache(config, date, data)
             elif self.db_type == "couch" and "config.json" in filename:
                 self.couch.write(filename, data, create)
                 self.json.write(filename, data)
-                self.write_cache(config, date, data)
+                if not self.exists_in_cache(config, date) and not no_cache:
+                    self.write_cache(config, date, data)
             elif self.db_type == "couch":
                 self.couch.write(filename, data, create)
                 if save_json:
                     self.json.write(filename, data)
-                self.write_cache(config, date, data)
+                if not self.exists_in_cache(config, date) and not no_cache:
+                    self.write_cache(config, date, data)
             elif self.db_type == "both":
                 self.couch.write(filename, data, create)
                 self.json.write(filename, data)
-                self.write_cache(config, date, data)
+                if not self.exists_in_cache(config, date) and not no_cache:
+                    self.write_cache(config, date, data)
             else:
                 self.raise_error("Unknown DB type (" + str(self.db_type) + ")")
         except Exception as e:
@@ -375,6 +390,17 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                                  self.config.db_handler.directory(config=config, date=date) + " (" + str(e) + ")")
 
         self._processing = False
+
+    def clean_up_cache(self, config, date=""):
+        """remove data from cache"""
+        if config != "":
+            if date != "":
+                del self.config_cache[config][date]
+            else:
+                del self.config_cache[config]
+        else:
+            for conf_key in self.config_cache:
+                del self.config_cache[conf_key]
 
     def lock(self, config, date=""):
         """
@@ -994,15 +1020,15 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                 del backup_info["changes"][status_key][date]
             if not is_changed and "info" in backup_file:
                 backup_file["info"]["changed_"+change] = False
-        self.db_handler.write("backup_info", "", backup_info)
+        self.db_handler.write("backup_info", "", backup_info, create=False, save_json=True, no_cache=True)
 
     def get_status_changed(self, date, change="archive"):
         """
         get status, if changed - from central file and from date specific backup file
         """
         return_value = False
-        backup_info = self.db_handler.read_cache("backup_info", "")
-        backup_file = self.db_handler.read_cache("backup", date)
+        backup_info = self.db_handler.read("backup_info", "")
+        backup_file = self.db_handler.read("backup", date)
         if "changes" in backup_info:
             if (change in backup_info["changes"] and date in backup_info["changes"][change]
                     and backup_info["changes"][change]):

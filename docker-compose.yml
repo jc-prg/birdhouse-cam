@@ -18,6 +18,12 @@ services:
     - ./app:/usr/local/apache2/htdocs
     - ./data/images:/usr/local/apache2/htdocs/images
     - ./data/videos:/usr/local/apache2/htdocs/videos
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_MAX_STREAM:-10M}
+        reservations:
+          memory: ${MEMORY_MIN_STREAM:-20M}
 
   birdhouse_db:
     image:  ${IMAGE_DB:-matthiasg/rpi-couchdb:latest}
@@ -30,6 +36,12 @@ services:
     environment:
       - 'COUCHDB_USER=${COUCHDB_USER}'
       - 'COUCHDB_PASSWORD=${COUCHDB_PASSWORD}'
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_MAX_COUCHDB:-150M}
+        reservations:
+          memory: ${MEMORY_MIN_COUCHDB:-100M}
     restart: always
     networks:
       my-net:
@@ -51,10 +63,10 @@ services:
       resources:
         limits:
           #cpus: '0.001'
-          memory: ${MEMORY_MAX:-550M}
+          memory: ${MEMORY_MAX_SERVER:-400M}
         reservations:
           cpus: '0.50'
-          memory: ${MEMORY_MIN:-300M}
+          memory: ${MEMORY_MIN_SERVER:-300M}
     restart: always
     networks:
       my-net:
@@ -69,6 +81,12 @@ services:
       - ./:/usr/src/app/
     ports:
       - "${BIRDHOUSE_VIDEO_PORT}:${BIRDHOUSE_VIDEO_PORT}"
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_MAX_STREAM:-50M}
+        reservations:
+          memory: ${MEMORY_MIN_STREAM:-50M}
     restart: on-failure
     networks:
       my-net:
