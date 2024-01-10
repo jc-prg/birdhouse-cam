@@ -212,7 +212,18 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             result = self.json.read(filename)
 
         elif self.db_type == "couch" or self.db_type == "both":
-            result = self.couch.read(filename)
+
+            if not self.couch.exists(filename) and self.json.exists(filename):
+                result = self.json.read(filename)
+                self.couch.write(filename, result, create=True)
+
+            elif self.couch.exists(filename) and not self.json.exists(filename) and self.db_type == "both":
+                result = self.couch.read(filename)
+                self.json.write(filename, result)
+
+            elif self.couch.exists(filename):
+                result = self.couch.read(filename)
+
             if result == {}:
                 result = self.json.read(filename)
 
