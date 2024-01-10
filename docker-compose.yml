@@ -40,8 +40,8 @@ services:
     container_name: birdhouse_server
     privileged: true
     volumes:
-      - ${BIRDHOUSE_DIR_LOGGING:-./log}:/log
-      - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
+      - ${BIRDHOUSE_DIR_LOGGING:-./log}:${BIRDHOUSE_DIR_LOGGING:-/log}
+      - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}
       - ./:/usr/src/app/
     ports:
       - "${BIRDHOUSE_API_PORT}:${BIRDHOUSE_API_PORT}"
@@ -64,8 +64,8 @@ services:
     build: ${CONTAINER_VIDEO:-./config/container_video_rpi/}
     container_name: birdhouse_video
     volumes:
-      - ${BIRDHOUSE_DIR_LOGGING:-./log}:/log
-      - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
+      - ${BIRDHOUSE_DIR_LOGGING:-./log}:${BIRDHOUSE_DIR_LOGGING:-/log}
+      - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}
       - ./:/usr/src/app/
     ports:
       - "${BIRDHOUSE_VIDEO_PORT}:${BIRDHOUSE_VIDEO_PORT}"
