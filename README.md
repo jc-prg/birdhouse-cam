@@ -3,12 +3,12 @@
 Raspberry Pi project to observe our birdhouse with multiple webcams: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, ...
 
-1. [Birdhouse Construction](#birdhouse-construction)
+1. [Birdhouse](#birdhouse)
 2. [Technology](#technology)
-3. [Main Software Features](#main-software-features)
-4. [Software Installation](#software-installation)
+3. [Main Features](#main-features)
+4. [Installation](#installation)
    * [Getting sources](#getting-sources)
-   * [Installation](#installation)
+   * [Software installation](#software-installation)
    * [First run and device configuration](#first-run-and-device-configuration)
    * [Finalize database setup](#finalize-database-setup)
    * [Accessing images via WebDAV](#Accessing-images-via-WebDAV)
@@ -19,7 +19,9 @@ detect activity, detect birds, record videos, mark favorites, analyze weather da
 7. [Impressions](#impressions)
 
 
-## Birdhouse Construction
+## Birdhouse
+
+Here are some options. Calculate with a little bit more space in the height for the camera inside the birdhouse.
 
 * German instructions: [NABU - Nistkästen selber bauen](https://www.nabu.de/tiere-und-pflanzen/voegel/helfen/nistkaesten/index.html)
 * English instructions: [Simple birdhouse](https://suncatcherstudio.com/birds/birdhouse-plans-simple/)
@@ -29,8 +31,8 @@ detect activity, detect birds, record videos, mark favorites, analyze weather da
 * IT Hardware
   * Raspberry Pi 3B+, Raspberry Pi 4 (recommended)
   * Micro SD with 64 GByte
-  * USB camera
-  * _optional:_ PiCamera with IR (only 32bit OS, no object detection)
+  * USB camera for outside view (and maybe inside view)
+  * _optional:_ PiCamera with IR for the inside view (wide-angle, e.g., 110°)
   * _optional:_ Small USB Microphone
   * _optional:_ DHT11 / DHT22 Sensor
 * Software
@@ -39,33 +41,33 @@ detect activity, detect birds, record videos, mark favorites, analyze weather da
   * HTML, CSS, JavaScript, Pinch-Zoom
   * jc://modules/, jc://app-framework/
 
-## Main Software Features
+## Main Features
 
-* Use as web-app on an iPhones or in a browser
-* Watch **live stream** with 1 or 2 cameras 
+* **WebApp for Browser and SmartPhone** (English and German, optimized for iPhone)
+* **Watching live stream** with 1 or 2 cameras (RPi4 recommend for fluent stream) 
   * via Raspberry Pi camera
   * USB web cam (e.g. RPi cam inside and USB web cam outside)
-* **Record photos**
+* **Continuously recording photos**
   * e.g. every 20 seconds from sunrise to 20:00 local time (configurable in the device settings)
   * Similarity detection, filter photos with movement in a defined area (visualize differences)
   * camera and image settings configurable (brightness, contrast, ...)
-* **Manage photos**
-  * Mark photos and videos as favorites and to be deleted
+* **Managing photos and videos**
+  * Mark photos and videos as favorites or to be deleted
   * Mark a range of photos between two marked photos as to be deleted
-  * List favorite photos and videos in a list
+  * List favorite photos and videos
   * Delete marked photos
   * Archive photos with movement and favorite photos once a day
-* **Record and stream videos**
+* **Recording and streaming videos**
   * create mp4 video incl. audio, works with iOS devices
   * Create video from all pictures of the current day
   * Trim videos
-* Get, archive, and visualize **weather data**:
+* **Recording and visualizing weather data**:
   * via internet for a defined location (python_weather OR [Open Meteo](https://open-meteo.com/))
   * from sensors connected to the Raspberry Pi (DHT11/DHT22)
   * GPS lookup for cities or addresses via GeoPy to set weather location
-* Connect to **audio stream** from microphone
+* **Listening audio stream** from microphone
   * under construction, currently browser only (no iPhone)
-* **Object / Bird detection** via PyTorch
+* **Detecting birds** (objects) via PyTorch
   * bird detection model in an early stage trained with a few European singing birds
   * labels in archive and favorite view as well as for admins in complete view of current day
   * batch detection for archive images
@@ -78,7 +80,7 @@ detect activity, detect birds, record videos, mark favorites, analyze weather da
   * edit camera and image settings (contrast, saturation, hue, brightness ...)
   * see amount of currently active streams
 
-## Software Installation
+## Installation
 
 * Build a birdhouse incl. a Raspberry Pi or USB Camera inside the birdhouse (additional cameras and sensors are optional)
 * Prepare a Raspberry Pi 3B or newer
@@ -106,7 +108,7 @@ $ cd birdhouse-cam
 $ git submodule update --init --recursive
 ```
 
-### Installation
+### Software installation
 
 Depending on the needs there are three options available how to install and run this software:
 
@@ -218,6 +220,8 @@ To access image and video files via WebDAV define credentials and port in the [.
 
 ### Optimizing system configuration
 
+At least for a Raspberry Pi 3B+ the following configuration should be done to ensure a slightly better performance. 
+
 #### Configure swap file on Ubuntu
 
 * Update swap memory (see also [https://bitlaunch.io/](https://bitlaunch.io/blog/how-to-create-and-adjust-swap-space-in-ubuntu-20-04/))
@@ -238,7 +242,7 @@ To access image and video files via WebDAV define credentials and port in the [.
   $ sudo nano /etc/dphys-swapfile
   
   # change the following values to:
-  CONF_SWAPSIZE=
+  CONF_SWAPSIZE=2048
   CONF_SWAPFACTOR=2
   
   $ sudo systemctl restart dphys-swapfile
