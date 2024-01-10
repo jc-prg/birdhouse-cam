@@ -140,7 +140,7 @@ Depending on the needs there are three options available how to install and run 
     ```bash 
     @reboot /usr/sbin/docker-compose -f /<path_to_script>/docker-compose.yml up -d
     ```
-6. Examine logging message if there are any problems
+6. Examine logging messages if there are any problems
    ```bash
    # show complete log file
    $ cat log/server.log
@@ -170,7 +170,7 @@ Depending on the needs there are three options available how to install and run 
     @reboot /usr/bin/python3 /<path_to_script>/server/server.py --logfile
     @reboot /usr/bin/python3 /<path_to_script>/server/stream_video.py
     ```
-6. Examine logging message if there are any problems, see (1.6)
+6. Examine logging messages if there are any problems, see (1.6)
 
 #### (3) Hybrid installation
 
@@ -193,7 +193,7 @@ Depending on the needs there are three options available how to install and run 
     $ sudo systemctl reload-daemons
     $ sudo systemctl enable birdhouse-cam.service
     ```
-8. Examine logging message if there are any problems, see (1.6)
+8. Examine logging messages if there are any problems, see (1.6)
 
 ### First run and device configuration
 
