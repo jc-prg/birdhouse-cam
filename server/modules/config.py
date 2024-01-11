@@ -281,24 +281,59 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             filename = self.file_path(config, date)
             if self.db_type == "json":
                 self.json.write(filename, data)
-                if not self.exists_in_cache(config, date) and not no_cache:
+                if (no_cache and self.exists_in_cache(config, date)) or not no_cache:
                     self.write_cache(config, date, data)
             elif self.db_type == "couch" and "config.json" in filename:
                 self.couch.write(filename, data, create)
                 self.json.write(filename, data)
-                if not self.exists_in_cache(config, date) and not no_cache:
+                if (no_cache and self.exists_in_cache(config, date)) or not no_cache:
                     self.write_cache(config, date, data)
             elif self.db_type == "couch":
                 self.couch.write(filename, data, create)
                 if save_json:
                     self.json.write(filename, data)
-                if not self.exists_in_cache(config, date) and not no_cache:
+                if (no_cache and self.exists_in_cache(config, date)) or not no_cache:
                     self.write_cache(config, date, data)
             elif self.db_type == "both":
                 self.couch.write(filename, data, create)
                 self.json.write(filename, data)
-                if not self.exists_in_cache(config, date) and not no_cache:
+                if (no_cache and self.exists_in_cache(config, date)) or not no_cache:
                     self.write_cache(config, date, data)
+            else:
+                self.raise_error("Unknown DB type (" + str(self.db_type) + ")")
+        except Exception as e:
+            self.logging.error("Error writing file " + filename + " - " + str(e))
+
+    def write_org(self, config, date="", data=None, create=False, save_json=False, no_cache=False):
+        """
+        write data to DB
+        """
+        filename = ""
+        try:
+            self.logging.debug("Write: " + config + " / " + date + " / " + self.db_type)
+            self.wait_if_paused()
+            if data is None:
+                self.logging.error("Write: No data given (" + str(config) + "/" + str(date) + ")")
+                return
+            if create:
+                self.directory(config, date)
+            filename = self.file_path(config, date)
+            if self.db_type == "json":
+                self.json.write(filename, data)
+                self.write_cache(config, date, data)
+            elif self.db_type == "couch" and "config.json" in filename:
+                self.couch.write(filename, data, create)
+                self.json.write(filename, data)
+                self.write_cache(config, date, data)
+            elif self.db_type == "couch":
+                self.couch.write(filename, data, create)
+                if save_json:
+                    self.json.write(filename, data)
+                self.write_cache(config, date, data)
+            elif self.db_type == "both":
+                self.couch.write(filename, data, create)
+                self.json.write(filename, data)
+                self.write_cache(config, date, data)
             else:
                 self.raise_error("Unknown DB type (" + str(self.db_type) + ")")
         except Exception as e:
