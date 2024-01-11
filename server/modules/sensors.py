@@ -58,8 +58,8 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         self.values = {}
         self.last_read = 0
         self.last_read_time = time.time()
-        self.interval = 10
-        self.interval_reconnect = 60
+        self.interval = 30
+        self.interval_reconnect = 180
         self.initial_load = True
         self.connected = False
 
