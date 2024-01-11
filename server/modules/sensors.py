@@ -9,6 +9,8 @@ error_module_msg = ""
 loaded_gpio = False
 loaded_dht11 = False
 loaded_dht22 = False
+loaded_dht22_pins = ['D0', 'D1', 'D10', 'D12', 'D13', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9']
+loaded_dht22_ada_pins = {}
 
 try:
     import RPi.GPIO as GPIO
@@ -29,6 +31,8 @@ try:
     import board
     import adafruit_dht
     loaded_dht22 = True
+    for pin in loaded_dht22_pins:
+        loaded_dht22_ada_pins[pin] = eval("board."+pin)
 except Exception as e:
     error_module = True
     error_module_msg += "\nCouldn't load modules dht22 (board, adafruit): "+str(e)
@@ -191,12 +195,20 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                         import board
                         import adafruit_dht
                         self.initial_load = False
-                    ada_pin = eval("board.D"+str(self.pin))
+                    # ada_pin = eval("board.D"+str(self.pin))
+                    ada_pin = loaded_dht22_ada_pins["D"+str(self.pin)]
                     self.sensor = adafruit_dht.DHT22(ada_pin, use_pulseio=False)
                 else:
                     raise "Sensor type not supported"
             except Exception as err:
-                self.raise_error(message="Could not load " + self.param["type"] + " sensor module: " + str(err),
+                if "D"+str(self.pin) in loaded_dht22_ada_pins:
+                    msg = ("Could not load " + self.param["type"] + " sensor module (D" + str(self.pin) + "=" +
+                           loaded_dht22_ada_pins["D"+str(self.pin)] + "): " + str(err))
+                else:
+                    msg = "Could not load " + self.param["type"] + " sensor module with D" + str(self.pin) + ". "
+                    msg += "Pin not in dict " + str(loaded_dht22_ada_pins) + ". "
+                    msg += str(err)
+                self.raise_error(message=,
                                  connect=True)
                 return
 
