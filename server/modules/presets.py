@@ -246,6 +246,7 @@ camera_list = []
 birdhouse_env = {}
 birdhouse_status = {"object_detection": False}
 birdhouse_picamera = False
+birdhouse_cache_for_archive = False
 
 set_global_configuration()
 
