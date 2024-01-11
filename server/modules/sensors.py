@@ -208,8 +208,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                     msg = "Could not load " + self.param["type"] + " sensor module with D" + str(self.pin) + ". "
                     msg += "Pin not in dict " + str(loaded_dht22_ada_pins) + ". "
                     msg += str(err)
-                self.raise_error(message=,
-                                 connect=True)
+                self.raise_error(message=msg, connect=True)
                 return
 
             try:
