@@ -3,14 +3,35 @@ import threading
 from modules.presets import *
 from modules.bh_class import BirdhouseClass
 
+error_module = False
+error_module_msg = ""
+
+loaded_gpio = False
+loaded_dht11 = False
+loaded_dht22 = False
+
 try:
     import RPi.GPIO as GPIO
     GPIO.setmode(GPIO.BCM)
-    error_module = False
-    error_module_msg = ""
+    loaded_gpio = True
 except Exception as e:
     error_module = True
     error_module_msg = "Couldn't load module RPi.GPIO: "+str(e)
+
+try:
+    import modules.dht11 as dht11
+    loaded_dht11 = True
+except Exception as e:
+    error_module = True
+    error_module_msg += "\nCouldn't load module dht11: "+str(e)
+
+try:
+    import board
+    import adafruit_dht
+    loaded_dht22 = True
+except Exception as e:
+    error_module = True
+    error_module_msg += "\nCouldn't load modules dht22 (board, adafruit): "+str(e)
 
 
 class BirdhouseSensor(threading.Thread, BirdhouseClass):
@@ -161,12 +182,12 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         if birdhouse_env["rpi_active"] and self.param["active"]:
             try:
                 if self.param["type"] == "dht11":
-                    if self.initial_load:
+                    if self.initial_load and not loaded_dht11:
                         import modules.dht11 as dht11
                         self.initial_load = False
                     self.sensor = dht11.DHT11(pin=self.pin)
                 elif self.param["type"] == "dht22":
-                    if self.initial_load:
+                    if self.initial_load and not loaded_dht22:
                         import board
                         import adafruit_dht
                         self.initial_load = False
