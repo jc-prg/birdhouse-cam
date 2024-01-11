@@ -21,7 +21,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${MEMORY_MAX_STREAM:-20M}
+          memory: ${MEMORY_MAX_APP:-50M}
 
   birdhouse_db:
     image:  ${IMAGE_DB:-matthiasg/rpi-couchdb:latest}
@@ -37,7 +37,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${MEMORY_MAX_COUCHDB:-150M}
+          memory: ${MEMORY_MAX_COUCHDB:-200M}
     restart: always
     networks:
       my-net:
@@ -58,7 +58,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${MEMORY_MAX_SERVER:-400M}
+          memory: ${MEMORY_MAX_SERVER:-600M}
     restart: always
     networks:
       my-net:
@@ -76,7 +76,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${MEMORY_MAX_STREAM:-50M}
+          memory: ${MEMORY_MAX_STREAM:-100M}
     restart: on-failure
     networks:
       my-net:

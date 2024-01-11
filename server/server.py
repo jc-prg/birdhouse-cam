@@ -1455,10 +1455,14 @@ if __name__ == "__main__":
     ch_logging = set_logging('cam-handl')
     view_logging = set_logging("view-head")
 
+    time.sleep(2)
+
     srv_logging.info('-------------------------------------------')
     srv_logging.info('Starting ...')
     srv_logging.info('-------------------------------------------')
-    srv_logging.info('Logging into File: ' + str(birdhouse_log_as_file))
+    srv_logging.info('* Logging into File: ' + str(birdhouse_log_as_file))
+    srv_logging.info('* Cache handling: cache=' + str(birdhouse_cache) +
+                     ", cache_for_archive=" + str(birdhouse_cache_for_archive))
 
     check_submodules()
     set_error_images()
