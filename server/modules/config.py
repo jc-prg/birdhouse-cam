@@ -438,7 +438,8 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             else:
                 del self.config_cache[config]
         elif config == "all":
-            for conf_key in self.config_cache:
+            keys = self.config_cache.keys()
+            for conf_key in keys:
                 del self.config_cache[conf_key]
             self.logging.info("Removed all data from cache.")
 
