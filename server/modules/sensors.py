@@ -178,7 +178,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         """
         connect with sensor
         """
-        temp = ""()
+        temp = ""
         self.reset_error()
         self.error_connect = False
         self.connected = False
