@@ -29,7 +29,7 @@ except Exception as e:
 
 try:
     import board
-    import adafruit_dht
+    import adafruit_dht as dht22
     loaded_dht22 = True
     for pin in loaded_dht22_pins:
         loaded_dht22_ada_pins[pin] = eval("board."+pin)
@@ -197,7 +197,8 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                         self.initial_load = False
                     # ada_pin = eval("board.D"+str(self.pin))
                     ada_pin = loaded_dht22_ada_pins["D"+str(self.pin)]
-                    self.sensor = adafruit_dht.DHT22(ada_pin, use_pulseio=False)
+                    #self.sensor = adafruit_dht.DHT22(ada_pin, use_pulseio=False)
+                    self.sensor = dht22.DHT22(ada_pin, use_pulseio=False)
                 else:
                     raise "Sensor type not supported"
             except Exception as err:
