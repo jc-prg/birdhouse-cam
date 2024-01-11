@@ -6,7 +6,7 @@ import threading
 
 from datetime import datetime, timezone, timedelta
 from modules.presets import *
-from modules.presets import birdhouse_cache_for_archvie
+from modules.presets import birdhouse_cache_for_archive
 from modules.weather import BirdhouseWeather
 from modules.bh_database import BirdhouseCouchDB, BirdhouseJSON, BirdhouseTEXT
 from modules.bh_class import BirdhouseClass
@@ -248,7 +248,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         get date from cache, if available (else read from source)
         """
-        if not birdhouse_cache_for_archvie:
+        if not birdhouse_cache_for_archive:
             if (config == "backup" or config == "images") and date != "":
                 return self.read(config, date)
 
