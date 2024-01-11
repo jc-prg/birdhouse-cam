@@ -935,6 +935,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         which_cam = param["which_cam"]
         command = param["command"]
 
+        config.user_activity("set", command)
+
         srv_logging.debug("GET API request with '" + self.path + "'.")
         srv_logging.debug(str(param))
 

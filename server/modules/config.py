@@ -6,7 +6,7 @@ import threading
 
 from datetime import datetime, timezone, timedelta
 from modules.presets import *
-from modules.presets import birdhouse_cache_for_archive
+from modules.presets import birdhouse_cache_for_archive, birdhouse_cache
 from modules.weather import BirdhouseWeather
 from modules.bh_database import BirdhouseCouchDB, BirdhouseJSON, BirdhouseTEXT
 from modules.bh_class import BirdhouseClass
@@ -248,8 +248,10 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         get date from cache, if available (else read from source)
         """
-        if not birdhouse_cache_for_archive:
-            if (config == "backup" or config == "images") and date != "":
+        if not birdhouse_cache_for_archive and not birdhouse_cache:
+            if not birdhouse_cache:
+                return self.read(config, date)
+            elif (config == "backup" or config == "images") and date != "":
                 return self.read(config, date)
 
         if config not in self.config_cache and date == "":
@@ -286,26 +288,23 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             filename = self.file_path(config, date)
             if self.db_type == "json":
                 self.json.write(filename, data)
-                if (no_cache and self.exists_in_cache(config, date)) or not no_cache:
-                    self.write_cache(config, date, data)
             elif self.db_type == "couch" and "config.json" in filename:
                 self.couch.write(filename, data, create)
                 self.json.write(filename, data)
-                if (no_cache and self.exists_in_cache(config, date)) or not no_cache:
-                    self.write_cache(config, date, data)
             elif self.db_type == "couch":
                 self.couch.write(filename, data, create)
                 if save_json:
                     self.json.write(filename, data)
-                if (no_cache and self.exists_in_cache(config, date)) or not no_cache:
-                    self.write_cache(config, date, data)
             elif self.db_type == "both":
                 self.couch.write(filename, data, create)
                 self.json.write(filename, data)
-                if (no_cache and self.exists_in_cache(config, date)) or not no_cache:
-                    self.write_cache(config, date, data)
             else:
                 self.raise_error("Unknown DB type (" + str(self.db_type) + ")")
+
+            if birdhouse_cache and ((no_cache and self.exists_in_cache(config, date)) or not no_cache):
+                self.logging.debug("Write to cache: " + config + " / " + date + " / " + self.db_type)
+                self.write_cache(config, date, data)
+
         except Exception as e:
             self.logging.error("Error writing file " + filename + " - " + str(e))
 
@@ -433,14 +432,15 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
 
     def clean_up_cache(self, config, date=""):
         """remove data from cache"""
-        if config != "":
+        if config != "" and config != "all":
             if date != "":
                 del self.config_cache[config][date]
             else:
                 del self.config_cache[config]
-        else:
+        elif config == "all":
             for conf_key in self.config_cache:
                 del self.config_cache[conf_key]
+            self.logging.info("Removed all data from cache.")
 
     def lock(self, config, date=""):
         """
@@ -1148,8 +1148,11 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.weather = None
         self.user_active = False
         self.user_activity_last = 0
-        self.last_start = ""
         self.record_audio_info = {}
+
+        self.last_start = ""
+        self.last_activity_cache = time.time()
+        self.last_activity_empty_cache = 15 * 60
 
         # read or create main config file
         self.db_handler = BirdhouseConfigDBHandler(self, "json", main_directory)
@@ -1230,6 +1233,11 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                     self.last_day_running = date_today
                     self.db_handler.write(config="main", date="", data=self.param)
                     time.sleep(2)
+
+            # check when last active access via app has been done -> delete cache from time to time
+            if self.last_activity_cache + self.last_activity_empty_cache < time.time():
+                self.db_handler.clean_up_cache("all")
+                self.last_activity_cache = time.time()
 
             # check if DB reconnect ist required
             connected = self.db_handler.get_db_status()["db_connected"]
@@ -1400,17 +1408,22 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         else:
             return False
 
-    def user_activity(self, cmd="get"):
+    def user_activity(self, cmd="get", param=""):
         """
         set user activity
         """
+        if cmd == "get" and param != "" and param not in ["status", "last_answer"]:
+            self.last_activity_cache = time.time()
+
         if cmd == "set":
             self.user_activity_last = self.local_time().timestamp()
             self.user_active = True
+            self.last_activity_cache = time.time()
             return True
 
         elif cmd == "get" and self.user_activity_last + 60 > self.local_time().timestamp():
             return True
+
 
         self.user_active = False
         return False

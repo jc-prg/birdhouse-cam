@@ -826,7 +826,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         main_directory = self.config.db_handler.directory(config="backup")
         db_type = self.config.db_handler.db_type
         dir_list = get_directories(main_directory)
-        self.config.db_handler.clean_up_cache()
+        self.config.db_handler.clean_up_cache("all")
 
         archive_changed = {}
         archive_info = self.config.db_handler.read("backup_info", "")
@@ -1050,7 +1050,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.config.db_handler.write("backup_info", "", archive_changed)
         self.archive_loading = "done"
         self.create_archive_complete = False
-        self.config.db_handler.clean_up_cache()
+        self.config.db_handler.clean_up_cache("all")
 
         self.logging.info("  => Total archive size: " + str(round(archive_total_size, 2)) + " MByte in " +
                           str(round(archive_total_count, 2)) + " files and " + str(count_entries) + " directories")
@@ -1320,7 +1320,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         start_time = time.time()
         self.logging.info("Create data for favorite view (complete="+str(complete)+") ...")
-        self.config.db_handler.clean_up_cache()
+        self.config.db_handler.clean_up_cache("all")
         self.favorite_loading = "in Progress"
 
         favorites = {}
@@ -1364,7 +1364,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.create_favorites_complete = False
         self.logging.info("Create data for favorite view done (" + str(round(time.time() - start_time, 1)) + "s)")
         self.config.db_handler.write("favorites", "", content, create=True, save_json=True, no_cache=False)
-        self.config.db_handler.clean_up_cache()
+        self.config.db_handler.clean_up_cache("all")
         self.favorite_loading = "done"
 
     def _favorite_list_create_archive(self, complete=False):
