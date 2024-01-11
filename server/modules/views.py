@@ -826,7 +826,6 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         main_directory = self.config.db_handler.directory(config="backup")
         db_type = self.config.db_handler.db_type
         dir_list = get_directories(main_directory)
-        self.config.db_handler.clean_up_cache("all")
 
         archive_changed = {}
         archive_info = self.config.db_handler.read("backup_info", "")
@@ -850,7 +849,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             archive_changed[cam]["active_cam"] = cam
 
             # create list per data (from lists per camera) and check if entries in databases have been changed
+            count = 0
             for date in archive_info[cam]["entries"]:
+                count += 1
                 if date not in backup_entries:
                     backup_entries[date] = {}
                 backup_entries[date][cam] = archive_info[cam]["entries"][date].copy()
@@ -863,11 +864,14 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     backup_entries[date]["exists"] = False
 
                 if timeout_living_last + timeout_living_signal < time.time():
-                    self.logging.info("... still calculating archive view ...")
+                    self.logging.info("... still calculating archive view - " + cam + " #1:" +
+                                      str(count) + "/" + str(len(archive_info[cam]["entries"])) +  "...")
                     timeout_living_last = time.time()
 
             # check if new directories are available
+            count = 0
             for directory in dir_list:
+                count += 1
                 if (len(directory) == 8 and directory not in backup_entries) or cam not in backup_entries[directory]:
                     if directory not in backup_entries:
                         backup_entries[directory] = {}
@@ -876,7 +880,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     backup_entries[directory] = {"changed": True, "exists": False}
 
                     if timeout_living_last + timeout_living_signal < time.time():
-                        self.logging.info("... still calculating archive view ...")
+                        self.logging.info("... still calculating archive view - " + cam + " #2:" +
+                                          str(count) + "/" + str(len(dir_list)) + "...")
                         timeout_living_last = time.time()
 
             # stop if shutdown signal was send
@@ -893,7 +898,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             archive_directory = self.config.db_handler.directory(config="backup", date=date)
 
             if timeout_living_last + timeout_living_signal < time.time():
-                self.logging.info("... still calculating archive view ...")
+                self.logging.info("... still calculating archive view #3: " + str(count_entries) + "/" +
+                                  str(len(backup_entries)) + " ...")
                 timeout_living_last = time.time()
 
             # if archive directory doesn't exist anymore, remove
@@ -1050,7 +1056,6 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.config.db_handler.write("backup_info", "", archive_changed)
         self.archive_loading = "done"
         self.create_archive_complete = False
-        self.config.db_handler.clean_up_cache("all")
 
         self.logging.info("  => Total archive size: " + str(round(archive_total_size, 2)) + " MByte in " +
                           str(round(archive_total_count, 2)) + " files and " + str(count_entries) + " directories")
@@ -1320,7 +1325,6 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         start_time = time.time()
         self.logging.info("Create data for favorite view (complete="+str(complete)+") ...")
-        self.config.db_handler.clean_up_cache("all")
         self.favorite_loading = "in Progress"
 
         favorites = {}
@@ -1364,7 +1368,6 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.create_favorites_complete = False
         self.logging.info("Create data for favorite view done (" + str(round(time.time() - start_time, 1)) + "s)")
         self.config.db_handler.write("favorites", "", content, create=True, save_json=True, no_cache=False)
-        self.config.db_handler.clean_up_cache("all")
         self.favorite_loading = "done"
 
     def _favorite_list_create_archive(self, complete=False):
