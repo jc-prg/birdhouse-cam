@@ -82,7 +82,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         count = 0
         self.reset_error()
         self.logging.info("Starting sensor handler (" + self.id + "/" + str(self.pin) + "/" +
-                          self.param["type"] + ") ...")
+                          self.param["type"] + " - loaded=" + str(eval("loaded_"+self.param["type"])) + ") ...")
         if not self.param["active"]:
             self.logging.info("-> Sensor " + self.id + " is inactive.")
 
