@@ -68,12 +68,14 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         self.connected = False
 
         if self.param["active"]:
-            if not error_module:
+            if loaded_gpio and self.param["type"] == "dht11" and loaded_dht11:
+                self.connect()
+            elif loaded_gpio and self.param["type"] == "dht22" and loaded_dht22:
                 self.connect()
             else:
                 self.logging.error(error_module_msg)
                 self.logging.error("- Requires Raspberry and installation of this module.")
-                self.logging.error("- To install module, try 'sudo apt-get -y install rpi.gpio'.")
+                self.logging.error("- To install modules 'rpi.gpio' (apt-get) and 'adafruit-circuitpython-dht' (pip3).")
                 self.error_connect = True
                 self.error_msg = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
                 self.error_msg += " - " + error_module_msg
@@ -186,22 +188,15 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         if birdhouse_env["rpi_active"] and self.param["active"]:
             try:
                 if self.param["type"] == "dht11":
-                    if self.initial_load and not loaded_dht11:
-                        import modules.dht11 as dht11
-                        self.initial_load = False
                     self.sensor = dht11.DHT11(pin=self.pin)
                 elif self.param["type"] == "dht22":
-                    if self.initial_load and not loaded_dht22:
-                        import board
-                        import adafruit_dht
-                        self.initial_load = False
-                    # ada_pin = eval("board.D"+str(self.pin))
                     ada_pin = loaded_dht22_ada_pins["D"+str(self.pin)]
-                    #self.sensor = adafruit_dht.DHT22(ada_pin, use_pulseio=False)
                     self.sensor = dht22.DHT22(ada_pin, use_pulseio=False)
                 else:
                     raise "Sensor type not supported"
+
             except Exception as err:
+
                 if "D"+str(self.pin) in loaded_dht22_ada_pins:
                     msg = ("Could not load " + self.param["type"] + " sensor module (D" + str(self.pin) + "=" +
                            str(loaded_dht22_ada_pins["D"+str(self.pin)]) + "): " + str(err))
@@ -209,6 +204,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                     msg = "Could not load " + self.param["type"] + " sensor module with D" + str(self.pin) + ". "
                     msg += "Pin not in dict " + str(loaded_dht22_ada_pins) + ". "
                     msg += str(err)
+
                 self.raise_error(message=msg, connect=True)
                 return
 
@@ -217,6 +213,8 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                     indoor = self.sensor.read()
                     if indoor.is_valid():
                         temp = "Temp: {:.1f} C; Humidity: {}% ".format(indoor.temperature, indoor.humidity)
+                        self.values["temperature"] = indoor.temperature
+                        self.values["humidity"] = indoor.humidity
                     else:
                         temp = "error"
 
@@ -225,6 +223,8 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                     temperature_f = temperature_c * (9 / 5) + 32
                     humidity = self.sensor.humidity
                     temp = "Temp: {:.1f} F / {:.1f} C; Humidity: {}% ".format(temperature_f, temperature_c, humidity)
+                    self.values["temperature"] = temperature_c
+                    self.values["humidity"] = humidity
 
                 self.reset_error()
 
