@@ -938,7 +938,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.endswith('favicon.ico'):
             self.stream_file(filetype='image/ico', content=read_image(file_directory=birdhouse_directories["html"], filename=self.path))
         elif self.path.startswith("/app/index.html"):
-            self.stream_file(filetype=file_types[".html"], content=read_html(directory=birdhouse_directories["html"], filename="index.html"))
+            self.stream_file(filetype=file_types[".html"], content=read_html(file_directory=birdhouse_directories["html"], filename="index.html"))
         elif file_ending in file_types:
             if "/images/" in self.path or "/videos/" in self.path or "/archive/" in self.path:
                 file_path = birdhouse_directories["data"]
@@ -947,10 +947,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             if "text" in file_types[file_ending]:
                 self.stream_file(filetype=file_types[file_ending],
-                                 content=read_html(directory=file_path, filename=self.path))
+                                 content=read_html(file_directory=file_path, filename=self.path))
             elif "application" in file_types[file_ending]:
                 self.stream_file(filetype=file_types[file_ending],
-                                 content=read_html(directory=file_path, filename=self.path))
+                                 content=read_html(file_directory=file_path, filename=self.path))
             else:
                 self.stream_file(filetype=file_types[file_ending],
                                  content=read_image(file_directory=file_path, filename=self.path))

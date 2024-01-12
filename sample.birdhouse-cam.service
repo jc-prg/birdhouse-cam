@@ -14,3 +14,6 @@ ExecStart=/projects/prod/birdhouse-cam/server/server.py
 ExecReload=/projects/prod/birdhouse-cam/server/server.py --shutdown
 Type=notify
 Restart=always
+
+[Install]
+WantedBy=multi-user.target
