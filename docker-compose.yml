@@ -51,6 +51,7 @@ services:
       - ${BIRDHOUSE_DIR_LOGGING:-./log}:${BIRDHOUSE_DIR_LOGGING:-/log}
       - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}
       - ./:/usr/src/app/
+      - /tmp/:/tmp/
     ports:
       - "${BIRDHOUSE_API_PORT}:${BIRDHOUSE_API_PORT}"
     depends_on:

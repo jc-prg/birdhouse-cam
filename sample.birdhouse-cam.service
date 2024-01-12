@@ -11,6 +11,6 @@ After=network.target birdhouse-cam-docker.service
 
 [Service]
 ExecStart=/projects/prod/birdhouse-cam/server/server.py
-ExecReload=/projects/prod/birdhouse-cam/server/server.py
+ExecReload=/projects/prod/birdhouse-cam/server/server.py --shutdown
 Type=notify
 Restart=always

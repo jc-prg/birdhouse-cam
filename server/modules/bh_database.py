@@ -12,10 +12,13 @@ from modules.bh_class import BirdhouseClass, BirdhouseDbClass
 
 class BirdhouseTEXT(BirdhouseDbClass):
 
-    def __init__(self, config):
-        BirdhouseDbClass.__init__(self, "TEXT", "DB-text", config)
+    def __init__(self, config=""):
+        if config != "":
+            BirdhouseDbClass.__init__(self, "TEXT", "DB-text", config)
+        else:
+            self.logging = set_logging("DB-text")
+            self.logging.setLevel(logging.ERROR)
         self.locked = {}
-
         self.logging.info("Connected TEXT handler.")
 
     def read(self, filename):
@@ -25,8 +28,9 @@ class BirdhouseTEXT(BirdhouseDbClass):
         try:
             self.wait_if_locked(filename)
             with open(filename) as text_file:
-                data = text_file
-            return data
+                data = text_file.read()
+            text_file.close()
+            return str(data)
 
         except Exception as e:
             self.raise_error("Could not read TEXT file: " + filename + " - " + str(e))

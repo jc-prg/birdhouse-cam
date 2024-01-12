@@ -13,15 +13,19 @@ from http import server
 from datetime import datetime
 from urllib.parse import unquote
 
-from modules.backup import BirdhouseArchive
-from modules.camera import BirdhouseCamera
-from modules.micro import BirdhouseMicrophone
-from modules.config import BirdhouseConfig
+if len(sys.argv) == 0 or ("--help" not in sys.argv and "--shutdown" not in sys.argv):
+    from modules.backup import BirdhouseArchive
+    from modules.camera import BirdhouseCamera
+    from modules.micro import BirdhouseMicrophone
+    from modules.config import BirdhouseConfig
+    from modules.presets import srv_logging
+    from modules.views import BirdhouseViews
+    from modules.sensors import BirdhouseSensor
+    from modules.bh_class import BirdhouseClass
+
 from modules.presets import *
-from modules.presets import srv_logging
-from modules.views import BirdhouseViews
-from modules.sensors import BirdhouseSensor
 from modules.bh_class import BirdhouseClass
+from modules.bh_database import BirdhouseTEXT
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 api_description = {"name": "BirdhouseCAM", "version": "v1.0.7"}
@@ -182,16 +186,23 @@ def decode_url_string(string):
 
 class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
-    def __init__(self):
-        threading.Thread.__init__(self)
-        BirdhouseClass.__init__(self, class_id="srv-health", config=config)
-        self.thread_set_priority(5)
+    def __init__(self, shutdown=False):
+        if not shutdown:
+            threading.Thread.__init__(self)
+            BirdhouseClass.__init__(self, class_id="srv-health", config=config)
+            self.thread_set_priority(5)
 
-        self._initial = True
-        self._interval_check = 60 * 5
-        self._min_live_time = 65
-        self._thread_info = {}
-        self._health_status = None
+            self._initial = True
+            self._interval_check = 60 * 5
+            self._min_live_time = 65
+            self._thread_info = {}
+            self._health_status = None
+            self._shutdown_signal_file = "/tmp/birdhouse-cam-shutdown"
+            self._text_files = BirdhouseTEXT()
+            self.set_shutdown(False)
+        else:
+            self._shutdown_signal_file = "/tmp/birdhouse-cam-shutdown"
+            self._text_files = BirdhouseTEXT()
 
     def run(self):
         self.logging.info("Starting Server Health Check ...")
@@ -229,6 +240,11 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
                     self.logging.info("... OK.")
                     self._health_status = "OK"
 
+            if self.check_shutdown():
+                self.logging.info("SHUTDOWN SIGNAL send from outside.")
+                self.set_shutdown(False)
+                config.force_shutdown()
+
             if count == 4:
                 count = 0
                 self.logging.info("Live sign health check!")
@@ -237,6 +253,25 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
     def status(self):
         return self._health_status
+
+    def check_shutdown(self):
+        """
+        check if external shutdown signal has been set
+        """
+        if os.path.exists(self._shutdown_signal_file):
+            content = self._text_files.read(self._shutdown_signal_file)
+            if "SHUTDOWN" in content:
+                return True
+        return False
+
+    def set_shutdown(self, shutdown=True):
+        """
+        set external shutdown signal ...
+        """
+        if shutdown:
+            self._text_files.write(self._shutdown_signal_file, "SHUTDOWN")
+        else:
+            self._text_files.write(self._shutdown_signal_file, "")
 
 
 class ServerInformation(threading.Thread, BirdhouseClass):
@@ -1447,6 +1482,12 @@ if __name__ == "__main__":
         print("--help       Write this information")
         print("--logfile    Write logging output to logfile '"+birdhouse_log_filename+"'")
         print("--backup     Start backup directly (current date, delete directory before)")
+        print("--shutdown   Send shutdown signal")
+        exit()
+
+    elif len(sys.argv) > 0 and "--shutdown" in sys.argv:
+        shutdown_thread = ServerHealthCheck(shutdown=True)
+        shutdown_thread.set_shutdown()
         exit()
 
     set_server_logging(sys.argv)
