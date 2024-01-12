@@ -475,6 +475,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.favorite_views = {}
         self.favorite_loading = "started"
 
+        self.timeout_living_last = time.time()
+        self.timeout_living_signal = 20
+
         self.create_archive = True
         self.create_archive_complete = False
         self.create_favorites = True
@@ -811,8 +814,6 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         archive_total_size = 0
         archive_total_count = 0
         start_time = time.time()
-        timeout_living_last = time.time()
-        timeout_living_signal = 10
         archive_template = {
             "active_cam": "",
             "view": "backup",
@@ -863,10 +864,10 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 if "exists" not in backup_entries[date]:
                     backup_entries[date]["exists"] = False
 
-                if timeout_living_last + timeout_living_signal < time.time():
+                if self.timeout_living_last + self.timeout_living_signal < time.time():
                     self.logging.info("... still calculating archive view - " + cam + " #1:" +
-                                      str(count) + "/" + str(len(archive_info[cam]["entries"])) + "...")
-                    timeout_living_last = time.time()
+                                      str(count) + "/" + str(len(archive_info[cam]["entries"])) + " ...")
+                    self.timeout_living_last = time.time()
 
             # check if new directories are available
             count = 0
@@ -879,10 +880,10 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                         backup_entries[directory][cam] = {}
                     backup_entries[directory] = {"changed": True, "exists": False}
 
-                    if timeout_living_last + timeout_living_signal < time.time():
+                    if self.timeout_living_last + self.timeout_living_signal < time.time():
                         self.logging.info("... still calculating archive view - " + cam + " #2:" +
-                                          str(count) + "/" + str(len(dir_list)) + "...")
-                        timeout_living_last = time.time()
+                                          str(count) + "/" + str(len(dir_list)) + " ...")
+                        self.timeout_living_last = time.time()
 
             # stop if shutdown signal was send
             if self.if_shutdown():
@@ -897,10 +898,10 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             # check if archive directory still exists
             archive_directory = self.config.db_handler.directory(config="backup", date=date)
 
-            if timeout_living_last + timeout_living_signal < time.time():
+            if self.timeout_living_last + self.timeout_living_signal < time.time():
                 self.logging.info("... still calculating archive view #3: " + str(count_entries) + "/" +
                                   str(len(backup_entries)) + " ...")
-                timeout_living_last = time.time()
+                self.timeout_living_last = time.time()
 
             # if archive directory doesn't exist anymore, remove
             if not os.path.isdir(archive_directory):
@@ -1384,10 +1385,17 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.logging.info("  -> ARCHIVE Directories: " + str(len(dir_list)))
         self.logging.debug(str(dir_list))
 
+        count_entries = 0
         for directory in dir_list:
+            count_entries += 1
             favorites_dir = self._favorite_list_create_images(directory, complete)
             for key in favorites_dir:
                 favorites[key] = favorites_dir[key].copy()
+
+            if self.timeout_living_last + self.timeout_living_signal < time.time():
+                self.logging.info("... still calculating favorite view #1: " + str(count_entries) + "/" +
+                                  str(len(dir_list)) + " ...")
+                self.timeout_living_last = time.time()
 
         return favorites.copy()
 
