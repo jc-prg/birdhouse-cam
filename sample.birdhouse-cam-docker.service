@@ -7,12 +7,16 @@
 
 [Unit]
 Description=Birdhouse-Cam Docker Service (Apache, DB, Videostream)
-After=network.target
+Requires=docker.service
+After=docker.service
 
 [Service]
-ExecStart=/usr/local/bin/docker-compose -f /projects/prod/birdhouse-cam/docker-compose-hybrid.yml up -d
-ExecReload=/usr/local/bin/docker-compose -f /projects/prod/birdhouse-cam/docker-compose-hybrid.yml restart
-Type=notify
+Type=simple
+Restart=always
+WorkingDirectory=/projects/prod/birdhouse-cam/
+ExecStart=/usr/local/bin/docker-compose up -d
+ExecReload=/usr/local/bin/docker-compose restart
+ExecStop=/usr/local/bin/docker-compose stop
 
 [Install]
-WantedBy=birdhouse-cam.service
+WantedBy=multi-user.target
