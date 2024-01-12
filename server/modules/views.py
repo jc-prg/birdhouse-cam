@@ -875,7 +875,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     if cam not in backup_entries[directory]:
                         backup_entries[directory][cam] = {}
                     backup_entries[directory] = {"changed": True, "exists": False}
-                    self._progress_information("archive", 2, cam, count, len(dir_list)))
+                    self._progress_information("archive", 2, cam, count, len(dir_list))
 
             # stop if shutdown signal was send
             if self.if_shutdown():
