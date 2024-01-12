@@ -1010,13 +1010,14 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         maintenance_color = (0, 0, 0)
         if active:
-            self.logging.info("Start maintenance mode ("+self.type+"/"+self.resolution+"): " + line1 + " ... ")
+            self.logging.info("Start maintenance mode for '"+self.id+"/"+self.type+"/"+self.resolution+"' (" +
+                              line1 + ") ... ")
         self.maintenance_mode = active
         self.stream_raw.maintenance_mode = active
         self.set_system_info(active, line1, line2, color=maintenance_color)
         if not active:
             self.reset_error()
-            self.logging.debug("Stopped maintenance mode ("+self.type+"/"+self.resolution+").")
+            self.logging.debug("Stopped maintenance mode for '"+self.id+"/"+self.type+"/"+self.resolution+"'.")
 
     def set_system_info(self, active, line1="", line2="", color=None):
         """
@@ -1248,12 +1249,13 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         Try out new
         """
         self.reload_time = time.time()
-        self.set_maintenance_mode(True, "Restart camera", self.id)
 
         if not init:
+            self.set_maintenance_mode(True, "Restarting camera", self.id)
             self.logging.info("Restarting CAMERA (" + self.id + ":" + self.source + ") ...")
             time.sleep(1)
         else:
+            self.set_maintenance_mode(True, "Starting camera", self.id)
             self.logging.info("Starting CAMERA (" + self.id + ":" + self.source + ") ...")
 
         self.reset_error_all()
@@ -1357,7 +1359,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         sensor_last = ""
 
         self.logging.info("Starting CAMERA control for '"+self.id+"' ...")
-        self.logging.info("Initializing camera (" + self.id + "/" + self.type + "/" + str(self.source) + ") ...")
+        self.logging.info("Initializing camera (id=" + self.id + ", type=" + self.type +
+                          ", source=" + str(self.source) + ") ...")
 
         while self._running:
             current_time = self.config.local_time()
