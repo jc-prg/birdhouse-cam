@@ -266,10 +266,10 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
             self.camera = None
 
         if stream_id in self._last_activity_per_stream:
-            self.logging.info(".... kill: " + str(stream_id))
+            self.logging.info(".... killing stream: " + str(stream_id))
             del self._last_activity_per_stream[stream_id]
 
-        self.logging.info(".... "+str(list(self._last_activity_per_stream.keys())))
+        self.logging.debug(".... active "+str(list(self._last_activity_per_stream.keys())))
 
     def stop(self):
         """
@@ -2021,7 +2021,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         self.logging.debug("get_image_stream_kill: " + str(ext_stream_id))
         if ext_stream_id in self.image_streams_to_kill:
-            self.logging.info("get_image_stream_kill - True: " + str(ext_stream_id))
+            self.logging.debug("get_image_stream_kill - True: " + str(ext_stream_id))
             del self.image_streams_to_kill[ext_stream_id]
             self.camera_stream_raw.kill(int_stream_id)
             return True
@@ -2032,7 +2032,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         mark streams to be killed
         """
-        self.logging.info("set_image_stream_kill: " + ext_stream_id)
+        self.logging.debug("set_image_stream_kill: " + ext_stream_id)
         self.image_streams_to_kill[ext_stream_id] = datetime.now().timestamp()
 
     def set_streams_active(self, active=True):
@@ -2193,7 +2193,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                                  ", shape=" + str(system["video_devices_03"][key]["shape"])
 
             camera_string = " - " + str(camera_count).rjust(2) + ": " + str(key).ljust(12) + " ("
-            camera_string += system["video_devices_03"][key]["info"].split("(")[0].split(":")[0] + ") "
+            camera_string += system["video_devices_03"][key]["info"].split(" (")[0].split(":")[0] + ") "
 
             if "error" in system["video_devices_03"][key]:
                 self.logging.warning(camera_string + " - ERROR: " + str(system["video_devices_03"][key]["error"]))
