@@ -1601,7 +1601,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         measure usage from time to time
         """
         if time.time() - self.usage_time > self.usage_interval:
-            self.logging.info("... check usage!")
+            self.logging.debug("... check usage!")
 
             self.usage_time = time.time()
             this_stamp = stamp[0:4]

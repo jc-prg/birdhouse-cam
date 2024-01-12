@@ -865,7 +865,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
                 if timeout_living_last + timeout_living_signal < time.time():
                     self.logging.info("... still calculating archive view - " + cam + " #1:" +
-                                      str(count) + "/" + str(len(archive_info[cam]["entries"])) +  "...")
+                                      str(count) + "/" + str(len(archive_info[cam]["entries"])) + "...")
                     timeout_living_last = time.time()
 
             # check if new directories are available
