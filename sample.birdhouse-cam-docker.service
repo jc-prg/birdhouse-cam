@@ -6,14 +6,13 @@
 # $ sudo systemctl enable birdhouse-cam.service
 
 [Unit]
-Description=Birdhouse-Cam Service
-After=network.target birdhouse-cam-docker.service
+Description=Birdhouse-Cam Docker Service (Apache, DB, Videostream)
+After=network.target
 
 [Service]
-ExecStart=/projects/prod/birdhouse-cam/server/server.py
-ExecReload=/projects/prod/birdhouse-cam/server/server.py
+ExecStart=/usr/local/bin/docker-compose -f /projects/prod/birdhouse-cam/docker-compose-hybrid.yml up -d
+ExecReload=/usr/local/bin/docker-compose -f /projects/prod/birdhouse-cam/docker-compose-hybrid.yml restart
 Type=notify
-Restart=always
 
 [Install]
 WantedBy=user.target
