@@ -1004,12 +1004,12 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         self.slow_stream = slow_down
 
-    def set_maintenance_mode(self, active, line1="", line2=""):
+    def set_maintenance_mode(self, active, line1="", line2="", silent=False):
         """
         set maintenance mode -> image plus text, no streaming image (e.g. for camera restart)
         """
         maintenance_color = (0, 0, 0)
-        if active:
+        if active and not silent:
             self.logging.info("Start maintenance mode for '"+self.id+"/"+self.type+"/"+self.resolution+"' (" +
                               line1 + ") ... ")
         self.maintenance_mode = active
@@ -1017,7 +1017,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self.set_system_info(active, line1, line2, color=maintenance_color)
         if not active:
             self.reset_error()
-            self.logging.debug("Stopped maintenance mode for '"+self.id+"/"+self.type+"/"+self.resolution+"'.")
+            if not silent:
+                self.logging.info("Stopped maintenance mode for '"+self.id+"/"+self.type+"/"+self.resolution+"'.")
 
     def set_system_info(self, active, line1="", line2="", color=None):
         """
@@ -2176,7 +2177,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         camera_cv = BirdhouseCameraHandler(self.id, self.source, self.config)
         camera_pi = BirdhousePiCameraHandler(self.id, self.source, self.config)
 
+        camera_count = 0
+        self.logging.info("Identified " + str(len(system["video_devices_02"])) + " video devices:")
         for key in system["video_devices_02"]:
+            camera_count += 1
             device_info = system["video_devices_03"][key]["info"]
 
             if key == "/dev/picam" and birdhouse_env["rpi_64bit"]:
@@ -2188,14 +2192,14 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                                  ", info=" + system["video_devices_03"][key]["info"] + \
                                                  ", shape=" + str(system["video_devices_03"][key]["shape"])
 
+            camera_string = " - " + str(camera_count).rjust(2) + ": " + str(key).ljust(12) + " ("
+            camera_string += system["video_devices_03"][key]["info"].split("(")[0].split(":")[0] + ") "
+
             if "error" in system["video_devices_03"][key]:
-                self.logging.warning(" - ERROR: " + str(key).ljust(12) + "  " +
-                                     str(system["video_devices_03"][key]["info"]) +
-                                     " " + str(system["video_devices_03"][key]["error"]))
+                self.logging.warning(camera_string + " - ERROR: " + str(system["video_devices_03"][key]["error"]))
                 birdhouse_initial_connect_msg[key] += ", error='" + str(system["video_devices_03"][key]["error"]) + "'"
             else:
-                self.logging.info(" - OK:    " + str(key).ljust(12) + "  " +
-                                  str(system["video_devices_03"][key]["info"]))
+                self.logging.warning(camera_string + " - OK")
 
         self.available_devices = system
         return system
@@ -2204,8 +2208,12 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         set maintenance_mode in all streams
         """
+        if active:
+            self.logging.info("Starting maintenance mode for CAMERA '" + self.id + " ... ")
         for stream in self.camera_streams:
-            self.camera_streams[stream].set_maintenance_mode(active, line1, line2)
+            self.camera_streams[stream].set_maintenance_mode(active, line1, line2, True)
+        if not active:
+            self.logging.info("Stopped maintenance mode for CAMERA '" + self.id + ". ")
 
     def write_image(self, filename, image, scale_percent=100):
         """

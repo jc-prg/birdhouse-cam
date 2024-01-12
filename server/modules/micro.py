@@ -133,7 +133,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         num_devices = self.info.get('deviceCount')
         self.logging.info("Identified " + str(num_devices) + " audio devices:")
         for i in range(0, num_devices):
-            self.logging.info(" - " + str(i) + " - " +
+            self.logging.info(" - " + str(i).rjust(2) + ": " +
                               str(self.audio.get_device_info_by_host_api_device_index(0, i).get('name')))
 
         if not self.param["active"]:

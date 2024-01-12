@@ -1506,7 +1506,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         show progress information in logging
         """
         if self.timeout_living_last + self.timeout_living_signal < time.time():
-            percentage = count / length
+            percentage = round((count / length)*100,1)
             if cam != "":
                 self.logging.info("... still calculating " + view + " view - " + cam + " #" + str(number) + ": " +
                                   str(percentage) + "% of " + str(length) + " ...")
