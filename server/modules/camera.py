@@ -551,7 +551,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 time.sleep(1)
                 wait_time += 1
             if self._stream_image_id == 0:
-                self.logging.error("WAIT .... !!!")
+                self.logging.debug("WAIT .... !!!")
 
         if self._stream_image_id == 0:
             self.raise_error("sEdit: read_stream: got no image from raw stream '" + self.id + "' yet!")
