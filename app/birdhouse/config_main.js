@@ -49,9 +49,9 @@ function app_menu_entries(data) {
 		["LINE"],
 		[lang("TODAY_COMPLETE"),"script", hideSettings+"birdhousePrint_load('TODAY_COMPLETE','"+app_active_cam+"');"],
 		["LINE"],
-		[lang("DEVICES"),   "script", hideSettings+"birdhousePrint_load('DEVICES','"+app_active_cam+"');"],
-		[lang("CAMERAS"),   "script", hideSettings+"birdhousePrint_load('CAMERA_SETTINGS','"+app_active_cam+"');"],
-		[lang("SETTINGS"),  "script", hideSettings+"birdhousePrint_load('SETTINGS','"+app_active_cam+"');"],
+		[lang("DEVICE_MENU"),   "script", hideSettings+"birdhousePrint_load('DEVICES','"+app_active_cam+"');"],
+		[lang("IMAGE_MENU"), "script", hideSettings+"birdhousePrint_load('IMAGE_SETTINGS','"+app_active_cam+"');"],
+		[lang("SETTINGS"),       "script", hideSettings+"birdhousePrint_load('SETTINGS','"+app_active_cam+"');"],
 		]);
 		if (admin_type == "LOGIN") {
     	    app_menu = app_menu.concat([

@@ -84,6 +84,9 @@ function birdhouse_adminAnswerReturn(data) {
         if (msg[0] == "RANGE_DONE") { button_tooltip.hide("info"); }
         birdhouseReloadView();
         }
+    if (document.getElementById("last_answer_detection_progress")) {
+        document.getElementById("last_answer_detection_progress").innerHTML = data["STATUS"]["server"]["object_detection_progress"];
+        }
 }
 
 function birdhouse_loadSettings() {
@@ -151,7 +154,13 @@ function birdhouse_archiveObjectDetection(camera, date_stamp, date) {
 
 function birdhouse_archiveObjectDetection_exec(camera, date) {
     commands = ["archive-object-detection", camera, date];
-	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
+	birdhouse_apiRequest('POST', commands, '', birdhouse_archiveObjectDetection_progress,'','birdhouse_forceBackup');
+    }
+
+function birdhouse_archiveObjectDetection_progress(data) {
+
+    var msg = lang("DETECTION_PROGRESS") + "<br/><text id='last_answer_detection_progress'>0</text> %";
+    appMsg.alert(msg);
     }
 
 function birdhouse_archiveDayDelete(date_stamp, date) {

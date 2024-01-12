@@ -30,6 +30,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         self.detect_queue_archive = []
         self.last_model = None
         self.image_size_object_detection = self.detect_settings["detection_size"]
+        self._processing_percentage = 0
 
         self.thread_set_priority(4)
 
@@ -45,9 +46,13 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         self.connect()
         while self._running:
 
+            self._processing_percentage = 0
             if len(self.detect_queue_archive) > 0:
                 date = self.detect_queue_archive.pop()
                 self.analyze_archive_images(date)
+
+            self.config.object_detection_processing = self._processing
+            self.config.object_detection_progress = self._processing_percentage
 
             self.thread_wait()
             self.thread_control()
@@ -167,10 +172,17 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.logging.info("Starting object detection for " + self.id + " / " + date + " ...")
             archive_data = self.config.db_handler.read(config="backup", date=date)
             archive_entries = archive_data["files"]
+
+            archive_info = archive_data["info"]
+            archive_info["detection_date"] = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+            archive_info["detection_threshold"] = self.detect_settings["threshold"]
+            archive_info["detection_model"] = self.detect_settings["model"]
+
+            count = 0
             for stamp in archive_entries:
                 if archive_entries[stamp]["camera"] == self.id and "hires" in archive_entries[stamp]:
 
-                    if "to_be_deleted" in archive_entries[stamp] and str(archive_entries[stamp]["to_be_delete"]) == 1:
+                    if "to_be_deleted" in archive_entries[stamp] and str(archive_entries[stamp]["to_be_deleted"]) == 1:
                         continue
 
                     path_hires = str(os.path.join(self.config.db_handler.directory("backup", date),
@@ -195,7 +207,15 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                         archive_entries[stamp]["hires_detect"] = ""
                     self.config.queue.entry_add(config="backup", date=date, key=stamp, entry=archive_entries[stamp])
 
+                count += 1
+                self._processing_percentage = round(count / len(archive_entries) * 100, 1)
+                self.config.object_detection_processing = self._processing
+                self.config.object_detection_progress = self._processing_percentage
+                if self._processing_percentage == 100:
+                    time.sleep(2)
+
             self.config.queue.set_status_changed(date=date, change="objects")
+            self.config.queue.entry_edit(config="backup", date=date, key="info", entry=archive_info)
             self.config.queue.add_to_status_queue(config="backup", date=date, key="end",
                                                   change_status="OBJECT_DETECTION_END", status=0)
             msg = "Object detection for " + date + " done, datasets are going to be saved."

@@ -648,6 +648,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                     entry_data = self.db_handler.read_cache(config_file, date)
                     self.db_handler.lock(config_file, date)
                     entries = entry_data["files"]
+                    file_info = entry_data["info"]
 
                     if date in self.edit_queue[config_file] and len(self.edit_queue[config_file][date]) > 0:
                         count_files += 1
@@ -661,37 +662,43 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                             [key, entry, command] = self.edit_queue[config_file][date].pop()
                             count_entries += 1
 
-                            self.logging.info(" +++> " + command + " +++ " + key)
+                            if key == "info":
+                                self.logging.info(" +++> " + command + " +++ " + key)
+                                file_info = entry.copy()
 
-                            if command == "add" or command == "edit":
-                                entries[key] = entry
-                                count_edit += 1
-                            elif command == "delete" and key in entries:  # !!! check, if also for keep_data?!
-                                del entries[key]
-                                count_edit += 1
-                            elif command == "keep_data":
-                                entries[key]["type"] = "data"
-                                if "hires" in entries[key]:
-                                    del entries[key]["hires"]
-                                if "hires_size" in entries[key]:
-                                    del entries[key]["hires_size"]
-                                if "lowres" in entries[key]:
-                                    del entries[key]["lowres"]
-                                if "lowres_size" in entries[key]:
-                                    del entries[key]["lowres_size"]
-                                if "directory" in entries[key]:
-                                    del entries[key]["directory"]
-                                if "compare" in entries[key]:
-                                    del entries[key]["compare"]
-                                if "favorit" in entries[key]:
-                                    del entries[key]["favorit"]
-                                if "to_be_deleted" in entries[key]:
-                                    del entries[key]["to_be_deleted"]
+                            else:
+                                self.logging.info(" +++> " + command + " +++ " + key)
+
+                                if command == "add" or command == "edit":
+                                    entries[key] = entry
+                                    count_edit += 1
+                                elif command == "delete" and key in entries:  # !!! check, if also for keep_data?!
+                                    del entries[key]
+                                    count_edit += 1
+                                elif command == "keep_data":
+                                    entries[key]["type"] = "data"
+                                    if "hires" in entries[key]:
+                                        del entries[key]["hires"]
+                                    if "hires_size" in entries[key]:
+                                        del entries[key]["hires_size"]
+                                    if "lowres" in entries[key]:
+                                        del entries[key]["lowres"]
+                                    if "lowres_size" in entries[key]:
+                                        del entries[key]["lowres_size"]
+                                    if "directory" in entries[key]:
+                                        del entries[key]["directory"]
+                                    if "compare" in entries[key]:
+                                        del entries[key]["compare"]
+                                    if "favorit" in entries[key]:
+                                        del entries[key]["favorit"]
+                                    if "to_be_deleted" in entries[key]:
+                                        del entries[key]["to_be_deleted"]
 
                     if count_edit > 0 and self.views is not None:
                         self.views.favorite_list_update()
 
                     entry_data["files"] = entries
+                    entry_data["info"] = file_info
                     self.db_handler.unlock(config_file, date)
                     self.db_handler.write(config_file, date, entry_data)
                     self.set_status_changed(date=date, change="all")
@@ -1150,6 +1157,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.user_active = False
         self.user_activity_last = 0
         self.record_audio_info = {}
+        self.object_detection_processing = None
+        self.object_detection_progress = None
 
         self.last_start = ""
         self.last_activity_cache = time.time()

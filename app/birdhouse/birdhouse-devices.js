@@ -31,7 +31,7 @@ function birdhouseDevices( title, data, show_settings=true ) {
     if (show_settings) {
         var html_index = birdhouseDevices_status(index=index, show_button=true);
         setTextById(app_frame_content, html_index + html);
-        setTextById(app_frame_header, "<center><h2>" + lang("DEVICES") + "</h2></center>");
+        setTextById(app_frame_header, "<center><h2>" + lang("DEVICE_SETTINGS") + "</h2></center>");
     }
     else {
         var html_index = birdhouseDevices_status(index=index, show_button=false);
@@ -155,7 +155,7 @@ function birdhouseDevices_cameras(data) {
 		html_entry += tab.row("- Crop (absolute):",         "<div id='get_crop_area_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
 		html_entry += tab.row("- Preview Scale:",           birdhouse_edit_field(id="set_scale_"+camera, field="devices:cameras:"+camera+":image:preview_scale", type="input", options="", data_type="integer") + " %");
 		html_entry += tab.row("- Show Framerate:",          birdhouse_edit_field(id="set_show_framerate_"+camera, field="devices:cameras:"+camera+":image:show_framerate", type="select", options="true,false", data_type="boolean"));
-		html_entry += tab.row("- Image Manipulation:",      "<a href='index.html?CAMERA_SETTINGS'>"+lang("CAMERA")+"-"+lang("SETTINGS")+"</a>");
+		html_entry += tab.row("- Image Manipulation:",      "<a href='index.html?IMAGE_SETTINGS'>"+lang("IMAGE_SETTINGS")+"</a>");
         html_entry += tab.end();
 
 		id_list += "set_resolution_"+camera+":set_black_white_"+camera+":";
@@ -354,7 +354,7 @@ function birdhouseDevices_cameraSettings (data) {
 	}
     html += "&nbsp;<br/>";
     setTextById(app_frame_content, html);
-    setTextById(app_frame_header, "<center><h2>" + lang("CAMERA") + "-" + lang("SETTINGS") + "</h2></center>");
+    setTextById(app_frame_header, "<center><h2>" + lang("IMAGE_SETTINGS") + "</h2></center>");
 
 	for (let camera in camera_settings) {
         birdhouseDevices_cameraSettingsLoad(camera);

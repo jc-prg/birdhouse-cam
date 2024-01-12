@@ -77,7 +77,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 	    if (app_first_load) { app_first_load = false; }
 	    else                { app_2nd_load = false; }
 	    var param = window.location.href.split("?");
-	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "TODAY", "INFO", "WEATHER", "CAMERA_SETTINGS"];
+	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "TODAY", "INFO", "WEATHER", "IMAGE_SETTINGS"];
 	    if (options.includes(param[1])) {
 	        view = param[1];
 	        app_active_page = param[1];
@@ -157,7 +157,7 @@ function birdhousePrint(data) {
 	else if (app_active_page == "INFO") 	         { birdhouse_settings.create("INFO_ONLY"); }
 	else if (app_active_page == "SETTINGS")          { birdhouse_settings.create(); }
 	else if (app_active_page == "DEVICES")           { birdhouseDevices(lang("DEVICES"), data, camera); }
-	else if (app_active_page == "CAMERA_SETTINGS")   { birdhouseDevices_cameraSettings(data); }
+	else if (app_active_page == "IMAGE_SETTINGS")   { birdhouseDevices_cameraSettings(data); }
 	else { setTextById(app_frame_content,lang("ERROR") + ": "+app_active_page); }
 
 	if (success == false) {
@@ -276,11 +276,11 @@ function birdhouseReloadView() {
 	birdhouse_overlayHide();
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 
-	if (app_active_page != "INDEX" && app_active_page != "CAMERA_SETTINGS" && app_active_page != "DEVICES") {
+	if (app_active_page != "INDEX" && app_active_page != "IMAGE_SETTINGS" && app_active_page != "DEVICES") {
 		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
 		}
 	// if (app_active_page == "INDEX" || app_active_page == "TODAY" || app_active_page == "DEVICES") {
-	if (app_active_page == "INDEX" || app_active_page == "CAMERA_SETTINGS" || app_active_page == "DEVICES") {
+	if (app_active_page == "INDEX" || app_active_page == "IMAGE_SETTINGS" || app_active_page == "DEVICES") {
 		for (let key in app_camera_source) {
 
 		    console.log("--->"+app_active_cam+"/"+key);

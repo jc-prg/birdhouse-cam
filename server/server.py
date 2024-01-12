@@ -993,6 +993,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "queue_waiting_time": config.queue.queue_wait,
                     "health_check": health_check.status(),
                     "object_detection": birdhouse_status["object_detection"],
+                    "object_detection_processing": config.object_detection_processing,
+                    "object_detection_progress": config.object_detection_progress,
                     "initial_setup": config.param["server"]["initial_setup"],
                     "last_answer": ""
                 },
