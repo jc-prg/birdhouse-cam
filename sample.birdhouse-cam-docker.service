@@ -3,7 +3,7 @@
 # to /etc/systemd/system/birdhouse-cam.service. Start with the following commands:
 #
 # $ sudo systemctl daemon-reload
-# $ sudo systemctl enable birdhouse-cam.service
+# $ sudo systemctl enable birdhouse-cam-docker.service
 
 [Unit]
 Description=Birdhouse-Cam Docker Service (Apache, DB, Videostream)
@@ -15,4 +15,4 @@ ExecReload=/usr/local/bin/docker-compose -f /projects/prod/birdhouse-cam/docker-
 Type=notify
 
 [Install]
-WantedBy=user.target
+WantedBy=birdhouse-cam.service
