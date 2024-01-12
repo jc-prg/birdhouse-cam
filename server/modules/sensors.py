@@ -62,7 +62,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         self.values = {}
         self.last_read = 0
         self.last_read_time = time.time()
-        self.interval = 30
+        self.interval = 10
         self.interval_reconnect = 180
         self.initial_load = True
         self.connected = False
@@ -234,7 +234,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                 return
 
             if not self.error:
-                self.logging.info("Loaded Sensor: "+self.id)
+                self.logging.info("Loaded Sensor: " + self.id + " (" + self.param["type"] + ")")
                 self.logging.info("- Initial values: "+str(temp))
                 self.connected = True
             else:
