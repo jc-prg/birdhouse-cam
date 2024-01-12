@@ -863,11 +863,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     backup_entries[date]["changed"] = False
                 if "exists" not in backup_entries[date]:
                     backup_entries[date]["exists"] = False
-
-                if self.timeout_living_last + self.timeout_living_signal < time.time():
-                    self.logging.info("... still calculating archive view - " + cam + " #1:" +
-                                      str(count) + "/" + str(len(archive_info[cam]["entries"])) + " ...")
-                    self.timeout_living_last = time.time()
+                self._progress_information("archive", 1, cam, count, len(archive_info[cam]["entries"]))
 
             # check if new directories are available
             count = 0
@@ -879,11 +875,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     if cam not in backup_entries[directory]:
                         backup_entries[directory][cam] = {}
                     backup_entries[directory] = {"changed": True, "exists": False}
-
-                    if self.timeout_living_last + self.timeout_living_signal < time.time():
-                        self.logging.info("... still calculating archive view - " + cam + " #2:" +
-                                          str(count) + "/" + str(len(dir_list)) + " ...")
-                        self.timeout_living_last = time.time()
+                    self._progress_information("archive", 2, cam, count, len(dir_list)))
 
             # stop if shutdown signal was send
             if self.if_shutdown():
@@ -898,10 +890,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             # check if archive directory still exists
             archive_directory = self.config.db_handler.directory(config="backup", date=date)
 
-            if self.timeout_living_last + self.timeout_living_signal < time.time():
-                self.logging.info("... still calculating archive view #3: " + str(count_entries) + "/" +
-                                  str(len(backup_entries)) + " ...")
-                self.timeout_living_last = time.time()
+            self._progress_information("archive", 3, "", count_entries, len(backup_entries))
 
             # if archive directory doesn't exist anymore, remove
             if not os.path.isdir(archive_directory):
@@ -1391,11 +1380,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             favorites_dir = self._favorite_list_create_images(directory, complete)
             for key in favorites_dir:
                 favorites[key] = favorites_dir[key].copy()
-
-            if self.timeout_living_last + self.timeout_living_signal < time.time():
-                self.logging.info("... still calculating favorite view #1: " + str(count_entries) + "/" +
-                                  str(len(dir_list)) + " ...")
-                self.timeout_living_last = time.time()
+            self._progress_information("favorite", 1, "", count_entries, len(dir_list))
 
         return favorites.copy()
 
@@ -1515,6 +1500,20 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         self.logging.info("  -> VIDEO Favorites: " + str(files_video_count))
         return favorites.copy()
+
+    def _progress_information(self, view, number, cam, count, length):
+        """
+        show progress information in logging
+        """
+        if self.timeout_living_last + self.timeout_living_signal < time.time():
+            percentage = count / length
+            if cam != "":
+                self.logging.info("... still calculating " + view + " view - " + cam + " #" + str(number) + ": " +
+                                  str(percentage) + "% of " + str(length) + " ...")
+            else:
+                self.logging.info("... still calculating " + view + " view - #" + str(number) + ": " +
+                                  str(percentage) + "% of " + str(length) + " ...")
+            self.timeout_living_last = time.time()
 
     def camera_list(self, param):
         """
