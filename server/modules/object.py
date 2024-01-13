@@ -172,11 +172,13 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.logging.info("Starting object detection for " + self.id + " / " + date + " ...")
             archive_data = self.config.db_handler.read(config="backup", date=date)
             archive_entries = archive_data["files"]
-
+            archive_detections = {}
             archive_info = archive_data["info"]
-            archive_info["detection_date"] = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
-            archive_info["detection_threshold"] = self.detect_settings["threshold"]
-            archive_info["detection_model"] = self.detect_settings["model"]
+            archive_info["detection_"+self.id] = {
+                "date":         self.config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
+                "threshold":    self.detect_settings["threshold"],
+                "model":        self.detect_settings["model"]
+            }
 
             count = 0
             for stamp in archive_entries:
@@ -205,7 +207,13 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                     else:
                         archive_entries[stamp]["detections"] = []
                         archive_entries[stamp]["hires_detect"] = ""
+
                     self.config.queue.entry_add(config="backup", date=date, key=stamp, entry=archive_entries[stamp])
+
+                    for detection in archive_entries[stamp]["detections"]:
+                        if detection["label"] not in archive_detections:
+                            archive_detections[detection["label"]] = []
+                        archive_detections[detection["label"]].append(stamp)
 
                 count += 1
                 self._processing_percentage = round(count / len(archive_entries) * 100, 1)
@@ -216,6 +224,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
             self.config.queue.set_status_changed(date=date, change="objects")
             self.config.queue.entry_edit(config="backup", date=date, key="info", entry=archive_info)
+            self.config.queue.entry_edit(config="backup", date=date, key="detection", entry=archive_detections)
             self.config.queue.add_to_status_queue(config="backup", date=date, key="end",
                                                   change_status="OBJECT_DETECTION_END", status=0)
             msg = "Object detection for " + date + " done, datasets are going to be saved."

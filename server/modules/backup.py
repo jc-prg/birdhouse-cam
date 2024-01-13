@@ -127,7 +127,8 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             self.config.db_handler.directory_create(config="images", date=backup_date)
             files = self.config.db_handler.read_cache(config="images")
             files_chart = files.copy()
-            files_backup = {"files": {}, "chart_data": {}, "info": {}, "weather_data": {}}
+            files_backup = {"files": {}, "chart_data": {}, "info": {}, "weather_data": {}, "detection": {}}
+            files_detections = {}
 
             file_sensor = self.config.db_handler.file_path(config="sensor")
             file_sensor_copy = os.path.join(self.config.db_handler.directory(config="images", date=backup_date),
@@ -242,6 +243,12 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                         if save_entry:
                             files_backup["files"][stamp] = update_new.copy()
 
+                        if "detections" in files[stamp]:
+                            for detection in files[stamp]["detections"]:
+                                if detection["label"] not in files_detections:
+                                    files_detections[detection["label"]] = []
+                                files_detections[detection["label"]].append(stamp)
+
                     else:
                         count_other_date += 1
 
@@ -249,6 +256,15 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                                   str(self.camera[cam].param["similarity"]["threshold"]) + ")")
                 self.logging.info(cam + ": " + str(count_data) + " Data entries")
                 self.logging.info(cam + ": " + str(count_other_date) + " not saved (other date)")
+
+                # add detection information
+                camera_settings = self.config.param["devices"]["cameras"][cam]
+                if "object_detection" in camera_settings and camera_settings["object_detection"]["active"]:
+                    files_backup["info"]["detection_"+cam] = {
+                        "date":         self.config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
+                        "threshold":    camera_settings["object_detection"]["threshold"],
+                        "model":        camera_settings["object_detection"]["model"]
+                    }
 
             # create chart data from sensor and weather data vor archive
             files_backup["chart_data"] = self.views.create.chart_data_new(data_image=files_chart,
@@ -259,7 +275,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             # extract relevant weather data for archive
             files_backup["weather_data"] = self.views.create.weather_data_new(data_weather=data_weather,
                                                                               date=backup_date)
-
+            files_backup["detection"] = files_detections.copy()
             files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
             files_backup["info"]["count"] = count
             files_backup["info"]["size"] = backup_size

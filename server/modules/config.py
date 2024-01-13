@@ -649,6 +649,10 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                     self.db_handler.lock(config_file, date)
                     entries = entry_data["files"]
                     file_info = entry_data["info"]
+                    if "detection" in entry_data:
+                        detection_info = entry_data["detection"]
+                    else:
+                        detection_info = {}
 
                     if date in self.edit_queue[config_file] and len(self.edit_queue[config_file][date]) > 0:
                         count_files += 1
@@ -665,6 +669,10 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                             if key == "info":
                                 self.logging.info(" +++> " + command + " +++ " + key)
                                 file_info = entry.copy()
+
+                            elif key == "detection":
+                                self.logging.info(" +++> " + command + " +++ " + key)
+                                detection_info = entry.copy()
 
                             else:
                                 self.logging.info(" +++> " + command + " +++ " + key)
@@ -699,6 +707,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                     entry_data["files"] = entries
                     entry_data["info"] = file_info
+                    entry_data["detection"] = detection_info
                     self.db_handler.unlock(config_file, date)
                     self.db_handler.write(config_file, date, entry_data)
                     self.set_status_changed(date=date, change="all")
