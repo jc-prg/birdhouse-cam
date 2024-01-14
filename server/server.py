@@ -826,10 +826,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif param["command"] == "update-views":
             views.archive.list_update(force=True)
             views.favorite.list_update(force=True)
+            views.object.list_update(force=True)
             response = {"update_views": "started"}
         elif param["command"] == "update-views-complete":
             views.archive.list_update(force=True, complete=True)
             views.favorite.list_update(force=True, complete=True)
+            views.object.list_update(force=True, complete=True)
             response = {"update-views-complete": "started"}
         elif param["command"] == "force-backup":
             backup.start_backup()
@@ -989,6 +991,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "server": {
                     "view_archive_loading": views.archive.loading,
                     "view_favorite_loading": views.favorite.loading,
+                    "view_object_loading": views.object.loading,
                     "backup_process_running": backup.backup_running,
                     "queue_waiting_time": config.queue.queue_wait,
                     "health_check": health_check.status(),
@@ -1049,7 +1052,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         request_times["0_initial"] = round(time.time() - request_start, 3)
 
-        cmd_views = ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL", "DEVICES"]
+        cmd_views = ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL",
+                     "DEVICES", "OBJECT"]
         cmd_status = ["status", "list", "last-answer"]
         cmd_info = ["camera-param", "version", "reload"]
 
@@ -1064,6 +1068,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content = views.complete_list_today(param=param)
         elif command == "ARCHIVE":
             content = views.archive.list(param=param)
+        elif command == "OBJECT":
+            content = views.object.list(param=param)
         elif command == "VIDEOS":
             content = views.video_list(param=param)
         elif command == "VIDEO_DETAIL":

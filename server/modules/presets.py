@@ -278,6 +278,7 @@ birdhouse_pages = {
     "cam_info": ("Ger&auml;te", "/cameras.html", "DEVICES"),
     "video_info": ("Video Info", "/video-info.html", ""),
     "videos": ("Videos", "/videos.html", "VIDEOS"),
+    "object": ("Birds", "/birds.html", "BIRDS"),
     "save": ("Speichern", "/image.jpg", "")
 }
 birdhouse_databases = {
@@ -302,6 +303,7 @@ birdhouse_directories = {
     "favorites": "images/",
     "sensor": "images/",
     "statistics": "images/",
+    "objects": "images/",
     "videos": "videos/",
     "videos_temp": "videos/images2video/",
     "audio_temp": "videos/images2video/",
@@ -312,6 +314,7 @@ birdhouse_files = {
     "backup": "config_images.json",
     "backup_info": "config_backup.json",
     "favorites": "config_favorites.json",
+    "objects": "config_objects.json",
     "images": "config_images.json",
     "videos": "config_videos.json",
     "sensor": "config_sensor.json",
@@ -326,6 +329,7 @@ birdhouse_dir_to_database = {
     "images/config_statistics": "today_statistics",
     "images/config_backup": "archive_images",
     "images/config_favorites": "favorites",
+    "images/config_objects": "objects",
     "videos/config_videos": "archive_videos",
     "images/<DATE>/config_statistics": "archive_statistics",
     "images/<DATE>/config_images": "archive_images",

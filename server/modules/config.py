@@ -1477,6 +1477,19 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         """
         return self.db_handler.get_db_status()
 
+    # !!! leads to an error ?!
+    def get_changes(self, category=""):
+        """
+        get changes documented in backup_info
+        """
+        if self.db_handler.exists("backup_info", ""):
+            entries = self.db_handler.read("back_info", "")
+            if "changes" in entries and category != "" and category in entries["changes"]:
+                return entries["changes"][category]
+            else:
+                return entries["changes"]
+        return {}
+
     @staticmethod
     def filename_image(image_type, timestamp, camera=""):
         """

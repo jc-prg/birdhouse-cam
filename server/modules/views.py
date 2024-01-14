@@ -1040,15 +1040,17 @@ class BirdhouseViewFavorite(BirdhouseClass):
         self.logging.info("Create data for favorite view (complete=" + str(complete) + ") ...")
         self.loading = "in progress"
 
-        favorites = {}
-        content = {
-            "active_cam": "none",
-            "view": "favorites",
-            "view_count": ["star"],
-            "subtitle": presets.birdhouse_pages["favorit"][0],
-            "entries": {},
-            "groups": {}
-        }
+        if self.config.db_handler.exists("favorites", ""):
+            content = self.config.db_handler.read("favorites", "")
+        else:
+            content = {
+                "active_cam": "none",
+                "view": "favorites",
+                "view_count": ["star"],
+                "subtitle": presets.birdhouse_pages["favorit"][0],
+                "entries": {},
+                "groups": {}
+            }
 
         # images from today
         files_images = self._list_create_from_images("", complete)
@@ -1235,11 +1237,14 @@ class BirdhouseViewObjects(BirdhouseClass):
         self.loading = "started"
 
         self.create = True
-        self.create_complete = True
+        self.create_complete = False
         self.force_reload = False
 
         self.links_default = ("live", "today", "videos", "backup")
         self.links_admin = ("live", "today", "today_complete", "videos", "backup")
+
+        self.relevant_keys = ["camera", "date", "datestamp", "directory", "hires", "hires_detect",
+                              "hires_size", "lowres", "lowres_size", "size", "time", "type"]
 
         self.logging.info("Connected object view creation handler.")
 
@@ -1258,7 +1263,7 @@ class BirdhouseViewObjects(BirdhouseClass):
 
         return content
 
-    def list_update(self, force, complete) -> None:
+    def list_update(self, force=False, complete=False) -> None:
         """
         Trigger recreation of the favorit list
         """
@@ -1267,11 +1272,151 @@ class BirdhouseViewObjects(BirdhouseClass):
         if force:
             self.force_reload = True
 
-    def list_create(self, complete) -> None:
+    def list_create(self, complete=False) -> None:
         """
         collect or create data for objects view ...
         """
-        self.logging.info("OBJECTS.list_create: Not Implemented yet")
+        start_time = time.time()
+        self.logging.info("Create data for object detection view (complete=" + str(complete) + ") ...")
+        self.loading = "in progress"
+
+        if self.config.db_handler.exists("objects", ""):
+            content = self.config.db_handler.read("objects", "")
+        else:
+            content = {
+                "active_cam": "none",
+                "view": "objects",
+                "view_count": ["star"],
+                "subtitle": presets.birdhouse_pages["object"][0],
+                "entries": {},
+                "groups": {},
+                "changes": True
+            }
+
+        # in progress: get detection information from archive files
+        files_archive = self._list_create_from_archive(complete)
+        content["entries"] = files_archive
+
+        self.views = content
+        self.create_complete = False
+        self.logging.info("Create data for object detection view done (" + str(round(time.time() - start_time, 1)) + "s)")
+        self.config.db_handler.write("objects", "", content, create=True, save_json=True, no_cache=False)
+        self.loading = "done"
+
+    def _list_create_from_archive(self, complete):
+        """
+        get information from archive files and return ...
+        """
+        entries = {}
+        main_directory = self.config.db_handler.directory(config="backup")
+        dir_list = self.tools.get_directories(main_directory)
+
+        dir_list = list(reversed(sorted(dir_list)))
+        self.logging.info("  -> ARCHIVE Directories -> Object detection: " + str(len(dir_list)))
+        self.logging.debug(str(dir_list))
+
+        for date in dir_list:
+
+            category = "/objects/" + date + "/"
+
+            if self.config.db_handler.exists(config="backup", date=date):
+                archive_entries = self.config.db_handler.read(config="backup", date=date)
+
+                if "detection" in archive_entries:
+                    archive_detect = archive_entries["detection"]
+                    archive_detection_labels = []
+
+                    for label in archive_detect:
+                        thumbnail = ""
+                        stamp_thumbnail = ""
+
+                        # create entry for label that doesn't exist yet
+                        if label not in entries:
+                            if ("favorite" in archive_detect[label]
+                                    and len(archive_detect[label]["favorite"]) > 0):
+                                for detect in archive_detect[label]["favorite"]:
+                                    if detect in archive_entries["files"]:
+                                        stamp_thumbnail = detect
+                                        break
+                                if stamp_thumbnail != "":
+                                    entries[label] = {}
+                                    for key in self.relevant_keys:
+                                        if key in archive_entries["files"][stamp_thumbnail]:
+                                            entries[label][key] = archive_entries["files"][stamp_thumbnail][key]
+                                    thumbnail = "favorite"
+                                    if label not in archive_detection_labels:
+                                        archive_detection_labels.append(label)
+
+                            if (thumbnail == "" and "default" in archive_detect[label]
+                                    and len(archive_detect[label]["default"]) > 0):
+                                for detect in archive_detect[label]["default"]:
+                                    if detect in archive_entries["files"]:
+                                        stamp_thumbnail = detect
+                                        break
+                                if stamp_thumbnail != "":
+                                    entries[label] = {}
+                                    for key in self.relevant_keys:
+                                        if key in archive_entries["files"][stamp_thumbnail]:
+                                            entries[label][key] = archive_entries["files"][stamp_thumbnail][key]
+                                    thumbnail = "default"
+                                    if label not in archive_detection_labels:
+                                        archive_detection_labels.append(label)
+
+                            if thumbnail == "":
+                                continue
+
+                        # count amount of images with label detected
+                        if "detections" not in entries[label]:
+                            entries[label]["detections"] = {
+                                "thumbnail": thumbnail,
+                                "favorite": len(archive_detect[label]["favorite"]),
+                                "favorite_dates": [date],
+                                "default": len(archive_detect[label]["default"]),
+                                "default_dates": [date],
+                                "total": len(archive_detect[label]["favorite"]) + len(archive_detect[label]["default"])
+                            }
+                        else:
+
+                            if "favorite" in archive_detect[label] and len(archive_detect[label]["favorite"]) > 0:
+                                entries[label]["detections"]["favorite"] += len(archive_detect[label]["favorite"])
+                                entries[label]["detections"]["favorite_dates"].append(date)
+                                entries[label]["detections"]["total"] += len(archive_detect[label]["favorite"])
+                                if label not in archive_detection_labels:
+                                    archive_detection_labels.append(label)
+
+                            if "default" in archive_detect[label] and len(archive_detect[label]["default"]) > 0:
+                                entries[label]["detections"]["default"] += len(archive_detect[label]["default"])
+                                entries[label]["detections"]["default_dates"].append(date)
+                                entries[label]["detections"]["total"] += len(archive_detect[label]["default"])
+                                if label not in archive_detection_labels:
+                                    archive_detection_labels.append(label)
+
+                        # replace entry "favorite" was not yet found
+                        if (entries[label]["detections"]["thumbnail"] == "default"
+                                and "favorite" in archive_detect[label]
+                                and len(archive_detect[label]["favorite"]) > 0):
+                            stamp_thumbnail = ""
+                            for detect in archive_detect[label]["favorite"]:
+                                if detect in archive_entries["files"]:
+                                    stamp_thumbnail = detect
+                                    break
+                            if stamp_thumbnail != "":
+                                for key in self.relevant_keys:
+                                    if key in archive_entries["files"][stamp_thumbnail]:
+                                        entries[label][key] = archive_entries["files"][stamp_thumbnail][key]
+                                entries[label]["detections"]["thumbnail"] = "favorite"
+
+                    self.logging.info("  -> Read objects from " + category + ": " + str(archive_detection_labels))
+
+                else:
+                    self.logging.debug("  -> No objects available in " + category + ".")
+                    continue
+
+            else:
+                self.logging.warning("  -> Could not read objects from " + category + ", no data available.")
+                continue
+
+        return entries
 
 
 class BirdhouseViews(threading.Thread, BirdhouseClass):
