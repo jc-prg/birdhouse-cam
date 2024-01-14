@@ -9,65 +9,6 @@ from modules.presets import view_logging
 from modules.bh_class import BirdhouseClass
 
 
-def read_html(filename, content=None):
-    """
-    read html file, replace placeholders and return for stream via webserver
-    """
-    if content is None:
-        content = {}
-
-    if not os.path.isfile(filename):
-        view_logging.warning("File '" + filename + "' does not exist!")
-        # print("File '" + filename + "' does not exist!")
-        return ""
-
-    with open(filename, "r") as page:
-        PAGE = page.read()
-
-    if content != "":
-        for param in content:
-            if "<!--" + param + "-->" in PAGE:
-                PAGE = PAGE.replace("<!--" + param + "-->", content[param])
-
-    # PAGE = PAGE.encode('utf-8')
-    return PAGE
-
-
-def print_links_json(link_list, cam=""):
-    """
-    create a list of links based on URLs and descriptions defined in preset.py -> for JSON API
-    """
-    json = {}
-    count = 0
-    if cam != "":
-        cam_link = cam
-    else:
-        cam_link = ""
-
-    for link in link_list:
-        json[link] = {
-            "link": presets.birdhouse_pages[link][2],
-            "camera": cam_link,
-            "description": presets.birdhouse_pages[link][0],
-            "position": count
-        }
-        count += 1
-    return json
-
-
-def get_directories(main_directory):
-    """
-    grab sub-directories in a directory
-    """
-    dir_list = []
-    file_list = os.listdir(main_directory)
-    for entry in file_list:
-        if "." not in entry:
-            if os.path.isdir(os.path.join(main_directory, entry)):
-                dir_list.append(entry)
-    return dir_list
-
-
 class BirdhouseViewTools(BirdhouseClass):
 
     def __init__(self, config):
@@ -91,6 +32,41 @@ class BirdhouseViewTools(BirdhouseClass):
                 self.logging.info("... still calculating " + view + " view - #" + str(number) + ": " +
                                   str(percentage) + "% of " + str(length) + " ...")
             self.timeout_living_last = time.time()
+
+    def get_directories(self, main_directory):
+        """
+        grab sub-directories in a directory
+        """
+        self.logging.debug("Return sub-directories for " + main_directory)
+        dir_list = []
+        file_list = os.listdir(main_directory)
+        for entry in file_list:
+            if "." not in entry:
+                if os.path.isdir(os.path.join(main_directory, entry)):
+                    dir_list.append(entry)
+        return dir_list
+
+    def print_links_json(self, link_list, cam=""):
+        """
+        create a list of links based on URLs and descriptions defined in preset.py -> for JSON API
+        """
+        self.logging.debug("Create link list " + str(link_list) + "/" + cam)
+        json = {}
+        count = 0
+        if cam != "":
+            cam_link = cam
+        else:
+            cam_link = ""
+
+        for link in link_list:
+            json[link] = {
+                "link": presets.birdhouse_pages[link][2],
+                "camera": cam_link,
+                "description": presets.birdhouse_pages[link][0],
+                "position": count
+            }
+            count += 1
+        return json
 
 
 class BirdhouseViewCharts(BirdhouseClass):
@@ -474,7 +450,6 @@ class BirdhouseViewCharts(BirdhouseClass):
         return chart
 
 
-# In Progress
 class BirdhouseViewArchive(BirdhouseClass):
 
     def __init__(self, config, tools, camera):
@@ -508,9 +483,9 @@ class BirdhouseViewArchive(BirdhouseClass):
         else:
             content = {}
         if param["admin_allowed"]:
-            content["links"] = print_links_json(link_list=self.links_admin, cam=camera)
+            content["links"] = self.tools.print_links_json(link_list=self.links_admin, cam=camera)
         else:
-            content["links"] = print_links_json(link_list=self.links_default, cam=camera)
+            content["links"] = self.tools.print_links_json(link_list=self.links_default, cam=camera)
         return content
 
     def list_update(self, force=False, complete=False):
@@ -542,7 +517,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         self.loading = "in progress"
         main_directory = self.config.db_handler.directory(config="backup")
         db_type = self.config.db_handler.db_type
-        dir_list = get_directories(main_directory)
+        dir_list = self.tools.get_directories(main_directory)
 
         archive_changed = {}
         archive_info = self.config.db_handler.read("backup_info", "")
@@ -1042,9 +1017,9 @@ class BirdhouseViewFavorite(BirdhouseClass):
         content["active_cam"] = camera
 
         if param["admin_allowed"]:
-            content["links"] = print_links_json(link_list=self.links_admin, cam=camera)
+            content["links"] = self.tools.print_links_json(link_list=self.links_admin, cam=camera)
         else:
-            content["links"] = print_links_json(link_list=self.links_default, cam=camera)
+            content["links"] = self.tools.print_links_json(link_list=self.links_default, cam=camera)
 
         return content
 
@@ -1114,7 +1089,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         """
         favorites = {}
         main_directory = self.config.db_handler.directory(config="backup")
-        dir_list = get_directories(main_directory)
+        dir_list = self.tools.get_directories(main_directory)
 
         # main_directory = self.config.db_handler.directory(config="backup")
         # dir_list = other_data.keys()
@@ -1357,9 +1332,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             "view": "index"
         }
         if param["admin_allowed"]:
-            content["links"] = print_links_json(link_list=("favorit", "today", "backup", "cam_info"))
+            content["links"] = self.tools.print_links_json(link_list=("favorit", "today", "backup", "cam_info"))
         else:
-            content["links"] = print_links_json(link_list=("favorit", "today", "backup"))
+            content["links"] = self.tools.print_links_json(link_list=("favorit", "today", "backup"))
 
         return content
 
@@ -1430,7 +1405,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             time_now = "000000"
 
             content["subtitle"] = presets.birdhouse_pages["backup"][0] + " " + files_data["info"]["date"]
-            content["links"] = print_links_json(link_list=("live", "today", "backup", "favorit"), cam=which_cam)
+            content["links"] = self.tools.print_links_json(link_list=("live", "today", "backup", "favorit"), cam=which_cam)
 
         # else read files from current day and create vars, links ...
         elif self.config.db_handler.exists(config="images"):
@@ -1448,10 +1423,10 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
             content["subtitle"] = presets.birdhouse_pages["today"][0]
             if param["admin_allowed"]:
-                content["links"] = print_links_json(
+                content["links"] = self.tools.print_links_json(
                     link_list=("live", "favorit", "today_complete", "videos", "backup"), cam=which_cam)
             else:
-                content["links"] = print_links_json(link_list=("live", "favorit", "videos", "backup"), cam=which_cam)
+                content["links"] = self.tools.print_links_json(link_list=("live", "favorit", "videos", "backup"), cam=which_cam)
 
         # else something went wrong ... ?
         else:
@@ -1624,7 +1599,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         content["view_count"] = []
         content["subtitle"] = presets.birdhouse_pages["cam_info"][0]
-        content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"), cam=which_cam)
+        content["links"] = self.tools.print_links_json(link_list=("live", "favorit", "today", "videos", "backup"), cam=which_cam)
 
         return content.copy()
 
@@ -1709,7 +1684,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         content["view_count"] = ["all", "star", "detect", "recycle", "data"]
         content["subtitle"] = presets.birdhouse_pages["today_complete"][0] + " (" + self.camera[
             which_cam].name + ", " + str(count) + " Bilder)"
-        content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"), cam=which_cam)
+        content["links"] = self.tools.print_links_json(link_list=("live", "favorit", "today", "videos", "backup"),
+                                                       cam=which_cam)
         content["chart_data"] = self.create.chart_data_new(data_image=content["entries"].copy(),
                                                            data_sensor=data_sensor,
                                                            data_weather=data_weather,
@@ -1755,9 +1731,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         content["subtitle"] = presets.birdhouse_pages["videos"][0]
 
         if param["admin_allowed"]:
-            content["links"] = print_links_json(link_list=("live", "favorit", "cam_info", "today", "backup"))
+            content["links"] = self.tools.print_links_json(link_list=("live", "favorit", "cam_info", "today", "backup"))
         else:
-            content["links"] = print_links_json(link_list=("live", "favorit", "today", "backup"))
+            content["links"] = self.tools.print_links_json(link_list=("live", "favorit", "today", "backup"))
 
         return content
 
@@ -1794,6 +1770,6 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         content["view_count"] = []
         content["subtitle"] = presets.birdhouse_pages["video_info"][0]
-        content["links"] = print_links_json(link_list=("live", "favorit", "today", "videos", "backup"))
+        content["links"] = self.tools.print_links_json(link_list=("live", "favorit", "today", "videos", "backup"))
 
         return content
