@@ -33,7 +33,7 @@ class BirdhouseViewTools(BirdhouseClass):
                                   str(percentage) + "% of " + str(length) + " ...")
             self.timeout_living_last = time.time()
 
-    def get_directories(self, main_directory) -> array:
+    def get_directories(self, main_directory) -> list[str]:
         """
         grab sub-directories in a directory
         """
