@@ -172,7 +172,6 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.logging.info("Starting object detection for " + self.id + " / " + date + " ...")
             archive_data = self.config.db_handler.read(config="backup", date=date)
             archive_entries = archive_data["files"]
-            archive_detections = {}
             archive_info = archive_data["info"]
             archive_info["detection_"+self.id] = {
                 "date":         self.config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
@@ -210,11 +209,6 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
                     self.config.queue.entry_add(config="backup", date=date, key=stamp, entry=archive_entries[stamp])
 
-                    for detection in archive_entries[stamp]["detections"]:
-                        if detection["label"] not in archive_detections:
-                            archive_detections[detection["label"]] = []
-                        archive_detections[detection["label"]].append(stamp)
-
                 count += 1
                 self._processing_percentage = round(count / len(archive_entries) * 100, 1)
                 self.config.object_detection_processing = self._processing
@@ -222,6 +216,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                 if self._processing_percentage == 100:
                     time.sleep(2)
 
+            archive_detections = self.summarize_detections(archive_entries)
             self.config.queue.set_status_changed(date=date, change="objects")
             self.config.queue.entry_edit(config="backup", date=date, key="info", entry=archive_info)
             self.config.queue.entry_edit(config="backup", date=date, key="detection", entry=archive_detections)
@@ -237,3 +232,23 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
         self._processing = False
         return response
+
+    def summarize_detections(self, entries) -> dict:
+        """
+        check files-section which detected objects are in and summarize for the archive configuration
+        """
+        self.logging.debug("Summarize detections from entries (" + str(len(entries)) + " entries)")
+        detections = {}
+        for stamp in entries:
+            if "detections" in entries[stamp]:
+                for detection in entries[stamp]["detections"]:
+                    if detection["label"] not in detections:
+                        detections[detection["label"]] = {"favorite": [], "default": []}
+
+                    if "favorit" in entries[stamp] and int(entries[stamp]["favorit"]) == 1:
+                        detections[detection["label"]]["favorite"].append(stamp)
+
+                    elif "to_be_deleted" not in entries[stamp] or not int(entries[stamp]["to_be_deleted"]):
+                        detections[detection["label"]]["default"].append(stamp)
+
+        return detections

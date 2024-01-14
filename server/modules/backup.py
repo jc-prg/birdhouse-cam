@@ -44,8 +44,8 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                 else:
                     self.logging.info("Starting daily backup ...")
                 self.backup_files()
-                self.views.archive_list_update(force=True)
-                self.views.favorite_list_update(force=True)
+                self.views.archive.list_update(force=True)
+                self.views.favorite.list_update(force=True)
                 count = 0
                 while self._running and count < 60:
                     time.sleep(1)
@@ -54,11 +54,11 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             else:
                 backup_started = False
 
-            if len(self.views.archive_config_recreate) > 0:
-                self.views.archive_config_recreate_progress = True
-                date = self.views.archive_config_recreate.pop()
+            if len(self.views.archive.config_recreate) > 0:
+                self.views.archive.config_recreate_progress = True
+                date = self.views.archive.config_recreate.pop()
                 self._create_image_config_save(date)
-                self.views.archive_config_recreate_progress = False
+                self.views.archive.config_recreate_progress = False
 
             self.thread_control()
             self.thread_wait()
@@ -81,16 +81,16 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         else:
             backup_date = other_date
 
-        camera_list = []
+        backup_camera_list = []
         for cam in self.camera:
-            camera_list.append(cam)
+            backup_camera_list.append(cam)
 
-        directory = self.config.db_handler.directory(config="backup", date=backup_date)
+        backup_directory = self.config.db_handler.directory(config="backup", date=backup_date)
         data_weather = self.config.db_handler.read(config="weather")
         data_sensor = self.config.db_handler.read(config="sensor")
 
         # if the directory but no config file exists for backup directory create a new one
-        if os.path.isdir(directory):
+        if os.path.isdir(backup_directory):
             self.logging.info("Backup files: create a new config file, directory already exists")
 
             if not os.path.isfile(self.config.db_handler.file_path(config="backup", date=backup_date)):
@@ -103,7 +103,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                                                                    data_sensor=data_sensor,
                                                                    data_weather=data_weather,
                                                                    date=backup_date,
-                                                                   cameras=camera_list),
+                                                                   cameras=backup_camera_list),
                     "weather_data": self.views.create.weather_data_new(data_weather=data_weather)
                 }
                 files_backup["info"]["count"] = len(files)
@@ -115,7 +115,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 #                    os.path.getsize(os.path.join(directory, f)) for f in os.listdir(directory) if
 #                    os.path.isfile(os.path.join(directory, f)))
                 files_backup["info"]["size"] = sum(
-                    os.path.getsize(os.path.join(directory, f)) for f in os.listdir(directory) if
+                    os.path.getsize(os.path.join(backup_directory, f)) for f in os.listdir(backup_directory) if
                     f.endswith(".jpeg") or f.endswith(".jpg") or f.endswith(".json"))
                 self.config.db_handler.write(config="backup", date=backup_date, data=files_backup,
                                              create=True, save_json=True)
@@ -204,13 +204,13 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                                 backup_size += update_new["size"]
 
                                 os.popen('cp ' + os.path.join(str(dir_source), file_lowres) + ' ' +
-                                         os.path.join(str(directory), file_lowres))
+                                         os.path.join(str(backup_directory), file_lowres))
                                 os.popen('cp ' + os.path.join(str(dir_source), file_hires) + ' ' +
-                                         os.path.join(str(directory), file_hires))
+                                         os.path.join(str(backup_directory), file_hires))
 
                                 if os.path.isfile(os.path.join(dir_source, file_hires_detect)):
                                     os.popen('cp ' + os.path.join(str(dir_source), file_hires_detect) + ' ' +
-                                             os.path.join(str(directory), file_hires_detect))
+                                             os.path.join(str(backup_directory), file_hires_detect))
 
                                 save_entry = True
 
@@ -243,12 +243,6 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                         if save_entry:
                             files_backup["files"][stamp] = update_new.copy()
 
-                        if "detections" in files[stamp]:
-                            for detection in files[stamp]["detections"]:
-                                if detection["label"] not in files_detections:
-                                    files_detections[detection["label"]] = []
-                                files_detections[detection["label"]].append(stamp)
-
                     else:
                         count_other_date += 1
 
@@ -271,11 +265,11 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                                                                           data_sensor=data_sensor,
                                                                           data_weather=data_weather,
                                                                           date=backup_date,
-                                                                          cameras=camera_list)
+                                                                          cameras=backup_camera_list)
             # extract relevant weather data for archive
             files_backup["weather_data"] = self.views.create.weather_data_new(data_weather=data_weather,
                                                                               date=backup_date)
-            files_backup["detection"] = files_detections.copy()
+            files_backup["detection"] = self.camera[backup_camera_list[0]].object.summarize_detections(files_backup["files"])
             files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
             files_backup["info"]["count"] = count
             files_backup["info"]["size"] = backup_size
@@ -283,9 +277,9 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             for cam in self.camera:
                 files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
 
-            self.config.db_handler.write(config="backup", date=directory, data=files_backup,
+            self.config.db_handler.write(config="backup", date=backup_directory, data=files_backup,
                                          create=True, save_json=True)
-            self.config.queue.set_status_changed(date=directory, change="archive")
+            self.config.queue.set_status_changed(date=backup_directory, change="archive")
 
         self.backup_running = False
 
@@ -736,8 +730,8 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             archive_directory = str(os.path.join(birdhouse_main_directories["data"], birdhouse_directories["backup"], date))
             command = "rm -rf " + archive_directory
             os.system(command)
-            self.views.archive_list_update(force=True)
-            self.views.favorite_list_update(force=True)
+            self.views.archive.list_update(force=True)
+            self.views.favorite.list_update(force=True)
             self.logging.info("Deleted archived day '"+date+"' and triggered recreation of archive and favorite view")
         except Exception as e:
             self.logging.error("Error while trying to delete data from '" + date + "': " + str(e))

@@ -349,10 +349,14 @@ birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(na
 birdhouse_loglevel_default = logging.INFO
 birdhouse_loglevel_module = {}
 birdhouse_loglevel_modules_all = [
-    'root', 'backup', 'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object',
-    'cam-stream', 'config', 'config-Q', 'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
-    'server', 'srv-info', 'srv-health', 'video', 'video-srv', 'views', 'view-head', 'view-creat',
-    'weather', 'weather-py', 'weather-om', 'cam-handl', 'cam-info']
+    'root', 'backup', 'server', 'srv-info', 'srv-health',
+    'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object', 'cam-stream',
+    'cam-handl', 'cam-info',
+    'config', 'config-Q',
+    'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
+    'video', 'video-srv',
+    'views', 'view-head', 'view-chart', 'view-fav', 'view-arch', 'view-obj',
+    'weather', 'weather-py', 'weather-om']
 
 # add modules to the following lists to change their log_level
 birdhouse_loglevel_modules_info = ["server"]

@@ -824,12 +824,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             config.db_handler.clean_all_data("sensor")
             response = {"cleanup": "done"}
         elif param["command"] == "update-views":
-            views.archive_list_update(force=True)
-            views.favorite_list_update(force=True)
+            views.archive.list_update(force=True)
+            views.favorite.list_update(force=True)
             response = {"update_views": "started"}
         elif param["command"] == "update-views-complete":
-            views.archive_list_update(force=True, complete=True)
-            views.favorite_list_update(force=True, complete=True)
+            views.archive.list_update(force=True, complete=True)
+            views.favorite.list_update(force=True, complete=True)
             response = {"update-views-complete": "started"}
         elif param["command"] == "force-backup":
             backup.start_backup()
@@ -987,8 +987,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "reload": False,
                 "system": {},
                 "server": {
-                    "view_archive_loading": views.archive_loading,
-                    "view_favorite_loading": views.favorite_loading,
+                    "view_archive_loading": views.archive.loading,
+                    "view_favorite_loading": views.favorite.loading,
                     "backup_process_running": backup.backup_running,
                     "queue_waiting_time": config.queue.queue_wait,
                     "health_check": health_check.status(),
@@ -1057,13 +1057,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if command == "INDEX":
             content = views.index_view(param=param)
         elif command == "FAVORITES":
-            content = views.favorite_list(param=param)
+            content = views.favorite.list(param=param)
         elif command == "TODAY":
             content = views.list(param=param)
         elif command == "TODAY_COMPLETE":
             content = views.complete_list_today(param=param)
         elif command == "ARCHIVE":
-            content = views.archive_list(param=param)
+            content = views.archive.list(param=param)
         elif command == "VIDEOS":
             content = views.video_list(param=param)
         elif command == "VIDEO_DETAIL":
@@ -1071,7 +1071,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif command == "DEVICES":
             content = views.camera_list(param=param)
             api_response["STATUS"]["system"] = sys_info.get()
-            api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
+            api_response["STATUS"]["system"]["hdd_archive"] = views.archive.dir_size / 1024
         elif command == "status" or command == "list":
             content = {"last_answer": ""}
             #if self.admin_allowed() and len(config.async_answers) > 0:
@@ -1079,7 +1079,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             #    content["background_process"] = config.async_running
             api_response["STATUS"]["database"] = config.get_db_status()
             api_response["STATUS"]["system"] = sys_info.get()
-            api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
+            api_response["STATUS"]["system"]["hdd_archive"] = views.archive.dir_size / 1024
         elif command == "last-answer":
             content = {"last_answer": ""}
             if len(config.async_answers) > 0:
@@ -1565,7 +1565,7 @@ if __name__ == "__main__":
     backup.start()
     if len(sys.argv) > 0 and "--backup" in sys.argv:
         backup.backup_files()
-        views.archive_list_update()
+        views.archive.list_update()
 
     # check if config files for main image directory exists and create if not exists
     if not os.path.isfile(config.db_handler.file_path("images")):
