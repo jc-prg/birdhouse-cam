@@ -1229,17 +1229,49 @@ class BirdhouseViewObjects(BirdhouseClass):
 
     def __init__(self, config, tools):
         BirdhouseClass.__init__(self, class_id="view-obj", config=config)
+
         self.tools = tools
-        self.logging.info("Connected archive creation handler.")
+        self.views = None
+        self.loading = "started"
 
-    def list(self):
-        pass
+        self.create = True
+        self.create_complete = True
+        self.force_reload = False
 
-    def list_update(self):
-        pass
+        self.links_default = ("live", "today", "videos", "backup")
+        self.links_admin = ("live", "today", "today_complete", "videos", "backup")
 
-    def list_create(self):
-        pass
+        self.logging.info("Connected object view creation handler.")
+
+    def list(self, param):
+        """
+        Return data for list of favorites from cache
+        """
+        camera = param["which_cam"]
+        content = self.views
+        content["active_cam"] = camera
+
+        if param["admin_allowed"]:
+            content["links"] = self.tools.print_links_json(link_list=self.links_admin, cam=camera)
+        else:
+            content["links"] = self.tools.print_links_json(link_list=self.links_default, cam=camera)
+
+        return content
+
+    def list_update(self, force, complete):
+        """
+        Trigger recreation of the favorit list
+        """
+        self.create_complete = complete
+        self.create = True
+        if force:
+            self.force_reload = True
+
+    def list_create(self, complete):
+        """
+        collect or create data for objects view ...
+        """
+        self.logging.info("OBJECTS.list_create: Not Implemented yet")
 
 
 class BirdhouseViews(threading.Thread, BirdhouseClass):
@@ -1281,16 +1313,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.logging.info("Starting HTML views and REST API for GET ...")
         while self._running:
 
-            if self.favorite.force_reload or self.archive.force_reload:
+            if self.favorite.force_reload or self.archive.force_reload or self.object.force_reload:
                 self.force_reload = True
-
-            # if archive to be read again (from time to time and depending on user activity)
-            #if self.create_archive and (count > count_rebuild or self.force_reload):
-            #    time.sleep(1)
-            #    if not self.if_shutdown():
-            #        self.archive_list_create(self.create_archive_complete)
-            #        self.create_archive = False
-            #        self.create_archive_complete = False
 
             # if archive to be read again (from time to time and depending on user activity)
             if self.archive.create and (count > count_rebuild or self.force_reload):
@@ -1299,6 +1323,14 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     self.archive.list_create(self.archive.create_complete)
                     self.archive.create = False
                     self.archive.create_complete = False
+
+            # if archive to be read again (from time to time and depending on user activity)
+            if self.object.create and (count > count_rebuild or self.force_reload):
+                time.sleep(1)
+                if not self.if_shutdown():
+                    self.object.list_create(self.object.create_complete)
+                    self.object.create = False
+                    self.object.create_complete = False
 
             # if favorites to be read again (from time to time and depending on user activity)
             if self.favorite.create and (count > count_rebuild or self.force_reload):
@@ -1321,7 +1353,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         self.logging.info("Stopped HTML views and REST API for GET.")
 
-    def index_view(self, param):
+    def index_view(self, param) -> dict:
         """
         Index page with live-streaming pictures
         """
@@ -1338,7 +1370,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         return content
 
-    def list(self, param):
+    def list(self, param) -> dict:
         """
         Page with pictures (and videos) of a single day
         """
@@ -1582,7 +1614,10 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         return content
 
-    def camera_list(self, param):
+    def archive_list(self, param) -> dict:
+        return self.archive.list(param)
+
+    def camera_list(self, param) -> dict:
         """
         Return data for page with all cameras
         """
@@ -1603,7 +1638,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         return content.copy()
 
-    def complete_list_today(self, param):
+    def complete_list_today(self, param) -> dict:
         """
         Page with all pictures of the current day
         """
@@ -1698,7 +1733,10 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                            " (" + str(length) + " kB)")
         return content
 
-    def video_list(self, param):
+    def favorite_list(self, param) -> dict:
+        return self.favorite.list(param)
+
+    def video_list(self, param) -> dict:
         """
         Return data for page with all videos
         """
@@ -1737,7 +1775,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         return content
 
-    def detail_view_video(self, param):
+    def detail_view_video(self, param) -> dict:
         """
         Show details and edit options for a video file
         """
