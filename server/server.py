@@ -1053,7 +1053,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         request_times["0_initial"] = round(time.time() - request_start, 3)
 
         cmd_views = ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL",
-                     "DEVICES", "OBJECT"]
+                     "DEVICES", "OBJECTS"]
         cmd_status = ["status", "list", "last-answer"]
         cmd_info = ["camera-param", "version", "reload"]
 
@@ -1068,7 +1068,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content = views.complete_list_today(param=param)
         elif command == "ARCHIVE":
             content = views.archive.list(param=param)
-        elif command == "OBJECT":
+        elif command == "OBJECTS":
             content = views.object.list(param=param)
         elif command == "VIDEOS":
             content = views.video_list(param=param)

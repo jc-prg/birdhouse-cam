@@ -146,18 +146,19 @@ function birdhousePrint(data) {
 
     var success = true;
 	if (app_active_page == "INDEX" && initial_setup) { birdhouse_settings.create(); return; }
-	else if (app_active_page == "INDEX")             { birdhouse_INDEX(data, camera); }
-	else if (app_active_page == "WEATHER")           { birdhouse_showWeather(); }
-	else if (app_active_page == "FAVORITES")         { success = birdhouse_LIST(lang("FAVORITES"),  data, camera); }
 	else if (app_active_page == "ARCHIVE")           { success = birdhouse_LIST(lang("ARCHIVE"), data, camera); }
+	else if (app_active_page == "DEVICES")           { birdhouseDevices(lang("DEVICES"), data, camera); }
+	else if (app_active_page == "FAVORITES")         { success = birdhouse_LIST(lang("FAVORITES"),  data, camera); }
+	else if (app_active_page == "IMAGE_SETTINGS")   { birdhouseDevices_cameraSettings(data); }
+	else if (app_active_page == "INDEX")             { birdhouse_INDEX(data, camera); }
+	else if (app_active_page == "INFO") 	         { birdhouse_settings.create("INFO_ONLY"); }
+	else if (app_active_page == "OBJECTS")           { birdhouse_LIST_OBJECTS(lang("BIRDS_DETECTED"), data); }
+	else if (app_active_page == "SETTINGS")          { birdhouse_settings.create(); }
 	else if (app_active_page == "TODAY")             { birdhouse_LIST(lang("TODAY"), data, camera); }
 	else if (app_active_page == "TODAY_COMPLETE")    { birdhouse_LIST(lang("TODAY_COMPLETE"), data, camera, false); }
 	else if (app_active_page == "VIDEOS")            { birdhouse_LIST(lang("VIDEOS"), data, camera); }
 	else if (app_active_page == "VIDEO_DETAIL")	     { birdhouse_VIDEO_DETAIL(lang("VIDEOS"), data, camera); }
-	else if (app_active_page == "INFO") 	         { birdhouse_settings.create("INFO_ONLY"); }
-	else if (app_active_page == "SETTINGS")          { birdhouse_settings.create(); }
-	else if (app_active_page == "DEVICES")           { birdhouseDevices(lang("DEVICES"), data, camera); }
-	else if (app_active_page == "IMAGE_SETTINGS")   { birdhouseDevices_cameraSettings(data); }
+	else if (app_active_page == "WEATHER")           { birdhouse_showWeather(); }
 	else { setTextById(app_frame_content,lang("ERROR") + ": "+app_active_page); }
 
 	if (success == false) {

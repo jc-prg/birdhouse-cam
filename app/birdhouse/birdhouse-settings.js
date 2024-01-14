@@ -227,6 +227,11 @@ function birdhouse_app_settings (name="Settings") {
             api_call   += "<button onclick='birdhouse_recordStopAudio(\""+micro+"\");' class='button-settings-api'>Stop "+micro+"</button>";
             html_entry += this.tab.row("API "+micro, api_call);
         }
+
+        api_call  = "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECT/\",\"_blank\");' class='button-settings-api'>Objects</button>";
+        api_call  += "<button onclick='window.open(\"" + RESTurl + "api/no-id/FAVORITES/\",\"_blank\");' class='button-settings-api'>Favorites</button>";
+        html_entry += this.tab.row("API Other", api_call);
+
         html_entry += this.tab.end();
         this.tab.style_cells["width"] = "40%";
         return html_entry;

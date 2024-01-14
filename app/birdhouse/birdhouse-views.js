@@ -585,3 +585,15 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	birdhouse_frameHeader(page_title, page_status);
 	setTextById(app_frame_content, html);
 	}
+
+function birdhouse_LIST_OBJECTS(title, data) {
+    html = "";
+    detections = data["DATA"]["data"]["entries"];
+
+    Object.entries(detections).forEach(([key, value])=>{
+        html += "<h3>" + key + "</h3><br/>";
+        });
+
+	birdhouse_frameHeader(title);
+	setTextById(app_frame_content, html);
+    }
