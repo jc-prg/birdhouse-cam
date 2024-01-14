@@ -11,7 +11,7 @@ from modules.bh_class import BirdhouseClass
 
 class BirdhouseViewTools(BirdhouseClass):
 
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         BirdhouseClass.__init__(self, class_id="view-arch", config=config)
 
         self.timeout_living_last = time.time()
@@ -19,7 +19,7 @@ class BirdhouseViewTools(BirdhouseClass):
 
         self.logging.info("Connected view tools.")
 
-    def calculate_progress(self, view, number, cam, count, length):
+    def calculate_progress(self, view, number, cam, count, length) -> None:
         """
         show progress information in logging
         """
@@ -33,7 +33,7 @@ class BirdhouseViewTools(BirdhouseClass):
                                   str(percentage) + "% of " + str(length) + " ...")
             self.timeout_living_last = time.time()
 
-    def get_directories(self, main_directory):
+    def get_directories(self, main_directory) -> array:
         """
         grab sub-directories in a directory
         """
@@ -46,7 +46,7 @@ class BirdhouseViewTools(BirdhouseClass):
                     dir_list.append(entry)
         return dir_list
 
-    def print_links_json(self, link_list, cam=""):
+    def print_links_json(self, link_list, cam="") -> dict:
         """
         create a list of links based on URLs and descriptions defined in preset.py -> for JSON API
         """
@@ -71,11 +71,11 @@ class BirdhouseViewTools(BirdhouseClass):
 
 class BirdhouseViewCharts(BirdhouseClass):
 
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         BirdhouseClass.__init__(self, class_id="view-chart", config=config)
         self.logging.info("Connected chart data creation handler.")
 
-    def chart_data_new(self, data_image, data_sensor=None, data_weather=None, date=None, cameras=None):
+    def chart_data_new(self, data_image, data_sensor=None, data_weather=None, date=None, cameras=None) -> dict:
         """
         create chart data based on sensor, weather and activity data
         """
@@ -264,7 +264,7 @@ class BirdhouseViewCharts(BirdhouseClass):
 
         return chart
 
-    def chart_data(self, data):
+    def chart_data(self, data) -> dict:
         self.logging.debug("create_chart_data")
         chart = {
             "titles": ["Activity"],
@@ -336,7 +336,7 @@ class BirdhouseViewCharts(BirdhouseClass):
 
         return chart
 
-    def weather_data_new(self, data_weather, date=None):
+    def weather_data_new(self, data_weather, date=None) -> dict:
         """
         create hourly weather data for API
         """
@@ -390,7 +390,7 @@ class BirdhouseViewCharts(BirdhouseClass):
 
         return weather
 
-    def weather_data(self, data):
+    def weather_data(self, data) -> dict:
         """
         create hourly weather data for API
         """
@@ -425,7 +425,7 @@ class BirdhouseViewCharts(BirdhouseClass):
 
         return weather
 
-    def statistic_data(self, data):
+    def statistic_data(self, data) -> dict:
         """
         create chart format out of statistic data
         ----
@@ -452,7 +452,7 @@ class BirdhouseViewCharts(BirdhouseClass):
 
 class BirdhouseViewArchive(BirdhouseClass):
 
-    def __init__(self, config, tools, camera):
+    def __init__(self, config, tools, camera) -> None:
         BirdhouseClass.__init__(self, class_id="view-arch", config=config)
         self.tools = tools
         self.camera = camera
@@ -473,7 +473,7 @@ class BirdhouseViewArchive(BirdhouseClass):
 
         self.logging.info("Connected archive creation handler.")
 
-    def list(self, param):
+    def list(self, param) -> dict:
         """
         Return data for list of archive folders (or an empty list if still loading)
         """
@@ -488,7 +488,7 @@ class BirdhouseViewArchive(BirdhouseClass):
             content["links"] = self.tools.print_links_json(link_list=self.links_default, cam=camera)
         return content
 
-    def list_update(self, force=False, complete=False):
+    def list_update(self, force=False, complete=False) -> None:
         """
         Trigger recreation of the archive list
         """
@@ -497,7 +497,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         if force:
             self.force_reload = True
 
-    def list_create(self, complete=False):
+    def list_create(self, complete=False) -> None:
         """
         Page with backup/archive directory
         """
@@ -992,7 +992,7 @@ class BirdhouseViewArchive(BirdhouseClass):
 
 class BirdhouseViewFavorite(BirdhouseClass):
 
-    def __init__(self, config, tools):
+    def __init__(self, config, tools) -> None:
         BirdhouseClass.__init__(self, class_id="view-fav", config=config)
 
         self.tools = tools
@@ -1008,7 +1008,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
 
         self.logging.info("Connected archive creation handler.")
 
-    def list(self, param):
+    def list(self, param) -> dict:
         """
         Return data for list of favorites from cache
         """
@@ -1023,7 +1023,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
 
         return content
 
-    def list_update(self, force=False, complete=False):
+    def list_update(self, force=False, complete=False) -> None:
         """
         Trigger recreation of the favorit list
         """
@@ -1032,7 +1032,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         if force:
             self.force_reload = True
 
-    def list_create(self, complete=False):
+    def list_create(self, complete=False) -> None:
         """
         Page with pictures (and videos) marked as favorites and sorted by date
         """
@@ -1227,7 +1227,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
 
 class BirdhouseViewObjects(BirdhouseClass):
 
-    def __init__(self, config, tools):
+    def __init__(self, config, tools) -> None:
         BirdhouseClass.__init__(self, class_id="view-obj", config=config)
 
         self.tools = tools
@@ -1243,7 +1243,7 @@ class BirdhouseViewObjects(BirdhouseClass):
 
         self.logging.info("Connected object view creation handler.")
 
-    def list(self, param):
+    def list(self, param) -> dict:
         """
         Return data for list of favorites from cache
         """
@@ -1258,7 +1258,7 @@ class BirdhouseViewObjects(BirdhouseClass):
 
         return content
 
-    def list_update(self, force, complete):
+    def list_update(self, force, complete) -> None:
         """
         Trigger recreation of the favorit list
         """
@@ -1267,7 +1267,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         if force:
             self.force_reload = True
 
-    def list_create(self, complete):
+    def list_create(self, complete) -> None:
         """
         collect or create data for objects view ...
         """
