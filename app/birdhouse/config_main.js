@@ -18,6 +18,8 @@ var app_error_connect_image = "birdhouse/img/camera_na_server.jpg";
 var app_unique_stream_url = true;			// doesn't work for chrome (assumption: mjpeg-streams are not closed correctly)
 var app_unique_stream_id  = new Date().getTime();     // new ID per App-Start
 var app_session_id        = "";
+var app_status_commands   = ["last-answer"];
+
 
 //--------------------------------
 // create menu entries
