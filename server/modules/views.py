@@ -1229,12 +1229,13 @@ class BirdhouseViewFavorite(BirdhouseClass):
 
 class BirdhouseViewObjects(BirdhouseClass):
 
-    def __init__(self, config, tools) -> None:
+    def __init__(self, config, tools, cameras) -> None:
         BirdhouseClass.__init__(self, class_id="view-obj", config=config)
 
         self.tools = tools
         self.views = None
         self.loading = "started"
+        self.cameras = cameras
 
         self.create = True
         self.create_complete = False
@@ -1310,9 +1311,10 @@ class BirdhouseViewObjects(BirdhouseClass):
         entries = {}
         main_directory = self.config.db_handler.directory(config="backup")
         dir_list = self.tools.get_directories(main_directory)
-
         dir_list = list(reversed(sorted(dir_list)))
-        self.logging.info("  -> ARCHIVE Directories -> Object detection: " + str(len(dir_list)))
+
+        self.logging.info("  -> ARCHIVE Directories -> Object detection: " +
+                          str(len(dir_list)) + " / " + str(self.cameras))
         self.logging.debug(str(dir_list))
 
         for date in dir_list:
@@ -1349,10 +1351,12 @@ class BirdhouseViewObjects(BirdhouseClass):
 
                             if (thumbnail == "" and "default" in archive_detect[label]
                                     and len(archive_detect[label]["default"]) > 0):
-                                for detect in archive_detect[label]["default"]:
-                                    if detect in archive_entries["files"]:
-                                        stamp_thumbnail = detect
-                                        break
+                                for camera in self.cameras:
+                                    if camera in archive_detect[label]["default"]:
+                                        for detect in archive_detect[label]["default"][camera]:
+                                            if detect in archive_entries["files"]:
+                                                stamp_thumbnail = detect
+                                                break
                                 if stamp_thumbnail != "":
                                     entries[label] = {}
                                     for key in self.relevant_keys:
@@ -1369,25 +1373,28 @@ class BirdhouseViewObjects(BirdhouseClass):
                         if "detections" not in entries[label]:
                             entries[label]["detections"] = {
                                 "thumbnail": thumbnail,
-                                "favorite": len(archive_detect[label]["favorite"]),
-                                "favorite_dates": [date],
-                                "default": len(archive_detect[label]["default"]),
-                                "default_dates": [date],
-                                "total": len(archive_detect[label]["favorite"]) + len(archive_detect[label]["default"])
+                                "favorite": 0,
+                                "favorite_dates": [],
+                                "default": 0,
+                                "default_dates": {},
+                                "total": 0
                             }
-                        else:
 
-                            if "favorite" in archive_detect[label] and len(archive_detect[label]["favorite"]) > 0:
-                                entries[label]["detections"]["favorite"] += len(archive_detect[label]["favorite"])
-                                entries[label]["detections"]["favorite_dates"].append(date)
-                                entries[label]["detections"]["total"] += len(archive_detect[label]["favorite"])
-                                if label not in archive_detection_labels:
-                                    archive_detection_labels.append(label)
+                        if "favorite" in archive_detect[label] and len(archive_detect[label]["favorite"]) > 0:
+                            entries[label]["detections"]["favorite"] += len(archive_detect[label]["favorite"])
+                            entries[label]["detections"]["favorite_dates"].append(date)
+                            entries[label]["detections"]["total"] += len(archive_detect[label]["favorite"])
+                            if label not in archive_detection_labels:
+                                archive_detection_labels.append(label)
 
-                            if "default" in archive_detect[label] and len(archive_detect[label]["default"]) > 0:
-                                entries[label]["detections"]["default"] += len(archive_detect[label]["default"])
-                                entries[label]["detections"]["default_dates"].append(date)
-                                entries[label]["detections"]["total"] += len(archive_detect[label]["default"])
+                        for camera in self.cameras:
+                            if ("default" in archive_detect[label] and camera in archive_detect[label]["default"]
+                                    and len(archive_detect[label]["default"][camera]) > 0):
+                                if camera not in entries[label]["detections"]["default_dates"]:
+                                    entries[label]["detections"]["default_dates"][camera] = []
+                                entries[label]["detections"]["default"] += len(archive_detect[label]["default"][camera])
+                                entries[label]["detections"]["default_dates"][camera].append(date)
+                                entries[label]["detections"]["total"] += len(archive_detect[label]["default"][camera])
                                 if label not in archive_detection_labels:
                                     archive_detection_labels.append(label)
 
@@ -1446,7 +1453,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.create = BirdhouseViewCharts(config)
         self.archive = BirdhouseViewArchive(config, self.tools, self.camera)
         self.favorite = BirdhouseViewFavorite(config, self.tools)
-        self.object = BirdhouseViewObjects(config, self.tools)
+        self.object = BirdhouseViewObjects(config, self.tools, list(self.camera.keys()))
 
     def run(self):
         """

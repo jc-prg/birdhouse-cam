@@ -241,14 +241,17 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         detections = {}
         for stamp in entries:
             if "detections" in entries[stamp]:
+                camera = entries[stamp]["camera"]
                 for detection in entries[stamp]["detections"]:
                     if detection["label"] not in detections:
-                        detections[detection["label"]] = {"favorite": [], "default": []}
+                        detections[detection["label"]] = {"favorite": [], "default": {}}
+                    if camera not in detections[detection["label"]]["default"]:
+                        detections[detection["label"]]["default"][camera] = []
 
                     if "favorit" in entries[stamp] and int(entries[stamp]["favorit"]) == 1:
                         detections[detection["label"]]["favorite"].append(stamp)
 
                     elif "to_be_deleted" not in entries[stamp] or not int(entries[stamp]["to_be_deleted"]):
-                        detections[detection["label"]]["default"].append(stamp)
+                        detections[detection["label"]]["default"][camera].append(stamp)
 
         return detections
