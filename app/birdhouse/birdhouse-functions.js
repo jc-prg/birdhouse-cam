@@ -446,8 +446,8 @@ function birdhouse_overlayHide() {
        }
 
 
-function birdhouse_groupToggle(id, open="") {
-    if (open == "") {
+function birdhouse_groupToggle(id, open="toggle") {
+    if (open == "toggle") {
         if (document.getElementById("group_"+id).style.display == "none")   { birdhouse_groupOpen(id); }
         else                                                                { birdhouse_groupClose(id); }
     }

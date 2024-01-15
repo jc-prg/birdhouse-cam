@@ -290,6 +290,8 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var img_missing  = false;
 	var detect_sign  = "";
 
+	if (entry["directory"] && entry["directory"].charAt(entry["directory"].length - 1) != "/") { entry["directory"] += "/"; }
+
 	console.log(app_active_page);
 
 	if (entry["type"] == "data") {
@@ -339,6 +341,12 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
     		description         = onclick_difference;
         }
 		edit            = true;
+    }
+    else if (entry["type"] == "label") {
+		var lowres      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
+		var hires       = birdhouse_ImageURL(img_url + entry["directory"] + entry["hires"]);
+		var description = "<div class='detection_label' style='float:none;'>"+title+"</div>";
+        same_img_size = true;
     }
 	else if (entry["type"] == "directory") {
 

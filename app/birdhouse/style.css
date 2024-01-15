@@ -460,3 +460,17 @@ img .play_button  {
     background    : #bbbbff;
     color         : black;
 }
+
+.other_label {
+    float         : left;
+    border-radius :  8px;
+    height        : 12px;
+    max-height    : 12px;
+    margin        :  5px;
+    padding       :  4px;
+    cursor        : pointer;
+    font-size     : 11px;
+
+    background    : #bbffbb;
+    color         : black;
+}

@@ -10,6 +10,7 @@ var language_app = {
 	"DE" : {
 	    "ACTIVITY"              : "Aktivit&auml;t",
 	    "ALL_IMAGES"            : "Alle Bilder",
+	    "ALL_LABELS"            : "Alle Labels",
 	    "ANALYTICS"             : "Analyse",
 		"APP_TRANSLATION"       : "App spezifische Übersetzungen",
 		"ARCHIVE"               : "Archiv",
@@ -50,6 +51,7 @@ var language_app = {
 		"GPS_POSITION"          : "GPS Position",
 		"GPS_LOCATION"          : "GPS Location",
 		"HUMIDITY"              : "Luftfeuchtigkeit",
+		"IMAGES"                : "Bilder",
 		"IMAGESIZE"             : "Bildgr&ouml;&szlig;e",
 		"IMAGE_MENU"            : "Bild-Einst.",
 		"IMAGE_SETTINGS"        : "Bild-Einstellungen",
@@ -138,6 +140,7 @@ var language_app = {
 	"EN" : {
 	    "ACTIVITY"              : "Activity",
 	    "ALL_IMAGES"            : "All images",
+	    "ALL_LABELS"            : "All labels",
 	    "ANALYTICS"             : "Analytics",
 		"APP_TRANSLATION"       : "App specific translations",
 		"ARCHIVE"               : "Archive",
@@ -180,6 +183,7 @@ var language_app = {
 		"IMAGESIZE"             : "Image size",
 		"IMAGE_MENU"            : "Image settings",
 		"IMAGE_SETTINGS"        : "Image settings",
+		"IMAGES"                : "Images",
 		"INDEX"                 : "Index",
 		"INITIAL_SETUP"         : "<b>First Start:</b>&nbsp;<br/><br/>Please check and save settings.<br/>Then proceed with device settings.",
 		"LENGTH"                : "Length",

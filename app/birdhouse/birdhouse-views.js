@@ -587,13 +587,74 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	}
 
 function birdhouse_LIST_OBJECTS(title, data) {
-    html = "";
+    var html = "";
     detections = data["DATA"]["data"]["entries"];
 
+	var tab = new birdhouse_table();
+	tab.style_cells["vertical-align"] = "top";
+	tab.style_cells["padding"] = "3px";
+
+    var all_labels = "<div class='detection_label' onclick='birdhouse_LIST_OBJECTS_open();'>&nbsp;&nbsp;"+lang("ALL_LABELS")+"&nbsp;&nbsp;</div>";
+    var all_labels_list = [];
     Object.entries(detections).forEach(([key, value])=>{
-        html += "<h3>" + key + "</h3><br/>";
+        var onclick = "birdhouse_LIST_OBJECTS_open(label=\""+key+"\");";
+        all_labels += "<div class='detection_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + key + "&nbsp;&nbsp;</div>";
+        all_labels_list.push(key);
+        });
+    all_labels += "<div style='width:100%;height:25px;float:left;'></div>";
+    html += birdhouse_OtherGroup( "label_"+key, lang("ALL_LABELS"), all_labels, true);
+    html += "<div id='all_labels_list' style='display:none;'>" + all_labels_list.join(",") + "</div>";
+
+    Object.entries(detections).forEach(([key, value])=>{
+
+        var default_dates = "";
+        if (value["detections"]["default"] == 0)  { value["detections"]["default"] = "N/A"; }
+
+        Object.entries(value["detections"]["default_dates"]).forEach(([camera, date_list])=>{
+            date_list.sort();
+            for (var i=0;i<date_list.length;i++) {
+                var stamp = date_list[i];
+                var date  = stamp.substring(6,8) + "." + stamp.substring(4,6) + "." + stamp.substring(2,4);
+                var onclick = "birdhousePrint_load(view=\"TODAY\", camera=\""+camera+"\", date=\""+stamp+"\");";
+                default_dates += "<div class='other_label' onclick='"+onclick+"'>&nbsp;" + camera + ": " + date + "&nbsp;</div>";
+                }
+            });
+
+        var favorite_label = "";
+        if (value["detections"]["favorite"] > 0 ) {
+            favorite_label = value["detections"]["favorite"] + " detections";
+            favorite_label += "<br/><div class='other_label'>&nbsp;" + lang("FAVORITES") + "&nbsp;</div>";
+            }
+        else  { value["detections"]["favorite"] = "N/A"; }
+
+        value["type"] = "label";
+        var entry_information = tab.start();
+        if (value["detections"]["favorite"] > 0 ) {
+            var onclick = "birdhousePrint_load(\"FAVORITES\",\"\");";
+            entry_information += tab.row(value["detections"]["favorite"] + " " + lang("FAVORITES") + ":",
+                                         "<div class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + lang("FAVORITES") + "&nbsp;&nbsp;</div>");
+            }
+        entry_information += tab.row(value["detections"]["default"] + " " + lang("IMAGES") + ":", default_dates);
+        entry_information += tab.end();
+
+        var html_entry = tab.start();
+        html_entry    += tab.row(birdhouse_Image(key, value), entry_information);
+        html_entry    += tab.end();
+
+        html += birdhouse_OtherGroup( "label_"+key, key, html_entry, true);
+
         });
 
 	birdhouse_frameHeader(title);
 	setTextById(app_frame_content, html);
     }
+
+function birdhouse_LIST_OBJECTS_open(label="all") {
+
+    var all_labels = document.getElementById("all_labels_list").innerHTML.split(",");
+    for (var i=0;i<all_labels.length;i++) {
+        if (label == "all" )  { birdhouse_groupToggle("label_"+all_labels[i], true); }
+        else                  { birdhouse_groupToggle("label_"+all_labels[i], false); }
+    }
+    if (label != "all")       { birdhouse_groupToggle("label_"+label, true); }
+}

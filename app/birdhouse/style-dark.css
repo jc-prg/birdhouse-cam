@@ -54,4 +54,9 @@
         background    : blue;
         color         : white;
     }
+
+    .other_label {
+        background    : darkgreen;
+        color         : white;
+    }
 }
