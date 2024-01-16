@@ -69,7 +69,8 @@ Here are some options. Calculate with a little bit more space in the height for 
   * under construction, currently browser only (no iPhone)
 * **Detecting birds** (objects) via PyTorch
   * bird detection model in an early stage trained with a few European singing birds
-  * labels in archive and favorite view as well as for admins in complete view of current day
+  * view with all detected birds and objects -> jump to other views filtered by bird
+  * filter by detected birds in archive and favorite view as well as for admins in complete view of current day
   * batch detection for archive images
   * _live detection is experimental and slow on RPi 4 (admin view)_
   * _no label editing via app yet_
@@ -188,12 +189,29 @@ Depending on the needs there are three options available how to install and run 
     ```
 7. Create a system service to automatically start and restart the server
     ```bash 
+    # create and configure services
     $ sudo cp ./sample.birdhouse-cam.service /etc/systemd/system/birdhouse-cam.service
     $ sudo nano /etc/systemd/system/birdhouse-cam.service
-    $ sudo systemctl reload-daemons
+
+    $ sudo cp ./sample.birdhouse-cam.service /etc/systemd/system/birdhouse-cam-docker.service
+    $ sudo nano /etc/systemd/system/birdhouse-cam-docker.service
+
+    # reload services
+    $ sudo systemctl daemon-reload
+   
+    # register and install services
     $ sudo systemctl enable birdhouse-cam.service
+    $ sudo systemctl start birdhouse-cam.service
+    $ sudo systemctl enable birdhouse-cam-docker.service
+    $ sudo systemctl start birdhouse-cam-docker.service
     ```
-8. Examine logging messages if there are any problems, see (1.6)
+8. Alternatively you can install both parts via ```sudo nano /etc/rc.local```. Add the following lines:
+    ```bash
+   /usr/local/bin/docker-compose -f /projects/prod/birdhouse-cam/docker-compose-hybrid.yml up -docker
+   /usr/bin/python3 /projects/prod/birdhouse-cam/server/server.py
+    ```
+
+10. Examine logging messages if there are any problems, see (1.6)
 
 ### First run and device configuration
 
@@ -220,20 +238,36 @@ To access image and video files via WebDAV define credentials and port in the [.
 
 ### Optimizing system configuration
 
-At least for a Raspberry Pi 3B+ the following configuration should be done to ensure a slightly better performance. 
+At least for a Raspberry Pi 3B+ the following configuration should be done to ensure a slightly better performance.
+
+#### Analyze memory and swap usage
+
+* first analyze the usage of the docker containers to decide if there is need for action
+    ```bash
+    # overview memory and swap usage
+    $ watch -n 2 free -h
+    
+    # overview memory usage per docker container (full and reduced)
+    $ sudo docker stats
+    $ sudo docker stats --format "table {{.Container}}\t{{.Name}}\t{{.MemUsage}}\t{{.MemPerc}}"
+    ```
+* NOTE: the file [sample.env](sample.env) defines memory limits that should fit for Raspberry Pi 3B+.
 
 #### Configure swap file on Ubuntu
 
 * Update swap memory (see also [https://bitlaunch.io/](https://bitlaunch.io/blog/how-to-create-and-adjust-swap-space-in-ubuntu-20-04/))
-
   ```bash
-  free -h
-  fallocate -l 2G /swapfile
-  chmod 600 /swapfile
-  mkswap /swapfile
-  swapon /swapfile
-  free -h
+  $ free -h
+  $ sudo fallocate -l 2G /swapfile
+  $ sudo chmod 600 /swapfile
+  $ sudo mkswap /swapfile
+  $ sudo swapon /swapfile
+  $ free -h
   ```
+* Add swap memory permanently
+    ```bash
+    $ sudo echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+    ```
 
 #### Configure swap file on Raspbian OS
 
