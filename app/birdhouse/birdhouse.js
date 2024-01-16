@@ -71,13 +71,13 @@ var birdhouse_css = [
 loadingImage = "birdhouse/img/bird.gif";
 
 
-function birdhousePrint_load(view="INDEX", camera="", date="") {
+function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 
 	if (app_first_load || app_2nd_load) {
 	    if (app_first_load) { app_first_load = false; }
 	    else                { app_2nd_load = false; }
 	    var param = window.location.href.split("?");
-	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "TODAY", "INFO", "WEATHER", "IMAGE_SETTINGS"];
+	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "OBJECTS", "TODAY", "INFO", "WEATHER", "IMAGE_SETTINGS"];
 	    if (options.includes(param[1])) {
 	        view = param[1];
 	        app_active_page = param[1];
@@ -89,8 +89,9 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 	if (camera != "" && date != "")	{ commands.push(date); commands.push(camera); app_active_cam = camera; }
 	else if (camera != "")          { commands.push(camera); app_active_cam = camera; }
 	else                            { commands.push(app_active_cam); }
+	if (label != "")                { commands.push(label); }
 	
-	console.debug("Request "+view+" / "+camera+" / "+date);
+	console.debug("Request "+view+" / "+camera+" / "+date+" / "+label);
 	birdhouse_genericApiRequest("GET", commands, birdhousePrint);
 	}
 	
@@ -148,7 +149,7 @@ function birdhousePrint(data) {
 	if (app_active_page == "INDEX" && initial_setup) { birdhouse_settings.create(); return; }
 	else if (app_active_page == "ARCHIVE")           { success = birdhouse_LIST(lang("ARCHIVE"), data, camera); }
 	else if (app_active_page == "DEVICES")           { birdhouseDevices(lang("DEVICES"), data, camera); }
-	else if (app_active_page == "FAVORITES")         { success = birdhouse_LIST(lang("FAVORITES"),  data, camera); }
+	else if (app_active_page == "FAVORITES")         { success = birdhouse_LIST(lang("FAVORITES"), data, camera); }
 	else if (app_active_page == "IMAGE_SETTINGS")   { birdhouseDevices_cameraSettings(data); }
 	else if (app_active_page == "INDEX")             { birdhouse_INDEX(data, camera); }
 	else if (app_active_page == "INFO") 	         { birdhouse_settings.create("INFO_ONLY"); }

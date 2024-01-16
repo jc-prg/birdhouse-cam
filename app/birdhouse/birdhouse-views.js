@@ -267,6 +267,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var weather_data      = data_list["data"]["weather_data"];
 	var chart_data        = data_list["data"]["chart_data"];
 	var entry_count       = data_list["view"]["view_count"];
+	var selected_label    = data_list["view"]["label"];
 
 	var sensors           = app_data["SETTINGS"]["devices"]["sensors"];
 	var camera_settings   = app_data["SETTINGS"]["devices"]["cameras"];
@@ -457,7 +458,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
     }
 
     // show labels of detected birds / objects
-    if ((active_page == "TODAY" && active_date != "" && active_date != undefined) || active_page == "TODAY_COMPLETE" || active_page == "FAVORITES") {
+    if (((active_page == "TODAY" || active_page == "ARCHIVE") && active_date != "" && active_date != undefined) || active_page == "TODAY_COMPLETE" || active_page == "FAVORITES") {
+
         if (entries != undefined &&  Object.keys(entries).length > 0) {
             var labels = {};
             var label_information = "";
@@ -584,6 +586,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
 	birdhouse_frameHeader(page_title, page_status);
 	setTextById(app_frame_content, html);
+
+    selected_label = selected_label.replaceAll("%20", " ");
+	if ((active_page == "FAVORITES" || active_page == "TODAY") && selected_label != undefined) { birdhouse_view_images_objects(selected_label); }
 	}
 
 function birdhouse_LIST_OBJECTS(title, data) {
@@ -620,7 +625,7 @@ function birdhouse_LIST_OBJECTS(title, data) {
             for (var k=0;k<date_list.length;k++) {
                 var stamp = date_list[k];
                 var date  = stamp.substring(6,8) + "." + stamp.substring(4,6) + "." + stamp.substring(2,4);
-                var onclick = "birdhousePrint_load(view=\"TODAY\", camera=\""+camera+"\", date=\""+stamp+"\");";
+                var onclick = "birdhousePrint_load(view=\"TODAY\", camera=\""+camera+"\", date=\""+stamp+"\", label=\""+key+"\");";
                 default_dates += "<div class='other_label' onclick='"+onclick+"'>&nbsp;" + camera + ": " + date + "&nbsp;</div>";
                 }
             });
@@ -635,7 +640,7 @@ function birdhouse_LIST_OBJECTS(title, data) {
         value["type"] = "label";
         var entry_information = tab.start();
         if (value["detections"]["favorite"] > 0 ) {
-            var onclick = "birdhousePrint_load(\"FAVORITES\",\"\");";
+            var onclick = "birdhousePrint_load(\"FAVORITES\",\""+app_active_cam+"\", \"all-dates\", \""+key+"\");";
             entry_information += tab.row(value["detections"]["favorite"] + " " + lang("FAVORITES") + ":",
                                          "<div class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + lang("FAVORITES") + "&nbsp;&nbsp;</div>");
             }

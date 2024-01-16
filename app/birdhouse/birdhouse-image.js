@@ -344,8 +344,10 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
     }
     else if (entry["type"] == "label") {
 		var lowres      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
-		var hires       = birdhouse_ImageURL(img_url + entry["directory"] + entry["hires"]);
-		var description = "<div class='detection_label' style='float:none;'>"+title+"</div>";
+		var hires       = birdhouse_ImageURL(img_url + entry["directory"] + entry["hires_detect"]);
+		var description = "<div class='detection_label' style='float:none;cursor:default;'>"+title+"</div>";
+        var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+title+"\");";
+
         same_img_size = true;
     }
 	else if (entry["type"] == "directory") {
