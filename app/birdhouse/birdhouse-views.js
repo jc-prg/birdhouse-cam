@@ -588,32 +588,37 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
 function birdhouse_LIST_OBJECTS(title, data) {
     var html = "";
-    detections = data["DATA"]["data"]["entries"];
+    var detections = data["DATA"]["data"]["entries"];
 
 	var tab = new birdhouse_table();
 	tab.style_cells["vertical-align"] = "top";
 	tab.style_cells["padding"] = "3px";
 
     var all_labels = "<div class='detection_label' onclick='birdhouse_LIST_OBJECTS_open();'>&nbsp;&nbsp;"+lang("ALL_LABELS")+"&nbsp;&nbsp;</div>";
-    var all_labels_list = [];
-    Object.entries(detections).forEach(([key, value])=>{
+    var all_labels_list = Object.keys(detections);
+    all_labels_list.sort();
+
+    console.error(all_labels_list);
+
+    for (var i=0;i<all_labels_list.length;i++) {
+        var key = all_labels_list[i];
         var onclick = "birdhouse_LIST_OBJECTS_open(label=\""+key+"\");";
         all_labels += "<div class='detection_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + key + "&nbsp;&nbsp;</div>";
-        all_labels_list.push(key);
-        });
+        }
     all_labels += "<div style='width:100%;height:25px;float:left;'></div>";
-    html += birdhouse_OtherGroup( "label_"+key, lang("ALL_LABELS"), all_labels, true);
+    html += birdhouse_OtherGroup( "list_of_labels", lang("ALL_LABELS"), all_labels, true);
     html += "<div id='all_labels_list' style='display:none;'>" + all_labels_list.join(",") + "</div>";
 
-    Object.entries(detections).forEach(([key, value])=>{
-
+    for (var i=0;i<all_labels_list.length;i++) {
+        var key = all_labels_list[i];
+        var value = detections[key];
         var default_dates = "";
-        if (value["detections"]["default"] == 0)  { value["detections"]["default"] = "N/A"; }
 
+        if (value["detections"]["default"] == 0)  { value["detections"]["default"] = "N/A"; }
         Object.entries(value["detections"]["default_dates"]).forEach(([camera, date_list])=>{
             date_list.sort();
-            for (var i=0;i<date_list.length;i++) {
-                var stamp = date_list[i];
+            for (var k=0;k<date_list.length;k++) {
+                var stamp = date_list[k];
                 var date  = stamp.substring(6,8) + "." + stamp.substring(4,6) + "." + stamp.substring(2,4);
                 var onclick = "birdhousePrint_load(view=\"TODAY\", camera=\""+camera+"\", date=\""+stamp+"\");";
                 default_dates += "<div class='other_label' onclick='"+onclick+"'>&nbsp;" + camera + ": " + date + "&nbsp;</div>";
@@ -642,8 +647,7 @@ function birdhouse_LIST_OBJECTS(title, data) {
         html_entry    += tab.end();
 
         html += birdhouse_OtherGroup( "label_"+key, key, html_entry, true);
-
-        });
+        }
 
 	birdhouse_frameHeader(title);
 	setTextById(app_frame_content, html);
