@@ -989,6 +989,14 @@ class BirdhouseViewArchive(BirdhouseClass):
 
         return content["entries"][archive_directory].copy()
 
+    def request_done(self):
+        """
+        reset all values that lead to (re)creation of this view
+        """
+        self.create_complete = False
+        self.create = False
+        self.force_reload = False
+
 
 class BirdhouseViewFavorite(BirdhouseClass):
 
@@ -1226,16 +1234,25 @@ class BirdhouseViewFavorite(BirdhouseClass):
         self.logging.info("  -> VIDEO Favorites: " + str(files_video_count))
         return favorites.copy()
 
+    def request_done(self):
+        """
+        reset all values that lead to (re)creation of this view
+        """
+        self.create_complete = False
+        self.create = False
+        self.force_reload = False
+
 
 class BirdhouseViewObjects(BirdhouseClass):
 
-    def __init__(self, config, tools, cameras) -> None:
+    def __init__(self, config, tools, camera) -> None:
         BirdhouseClass.__init__(self, class_id="view-obj", config=config)
 
         self.tools = tools
         self.views = None
         self.loading = "started"
-        self.cameras = cameras
+        self.camera = camera
+        self.cameras = list(camera.keys())
 
         self.create = True
         self.create_complete = False
@@ -1323,6 +1340,16 @@ class BirdhouseViewObjects(BirdhouseClass):
 
             if self.config.db_handler.exists(config="backup", date=date):
                 archive_entries = self.config.db_handler.read(config="backup", date=date)
+                changed = self.config.queue.get_status_changed(date, "objects")
+                if changed or self.create_complete:
+                    if changed:
+                        self.logging.info("  * Objects in " + date + " have changed, start update ...")
+                    else:
+                        self.logging.info("  * Complete update for " + date + " requested ...")
+                    changed_detections = self.camera[self.cameras[0]].object.summarize_detections(archive_entries["files"])
+                    archive_entries["detection"] = changed_detections
+                    self.config.db_handler.write(config="backup", date=date, data=archive_entries)
+                    self.config.queue.set_status_changed(date, "objects", False)
 
                 if "detection" in archive_entries:
                     archive_detect = archive_entries["detection"]
@@ -1425,6 +1452,14 @@ class BirdhouseViewObjects(BirdhouseClass):
 
         return entries
 
+    def request_done(self):
+        """
+        reset all values that lead to (re)creation of this view
+        """
+        self.create_complete = False
+        self.create = False
+        self.force_reload = False
+
 
 class BirdhouseViews(threading.Thread, BirdhouseClass):
 
@@ -1453,7 +1488,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.create = BirdhouseViewCharts(config)
         self.archive = BirdhouseViewArchive(config, self.tools, self.camera)
         self.favorite = BirdhouseViewFavorite(config, self.tools)
-        self.object = BirdhouseViewObjects(config, self.tools, list(self.camera.keys()))
+        self.object = BirdhouseViewObjects(config, self.tools, self.camera)
 
     def run(self):
         """
@@ -1473,23 +1508,21 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 time.sleep(1)
                 if not self.if_shutdown():
                     self.archive.list_create(self.archive.create_complete)
-                    self.archive.create = False
-                    self.archive.create_complete = False
+                    self.archive.request_done()
 
             # if archive to be read again (from time to time and depending on user activity)
             if self.object.create and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
                 if not self.if_shutdown():
                     self.object.list_create(self.object.create_complete)
-                    self.object.create = False
-                    self.object.create_complete = False
+                    self.object.request_done()
 
             # if favorites to be read again (from time to time and depending on user activity)
             if self.favorite.create and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
                 if not self.if_shutdown():
                     self.favorite.list_create(self.favorite.create_complete)
-                    self.favorite.create = False
+                    self.favorite.request_done()
 
             if self.force_reload:
                 self.force_reload = False
