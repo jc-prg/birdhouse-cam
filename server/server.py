@@ -646,10 +646,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 param["which_cam"] = elements[5]
 
         elif self.path.startswith("/api"):
+            param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup",
+                            "last-answer", "favorit", "recycle", "update-views", "update-views-complete",
+                            "archive-object-detection", "archive-remove-day", "OBJECTS", "FAVORITES"]
+
             param["session_id"] = elements[2]
             param["command"] = elements[3]
-            last_is_cam = True
 
+            # start with hypothesis that the last param is the active cam
+            last_is_cam = True
             complete_cam = elements[len(elements) - 1]
             if "+" in complete_cam:
                 param["which_cam"] = complete_cam.split("+")[0]
@@ -657,14 +662,18 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                 param["which_cam"] = complete_cam
 
-            param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup",
-                            "last-answer", "favorit", "recycle", "update-views", "update-views-complete",
-                            "archive-object-detection", "archive-remove-day", "OBJECTS", "FAVORITES"]
-            if "command" in param and param["command"] not in param_no_cam:
+            # extra rule for TODAY
+            if param["command"] == "TODAY":
+                param["date"] = elements[4]
+                param["which_cam"] = elements[5]
+                last_is_cam = False
+
+            elif param["command"] not in param_no_cam:
                 if param["which_cam"] not in views.camera:
                     srv_logging.warning("Unknown camera requested: " + param["which_cam"] + " (" + self.path + ")")
                     param["which_cam"] = "cam1"
                     last_is_cam = False
+
             elif "command" in param and param["command"] in param_no_cam:
                 param["which_cam"] = "cam1"
                 last_is_cam = False
@@ -1147,7 +1156,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if key in content:
                     api_data["data"][key] = content[key]
 
-            param_to_publish = ["view", "view_count", "links", "subtitle", "max_image_size"]
+            param_to_publish = ["view", "view_count", "links", "subtitle", "max_image_size", "label"]
             for key in param_to_publish:
                 if key in content:
                     api_data["view"][key] = content[key]

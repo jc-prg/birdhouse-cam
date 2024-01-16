@@ -1689,7 +1689,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 if image_hires is None:
                     self.record_image_error_msg = ["img_error='empty image from camera, but no camera error' (None)"]
                 else:
-                    self.record_image_error_msg = ["img_error=" + str(self.image.error) + "; img_len=" + str(len(image))]
+                    self.record_image_error_msg = ["img_error=" + str(self.image.error) + "; img_len=" + str(len(image_hires))]
                 sensor_data = {}
                 image_info = {}
                 self.previous_stamp = stamp

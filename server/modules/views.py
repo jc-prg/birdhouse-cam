@@ -482,6 +482,11 @@ class BirdhouseViewArchive(BirdhouseClass):
             content = self.views[camera]
         else:
             content = {}
+
+        content["label"] = ""
+        if len(param["parameter"]) >= 3:
+            content["label"] = param["parameter"][2]
+
         if param["admin_allowed"]:
             content["links"] = self.tools.print_links_json(link_list=self.links_admin, cam=camera)
         else:
@@ -1023,6 +1028,9 @@ class BirdhouseViewFavorite(BirdhouseClass):
         camera = param["which_cam"]
         content = self.views
         content["active_cam"] = camera
+        content["label"] = ""
+        if len(param["parameter"]) >= 3:
+            content["label"] = param["parameter"][2]
 
         if param["admin_allowed"]:
             content["links"] = self.tools.print_links_json(link_list=self.links_admin, cam=camera)
@@ -1321,11 +1329,50 @@ class BirdhouseViewObjects(BirdhouseClass):
         self.config.db_handler.write("objects", "", content, create=True, save_json=True, no_cache=False)
         self.loading = "done"
 
+    def _list_get_detection_for_label(self, label, entry, favorite) -> dict:
+        """
+        get entry, if label inside, and check if its a favorite
+        """
+        new_entry = {}
+        label_exists = False
+        coordinates = []
+
+        if favorite and not ("favorit" in entry and int(entry["favorit"]) == 1):
+            return {}
+        if "type" not in entry or entry["type"] != "image" or "hires" not in entry:
+            return {}
+
+        if "directory" in entry:
+            img_directory = entry["directory"]
+            if img_directory[0:1] == "/":
+                img_directory = entry["directory"][1:]
+        elif "datestamp" in entry:
+            img_directory = "images/" + entry["datestamp"] +"/"
+        else:
+            return {}
+        if not os.path.exists(os.path.join(birdhouse_main_directories["data"], img_directory, entry["hires"])):
+            return {}
+
+        if "detections" in entry:
+            for detect in entry["detections"]:
+                if detect["label"] == label:
+                    label_exists = True
+                    coordinates = detect["coordinates"]
+                    break
+
+        if label_exists:
+            for key in self.relevant_keys:
+                new_entry[key] = entry[key]
+            new_entry["coordinates"] = coordinates
+            new_entry["type"] = "label"
+
+        return new_entry
+
     def _list_create_from_archive(self, complete):
         """
         get information from archive files and return ...
         """
-        entries = {}
+        view_entries = {}
         main_directory = self.config.db_handler.directory(config="backup")
         dir_list = self.tools.get_directories(main_directory)
         dir_list = list(reversed(sorted(dir_list)))
@@ -1339,9 +1386,10 @@ class BirdhouseViewObjects(BirdhouseClass):
             category = "/objects/" + date + "/"
 
             if self.config.db_handler.exists(config="backup", date=date):
+
                 archive_entries = self.config.db_handler.read(config="backup", date=date)
                 changed = self.config.queue.get_status_changed(date, "objects")
-                if changed or self.create_complete:
+                if changed or complete:
                     if changed:
                         self.logging.info("  * Objects in " + date + " have changed, start update ...")
                     else:
@@ -1352,93 +1400,64 @@ class BirdhouseViewObjects(BirdhouseClass):
                     self.config.queue.set_status_changed(date, "objects", False)
 
                 if "detection" in archive_entries:
-                    archive_detect = archive_entries["detection"]
+
                     archive_detection_labels = []
+                    archive_detect = archive_entries["detection"]
 
+                    # Initial round: identify thumbnails
                     for label in archive_detect:
-                        thumbnail = ""
-                        stamp_thumbnail = ""
 
-                        # create entry for label that doesn't exist yet
-                        if label not in entries:
-                            if ("favorite" in archive_detect[label]
-                                    and len(archive_detect[label]["favorite"]) > 0):
-                                for detect in archive_detect[label]["favorite"]:
-                                    if detect in archive_entries["files"]:
-                                        stamp_thumbnail = detect
+                        if label not in view_entries:
+
+                            view_entry = {}
+                            view_thumbnail = ""
+
+                            for archive_stamp in archive_entries["files"]:
+                                archive_entry = archive_entries["files"][archive_stamp]
+                                view_entry = self._list_get_detection_for_label(label, archive_entry, True)
+                                view_thumbnail = "favorite"
+                                if view_entry != {}:
+                                    break
+
+                            if view_entry == {}:
+                                for archive_stamp in archive_entries["files"]:
+                                    archive_entry = archive_entries["files"][archive_stamp]
+                                    view_entry = self._list_get_detection_for_label(label, archive_entry, False)
+                                    view_thumbnail = "default"
+                                    if view_entry != {}:
                                         break
-                                if stamp_thumbnail != "":
-                                    entries[label] = {}
-                                    for key in self.relevant_keys:
-                                        if key in archive_entries["files"][stamp_thumbnail]:
-                                            entries[label][key] = archive_entries["files"][stamp_thumbnail][key]
-                                    thumbnail = "favorite"
-                                    if label not in archive_detection_labels:
-                                        archive_detection_labels.append(label)
 
-                            if (thumbnail == "" and "default" in archive_detect[label]
-                                    and len(archive_detect[label]["default"]) > 0):
-                                for camera in self.cameras:
-                                    if camera in archive_detect[label]["default"]:
-                                        for detect in archive_detect[label]["default"][camera]:
-                                            if detect in archive_entries["files"]:
-                                                stamp_thumbnail = detect
-                                                break
-                                if stamp_thumbnail != "":
-                                    entries[label] = {}
-                                    for key in self.relevant_keys:
-                                        if key in archive_entries["files"][stamp_thumbnail]:
-                                            entries[label][key] = archive_entries["files"][stamp_thumbnail][key]
-                                    thumbnail = "default"
-                                    if label not in archive_detection_labels:
-                                        archive_detection_labels.append(label)
+                            if view_entry != {}:
+                                view_entries[label] = view_entry
+                                view_entries[label]["detections"] = {
+                                    "thumbnail": view_thumbnail,
+                                    "favorite": 0,
+                                    "favorite_dates": [],
+                                    "default": 0,
+                                    "default_dates": {},
+                                    "total": 0
+                                }
 
-                            if thumbnail == "":
-                                continue
+                    # second round, count detections
+                    for label in archive_detect:
 
-                        # count amount of images with label detected
-                        if "detections" not in entries[label]:
-                            entries[label]["detections"] = {
-                                "thumbnail": thumbnail,
-                                "favorite": 0,
-                                "favorite_dates": [],
-                                "default": 0,
-                                "default_dates": {},
-                                "total": 0
-                            }
+                        if "detection" in archive_entries and label in archive_entries["detection"]:
+                            detection = archive_entries["detection"][label]
+                            if len(detection["favorite"]) > 0:
+                                view_entries[label]["detections"]["favorite"] += len(detection["favorite"])
+                                view_entries[label]["detections"]["favorite_dates"].append(date)
+                                view_entries[label]["detections"]["total"] += len(detection["favorite"])
 
-                        if "favorite" in archive_detect[label] and len(archive_detect[label]["favorite"]) > 0:
-                            entries[label]["detections"]["favorite"] += len(archive_detect[label]["favorite"])
-                            entries[label]["detections"]["favorite_dates"].append(date)
-                            entries[label]["detections"]["total"] += len(archive_detect[label]["favorite"])
+                            for camera in self.cameras:
+                                if camera not in view_entries[label]["detections"]["default_dates"]:
+                                    view_entries[label]["detections"]["default_dates"][camera] = []
+                                if camera in detection["default"] and len(detection["default"][camera]) > 0:
+                                    view_entries[label]["detections"]["default"] += len(detection["default"][camera])
+                                    view_entries[label]["detections"]["default_dates"][camera].append(date)
+                                    view_entries[label]["detections"]["total"] += len(detection["favorite"])
+
                             if label not in archive_detection_labels:
                                 archive_detection_labels.append(label)
-
-                        for camera in self.cameras:
-                            if ("default" in archive_detect[label] and camera in archive_detect[label]["default"]
-                                    and len(archive_detect[label]["default"][camera]) > 0):
-                                if camera not in entries[label]["detections"]["default_dates"]:
-                                    entries[label]["detections"]["default_dates"][camera] = []
-                                entries[label]["detections"]["default"] += len(archive_detect[label]["default"][camera])
-                                entries[label]["detections"]["default_dates"][camera].append(date)
-                                entries[label]["detections"]["total"] += len(archive_detect[label]["default"][camera])
-                                if label not in archive_detection_labels:
-                                    archive_detection_labels.append(label)
-
-                        # replace entry "favorite" was not yet found
-                        if (entries[label]["detections"]["thumbnail"] == "default"
-                                and "favorite" in archive_detect[label]
-                                and len(archive_detect[label]["favorite"]) > 0):
-                            stamp_thumbnail = ""
-                            for detect in archive_detect[label]["favorite"]:
-                                if detect in archive_entries["files"]:
-                                    stamp_thumbnail = detect
-                                    break
-                            if stamp_thumbnail != "":
-                                for key in self.relevant_keys:
-                                    if key in archive_entries["files"][stamp_thumbnail]:
-                                        entries[label][key] = archive_entries["files"][stamp_thumbnail][key]
-                                entries[label]["detections"]["thumbnail"] = "favorite"
 
                     self.logging.info("  -> Read objects from " + category + ": " + str(archive_detection_labels))
 
@@ -1450,7 +1469,39 @@ class BirdhouseViewObjects(BirdhouseClass):
                 self.logging.warning("  -> Could not read objects from " + category + ", no data available.")
                 continue
 
-        return entries
+        for label in view_entries:
+            view_entries[label] = self._list_create_specific_thumbnails(label, view_entries[label])
+
+        return view_entries
+
+    def _list_create_specific_thumbnails(self, label, entry):
+        """
+        create a thumbnail from the detected object
+        """
+        detect_position = []
+        if entry["directory"][0:1] == "/":
+            entry["directory"] = entry["directory"][1:]
+        hires_path = os.path.join(birdhouse_main_directories["data"], entry["directory"], entry["hires"])
+        lowres_file = "image_" + label + "_lowres.jpg"
+        lowres_path = os.path.join(birdhouse_main_directories["data"], entry["directory"], lowres_file)
+
+        if "coordinates" in entry:
+            detect_position = entry["coordinates"]
+
+        if detect_position and os.path.exists(hires_path):
+
+            raw = self.camera[self.cameras[0]].image.read(hires_path)
+            raw_crop, crop_area = self.camera[self.cameras[0]].image.crop_raw(raw, crop_area=detect_position, crop_type="relative")
+            self.camera[self.cameras[0]].image.write(lowres_path, raw_crop)
+            entry["lowres"] = lowres_file
+
+            self.logging.debug("Created thumbnail from " + str(hires_path) + ": size=" +
+                               str(raw.shape) + "; crop_area=" + str(crop_area))
+
+        elif not os.path.exists(hires_path):
+            self.logging.error("Could not find hires file: " + str(hires_path) + " - " + birdhouse_main_directories["data"])
+
+        return entry
 
     def request_done(self):
         """
@@ -1579,6 +1630,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         content = {
             "active_cam": which_cam,
             "active_date": date_backup,
+            "label": "",
             "view": "list",
             "entries": {},
             "entries_delete": {},
@@ -1593,6 +1645,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 "hires": [0, 0]
             }
         }
+        if len(param["parameter"]) >= 3:
+            content["label"] = param["parameter"][2]
+
         files_all = {}
         count = 0
 

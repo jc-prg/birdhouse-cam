@@ -200,6 +200,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
             self.logging.debug("H: " + str(y_start) + "-" + str(y_end) + " / W: " + str(x_start) + "-" + str(x_end))
             frame_cropped = raw[y_start:y_end, x_start:x_end]
+            #frame_cropped = raw[x_start:x_end, y_start:y_end]
             return frame_cropped, crop_area
 
         except Exception as e:
@@ -421,7 +422,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         except Exception as e:
             error_msg = "Can't save image and/or create thumbnail '" + image_path + "': " + str(e)
-            self.image.raise_error(error_msg)
+            self.raise_error(error_msg)
             return ""
 
     def read(self, filename):
@@ -438,10 +439,8 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         except Exception as e:
             error_msg = "Can't read image '" + image_path + "': " + str(e)
-            self.image.raise_error(error_msg)
+            self.raise_error(error_msg)
             return ""
-
-
 
     def size_raw(self, raw, scale_percent=100):
         """
