@@ -1,4 +1,4 @@
-# Birdhouse Camera v1.0.7
+# Birdhouse Camera v1.0.8 (in progress)
 
 Raspberry Pi project to observe our birdhouse with multiple webcams: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, ...
@@ -176,8 +176,13 @@ Depending on the needs there are three options available how to install and run 
 #### (3) Hybrid installation
 
 1. Install docker and docker-compose, see (1.1)
+
 2. Install birdhouse-cam prerequisites, see (2.1)
-3. Create and adapt main configuration file, see (1.2)
+
+3. Create and adapt main configuration file, see (1.2). 
+
+   Ensure the following variable is set correctly: ```BIRDHOUSE_INSTALLATION_TYPE=HYBRID```
+
 4. Build docker container and run the first time
     ```bash
     $ docker-compose -f docker-compose-hybrid.yml up --build
@@ -187,31 +192,37 @@ Depending on the needs there are three options available how to install and run 
     ```bash 
     @reboot /usr/sbin/docker-compose -f /<path_to_script>/docker-compose-hybrid.yml up -d
     ```
-7. Create a system service to automatically start and restart the server
-    ```bash 
-    # create and configure services
-    $ sudo cp ./sample.birdhouse-cam.service /etc/systemd/system/birdhouse-cam.service
-    $ sudo nano /etc/systemd/system/birdhouse-cam.service
+7. Enable starting when the server starts:
 
-    $ sudo cp ./sample.birdhouse-cam.service /etc/systemd/system/birdhouse-cam-docker.service
-    $ sudo nano /etc/systemd/system/birdhouse-cam-docker.service
+   1. Install via ```sudo crontab -e```. Add the following lines:
+       ```bash
+      # birdhouse-cam: start database, web-server, and videoserver
+      @reboot     /usr/local/bin/docker-compose -f /projects/prod/birdhouse-cam/docker-compose-hybrid.yml up -docker
+      # birdhouse-cam: start birdhouse server
+      @reboot     /usr/bin/python3 /projects/prod/birdhouse-cam/server/server.py
+      # birdhouse-cam: start if restart has been requested 
+      * * * * *   /usr/bin/python3 /projects/prod/birdhouse-cam/server/server.py --check-if-start
+       ```
+   2. Alternatively create a system service to automatically start and restart the server (experimental)
+       ```bash 
+       # create and configure services
+       $ sudo cp ./sample.birdhouse-cam.service /etc/systemd/system/birdhouse-cam.service
+       $ sudo nano /etc/systemd/system/birdhouse-cam.service
 
-    # reload services
-    $ sudo systemctl daemon-reload
+       $ sudo cp ./sample.birdhouse-cam.service /etc/systemd/system/birdhouse-cam-docker.service
+       $ sudo nano /etc/systemd/system/birdhouse-cam-docker.service
+
+       # reload services
+       $ sudo systemctl daemon-reload
    
-    # register and install services
-    $ sudo systemctl enable birdhouse-cam.service
-    $ sudo systemctl start birdhouse-cam.service
-    $ sudo systemctl enable birdhouse-cam-docker.service
-    $ sudo systemctl start birdhouse-cam-docker.service
-    ```
-8. Alternatively you can install both parts via ```sudo nano /etc/rc.local```. Add the following lines:
-    ```bash
-   /usr/local/bin/docker-compose -f /projects/prod/birdhouse-cam/docker-compose-hybrid.yml up -docker
-   /usr/bin/python3 /projects/prod/birdhouse-cam/server/server.py
-    ```
+       # register and install services
+       $ sudo systemctl enable birdhouse-cam.service
+       $ sudo systemctl start birdhouse-cam.service
+       $ sudo systemctl enable birdhouse-cam-docker.service
+       $ sudo systemctl start birdhouse-cam-docker.service
+       ```
 
-10. Examine logging messages if there are any problems, see (1.6)
+8. Examine logging messages if there are any problems, see (1.6)
 
 ### First run and device configuration
 

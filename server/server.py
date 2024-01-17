@@ -186,8 +186,8 @@ def decode_url_string(string):
 
 class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
-    def __init__(self, shutdown=False):
-        if not shutdown:
+    def __init__(self, maintain=False):
+        if not maintain:
             threading.Thread.__init__(self)
             BirdhouseClass.__init__(self, class_id="srv-health", config=config)
             self.thread_set_priority(5)
@@ -200,8 +200,10 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             self._shutdown_signal_file = "/tmp/birdhouse-cam-shutdown"
             self._text_files = BirdhouseTEXT()
             self.set_shutdown(False)
+            self.set_restart(False)
         else:
             self._shutdown_signal_file = "/tmp/birdhouse-cam-shutdown"
+            self._running = False
             self._text_files = BirdhouseTEXT()
 
     def run(self):
@@ -245,6 +247,11 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
                 self.set_shutdown(False)
                 config.force_shutdown()
 
+            if self.check_restart():
+                self.logging.info("RESTART SIGNAL detected - shutdown and set START signal (requires check via crontab)")
+                self.set_start()
+                config.force_shutdown()
+
             if count == 4:
                 count = 0
                 self.logging.info("Live sign health check!")
@@ -253,6 +260,45 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
     def status(self):
         return self._health_status
+
+    def check_restart(self):
+        """
+        check if external shutdown signal has been set
+        """
+        if os.path.exists(self._shutdown_signal_file):
+            content = self._text_files.read(self._shutdown_signal_file)
+            if "REBOOT" in content:
+                return True
+        return False
+
+    def set_restart(self, restart=True):
+        """
+        set external shutdown signal ...
+        """
+        if restart:
+            self._text_files.write(self._shutdown_signal_file, "REBOOT")
+        else:
+            self._text_files.write(self._shutdown_signal_file, "")
+
+    def check_start(self):
+        """
+        check if external shutdown signal has been set
+        """
+        if os.path.exists(self._shutdown_signal_file):
+            content = self._text_files.read(self._shutdown_signal_file)
+            if "START" in content:
+                print("START signal set ... starting birdhouse server.")
+                return True
+        return False
+
+    def set_start(self, restart=True):
+        """
+        set external shutdown signal ...
+        """
+        if restart:
+            self._text_files.write(self._shutdown_signal_file, "START")
+        else:
+            self._text_files.write(self._shutdown_signal_file, "")
 
     def check_shutdown(self):
         """
@@ -851,6 +897,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_logging.info("FORCED SHUT-DOWN OF BIRDHOUSE SERVER .... !")
             srv_logging.info("-------------------------------------------")
             config.force_shutdown()
+            health_check.set_start()
             response = {"shutdown": "started"}
         elif param["command"] == "check-timeout":
             time.sleep(30)
@@ -1497,16 +1544,27 @@ if __name__ == "__main__":
     # help
     if len(sys.argv) > 0 and "--help" in sys.argv:
         print("jc://birdhouse/\n\nArguments:")
-        print("--help       Write this information")
-        print("--logfile    Write logging output to logfile '"+birdhouse_log_filename+"'")
-        print("--backup     Start backup directly (current date, delete directory before)")
-        print("--shutdown   Send shutdown signal")
+        print("--help            Write this information")
+        print("--logfile         Write logging output to logfile '"+birdhouse_log_filename+"'")
+        print("--backup          Start backup directly (current date, delete directory before)")
+        print("--shutdown        Send shutdown signal")
+        print("--restart         Send restart signal")
+        print("--check-if-start  Start if restart requested (-> request via crontab)")
         exit()
 
     elif len(sys.argv) > 0 and "--shutdown" in sys.argv:
-        shutdown_thread = ServerHealthCheck(shutdown=True)
+        shutdown_thread = ServerHealthCheck(maintain=True)
         shutdown_thread.set_shutdown()
         exit()
+
+    elif len(sys.argv) > 0 and "--check-if-start" in sys.argv:
+        restart_thread = ServerHealthCheck(maintain=True)
+        if not restart_thread.check_start():
+            exit()
+
+    elif len(sys.argv) > 0 and "--restart" in sys.argv:
+        restart_thread = ServerHealthCheck(maintain=True)
+        restart_thread.set_restart()
 
     set_server_logging(sys.argv)
 
