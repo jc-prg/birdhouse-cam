@@ -1719,7 +1719,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     files_all[stamp]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
 
                 if ((int(stamp) < int(time_now) or time_now == "000000")
-                    and files_all[stamp]["datestamp"] == date_today) or backup:
+                        and files_all[stamp]["datestamp"] == date_today) or backup:
 
                     show_img = self.camera[which_cam].image_to_select(timestamp=stamp,
                                                                       file_info=files_all[stamp].copy(),
@@ -1840,17 +1840,33 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                                                                        date=self.config.local_time().strftime("%Y%m%d"))
 
         # add navigation information for archive (next day, last day)
-        if which_cam in self.archive.views and self.archive.views[which_cam] != {} and date_backup != "":
-            archived_days = list(self.archive.views[which_cam]["entries"].keys())
-            if len(archived_days) > 0:
-                archived_days = sorted(archived_days, reverse=True)
-            content["days_available"] = archived_days
-            position_date_backup = archived_days.index(date_backup)
-            if position_date_backup >= 0:
-                if position_date_backup > 0:
-                    content["day_forward"] = archived_days[position_date_backup - 1]
-                if position_date_backup < len(archived_days) - 1:
-                    content["day_back"] = archived_days[position_date_backup + 1]
+        if content["entries_total"] > 0:
+            if which_cam in self.archive.views and self.archive.views[which_cam] != {} and date_backup != "":
+
+                archived_days = []
+                for key in self.archive.views[which_cam]["entries"]:
+                    if self.archive.views[which_cam]["entries"][key]["count_cam"] > 0:
+                        archived_days.append(key)
+
+                if date_backup in archived_days:
+                    if len(archived_days) > 0:
+                        archived_days = sorted(archived_days, reverse=True)
+                    content["days_available"] = archived_days
+                    position_date_backup = archived_days.index(date_backup)
+                    if position_date_backup >= 0:
+                        if position_date_backup > 0:
+                            content["day_forward"] = archived_days[position_date_backup - 1]
+                        if position_date_backup < len(archived_days) - 1:
+                            content["day_back"] = archived_days[position_date_backup + 1]
+
+            if date_backup != "":
+                content["archive_exists"] = {}
+                for camera in self.archive.views:
+                    if (date_backup in self.archive.views[camera]["entries"]
+                            and self.archive.views[camera]["entries"][date_backup]["count_cam"] > 0):
+                        content["archive_exists"][camera] = True
+                    else:
+                        content["archive_exists"][camera] = False
 
         return content
 

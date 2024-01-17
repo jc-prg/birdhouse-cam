@@ -709,7 +709,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 param["which_cam"] = complete_cam
 
             # extra rule for TODAY
-            if param["command"] == "TODAY":
+            if param["command"] == "TODAY" and len(elements) > 5:
                 param["date"] = elements[4]
                 param["which_cam"] = elements[5]
                 last_is_cam = False
@@ -1197,7 +1197,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
         if command in cmd_views:
-            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups",
+            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups", "archive_exists",
                                 "chart_data", "weather_data", "days_available", "day_back", "day_forward"]
             for key in param_to_publish:
                 if key in content:
