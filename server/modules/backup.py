@@ -193,6 +193,8 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                                 update_new["favorit"] = 0
                             if "type" not in update_new:
                                 update_new["type"] = "image"
+                            if "detections" in update_new and len(update_new["detections"]) > 0:
+                                files_backup["info"]["detection_"+cam] = True
 
                             update_new["directory"] = os.path.join(self.config.directories["images"], backup_date)
 

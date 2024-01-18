@@ -159,12 +159,20 @@ class BirdhouseCouchDB(BirdhouseDbClass):
                 self.raise_error("Error connecting to CouchDB, give up.")
                 return False
 
-        self.database = couchdb.Server(self.db_url)
-        self.check_db()
-        self.logging.info("Connected.")
-        return True
+        try:
+            self.database = couchdb.Server(self.db_url)
+        except Exception as e:
+            self.raise_error("  -> Could not connect to DB " + self.db_url + "! " + str(e))
+            return False
 
-    def check_db(self) -> None:
+        check = self.check_db()
+        if check:
+            self.logging.info("Connected.")
+            return True
+        else:
+            return False
+
+    def check_db(self) -> bool:
         """
         check if required DB exists or create (under construction)
         """
@@ -179,21 +187,26 @@ class BirdhouseCouchDB(BirdhouseDbClass):
                     self.create(db_key)
                 except Exception as e:
                     self.raise_error("  -> Could not create DB " + db_key + "! " + str(e))
+                    return False
+        return True
 
     def create(self, db_key):
         """
         create a database in couch_db
         """
         self.logging.debug("   -> create DB " + db_key)
-        if db_key in self.database:
-            self.logging.warning("   -> DB " + db_key + " exists.")
-            db = self.database[db_key]
-        else:
-            try:
-                db = self.database.create(db_key)
-            except Exception as e:
-                self.raise_error("   -> Could not create DB " + db_key + "! " + str(e))
-                return
+        try:
+            if db_key in self.database:
+                self.logging.warning("   -> DB " + db_key + " exists.")
+                db = self.database[db_key]
+            else:
+                try:
+                    db = self.database.create(db_key)
+                except Exception as e:
+                    self.raise_error("   -> Could not create DB " + db_key + "! " + str(e))
+                    return
+        except Exception as e:
+            self.logging.error("CouchDB error create: " + str(e))
 
         # create initial data
         if "main" in self.database[db_key]:
@@ -259,21 +272,24 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         if db_key == "":
             self.raise_error("CouchDB ERROR read, could not get db_key from filename ("+filename+")")
             return {}
-
-        if db_key in self.database:
-            database = self.database[db_key]
-            doc = database.get("main")
-            doc_data = doc["data"]
-            if date != "":
-                if date in doc_data:
-                    return doc_data[date]
+        try:
+            if db_key in self.database:
+                database = self.database[db_key]
+                doc = database.get("main")
+                doc_data = doc["data"]
+                if date != "":
+                    if date in doc_data:
+                        return doc_data[date]
+                    else:
+                        self.raise_error("CouchDB ERROR read (date): " + filename + " - " + db_key + "/" + date)
+                        return {}
                 else:
-                    self.raise_error("CouchDB ERROR read (date): " + filename + " - " + db_key + "/" + date)
-                    return {}
+                    return doc_data
             else:
-                return doc_data
-        else:
-            self.raise_error("CouchDB ERROR read (db_key): " + filename + " - " + db_key + "/" + date)
+                self.raise_error("CouchDB ERROR read (db_key): " + filename + " - " + db_key + "/" + date)
+                return {}
+        except Exception as e:
+            self.raise_error("CouchDB ERROR read: " + filename + " - " + db_key + "/" + date + " - " + str(e))
             return {}
 
     def write(self, filename, data, create=False) -> None:
@@ -291,26 +307,30 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             self.raise_error("CouchDB ERROR save: '" + db_key + "' not found, could not write data.")
             return
 
-        database = self.database[db_key]
-        doc = database.get("main")
-        doc_data = doc["data"]
-        if date != "":
-            doc_data[date] = data
-        else:
-            doc_data = data
+        try:
+            database = self.database[db_key]
+            doc = database.get("main")
+            doc_data = doc["data"]
+            if date != "":
+                doc_data[date] = data
+            else:
+                doc_data = data
 
-        if doc is None:
-            doc = {
-                '_id': 'main',
-                'type': db_key,
-                'time': time.time(),
-                'change': 'new',
-                'data': doc_data
-            }
-        else:
-            doc['data'] = doc_data
-            doc['time'] = time.time()
-            doc['change'] = 'save changes'
+            if doc is None:
+                doc = {
+                    '_id': 'main',
+                    'type': db_key,
+                    'time': time.time(),
+                    'change': 'new',
+                    'data': doc_data
+                }
+            else:
+                doc['data'] = doc_data
+                doc['time'] = time.time()
+                doc['change'] = 'save changes'
+        except Exception as e:
+            self.logging.error("CouchDB ERROR save (prepare data): " + db_key + " " + str(e))
+            return
 
         try:
             database.save(doc)
@@ -335,18 +355,21 @@ class BirdhouseCouchDB(BirdhouseDbClass):
 
         if db_key == "":
             return False
-        if db_key in self.database:
-            database = self.database[db_key]
-            doc = database.get("main")
-            doc_data = doc["data"]
-            if date != "":
-                if date in doc_data:
-                    return True
+        try:
+            if db_key in self.database:
+                database = self.database[db_key]
+                doc = database.get("main")
+                doc_data = doc["data"]
+                if date != "":
+                    if date in doc_data:
+                        return True
+                    else:
+                        return False
                 else:
-                    return False
+                    return True
             else:
-                return True
-        else:
-            return False
+                return False
+        except Exception as e:
+            self.logging.error("'exists()' - DB connection error: " + str(e))
 
 
