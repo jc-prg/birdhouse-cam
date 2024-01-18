@@ -150,7 +150,7 @@ function birdhousePrint(data) {
 	else if (app_active_page == "ARCHIVE")           { success = birdhouse_LIST(lang("ARCHIVE"), data, camera); }
 	else if (app_active_page == "DEVICES")           { birdhouseDevices(lang("DEVICES"), data, camera); }
 	else if (app_active_page == "FAVORITES")         { success = birdhouse_LIST(lang("FAVORITES"), data, camera); }
-	else if (app_active_page == "IMAGE_SETTINGS")   { birdhouseDevices_cameraSettings(data); }
+	else if (app_active_page == "IMAGE_SETTINGS")    { birdhouseDevices_cameraSettings(data); }
 	else if (app_active_page == "INDEX")             { birdhouse_INDEX(data, camera); }
 	else if (app_active_page == "INFO") 	         { birdhouse_settings.create("INFO_ONLY"); }
 	else if (app_active_page == "OBJECTS")           { birdhouse_LIST_OBJECTS(lang("BIRDS_DETECTED"), data); }

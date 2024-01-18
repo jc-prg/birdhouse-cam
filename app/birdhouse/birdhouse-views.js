@@ -564,19 +564,25 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 		            }
 		        }
 
-		if (entries_available == false) {
+        // check if no entries or still loading
+		if (entries_available == false && (active_page == "TODAY" || active_page == "ARCHIVE" || active_page == "FAVORITES")) {
 		    var empty = false;
-		    if (active_page == "FAVORITE" && server_status["view_favorite_loading"] == "done")                        { empty = true; }
+		    if (active_page == "FAVORITES" && server_status["view_favorite_loading"] == "done")                        { empty = true; }
 		    else if (active_page == "TODAY" && active_date != "" && server_status["view_archive_loading"] == "done")  { empty = true; }
-		    else if (active_page != "TODAY" && active_page != "FAVORITE")                                             { empty = true; }
+		    else if (active_page == "ARCHIVE" && active_date != "" && server_status["view_archive_loading"] == "done")  { empty = true; }
    			else {
-    			appMsg.alert(lang("DATA_LOADING_TRY_AGAIN"));
+   			    var progress_info = "";
+   			    if (active_page == "FAVORITES") { progress_info = "<i><div id='loading_status_favorite'></div></i>"; }
+   			    if (active_page == "TODAY")     { progress_info = "<i><div id='loading_status_archive'></div></i>"; }
+   			    if (active_page == "ARCHIVE")   { progress_info = "<i><div id='loading_status_archive'></div></i>"; }
+    			appMsg.alert(lang("DATA_LOADING_TRY_AGAIN") + "<br/>" + progress_info);
     			return false;
    			    }
-   			if (empty) {
-		        html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>";
-		        }
-			}
+   	    	if (empty) { html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>"; }
+            }
+		if (entries_available == false && active_page == "VIDEOS") {
+   	    	html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>";
+   	    	}
 
         html += "<div id='group_list' style='display:none;'>" + group_list.join(" ") + "</div>";
 		}
@@ -596,8 +602,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	birdhouse_frameHeader(page_title, page_status);
 	setTextById(app_frame_content, html);
 
-    selected_label = selected_label.replaceAll("%20", " ");
 	if ((active_page == "FAVORITES" || active_page == "TODAY") && selected_label != undefined) {
+        selected_label = selected_label.replaceAll("%20", " ");
 	    birdhouse_view_images_objects(selected_label);
 	    birdhouse_labels_highlight(selected_label);
 	    }
@@ -605,7 +611,14 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
 function birdhouse_LIST_OBJECTS(title, data) {
     var html = "";
-    var detections = data["DATA"]["data"]["entries"];
+    var detections     = data["DATA"]["data"]["entries"];
+	var server_status  = app_data["STATUS"]["server"];
+
+    if (!detections && server_status["view_archive_loading"] != "done") {
+        var progress_info = "<i><div id='loading_status_object'></div></i>";
+        appMsg.alert(lang("DATA_LOADING_TRY_AGAIN") + "<br/>" + progress_info);
+        return false;
+        }
 
 	var tab = new birdhouse_table();
 	tab.style_cells["vertical-align"] = "top";
@@ -626,10 +639,6 @@ function birdhouse_LIST_OBJECTS(title, data) {
 
     if (all_labels_list.length == 0 && server_status["view_archive_loading"] == "done")  {
         html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;</center>";
-        }
-    else if (all_labels_list.length == 0) {
-        appMsg.alert(lang("DATA_LOADING_TRY_AGAIN"));
-        return false;
         }
 
     for (var i=0;i<all_labels_list.length;i++) {

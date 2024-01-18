@@ -84,9 +84,9 @@ function birdhouse_adminAnswerReturn(data) {
         if (msg[0] == "RANGE_DONE") { button_tooltip.hide("info"); }
         birdhouseReloadView();
         }
-    if (document.getElementById("last_answer_detection_progress")) {
-        document.getElementById("last_answer_detection_progress").innerHTML = data["STATUS"]["server"]["object_detection_progress"];
-        }
+
+    birdhouseStatus_loadingViews(data);
+    birdhouseStatus_detection(data);
 }
 
 function birdhouse_loadSettings() {
