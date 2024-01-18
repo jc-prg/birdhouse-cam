@@ -65,6 +65,9 @@ function birdhouseStatus_print(data) {
     birdhouseStatus_sensors(data);
     birdhouseStatus_microphones(data);
 
+    birdhouseStatus_loadingViews(data);
+    birdhouseStatus_detection(data);
+
     document.getElementById(app_frame_info).style.display = "block";
 
     html = "<center><i><font color='gray'>";
@@ -404,3 +407,26 @@ function birdhouseStatus_system(data) {
         setTextById("system_info_cpu_usage_detail", cpu_details);
         }
 }
+
+function birdhouseStatus_loadingViews(data) {
+    var views = ["object", "archive", "favorite"];
+    for (var i=0;i<views.length;i++) {
+        var status = data["STATUS"]["server"]["view_"+views[i]+"_loading"];
+        var progress = data["STATUS"]["server"]["view_"+views[i]+"_progress"];
+        if (status == "in progress") {
+            setTextById("loading_status_"+views[i], progress);
+        }
+        else if (status == "started") {
+            setTextById("loading_status_"+views[i], lang("WAITING"));
+        }
+        else if (status == "done") {
+            setTextById("loading_status_"+views[i], lang("DONE"));
+        }
+    }
+}
+
+function birdhouseStatus_detection(data) {
+    if (data["STATUS"]["server"]["object_detection_progress"]) {
+         setTextById("last_answer_detection_progress", data["STATUS"]["server"]["object_detection_progress"]);
+        }
+    }

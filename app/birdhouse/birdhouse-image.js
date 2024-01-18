@@ -353,6 +353,8 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	else if (entry["type"] == "directory") {
 
         var description = "";
+        var detection = "";
+        if (entry["detection"]) { detection = "<sup>D</sup>"; }
     	if (entry["lowres"] == "" && entry["count_cam"] == 0) {
             description += "<b>" + entry["date"] + "</b><br/>";
             description += "<i>"+lang("NO_IMAGE_IN_ARCHIVE_2")+"</i>";
@@ -362,12 +364,12 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
             var lowres      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
             var onclick     = "birdhousePrint_load(view=\"TODAY\", camera = \""+entry["camera"]+"\", date=\""+entry["datestamp"]+"\");";
             if (entry["count_cam"] != entry["count"]) {
-                description += "<b>" + entry["date"] + "</b><br/>" + entry["count_cam"] + " / " + entry["count"];
+                description += "<b>" + entry["date"] + "</b>"+detection+"<br/>" + entry["count_cam"] + " / " + entry["count"];
                 if (entry["count_delete"] > 0) { description += "*"; }
                 description += "<br/><i>[" + Math.round(entry["dir_size"]*10)/10 + " MB]</i>";
                 }
             else {
-                description += "<b>" + entry["date"] + "</b><br/>" + entry["count_cam"];
+                description += "<b>" + entry["date"] + "</b>"+detection+"<br/>" + entry["count_cam"];
                 description += "<br/><i>[" + Math.round(entry["dir_size"]*10)/10 + " MB]</i>";
                 }
             }
