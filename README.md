@@ -1,12 +1,14 @@
 # Birdhouse Camera v1.0.8 (in progress)
 
-Raspberry Pi project to observe our birdhouse with multiple webcams: live stream, record images, 
-detect activity, detect birds, record videos, mark favorites, analyze weather data, ...
+Raspberry Pi project to observe our birdhouse with two webcams: live stream, record images, 
+detect activity, detect birds, record videos, mark favorites, analyze weather data, 
+app in English and German, ...
 
-1. [Birdhouse](#birdhouse)
-2. [Technology](#technology)
-3. [Main Features](#main-features)
-4. [Installation](#installation)
+1. [Impressions](#impressions)
+2. [Main Features](#main-features)
+3. [Birdhouse](#birdhouse)
+4. [Technology](#technology)
+5. [Installation](#installation)
    * [Getting sources](#getting-sources)
    * [Software installation](#software-installation)
    * [First run and device configuration](#first-run-and-device-configuration)
@@ -14,32 +16,29 @@ detect activity, detect birds, record videos, mark favorites, analyze weather da
    * [Accessing images via WebDAV](#Accessing-images-via-WebDAV)
    * [Optimizing system configuration](#optimizing-system-configuration)
    * [Sample proxy server configuration](#Sample-proxy-server-configuration)
-5. [Helping stuff](#helping-stuff)
-6. [Other sources](#other-sources)
-7. [Impressions](#impressions)
+6. [Helping stuff](#helping-stuff)
+7. [Other sources](#other-sources)
 
 
-## Birdhouse
+## Impressions
 
-Here are some options. Calculate with a little bit more space in the height for the camera inside the birdhouse.
+<img src="info/images/birdcam_05.PNG" width="30%"><img src="info/images/birdcam_21.PNG" width="30%"><img src="info/images/birdcam_10.PNG" width="30%">
+<br/><br/>
+<img src="info/images/birdcam_17.PNG" width="30%"><img src="info/images/birdcam_18.PNG" width="30%"><img src="info/images/birdcam_19.PNG" width="30%">
+<br/><br/>
+<img src="info/images/birdcam_08.PNG" width="30%"><img src="info/images/birdcam_06.PNG" width="30%"><img src="info/images/birdcam_11.PNG" width="30%">
 
-* German instructions: [NABU - Nistkästen selber bauen](https://www.nabu.de/tiere-und-pflanzen/voegel/helfen/nistkaesten/index.html)
-* English instructions: [Simple birdhouse](https://suncatcherstudio.com/birds/birdhouse-plans-simple/)
 
-## Technology
+<img src="info/images/birdcam_12.PNG" width="30%"><img src="info/images/birdcam_13.PNG" width="30%"><img src="info/images/birdcam_22.PNG" width="30%">
 
-* IT Hardware
-  * Raspberry Pi 3B+, Raspberry Pi 4 (recommended)
-  * Micro SD with 64 GByte
-  * USB camera for outside view (and maybe inside view)
-  * _optional:_ PiCamera with IR for the inside view (wide-angle, e.g., 110°)
-  * _optional:_ Small USB Microphone
-  * _optional:_ DHT11 / DHT22 Sensor
-* Software
-  * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, PyTorch/YOLOv5
-  * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
-  * HTML, CSS, JavaScript, Pinch-Zoom
-  * jc://modules/, jc://app-framework/
+<img src="info/images/birdcam_23.PNG" width="30%"><img src="info/images/birdcam_15.PNG" width="30%"><img src="info/images/birdcam_16.PNG" width="30%">
+
+<img src="info/images/birdcam_01.PNG" width="30%"><img src="info/images/birdcam_02.PNG" width="30%"><img src="info/images/birdcam_24.PNG" width="30%">
+
+<img src="info/images/birdcam_25.PNG" width="30%"><img src="info/images/birdcam_32.PNG" width="30%"><img src="info/images/birdcam_31.PNG" width="30%">
+
+<br/><br/>
+<img src="info/images/birdcam_14.PNG" width="90%">
 
 ## Main Features
 
@@ -80,6 +79,28 @@ Here are some options. Calculate with a little bit more space in the height for 
   * edit device settings, reconnect devices (devices must be added via config file)
   * edit camera and image settings (contrast, saturation, hue, brightness ...)
   * see amount of currently active streams
+
+## Birdhouse
+
+Here are some options. Calculate with a little bit more space in the height for the camera inside the birdhouse.
+
+* German instructions: [NABU - Nistkästen selber bauen](https://www.nabu.de/tiere-und-pflanzen/voegel/helfen/nistkaesten/index.html)
+* English instructions: [Simple birdhouse](https://suncatcherstudio.com/birds/birdhouse-plans-simple/)
+
+## Technology
+
+* IT Hardware
+  * Raspberry Pi 3B+, Raspberry Pi 4 (recommended)
+  * Micro SD with 64 GByte
+  * USB camera for outside view (and maybe inside view)
+  * _optional:_ PiCamera with IR for the inside view (wide-angle, e.g., 110°)
+  * _optional:_ Small USB Microphone
+  * _optional:_ DHT11 / DHT22 Sensor
+* Software
+  * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, PyTorch/YOLOv5
+  * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
+  * HTML, CSS, JavaScript, Pinch-Zoom
+  * jc://modules/, jc://app-framework/
 
 ## Installation
 
@@ -354,22 +375,3 @@ Thanks for your inspiration, code snippets, images:
 * [https://www.tunbury.org/audio-stream/](https://www.tunbury.org/audio-stream/)
 * ...
 
-## Impressions
-
-<img src="info/images/birdcam_05.PNG" width="30%"><img src="info/images/birdcam_21.PNG" width="30%"><img src="info/images/birdcam_10.PNG" width="30%">
-<br/><br/>
-<img src="info/images/birdcam_17.PNG" width="30%"><img src="info/images/birdcam_18.PNG" width="30%"><img src="info/images/birdcam_19.PNG" width="30%">
-<br/><br/>
-<img src="info/images/birdcam_08.PNG" width="30%"><img src="info/images/birdcam_06.PNG" width="30%"><img src="info/images/birdcam_11.PNG" width="30%">
-
-
-<img src="info/images/birdcam_12.PNG" width="30%"><img src="info/images/birdcam_13.PNG" width="30%"><img src="info/images/birdcam_22.PNG" width="30%">
-
-<img src="info/images/birdcam_23.PNG" width="30%"><img src="info/images/birdcam_15.PNG" width="30%"><img src="info/images/birdcam_16.PNG" width="30%">
-
-<img src="info/images/birdcam_01.PNG" width="30%"><img src="info/images/birdcam_02.PNG" width="30%"><img src="info/images/birdcam_24.PNG" width="30%">
-
-<img src="info/images/birdcam_25.PNG" width="30%"><img src="info/images/birdcam_32.PNG" width="30%"><img src="info/images/birdcam_31.PNG" width="30%">
-
-<br/><br/>
-<img src="info/images/birdcam_14.PNG" width="90%">
