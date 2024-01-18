@@ -175,11 +175,13 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             archive_info = archive_data["info"]
             archive_info["detection_"+self.id] = {
                 "date":         self.config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
+                "detected":     False,
                 "threshold":    self.detect_settings["threshold"],
                 "model":        self.detect_settings["model"]
             }
 
             count = 0
+            found = False
             for stamp in archive_entries:
                 if archive_entries[stamp]["camera"] == self.id and "hires" in archive_entries[stamp]:
 
@@ -196,6 +198,8 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                                                                    return_image=True, render_detection=True)
                     self.logging.info("- " + date + "/" + stamp + ": " +
                                       str(len(detect_info["detections"])) + " objects detected")
+                    if len(detect_info["detections"]) > 0:
+                        found = True
                     if os.path.exists(path_hires_detect):
                         os.remove(path_hires_detect)
 
@@ -215,6 +219,8 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                 self.config.object_detection_progress = self._processing_percentage
                 if self._processing_percentage == 100:
                     time.sleep(2)
+
+            archive_info["detection_"+self.id]["detected"] = True
 
             archive_detections = self.summarize_detections(archive_entries)
             self.config.queue.set_status_changed(date=date, change="objects")
