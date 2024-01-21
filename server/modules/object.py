@@ -123,6 +123,10 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             path_hires_temp = path_hires.replace(".jpeg", "_temp.jpeg")
             self.image.write(path_hires_temp, image_hires, scale_percent=self.image_size_object_detection)
             img, detect_info = self.detect_objects.analyze(path_hires_temp, -1, False)
+            if "error" in detect_info:
+                self.logging.error("Couldn't detect objects: " + detect_info["error"])
+                return
+
             img = self.detect_visualize.render_detection(image_hires, detect_info, 1, self.detect_settings["threshold"])
             img = self.image.draw_text_raw(img, stamp, (-80, -40), None, 0.5, (255, 255, 255), 1)
 
@@ -196,6 +200,10 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                     img, detect_info = self.detect_objects.analyze(file_path=path_hires,
                                                                    threshold=self.detect_settings["threshold"],
                                                                    return_image=True, render_detection=True)
+                    if "error" in detect_info:
+                        self.logging.error("Could not detect objects: " + detect_info["error"])
+                        continue
+
                     self.logging.info("- " + date + "/" + stamp + ": " +
                                       str(len(detect_info["detections"])) + " objects detected")
                     if len(detect_info["detections"]) > 0:

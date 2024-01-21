@@ -909,8 +909,10 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         if "show_framerate" in self.param["image"] and self.param["image"]["show_framerate"] \
                 and self.resolution != "lowres":
             framerate = round(self.stream_raw.fps, 1)
-            if self.fps < framerate:
+            if self.fps and framerate and self.fps < framerate:
                 framerate = self.fps
+            if not framerate:
+                framerate = -1
             raw = self.image.draw_text_raw(raw=raw, text=str(round(framerate, 1)) + "fps",
                                            font=cv2.QT_FONT_NORMAL,
                                            position=(10, -20), scale=0.4, thickness=1)
@@ -1722,7 +1724,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.write_image(filename=path_lowres, image=image_hires,
                                  scale_percent=self.param["image"]["preview_scale"])
 
-                if self.detect_active and self.detect_settings["active"]:
+                if self.detect_active and self.detect_settings["active"] and os.path.exists(path_hires):
                     self.object.analyze_image(stamp, path_hires, image_hires, image_info)
 
                 self.record_image_error = False
