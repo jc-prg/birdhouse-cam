@@ -1141,6 +1141,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.views = None
         self.queue = None
         self.db_handler = None
+        self.birds = None
 
         self.thread_status = {}
         self.thread_ctrl = {
@@ -1201,6 +1202,10 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.param["info"]["last_start_date"] = self.local_time().strftime("%Y-%m-%d")
         self.param["info"]["last_start_time"] = self.local_time().strftime("%H:%M:%S")
         self.db_handler.write(config="main", data=self.param)
+
+        # read birdhouse dictionary
+        self.birds = self.db_handler.json.read(os.path.join(birdhouse_main_directories["data"], birdhouse_files["birds"]))
+        self.logging.debug(str(self.birds))
 
         # set database type if not JSON
         self.db_type = birdhouse_env["database_type"]

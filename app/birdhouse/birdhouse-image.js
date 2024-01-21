@@ -322,7 +322,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
                 }
             Object.keys(counted_labels).forEach( key => {
                 var amount = counted_labels[key];
-                description_labels += "[div class=detection_label style=cursor:default]&nbsp;"+key+"&nbsp;("+counted_labels[key]+")&nbsp;[/div]";
+                description_labels += "[div class=detection_label style=cursor:default]&nbsp;"+bird_lang(key)+"&nbsp;("+counted_labels[key]+")&nbsp;[/div]";
                 });
             description_labels += "[/div][/center]";
             hires_description += description_labels;

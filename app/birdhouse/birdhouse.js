@@ -26,6 +26,7 @@ var app_recycle_range     = {};
 var app_active_cam        = "cam1";
 var app_admin_allowed     = false;
 var app_data              = {};
+var app_bird_names        = {};
 
 var app_frame_header    = "frame1";
 var app_frame_content   = "frame2";
@@ -83,6 +84,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 	        app_active_page = param[1];
 	        app_last_active_page = param[1];
 	        }
+	    birdhouse_birdNamesRequest();
 	    }
 
 	var commands = [view];
