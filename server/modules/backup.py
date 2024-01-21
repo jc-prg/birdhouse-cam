@@ -37,6 +37,15 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
 
         self.logging.info("Stopped backup download handler.")
 
+    def stop(self):
+        """
+        stop if thread (set self._running = False)
+        """
+        self.logging.debug("STOP SIGNAL SEND FROM SOMEWHERE ...")
+        self._running = False
+        self._processing = False
+        self.delete_all_downloads()
+
     def add2queue(self, param):
         """
         add download to queue
@@ -120,6 +129,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         entries = self.config.db_handler.read("backup", date)
 
         if ("info" in entries and "detection_" + camera in entries["info"]
+                and "detected" in entries["info"]["detection_"+camera]
                 and entries["info"]["detection_"+camera]["detected"]):
             if "labels" in entries["info"]["detection_"+camera]:
                 labels = entries["info"]["detection_"+camera]["labels"]
@@ -171,6 +181,19 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
                 os.remove(self.downloads[download_id]["file_path"])
         del self.downloads[download_id]
 
+    def delete_all_downloads(self):
+        """
+        clean up download directory and internal dict
+        """
+        self.logging.info("Delete all files in download folder ...")
+        try:
+            download_directory = str(birdhouse_main_directories["download"])
+            command = "rm -rf " + download_directory
+            os.system(command)
+            self.downloads = {}
+        except Exception as e:
+            self.logging.error("Couldn't delete all downloads: " + str(e))
+
 
 class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
@@ -202,7 +225,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             check_stamp = str(int(stamp[0:4]) - 1)
 
             if (int(check_stamp) == int(self.config.param["backup"]["time"])
-                or self.backup_start) and not backup_started:
+                    or self.backup_start) and not backup_started:
                 backup_started = True
                 self.backup_start = False
                 if self.backup_start:

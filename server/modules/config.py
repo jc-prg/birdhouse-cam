@@ -428,6 +428,15 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 self.raise_error("Could not delete image files from " +
                                  self.config.db_handler.directory(config=config, date=date) + " (" + str(e) + ")")
 
+        if config == "downloads":
+            self.logging.info(" - delete all files in download folder ...")
+            try:
+                download_directory = str(birdhouse_main_directories["download"])
+                command = "rm -rf " + download_directory
+                os.system(command)
+            except Exception as e:
+                self.logging.error("Couldn't delete all downloads: " + str(e))
+
         self._processing = False
 
     def clean_up_cache(self, config, date=""):
@@ -1253,6 +1262,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                     self.db_handler.clean_all_data(config="images")
                     self.db_handler.clean_all_data(config="sensor")
                     self.db_handler.clean_all_data(config="weather")
+                    self.db_handler.clean_all_data(config="downloads")
                     self.param["info"]["last_day_running"] = date_today
                     self.last_day_running = date_today
                     self.db_handler.write(config="main", date="", data=self.param)
