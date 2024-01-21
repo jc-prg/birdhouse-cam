@@ -379,8 +379,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    var detection_model = camera_settings[app_active_cam]["object_detection"]["model"]; // devices:cameras:"+camera+":object_detection:model
 	    var detection_threshold = camera_settings[app_active_cam]["object_detection"]["threshold"];
 	    var detection_date = active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4);
-	    var button_object_detection = "<button onclick='birdhouse_archiveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button'>Start</button>";
-	    var button_archive_deletion = "<button onclick='birdhouse_archiveDayDelete(\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button'>Delete</button>";
+	    var button_object_detection = "<button onclick='birdhouse_archiveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button'  style='width:80px;'>Start</button>";
+	    var button_archive_deletion = "<button onclick='birdhouse_archiveDayDelete(\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button' style='width:80px;'>Delete</button>";
+	    var button_archive_download = "<button onclick='birdhouse_archiveDayDownload(\""+active_date+"\", \""+app_active_cam+"\");' class='bh-slider-button' style='width:80px;'>Download</button>";
 
         info_text += "&nbsp;";
 	    info_text += tab.start();
@@ -390,6 +391,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
     	    info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model, detection_threshold]) + ":", button_object_detection );
     	    }
 	    info_text += tab.row(lang("DELETE_ARCHIVE") + ":", button_archive_deletion );
+	    info_text += tab.row(lang("DOWNLOAD_ARCHIVE") + ":", button_archive_download );
 	    info_text += tab.end();
 	    info_text += "&nbsp;<br/>&nbsp;";
 
@@ -398,43 +400,50 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
     // create chart data
     if (active_page == "TODAY_COMPLETE" || (active_page == "TODAY" && active_date != "" && active_date != undefined)) {
-        var chart_titles = [];
-        for (var x=0;x<chart_data["titles"].length;x++) {
-            if (chart_data["titles"][x].indexOf(":")>-1) {
-                var sensor = chart_data["titles"][x].split(":");
-                var translation = lang(sensor[1].toUpperCase().replace(" ",""));
-                if (translation.indexOf("not found") < 0) { sensor[1] = translation; }
-                var title_s = sensor[1].charAt(0).toUpperCase() + sensor[1].slice(1);
-                if (sensors[sensor[0]]) {
-                    title_s += " ("+sensors[sensor[0]]["name"]+")";
+        if (chartJS_loaded) {
+            var chart_titles = [];
+            for (var x=0;x<chart_data["titles"].length;x++) {
+                if (chart_data["titles"][x].indexOf(":")>-1) {
+                    var sensor = chart_data["titles"][x].split(":");
+                    var translation = lang(sensor[1].toUpperCase().replace(" ",""));
+                    if (translation.indexOf("not found") < 0) { sensor[1] = translation; }
+                    var title_s = sensor[1].charAt(0).toUpperCase() + sensor[1].slice(1);
+                    if (sensors[sensor[0]]) {
+                        title_s += " ("+sensors[sensor[0]]["name"]+")";
+                        }
+                    else if (sensor[0].indexOf("WEATHER/") >= 0) {
+                        var location = sensor[0].replace("WEATHER/", "");
+                        title_s += " ("+location+")";
+                        }
                     }
-                else if (sensor[0].indexOf("WEATHER/") >= 0) {
-                    var location = sensor[0].replace("WEATHER/", "");
-                    title_s += " ("+location+")";
+                else {
+                    var translation = lang(chart_data["titles"][x].toUpperCase());
+                    if (translation.indexOf("not found") < 0) { chart_data["titles"][x] = translation; }
+                    title_s = chart_data["titles"][x];
                     }
+                title_s = title_s.replace("&szlig;", "ß");
+                title_s = title_s.replace("&uuml;", "ü");
+                title_s = title_s.replace("&auml;", "ä");
+                title_s = title_s.replace("&ouml;", "ö");
+                chart_titles.push(title_s);
+            }
+            var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
+            chart    += birdhouseChart_weatherOverview(weather_data); // + "<br/>";
+
+            if (active_page == "TODAY") {
+                chart += "<hr/><div style='width:100%'>" + link_day_forward + " &nbsp; " + link_day_back + "</div><br/>&nbsp;";
                 }
             else {
-                var translation = lang(chart_data["titles"][x].toUpperCase());
-                if (translation.indexOf("not found") < 0) { chart_data["titles"][x] = translation; }
-                title_s = chart_data["titles"][x];
+                chart += "<br/>&nbsp;";
                 }
-            title_s = title_s.replace("&szlig;", "ß");
-            title_s = title_s.replace("&uuml;", "ü");
-            title_s = title_s.replace("&auml;", "ä");
-            title_s = title_s.replace("&ouml;", "ö");
-            chart_titles.push(title_s);
-        }
-        var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
-        chart    += birdhouseChart_weatherOverview(weather_data); // + "<br/>";
-
-        if (active_page == "TODAY") {
-            chart += "<hr/><div style='width:100%'>" + link_day_forward + " &nbsp; " + link_day_back + "</div><br/>&nbsp;";
+            html     += birdhouse_OtherGroup( "chart", lang("WEATHER"), chart, true );
             }
         else {
+            var chart = birdhouseChart_weatherOverview(weather_data);
             chart += "<br/>&nbsp;";
+            html     += birdhouse_OtherGroup( "chart", lang("WEATHER") + " " + lang("NO_INTERNET_CHART"), chart, false );
             }
-        html     += birdhouse_OtherGroup( "chart", lang("WEATHER"), chart, true );
-    }
+        }
 
     // set images size
     if (active_page != "FAVORITES" && app_active_page != "VIDEOS" && app_active_page != "ARCHIVE") {
@@ -488,7 +497,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             Object.entries(labels).sort().forEach(([key, value]) => {
                 console.log("     - " + key + ": " + value.length);
                 var onclick = "birdhouse_view_images_objects(\""+key+"\"); birdhouse_labels_highlight(\""+key+"\", \"label_key_list\");";
-                label_information += "<div id='label_"+key+"' class='detection_label' onclick='" + onclick + "'>&nbsp;" + key + " (" + value.length + ")&nbsp;</div>";
+                label_information += "<div id='label_"+key+"' class='detection_label' onclick='" + onclick + "'>&nbsp;" + bird_lang(key) + " (" + value.length + ")&nbsp;</div>";
                 label_keys.push(key);
                 });
 
@@ -631,7 +640,7 @@ function birdhouse_LIST_OBJECTS(title, data) {
     for (var i=0;i<all_labels_list.length;i++) {
         var key = all_labels_list[i];
         var onclick = "birdhouse_LIST_OBJECTS_open(label=\""+key+"\");birdhouse_labels_highlight(\""+key+"\",\"label_key_list\");";
-        all_labels += "<div id='label_"+key+"' class='detection_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + key + "&nbsp;&nbsp;</div>";
+        all_labels += "<div id='label_"+key+"' class='detection_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + bird_lang(key) + "&nbsp;&nbsp;</div>";
         }
     all_labels += "<div style='width:100%;height:25px;float:left;'></div>";
     html += birdhouse_OtherGroup( "list_of_labels", lang("ALL_LABELS"), all_labels, true);
@@ -675,10 +684,12 @@ function birdhouse_LIST_OBJECTS(title, data) {
         entry_information += tab.end();
 
         var html_entry = tab.start();
-        html_entry    += tab.row(birdhouse_Image(key, value), entry_information);
+        html_entry    += tab.row(birdhouse_Image(bird_lang(key), value), entry_information);
         html_entry    += tab.end();
 
-        html += birdhouse_OtherGroup( "label_"+key, key, html_entry, true);
+        var bird_key = bird_lang(key);
+        if (bird_key != key) { bird_key = "<b>" + bird_key + "</b>"; }
+        html += birdhouse_OtherGroup( "label_"+key, bird_key, html_entry, true);
         }
 
 	birdhouse_frameHeader(title);
@@ -709,5 +720,17 @@ function birdhouse_labels_highlight(key, list="") {
                 document.getElementById("label_"+this_key).classList.remove("glow");
             }
         }
+    }
+}
+
+function bird_lang(bird_name) {
+    var key = bird_name.toUpperCase();
+    if (!app_bird_names)            { return bird_name; }
+    else if (!app_bird_names[key])  { return bird_name; }
+    else {
+        if (app_bird_names[key][LANG])      { return app_bird_names[key][LANG]; }
+        else if (app_bird_names[key]["EN"]) { return app_bird_names[key]["EN"]; }
+        else if (app_bird_names[key]["DE"]) { return app_bird_names[key]["DE"]; }
+        else                                { return bird_name; }
     }
 }

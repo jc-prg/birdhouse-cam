@@ -163,6 +163,17 @@ function birdhouse_archiveObjectDetection_progress(data) {
     appMsg.alert(msg);
     }
 
+function birdhouse_archiveDayDownload(date_stamp, camera) {
+    commands = ["archive-download-day", date_stamp, camera];
+	birdhouse_apiRequest('POST', commands, '', birdhouse_archiveDayDownloadWait,'','birdhouse_archiveDayDownload(\"'+date_stamp+'\")');
+}
+
+function birdhouse_archiveDayDownloadWait(data) {
+console.error(data["date"]);
+    if (data["date"]) { appMsg.alert(lang("WAITING_FOR_DOWNLOAD") + ":<br/><div id='archive_download_link_"+data["date"]+"'></div>"); }
+    else { appMsg.alert(lang("WAITING_FOR_DOWNLOAD") + ":<br/><div id='archive_download_link'></div>"); }
+}
+
 function birdhouse_archiveDayDelete(date_stamp, date) {
 
     appMsg.confirm(lang("DELETE_ARCHIVE_DAY", [date]), "birdhouse_archiveDayDelete_exec('"+date_stamp+"');", 150);
@@ -170,7 +181,7 @@ function birdhouse_archiveDayDelete(date_stamp, date) {
 
 function birdhouse_archiveDayDelete_exec(date_stamp) {
     commands = ["archive-remove-day", date_stamp];
-	birdhouse_apiRequest('POST', commands, '', birdhouse_archiveDayDelete_done,'','birdhouse_forceBackup');
+	birdhouse_apiRequest('POST', commands, '', birdhouse_archiveDayDelete_done,'','birdhouse_archiveDayDelete_exec(\"'+date_stamp+'\")');
     }
 
 function birdhouse_archiveDayDelete_done(data) {
@@ -370,6 +381,16 @@ function birdhouse_showCameraParam(data) {
 function birdhouse_showWeather() {
 	commands = ["status"];
 	birdhouse_apiRequest('GET', commands, '', birdhouseWeather,'','birdhouseWeather');
+}
+
+function birdhouse_birdNamesRequest() {
+	commands = ["bird-names"];
+	birdhouse_apiRequest('GET', commands, '', birdhouse_birdNamesSet,'','birdhouse_birdNamesRequest()');
+}
+
+function birdhouse_birdNamesSet(data) {
+    app_bird_names = data["DATA"]["data"]["birds"];
+    console.log(app_bird_names);
 }
 
 function birdhouse_AnswerDelete(data) {

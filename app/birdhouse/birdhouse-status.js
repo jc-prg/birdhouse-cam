@@ -67,6 +67,7 @@ function birdhouseStatus_print(data) {
 
     birdhouseStatus_loadingViews(data);
     birdhouseStatus_detection(data);
+    birdhouseStatus_downloads(data);
 
     document.getElementById(app_frame_info).style.display = "block";
 
@@ -428,5 +429,18 @@ function birdhouseStatus_loadingViews(data) {
 function birdhouseStatus_detection(data) {
     if (data["STATUS"]["server"]["object_detection_progress"]) {
          setTextById("last_answer_detection_progress", data["STATUS"]["server"]["object_detection_progress"]);
+        }
+    }
+
+function birdhouseStatus_downloads(data) {
+    if (data["STATUS"]["server"]["downloads"] != {}) {
+        var all_links = "";
+        Object.entries(data["STATUS"]["server"]["downloads"]).forEach(([key,value]) => {
+            if (value.indexOf("in progress") > 0)   {var link = "<i>" + lang("WAITING") + "</i>"; }
+            else                                    {var link = "<a href='"+value+"'>"+value+"</a>"; }
+            all_links += link + "<br/>";
+            setTextById("archive_download_link_" + key, link);
+            });
+        setTextById("archive_download_link", all_links);
         }
     }
