@@ -221,6 +221,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                     time.sleep(2)
 
             archive_info["detection_"+self.id]["detected"] = True
+            archive_info["detection_"+self.id]["labels"] = self.detect_objects.get_labels()
 
             archive_detections = self.summarize_detections(archive_entries)
             self.config.queue.set_status_changed(date=date, change="objects")

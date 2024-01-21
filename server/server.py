@@ -818,11 +818,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             [cam_id, date] = param["parameter"]
             response = camera[cam_id].object.analyze_archive_images_start(date)
         elif param["command"] == "archive-remove-day":
+            response = backup.delete_archived_day(param)
+        elif param["command"] == "archive-download-day":
             msg = "API CALL '" + param["command"] + "' not implemented yet (" + str(self.path) + ")"
             srv_logging.info(msg)
             srv_logging.info(str(param))
             #response = {"info": msg}
-            response = backup.delete_archived_day(param)
+            response = backup.download_files(param)
         elif param["command"] == "reconnect-camera":
             response = camera[which_cam].reconnect()
         elif param["command"] == "camera-settings":
@@ -1058,6 +1060,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "object_detection": birdhouse_status["object_detection"],
                     "object_detection_processing": config.object_detection_processing,
                     "object_detection_progress": config.object_detection_progress,
+                    "downloads": backup.download_files_waiting(param),
                     "initial_setup": config.param["server"]["initial_setup"],
                     "last_answer": ""
                 },
@@ -1113,7 +1116,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         request_times["0_initial"] = round(time.time() - request_start, 3)
 
         cmd_views = ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL",
-                     "DEVICES", "OBJECTS"]
+                     "DEVICES", "OBJECTS", "bird-names"]
         cmd_status = ["status", "list", "last-answer"]
         cmd_info = ["camera-param", "version", "reload"]
 
@@ -1154,6 +1157,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif command == "reload":
             content = {}
             api_response["STATUS"]["reload"] = True
+        elif command == "bird-names":
+            content = {"birds": config.birds}
         elif command == "version":
             content = {}
             version["Code"] = "800"
@@ -1201,7 +1206,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
         if command in cmd_views:
             param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups", "archive_exists",
-                                "chart_data", "weather_data", "days_available", "day_back", "day_forward"]
+                                "chart_data", "weather_data", "days_available", "day_back", "day_forward", "birds"]
             for key in param_to_publish:
                 if key in content:
                     api_data["data"][key] = content[key]

@@ -215,7 +215,8 @@ birdhouse_main_directories = {
     "project": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."),
     "app": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "app"),
     "log": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "log"),
-    "data": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data")
+    "data": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data"),
+    "download": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data/downloads")
 }
 
 # ------------------------------------
@@ -311,6 +312,7 @@ birdhouse_directories = {
 }
 birdhouse_files = {
     "main": "config.json",
+    "birds": "birds.json",
     "backup": "config_images.json",
     "backup_info": "config_backup.json",
     "favorites": "config_favorites.json",
@@ -323,6 +325,7 @@ birdhouse_files = {
 }
 birdhouse_dir_to_database = {
     "config": "config",
+    "birds": "birds",
     "images/config_images": "today_images",
     "images/config_sensor": "today_sensors",
     "images/config_weather": "today_weather",
@@ -353,7 +356,7 @@ birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(na
 birdhouse_loglevel_default = logging.INFO
 birdhouse_loglevel_module = {}
 birdhouse_loglevel_modules_all = [
-    'root', 'backup', 'server', 'srv-info', 'srv-health',
+    'root', 'backup', 'bu-dwnld', 'server', 'srv-info', 'srv-health',
     'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object', 'cam-stream',
     'cam-handl', 'cam-info',
     'config', 'config-Q',
