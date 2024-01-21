@@ -79,6 +79,7 @@ app in English and German, ...
   * edit device settings, reconnect devices (devices must be added via config file)
   * edit camera and image settings (contrast, saturation, hue, brightness ...)
   * see amount of currently active streams
+  * download archived data (hires, config-files, object detection as YOLOv5)
 
 ## Birdhouse
 
@@ -373,5 +374,6 @@ Thanks for your inspiration, code snippets, images:
 * [https://github.com/szazo/DHT11_Python](https://github.com/szazo/DHT11_Python)
 * [https://github.com/bullet64/DHT22_Python](https://github.com/bullet64/DHT22_Python)
 * [https://www.tunbury.org/audio-stream/](https://www.tunbury.org/audio-stream/)
+* [https://github.com/nicknochnack/YOLO-Drowsiness-Detection/blob/main/Drowsiness%20Detection%20Tutorial.ipynb](https://github.com/nicknochnack/YOLO-Drowsiness-Detection/blob/main/Drowsiness%20Detection%20Tutorial.ipynb)
 * ...
 
