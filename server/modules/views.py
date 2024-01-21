@@ -521,7 +521,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         self.logging.info("Create data for favorite view (complete=" + str(complete) + ") ...")
         self.loading = "in progress"
 
-        if self.config.db_handler.exists("favorites", ""):
+        if self.config.db_handler.exists("favorites", "") and not complete:
             content = self.config.db_handler.read("favorites", "")
         else:
             content = {
@@ -532,6 +532,19 @@ class BirdhouseViewFavorite(BirdhouseClass):
                 "entries": {},
                 "groups": {}
             }
+
+        # check existing directories
+        main_directory = self.config.db_handler.directory(config="backup")
+        dir_list = self.tools.get_directories(main_directory)
+        self.logging.debug(str(dir_list))
+        delete_entries = []
+        if not complete:
+            for stamp in content["entries"]:
+                entry = content["entries"]["stamp"]
+                if entry["datestamp"] not in dir_list:
+                    delete_entries.append(stamp)
+            for stamp in delete_entries:
+                del content["entries"][stamp]
 
         # images from today
         files_images = self._list_create_from_images("", complete)
@@ -551,6 +564,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
                 content["entries"][entry] = files_videos[entry].copy()
                 content["groups"][group].append(entry)
 
+        # archive images
         files_archive = self._list_create_from_archive(complete)
         if len(files_archive) > 0:
             for entry in files_archive:
