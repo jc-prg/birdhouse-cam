@@ -21,15 +21,18 @@ var chartJS_darkColors = ["red","aquamarine","chartreuse","coral", "cadetblue",
 
 function load_chartJS() {
 	if (chartJS_loaded == false) {
-		chartJS_script       = document.createElement('script');
-		chartJS_script.async = false;
-		chartJS_script.src   = chartJS_URL;
-		chartJS_script.type  = 'text/javascript';
-		(document.getElementsByTagName('HEAD')[0]||document.body).appendChild(chartJS_script);
+		chartJS_script = document.createElement('script');
+		//if (chartJS_script) {
+            chartJS_script.async = false;
+            chartJS_script.src   = chartJS_URL;
+            chartJS_script.type  = 'text/javascript';
+            (document.getElementsByTagName('HEAD')[0]||document.body).appendChild(chartJS_script);
+            chartJS_loaded = true;
+        //    }
 		}
 	}
 
-function birdhouseChart_create (title, data, type="line", sort_keys=true) {
+function birdhouseChart_create(title, data, type="line", sort_keys=true) {
 
       	// https://www.chartjs.org/docs/latest/samples/line/line.html
       	// data = { "label1" : [1, 2, 3], "label2" : [1, 2, 3] };

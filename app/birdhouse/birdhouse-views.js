@@ -400,6 +400,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
     // create chart data
     if (active_page == "TODAY_COMPLETE" || (active_page == "TODAY" && active_date != "" && active_date != undefined)) {
+    //chartJS_loaded = true;
         if (chartJS_loaded) {
             var chart_titles = [];
             for (var x=0;x<chart_data["titles"].length;x++) {
