@@ -16,8 +16,9 @@ app in English and German, ...
    * [Accessing images via WebDAV](#Accessing-images-via-WebDAV)
    * [Optimizing system configuration](#optimizing-system-configuration)
    * [Sample proxy server configuration](#Sample-proxy-server-configuration)
-6. [Helping stuff](#helping-stuff)
-7. [Other sources](#other-sources)
+6. [Train bird detection](#Train-bird-detection)
+7. [Helping stuff](#helping-stuff)
+8. [Other sources](#other-sources)
 
 
 ## Impressions
@@ -326,6 +327,16 @@ Therefor it's required to enable access to the following ports (if not changed d
 * **Audiostream**: 8009
 
 See a sample configuration (e.g. to forward http://birdhouse.your.domain:443 to http://your-server-ip:8000) here: [sample.nginx.conf](sample.nginx.conf). Ensure, that all used ports are publicly shared via your router.
+
+## Train bird detection
+
+The bird detection is based on a relatively simple training with a few singing birds. If you want to use and 
+continuously improve your own detection model you can use the module [jc://bird-detection/](https://github.com/jc-prg/bird-detection/). 
+Alternatively create a YOLOv5 model with 
+different tools. Copy the *.pt file into the folder [server/modules/detection/custom_models/](server/modules/detection/custom_models/).
+
+Hint: if you're logged in as admin you can download the archived images per camera incl. YOLOv5 files with the detected
+birds or objects. By that you can adapt and use detected birds from your cameras for training.
 
 ## Helping stuff
 
