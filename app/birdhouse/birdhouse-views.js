@@ -400,37 +400,37 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
     // create chart data
     if (active_page == "TODAY_COMPLETE" || (active_page == "TODAY" && active_date != "" && active_date != undefined)) {
-    //chartJS_loaded = true;
-        if (chartJS_loaded) {
-            var chart_titles = [];
-            for (var x=0;x<chart_data["titles"].length;x++) {
-                if (chart_data["titles"][x].indexOf(":")>-1) {
-                    var sensor = chart_data["titles"][x].split(":");
-                    var translation = lang(sensor[1].toUpperCase().replace(" ",""));
-                    if (translation.indexOf("not found") < 0) { sensor[1] = translation; }
-                    var title_s = sensor[1].charAt(0).toUpperCase() + sensor[1].slice(1);
-                    if (sensors[sensor[0]]) {
-                        title_s += " ("+sensors[sensor[0]]["name"]+")";
-                        }
-                    else if (sensor[0].indexOf("WEATHER/") >= 0) {
-                        var location = sensor[0].replace("WEATHER/", "");
-                        title_s += " ("+location+")";
-                        }
-                    }
-                else {
-                    var translation = lang(chart_data["titles"][x].toUpperCase());
-                    if (translation.indexOf("not found") < 0) { chart_data["titles"][x] = translation; }
-                    title_s = chart_data["titles"][x];
-                    }
-                title_s = title_s.replace("&szlig;", "ß");
-                title_s = title_s.replace("&uuml;", "ü");
-                title_s = title_s.replace("&auml;", "ä");
-                title_s = title_s.replace("&ouml;", "ö");
-                chart_titles.push(title_s);
-            }
-            var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
-            chart    += birdhouseChart_weatherOverview(weather_data); // + "<br/>";
 
+        var chart_titles = [];
+        for (var x=0;x<chart_data["titles"].length;x++) {
+            if (chart_data["titles"][x].indexOf(":")>-1) {
+                var sensor = chart_data["titles"][x].split(":");
+                var translation = lang(sensor[1].toUpperCase().replace(" ",""));
+                if (translation.indexOf("not found") < 0) { sensor[1] = translation; }
+                var title_s = sensor[1].charAt(0).toUpperCase() + sensor[1].slice(1);
+                if (sensors[sensor[0]]) {
+                    title_s += " ("+sensors[sensor[0]]["name"]+")";
+                    }
+                else if (sensor[0].indexOf("WEATHER/") >= 0) {
+                    var location = sensor[0].replace("WEATHER/", "");
+                    title_s += " ("+location+")";
+                    }
+                }
+            else {
+                var translation = lang(chart_data["titles"][x].toUpperCase());
+                if (translation.indexOf("not found") < 0) { chart_data["titles"][x] = translation; }
+                title_s = chart_data["titles"][x];
+                }
+            title_s = title_s.replace("&szlig;", "ß");
+            title_s = title_s.replace("&uuml;", "ü");
+            title_s = title_s.replace("&auml;", "ä");
+            title_s = title_s.replace("&ouml;", "ö");
+            chart_titles.push(title_s);
+        }
+        var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
+        chart    += birdhouseChart_weatherOverview(weather_data); // + "<br/>";
+
+        if (chartJS_loaded) {
             if (active_page == "TODAY") {
                 chart += "<hr/><div style='width:100%'>" + link_day_forward + " &nbsp; " + link_day_back + "</div><br/>&nbsp;";
                 }

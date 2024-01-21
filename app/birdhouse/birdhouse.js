@@ -84,6 +84,8 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 	        app_active_page = param[1];
 	        app_last_active_page = param[1];
 	        }
+
+        birdhouse_loadChartJS();
 	    birdhouse_birdNamesRequest();
 	    }
 

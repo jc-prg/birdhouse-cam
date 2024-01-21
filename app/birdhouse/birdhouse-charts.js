@@ -13,22 +13,26 @@ var chartJS_defaultColors = ["coral","cornflowerblue", "cadetblue",
 				"darkorange", "darksalmon", "darkviolet", "dodgerblue", "firebrick",
 				"forestgreen", "goldenrod", "greenyellow", "hotpink", "indigo"
 				];
-var chartJS_darkColors = ["red","aquamarine","chartreuse","coral", "cadetblue",
+var chartJS_darkColors = ["red", "aquamarine", "chartreuse", "coral", "cadetblue",
 				"crimson", "darkblue", "goldenrod", "green", "magenta",
 				"orange", "salmon", "violet", "dodgerblue", "firebrick",
 				"forestgreen", "goldenrod", "greenyellow", "hotpink", "indigo"
 				];
 
-function load_chartJS() {
+function birdhouse_loadChartJS() {
+
 	if (chartJS_loaded == false) {
 		chartJS_script = document.createElement('script');
-		//if (chartJS_script) {
+		if (chartJS_script) {
+
             chartJS_script.async = false;
             chartJS_script.src   = chartJS_URL;
             chartJS_script.type  = 'text/javascript';
             (document.getElementsByTagName('HEAD')[0]||document.body).appendChild(chartJS_script);
-            chartJS_loaded = true;
-        //    }
+            setTimeout(function() {
+                if (typeof Chart === 'function') { chartJS_loaded = true; }
+            }, 1000);
+            }
 		}
 	}
 
@@ -46,7 +50,6 @@ function birdhouseChart_create(title, data, type="line", sort_keys=true) {
 	    return html;
 	}
     var data_rows	= data[data_keys[0]].length;		// startet with only 1 line per chart!
-
     var data_labels = "";
     var data_data   = "";
     var data_sets   = [];
@@ -74,36 +77,32 @@ function birdhouseChart_create(title, data, type="line", sort_keys=true) {
             });
         }
 
-	load_chartJS();
+    html += "<div><canvas id=\"birdhouseChart\" style=\"height:200px;width:100%;\"></canvas></div>\n";
 
-      	html += "<div><canvas id=\"birdhouseChart\" style=\"height:200px;width:100%;\"></canvas></div>\n";
-
-      	const chart_labels = data_keys;
-      	const chart_data   = {
-      		labels   : chart_labels,
-      		datasets : data_sets
-      		};
-      	chartJS_config = {
-      		type : type,
-      		data : chart_data,
-      		options : {
-			responsive: true,
-  	    		plugins: {
-  	    			legend: {
-  				position: "right",
-  				align: "middle",
-  				labels : {
-	  			    boxHeight : 12,
-	  			    boxWidth : 12,
-	  			    }
-				}}
-      			}
-      		};
-
-      	setTimeout(function(){
-      		chartJS_chart = new Chart(document.getElementById('birdhouseChart'), chartJS_config );
-		}, 1000);
-
+    const chart_labels = data_keys;
+    const chart_data   = {
+        labels   : chart_labels,
+        datasets : data_sets
+        };
+    chartJS_config = {
+        type : type,
+        data : chart_data,
+        options : {
+        responsive: true,
+            plugins: {
+                legend: {
+            position: "right",
+            align: "middle",
+            labels : {
+                boxHeight : 12,
+                boxWidth : 12,
+                }
+            }}
+            }
+        };
+    setTimeout(function() {
+        chartJS_chart = new Chart(document.getElementById('birdhouseChart'), chartJS_config );
+        }, 1000 );
 	return html;
 	}
 
