@@ -694,7 +694,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.startswith("/api"):
             param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup",
                             "last-answer", "favorit", "recycle", "update-views", "update-views-complete",
-                            "archive-object-detection", "archive-remove-day", "OBJECTS", "FAVORITES"]
+                            "archive-object-detection", "archive-remove-day", "OBJECTS", "FAVORITES", "bird-names"]
 
             param["session_id"] = elements[2]
             param["command"] = elements[3]
