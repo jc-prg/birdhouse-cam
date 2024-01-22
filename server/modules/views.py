@@ -508,6 +508,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         """
         Trigger recreation of the favorit list
         """
+        self.logging.info("Request update FAVORITE view (complete=" + str(complete) + "; force=" + str(force) + ")")
         self.create_complete = complete
         self.create = True
         if force:
@@ -777,6 +778,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         """
         Trigger recreation of the archive list
         """
+        self.logging.info("Request update ARCHIVE view (complete=" + str(complete) + "; force=" + str(force) + ")")
         self.create_complete = complete
         self.create = True
         if force:
@@ -1338,6 +1340,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         """
         Trigger recreation of the favorit list
         """
+        self.logging.info("Request update OBJECT view (complete=" + str(complete) + "; force=" + str(force) + ")")
         self.create_complete = complete
         self.create = True
         if force:
