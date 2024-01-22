@@ -582,6 +582,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
             if update_views:
                 self.views.archive.list_update()
                 self.views.favorite.list_update()
+                self.views.objects.list_update()
 
             self.thread_control()
             self.thread_wait()
@@ -646,9 +647,6 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                 self.db_handler.unlock(config_file)
                 self.db_handler.write(config_file, "", entries)
 
-                if count_edit > 0 and self.views is not None:
-                    self.views.favorite.list_update()
-
             # EDIT QUEUE: backup (with date)
             elif config_file == "backup":
 
@@ -711,15 +709,13 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                     if "to_be_deleted" in entries[key]:
                                         del entries[key]["to_be_deleted"]
 
-                    if count_edit > 0 and self.views is not None:
-                        self.views.favorite.list_update()
-
                     entry_data["files"] = entries
                     entry_data["info"] = file_info
                     entry_data["detection"] = detection_info
                     self.db_handler.unlock(config_file, date)
                     self.db_handler.write(config_file, date, entry_data)
-                    self.set_status_changed(date=date, change="all")
+                    if count_edit > 0 and self.views is not None:
+                        self.set_status_changed(date=date, change="all")
 
                     update_views = True
 

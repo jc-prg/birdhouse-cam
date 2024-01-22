@@ -477,6 +477,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         self.create = True
         self.create_complete = True
         self.force_reload = False
+        self.reload_counter = ""
 
         self.links_default = ("live", "today", "videos", "backup")
         self.links_admin = ("live", "today", "today_complete", "videos", "backup")
@@ -508,7 +509,8 @@ class BirdhouseViewFavorite(BirdhouseClass):
         """
         Trigger recreation of the favorit list
         """
-        self.logging.info("Request update FAVORITE view (complete=" + str(complete) + "; force=" + str(force) + ")")
+        self.logging.info("Request update FAVORITE view (complete=" + str(complete) + "; force=" + str(force) +
+                          "; count=" + str(self.reload_counter) + ")")
         self.create_complete = complete
         self.create = True
         if force:
@@ -616,6 +618,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         fields_not_required = []
         from_file = False
         save_file = False
+        update_mode = " - "
 
         if date == "":
             today = True
@@ -639,10 +642,15 @@ class BirdhouseViewFavorite(BirdhouseClass):
             self.logging.warning("  -> Could not read favorites from " + category + ", no data available.")
             return {}
 
-        if complete or self.config.queue.get_status_changed(date=date, change="favorites"):
+        if complete:
             from_file = True
+            update_mode += " from file (complete)"
+        elif self.config.queue.get_status_changed(date=date, change="favorites"):
+            from_file = True
+            update_mode += " from file (changed="+date+")"
         elif "favorites" not in files_complete:
             from_file = True
+            update_mode += " from file (not yet in config-file)"
 
         if not from_file:
             self.logging.info("  -> Favorites " + category + ": " + str(len(files_complete["favorites"])) + " - keep")
@@ -744,6 +752,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         self.create = True
         self.create_complete = False
         self.force_reload = False
+        self.reload_counter = ""
 
         # to be validated ....
         self.config_recreate = []
@@ -778,7 +787,8 @@ class BirdhouseViewArchive(BirdhouseClass):
         """
         Trigger recreation of the archive list
         """
-        self.logging.info("Request update ARCHIVE view (complete=" + str(complete) + "; force=" + str(force) + ")")
+        self.logging.info("Request update ARCHIVE view (complete=" + str(complete) + "; force=" + str(force) +
+                          "; count=" + str(self.reload_counter) + ")")
         self.create_complete = complete
         self.create = True
         if force:
@@ -1309,6 +1319,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         self.create = True
         self.create_complete = False
         self.force_reload = False
+        self.reload_counter = ""
 
         self.links_default = ("live", "today", "videos", "backup")
         self.links_admin = ("live", "today", "today_complete", "videos", "backup")
@@ -1340,7 +1351,8 @@ class BirdhouseViewObjects(BirdhouseClass):
         """
         Trigger recreation of the favorit list
         """
-        self.logging.info("Request update OBJECT view (complete=" + str(complete) + "; force=" + str(force) + ")")
+        self.logging.info("Request update OBJECT view (complete=" + str(complete) + "; force=" + str(force) +
+                          "; count=" + str(self.reload_counter) + ")")
         self.create_complete = complete
         self.create = True
         if force:
@@ -1572,7 +1584,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="views", config=config)
-        self.thread_set_priority(5)
+        self.thread_set_priority(3)
 
         self.active_cams = None
         self.camera = camera
@@ -1635,6 +1647,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
             if self.config.user_activity():
                 count += 1
+                self.favorite.reload_counter = str(count)+"/"+str(count_rebuild)
+                self.archive.reload_counter = str(count)+"/"+str(count_rebuild)
+                self.object.reload_counter = str(count)+"/"+str(count_rebuild)
 
             self.thread_control()
             self.thread_wait()

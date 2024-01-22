@@ -235,6 +235,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                 self.backup_files()
                 self.views.archive.list_update(force=True)
                 self.views.favorite.list_update(force=True)
+                self.views.object.list_update(force=True)
                 count = 0
                 while self._running and count < 60:
                     time.sleep(1)
@@ -945,6 +946,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             os.system(command)
             self.views.archive.list_update(force=True)
             self.views.favorite.list_update(force=True)
+            self.views.object.list_update(force=True)
             self.logging.info(
                 "Deleted archived day '" + date + "' and triggered recreation of archive and favorite view")
         except Exception as e:
