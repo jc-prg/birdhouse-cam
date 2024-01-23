@@ -547,6 +547,11 @@ class BirdhouseViewFavorite(BirdhouseClass):
                 entry = content["entries"][stamp]
                 if "datestamp" in entry and entry["datestamp"] not in dir_list:
                     delete_entries.append(stamp)
+                elif "date" in entry:
+                    day, month, year = entry["date"].split(".")
+                    datestamp = year + month + day
+                    if datestamp not in dir_list:
+                        delete_entries.append(stamp)
             for stamp in delete_entries:
                 del content["entries"][stamp]
 
