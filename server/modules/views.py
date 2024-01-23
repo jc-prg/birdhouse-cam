@@ -545,7 +545,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         if not complete:
             for stamp in content["entries"]:
                 entry = content["entries"][stamp]
-                if entry["datestamp"] not in dir_list:
+                if "datestamp" in entry and entry["datestamp"] not in dir_list:
                     delete_entries.append(stamp)
             for stamp in delete_entries:
                 del content["entries"][stamp]
