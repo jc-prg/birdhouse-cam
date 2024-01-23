@@ -911,11 +911,10 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             framerate = round(self.stream_raw.fps, 1)
             if self.fps and framerate and self.fps < framerate:
                 framerate = self.fps
-            if not framerate:
-                framerate = -1
-            raw = self.image.draw_text_raw(raw=raw, text=str(round(framerate, 1)) + "fps",
-                                           font=cv2.QT_FONT_NORMAL,
-                                           position=(10, -20), scale=0.4, thickness=1)
+            if framerate:
+                raw = self.image.draw_text_raw(raw=raw, text=str(round(framerate, 1)) + "fps",
+                                               font=cv2.QT_FONT_NORMAL,
+                                               position=(10, -20), scale=0.4, thickness=1)
         return raw.copy()
 
     def edit_add_system_info(self, raw):
