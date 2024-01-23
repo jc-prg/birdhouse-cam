@@ -1315,6 +1315,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         self.loading = "started"
         self.camera = camera
         self.cameras = list(camera.keys())
+        self.detect_active = birdhouse_env["detection_active"]
 
         self.create = True
         self.create_complete = False
@@ -1333,7 +1334,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         """
         Return data for list of favorites from cache
         """
-        if not self.views:
+        if not self.views or not self.detect_active:
             return {}
 
         camera = param["which_cam"]
@@ -1351,17 +1352,23 @@ class BirdhouseViewObjects(BirdhouseClass):
         """
         Trigger recreation of the favorit list
         """
-        self.logging.info("Request update OBJECT view (complete=" + str(complete) + "; force=" + str(force) +
-                          "; count=" + str(self.reload_counter) + ")")
-        self.create_complete = complete
-        self.create = True
-        if force:
-            self.force_reload = True
+        if not self.detect_active:
+            self.logging.debug("Request update OBJECT view but object detection is off")
+        else:
+            self.logging.info("Request update OBJECT view (complete=" + str(complete) + "; force=" + str(force) +
+                              "; count=" + str(self.reload_counter) + ")")
+            self.create_complete = complete
+            self.create = True
+            if force:
+                self.force_reload = True
 
     def list_create(self, complete=False) -> None:
         """
         collect or create data for objects view ...
         """
+        if not self.detect_active:
+            return
+
         start_time = time.time()
         self.logging.info("Create data for object detection view (complete=" + str(complete) + ") ...")
         self.loading = "in progress"

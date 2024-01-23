@@ -34,7 +34,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
         self.thread_set_priority(4)
 
-    def run(self):
+    def run(self) -> None:
         """
         queue to analyze pictures of archive days
         """
@@ -58,7 +58,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.thread_control()
         self.logging.info("Stopped OBJECT DETECTION for '"+self.id+"'.")
 
-    def connect(self, first_load=True):
+    def connect(self, first_load=True) -> None:
         """
         initialize models for object detection
         """
@@ -97,7 +97,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.detect_loaded = False
             self.logging.info(" -> Object detection inactive (" + self.name + "), see .env-file.")
 
-    def reconnect(self, force_reload=False):
+    def reconnect(self, force_reload=False) -> None:
         """
         reconnect, e.g., when the model has been changed
         """
@@ -113,10 +113,13 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.detect_settings = self.param["object_detection"]
             self.connect(first_load=False)
 
-    def analyze_image(self, stamp, path_hires, image_hires, image_info):
+    def analyze_image(self, stamp, path_hires, image_hires, image_info) -> None:
         """
         analyze image for objects, save in metadata incl. image with labels if detected
         """
+        if not self.detect_active:
+            return
+
         start_time = time.time()
         if self.detect_objects is not None and self.detect_objects.loaded:
 
@@ -154,22 +157,39 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         else:
             self.logging.debug("Object detection not loaded (" + stamp + ")")
 
-    def analyze_archive_images_start(self, date):
+    def analyze_archive_images_start(self, date) -> dict:
         """
         add analyzing request to the queue
         """
-        response = {
-            "command": ["archive object detection"],
-            "camera": self.id,
-            "status": "Added " + date + " to the queue."
-        }
-        self.detect_queue_archive.append(date)
+        if not self.detect_active:
+            response = {
+                "command": ["archive object detection"],
+                "camera": self.id,
+                "error": "Object detections is inactive",
+                "status": "Object detections is inactive"
+            }
+        else:
+            response = {
+                "command": ["archive object detection"],
+                "camera": self.id,
+                "status": "Added " + date + " to the queue."
+            }
+            self.detect_queue_archive.append(date)
         return response
 
-    def analyze_archive_images(self, date):
+    def analyze_archive_images(self, date) -> dict:
         """
         detect objects for an archived day, replaces  detections if exist
         """
+        if not self.detect_active:
+            response = {
+                "command": ["archive object detection"],
+                "camera": self.id,
+                "error": "Object detections is inactive",
+                 "status": "Object detections is inactive"
+            }
+            return response
+
         response = {"command": ["archive object detection"], "camera": self.id}
         self._processing = True
         if self.detect_objects is not None and self.detect_objects.loaded:
@@ -252,6 +272,9 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         """
         check files-section which detected objects are in and summarize for the archive configuration
         """
+        if not self.detect_active:
+            return {}
+
         self.logging.debug("Summarize detections from entries (" + str(len(entries)) + " entries)")
         detections = {}
         for stamp in entries:

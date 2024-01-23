@@ -289,6 +289,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             if "START" in content:
                 print("START signal set ... starting birdhouse server.")
                 return True
+        print("Check: no START signal present (file="+str(os.path.exists(self._shutdown_signal_file))+").")
         return False
 
     def set_start(self, restart=True):
