@@ -427,8 +427,8 @@ function birdhouseStatus_loadingViews(data) {
 }
 
 function birdhouseStatus_detection(data) {
-    if (data["STATUS"]["server"]["object_detection_progress"]) {
-         setTextById("last_answer_detection_progress", data["STATUS"]["server"]["object_detection_progress"]);
+    if (data["STATUS"]["object_detection"]["progress"]) {
+         setTextById("last_answer_detection_progress", data["STATUS"]["object_detection"]["progress"]);
         }
     }
 

@@ -80,12 +80,20 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                             model_to_load = os.path.join(detection_custom_model_path, model_to_load)
                         self.logging.info("Initialize object detection model (" + self.name + ") ...")
                         self.logging.info(" -> '" + model_to_load + "'")
-                        self.detect_objects = self.DetectionModel(model_to_load)
-                        self.detect_live = self.detect_settings["live"]
-                        self.detect_loaded = True
-                        self.last_model = self.detect_settings["model"]
-                        birdhouse_status["object_detection"] = True
-                        self.logging.info(" -> '" + model_to_load + "': OK")
+                        if os.path.exists(model_to_load):
+                            self.detect_objects = self.DetectionModel(model_to_load)
+                            if self.detect_objects.loaded:
+                                self.detect_live = self.detect_settings["live"]
+                                self.detect_loaded = True
+                                self.last_model = self.detect_settings["model"]
+                                birdhouse_status["object_detection"] = True
+                                self.logging.info(" -> '" + model_to_load + "': OK")
+                            else:
+                                self.detect_loaded = False
+                                self.logging.info(" -> '" + model_to_load + "': ERROR LOADING MODEL")
+                        else:
+                            self.detect_loaded = False
+                            self.logging.info(" -> '" + model_to_load + "': NOT FOUND")
                 else:
                     self.logging.info(" -> Object detection inactive (" + self.name + "), see settings.")
 

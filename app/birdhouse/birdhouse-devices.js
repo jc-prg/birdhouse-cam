@@ -171,7 +171,7 @@ function birdhouseDevices_cameras(data) {
         html_temp += birdhouse_OtherGroup( camera+"_detect", "Image Similarity Detection", html_entry, false );
 
         if (settings["server"]["detection_active"]) {
-            var model_options = app_data["STATUS"]["detection_models"].join(",");
+            var model_options = app_data["STATUS"]["object_detection"]["models_available"].join(",");
             html_entry = tab.start();
             html_entry += tab.row("- Image Detection:",     birdhouse_edit_field(id="set_detect_active_"+camera, field="devices:cameras:"+camera+":object_detection:active", type="select", options="true,false", data_type="boolean"));
             html_entry += tab.row("- Detection Size:",      birdhouse_edit_field(id="set_detect_size_"+camera, field="devices:cameras:"+camera+":object_detection:detection_size", type="input", options="", data_type="integer") + " %");

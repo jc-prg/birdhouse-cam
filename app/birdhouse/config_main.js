@@ -28,7 +28,7 @@ var app_status_commands   = ["last-answer"];
 function app_menu_entries(data) {
 	var hideSettings     = "birdhouse_settings.toggle(true);";
 	var weather_active   = data["SETTINGS"]["localization"]["weather_active"];
-	var detection_active = data["STATUS"]["server"]["object_detection"];
+	var detection_active = data["STATUS"]["object_detection"]["active"];
 	var admin_type       = data["SETTINGS"]["server"]["admin_login"];
 
 	var app_menu = [

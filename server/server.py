@@ -1035,19 +1035,22 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         config.user_activity("set", command)
 
         srv_logging.debug("GET API request with '" + self.path + "'.")
-        srv_logging.debug(str(param))
-
-        # prepare API response
         api_response = {
             "API": api_description,
             "STATUS": {
-                "start_time": api_start,
-                "current_time": config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
                 "admin_allowed": self.admin_allowed(),
-                "check-version": version,
                 "api-call": status,
+                "check-version": version,
+                "current_time": config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
+                "start_time": api_start,
+                "database": {},
+                "devices": {
+                    "cameras": {},
+                    "sensors": {},
+                    "weather": {},
+                    "microphones": {}
+                },
                 "reload": False,
-                "system": {},
                 "server": {
                     "view_archive_loading": views.archive.loading,
                     "view_favorite_loading": views.favorite.loading,
@@ -1058,27 +1061,25 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "backup_process_running": backup.backup_running,
                     "queue_waiting_time": config.queue.queue_wait,
                     "health_check": health_check.status(),
-                    "object_detection": birdhouse_status["object_detection"],
-                    "object_detection_processing": config.object_detection_processing,
-                    "object_detection_progress": config.object_detection_progress,
                     "downloads": backup.download_files_waiting(param),
                     "initial_setup": config.param["server"]["initial_setup"],
                     "last_answer": ""
                 },
-                "devices": {
-                    "cameras": {},
-                    "sensors": {},
-                    "weather": {},
-                    "microphones": {}
+                "system": {},
+                "object_detection": {
+                    "active": birdhouse_status["object_detection"],
+                    "processing": config.object_detection_processing,
+                    "progress": config.object_detection_progress,
+                    "models_available": detection_models,
+                    "models_loaded": {},
+                    "models_loaded_status": {},
                 },
                 "view": {
                     "selected": which_cam,
                     "active_cam": which_cam,
                     "active_date": "",
                     "active_page": command
-                },
-                "database": {},
-                "detection_models": detection_models
+                }
             },
             "SETTINGS": {
                 "backup": {},
@@ -1098,6 +1099,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             "WEATHER": {},
             "DATA": {}
         }
+        srv_logging.debug(str(param))
+
+        # prepare API response
 
         # prepare DATA section
         api_data = {
@@ -1144,9 +1148,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive.dir_size / 1024
         elif command == "status" or command == "list":
             content = {"last_answer": ""}
-            #if self.admin_allowed() and len(config.async_answers) > 0:
-            #    content["last_answer"] = config.async_answers.pop()
-            #    content["background_process"] = config.async_running
             api_response["STATUS"]["database"] = config.get_db_status()
             api_response["STATUS"]["system"] = sys_info.get()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive.dir_size / 1024
@@ -1188,6 +1189,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             for key in param_to_publish:
                 if key in content:
                     api_response["STATUS"]["server"][key] = content[key]
+
+            for key in camera:
+                api_response["STATUS"]["object_detection"]["models_loaded_status"][key] = camera[key].object.detect_loaded
+                api_response["STATUS"]["object_detection"]["models_loaded"][key] = camera[key].object.detect_settings["model"]
 
             # collect data for new DATA section
             param_to_publish = ["backup", "localization", "title", "views", "info", "weather"]
