@@ -175,6 +175,8 @@ Depending on the needs there are three options available how to install and run 
 
 #### (2) Direct installation
 
+_Note:_ This installation is not fully tested yet. Recommend are (1) and (3).
+
 1. Install birdhouse-cam prerequisites
     ```bash 
     # Install required Python modules and ffmpeg (this may take a while)
@@ -224,7 +226,7 @@ Depending on the needs there are three options available how to install and run 
       # birdhouse-cam: start birdhouse server
       @reboot     /usr/bin/python3 /projects/prod/birdhouse-cam/server/server.py
       # birdhouse-cam: start if restart has been requested 
-      * * * * *   /usr/bin/python3 /projects/prod/birdhouse-cam/server/server.py --check-if-start
+      * * * * *   /usr/bin/python3 /projects/prod/birdhouse-cam/server/server.py --check-if-start > /tmp/birdhouse-cam-cron 2>&1
        ```
    2. Alternatively create a system service to automatically start and restart the server (experimental)
        ```bash 
@@ -332,8 +334,7 @@ See a sample configuration (e.g. to forward http://birdhouse.your.domain:443 to 
 
 The bird detection is based on a relatively simple training with a few singing birds. If you want to use and 
 continuously improve your own detection model you can use the module [jc://bird-detection/](https://github.com/jc-prg/bird-detection/). 
-Alternatively create a YOLOv5 model with 
-different tools. Copy the *.pt file into the folder [server/modules/detection/custom_models/](server/modules/detection/custom_models/).
+Alternatively create a YOLOv5 model with different tools. Copy the *.pt file into the folder [data/custom_models/](data/custom_models/).
 
 Hint: if you're logged in as admin you can download the archived images per camera incl. YOLOv5 files with the detected
 birds or objects. By that you can adapt and use detected birds from your cameras for training.
