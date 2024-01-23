@@ -142,7 +142,18 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
     def analyze_image(self, stamp, path_hires, image_hires, image_info) -> None:
         """
-        analyze image for objects, save in metadata incl. image with labels if detected
+        Analyze an image for objects.
+
+        Analyze an image for objects. Changes will be saved in metadata incl. image with labels if detected
+        using the config queue.
+
+        Args:
+            stamp (str): entry key which is the recording time in the format HHMMSS
+            path_hires (str): complete path to the hires image file
+            image_hires (object): hires images, e.g., directly from the camera or read via cv2.imread()
+            image_info (dict): complete entry for the image
+        Returns:
+            None
         """
         if not self.detect_active:
             return
