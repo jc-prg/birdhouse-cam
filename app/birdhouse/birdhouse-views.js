@@ -388,7 +388,10 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    info_text += tab.row("");
 	    info_text += tab.row(lang("THRESHOLD_FOR_ARCHIVE") + ":", threshold_slider );
         if (app_data["SETTINGS"]["server"]["detection_active"]) {
-            if (!app_data["STATUS"]["object_detection"]["models_loaded_status"][app_active_cam]) { button_object_detection = lang("DETECTION_NOT_LOADED"); }
+            if (!camera_settings[app_active_cam]["object_detection"]["active"])
+                { button_object_detection = lang("DETECTION_INACTIVE_CAM"); }
+            else if (!app_data["STATUS"]["object_detection"]["models_loaded_status"][app_active_cam])
+                { button_object_detection = lang("DETECTION_NOT_LOADED"); }
     	    info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model, detection_threshold]) + ":", button_object_detection );
     	    }
 	    info_text += tab.row(lang("DELETE_ARCHIVE") + ":", button_archive_deletion );
