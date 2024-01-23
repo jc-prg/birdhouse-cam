@@ -26,22 +26,23 @@ var app_status_commands   = ["last-answer"];
 //--------------------------------
 
 function app_menu_entries(data) {
-	var hideSettings    = "birdhouse_settings.toggle(true);";
-	var weather_active  = data["SETTINGS"]["localization"]["weather_active"];
-	var admin_type      = data["SETTINGS"]["server"]["admin_login"];
+	var hideSettings     = "birdhouse_settings.toggle(true);";
+	var weather_active   = data["SETTINGS"]["localization"]["weather_active"];
+	var detection_active = data["STATUS"]["server"]["object_detection"];
+	var admin_type       = data["SETTINGS"]["server"]["admin_login"];
 
 	var app_menu = [
 		[lang("LIVESTREAM"),   "script", hideSettings+"birdhousePrint_load('INDEX',   '"+app_active_cam+"');"],
-		[lang("FAVORITES"),    "script", hideSettings+"birdhousePrint_load('FAVORITES','"+app_active_cam+"');"],
 		[lang("TODAY"),        "script", hideSettings+"birdhousePrint_load('TODAY',   '"+app_active_cam+"');"],
+		[lang("FAVORITES"),    "script", hideSettings+"birdhousePrint_load('FAVORITES','"+app_active_cam+"');"],
 		[lang("VIDEOS"),       "script", hideSettings+"birdhousePrint_load('VIDEOS',  '"+app_active_cam+"');"],
-		[lang("BIRDS"),        "script", hideSettings+"birdhousePrint_load('OBJECTS',  '"+app_active_cam+"');"],
-		[lang("ARCHIVE"),      "script", hideSettings+"birdhousePrint_load('ARCHIVE', '"+app_active_cam+"');"]
-		];
+        ];
 
-	if (weather_active) {
-	    app_menu.push([lang("WEATHER"),      "script", hideSettings+"birdhousePrint_load('WEATHER', '"+app_active_cam+"');"]);
-    }
+	if (detection_active) { app_menu.push([lang("BIRDS"),        "script", hideSettings+"birdhousePrint_load('OBJECTS',  '"+app_active_cam+"');"]); }
+
+    app_menu.push([lang("ARCHIVE"),      "script", hideSettings+"birdhousePrint_load('ARCHIVE', '"+app_active_cam+"');"]);
+
+	if (weather_active)   { app_menu.push([lang("WEATHER"),      "script", hideSettings+"birdhousePrint_load('WEATHER', '"+app_active_cam+"');"]); }
 
 	if (app_admin_allowed) {
 	    birdhouse_adminAnswer(true);
