@@ -9,9 +9,13 @@ from modules.image import BirdhouseImageProcessing
 
 class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
-    def __init__(self, camera_id, config):
+    def __init__(self, camera_id: str, config: dict):
         """
-        create instance of this class for a specific camera
+        Create instance of this class for a specific camera
+
+        Args:
+            camera_id (str): id string to identify the camera from which this class is embedded
+            config (dict): reference to main config object
         """
         threading.Thread.__init__(self)
         BirdhouseCameraClass.__init__(self, class_id=camera_id + "-object", class_log="cam-object",
@@ -36,13 +40,18 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
     def run(self) -> None:
         """
-        queue to analyze pictures of archive days
+        Manage queue to analyze pictures of archive days
+
+        Args:
+            N/A
+        Returns:
+            None
         """
         if not self.detect_active:
             self.logging.info("Do not start OBJECT DETECTION, can be changed in file '.env'.")
             return
 
-        self.logging.info("Starting OBJECT DETECTION for '"+self.id+"' ...")
+        self.logging.info("Starting OBJECT DETECTION for '" + self.id + "' ...")
         self.connect()
         while self._running:
 
@@ -56,11 +65,16 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
             self.thread_wait()
             self.thread_control()
-        self.logging.info("Stopped OBJECT DETECTION for '"+self.id+"'.")
+        self.logging.info("Stopped OBJECT DETECTION for '" + self.id + "'.")
 
-    def connect(self, first_load=True) -> None:
+    def connect(self, first_load: bool = True) -> None:
         """
         initialize models for object detection
+
+        Args:
+            first_load (bool): set True when initializing the first object of this class to import required modules
+        Returns:
+            None
         """
         if self.detect_active:
             try:
@@ -105,9 +119,14 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.detect_loaded = False
             self.logging.info(" -> Object detection inactive (" + self.name + "), see .env-file.")
 
-    def reconnect(self, force_reload=False) -> None:
+    def reconnect(self, force_reload: bool = False) -> None:
         """
-        reconnect, e.g., when the model has been changed
+        Reconnect, e.g., when connect didn't work due to an error or the model has been changed
+
+        Args:
+            force_reload (bool): force a reconnect even if already a model is set
+        Returns:
+            None
         """
         if self.detect_active:
             if self.last_model == self.detect_settings["model"] and self.detect_loaded and not force_reload:
@@ -165,9 +184,17 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         else:
             self.logging.debug("Object detection not loaded (" + stamp + ")")
 
-    def analyze_archive_images_start(self, date) -> dict:
+    def analyze_archive_images_start(self, date: str) -> dict:
         """
-        add analyzing request to the queue
+        Add object detection request for one date.
+
+        Add object detection analyzing request to the queue for a specific date and camera.
+        The camera is defined when an object for a camera is build based on this class.
+
+        Args:
+            date (str): archived date that shall be analyzed
+        Returns:
+            dict: response for API
         """
         if not self.detect_active:
             response = {
@@ -185,16 +212,52 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.detect_queue_archive.append(date)
         return response
 
-    def analyze_archive_images(self, date) -> dict:
+    def analyze_archives_start(self, dates: list) -> dict:
         """
-        detect objects for an archived day, replaces  detections if exist
+        Add object detection request for a list of dates.
+
+        Add object detection analyzing request to the queue for a list of dates and a specific camera.
+        The camera is defined when an object for a camera is build based on this class.
+
+        Args:
+            dates (list): list of archived dates that shall be analyzed
+        Returns:
+            dict: response for API
+        """
+        if not self.detect_active:
+            response = {
+                "command": ["archive object detection - list of dates"],
+                "camera": self.id,
+                "error": "Object detections is inactive",
+                "status": "Object detections is inactive"
+            }
+        else:
+            response = {
+                "command": ["archive object detection"],
+                "camera": self.id,
+                "status": "Added " + str(dates) + " to the queue."
+            }
+            for date in dates:
+                self.analyze_archive_images_start(date)
+        return response
+
+    def analyze_archive_images(self, date: str) -> dict:
+        """
+        Execute detection request for one day.
+
+        Detects objects for an archived day and replace detections if existing.
+
+        Args:
+            date (str): date of day to be analyzed
+        Returns:
+            dict: in case of direct call from API it returns an API response
         """
         if not self.detect_active:
             response = {
                 "command": ["archive object detection"],
                 "camera": self.id,
                 "error": "Object detections is inactive",
-                 "status": "Object detections is inactive"
+                "status": "Object detections is inactive"
             }
             return response
 
@@ -205,11 +268,11 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             archive_data = self.config.db_handler.read(config="backup", date=date)
             archive_entries = archive_data["files"]
             archive_info = archive_data["info"]
-            archive_info["detection_"+self.id] = {
-                "date":         self.config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
-                "detected":     False,
-                "threshold":    self.detect_settings["threshold"],
-                "model":        self.detect_settings["model"]
+            archive_info["detection_" + self.id] = {
+                "date": self.config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
+                "detected": False,
+                "threshold": self.detect_settings["threshold"],
+                "model": self.detect_settings["model"]
             }
 
             count = 0
@@ -251,8 +314,8 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                 if self._processing_percentage == 100:
                     time.sleep(2)
 
-            archive_info["detection_"+self.id]["detected"] = True
-            archive_info["detection_"+self.id]["labels"] = self.detect_objects.get_labels()
+            archive_info["detection_" + self.id]["detected"] = True
+            archive_info["detection_" + self.id]["labels"] = self.detect_objects.get_labels()
 
             archive_detections = self.summarize_detections(archive_entries)
             self.config.queue.set_status_changed(date=date, change="objects")
@@ -271,9 +334,14 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         self._processing = False
         return response
 
-    def summarize_detections(self, entries) -> dict:
+    def summarize_detections(self, entries: dict) -> dict:
         """
-        check files-section which detected objects are in and summarize for the archive configuration
+        Check entries from files-section which detected objects are in and summarize for the archive configuration
+
+        Args:
+            entries (dict): entries from "files" section of a config file for images
+        Returns:
+            dict: entry for summarizing "detection" section in config file for images
         """
         if not self.detect_active:
             return {}
