@@ -234,8 +234,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
                     self.logging.info("- " + date + "/" + stamp + ": " +
                                       str(len(detect_info["detections"])) + " objects detected")
-                    if len(detect_info["detections"]) > 0:
-                        found = True
+
                     if os.path.exists(path_hires_detect):
                         os.remove(path_hires_detect)
 
@@ -243,11 +242,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                         self.image.write(path_hires_detect, img)
                         archive_entries[stamp]["detections"] = detect_info["detections"]
                         archive_entries[stamp]["hires_detect"] = path_hires_detect.split("/")[-1]
-                    else:
-                        archive_entries[stamp]["detections"] = []
-                        archive_entries[stamp]["hires_detect"] = ""
-
-                    self.config.queue.entry_add(config="backup", date=date, key=stamp, entry=archive_entries[stamp])
+                        self.config.queue.entry_add(config="backup", date=date, key=stamp, entry=archive_entries[stamp])
 
                 count += 1
                 self._processing_percentage = round(count / len(archive_entries) * 100, 1)

@@ -582,7 +582,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
             if update_views:
                 self.views.archive.list_update()
                 self.views.favorite.list_update()
-                self.views.objects.list_update()
+                self.views.object.list_update()
 
             self.thread_control()
             self.thread_wait()
