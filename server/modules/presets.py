@@ -565,11 +565,11 @@ file_types = {
 detection_default_models = ["yolov5n", "yolov5s", "yolov5m", "yolov5l", "yolov5x",
                             "yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6", "yolov5x6"]
 detection_custom_model_path = os.path.join(birdhouse_main_directories["data"],
-                                           birdhouse_directories["custom_models"], "*.pt")
-detection_custom_models = glob.glob(detection_custom_model_path)
+                                           birdhouse_directories["custom_models"])
+detection_custom_models = glob.glob(os.path.join(detection_custom_model_path, "*.pt"))
 detection_models = []
 for directory in detection_custom_models:
-    directory = directory.replace(detection_custom_model_path, "")
+    directory = directory.replace(str(detection_custom_model_path), "")
     detection_models.append(directory)
 detection_models.extend(detection_default_models)
 
