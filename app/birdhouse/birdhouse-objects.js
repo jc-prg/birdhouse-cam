@@ -56,7 +56,8 @@ function birdhouse_OBJECTS(title, data) {
         var entry_information = "";
 
         if (value["detections"]["favorite"] > 0 ) {
-            favorite_label += "<div class='other_label'>&nbsp;" + lang("FAVORITES") + "&nbsp;(" + value["detections"]["favorite"] + ")&nbsp;</div>";
+            var onclick = "birdhousePrint_load(\"FAVORITES\",\""+app_active_cam+"\", \"all-dates\", \""+key+"\");";
+            favorite_label += "<div class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + lang("FAVORITES") + "&nbsp;(" + value["detections"]["favorite"] + ")&nbsp;&nbsp;</div>";
             }
         else  { value["detections"]["favorite"] = 0; }
 
