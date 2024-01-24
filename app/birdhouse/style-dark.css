@@ -50,25 +50,4 @@
         border-bottom: 10px solid black;
     }
 
-    .detection_label {
-        background    : blue;
-        color         : white;
-    }
-
-    .detection_label.glow {
-          box-shadow: 0px 0px 3px 3px #777;
-          /* in order: x offset, y offset, blur size, spread size, color */
-          /* blur size and spread size are optional (they default to 0) */
-    }
-
-    .detection_label:hover {
-          box-shadow: 0px 0px 2px 2px #772;
-          /* in order: x offset, y offset, blur size, spread size, color */
-          /* blur size and spread size are optional (they default to 0) */
-    }
-
-    .other_label {
-        background    : darkgreen;
-        color         : white;
-    }
 }
