@@ -56,10 +56,9 @@ function birdhouse_OBJECTS(title, data) {
         var entry_information = "";
 
         if (value["detections"]["favorite"] > 0 ) {
-            favorite_label  = value["detections"]["favorite"] + " detections";
-            favorite_label += "<br/><div class='other_label'>&nbsp;" + lang("FAVORITES") + "&nbsp;</div>";
+            favorite_label += "<div class='other_label'>&nbsp;" + lang("FAVORITES") + "&nbsp;(" + value["detections"]["favorite"] + ")&nbsp;</div>";
             }
-        else  { value["detections"]["favorite"] = "N/A"; }
+        else  { value["detections"]["favorite"] = 0; }
 
         var day_count = 0;
         if (value["detections"]["default"] == 0)  { value["detections"]["default"] = "N/A"; }
@@ -75,19 +74,8 @@ function birdhouse_OBJECTS(title, data) {
             });
 
         var image_count = (value["detections"]["favorite"] + value["detections"]["default"]);
-        entry_information += "<b>" + image_count + " " + lang("IMAGES") + " (" + day_count + ")</b><hr/>";
+        entry_information += "<b>" + image_count + " " + lang("IMAGES") + "</b> (" + day_count + ")<hr/>";
         entry_information += favorite_label + default_dates;
-
-        /*
-        entry_information += tab.start();
-        if (value["detections"]["favorite"] > 0 ) {
-            var onclick = "birdhousePrint_load(\"FAVORITES\",\""+app_active_cam+"\", \"all-dates\", \""+key+"\");";
-            entry_information += tab.row(value["detections"]["favorite"] + " " + lang("FAVORITES") + ":",
-                                         "<div class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + lang("FAVORITES") + "&nbsp;&nbsp;</div>");
-            }
-        entry_information += tab.row(value["detections"]["default"] + " " + lang("IMAGES") + ":", default_dates);
-        entry_information += tab.end();
-        */
 
         var html_entry = tab.start();
         html_entry    += tab.row(birdhouse_Image(bird_lang(key), value), entry_information);
