@@ -409,6 +409,13 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def write(self, filename, image, scale_percent=100):
         """
         Scale image and write to file
+
+        Parameters:
+            filename (str): relative path and filename starting from server directory
+            image (list): raw image data as list of lists
+            scale_percent (int): target size of image in percent
+        Returns:
+            bool/str: status if successfully
         """
         image_path = os.path.join(self.config.main_directory, filename)
         self.logging.debug("Write image: " + image_path)
@@ -425,12 +432,17 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             self.raise_error(error_msg)
             return ""
 
-    def read(self, filename):
+    def read(self, filename: str) -> Any:
         """
-        read image with given filename
+        Read image with given filename
+
+        Parameters:
+            filename (str): relative path and filename starting from server directory
+        Returns:
+            list/str: raw image data as list of lists
         """
         image_path = os.path.join(self.config.main_directory, filename)
-        self.logging.info("Read image: " + image_path)
+        self.logging.debug("Read image: " + image_path)
 
         try:
             image = cv2.imread(image_path)

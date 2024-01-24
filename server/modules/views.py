@@ -545,13 +545,20 @@ class BirdhouseViewFavorite(BirdhouseClass):
         if not complete:
             for stamp in content["entries"]:
                 entry = content["entries"][stamp]
-                if "datestamp" in entry and entry["datestamp"] not in dir_list:
-                    delete_entries.append(stamp)
-                elif "date" in entry:
+
+                if "_" in stamp:
+                    date_stamp, time_stamp = stamp.split("_")
+                elif "datestamp" in entry:
+                    date_stamp = entry["datestamp"]
+                elif "date" in entry and len(entry["date"].split(".")) == 3:
                     day, month, year = entry["date"].split(".")
-                    datestamp = year + month + day
-                    if datestamp not in dir_list:
-                        delete_entries.append(stamp)
+                    date_stamp = year + month + day
+                else:
+                    continue
+
+                if date_stamp not in dir_list:
+                    delete_entries.append(stamp)
+
             for stamp in delete_entries:
                 del content["entries"][stamp]
 

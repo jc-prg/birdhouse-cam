@@ -8,12 +8,19 @@ from modules.image import BirdhouseImageProcessing
 
 
 class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
+    """
+    Class to control the object detection for a camera.
+
+    Attributes:
+          camera_id (str): id string to identify the camera from which this class is embedded
+          config (dict): reference to main config object
+    """
 
     def __init__(self, camera_id: str, config: dict):
         """
-        Create instance of this class for a specific camera
+        Constructor method for initializing the class.
 
-        Args:
+        Parameters:
             camera_id (str): id string to identify the camera from which this class is embedded
             config (dict): reference to main config object
         """
@@ -42,8 +49,6 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         """
         Manage queue to analyze pictures of archive days
 
-        Args:
-            N/A
         Returns:
             None
         """
@@ -71,7 +76,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         """
         initialize models for object detection
 
-        Args:
+        Parameters:
             first_load (bool): set True when initializing the first object of this class to import required modules
         Returns:
             None
@@ -123,7 +128,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         """
         Reconnect, e.g., when connect didn't work due to an error or the model has been changed
 
-        Args:
+        Parameters:
             force_reload (bool): force a reconnect even if already a model is set
         Returns:
             None
@@ -147,7 +152,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         Analyze an image for objects. Changes will be saved in metadata incl. image with labels if detected
         using the config queue.
 
-        Args:
+        Parameters:
             stamp (str): entry key which is the recording time in the format HHMMSS
             path_hires (str): complete path to the hires image file
             image_hires (object): hires images, e.g., directly from the camera or read via cv2.imread()
@@ -202,7 +207,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         Add object detection analyzing request to the queue for a specific date and camera.
         The camera is defined when an object for a camera is build based on this class.
 
-        Args:
+        Parameters:
             date (str): archived date that shall be analyzed
         Returns:
             dict: response for API
@@ -258,7 +263,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
         Detects objects for an archived day and replace detections if existing.
 
-        Args:
+        Parameters:
             date (str): date of day to be analyzed
         Returns:
             dict: in case of direct call from API it returns an API response
@@ -349,7 +354,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         """
         Check entries from files-section which detected objects are in and summarize for the archive configuration
 
-        Args:
+        Parameters:
             entries (dict): entries from "files" section of a config file for images
         Returns:
             dict: entry for summarizing "detection" section in config file for images
