@@ -56,7 +56,7 @@ function birdhouse_OBJECTS(title, data) {
         var entry_information = "";
 
         if (value["detections"]["favorite"] > 0 ) {
-            favorite_label += "<div class='other_label'>&nbsp;" + lang("FAVORITES") + "&nbsp;(" + value["detections"]["favorite"] + ")&nbsp;</div><hr/>";
+            favorite_label += "<div class='other_label'>&nbsp;" + lang("FAVORITES") + "&nbsp;(" + value["detections"]["favorite"] + ")&nbsp;</div>";
             }
         else  { value["detections"]["favorite"] = 0; }
 
