@@ -817,7 +817,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = backup.delete_marked_files_api(param)
         elif param["command"] == "archive-object-detection":
             [cam_id, date] = param["parameter"]
-            response = camera[cam_id].object.analyze_archive_images_start(date)
+            if "_" in date:
+                date_list = date.split("_")
+                response = camera[cam_id].object.analyze_archive_several_days_start(date_list)
+            else:
+                response = camera[cam_id].object.analyze_archive_day_start(date)
         elif param["command"] == "archive-remove-day":
             response = backup.delete_archived_day(param)
         elif param["command"] == "archive-download-day":

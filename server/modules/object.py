@@ -10,19 +10,15 @@ from modules.image import BirdhouseImageProcessing
 class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
     """
     Class to control the object detection for a camera.
-
-    Attributes:
-          camera_id (str): id string to identify the camera from which this class is embedded
-          config (dict): reference to main config object
     """
 
-    def __init__(self, camera_id: str, config: dict):
+    def __init__(self, camera_id, config):
         """
         Constructor method for initializing the class.
 
         Parameters:
             camera_id (str): id string to identify the camera from which this class is embedded
-            config (dict): reference to main config object
+            config (modules.config.BirdhouseConfig): reference to main config object
         """
         threading.Thread.__init__(self)
         BirdhouseCameraClass.__init__(self, class_id=camera_id + "-object", class_log="cam-object",
@@ -45,7 +41,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
         self.thread_set_priority(4)
 
-    def run(self) -> None:
+    def run(self):
         """
         Manage queue to analyze pictures of archive days
 
@@ -63,7 +59,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self._processing_percentage = 0
             if len(self.detect_queue_archive) > 0:
                 date = self.detect_queue_archive.pop()
-                self.analyze_archive_images(date)
+                self.analyze_archive_day(date)
 
             self.config.object_detection_processing = self._processing
             self.config.object_detection_progress = self._processing_percentage
@@ -72,7 +68,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.thread_control()
         self.logging.info("Stopped OBJECT DETECTION for '" + self.id + "'.")
 
-    def connect(self, first_load: bool = True) -> None:
+    def connect(self, first_load=True):
         """
         initialize models for object detection
 
@@ -124,7 +120,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.detect_loaded = False
             self.logging.info(" -> Object detection inactive (" + self.name + "), see .env-file.")
 
-    def reconnect(self, force_reload: bool = False) -> None:
+    def reconnect(self, force_reload=False):
         """
         Reconnect, e.g., when connect didn't work due to an error or the model has been changed
 
@@ -145,7 +141,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.detect_settings = self.param["object_detection"]
             self.connect(first_load=False)
 
-    def analyze_image(self, stamp, path_hires, image_hires, image_info) -> None:
+    def analyze_image(self, stamp, path_hires, image_hires, image_info):
         """
         Analyze an image for objects.
 
@@ -200,7 +196,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         else:
             self.logging.debug("Object detection not loaded (" + stamp + ")")
 
-    def analyze_archive_images_start(self, date: str) -> dict:
+    def analyze_archive_day_start(self, date):
         """
         Add object detection request for one date.
 
@@ -226,9 +222,10 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                 "status": "Added " + date + " to the queue."
             }
             self.detect_queue_archive.append(date)
+        self.logging.info("Added object detection request for " + date + " to the queue ...")
         return response
 
-    def analyze_archives_start(self, dates: list) -> dict:
+    def analyze_archive_several_days_start(self, dates):
         """
         Add object detection request for a list of dates.
 
@@ -253,11 +250,12 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                 "camera": self.id,
                 "status": "Added " + str(dates) + " to the queue."
             }
+            self.logging.info("Got a bundle of " + str(len(dates)) + " object detection requests ...")
             for date in dates:
-                self.analyze_archive_images_start(date)
+                self.analyze_archive_day_start(date)
         return response
 
-    def analyze_archive_images(self, date: str) -> dict:
+    def analyze_archive_day(self, date):
         """
         Execute detection request for one day.
 
@@ -350,7 +348,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         self._processing = False
         return response
 
-    def summarize_detections(self, entries: dict) -> dict:
+    def summarize_detections(self, entries):
         """
         Check entries from files-section which detected objects are in and summarize for the archive configuration
 

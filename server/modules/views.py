@@ -466,8 +466,18 @@ class BirdhouseViewCharts(BirdhouseClass):
 
 
 class BirdhouseViewFavorite(BirdhouseClass):
+    """
+    Class to create and update favorite view
+    """
 
-    def __init__(self, config, tools) -> None:
+    def __init__(self, config, tools):
+        """
+        Constructor method for initializing the class.
+
+        Parameters:
+            config (modules.config.BirdhouseConfig): reference to main config object
+            tools (BirdhouseViewTools): reference to tooling object
+        """
         BirdhouseClass.__init__(self, class_id="view-fav", config=config)
 
         self.tools = tools
@@ -753,9 +763,21 @@ class BirdhouseViewFavorite(BirdhouseClass):
 
 
 class BirdhouseViewArchive(BirdhouseClass):
+    """
+    Class to create and update archive view
+    """
 
-    def __init__(self, config, tools, camera) -> None:
+    def __init__(self, config, tools, camera):
+        """
+        Constructor method for initializing the class.
+
+        Parameters:
+            config (modules.config.BirdhouseConfig): reference to main config object
+            tools (BirdhouseViewTools): reference to tooling object
+            camera (modules.camera.BirdhouseCamera): reference to global camera object
+        """
         BirdhouseClass.__init__(self, class_id="view-arch", config=config)
+
         self.tools = tools
         self.camera = camera
         self.views = {}
@@ -776,9 +798,14 @@ class BirdhouseViewArchive(BirdhouseClass):
 
         self.logging.info("Connected archive creation handler.")
 
-    def list(self, param) -> dict:
+    def list(self, param):
         """
-        Return data for list of archive folders (or an empty list if still loading)
+        Get data for list of archive from cache (or an empty list if still loading).
+
+        Parameters:
+            param (list): parameter given via API
+        Returns:
+            dict: view definition for API response
         """
         camera = param["which_cam"]
         if camera in self.views:
@@ -796,9 +823,13 @@ class BirdhouseViewArchive(BirdhouseClass):
             content["links"] = self.tools.print_links_json(link_list=self.links_default, cam=camera)
         return content
 
-    def list_update(self, force=False, complete=False) -> None:
+    def list_update(self, force=False, complete=False):
         """
-        Trigger recreation of the archive list
+        Trigger recreation of the favorit list.
+
+        Parameters:
+            force (bool): don't wait for next update cycle
+            complete (bool): scan complete information from files, not cached data from database
         """
         if complete or force:
             self.logging.info("Request update ARCHIVE view (complete=" + str(complete) + "; force=" + str(force) +
@@ -1320,8 +1351,19 @@ class BirdhouseViewArchive(BirdhouseClass):
 
 
 class BirdhouseViewObjects(BirdhouseClass):
+    """
+    class to create and update object/bird detection view
+    """
 
-    def __init__(self, config, tools, camera) -> None:
+    def __init__(self, config, tools, camera):
+        """
+        Constructor method for initializing the class.
+
+        Parameters:
+            config (modules.config.BirdhouseConfig): reference to main config object
+            tools (BirdhouseViewTools): reference to tooling object
+            camera (modules.camera.BirdhouseCamera): reference to global camera object
+        """
         BirdhouseClass.__init__(self, class_id="view-obj", config=config)
 
         self.tools = tools
@@ -1344,9 +1386,14 @@ class BirdhouseViewObjects(BirdhouseClass):
 
         self.logging.info("Connected object view creation handler.")
 
-    def list(self, param) -> dict:
+    def list(self, param):
         """
-        Return data for list of favorites from cache
+        Get data for list of favorites from cache.
+
+        Parameters:
+            param (list): parameter given via API
+        Returns:
+            dict: view definition for API response
         """
         if not self.views or not self.detect_active:
             return {}
@@ -1362,9 +1409,13 @@ class BirdhouseViewObjects(BirdhouseClass):
 
         return content
 
-    def list_update(self, force=False, complete=False) -> None:
+    def list_update(self, force=False, complete=False):
         """
-        Trigger recreation of the favorit list
+        Trigger recreation of the favorit list.
+
+        Parameters:
+            force (bool): don't wait for next update cycle
+            complete (bool): scan complete information from files, not cached data from database
         """
         if not self.detect_active:
             self.logging.debug("Request update OBJECT view but object detection is off")
@@ -1377,9 +1428,12 @@ class BirdhouseViewObjects(BirdhouseClass):
             if force:
                 self.force_reload = True
 
-    def list_create(self, complete=False) -> None:
+    def list_create(self, complete=False):
         """
-        collect or create data for objects view ...
+        Collect or create data for objects view.
+
+        Parameters:
+            complete (bool): read complete information from files or cached information from database
         """
         if not self.detect_active:
             return
@@ -1411,9 +1465,18 @@ class BirdhouseViewObjects(BirdhouseClass):
         self.config.db_handler.write("objects", "", content, create=True, save_json=True, no_cache=False)
         self.loading = "done"
 
-    def _list_get_detection_for_label(self, label, entry, favorite) -> dict:
+    def _list_get_detection_for_label(self, label, entry, favorite):
         """
-        get entry, if label inside, and check if its a favorite
+        Create label entry out of image entry.
+
+        Creates label entry, if detection exists. Checks if favorite entry.
+
+        Parameters:
+            label (str): label for object
+            entry (dict): image entry to be checked and modified
+            favorite (bool): filter for favorite entries
+        Return:
+            dict: adapted entry for label, returns {} if not matching requirements
         """
         new_entry = {}
         label_exists = False
@@ -1452,7 +1515,15 @@ class BirdhouseViewObjects(BirdhouseClass):
 
     def _list_create_from_archive(self, complete):
         """
-        get information from archive files and return ...
+        Get detection information from all archive files.
+
+        Analyzes all available archived entries for existing object detection and updates or creates database
+        of object detection as base for the object detection view?
+
+        Parameters:
+            complete (bool): if complete, the image entries in the archive are scanned for available detections
+        Returns:
+            dict: db entry per available labels
         """
         view_entries = {}
         main_directory = self.config.db_handler.directory(config="backup")
@@ -1556,13 +1627,19 @@ class BirdhouseViewObjects(BirdhouseClass):
             self.tools.calculate_progress("object", "1/1", "", count, len(dir_list))
 
         for label in view_entries:
-            view_entries[label] = self._list_create_specific_thumbnails(label, view_entries[label])
+            view_entries[label] = self._list_create_label_thumbnail(label, view_entries[label])
 
         return view_entries
 
-    def _list_create_specific_thumbnails(self, label, entry):
+    def _list_create_label_thumbnail(self, label, entry):
         """
-        create a thumbnail from the detected object
+        Create a thumbnail for a specific label.
+
+        Parameters:
+            label (str): label that shall get a thumbnail
+            entry (dict): image entry the thumbnail shall be generated from
+        Returns:
+            dict: modified image entry to be used for the thumbnail
         """
         detect_position = []
         if entry["directory"][0:1] == "/":
@@ -1599,13 +1676,21 @@ class BirdhouseViewObjects(BirdhouseClass):
 
 
 class BirdhouseViews(threading.Thread, BirdhouseClass):
+    """
+    Class to create, update and deliver views for the birdhouse app
+    """
 
     def __init__(self, camera, config):
         """
-        Initialize new thread and set initial parameters
+        Constructor method for initializing the class.
+
+        Parameters:
+            config (modules.config.BirdhouseConfig): reference to main config object
+            camera (modules.camera.BirdhouseCamera): reference to global camera object
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="views", config=config)
+
         self.thread_set_priority(3)
 
         self.active_cams = None
