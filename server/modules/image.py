@@ -432,7 +432,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             self.raise_error(error_msg)
             return ""
 
-    def read(self, filename: str) -> Any:
+    def read(self, filename: str):
         """
         Read image with given filename
 
