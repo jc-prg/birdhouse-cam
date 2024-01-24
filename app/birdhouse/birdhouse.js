@@ -61,6 +61,7 @@ var birdhouse_css = [
     "style-streams.css",
     "video-player.css",
     "style-settings.css",
+    "style-labels.css",
     "style-laptop.css",
     "style-iphone.css",
     "style-ipad.css",
