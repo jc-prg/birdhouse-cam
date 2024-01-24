@@ -547,7 +547,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
                 entry = content["entries"][stamp]
 
                 if "_" in stamp:
-                    date_stamp, time_stamp = stamp.split("_")
+                    date_stamp = stamp.split("_")[0]
                 elif "datestamp" in entry:
                     date_stamp = entry["datestamp"]
                 elif "date" in entry and len(entry["date"].split(".")) == 3:

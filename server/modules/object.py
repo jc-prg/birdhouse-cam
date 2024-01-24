@@ -303,7 +303,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                                                   archive_entries[stamp]["hires"]))
                     path_hires_detect = str(path_hires.replace(".jpeg", "_detect.jpeg"))
 
-                    self.logging.info("- " + date + "/" + stamp + ": " + path_hires_detect)
+                    self.logging.debug("- " + date + "/" + stamp + ": " + path_hires_detect)
                     img, detect_info = self.detect_objects.analyze(file_path=path_hires,
                                                                    threshold=self.detect_settings["threshold"],
                                                                    return_image=True, render_detection=True)
