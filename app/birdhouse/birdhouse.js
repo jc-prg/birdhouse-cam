@@ -42,6 +42,7 @@ var birdhouse_js = [
     "birdhouse-audio.js",
     "birdhouse-views.js",
     "birdhouse-views-index.js",
+    "birdhouse-objects.js",
     "birdhouse-image.js",
     "birdhouse-status.js",
     "birdhouse-weather.js",
@@ -158,7 +159,7 @@ function birdhousePrint(data) {
 	else if (app_active_page == "IMAGE_SETTINGS")    { birdhouseDevices_cameraSettings(data); }
 	else if (app_active_page == "INDEX")             { birdhouse_INDEX(data, camera); }
 	else if (app_active_page == "INFO") 	         { birdhouse_settings.create("INFO_ONLY"); }
-	else if (app_active_page == "OBJECTS")           { birdhouse_LIST_OBJECTS(lang("BIRDS_DETECTED"), data); }
+	else if (app_active_page == "OBJECTS")           { birdhouse_OBJECTS(lang("BIRDS_DETECTED"), data); }
 	else if (app_active_page == "SETTINGS")          { birdhouse_settings.create(); }
 	else if (app_active_page == "TODAY")             { birdhouse_LIST(lang("TODAY"), data, camera); }
 	else if (app_active_page == "TODAY_COMPLETE")    { birdhouse_LIST(lang("TODAY_COMPLETE"), data, camera, false); }
