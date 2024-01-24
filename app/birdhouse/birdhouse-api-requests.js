@@ -147,8 +147,30 @@ function birdhouse_recycleThreshold(category, date, threshold, del, camera) {
     birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerEditSend,"","birdhouse_editData");
 }
 
-function birdhouse_archiveObjectDetection(camera, date_stamp, date) {
-    var message = lang("OBJECT_DETECTION_REQUEST", [date, getTextById("image_count_all_" + date)]);
+function birdhouse_archiveObjectDetection(camera, date_stamp, date, date_list="") {
+    if (date_list != "") {
+        var select = document.getElementById(date_list);
+        var options = select && select.options;
+        var result = [];
+        var result_dates = [];
+        var opt;
+        var count = 0;
+        for (var i=0, iLen=options.length; i<iLen; i++) {
+            opt = options[i];
+            if (opt.selected) {
+                var date_stamp = opt.value.split("_")[0];
+                var date = date_stamp.substring(6,8) + "." + date_stamp.substring(4,6) + "." + date_stamp.substring(0,4);
+                count +=  Number(opt.value.split("_")[1]);
+                result.push(date_stamp);
+                result_dates.push(date);
+           }    }
+        date_list = result_dates.join(", ");
+        date_stamp = result.join("_");
+        var message = lang("OBJECT_DETECTION_REQUESTS", [date_list, count]);
+    }
+    else {
+        var message = lang("OBJECT_DETECTION_REQUEST", [date, getTextById("image_count_all_" + date)]);
+        }
     appMsg.confirm(message, "birdhouse_archiveObjectDetection_exec('"+camera+"', '"+date_stamp+"');", 150);
     }
 

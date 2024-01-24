@@ -62,7 +62,6 @@ function birdhouse_OBJECTS(title, data) {
         else  { value["detections"]["favorite"] = 0; }
 
         var day_count = 0;
-        if (value["detections"]["default"] == 0)  { value["detections"]["default"] = "N/A"; }
         Object.entries(value["detections"]["default_dates"]).forEach(([camera, date_list])=>{
             date_list.sort();
             for (var k=0;k<date_list.length;k++) {

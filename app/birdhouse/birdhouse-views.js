@@ -371,6 +371,38 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         html += birdhouse_OtherGroup( "info", lang("SETTINGS"), info_text, false );
 	}
 
+	// show settings for admins - ARCHIVE
+	if (admin && active_page == "ARCHIVE" && app_data["SETTINGS"]["server"]["detection_active"]) {
+	    var info_text = "";
+	    var detection_model = camera_settings[app_active_cam]["object_detection"]["model"]; // devices:cameras:"+camera+":object_detection:model
+	    var detection_threshold = camera_settings[app_active_cam]["object_detection"]["threshold"];
+	    var detection_date = active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4);
+
+	    var select_object_detection = "<select id='selection_dates' multiple style='width:180px;height:100px;'>";
+	    Object.entries(entries).forEach(([key,value]) => {
+	        var date = key.substring(6,8) + "." + key.substring(4,6) + "." + key.substring(0,4);
+	        var detection = "";
+	        if (value["detection"]) { detection = "; D";}
+	        select_object_detection += "<option value='"+key+"_"+value["count_cam"]+"'>" + date + " (" + value["count_cam"] + " " + lang("IMAGES") + detection + ")</option>";
+	    });
+	    select_object_detection += "</select>";
+
+	    var button_object_detection = "<button onclick='birdhouse_archiveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \"\", \"selection_dates\");' class='bh-slider-button'  style='width:80px;'>Start</button>";
+
+        info_text += "&nbsp;";
+	    info_text += tab.start();
+
+        if (!camera_settings[app_active_cam]["object_detection"]["active"])
+            { button_object_detection = lang("DETECTION_INACTIVE_CAM"); select_object_detection = ""; }
+        else if (!app_data["STATUS"]["object_detection"]["models_loaded_status"][app_active_cam])
+            { button_object_detection = lang("DETECTION_NOT_LOADED"); select_object_detection = ""; }
+        info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model, detection_threshold]) + ":", select_object_detection + "<br/>&nbsp;<br/>" + button_object_detection );
+
+	    info_text += tab.end();
+	    info_text += "&nbsp;<br/>&nbsp;";
+        html += birdhouse_OtherGroup( "info", lang("SETTINGS"), info_text, false );
+	}
+
 	// show settings for admins - ARCHIVE / BACKUP
 	if (admin && active_page == "TODAY" && active_date != "" && active_date != undefined) {
 
