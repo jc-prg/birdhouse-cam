@@ -1937,7 +1937,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
                     show_img = self.camera[which_cam].image_to_select(timestamp=stamp,
                                                                       file_info=files_all[stamp].copy(),
-                                                                      check_similarity=check_similarity)
+                                                                      check_detection=check_similarity)
                     if show_img:
                         # check maximum image size
                         if "lowres_size" in files_all[stamp]:
@@ -1997,7 +1997,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                                 files_all[stamp]["datestamp"] == date_yesterday:
 
                             if self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp],
-                                                                      check_similarity=check_similarity):
+                                                                      check_detection=check_similarity):
                                 files_yesterday[stamp] = files_all[stamp]
                                 if "type" not in files_yesterday[stamp]:
                                     files_yesterday[stamp]["type"] = "image"
