@@ -1831,7 +1831,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             date_backup = param["parameter"][0]
 
         time_now = self.config.local_time().strftime('%H%M%S')
-        check_similarity = True
+        check_detection = True
         backup = False
         category = ""
         subdirectory = ""
@@ -1884,7 +1884,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             if "weather_data" in files_data:
                 content["weather_data"] = files_data["weather_data"].copy()
 
-            check_similarity = False
+            check_detection = False
             category = "/backup/" + date_backup + "/"
             subdirectory = date_backup + "/"
             time_now = "000000"
@@ -1937,7 +1937,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
                     show_img = self.camera[which_cam].image_to_select(timestamp=stamp,
                                                                       file_info=files_all[stamp].copy(),
-                                                                      check_detection=check_similarity)
+                                                                      check_detection=check_detection)
                     if show_img:
                         # check maximum image size
                         if "lowres_size" in files_all[stamp]:
@@ -1997,7 +1997,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                                 files_all[stamp]["datestamp"] == date_yesterday:
 
                             if self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp],
-                                                                      check_detection=check_similarity):
+                                                                      check_detection=check_detection):
                                 files_yesterday[stamp] = files_all[stamp]
                                 if "type" not in files_yesterday[stamp]:
                                     files_yesterday[stamp]["type"] = "image"

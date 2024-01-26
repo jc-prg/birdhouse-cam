@@ -1879,7 +1879,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             threshold = self.record_temp_threshold
 
         select = False
-        if check_similarity and "similarity" not in file_info:
+        if check_detection and "similarity" not in file_info:
             select = False
 
         elif "to_be_deleted" in file_info and float(file_info["to_be_deleted"]) == 1:
