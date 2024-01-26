@@ -134,7 +134,7 @@ function birdhouseDevices_cameras(data) {
 		html_temp += "<div class='camera_info_text'>";
 
         var on_change_source = "birdhouseDevices_cameras_resolutions(\""+camera+"\", this.value);";
-        var device_options = app_data["STATUS"]["system"]["video_devices_02"];
+        var device_options = app_data["STATUS"]["devices"]["available"]["video_devices_short"];
 		html_temp += tab.start();
 		html_temp += tab.row("Name:",       birdhouse_edit_field(id="set_name_"+camera, field="devices:cameras:"+camera+":name", type="input"));
         html_temp += tab.row("Source:",     birdhouse_edit_field(id="set_source_"+camera, field="devices:cameras:"+camera+":source", type="select_dict_sort", options=device_options, data_type="string", on_change=on_change_source));
@@ -243,8 +243,8 @@ function birdhouseDevices_cameras_resolutions(camera, source="") {
     	    }
 
         var current_available_resolutions = "<u>" + source + "</u>";
-        if (app_data["STATUS"]["system"]["video_devices_03"][source]) {
-            current_available_resolutions += ": " + JSON.stringify(app_data["STATUS"]["system"]["video_devices_03"][source]["resolutions"]);
+        if (app_data["STATUS"]["devices"]["available"]["video_devices_complete"][source]) {
+            current_available_resolutions += ": " + JSON.stringify(app_data["STATUS"]["devices"]["available"]["video_devices_complete"][source]["resolutions"]);
             current_available_resolutions = current_available_resolutions.replaceAll(",", ", ");
             // setTextById("set_resolution_"+camera, value);
             }

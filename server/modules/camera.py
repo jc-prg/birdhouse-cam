@@ -2170,35 +2170,34 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         devices = self.camera_info.get_available_cameras()
         system = {
             "video_devices": devices["list"],
-            "video_devices_02": devices["short"],
-            "video_devices_03": devices["complete"],
-            "video_devices_04": {}
+            "video_devices_short": devices["short"],
+            "video_devices_complete": devices["complete"],
         }
 
         camera_cv = BirdhouseCameraHandler(self.id, self.source, self.config)
         camera_pi = BirdhousePiCameraHandler(self.id, self.source, self.config)
 
         camera_count = 0
-        self.logging.info("Identified " + str(len(system["video_devices_02"])) + " video devices:")
-        for key in system["video_devices_02"]:
+        self.logging.info("Identified " + str(len(system["video_devices_short"])) + " video devices:")
+        for key in system["video_devices_short"]:
             camera_count += 1
-            device_info = system["video_devices_03"][key]["info"]
+            device_info = system["video_devices_complete"][key]["info"]
 
             if key == "/dev/picam" and birdhouse_env["rpi_64bit"]:
-                system["video_devices_03"][key] = camera_pi.camera_status(source=key, name=device_info)
+                system["video_devices_complete"][key] = camera_pi.camera_status(source=key, name=device_info)
             else:
-                system["video_devices_03"][key] = camera_cv.camera_status(source=key, name=device_info)
+                system["video_devices_complete"][key] = camera_cv.camera_status(source=key, name=device_info)
 
-            birdhouse_initial_connect_msg[key] = "initial_connect=" + str(system["video_devices_03"][key]["image"]) + \
-                                                 ", info=" + system["video_devices_03"][key]["info"] + \
-                                                 ", shape=" + str(system["video_devices_03"][key]["shape"])
+            birdhouse_initial_connect_msg[key] = "initial_connect=" + str(system["video_devices_complete"][key]["image"]) + \
+                                                 ", info=" + system["video_devices_complete"][key]["info"] + \
+                                                 ", shape=" + str(system["video_devices_complete"][key]["shape"])
 
             camera_string = " - " + str(camera_count).rjust(2) + ": " + str(key).ljust(12) + " ("
-            camera_string += system["video_devices_03"][key]["info"].split(" (")[0].split(":")[0] + ") "
+            camera_string += system["video_devices_complete"][key]["info"].split(" (")[0].split(":")[0] + ") "
 
-            if "error" in system["video_devices_03"][key]:
-                self.logging.warning(camera_string + " - ERROR: " + str(system["video_devices_03"][key]["error"]))
-                birdhouse_initial_connect_msg[key] += ", error='" + str(system["video_devices_03"][key]["error"]) + "'"
+            if "error" in system["video_devices_complete"][key]:
+                self.logging.warning(camera_string + " - ERROR: " + str(system["video_devices_complete"][key]["error"]))
+                birdhouse_initial_connect_msg[key] += ", error='" + str(system["video_devices_complete"][key]["error"]) + "'"
             else:
                 self.logging.warning(camera_string + " - OK")
 

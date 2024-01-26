@@ -329,19 +329,28 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         self.thread_set_priority(4)
 
         self._system_status = {}
-        self._device_status = {}
+        self._device_status = {
+            "cameras": {},
+            "sensors": {},
+            "microphones": {},
+            "available": {}
+        }
         self._srv_info_time = 0
         self.initial_camera_scan = initial_camera_scan
 
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
         self.microphones = None
 
-    def run(self) -> None:
+    def run(self):
+        """
+        Running thread to continuously update server information in the background.
+        """
         self.logging.info("Starting Server Information ...")
         while self._running:
             start_time = time.time()
-            self.read()
+            self.read_memory_usage()
             self.read_device_status()
+            self.read_available_devices()
 
             self._srv_info_time = round(time.time() - start_time, 2)
 
@@ -350,9 +359,10 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
         self.logging.info("Stopped Server Information.")
 
-    def read(self):
-        global srv_audio
-
+    def read_memory_usage(self):
+        """
+        Get data for current memory and HDD usage, to be requested via .get().
+        """
         system = {}
         try:
             # cpu information
@@ -407,11 +417,15 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             system["hdd_data"] = -1
             self.logging.warning("Was not able to get size of data dir: " + (str(cmd_data)) + " - " + str(e))
 
-        # threading information
-        # system["threads_active"] = str(threading.active_count())
-        # system["threads_info"] = str(threading.enumerate())
+        self._system_status = system.copy()
 
-        # read camera information
+    def read_available_devices(self):
+        """
+        Identify which video and audio devices are available on the system, to be requested via .get_device_status().
+        """
+        global srv_audio
+        system = {}
+
         process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
         output = process.communicate()[0]
         output = output.decode()
@@ -423,8 +437,8 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             output_2.append("/dev/picam")
 
         system["video_devices"] = {}
-        system["video_devices_02"] = {}
-        system["video_devices_03"] = self.initial_camera_scan["video_devices_03"]
+        system["video_devices_short"] = {}
+        system["video_devices_complete"] = self.initial_camera_scan["video_devices_complete"]
         for value in output_2:
             if ":" in value:
                 system["video_devices"][value] = []
@@ -432,15 +446,15 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             elif value != "":
                 value = value.replace("\t", "")
                 check_text = "NEW"
-                if value in system["video_devices_03"]:
-                    check = system["video_devices_03"][value]
+                if value in system["video_devices_complete"]:
+                    check = system["video_devices_complete"][value]
                     if check["image"]:
                         check_text = "OK"
                     else:
                         check_text = "ERROR"
                 system["video_devices"][last_key].append(value)
                 info = last_key.split(":")
-                system["video_devices_02"][value] = check_text + ": " + value + " (" + info[0] + ")"
+                system["video_devices_short"][value] = check_text + ": " + value + " (" + info[0] + ")"
 
         system["audio_devices"] = {}
         if microphones != {}:
@@ -463,21 +477,14 @@ class ServerInformation(threading.Thread, BirdhouseClass):
                                 "output": info.get("maxOutputChannels"),
                                 "sample_rate": info.get("defaultSampleRate")
                             }
-
-        self._system_status = system.copy()
+        self._device_status["available"] = system
 
     def read_device_status(self):
         """
-        get device data ever x seconds for a faster API response
+        Get device data ever x seconds for a faster API response
         """
         global microphones, camera, sensor
         # get microphone data and create streaming information
-        self._device_status = {
-            "cameras": {},
-            "sensors": {},
-            "microphones": {}
-        }
-
         for key in microphones:
             self._device_status["microphones"][key] = microphones[key].get_device_status()
 
@@ -490,11 +497,14 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             self._device_status["sensors"][key] = sensor[key].get_status()
 
     def get(self):
+        """
+        Get server data which are updated continuously in the background.
+        """
         return self._system_status
 
     def get_device_status(self):
         """
-        return device status
+        Get device data which are updated continuously in the background.
         """
         return self._device_status
 
