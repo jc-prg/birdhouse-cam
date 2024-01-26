@@ -1133,7 +1133,11 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
 
     def __init__(self, param_init, main_directory):
         """
-        Initialize new thread and set inital parameters
+        Constructor to initialize class
+
+        Parameters:
+            param_init (dict): initial parameters
+            main_directory (str): main directory (location of main script)
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="config", config=None)
@@ -1174,6 +1178,9 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.record_audio_info = {}
         self.object_detection_processing = None
         self.object_detection_progress = None
+        self.object_detection_waiting = None
+        self.object_detection_waiting_keys = None
+        self.object_detection_build_views = False
 
         self.last_start = ""
         self.last_activity_cache = time.time()

@@ -1890,6 +1890,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             elif "favorit" in file_info and float(file_info["favorit"]) == 1:
                 select = True
 
+            elif "detections" in file_info and len(file_info["detections"]) > 0:
+                select = True
+
             elif check_similarity:
                 similarity = float(file_info["similarity"])
                 if similarity != 0 and similarity < threshold:
