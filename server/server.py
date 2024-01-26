@@ -1084,6 +1084,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "active": birdhouse_status["object_detection"],
                     "processing": config.object_detection_processing,
                     "progress": config.object_detection_progress,
+                    "waiting": config.object_detection_waiting,
+                    "waiting_dates": config.object_detection_waiting_keys,
                     "models_available": detection_models,
                     "models_loaded": {},
                     "models_loaded_status": {},

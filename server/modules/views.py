@@ -1745,6 +1745,15 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             if self.favorite.force_reload or self.archive.force_reload or self.object.force_reload:
                 self.force_reload = True
 
+            # if object detection has taken place, force a reload of views
+            if self.config.object_detection_build_views:
+                self.force_reload = True
+                self.archive.create = True
+                self.archive.create_complete = True
+                self.object.create = True
+                self.object.create_complete = True
+                self.config.object_detection_build_views = False
+
             # if favorites to be read again (from time to time and depending on user activity)
             if self.favorite.create and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
@@ -1902,7 +1911,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 content["links"] = self.tools.print_links_json(
                     link_list=("live", "favorit", "today_complete", "videos", "backup"), cam=which_cam)
             else:
-                content["links"] = self.tools.print_links_json(link_list=("live", "favorit", "videos", "backup"), cam=which_cam)
+                content["links"] = self.tools.print_links_json(link_list=("live", "favorit", "videos", "backup"),
+                                                               cam=which_cam)
 
         # else something went wrong ... ?
         else:

@@ -325,6 +325,8 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                 self._processing_percentage = round(count / len(archive_entries) * 100, 1)
                 self.config.object_detection_processing = self._processing
                 self.config.object_detection_progress = self._processing_percentage
+                self.config.object_detection_waiting = len(self.detect_queue_archive)
+                self.config.object_detection_waiting_keys = self.detect_queue_archive
                 if self._processing_percentage == 100:
                     time.sleep(2)
 
@@ -335,8 +337,10 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.config.queue.set_status_changed(date=date, change="objects")
             self.config.queue.entry_edit(config="backup", date=date, key="info", entry=archive_info)
             self.config.queue.entry_edit(config="backup", date=date, key="detection", entry=archive_detections)
-            self.config.queue.add_to_status_queue(config="backup", date=date, key="end",
-                                                  change_status="OBJECT_DETECTION_END", status=0)
+            if len(self.detect_queue_archive) == 0:
+                self.config.queue.add_to_status_queue(config="backup", date=date, key="end",
+                                                      change_status="OBJECT_DETECTION_END", status=0)
+                self.config.object_detection_build_views = True
             msg = "Object detection for " + date + " done, datasets are going to be saved."
             self.logging.info(msg)
             response["status"] = msg
