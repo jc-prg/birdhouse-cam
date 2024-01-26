@@ -1918,6 +1918,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         for value in ["camera", "to_be_deleted", "favorit", "similarity", "detect_object"]:
             if value not in info:
                 info[value] = -1
+        if "detections" not in file_info:
+            file_info["detections"] = []
         self.logging.debug("Image to select: delete=" + str(float(info["to_be_deleted"])) +
                            "; cam=" + str(info["camera"]) + "|" + self.id +
                            "; favorite=" + str(float(info["favorit"])) +
