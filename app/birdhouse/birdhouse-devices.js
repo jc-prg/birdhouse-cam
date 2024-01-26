@@ -143,7 +143,7 @@ function birdhouseDevices_cameras(data) {
         html_temp += tab.row("Detection:",  birdhouse_edit_field(id="set_detection_mode_"+camera, field="devices:cameras:"+camera+":detection_mode", type="select", options="similarity,object", data_type="string"));
 		html_temp += tab.end();
 		html_temp += "&nbsp;<br/>";
-		id_list += "set_name_"+camera+":set_active_"+camera+":set_source_"+camera+":"+":set_micro_"+camera+":set_detection_mode_"+camera;
+		id_list += "set_name_"+camera+":set_active_"+camera+":set_source_"+camera+":"+":set_micro_"+camera+":set_detection_mode_"+camera+":";
 
         var current_available_resolutions = birdhouseDevices_cameras_resolutions(camera, cameras[camera]["source"] );
         html_entry = tab.start();
