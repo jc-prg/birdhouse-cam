@@ -368,7 +368,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                         update_new = files[stamp].copy()
 
                         # if images are to be archived
-                        if self.camera[cam].image_to_select(timestamp=stamp, file_info=files[stamp].copy()):
+                        if self.camera[cam].img_evaluate.select(timestamp=stamp, file_info=files[stamp].copy()):
 
                             count += 1
                             file_lowres = self.config.filename_image(image_type="lowres", timestamp=stamp, camera=cam)

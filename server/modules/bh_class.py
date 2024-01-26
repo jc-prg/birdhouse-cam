@@ -284,7 +284,7 @@ class BirdhouseClass(object):
 
 class BirdhouseCameraClass(BirdhouseClass):
 
-    def __init__(self, class_id, class_log, camera_id, config):
+    def __init__(self, class_id, class_log="", camera_id="", config=None):
         BirdhouseClass.__init__(self, class_id, class_log, camera_id, config)
         if "devices" in self.config.param and "cameras" in self.config.param["devices"] \
                 and self.id in self.config.param["devices"]["cameras"]:

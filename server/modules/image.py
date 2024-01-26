@@ -3,7 +3,120 @@ import cv2
 import os
 
 from skimage.metrics import structural_similarity as ssim
-from modules.bh_class import BirdhouseCameraClass
+from modules.bh_class import BirdhouseCameraClass, BirdhouseClass
+
+
+class BirdhouseImageEvaluate(BirdhouseCameraClass):
+    """
+    Class to evaluate image information against defined criteria
+    """
+
+    def __init__(self, camera_id, config):
+        """
+        Constructor to initialize class
+
+        Parameters:
+            camera_id (str): camera id
+            config (modules.config.BirdhouseConfig): settings for a camera
+        """
+        BirdhouseCameraClass.__init__(self, class_id="img-eval", camera_id=camera_id, config=config)
+
+        self.id = camera_id
+        self.image_to_select_last = ""
+
+    def differs(self, file_info):
+        """
+        check if similarity is under threshold
+
+        Parameters:
+            file_info (dict): DB entry of an image
+        Returns:
+            int: 1 if image difference is higher than threshold else 0
+        """
+        threshold = float(self.param["similarity"]["threshold"])
+        similarity = float(file_info["similarity"])
+        if similarity != 0 and similarity < threshold:
+            return 1
+        else:
+            return 0
+
+    def select(self, timestamp, file_info, check_detection=True, overwrite_detection_mode="",
+               overwrite_threshold="", overwrite_camera=""):
+        """
+        check image properties to decide if image is a selected one (for backup and view with selected images)
+
+        Parameters:
+            timestamp (str): timestamp of image (image-id) in format HHMMSS
+            file_info (dict): db entry for the image
+            check_detection (bool): check if detection (depending on mode, similarity or object)
+            overwrite_detection_mode (str): overwrite default setting for camera (options: 'object', 'similarity')
+            overwrite_threshold (float): overwrite default setting for camera
+            overwrite_camera (str): overwrite default setting for camera id (or use if camera id not set)
+        Returns:
+            bool: True if image fulfills selection criteria
+        """
+        if overwrite_threshold != "" or overwrite_detection_mode == "object":
+            threshold = float(overwrite_threshold)
+        else:
+            threshold = float(self.param["similarity"]["threshold"])
+        camera_id = self.id
+        if overwrite_camera != "":
+            camera_id = overwrite_camera
+        if overwrite_detection_mode != "":
+            detection_mode = overwrite_detection_mode
+        else:
+            detection_mode = self.param["detection_mode"]
+
+        select = False
+        if check_detection and "similarity" not in file_info:
+            select = False
+
+        elif "to_be_deleted" in file_info and float(file_info["to_be_deleted"]) == 1:
+            select = False
+
+        elif ("camera" in file_info and file_info["camera"] == camera_id) or (
+                "camera" not in file_info and camera_id == "cam1"):
+
+            if timestamp[2:4] == "00" and timestamp[0:4] != self.image_to_select_last[0:4]:
+                self.image_to_select_last = timestamp
+                select = True
+
+            elif "favorit" in file_info and float(file_info["favorit"]) == 1:
+                select = True
+
+            elif "detections" in file_info and len(file_info["detections"]) > 0:
+                select = True
+
+            elif check_detection:
+                if detection_mode == "similarity":
+                    similarity = float(file_info["similarity"])
+                    if similarity != 0 and similarity < threshold:
+                        select = True
+                elif detection_mode == "object":
+                    if "detections" in file_info and len(file_info["detections"]) > 0:
+                        select = True
+                        file_info["detect_object"] = len(file_info["detections"])
+                    else:
+                        file_info["detect_object"] = -1
+
+            elif not check_detection:
+                select = True
+
+        info = file_info.copy()
+        for value in ["camera", "to_be_deleted", "favorit", "similarity", "detect_object"]:
+            if value not in info or info[value] is None:
+                info[value] = -1
+        if "detections" not in file_info:
+            file_info["detections"] = []
+        self.logging.debug("Image to select: delete=" + str(float(info["to_be_deleted"])) +
+                           "; cam=" + str(info["camera"]) + "|" + camera_id +
+                           "; favorite=" + str(float(info["favorit"])) +
+                           "; stamp=" + timestamp + "|" + self.image_to_select_last +
+                           "; object=" + str(len(file_info["detections"])) +
+                           "; similarity=" + str(float(info["similarity"])) + "<" +
+                           str(threshold) +
+                           " -> " + str(select))
+        return select
 
 
 class BirdhouseImageProcessing(BirdhouseCameraClass):

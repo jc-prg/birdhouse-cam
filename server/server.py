@@ -815,6 +815,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             # http://localhost:8007/api/1682709071876/recycle-threshold/backup/20230421/95/cam1/
             srv_logging.info("RECYCLE THRESHOLD")
             response = config.queue.set_status_recycle_threshold(param, which_cam)
+        elif param["command"] == "recycle-object-detection":
+            srv_logging.info("RECYCLE OBJECT")
+            response = config.queue.set_status_recycle_object(param, which_cam)
         elif param["command"] == "recycle-range":
             response = config.queue.set_status_recycle_range(param)
         elif param["command"] == "create-short-video":

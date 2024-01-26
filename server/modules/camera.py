@@ -11,7 +11,7 @@ from datetime import datetime
 
 from modules.presets import *
 from modules.bh_class import BirdhouseCameraClass
-from modules.image import BirdhouseImageProcessing
+from modules.image import BirdhouseImageProcessing, BirdhouseImageEvaluate
 from modules.video import BirdhouseVideoProcessing
 from modules.object import BirdhouseObjectDetection
 from modules.camera_handler import BirdhousePiCameraHandler, BirdhouseCameraHandler, CameraInformation
@@ -1153,6 +1153,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.camera_scan = {}
         self.camera_info = CameraInformation()
+        self.img_evaluate = BirdhouseImageEvaluate(self.id, self.config)
         if first_cam:
             self.camera_scan = self.get_available_devices()
 
@@ -1853,82 +1854,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.record_image_end = str(int(record_to_hour)).zfill(2) + ":" + str(int(record_to_minute)).zfill(2)
 
         return is_active
-
-    def image_differs(self, file_info):
-        """
-        check if similarity is under threshold
-        """
-        threshold = float(self.param["similarity"]["threshold"])
-        similarity = float(file_info["similarity"])
-        if similarity != 0 and similarity < threshold:
-            return 1
-        else:
-            return 0
-
-    def image_to_select(self, timestamp, file_info, check_detection=True):
-        """
-        check image properties to decide if image is a selected one (for backup and view with selected images)
-
-        Parameters:
-            timestamp (str): timestamp of image (image-id) in format HHMMSS
-            file_info (dict): db entry for the image
-            check_detection (bool): check if detection (depending on mode, similarity or object)
-        """
-        threshold = float(self.param["similarity"]["threshold"])
-        if self.record_temp_threshold is not None:
-            threshold = self.record_temp_threshold
-
-        select = False
-        if check_detection and "similarity" not in file_info:
-            select = False
-
-        elif "to_be_deleted" in file_info and float(file_info["to_be_deleted"]) == 1:
-            select = False
-
-        elif ("camera" in file_info and file_info["camera"] == self.id) or (
-                "camera" not in file_info and self.id == "cam1"):
-
-            if timestamp[2:4] == "00" and timestamp[0:4] != self.image_to_select_last[0:4]:
-                self.image_to_select_last = timestamp
-                select = True
-
-            elif "favorit" in file_info and float(file_info["favorit"]) == 1:
-                select = True
-
-            elif "detections" in file_info and len(file_info["detections"]) > 0:
-                select = True
-
-            elif check_detection:
-                detection_mode = self.param["detection_mode"]
-                if detection_mode == "similarity":
-                    similarity = float(file_info["similarity"])
-                    if similarity != 0 and similarity < threshold:
-                        select = True
-                elif detection_mode == "object":
-                    if "detections" in file_info and len(file_info["detections"]) > 0:
-                        select = True
-                        file_info["detect_object"] = len(file_info["detections"])
-                    else:
-                        file_info["detect_object"] = -1
-
-            elif not check_detection:
-                select = True
-
-        info = file_info.copy()
-        for value in ["camera", "to_be_deleted", "favorit", "similarity", "detect_object"]:
-            if value not in info:
-                info[value] = -1
-        if "detections" not in file_info:
-            file_info["detections"] = []
-        self.logging.debug("Image to select: delete=" + str(float(info["to_be_deleted"])) +
-                           "; cam=" + str(info["camera"]) + "|" + self.id +
-                           "; favorite=" + str(float(info["favorit"])) +
-                           "; stamp=" + timestamp + "|" + self.image_to_select_last +
-                           "; object=" + str(len(file_info["detections"])) +
-                           "; similarity=" + str(float(info["similarity"])) + "<" +
-                           str(self.param["similarity"]["threshold"]) +
-                           " -> " + str(select))
-        return select
 
     def get_image_raw(self):
         """

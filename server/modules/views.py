@@ -1577,7 +1577,7 @@ class BirdhouseViewObjects(BirdhouseClass):
                 if "detection" in archive_entries:
 
                     archive_detection_labels = []
-                    archive_detect = archive_entries["detection"]
+                    archive_detect = archive_entries["detection"].copy()
 
                     # Initial round: identify thumbnails
                     for label in archive_detect:
@@ -1935,9 +1935,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 if ((int(stamp) < int(time_now) or time_now == "000000")
                         and files_all[stamp]["datestamp"] == date_today) or backup:
 
-                    show_img = self.camera[which_cam].image_to_select(timestamp=stamp,
-                                                                      file_info=files_all[stamp].copy(),
-                                                                      check_detection=check_detection)
+                    show_img = self.camera[which_cam].img_evaluate.select(timestamp=stamp,
+                                                                          file_info=files_all[stamp].copy(),
+                                                                          check_detection=check_detection)
                     if show_img:
                         # check maximum image size
                         if "lowres_size" in files_all[stamp]:
@@ -1958,7 +1958,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                         if "type" not in files_today[stamp]:
                             files_today[stamp]["type"] = "image"
                         files_today[stamp]["category"] = category + stamp
-                        files_today[stamp]["detect"] = self.camera[which_cam].image_differs(files_today[stamp])
+                        files_today[stamp]["detect"] = self.camera[which_cam].img_evaluate.differs(files_today[stamp])
                         files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
 
                         if "type" in files_today[stamp] and files_today[stamp]["type"] != "data":
@@ -1996,13 +1996,13 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                             stamp] and \
                                 files_all[stamp]["datestamp"] == date_yesterday:
 
-                            if self.camera[which_cam].image_to_select(timestamp=stamp, file_info=files_all[stamp],
-                                                                      check_detection=check_detection):
+                            if self.camera[which_cam].img_evaluate.select(timestamp=stamp, file_info=files_all[stamp],
+                                                                          check_detection=check_detection):
                                 files_yesterday[stamp] = files_all[stamp]
                                 if "type" not in files_yesterday[stamp]:
                                     files_yesterday[stamp]["type"] = "image"
                                 files_yesterday[stamp]["category"] = category + stamp
-                                files_yesterday[stamp]["detect"] = self.camera[which_cam].image_differs(
+                                files_yesterday[stamp]["detect"] = self.camera[which_cam].img_evaluate.differs(
                                     file_info=files_yesterday[stamp])
                                 files_yesterday[stamp]["directory"] = "/" + self.config.directories["images"]
                                 if "type" in files_yesterday[stamp] and files_yesterday[stamp]["type"] != "data":
@@ -2180,7 +2180,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                             files_part[stamp] = files_all[stamp]
                             if "type" not in files_part[stamp]:
                                 files_part[stamp]["type"] = "image"
-                            files_part[stamp]["detect"] = self.camera[which_cam].image_differs(
+                            files_part[stamp]["detect"] = self.camera[which_cam].img_evaluate.differs(
                                 file_info=files_part[stamp])
                             files_part[stamp]["category"] = category + stamp
                             files_part[stamp]["directory"] = "/" + self.config.directories["images"]

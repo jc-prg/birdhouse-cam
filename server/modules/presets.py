@@ -362,7 +362,7 @@ birdhouse_loglevel_modules_all = [
     'cam-handl', 'cam-info',
     'config', 'config-Q',
     'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
-    'video', 'video-srv',
+    'video', 'video-srv', "img-eval",
     'views', 'view-head', 'view-chart', 'view-fav', 'view-arch', 'view-obj',
     'weather', 'weather-py', 'weather-om']
 

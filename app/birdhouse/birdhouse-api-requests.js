@@ -147,6 +147,11 @@ function birdhouse_recycleThreshold(category, date, threshold, del, camera) {
     birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerEditSend,"","birdhouse_editData");
 }
 
+function birdhouse_recycleObject(category, date, del, camera) {
+    commands = ["recycle-object-detection", category, date, del, camera];
+    birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerEditSend,"","birdhouse_editData");
+}
+
 function birdhouse_archiveObjectDetection(camera, date_stamp, date, date_list="") {
     if (date_list != "") {
         var select = document.getElementById(date_list);

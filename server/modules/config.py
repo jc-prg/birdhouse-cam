@@ -10,6 +10,7 @@ from modules.presets import birdhouse_cache_for_archive, birdhouse_cache
 from modules.weather import BirdhouseWeather
 from modules.bh_database import BirdhouseCouchDB, BirdhouseJSON, BirdhouseTEXT
 from modules.bh_class import BirdhouseClass
+from modules.image import BirdhouseImageEvaluate
 
 
 class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
@@ -493,6 +494,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         self.queue_wait_max = 30
         self.queue_wait_min = 5
         self.queue_wait_duration = 0
+        self.img_evaluate = BirdhouseImageEvaluate(camera_id="", config=config)
 
     def run(self):
         """
@@ -898,7 +900,12 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
     def set_status_recycle(self, param):
         """
-        set / unset recycling -> redesigned
+        Set / unset recycling for single image.
+
+        Parameters:
+            param (dict): parameters given via API
+        Returns:
+            dict: API response
         """
         self.logging.info("Status recycle: " + str(param))
 
@@ -941,9 +948,55 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
         return response
 
+    def set_status_recycle_object(self, param, which_cam):
+        """
+        Set / unset recycling based on given threshold
+
+        Parameters:
+            param (dict): parameters given via API
+            which_cam (str): id of selected camera
+        Returns:
+            dict: API response
+        """
+        response = {}
+        config_data = {}
+        category = param["parameter"][0]
+        entry_date = param["parameter"][1]
+
+        self.logging.info("Start to identify RECYCLE images based on detected object ...")
+        self.logging.info("- recycle object: " + category + "/" + entry_date + " / " + which_cam)
+        self.logging.debug("- recycle object: " + str(param))
+
+        if category == "images":
+            config_data = self.db_handler.read_cache(config="images")
+        elif category == "backup":
+            config_data = self.db_handler.read_cache(config="backup", date=entry_date)["files"]
+
+        count = 0
+        for entry_id in config_data:
+            self.logging.debug("..." + entry_id)
+            select = self.img_evaluate.select(timestamp=entry_id, file_info=config_data[entry_id], check_detection=True,
+                                              overwrite_detection_mode="object", overwrite_camera=which_cam)
+            if select:
+                self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
+                                         change_status="to_be_deleted", status=0)
+                count += 1
+            else:
+                self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
+                                         change_status="to_be_deleted", status=1)
+
+        self.logging.info("- object=" + str(count) + "/" + str(len(config_data.keys())) + " entries.")
+        return response
+
     def set_status_recycle_threshold(self, param, which_cam):
         """
-        set / unset recycling based on given threshold
+        Set / unset recycling based on given threshold
+
+        Parameters:
+            param (dict): parameters given via API
+            which_cam (str): id of selected camera
+        Returns:
+            dict: API response
         """
         self.logging.info("Start to identify RECYCLE images based on threshold ...")
         self.logging.info("- recycle threshold: " + str(param) + " / " + which_cam)
@@ -965,6 +1018,18 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
         count = 0
         for entry_id in config_data:
+            self.logging.debug("..." + entry_id)
+            select = self.img_evaluate.select(timestamp=entry_id, file_info=config_data[entry_id], check_detection=True,
+                                              overwrite_detection_mode="similarity", overwrite_camera=which_cam,
+                                              overwrite_threshold=threshold)
+            #if select:
+            #    self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
+            #                             change_status="to_be_deleted", status=0)
+            #    count += 1
+            #else:
+            #    self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
+            #                             change_status="to_be_deleted", status=1)
+
             entry_threshold = float(config_data[entry_id]["similarity"])
             if "camera" not in config_data[entry_id] or config_data[entry_id]["camera"] == which_cam:
                 if threshold > entry_threshold:
@@ -981,6 +1046,11 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
     def set_status_recycle_range(self, param):
         """
         set / unset recycling -> range from-to
+
+        Parameters:
+            param (dict): parameters given via API
+        Returns:
+            dict: API response
         """
         self.logging.info("Start to identify RECYCLE range ...")
         self.logging.info("Status recycle range: " + str(param))

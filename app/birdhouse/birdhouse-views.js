@@ -333,6 +333,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	        var threshold_onclick_set       = "current_threshold = document.getElementById(\"set_threshold_"+app_active_cam+"\").value;"
 	        threshold_onclick_set          += "birdhouse_recycleThreshold(\"backup\", \""+active_date+"\", current_threshold, 1, \""+app_active_cam+"\");";
 	        var threshold_onclick_set_cmd   = "Recycle";
+
+	        var object_onclick              = "birdhouse_recycleObject(\"backup\", \""+active_date+"\", 1, \""+app_active_cam+"\");";
+	        object_onclick                 += "setTimeout(function(){ birdhouseReloadView(); }, 1000);"
 	    }
 
 	    var threshold_onclick_reset     = "document.getElementById(\"threshold_slider_"+app_active_cam+"\").value = "+threshold_initial_value+";";
@@ -400,6 +403,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             { button_object_detection = lang("DETECTION_NOT_LOADED"); select_object_detection = ""; }
         info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVES", [detection_model, detection_threshold]) + ":", select_object_detection + "<br/>&nbsp;<br/>" + button_object_detection );
 
+
 	    info_text += tab.end();
 	    info_text += "&nbsp;<br/>&nbsp;";
         html += birdhouse_OtherGroup( "info", lang("SETTINGS"), info_text, false );
@@ -416,6 +420,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    var button_object_detection = "<button onclick='birdhouse_archiveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button'  style='width:80px;'>Start</button>";
 	    var button_archive_deletion = "<button onclick='birdhouse_archiveDayDelete(\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button' style='width:80px;'>Delete</button>";
 	    var button_archive_download = "<button onclick='birdhouse_archiveDayDownload(\""+active_date+"\", \""+app_active_cam+"\");' class='bh-slider-button' style='width:80px;'>Download</button>";
+	    var button_object_recycle   =  "<button onclick='"+object_onclick+"' class='bh-slider-button'  style='width:80px;'>Recycle</button>";
 
         info_text += "&nbsp;";
 	    info_text += tab.start();
@@ -428,6 +433,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
                 { button_object_detection = lang("DETECTION_NOT_LOADED"); }
     	    info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model, detection_threshold]) + ":", button_object_detection );
     	    }
+        info_text += tab.row(lang("OBJECT_DETECTION_RECYCLE") + ":", button_object_recycle);
 	    info_text += tab.row(lang("DELETE_ARCHIVE") + ":", button_archive_deletion );
 	    info_text += tab.row(lang("DOWNLOAD_ARCHIVE") + ":", button_archive_download );
 	    info_text += tab.end();

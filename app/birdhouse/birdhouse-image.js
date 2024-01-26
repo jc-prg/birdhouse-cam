@@ -128,7 +128,6 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
                     count["recycle"] += 1;
                 }
                 else if (count["object"] != undefined && entries[key]["detections"] && entries[key]["detections"].length > 0) {
-                console.error(entries[key]);
                     count["object"]  += 1;
                 }
                 else if (count["detect"] != undefined && parseInt(entries[key]["detect"]) == 1) {
