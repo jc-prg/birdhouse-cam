@@ -32,6 +32,9 @@ function birdhouseStatus_connectionError() {
         setStatusColor(status_id="status_active_"+camera, "red");
         setStatusColor(status_id="status_error_"+camera, "black");
         setStatusColor(status_id="status_error_record_"+camera, "black");
+
+        setStatusColor(status_id="status_"+camera+"_detection_active", "red");
+        setStatusColor(status_id="status_"+camera+"_detection_loaded", "black");
     }
     for (let sensor in sensors) {
         setStatusColor(status_id="status_active_"+sensor, "red");
@@ -428,8 +431,28 @@ function birdhouseStatus_loadingViews(data) {
 
 function birdhouseStatus_detection(data) {
     if (data["STATUS"]["object_detection"]["progress"]) {
-         setTextById("last_answer_detection_progress", data["STATUS"]["object_detection"]["progress"]);
+        message = data["STATUS"]["object_detection"]["progress"] + " %";
+        if (data["STATUS"]["object_detection"]["waiting"] > 1) {
+            message += "<br/><i>(" + lang("WAITING_DATES", [data["STATUS"]["object_detection"]["waiting"]]) + ")</i>";
+            }
+        else if (data["STATUS"]["object_detection"]["waiting"] == 1) {
+            message += "<br/><i>(" + lang("WAITING_DATE") + ")</i>";
+            }
+        setTextById("last_answer_detection_progress", message);
         }
+
+    var status   = app_data["STATUS"]["object_detection"];
+    var settings = app_data["SETTINGS"]["devices"]["cameras"];
+
+    Object.entries(settings).forEach(([key,value])=> {
+        if (value["object_detection"]["active"])      { setStatusColor("status_" + key + "_detection_active", "white"); }
+        else                                          { setStatusColor("status_" + key + "_detection_active", "black"); }
+
+        if (!value["object_detection"]["active"])     { setStatusColor("status_" + key + "_detection_loaded", "black"); }
+        else if (status["models_loaded_status"][key]) { setStatusColor("status_" + key + "_detection_loaded", "green"); }
+        else                                          { setStatusColor("status_" + key + "_detection_loaded", "red"); }
+        });
+
     }
 
 function birdhouseStatus_downloads(data) {

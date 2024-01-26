@@ -307,8 +307,31 @@ function birdhouse_app_settings (name="Settings") {
 	}
 
 	this.device_information = function () {
+	    var status   = app_data["STATUS"]["object_detection"];
+        var tab      = new birdhouse_table();
+        tab.style_rows["height"] = "27px";
+        tab.style_cells["width"] = "50%";
 
-	    return birdhouseDevices("", app_data, false);
+	    var html = birdhouseDevices("", app_data, false);
+
+        if (status["active"]) {
+            html += tab.start();
+            Object.entries(status["models_loaded"]).forEach(([key,value])=> {
+                var description = "Detection " + key + " (" + value + "):";
+                var action = "<div style='float:left;'>";
+                action += "<div id='status_" + key + "_detection_active' style='float:left;'><div id='black'></div></div>";
+                action += "<div id='status_" + key + "_detection_loaded' style='float:left;'><div id='black'></div></div>";
+
+                html += tab.row(description, action);
+                });
+            html += tab.end();
+            }
+        else {
+            html += "<i>" + lang("OBJECT_DETECTION_INACTIVE") + "</i><br/>&nbsp;";
+            }
+        html += "<br/>&nbsp;<br/>";
+
+	    return html;
 	}
 
 	this.app_under_construction = function() {
