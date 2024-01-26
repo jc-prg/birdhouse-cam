@@ -127,6 +127,10 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
                 else if (count["recycle"] != undefined && (entries[key]["to_be_deleted"]) == 1)	{
                     count["recycle"] += 1;
                 }
+                else if (count["object"] != undefined && entries[key]["detections"] && entries[key]["detections"].length > 0) {
+                console.error(entries[key]);
+                    count["object"]  += 1;
+                }
                 else if (count["detect"] != undefined && parseInt(entries[key]["detect"]) == 1) {
                     count["detect"]  += 1;
                 }
@@ -250,6 +254,12 @@ function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 	if (count["star"] != undefined) {
 		if (count["star"] > 0) { color = color_code["star"]; } else { color = "gray"; }
 		info += "star: <font color='"+color+"' id='image_count_star_"+key+"'>"   + count["star"].toString().padStart(2,"0")    + "</font>";
+		if (info_count < Object.keys(count).length) { info += " | "; }
+		info_count += 1;
+		}
+	if (count["object"] != undefined) {
+		if (count["object"] > 0) { color = color_code["object"]; } else { color = "gray"; }
+		info += "object: <font color='"+color+"' id='image_count_detect_"+key+"'>" + count["object"].toString().padStart(2,"0")  + "</font>";
 		if (info_count < Object.keys(count).length) { info += " | "; }
 		info_count += 1;
 		}
@@ -454,9 +464,10 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
         img_id2 = img_id2.replaceAll( "/", "_");
     }
 
-	if (entry["detect"] == 1)                                           { style = "border: 1px solid "+color_code["detect"]+";"; }
-	if (entry["to_be_deleted"] == 1 || entry["to_be_deleted"] == "1")   { style = "border: 1px solid "+color_code["recycle"]+";"; }
-	if (entry["favorit"] == 1 || entry["favorit"] == "1")               { style = "border: 1px solid "+color_code["star"]+";"; }
+	if (entry["favorit"] == 1 || entry["favorit"] == "1")                    { style = "border: 1px solid "+color_code["star"]+";"; }
+	else if (entry["to_be_deleted"] == 1 || entry["to_be_deleted"] == "1")   { style = "border: 1px solid "+color_code["recycle"]+";"; }
+	else if (entry["detections"] && entry["detections"].length > 0)          { style = "border: 1px solid "+color_code["object"]+";"; }
+	else if (entry["detect"] == 1)                                           { style = "border: 1px solid "+color_code["detect"]+";"; }
 
 	if (admin && edit) {
 		var img_id      = entry["category"];

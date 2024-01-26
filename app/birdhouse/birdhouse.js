@@ -6,11 +6,12 @@
 
 var color_code = {
 	"star"    : "lime",
-	"detect"  : "aqua",
+	"detect"  : "DodgerBlue",
+	"object"  : "aqua",
 	"recycle" : "red",
 	"default" : "white",
 	"request" : "yellow",
-	"data"    : "lightblue"
+	"data"    : "gray"
 	}
 	
 var app_available_cameras = [];

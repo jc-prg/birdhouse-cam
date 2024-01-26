@@ -318,8 +318,8 @@ class BirdhouseViewCharts(BirdhouseClass):
                 if "weather" in data[key]:
                     if "location" in data[key]["weather"]:
                         location = data[key]["weather"]["location"]
-                    elif self.config is not None:
-                        location = self.config.param["localization"]["weather_location"]
+                    elif self.config is not None and "weather" in self.config.param:
+                        location = self.config.param["weather"]["location"]
                     else:
                         location = ""
                     for weather_category in weather_data_in_chart:
@@ -494,9 +494,14 @@ class BirdhouseViewFavorite(BirdhouseClass):
 
         self.logging.info("Connected archive creation handler.")
 
-    def list(self, param) -> dict:
+    def list(self, param):
         """
-        Return data for list of favorites from cache
+        Get view definition for favorites
+
+        Parameters:
+            param (dict): parameter given via API
+        Returns:
+            dict: favorite view definition for API response
         """
         if not self.views:
             return {}
@@ -774,7 +779,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         Parameters:
             config (modules.config.BirdhouseConfig): reference to main config object
             tools (BirdhouseViewTools): reference to tooling object
-            camera (modules.camera.BirdhouseCamera): reference to global camera object
+            camera (dict): reference to global camera object
         """
         BirdhouseClass.__init__(self, class_id="view-arch", config=config)
 
@@ -803,9 +808,9 @@ class BirdhouseViewArchive(BirdhouseClass):
         Get data for list of archive from cache (or an empty list if still loading).
 
         Parameters:
-            param (list): parameter given via API
+            param (dict): parameter given via API
         Returns:
-            dict: view definition for API response
+            dict: archive view definition for API response
         """
         camera = param["which_cam"]
         if camera in self.views:
@@ -839,9 +844,12 @@ class BirdhouseViewArchive(BirdhouseClass):
         if force:
             self.force_reload = True
 
-    def list_create(self, complete=False) -> None:
+    def list_create(self, complete=False):
         """
-        Page with backup/archive directory
+        Create list data for backup/archive directory
+
+        Parameters:
+            complete (bool): read complete information from files or cached information from database
         """
         camera_settings = self.config.param["devices"]["cameras"]
         archive_total_size = 0
@@ -898,7 +906,8 @@ class BirdhouseViewArchive(BirdhouseClass):
                     backup_entries[date]["changed"] = False
                 if "exists" not in backup_entries[date]:
                     backup_entries[date]["exists"] = False
-                self.tools.calculate_progress("archive", str(cam_count)+"/4", cam, count, len(archive_info[cam]["entries"]))
+                self.tools.calculate_progress("archive", str(cam_count)+"/4", cam, count,
+                                              len(archive_info[cam]["entries"]))
 
             # check if new directories are available
             count = 0
@@ -941,6 +950,9 @@ class BirdhouseViewArchive(BirdhouseClass):
 
                 # update for those dates where necessary
                 for cam in self.camera:
+
+                    log_info = ""
+                    log_info_2 = ""
 
                     # if directory doesn't exist yet read entries from database of the respective date
                     if ((backup_entries[date]["changed"] and not backup_entries[date]["exists"])
@@ -1099,6 +1111,14 @@ class BirdhouseViewArchive(BirdhouseClass):
     def _list_create_preview(self, cam, image_title, archive_directory, file_data):
         """
         select / create preview image for archive (thumbnail for date in archive overview)
+
+        Parameters:
+            cam (str): camera-id
+            image_title (str): string to identify preview image based on a specific time
+            archive_directory (str): file directory where images files are stored
+            file_data (dict): db entries of all existing images
+        Returns:
+            str: path to created preview image
         """
         # first favorite as image or ...
         first_img = ""
@@ -1173,7 +1193,7 @@ class BirdhouseViewArchive(BirdhouseClass):
 
         return image_preview
 
-    def _list_create_entry(self, cam, content, archive_directory, dir_size, file_data) -> (dict, int):
+    def _list_create_entry(self, cam, content, archive_directory, dir_size, file_data):
         """
         create entry per archive directory, measure file sizes
         """
@@ -1260,7 +1280,7 @@ class BirdhouseViewArchive(BirdhouseClass):
 
         return content.copy(), dir_size
 
-    def _list_create_database_ok(self, date) -> bool:
+    def _list_create_database_ok(self, date):
         """
         check availability of couch db and/or json db
         """
@@ -1281,7 +1301,7 @@ class BirdhouseViewArchive(BirdhouseClass):
                                  str(database_available) + ", DB-TYPE=" + database_type)
         return database_ok
 
-    def _list_create_file_data(self, archive_directory, database_ok) -> dict:
+    def _list_create_file_data(self, archive_directory, database_ok):
         """
         get data from existing database or return empty value
         """
@@ -1318,7 +1338,7 @@ class BirdhouseViewArchive(BirdhouseClass):
 
         return file_data.copy()
 
-    def _list_create_from_database(self, cam, content, archive_directory, file_data) -> dict:
+    def _list_create_from_database(self, cam, content, archive_directory, file_data):
         """
         create archive entry from files
         """
@@ -1362,7 +1382,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         Parameters:
             config (modules.config.BirdhouseConfig): reference to main config object
             tools (BirdhouseViewTools): reference to tooling object
-            camera (modules.camera.BirdhouseCamera): reference to global camera object
+            camera (dict): reference to global camera object
         """
         BirdhouseClass.__init__(self, class_id="view-obj", config=config)
 
@@ -1391,7 +1411,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         Get data for list of favorites from cache.
 
         Parameters:
-            param (list): parameter given via API
+            param (dict): parameter given via API
         Returns:
             dict: view definition for API response
         """
@@ -1686,7 +1706,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         Parameters:
             config (modules.config.BirdhouseConfig): reference to main config object
-            camera (modules.camera.BirdhouseCamera): reference to global camera object
+            camera (dict): reference to global camera object
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="views", config=config)
@@ -1763,9 +1783,14 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         self.logging.info("Stopped HTML views and REST API for GET.")
 
-    def index_view(self, param) -> dict:
+    def index_view(self, param):
         """
         Index page with live-streaming pictures
+
+        Parameters:
+            param (dict): parameters given via API
+        Returns:
+            dict: view definition for index view
         """
         self.logging.debug("Create data for Index View.")
         which_cam = param["which_cam"]
@@ -1780,9 +1805,14 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         return content
 
-    def list(self, param) -> dict:
+    def list(self, param):
         """
-        Page with pictures (and videos) of a single day
+        View definition for page with pictures (and videos) of a single day
+
+        Parameters:
+            param (dict): parameters given via API
+        Returns:
+            dict: image list view definition for API response (single day)
         """
         path = param["path"]
         which_cam = param["which_cam"]
@@ -1992,7 +2022,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         content["subtitle"] += " (" + self.camera[which_cam].name + ", " + str(count) + " Bilder)"
         content["entries_total"] = len(files_today)
-        content["view_count"] = ["all", "star", "detect", "data"]
+        content["view_count"] = ["all", "star", "object", "detect"]
 
         # add chart and weather data
         if backup:
@@ -2044,12 +2074,25 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         return content
 
-    def archive_list(self, param) -> dict:
+    def archive_list(self, param):
+        """
+        View definition for list of archive days from cache (or an empty list if still loading).
+
+        Parameters:
+            param (dict): parameter given via API
+        Returns:
+            dict: archive view definition for API response
+        """
         return self.archive.list(param)
 
-    def camera_list(self, param) -> dict:
+    def camera_list(self, param):
         """
-        Return data for page with all cameras
+        Return view definition for page with all cameras.
+
+        Parameters:
+            param (dict): parameter given via API
+        Returns:
+            dict: camera view definition for API response
         """
         which_cam = param["which_cam"]
         content = {"active_cam": which_cam, "view": "list_cameras", "entries": {}}
@@ -2068,9 +2111,14 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         return content.copy()
 
-    def complete_list_today(self, param) -> dict:
+    def complete_list_today(self, param):
         """
-        Page with all pictures of the current day
+        Return view definition for a page with all pictures of the current day.
+
+        Parameters:
+            param (dict): parameter given via API
+        Returns:
+            dict: complete day view definition for API response
         """
         self.logging.debug("CompleteListToday: Start - " + self.config.local_time().strftime("%H:%M:%S"))
         which_cam = param["which_cam"]
@@ -2146,7 +2194,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     content["entries"][entry] = files_part[entry]
                     content["groups"][hour + ":00"].append(entry)
 
-        content["view_count"] = ["all", "star", "detect", "recycle", "data"]
+        content["view_count"] = ["all", "star", "object", "detect", "recycle"]
         content["subtitle"] = presets.birdhouse_pages["today_complete"][0] + " (" + self.camera[
             which_cam].name + ", " + str(count) + " Bilder)"
         content["links"] = self.tools.print_links_json(link_list=("live", "favorit", "today", "videos", "backup"),
@@ -2163,12 +2211,25 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                            " (" + str(length) + " kB)")
         return content
 
-    def favorite_list(self, param) -> dict:
+    def favorite_list(self, param):
+        """
+        Get view definition for favorites
+
+        Parameters:
+            param (dict): parameter given via API
+        Returns:
+            dict: favorite view definition for API response
+        """
         return self.favorite.list(param)
 
-    def video_list(self, param) -> dict:
+    def video_list(self, param):
         """
-        Return data for page with all videos
+        Get view definition for page with all videos
+
+        Parameters:
+            param (dict): parameter given via API
+        Returns:
+            dict: video view definition for API response
         """
         which_cam = param["which_cam"]
         content = {"active_cam": which_cam, "view": "list_videos"}
@@ -2205,9 +2266,14 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         return content
 
-    def detail_view_video(self, param) -> dict:
+    def detail_view_video(self, param):
         """
-        Show details and edit options for a video file
+        Get view definition to show details and edit options for a video file
+
+        Parameters:
+            param (dict): parameter given via API
+        Returns:
+            dict: video view definition for API response
         """
         which_cam = param["which_cam"]
         video_id = param["parameter"][0]
