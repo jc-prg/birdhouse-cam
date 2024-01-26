@@ -1865,16 +1865,21 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         else:
             return 0
 
-    def image_to_select(self, timestamp, file_info, check_similarity=True):
+    def image_to_select(self, timestamp, file_info, check_detection=True):
         """
         check image properties to decide if image is a selected one (for backup and view with selected images)
+
+        Parameters:
+            timestamp (str): timestamp of image (image-id) in format HHMMSS
+            file_info (dict): db entry for the image
+            check_detection (bool): check if detection (depending on mode, similarity or object)
         """
         threshold = float(self.param["similarity"]["threshold"])
         if self.record_temp_threshold is not None:
             threshold = self.record_temp_threshold
 
         select = False
-        if "similarity" not in file_info:
+        if check_similarity and "similarity" not in file_info:
             select = False
 
         elif "to_be_deleted" in file_info and float(file_info["to_be_deleted"]) == 1:
@@ -1893,22 +1898,31 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             elif "detections" in file_info and len(file_info["detections"]) > 0:
                 select = True
 
-            elif check_similarity:
-                similarity = float(file_info["similarity"])
-                if similarity != 0 and similarity < threshold:
-                    select = True
+            elif check_detection:
+                detection_mode = self.param["detection_mode"]
+                if detection_mode == "similarity":
+                    similarity = float(file_info["similarity"])
+                    if similarity != 0 and similarity < threshold:
+                        select = True
+                elif detection_mode == "object":
+                    if "detections" in file_info and len(file_info["detections"]) > 0:
+                        select = True
+                        file_info["detect_object"] = len(file_info["detections"])
+                    else:
+                        file_info["detect_object"] = -1
 
-            else:
-                select = True  # to be checked !!!
+            elif not check_detection:
+                select = True
 
         info = file_info.copy()
-        for value in ["camera", "to_be_deleted", "favorit", "similarity"]:
+        for value in ["camera", "to_be_deleted", "favorit", "similarity", "detect_object"]:
             if value not in info:
                 info[value] = -1
         self.logging.debug("Image to select: delete=" + str(float(info["to_be_deleted"])) +
                            "; cam=" + str(info["camera"]) + "|" + self.id +
                            "; favorite=" + str(float(info["favorit"])) +
                            "; stamp=" + timestamp + "|" + self.image_to_select_last +
+                           "; object=" + str(len(file_info["detections"])) +
                            "; similarity=" + str(float(info["similarity"])) + "<" +
                            str(self.param["similarity"]["threshold"]) +
                            " -> " + str(select))

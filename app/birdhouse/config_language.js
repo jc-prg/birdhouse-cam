@@ -114,7 +114,7 @@ var language_app = {
 		"WAITING"               : "warte ...",
 		"WAITING_FOR_DOWNLOAD"  : "Warte auf Download",
 		"WAITING_DATES"         : "{0} weitere Tage zu analysieren",
-		"WAITING_DATE"          : "Ein weiter Tag zu analysieren",
+		"WAITING_DATE"          : "Ein weiterer Tag zu analysieren",
 		"WEATHER"               : "Wetter",
 		"WEATHER_DATA_ERROR"    : "Fehlerhafte Wetterdaten.",
         "WEATHER_0"             : "klarer Himmel",
