@@ -181,7 +181,7 @@ function birdhouse_archiveObjectDetection_exec(camera, date) {
 
 function birdhouse_archiveObjectDetection_progress(data) {
 
-    var msg = lang("DETECTION_PROGRESS") + "<br/><text id='last_answer_detection_progress'>0</text> %";
+    var msg = lang("DETECTION_PROGRESS") + "<br/><text id='last_answer_detection_progress'>0 %</text>";
     appMsg.alert(msg);
     }
 

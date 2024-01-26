@@ -379,12 +379,14 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    var detection_date = active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4);
 
 	    var select_object_detection = "<select id='selection_dates' multiple style='width:180px;height:100px;'>";
-	    Object.entries(entries).forEach(([key,value]) => {
-	        var date = key.substring(6,8) + "." + key.substring(4,6) + "." + key.substring(0,4);
-	        var detection = "";
-	        if (value["detection"]) { detection = "; D";}
-	        select_object_detection += "<option value='"+key+"_"+value["count_cam"]+"'>" + date + " (" + value["count_cam"] + " " + lang("IMAGES") + detection + ")</option>";
-	    });
+	    if (entries) {
+            Object.entries(entries).forEach(([key,value]) => {
+                var date = key.substring(6,8) + "." + key.substring(4,6) + "." + key.substring(0,4);
+                var detection = "";
+                if (value["detection"]) { detection = "; D";}
+                select_object_detection += "<option value='"+key+"_"+value["count_cam"]+"'>" + date + " (" + value["count_cam"] + " " + lang("IMAGES") + detection + ")</option>";
+                });
+            }
 	    select_object_detection += "</select>";
 
 	    var button_object_detection = "<button onclick='birdhouse_archiveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \"\", \"selection_dates\");' class='bh-slider-button'  style='width:80px;'>Start</button>";
@@ -396,7 +398,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             { button_object_detection = lang("DETECTION_INACTIVE_CAM"); select_object_detection = ""; }
         else if (!app_data["STATUS"]["object_detection"]["models_loaded_status"][app_active_cam])
             { button_object_detection = lang("DETECTION_NOT_LOADED"); select_object_detection = ""; }
-        info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model, detection_threshold]) + ":", select_object_detection + "<br/>&nbsp;<br/>" + button_object_detection );
+        info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVES", [detection_model, detection_threshold]) + ":", select_object_detection + "<br/>&nbsp;<br/>" + button_object_detection );
 
 	    info_text += tab.end();
 	    info_text += "&nbsp;<br/>&nbsp;";
