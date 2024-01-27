@@ -226,8 +226,8 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         Calculate structural similarity index (SSIM) of two images
 
         Parameters:
-            image_1st (numpy.ndarray): first image to be compared
-            image_2nd (numpy.ndarray): second image to be compared
+            image_1st (bytearray): first image to be compared
+            image_2nd (bytearray): second image to be compared
             detection_area (list): area of image to be compared (start_x, start_y, end_x, end_y)
         Returns:
             float: structural similarity index (SSIM)
@@ -403,7 +403,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             bytearray: encoded cropped image
         """
         raw = self.convert_to_raw(image)
-        raw = self.crop_raw(raw, crop_area, crop_type)
+        raw, area = self.crop_raw(raw, crop_area, crop_type)
         image = self.convert_from_raw(raw)
         return image
 
@@ -455,7 +455,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         calculate start & end pixel for relative area
 
         Parameters:
-            resolution (str): defined resolution in format '800x600'
+            resolution (Any): defined resolution in format '800x600' or in format [width, height]
             area (list): relative definition of crop area (0, 0, 1, 1) with float values from 0.0..1.0
             dimension (bool): add width and height or not
         Returns:
@@ -491,7 +491,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             position (int, int): text position (x, y)
             font (int): font type (see open-cv documentation)
             scale (float): size of font (0..1)
-            color (list of int): text color in (R, G, B)
+            color (tuple of int): text color in (R, G, B)
             thickness (float): font thickness in pixel
         Returns:
             bytearray: encoded image with text
@@ -511,7 +511,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             position (int, int): text position (x, y)
             font (int): font type (see open-cv documentation)
             scale (float): size of font (0..1)
-            color (list of int): text color in (R, G, B)
+            color (tuple of int): text color in (R, G, B)
             thickness (float): font thickness in pixel
         Returns:
             numpy.ndarray: image with text
@@ -559,7 +559,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         Parameters:
             raw (numpy.ndarray): input raw image
-            overwrite_color (list of int): color as (R, G, B) if not default defined in settings
+            overwrite_color (tuple of int): color as (R, G, B) if not default defined in settings
             overwrite_position (int): position (1-4) if not default defined in settings
             offset (int): offset from position in pixel
         Returns:
@@ -600,7 +600,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         Parameters:
             raw (numpy.ndarray): raw image
             area (list of float): area the rectangle shall cover, default is the complete image
-            color (list of int): color of the rectangle in (R, G, B); default is red (0, 0, 255)
+            color (tuple of int): color of the rectangle in (R, G, B); default is red (0, 0, 255)
             thickness (int): thickness of the rectangle, default is 2 pixel
         Returns:
             numpy.ndarray: raw image with added rectangle
@@ -706,7 +706,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         Return size of raw image
 
         Parameters:
-            image (numpy.ndarray): image to get the size of
+            image (bytearray): image to get the size of
         Returns:
             (int, int): sizes of resized image (width, height)
         """
@@ -725,7 +725,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         Parameters:
             filename (str): relative path and filename starting from server directory
-            image (list): raw image data as list of lists
+            image (numpy.ndarray): raw image data as list of lists
             scale_percent (int): target size of image in percent
         Returns:
             bool/str: status if successfully
