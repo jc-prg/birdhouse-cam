@@ -22,7 +22,7 @@ class BirdhouseImageEvaluate(BirdhouseCameraClass):
         BirdhouseCameraClass.__init__(self, class_id="img-eval", camera_id=camera_id, config=config)
 
         self.id = camera_id
-        self.image_to_select_last = ""
+        self.image_to_select_last = "xxxxxx"
 
     def differs(self, file_info):
         """
@@ -69,6 +69,8 @@ class BirdhouseImageEvaluate(BirdhouseCameraClass):
 
         select = False
         if check_detection and "similarity" not in file_info:
+            if timestamp[2:4] == "00":
+                self.image_to_select_last = timestamp
             select = False
 
         elif "to_be_deleted" in file_info and float(file_info["to_be_deleted"]) == 1:
