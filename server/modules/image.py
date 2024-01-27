@@ -40,8 +40,8 @@ class BirdhouseImageEvaluate(BirdhouseCameraClass):
         else:
             return 0
 
-    def select(self, timestamp, file_info, check_detection=True, overwrite_detection_mode="",
-               overwrite_threshold="", overwrite_camera=""):
+    def select(self, timestamp, file_info, check_detection=True,
+               overwrite_detection_mode="", overwrite_threshold="", overwrite_camera=""):
         """
         check image properties to decide if image is a selected one (for backup and view with selected images)
 
@@ -69,11 +69,11 @@ class BirdhouseImageEvaluate(BirdhouseCameraClass):
 
         select = False
         if check_detection and "similarity" not in file_info:
-            if timestamp[2:4] == "00":
-                self.image_to_select_last = timestamp
             select = False
 
         elif "to_be_deleted" in file_info and float(file_info["to_be_deleted"]) == 1:
+            if timestamp[2:4] == "00":
+                self.image_to_select_last = timestamp
             select = False
 
         elif ("camera" in file_info and file_info["camera"] == camera_id) or (
