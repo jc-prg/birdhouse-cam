@@ -14,8 +14,19 @@ from modules.image import BirdhouseImageEvaluate
 
 
 class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
+    """
+    Class to handle DB connect, to read, write, and cache data
+    """
 
     def __init__(self, config, db_type="json", main_directory=""):
+        """
+        Constructor to initialize class.
+
+        Parameters:
+             config (modules.config.BirdhouseConfig): reference to main configuration handler
+             db_type (str): database type (json, couch, both)
+             main_directory (str): root directory of the server
+        """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="DB-handler", config=config)
         self.thread_set_priority(1)
@@ -471,10 +482,17 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
 
 
 class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
+    """
+    Class to manage queue for database access (json, couch, both)
+    """
 
     def __init__(self, config, db_handler):
         """
-        Initialize new thread and set inital parameters
+        Constructor to initialize class.
+
+        Parameters:
+             config (modules.config.BirdhouseConfig): reference to main configuration handler
+             db_handler (modules.config.BirdhouseConfigDBHandler): reference to db handler
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="config-Q", config=config)
@@ -652,7 +670,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
             # EDIT QUEUE: backup (with date)
             elif config_file == "backup":
 
-                for date in self.edit_queue[config_file]:
+                dates_in_queue = list(self.edit_queue[config_file].keys())
+                for date in dates_in_queue:
 
                     entry_data = self.db_handler.read_cache(config_file, date)
                     self.db_handler.lock(config_file, date)
@@ -1391,7 +1410,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
     def main_config_edit(self, config, config_data, date=""):
         """
         change configuration base on dict in form
-        dict["key1:ey2:key3"] = "value"
+        dict["key1:key2:key3"] = "value"
         """
         self.logging.info("Change configuration ... " + config + "/" + date + " ... " + str(config_data))
         param = self.db_handler.read(config, date)

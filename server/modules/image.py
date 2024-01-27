@@ -8,7 +8,7 @@ from modules.bh_class import BirdhouseCameraClass, BirdhouseClass
 
 class BirdhouseImageEvaluate(BirdhouseCameraClass):
     """
-    Class to evaluate image information against defined criteria
+    Class to evaluate image metadata against defined criteria
     """
 
     def __init__(self, camera_id, config):
@@ -121,10 +121,17 @@ class BirdhouseImageEvaluate(BirdhouseCameraClass):
 
 class BirdhouseImageProcessing(BirdhouseCameraClass):
     """
-    modify encoded and raw images
+    Class to modify encoded and raw images
     """
 
     def __init__(self, camera_id, config):
+        """
+        Constructor to initialize class.
+
+        Parameters:
+            camera_id (str): camera id
+            config (modules.config.BirdhouseConfig): reference to main config handler
+        """
         BirdhouseCameraClass.__init__(self, class_id=camera_id+"-img", class_log="image",
                                       camera_id=camera_id, config=config)
 
@@ -148,7 +155,14 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def compare(self, image_1st, image_2nd, detection_area=None):
         """
-        calculate structural similarity index (SSIM) of two images
+        Calculate structural similarity index (SSIM) of two images
+
+        Parameters:
+            image_1st (numpy.ndarray): first image to be compared
+            image_2nd (numpy.ndarray): second image to be compared
+            detection_area (list): area of image to be compared (start_x, start_y, end_x, end_y)
+        Returns:
+            float: structural similarity index (SSIM)
         """
         if self.error_camera:
             return 0
@@ -160,7 +174,14 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def compare_raw(self, image_1st, image_2nd, detection_area=None):
         """
-        calculate structural similarity index (SSIM) of two images
+        Calculate structural similarity index (SSIM) of two images
+
+        Parameters:
+            image_1st (numpy.ndarray): first image to be compared (raw format)
+            image_2nd (numpy.ndarray): second image to be compared (raw format)
+            detection_area (list): area of image to be compared (start_x, start_y, end_x, end_y)
+        Returns:
+            float: structural similarity index (SSIM)
         """
         if self.error_camera:
             return 0
@@ -193,7 +214,13 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def compare_raw_show(self, image_1st, image_2nd):
         """
-        show in an image where the differences are
+        Show in an image where the differences are (colors: black, red; the images have to have the same size)
+
+        Parameters:
+            image_1st (numpy.ndarray): first image to be compared (raw format)
+            image_2nd (numpy.ndarray): second image to be compared (raw format)
+        Returns:
+            numpy.ndarray: image that visualizes the differences
         """
         image_diff = cv2.subtract(image_2nd, image_1st)
 
@@ -209,7 +236,12 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def convert_from_raw(self, raw):
         """
-        convert from raw image to image // untested
+        convert from raw image to image
+
+        Parameters:
+            raw (numpy.ndarray): input raw image
+        Returns:
+            bytearray: encoded image
         """
         try:
             encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 100]
@@ -224,6 +256,11 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def convert_to_raw(self, image):
         """
         convert from device to raw image -> to be modified with CV2
+
+        Parameters:
+            image (bytearray): encoded input image
+        Returns:
+            numpy.ndarray: raw image (or None if error)
         """
         if self.error_camera:
             return
@@ -239,6 +276,11 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def convert_to_gray_raw(self, raw):
         """
         convert image from RGB to gray scale image (e.g. for analyzing similarity)
+
+        Parameters:
+            raw (numpy.ndarray): input raw image
+        Returns:
+            numpy.ndarray: to gray scale converted raw image
         """
         # error in camera
         if self.error_camera:
@@ -261,6 +303,11 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def convert_from_gray_raw(self, raw):
         """
         convert image from RGB to gray scale image (e.g. for analyzing similarity)
+
+        Parameters:
+            raw (numpy.ndarray): gray scale input raw image
+        Returns:
+            numpy.ndarray: raw image in BGR
         """
         # error in camera
         if self.error_camera:
@@ -279,6 +326,13 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def crop(self, image, crop_area, crop_type="relative"):
         """
         crop encoded image
+
+        Parameters:
+            image (bytearray): encoded input image
+            crop_area (list): crop area (start_x, start_y, end_x, end_y), if relative float values from 0.0..1.0
+            crop_type (str): type of crop area definition; options: 'relative' (default), 'absolute'
+        Returns:
+            bytearray: encoded cropped image
         """
         raw = self.convert_to_raw(image)
         raw = self.crop_raw(raw, crop_area, crop_type)
@@ -287,8 +341,15 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def crop_raw(self, raw, crop_area, crop_type="relative"):
         """
-        crop image using relative dimensions (0.0 ... 1.0);
-        ensure dimension is dividable by 2, which is required to create a video based on this images
+        crop image using relative dimensions; ensure dimension is dividable by 2,
+        which is required to create a video based on this images
+
+        Parameters:
+            raw (numpy.ndarray): input raw image
+            crop_area (list): crop area (start_x, start_y, end_x, end_y), if relative float values from 0.0..1.0
+            crop_type (str): type of crop area definition; options: 'relative' (default), 'absolute'
+        Returns:
+            (numpy.ndarray, list): cropped raw image plus crop area
         """
         try:
             height = raw.shape[0]
@@ -324,6 +385,13 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def crop_area_pixel(self, resolution, area, dimension=True):
         """
         calculate start & end pixel for relative area
+
+        Parameters:
+            resolution (str): defined resolution in format '800x600'
+            area (list): relative definition of crop area (0, 0, 1, 1) with float values from 0.0..1.0
+            dimension (bool): add width and height or not
+        Returns:
+            list: values in pixel (x_start, y_start, x_end, y_end, x_width, y_height)
         """
         if "x" in resolution:
             resolution = resolution.split("x")
@@ -348,6 +416,17 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def draw_text(self, image, text, position=None, font=None, scale=None, color=None, thickness=0):
         """
         Add text on image
+
+        Parameters:
+            image (bytearray): encoded input image
+            text (str): string to be added
+            position (int, int): text position (x, y)
+            font (int): font type (see open-cv documentation)
+            scale (float): size of font (0..1)
+            color (list of int): text color in (R, G, B)
+            thickness (float): font thickness in pixel
+        Returns:
+            bytearray: encoded image with text
         """
         raw = self.convert_to_raw(image)
         raw = self.draw_text_raw(raw, text, position=position, font=font, scale=scale, color=color, thickness=thickness)
@@ -357,6 +436,17 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def draw_text_raw(self, raw, text, position=None, font=None, scale=None, color=None, thickness=0):
         """
         Add text on image
+
+        Parameters:
+            raw (numpy.ndarray): input raw image
+            text (str): string to be added
+            position (int, int): text position (x, y)
+            font (int): font type (see open-cv documentation)
+            scale (float): size of font (0..1)
+            color (list of int): text color in (R, G, B)
+            thickness (float): font thickness in pixel
+        Returns:
+            numpy.ndarray: image with text
         """
         if position is None:
             position = self.text_default_position
@@ -395,8 +485,18 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         return raw
 
-    # !!! check if to be moved to EditStream
     def draw_date_raw(self, raw, overwrite_color=None, overwrite_position=None, offset=None):
+        """
+        write date into image
+
+        Parameters:
+            raw (numpy.ndarray): input raw image
+            overwrite_color (list of int): color as (R, G, B) if not default defined in settings
+            overwrite_position (int): position (1-4) if not default defined in settings
+            offset (int): offset from position in pixel
+        Returns:
+            numpy.ndarray: image with current date and time
+        """
         date_information = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
         font = self.text_default_font
@@ -428,6 +528,14 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def draw_area_raw(self, raw, area=(0, 0, 1, 1), color=(0, 0, 255), thickness=2):
         """
         draw as colored rectangle
+
+        Parameters:
+            raw (numpy.ndarray): raw image
+            area (list of float): area the rectangle shall cover, default is the complete image
+            color (list of int): color of the rectangle in (R, G, B); default is red (0, 0, 255)
+            thickness (int): thickness of the rectangle, default is 2 pixel
+        Returns:
+            numpy.ndarray: raw image with added rectangle
         """
         try:
             height = raw.shape[0]
@@ -446,6 +554,13 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def draw_warning_bullet_raw(self, raw, color=None):
         """
         add read circle in raw image (not cropped, depending on lowres position)
+
+        Parameters:
+            raw (numpy.ndarray): raw image
+            color (list of int): color of the bullet to be drawn (R, G, B); default is (0, 0, 255)
+        Returns:
+            numpy.ndarray: raw image with colored bullet in the upper right or upper left corner
+            (depending on lowres position)
         """
         (start_x, start_y, end_x, end_y) = self.param["image"]["crop_area"]
         position = self.config.param["views"]["index"]["lowres_position"]
@@ -465,8 +580,13 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def image_in_image_raw(self, raw, raw2, position=4, distance=10):
         """
-        add a smaller image in a larger image,
-        inspired by https://answers.opencv.org/question/231069/inserting-logo-in-an-image/
+        add a smaller image in a larger image
+
+        Parameters:
+            raw (numpy.ndarray): input raw image, main image
+            raw2 (numpy.ndarray): input raw image, small image as picture in picture (use lowres)
+            position (int): position in image (1: top left, 2: top right, 3: bottom right, 4: bottom left)
+            distance (int): distance to border of the frame in pixel
         """
         [w1, h1, ch1] = raw.shape
         [w2, h2, ch2] = raw2.shape
@@ -489,6 +609,12 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def rotate_raw(self, raw, degree):
         """
         rotate image
+
+        Parameters:
+            raw (numpy.ndarray): raw image to be rotated
+            degree (int): angle to rotate; options: 90, 180, 270
+        Returns:
+            numpy.ndarray: rotated raw image
         """
         self.logging.debug("Rotate image " + str(degree) + " ...")
         rotate_degree = "don't rotate"
@@ -509,6 +635,11 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def size(self, image):
         """
         Return size of raw image
+
+        Parameters:
+            image (numpy.ndarray): image to get the size of
+        Returns:
+            (int, int): sizes of resized image (width, height)
         """
         frame = self.convert_to_raw(image)
         try:
@@ -545,7 +676,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             self.raise_error(error_msg)
             return ""
 
-    def read(self, filename: str):
+    def read(self, filename):
         """
         Read image with given filename
 
@@ -570,6 +701,12 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def size_raw(self, raw, scale_percent=100):
         """
         Return size of raw image
+
+        Parameters:
+            raw (numpy.ndarray): raw image to get the size of
+            scale_percent (int): calculate size when scaled
+        Returns:
+            (int, int): sizes of resized image (width, height)
         """
         try:
             if scale_percent != 100:
@@ -585,7 +722,14 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def resize_raw(self, raw, scale_percent=100, scale_size=None):
         """
-        resize raw image
+        Resize raw image
+
+        Parameters:
+            raw (numpy.ndarray): raw image to be resized
+            scale_percent (int): percentage the image shall be resized to
+            scale_size (list): concrete size (width, height) the image shall be resized to (priority before percentage)
+        Returns:
+            numpy.ndarray: resized image
         """
         self.logging.debug("Resize image ("+str(scale_percent)+"% / "+str(scale_size)+")")
         if scale_size is not None:
