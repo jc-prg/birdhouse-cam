@@ -485,7 +485,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         self.loading = "started"
 
         self.create = True
-        self.create_complete = True
+        self.create_complete = False
         self.force_reload = False
         self.reload_counter = ""
 
@@ -646,7 +646,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         fields_not_required = []
         from_file = False
         save_file = False
-        update_mode = " - "
+        update_mode = ""
 
         if date == "":
             today = True
@@ -681,7 +681,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
             update_mode += " from file (not yet in config-file)"
 
         if not from_file:
-            self.logging.info("  -> Favorites " + category + ": " + str(len(files_complete["favorites"])) + " - keep")
+            self.logging.info("  -> Favorites " + category + ": " + str(len(files_complete["favorites"])) + " ... keep")
             return files_complete["favorites"]
 
         if "error" in files or files == {}:
@@ -719,7 +719,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
 
         self.config.queue.set_status_changed(date=date, change="favorites", is_changed=False)
         self.logging.info("  -> Favorites " + category + ": " + str(files_today_count) + "/" + str(len(files)) +
-                          " - from file")
+                          " ... " + update_mode)
         return favorites.copy()
 
     def _list_create_from_videos(self) -> dict:
