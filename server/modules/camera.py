@@ -1802,7 +1802,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         hour = current_time.strftime('%H')
         current_time_string = current_time.strftime("%Y-%m-%d_%H:%M:%S")
 
-        self.logging.info("Check if record ... " + str(hour) + "/" + str(minute) + "/" + str(second) + " ...")
+        self.logging.debug("Check if record ... " + str(hour) + "/" + str(minute) + "/" + str(second) + " ...")
 
         record_from_hour = -1
         record_from_minute = -1
