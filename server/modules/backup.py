@@ -706,17 +706,17 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                     try:
                         filename = os.path.join(self.config.db_handler.directory(config="images"),
                                                 subdir, filename_lowres)
-                        image_current = cv2.imread(filename)
+                        image_current = cv2.imread(str(filename))
                         image_current = cv2.cvtColor(image_current, cv2.COLOR_BGR2GRAY)
                         height_l, width_l = image_current.shape[:2]
 
                         filename = os.path.join(self.config.db_handler.directory(config="images"),
                                                 subdir, filename_hires)
-                        image_hires = cv2.imread(filename)
+                        image_hires = cv2.imread(str(filename))
                         height_h, width_h = image_hires.shape[:2]
 
                     except Exception as e:
-                        self.raise_error("Could not load image: " + filename + " ... " + str(e))
+                        self.raise_error("Could not load image: " + str(filename) + " ... " + str(e))
 
                     files_new[key]["to_be_deleted"] = 0
                     files_new[key]["favorit"] = 0
@@ -840,22 +840,22 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         delete files which are marked to be recycled for a specific date + database entry
         """
         response = {}
-        file_types = ["lowres", "hires", "video_file", "thumbnail"]
+        del_file_types = ["lowres", "hires", "video_file", "thumbnail"]
         files_in_config = []
         delete_keys = []
 
         # get data from DB
         if config == "images" and date == "":
             files = self.config.db_handler.read_cache(config='images')
-            directory = self.config.db_handler.directory(config='images')
+            del_directory = self.config.db_handler.directory(config='images')
         elif config == "images":
             config_file = self.config.db_handler.read_cache(config='backup', date=date)
-            directory = self.config.db_handler.directory(config='backup', date=date)
+            del_directory = self.config.db_handler.directory(config='backup', date=date)
             files = config_file["files"]
             config = "backup"
         elif config == "videos":
             files = self.config.db_handler.read_cache(config='videos')
-            directory = self.config.db_handler.directory(config='videos')
+            del_directory = self.config.db_handler.directory(config='videos')
         else:
             response["error"] = "file type not supported"
             return response
@@ -866,9 +866,9 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         else:
             check_date = ""
 
-        self.logging.info(" - Prepare DELETE: Start to read data from " + directory)
+        self.logging.info(" - Prepare DELETE: Start to read data from " + del_directory)
         start_time = time.time()
-        files_in_dir = [f for f in os.listdir(directory) if f.endswith(".jpg") or f.endswith(".jpeg")]
+        files_in_dir = [f for f in os.listdir(del_directory) if f.endswith(".jpg") or f.endswith(".jpeg")]
         self.logging.info(" - Prepare DELETE: Read " + str(len(files_in_dir)) + " files (" +
                           str(time.time() - start_time) + "s)")
 
@@ -885,7 +885,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             # collect stamps where potentially files exist
             if check:
                 if date == "" or ("date" in files[key] and check_date in files[key]["date"]):
-                    for file_type in file_types:
+                    for file_type in del_file_types:
                         if file_type in files[key]:
                             files_in_config.append(files[key][file_type])
 
@@ -902,13 +902,13 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         for key in delete_keys:
             try:
                 if config == "backup" or config == "videos" or config == "images":
-                    for file_type in file_types:
+                    for file_type in del_file_types:
                         if file_type in files[key]:
-                            if os.path.isfile(os.path.join(directory, files[key][file_type])):
-                                os.remove(os.path.join(directory, files[key][file_type]))
+                            if os.path.isfile(os.path.join(del_directory, files[key][file_type])):
+                                os.remove(os.path.join(del_directory, files[key][file_type]))
                                 count_del_file += 1
                                 self.logging.debug(
-                                    "Delete - " + str(key) + ": " + os.path.join(directory, files[key][file_type]))
+                                    "Delete - " + str(key) + ": " + str(os.path.join(del_directory, files[key][file_type])))
 
                 if config == "backup" or config == "images":
                     self.config.queue.entry_keep_data(config=config, date=date, key=key)
@@ -930,7 +930,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         if delete_not_used:
             for file in files_in_dir:
                 if file not in files_in_config:
-                    os.remove(os.path.join(directory, file))
+                    os.remove(os.path.join(del_directory, file))
             self.logging.info(" - Perform DELETE 'unused': files=" + str(count_del_file) + "; ")
 
         self.logging.debug(str(len(files_in_dir)) + "/" + str(len(files_in_config)))
@@ -940,7 +940,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         response["files_not_used"] = len(files_in_dir) - len(files_in_config)
         response["files_used"] = len(files_in_config)
 
-        self.logging.info(" -> Deleted " + str(count_del_entry) + " marked files in " + directory + ".")
+        self.logging.info(" -> Deleted " + str(count_del_entry) + " marked files in " + del_directory + ".")
         return response
 
     def delete_archived_day(self, param):
