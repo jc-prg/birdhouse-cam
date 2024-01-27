@@ -520,9 +520,13 @@ class BirdhouseViewFavorite(BirdhouseClass):
 
         return content
 
-    def list_update(self, force=False, complete=False) -> None:
+    def list_update(self, force=False, complete=False):
         """
         Trigger recreation of the favorit list
+
+        Parameters:
+            force (bool): force update, don't wait for regular cycle
+            complete (bool): recreate data from files
         """
         if complete or force:
             self.logging.info("Request update FAVORITE view (complete=" + str(complete) + "; force=" + str(force) +
@@ -532,9 +536,14 @@ class BirdhouseViewFavorite(BirdhouseClass):
         if force:
             self.force_reload = True
 
-    def list_create(self, complete=False) -> None:
+    def list_create(self, complete=False):
         """
         Page with pictures (and videos) marked as favorites and sorted by date
+
+        Parameters:
+            complete (bool): recreate data from files
+        Returns:
+            dict: favorite data for view definition
         """
         start_time = time.time()
         self.logging.info("Create data for favorite view (complete=" + str(complete) + ") ...")
@@ -559,7 +568,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         delete_entries = []
         if not complete:
             for stamp in content["entries"]:
-                entry = content["entries"][stamp]
+                entry: dict = content["entries"][stamp]
 
                 if "_" in stamp:
                     date_stamp = stamp.split("_")[0]
@@ -588,22 +597,22 @@ class BirdhouseViewFavorite(BirdhouseClass):
         # videos
         files_videos = self._list_create_from_videos()
         if len(files_videos) > 0:
-            for entry in files_videos:
-                group = entry[0:4] + "-" + entry[4:6]
+            for entry_id in files_videos:
+                group = entry_id[0:4] + "-" + entry_id[4:6]
                 if group not in content["groups"]:
                     content["groups"][group] = []
-                content["entries"][entry] = files_videos[entry].copy()
-                content["groups"][group].append(entry)
+                content["entries"][entry_id] = files_videos[entry_id].copy()
+                content["groups"][group].append(entry_id)
 
         # archive images
         files_archive = self._list_create_from_archive(complete)
         if len(files_archive) > 0:
-            for entry in files_archive:
-                group = entry[0:4] + "-" + entry[4:6]
+            for entry_id in files_archive:
+                group = entry_id[0:4] + "-" + entry_id[4:6]
                 if group not in content["groups"]:
                     content["groups"][group] = []
-                content["entries"][entry] = files_archive[entry].copy()
-                content["groups"][group].append(entry)
+                content["entries"][entry_id] = files_archive[entry_id].copy()
+                content["groups"][group].append(entry_id)
 
         self.views = content
         self.create_complete = False
@@ -611,9 +620,14 @@ class BirdhouseViewFavorite(BirdhouseClass):
         self.config.db_handler.write("favorites", "", content, create=True, save_json=True, no_cache=False)
         self.loading = "done"
 
-    def _list_create_from_archive(self, complete=False) -> dict:
+    def _list_create_from_archive(self, complete=False):
         """
-        get favorites from archive
+        Get favorites from archive
+
+        Parameters:
+            complete (bool): recreate data from files
+        Returns:
+            dict: favorite data for view definition
         """
         favorites = {}
         main_directory = self.config.db_handler.directory(config="backup")
@@ -635,9 +649,15 @@ class BirdhouseViewFavorite(BirdhouseClass):
 
         return favorites.copy()
 
-    def _list_create_from_images(self, date="", complete=False) -> dict:
+    def _list_create_from_images(self, date="", complete=False):
         """
-        get favorites from current day
+        Get favorites from current day
+
+        Parameters:
+            date (str): date string in formate YYYYMMDD
+            complete (bool): recreate data from files
+        Returns:
+            dict: favorite data for view definition
         """
         files = {}
         category = "/not_found/"
@@ -652,7 +672,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
             today = True
             category = "/current/"
             date = self.config.local_time().strftime("%Y%m%d")
-            files = self.config.db_handler.read(config="images")
+            files: dict = self.config.db_handler.read(config="images")
             files_complete["files"] = files.copy()
 
         elif self.config.db_handler.exists(config="backup", date=date):
@@ -662,7 +682,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
             self.logging.debug("  -> " + category + " ... " + str(files_complete.keys()))
 
             if "files" in files_complete:
-                files = files_complete["files"].copy()
+                files: dict = files_complete["files"].copy()
                 save_file = True
             else:
                 files["error"] = True
@@ -675,7 +695,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
             update_mode += " from file (complete)"
         elif self.config.queue.get_status_changed(date=date, change="favorites"):
             from_file = True
-            update_mode += " from file (changed="+date+")"
+            update_mode += " from file (changed=" + date + ")"
         elif "favorites" not in files_complete:
             from_file = True
             update_mode += " from file (not yet in config-file)"
@@ -722,9 +742,12 @@ class BirdhouseViewFavorite(BirdhouseClass):
                           " ... " + update_mode)
         return favorites.copy()
 
-    def _list_create_from_videos(self) -> dict:
+    def _list_create_from_videos(self):
         """
-        get favorite videos from respective database
+        Get favorite videos from respective database
+
+        Returns:
+            dict: favorite data for view definition
         """
         favorites = {}
         files_videos = {}
@@ -760,7 +783,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
 
     def request_done(self):
         """
-        reset all values that lead to (re)creation of this view
+        Reset all values that lead to (re)creation of this view
         """
         self.create_complete = False
         self.create = False
@@ -906,7 +929,7 @@ class BirdhouseViewArchive(BirdhouseClass):
                     backup_entries[date]["changed"] = False
                 if "exists" not in backup_entries[date]:
                     backup_entries[date]["exists"] = False
-                self.tools.calculate_progress("archive", str(cam_count)+"/4", cam, count,
+                self.tools.calculate_progress("archive", str(cam_count) + "/4", cam, count,
                                               len(archive_info[cam]["entries"]))
 
             # check if new directories are available
@@ -1349,7 +1372,8 @@ class BirdhouseViewArchive(BirdhouseClass):
         image_file = image_preview.replace(archive_directory + "/", "")
         image_file = image_file.replace(self.config.directories["backup"], "")
 
-        content, dir_size = self._list_create_entry(cam=cam, content=content.copy(), archive_directory=archive_directory,
+        content, dir_size = self._list_create_entry(cam=cam, content=content.copy(),
+                                                    archive_directory=archive_directory,
                                                     dir_size=dir_size, file_data=file_data)
         content["entries"][archive_directory]["lowres"] = image_file
 
@@ -1481,7 +1505,8 @@ class BirdhouseViewObjects(BirdhouseClass):
 
         self.views = content
         self.create_complete = False
-        self.logging.info("Create data for object detection view done (" + str(round(time.time() - start_time, 1)) + "s)")
+        self.logging.info(
+            "Create data for object detection view done (" + str(round(time.time() - start_time, 1)) + "s)")
         self.config.db_handler.write("objects", "", content, create=True, save_json=True, no_cache=False)
         self.loading = "done"
 
@@ -1512,7 +1537,7 @@ class BirdhouseViewObjects(BirdhouseClass):
             if img_directory[0:1] == "/":
                 img_directory = entry["directory"][1:]
         elif "datestamp" in entry:
-            img_directory = "images/" + entry["datestamp"] +"/"
+            img_directory = "images/" + entry["datestamp"] + "/"
         else:
             return {}
         if not os.path.exists(os.path.join(birdhouse_main_directories["data"], img_directory, entry["hires"])):
@@ -1569,7 +1594,8 @@ class BirdhouseViewObjects(BirdhouseClass):
                         self.logging.info("  * Objects in " + date + " have changed, start update ...")
                     else:
                         self.logging.info("  * Complete update for " + date + " requested ...")
-                    changed_detections = self.camera[self.cameras[0]].object.summarize_detections(archive_entries["files"])
+                    changed_detections = self.camera[self.cameras[0]].object.summarize_detections(
+                        archive_entries["files"])
                     archive_entries["detection"] = changed_detections
                     self.config.db_handler.write(config="backup", date=date, data=archive_entries)
                     self.config.queue.set_status_changed(date, "objects", False)
@@ -1677,7 +1703,8 @@ class BirdhouseViewObjects(BirdhouseClass):
         if detect_position and os.path.exists(hires_path):
 
             raw = self.camera[self.cameras[0]].image.read(hires_path)
-            raw_crop, crop_area = self.camera[self.cameras[0]].image.crop_raw(raw, crop_area=detect_position, crop_type="relative")
+            raw_crop, crop_area = self.camera[self.cameras[0]].image.crop_raw(raw, crop_area=detect_position,
+                                                                              crop_type="relative")
             self.camera[self.cameras[0]].image.write(lowres_path, raw_crop)
             entry["lowres"] = lowres_file
 
@@ -1685,7 +1712,8 @@ class BirdhouseViewObjects(BirdhouseClass):
                                str(raw.shape) + "; crop_area=" + str(crop_area))
 
         elif not os.path.exists(hires_path):
-            self.logging.error("Could not find hires file: " + str(hires_path) + " - " + birdhouse_main_directories["data"])
+            self.logging.error(
+                "Could not find hires file: " + str(hires_path) + " - " + birdhouse_main_directories["data"])
 
         return entry
 
@@ -1786,9 +1814,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
             if self.config.user_activity():
                 count += 1
-                self.favorite.reload_counter = str(count)+"/"+str(count_rebuild)
-                self.archive.reload_counter = str(count)+"/"+str(count_rebuild)
-                self.object.reload_counter = str(count)+"/"+str(count_rebuild)
+                self.favorite.reload_counter = str(count) + "/" + str(count_rebuild)
+                self.archive.reload_counter = str(count) + "/" + str(count_rebuild)
+                self.object.reload_counter = str(count) + "/" + str(count_rebuild)
 
             self.thread_control()
             self.thread_wait()
@@ -1893,7 +1921,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             time_now = "000000"
 
             content["subtitle"] = presets.birdhouse_pages["backup"][0] + " " + files_data["info"]["date"]
-            content["links"] = self.tools.print_links_json(link_list=("live", "today", "backup", "favorit"), cam=which_cam)
+            content["links"] = self.tools.print_links_json(link_list=("live", "today", "backup", "favorit"),
+                                                           cam=which_cam)
 
         # else read files from current day and create vars, links ...
         elif self.config.db_handler.exists(config="images"):
@@ -2120,7 +2149,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         content["view_count"] = []
         content["subtitle"] = presets.birdhouse_pages["cam_info"][0]
-        content["links"] = self.tools.print_links_json(link_list=("live", "favorit", "today", "videos", "backup"), cam=which_cam)
+        content["links"] = self.tools.print_links_json(link_list=("live", "favorit", "today", "videos", "backup"),
+                                                       cam=which_cam)
 
         return content.copy()
 
