@@ -280,7 +280,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
 
 class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
     """
-    creates a continuous stream while active requests
+    Class to create a continuous stream with specific format while active requests incl. error handling.
     """
 
     def __init__(self, camera_id, config, stream_raw, stream_type, stream_resolution):
@@ -582,16 +582,16 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 error_msg = error_msg[-1]
 
         if self.type == "setting":
-            image = self.img_error_raw["setting"]
+            image = self.img_error_raw["setting"].copy()
             image = self.edit_error_add_info(image, [error_msg], reload_time=0, info_type="setting",
                                              error_trigger=error_trigger)
         elif self.resolution == "lowres":
-            image = self.img_error_raw["lowres"]
+            image = self.img_error_raw["lowres"].copy()
             image = self.edit_create_lowres(image)
             image = self.edit_error_add_info(image, error_msg, reload_time=0, info_type="lowres",
                                              error_trigger=error_trigger)
         else:
-            image = self.img_error_raw["camera"]
+            image = self.img_error_raw["camera"].copy()
             image = self.edit_error_add_info(image, error_msg, reload_time=0, info_type="camera",
                                              error_trigger=error_trigger)
 
