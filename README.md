@@ -71,7 +71,7 @@ app in English and German, ...
   * bird detection model in an early stage trained with a few European singing birds
   * view with all detected birds and objects -> jump to other views filtered by bird
   * filter by detected birds in archive and favorite view as well as for admins in complete view of current day
-  * batch detection for archive images
+  * batch detection for archive images (single day and multiple days)
   * _live detection is experimental and slow on RPi 4 (admin view)_
   * _no label editing via app yet_
 * **Admin functionality** via app
@@ -112,7 +112,7 @@ Here are some options. Calculate with a little bit more space in the height for 
   * Recommended OS (due to restrictions: PyTorch require 64bit, picamera doesn't support 64bit any more, 
     and picamera2 + libcamera doesn't work in docker container yet (requires Raspbian OS 64bit > bullseye)) 
     * Raspbian OS Lite 64bit for **object detection** using PyTorch
-    * Raspbian OS Lite 32bit if you want to use a **PiCamera**  
+    * Raspbian OS Lite 32bit if you want to use a **PiCamera** and the Docker version 
       
   * Install git: ```sudo apt-get install git```
   * _Optional:_ Install v4l2-ctl: ```sudo apt-get install v4l-utils```
