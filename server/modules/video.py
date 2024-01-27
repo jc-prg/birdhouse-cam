@@ -4,6 +4,7 @@ import threading
 from modules.presets import *
 from modules.bh_class import BirdhouseCameraClass
 from modules.bh_ffmpeg import BirdhouseFfmpegTranscoding
+from modules.image import BirdhouseImageSupport
 
 
 class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
@@ -36,6 +37,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.max_length = 60
         self.delete_temp_files = True   # usually set to True, can temporarily be used to keep recorded files for analysis
 
+        self.img_support = BirdhouseImageSupport(camera_id, config)
         self.ffmpeg = BirdhouseFfmpegTranscoding(self.id, self.config)
         self.count_length = 8
         self.info = {
@@ -47,7 +49,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
     def run(self):
         """
-        Initialize, set initial values
+        Thread control: queue to create or trim a video file
         """
         self._running = True
         self.logging.info("Starting VIDEO processing for '"+self.id+"' ...")
@@ -95,7 +97,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
     def stop(self):
         """
-        ending functions (nothing at the moment)
+        Stop running process and thread
         """
         if self.recording:
             self.record_stop()
@@ -108,6 +110,9 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     def status(self):
         """
         Return recording status
+
+        Returns:
+            dict: recording status
         """
         return self.record_video_info.copy()
 
@@ -116,11 +121,11 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         generate filename for images
         """
         if file_type == "video":
-            return self.config.filename_image(image_type="video", timestamp=self.info["date_start"], camera=self.id)
+            return self.img_support.filename(image_type="video", timestamp=self.info["date_start"], camera=self.id)
         elif file_type == "thumb":
-            return self.config.filename_image(image_type="thumb", timestamp=self.info["date_start"], camera=self.id)
+            return self.img_support.filename(image_type="thumb", timestamp=self.info["date_start"], camera=self.id)
         elif file_type == "vimages":
-            return self.config.filename_image(image_type="vimages", timestamp=self.info["date_start"], camera=self.id)
+            return self.img_support.filename(image_type="vimages", timestamp=self.info["date_start"], camera=self.id)
         else:
             return
 

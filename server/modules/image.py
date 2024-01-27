@@ -6,7 +6,7 @@ from skimage.metrics import structural_similarity as ssim
 from modules.bh_class import BirdhouseCameraClass, BirdhouseClass
 
 
-class BirdhouseImageEvaluate(BirdhouseCameraClass):
+class BirdhouseImageSupport(BirdhouseCameraClass):
     """
     Class to evaluate image metadata against defined criteria
     """
@@ -120,6 +120,72 @@ class BirdhouseImageEvaluate(BirdhouseCameraClass):
                            " -> " + str(select))
         return select
 
+    def filename(self, image_type, timestamp, camera=""):
+        """
+        Create image filename from different parameters
+
+        Parameters:
+            image_type (str): available options: 'lowres', 'hires', 'thumb', 'detect', 'video', 'vimages'
+            timestamp (str): timestamp in the format 'HHMMSS'
+            camera (str): camera id
+        Returns:
+            str: filename
+        """
+        if camera != "":
+            camera += '_'
+
+        if image_type == "lowres":
+            filename = "image_" + camera + timestamp + ".jpg"
+        elif image_type == "hires":
+            filename = "image_" + camera + "big_" + timestamp + ".jpeg"
+        elif image_type == "detect":
+            filename = "image_" + camera + "big_" + timestamp + "_detect.jpeg"
+        elif image_type == "thumb":
+            filename = "video_" + camera + timestamp + "_thumb.jpeg"
+        elif image_type == "video":
+            filename = "video_" + camera + timestamp + ".mp4"
+        elif image_type == "vimages":
+            filename = "video_" + camera + timestamp + "_"
+        else:
+            filename = "image_" + camera + timestamp + ".jpg"
+
+        self.logging.debug("Created filename: " + filename)
+        return filename
+
+    def param_from_filename(self, filename):
+        """
+        Get parameters from image filename
+
+        Parameters:
+            filename (str): image filename (without path)
+        Returns:
+            dict: available info keys: 'stamp', 'type', 'cam'
+        """
+        if filename.endswith(".jpg"):
+            filename = filename.replace(".jpg", "")
+        elif filename.endswith(".jpeg"):
+            filename = filename.replace(".jpeg", "")
+        else:
+            return {"error": "not an image"}
+
+        parts = filename.split("_")
+        info = {"stamp": '', "type": 'lowres', "cam": 'cam1'}
+        if len(parts) == 2:
+            info["stamp"] = parts[1]
+        if len(parts) == 3 and parts[1] == "big":
+            info["stamp"] = parts[2]
+            info["type"] = "hires"
+        if len(parts) == 3:
+            info["cam"] = parts[1]
+            info["stamp"] = parts[2]
+        if len(parts) == 4:
+            info["cam"] = parts[1]
+            info["type"] = "hires"
+            info["stamp"] = parts[3]
+
+        self.logging.debug("Parameters from filename: " + str(info))
+        return info
+
 
 class BirdhouseImageProcessing(BirdhouseCameraClass):
     """
@@ -134,7 +200,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             camera_id (str): camera id
             config (modules.config.BirdhouseConfig): reference to main config handler
         """
-        BirdhouseCameraClass.__init__(self, class_id=camera_id+"-img", class_log="image",
+        BirdhouseCameraClass.__init__(self, class_id=camera_id + "-img", class_log="image",
                                       camera_id=camera_id, config=config)
 
         self.frame = None
@@ -153,7 +219,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         self.error_camera = False
         self.error_image = {}
 
-        self.logging.info("Connected IMAGE processing ("+self.id+") ...")
+        self.logging.info("Connected IMAGE processing (" + self.id + ") ...")
 
     def compare(self, image_1st, image_2nd, detection_area=None):
         """
@@ -376,7 +442,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
             self.logging.debug("H: " + str(y_start) + "-" + str(y_end) + " / W: " + str(x_start) + "-" + str(x_end))
             frame_cropped = raw[y_start:y_end, x_start:x_end]
-            #frame_cropped = raw[x_start:x_end, y_start:y_end]
+            # frame_cropped = raw[x_start:x_end, y_start:y_end]
             return frame_cropped, crop_area
 
         except Exception as e:
@@ -437,7 +503,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def draw_text_raw(self, raw, text, position=None, font=None, scale=None, color=None, thickness=0):
         """
-        Add text on image
+        Add text on raw image with a wide range of possible settings
 
         Parameters:
             raw (numpy.ndarray): input raw image
@@ -478,7 +544,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         param = str(text) + ", " + str(position) + ", " + str(font) + ", " + str(scale) + ", " + str(
             color) + ", " + str(thickness)
-        self.logging.debug("draw_text_raw: "+param)
+        self.logging.debug("draw_text_raw: " + param)
         try:
             raw = cv2.putText(raw, text, tuple(position), font, scale, color, thickness, cv2.LINE_AA)
         except Exception as e:
@@ -592,19 +658,20 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         [w1, h1, ch1] = raw.shape
         [w2, h2, ch2] = raw2.shape
-        self.logging.debug("Insert images into image: big="+str(w1)+","+str(h1)+" / small="+str(w2)+","+str(h2))
+        self.logging.debug(
+            "Insert images into image: big=" + str(w1) + "," + str(h1) + " / small=" + str(w2) + "," + str(h2))
         # top left
         if position == 1:
-            raw[distance:w2+distance, distance:h2+distance] = raw2
+            raw[distance:w2 + distance, distance:h2 + distance] = raw2
         # top right
         if position == 2:
-            raw[distance:w2+distance, h1-(distance+h2):h1-distance] = raw2
+            raw[distance:w2 + distance, h1 - (distance + h2):h1 - distance] = raw2
         # bottom left
         if position == 3:
-            raw[w1-(distance+w2):w1-distance, distance:h2+distance] = raw2
+            raw[w1 - (distance + w2):w1 - distance, distance:h2 + distance] = raw2
         # bottom right
         if position == 4:
-            raw[w1-(distance+w2):w1-distance, h1-(distance+h2):h1-distance] = raw2
+            raw[w1 - (distance + w2):w1 - distance, h1 - (distance + h2):h1 - distance] = raw2
 
         return raw
 
@@ -733,7 +800,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         Returns:
             numpy.ndarray: resized image
         """
-        self.logging.debug("Resize image ("+str(scale_percent)+"% / "+str(scale_size)+")")
+        self.logging.debug("Resize image (" + str(scale_percent) + "% / " + str(scale_size) + ")")
         if scale_size is not None:
             [width, height] = scale_size
             try:
@@ -747,4 +814,3 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             except Exception as e:
                 self.raise_error("Could not resize raw image: " + str(e))
         return raw
-

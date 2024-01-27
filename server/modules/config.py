@@ -10,7 +10,7 @@ from modules.presets import birdhouse_cache_for_archive, birdhouse_cache
 from modules.weather import BirdhouseWeather
 from modules.bh_database import BirdhouseCouchDB, BirdhouseJSON, BirdhouseTEXT
 from modules.bh_class import BirdhouseClass
-from modules.image import BirdhouseImageEvaluate
+from modules.image import BirdhouseImageSupport
 
 
 class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
@@ -512,7 +512,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         self.queue_wait_max = 30
         self.queue_wait_min = 5
         self.queue_wait_duration = 0
-        self.img_evaluate = BirdhouseImageEvaluate(camera_id="", config=config)
+        self.img_support = BirdhouseImageSupport(camera_id="", config=config)
 
     def run(self):
         """
@@ -994,8 +994,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         count = 0
         for entry_id in config_data:
             self.logging.debug("..." + entry_id)
-            select = self.img_evaluate.select(timestamp=entry_id, file_info=config_data[entry_id], check_detection=True,
-                                              overwrite_detection_mode="object", overwrite_camera=which_cam)
+            select = self.img_support.select(timestamp=entry_id, file_info=config_data[entry_id], check_detection=True,
+                                             overwrite_detection_mode="object", overwrite_camera=which_cam)
             if select:
                 self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
                                          change_status="to_be_deleted", status=0)
@@ -1038,9 +1038,9 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         count = 0
         for entry_id in config_data:
             self.logging.debug("..." + entry_id)
-            select = self.img_evaluate.select(timestamp=entry_id, file_info=config_data[entry_id], check_detection=True,
-                                              overwrite_detection_mode="similarity", overwrite_camera=which_cam,
-                                              overwrite_threshold=threshold)
+            select = self.img_support.select(timestamp=entry_id, file_info=config_data[entry_id], check_detection=True,
+                                             overwrite_detection_mode="similarity", overwrite_camera=which_cam,
+                                             overwrite_threshold=threshold)
             #if select:
             #    self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
             #                             change_status="to_be_deleted", status=0)
@@ -1229,7 +1229,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             main_directory (str): main directory (location of main script)
         """
         threading.Thread.__init__(self)
-        BirdhouseClass.__init__(self, class_id="config", config=None)
+        BirdhouseClass.__init__(self, class_id="config")
         self.thread_set_priority(1)
 
         self.param = None
@@ -1596,52 +1596,3 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             else:
                 return entries["changes"]
         return {}
-
-    @staticmethod
-    def filename_image(image_type, timestamp, camera=""):
-        """
-        set image name
-        """
-        if camera != "":
-            camera += '_'
-
-        if image_type == "lowres":
-            return "image_" + camera + timestamp + ".jpg"
-        elif image_type == "hires":
-            return "image_" + camera + "big_" + timestamp + ".jpeg"
-        elif image_type == "thumb":
-            return "video_" + camera + timestamp + "_thumb.jpeg"
-        elif image_type == "video":
-            return "video_" + camera + timestamp + ".mp4"
-        elif image_type == "vimages":
-            return "video_" + camera + timestamp + "_"
-        else:
-            return "image_" + camera + timestamp + ".jpg"
-
-    @staticmethod
-    def filename_image_get_param(filename):
-        """
-        Analyze image name ...
-        """
-        if filename.endswith(".jpg"):
-            filename = filename.replace(".jpg", "")
-        elif filename.endswith(".jpeg"):
-            filename = filename.replace(".jpeg", "")
-        else:
-            return {"error": "not an image"}
-
-        parts = filename.split("_")
-        info = {"stamp": '', "type": 'lowres', "cam": 'cam1'}
-        if len(parts) == 2:
-            info["stamp"] = parts[1]
-        if len(parts) == 3 and parts[1] == "big":
-            info["stamp"] = parts[2]
-            info["type"] = "hires"
-        if len(parts) == 3:
-            info["cam"] = parts[1]
-            info["stamp"] = parts[2]
-        if len(parts) == 4:
-            info["cam"] = parts[1]
-            info["type"] = "hires"
-            info["stamp"] = parts[3]
-        return info

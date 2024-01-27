@@ -7,6 +7,7 @@ from datetime import datetime
 from modules.presets import *
 from modules.bh_class import *
 from modules.bh_database import BirdhouseTEXT
+from modules.image import BirdhouseImageSupport
 
 
 class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
@@ -14,12 +15,16 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
     def __init__(self, config):
         """
         thread to create tar archives from archived data and return download link
+
+        Parameters:
+            config (modules.config.BirdhouseConfig): reference to main config handler
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="bu-dwnld", config=config)
 
         self.downloads = {}
         self.download_keep_time = 10 * 60
+        self.img_support = BirdhouseImageSupport("", config)
         self.text = BirdhouseTEXT()
 
     def run(self):
@@ -87,7 +92,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         time_string = "[0-9][0-9][0-9][0-9][0-9][0-9]"
         archive_path = str(os.path.join(birdhouse_main_directories["data"], birdhouse_directories["backup"], date))
         archive_files = {
-            "images": self.config.filename_image(image_type="hires", timestamp=time_string, camera=camera),
+            "images": self.img_support.filename(image_type="hires", timestamp=time_string, camera=camera),
             "config": "*.json",
             "yolov5": "yolov5/*.txt"
         }
@@ -211,6 +216,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         self.backup_start = False
         self.backup_running = False
 
+        self.img_support = BirdhouseImageSupport("", config)
         self.download = BirdhouseArchiveDownloads(config)
         self.download.start()
 
@@ -368,11 +374,11 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                         update_new = files[stamp].copy()
 
                         # if images are to be archived
-                        if self.camera[cam].img_evaluate.select(timestamp=stamp, file_info=files[stamp].copy()):
+                        if self.camera[cam].img_support.select(timestamp=stamp, file_info=files[stamp].copy()):
 
                             count += 1
-                            file_lowres = self.config.filename_image(image_type="lowres", timestamp=stamp, camera=cam)
-                            file_hires = self.config.filename_image(image_type="hires", timestamp=stamp, camera=cam)
+                            file_lowres = self.img_support.filename(image_type="lowres", timestamp=stamp, camera=cam)
+                            file_hires = self.img_support.filename(image_type="hires", timestamp=stamp, camera=cam)
                             file_hires_detect = file_hires.replace(".jpeg", "_detect.jpeg")
 
                             if "similarity" not in update_new:
@@ -752,39 +758,44 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
     def _create_image_config_get_filelist(self, file_list, files, subdir=""):
         """
-        get image date from file
+        Get image date from files and add to database entries
+
+        Parameters:
+            file_list (list): list of filenames (without path)
+            files (dict): database with file entries
+            subdir (str): not used yet ... ?!
         """
         for file in file_list:
             if ".jpg" in file:
 
-                analyze = self.config.filename_image_get_param(filename=file)
+                analyze = self.img_support.param_from_filename(filename=file)
                 if "error" in analyze:
                     continue
 
                 which_cam = analyze["cam"]
-                time = analyze["stamp"]
-                files[time] = {}
-                files[time]["camera"] = which_cam
+                timestamp = analyze["stamp"]
+                files[timestamp] = {}
+                files[timestamp]["camera"] = which_cam
 
                 if "cam" in file:
-                    files[time]["lowres"] = self.config.filename_image(image_type="lowres", timestamp=time,
-                                                                       camera=which_cam)
-                    files[time]["hires"] = self.config.filename_image(image_type="hires", timestamp=time,
-                                                                      camera=which_cam)
+                    files[timestamp]["lowres"] = self.img_support.filename(image_type="lowres", timestamp=timestamp,
+                                                                           camera=which_cam)
+                    files[timestamp]["hires"] = self.img_support.filename(image_type="hires", timestamp=timestamp,
+                                                                          camera=which_cam)
                 else:
-                    files[time]["lowres"] = self.config.filename_image(image_type="lowres", timestamp=time)
-                    files[time]["hires"] = self.config.filename_image(image_type="hires", timestamp=time)
+                    files[timestamp]["lowres"] = self.img_support.filename(image_type="lowres", timestamp=timestamp)
+                    files[timestamp]["hires"] = self.img_support.filename(image_type="hires", timestamp=timestamp)
 
                 if subdir == "":
                     file_dir = os.path.join(self.config.db_handler.directory(config='images'), file)
-                    timestamp = datetime.fromtimestamp(os.path.getmtime(file_dir))
+                    timestamp2 = datetime.fromtimestamp(os.path.getmtime(file_dir))
 
-                    files[time]["datestamp"] = timestamp.strftime("%Y%m%d")
-                    files[time]["date"] = timestamp.strftime("%d.%m.%Y")
-                    files[time]["time"] = timestamp.strftime("%H:%M:%S")
+                    files[timestamp]["datestamp"] = timestamp2.strftime("%Y%m%d")
+                    files[timestamp]["date"] = timestamp2.strftime("%d.%m.%Y")
+                    files[timestamp]["time"] = timestamp2.strftime("%H:%M:%S")
 
-                if "sensor" not in files[time]:
-                    files[time]["sensor"] = {}
+                if "sensor" not in files[timestamp]:
+                    files[timestamp]["sensor"] = {}
 
         return files
 

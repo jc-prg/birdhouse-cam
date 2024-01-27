@@ -11,7 +11,7 @@ from datetime import datetime
 
 from modules.presets import *
 from modules.bh_class import BirdhouseCameraClass
-from modules.image import BirdhouseImageProcessing, BirdhouseImageEvaluate
+from modules.image import BirdhouseImageProcessing, BirdhouseImageSupport
 from modules.video import BirdhouseVideoProcessing
 from modules.object import BirdhouseObjectDetection
 from modules.camera_handler import BirdhousePiCameraHandler, BirdhouseCameraHandler, CameraInformation
@@ -1195,7 +1195,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.camera_scan = {}
         self.camera_info = CameraInformation()
-        self.img_evaluate = BirdhouseImageEvaluate(self.id, self.config)
+        self.img_support = BirdhouseImageSupport(self.id, self.config)
         if first_cam:
             self.camera_scan = self.get_available_devices()
 
@@ -1719,10 +1719,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     "date": current_time.strftime("%d.%m.%Y"),
                     "datestamp": current_time.strftime("%Y%m%d"),
                     "detections": [],
-                    "hires": self.config.filename_image("hires", stamp, self.id),
+                    "hires": self.img_support.filename("hires", stamp, self.id),
                     "hires_size": [width, height],
                     "info": {},
-                    "lowres": self.config.filename_image("lowres", stamp, self.id),
+                    "lowres": self.img_support.filename("lowres", stamp, self.id),
                     "lowres_size": [round(width * preview_scale / 100), round(height * preview_scale / 100)],
                     "similarity": similarity,
                     "sensor": {},
@@ -1764,9 +1764,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             # if no error save image files
             if not self.error and not self.image.error:
                 path_lowres = os.path.join(self.config.db_handler.directory("images"),
-                                           self.config.filename_image("lowres", stamp, self.id))
+                                           self.img_support.filename("lowres", stamp, self.id))
                 path_hires = os.path.join(self.config.db_handler.directory("images"),
-                                          self.config.filename_image("hires", stamp, self.id))
+                                          self.img_support.filename("hires", stamp, self.id))
                 self.logging.debug("WRITE:" + path_lowres)
                 self.write_image(filename=path_hires, image=image_hires)
                 self.write_image(filename=path_lowres, image=image_hires,
