@@ -163,7 +163,7 @@ function birdhouse_archiveObjectDetection(camera, date_stamp, date, date_list=""
         var result_dates = [];
         var opt;
         var count = 0;
-        for (var i=0, iLen=options.length; i<iLen; i++) {
+        for (var i=0; i<options.length; i++) {
             opt = options[i];
             if (opt.selected) {
                 var date_stamp = opt.value.split("_")[0];
@@ -177,7 +177,7 @@ function birdhouse_archiveObjectDetection(camera, date_stamp, date, date_list=""
         var message = lang("OBJECT_DETECTION_REQUESTS", [date_list, count, threshold]);
     }
     else {
-        var message = lang("OBJECT_DETECTION_REQUEST", [date, getTextById("image_count_all_" + date)]);
+        var message = lang("OBJECT_DETECTION_REQUEST", [date, getTextById("image_count_all_" + date), threshold]);
         }
     appMsg.confirm(message, "birdhouse_archiveObjectDetection_exec('"+camera+"', '"+date_stamp+"', '" + threshold + "');", 150);
     }

@@ -427,10 +427,20 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    var detection_model = camera_settings[app_active_cam]["object_detection"]["model"]; // devices:cameras:"+camera+":object_detection:model
 	    var detection_threshold = camera_settings[app_active_cam]["object_detection"]["threshold"];
 	    var detection_date = active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4);
-	    var button_object_detection = "<button onclick='birdhouse_archiveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button'  style='width:80px;'>Start</button>";
+	    var button_object_detection = "<button onclick='birdhouse_archiveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \""+detection_date+"\", \"\", \"selection_threshold\");' class='bh-slider-button'  style='width:80px;'>Start</button>";
 	    var button_archive_deletion = "<button onclick='birdhouse_archiveDayDelete(\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button' style='width:80px;'>Delete</button>";
 	    var button_archive_download = "<button onclick='birdhouse_archiveDayDownload(\""+active_date+"\", \""+app_active_cam+"\");' class='bh-slider-button' style='width:80px;'>Download</button>";
 	    var button_object_recycle   =  "<button onclick='"+object_onclick+"' class='bh-slider-button'  style='width:80px;'>Recycle</button>";
+
+	    var available_thresholds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95];
+        var select_thresholds = "<select id='selection_threshold' style='height:30px;width:60px;float:left;margin:3px;'>";
+        for (var i=0;i<available_thresholds.length;i++) {
+            var this_selected = "";
+            if (available_thresholds[i]*1 == detection_threshold*1 ) { this_selected = "selected"; }
+            select_thresholds += "<option value='" + available_thresholds[i] + "' " + this_selected + ">" + available_thresholds[i] + "%</option>";
+        }
+        select_thresholds += "</select>&nbsp;";
+
 
         info_text += "&nbsp;";
 	    info_text += tab.start();
@@ -441,7 +451,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
                 { button_object_detection = lang("DETECTION_INACTIVE_CAM"); }
             else if (!app_data["STATUS"]["object_detection"]["models_loaded_status"][app_active_cam])
                 { button_object_detection = lang("DETECTION_NOT_LOADED"); }
-    	    info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model, detection_threshold]) + ":", button_object_detection );
+    	    info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model, detection_threshold]) + ":", select_thresholds + button_object_detection );
     	    }
         info_text += tab.row(lang("OBJECT_DETECTION_RECYCLE") + ":", button_object_recycle);
 	    info_text += tab.row(lang("DELETE_ARCHIVE") + ":", button_archive_deletion );
