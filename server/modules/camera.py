@@ -1775,6 +1775,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 if self.detect_active and self.detect_settings["active"] and os.path.exists(path_hires):
                     self.object.analyze_image(stamp, path_hires, image_hires, image_info)
 
+                # !!! unclear what happens with this analyze image?
+
                 self.record_image_error = False
                 self.record_image_error_msg = []
                 self.record_image_last = time.time()
@@ -1983,7 +1985,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                           "_temp_"+str(self.id)+"_"+str(stream_id)+".jpg"))
             try:
                 self.write_image(path_hires, image, scale_percent=self.image_size_object_detection)
-                img, detect_info = self.detect_objects.analyze(path_hires, -1, False)
+                img, detect_info = self.detect_objects.analyze(path_hires, self.detect_settings["threshold"], False)
                 img = self.detect_visualize.render_detection(image, detect_info, 1, self.detect_settings["threshold"])
                 if os.path.exists(path_hires):
                     os.remove(path_hires)
