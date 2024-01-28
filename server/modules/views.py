@@ -1543,18 +1543,24 @@ class BirdhouseViewObjects(BirdhouseClass):
         if not os.path.exists(os.path.join(birdhouse_main_directories["data"], img_directory, entry["hires"])):
             return {}
 
+        confidence = 0
         if "detections" in entry:
             for detect in entry["detections"]:
                 if detect["label"] == label:
                     label_exists = True
                     coordinates = detect["coordinates"]
+                    confidence = detect["confidence"]
                     break
 
         if label_exists:
             for key in self.relevant_keys:
                 new_entry[key] = entry[key]
             new_entry["coordinates"] = coordinates
+            new_entry["confidence"] = confidence
             new_entry["type"] = "label"
+            new_entry["image_type"] = "default"
+            if favorite:
+                new_entry["image_type"] = "favorite"
 
         return new_entry
 
@@ -1570,7 +1576,8 @@ class BirdhouseViewObjects(BirdhouseClass):
         Returns:
             dict: db entry per available labels
         """
-        view_entries = {}
+
+        view_entries: dict = {}
         main_directory = self.config.db_handler.directory(config="backup")
         dir_list = self.tools.get_directories(main_directory)
         dir_list = list(reversed(sorted(dir_list)))
@@ -1594,9 +1601,11 @@ class BirdhouseViewObjects(BirdhouseClass):
                         self.logging.info("  * Objects in " + date + " have changed, start update ...")
                     else:
                         self.logging.info("  * Complete update for " + date + " requested ...")
+
                     changed_detections = self.camera[self.cameras[0]].object.summarize_detections(
                         archive_entries["files"])
                     archive_entries["detection"] = changed_detections
+
                     self.config.db_handler.write(config="backup", date=date, data=archive_entries)
                     self.config.queue.set_status_changed(date, "objects", False)
 
@@ -1608,36 +1617,30 @@ class BirdhouseViewObjects(BirdhouseClass):
                     # Initial round: identify thumbnails
                     for label in archive_detect:
 
-                        if label not in view_entries:
+                        # check if thumbnail based on confidence is defined
+                        if "thumbnail" in archive_detect[label]:
+                            thumbnail = archive_detect[label]["thumbnail"]
+                            if thumbnail["stamp"] in archive_detect[label]["favorite"]:
+                                thumbnail["favorite"] = True
+                            else:
+                                thumbnail["favorite"] = False
+                            archive_entry = archive_entries["files"][thumbnail["stamp"]]
+                            view_entry = self._list_get_detection_for_label(label, archive_entry, thumbnail["favorite"])
 
-                            view_entry = {}
-                            view_thumbnail = ""
-
-                            for archive_stamp in archive_entries["files"]:
-                                archive_entry = archive_entries["files"][archive_stamp]
-                                view_entry = self._list_get_detection_for_label(label, archive_entry, True)
-                                view_thumbnail = "favorite"
-                                if view_entry != {}:
-                                    break
-
-                            if view_entry == {}:
-                                for archive_stamp in archive_entries["files"]:
-                                    archive_entry = archive_entries["files"][archive_stamp]
-                                    view_entry = self._list_get_detection_for_label(label, archive_entry, False)
-                                    view_thumbnail = "default"
-                                    if view_entry != {}:
-                                        break
-
-                            if view_entry != {}:
-                                view_entries[label] = view_entry
+                            if label not in view_entries:
+                                view_entries[label]: dict = view_entry
                                 view_entries[label]["detections"] = {
-                                    "thumbnail": view_thumbnail,
                                     "favorite": 0,
                                     "favorite_dates": [],
+                                    "favorite_thumbnail": thumbnail["favorite"],
                                     "default": 0,
                                     "default_dates": {},
                                     "total": 0
                                 }
+                            elif view_entry["confidence"] > view_entries[label]["confidence"]:
+                                detections = view_entries[label]["detections"].copy()
+                                view_entries[label] = view_entry
+                                view_entries[label]["detections"] = detections
 
                     # second round, count detections
                     for label in archive_detect:
@@ -1696,6 +1699,9 @@ class BirdhouseViewObjects(BirdhouseClass):
         hires_path = os.path.join(birdhouse_main_directories["data"], entry["directory"], entry["hires"])
         lowres_file = "image_" + label + "_lowres.jpg"
         lowres_path = os.path.join(birdhouse_main_directories["data"], entry["directory"], lowres_file)
+
+        if os.path.exists(lowres_path):
+            os.remove(lowres_path)
 
         if "coordinates" in entry:
             detect_position = entry["coordinates"]

@@ -151,7 +151,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         Parameters:
             stamp (str): entry key which is the recording time in the format HHMMSS
             path_hires (str): complete path to the hires image file
-            image_hires (object): hires images, e.g., directly from the camera or read via cv2.imread()
+            image_hires (numpy.ndarray): hires images, e.g., directly from the camera or read via cv2.imread()
             image_info (dict): complete entry for the image
         Returns:
             None
@@ -161,32 +161,41 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
         start_time = time.time()
         if self.detect_objects is not None and self.detect_objects.loaded:
+            self.logging.debug("Analyze image: path=" + path_hires + "; model=" +
+                               self.detect_settings["model"] + "; threshold=" + str(self.detect_settings["threshold"]))
 
             path_hires_temp = path_hires.replace(".jpeg", "_temp.jpeg")
+            if os.path.exists(path_hires_temp):
+                os.remove(path_hires_temp)
             self.image.write(path_hires_temp, image_hires, scale_percent=self.image_size_object_detection)
-            img, detect_info = self.detect_objects.analyze(path_hires_temp, -1, False)
+            img, detect_info = self.detect_objects.analyze(file_path=path_hires_temp,
+                                                           threshold=self.detect_settings["threshold"],
+                                                           return_image=False)
             if "error" in detect_info:
                 self.logging.error("Couldn't detect objects: " + detect_info["error"])
                 return
 
-            img = self.detect_visualize.render_detection(image_hires, detect_info, 1, self.detect_settings["threshold"])
+            img = self.detect_visualize.render_detection(img=image_hires, detection_info=detect_info,
+                                                         label_position=1, threshold=self.detect_settings["threshold"])
+
             img = self.image.draw_text_raw(img, stamp, (-80, -40), None, 0.5, (255, 255, 255), 1)
 
-            if os.path.exists(path_hires_temp):
-                os.remove(path_hires_temp)
             self.logging.debug("Current detection for " + stamp + ": " + str(detect_info))
 
             if len(detect_info["detections"]) > 0:
-                detections_to_save = []
-                for detect in detect_info["detections"]:
-                    if float(detect["confidence"] * 100) >= float(self.detect_settings["threshold"]):
-                        detections_to_save.append(detect.copy())
+                image_info["detections"] = detect_info["detections"]
+                image_info["hires_detect"] = image_info["hires"].replace(".jpeg", "_detect.jpeg")
+                path_hires_detect = path_hires.replace(".jpeg", "_detect.jpeg")
+                if os.path.exists(path_hires_detect):
+                    os.remove(path_hires_detect)
+                self.image.write(filename=path_hires_detect, image=img)
 
-                if len(detections_to_save) > 0:
-                    image_info["detections"] = detections_to_save
-                    image_info["hires_detect"] = image_info["hires"].replace(".jpeg", "_detect.jpeg")
-                    path_hires_detect = path_hires.replace(".jpeg", "_detect.jpeg")
-                    self.image.write(filename=path_hires_detect, image=img)
+            else:
+                image_info["detections"] = []
+                image_info["hires_detect"] = ""
+                path_hires_detect = path_hires.replace(".jpeg", "_detect.jpeg")
+                if os.path.exists(path_hires_detect):
+                    os.remove(path_hires_detect)
 
             image_info["detection_threshold"] = self.detect_settings["threshold"]
             image_info["info"]["duration_2"] = round(time.time() - start_time, 3)
@@ -312,13 +321,18 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                     self.logging.info("- " + date + "/" + stamp + "/" + self.id + ": " +
                                       str(len(detect_info["detections"])) + " objects detected")
 
-                    if os.path.exists(path_hires_detect):
-                        os.remove(path_hires_detect)
-
                     if len(detect_info["detections"]) > 0:
+                        if os.path.exists(path_hires_detect):
+                            os.remove(path_hires_detect)
                         self.image.write(path_hires_detect, img)
                         archive_entries[stamp]["detections"] = detect_info["detections"]
                         archive_entries[stamp]["hires_detect"] = path_hires_detect.split("/")[-1]
+                        self.config.queue.entry_add(config="backup", date=date, key=stamp, entry=archive_entries[stamp])
+                    else:
+                        if os.path.exists(path_hires_detect):
+                            os.remove(path_hires_detect)
+                        archive_entries[stamp]["detections"] = []
+                        archive_entries[stamp]["hires_detect"] = ""
                         self.config.queue.entry_add(config="backup", date=date, key=stamp, entry=archive_entries[stamp])
 
                 count += 1
@@ -385,13 +399,15 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                     if "thumbnail" not in detections[detection["label"]] and "confidence" in detection:
                         detections[detection["label"]]["thumbnail"] = {
                             "stamp": stamp,
-                            "confidence": detection["confidence"]
+                            "confidence": detection["confidence"],
+                            "threshold": self.detect_settings["threshold"]
                         }
                     elif ("confidence" in detection
                             and detections[detection["label"]]["thumbnail"]["confidence"] < detection["confidence"]):
                         detections[detection["label"]]["thumbnail"] = {
                             "stamp": stamp,
-                            "confidence": detection["confidence"]
+                            "confidence": detection["confidence"],
+                            "threshold": self.detect_settings["threshold"]
                         }
 
         return detections
