@@ -152,7 +152,10 @@ function birdhouse_recycleObject(category, date, del, camera) {
     birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerEditSend,"","birdhouse_editData");
 }
 
-function birdhouse_archiveObjectDetection(camera, date_stamp, date, date_list="") {
+function birdhouse_archiveObjectDetection(camera, date_stamp, date, date_list="", threshold="") {
+    if (threshold != "") {
+        var threshold = document.getElementById(threshold).value;
+        }
     if (date_list != "") {
         var select = document.getElementById(date_list);
         var options = select && select.options;
@@ -171,16 +174,16 @@ function birdhouse_archiveObjectDetection(camera, date_stamp, date, date_list=""
            }    }
         date_list = result_dates.join(", ");
         date_stamp = result.join("_");
-        var message = lang("OBJECT_DETECTION_REQUESTS", [date_list, count]);
+        var message = lang("OBJECT_DETECTION_REQUESTS", [date_list, count, threshold]);
     }
     else {
         var message = lang("OBJECT_DETECTION_REQUEST", [date, getTextById("image_count_all_" + date)]);
         }
-    appMsg.confirm(message, "birdhouse_archiveObjectDetection_exec('"+camera+"', '"+date_stamp+"');", 150);
+    appMsg.confirm(message, "birdhouse_archiveObjectDetection_exec('"+camera+"', '"+date_stamp+"', '" + threshold + "');", 150);
     }
 
-function birdhouse_archiveObjectDetection_exec(camera, date) {
-    commands = ["archive-object-detection", camera, date];
+function birdhouse_archiveObjectDetection_exec(camera, date, threshold) {
+    commands = ["archive-object-detection", camera, date, threshold];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_archiveObjectDetection_progress,'','birdhouse_forceBackup');
     }
 
