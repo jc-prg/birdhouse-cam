@@ -1652,7 +1652,8 @@ class BirdhouseViewObjects(BirdhouseClass):
                                     "default_dates": {},
                                     "total": 0
                                 }
-                            elif view_entry["confidence"] > view_entries[label]["confidence"]:
+                            elif ("confidence" in view_entry
+                                  and view_entry["confidence"] > view_entries[label]["confidence"]):
                                 detections = view_entries[label]["detections"].copy()
                                 view_entries[label] = view_entry
                                 view_entries[label]["detections"] = detections
