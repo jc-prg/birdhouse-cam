@@ -380,7 +380,15 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    var detection_model = camera_settings[app_active_cam]["object_detection"]["model"]; // devices:cameras:"+camera+":object_detection:model
 	    var detection_threshold = camera_settings[app_active_cam]["object_detection"]["threshold"];
 	    var detection_date = active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4);
+	    var available_thresholds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95];
 
+        var select_thresholds = "<select id='selection_thresholds' style='width:180px;'>";
+        for (var i=0;i<available_thresholds.length;i++) {
+            var this_selected = "";
+            if (available_thresholds[i]*1 == detection_threshold*1 ) { this_selected = "selected"; }
+            select_thresholds += "<option value='" + available_thresholds[i] + "' " + this_selected + ">" + available_thresholds[i] + "%</option>";
+        }
+        select_thresholds += "</select>";
 	    var select_object_detection = "<select id='selection_dates' multiple style='width:180px;height:100px;'>";
 	    if (entries) {
             Object.entries(entries).forEach(([key,value]) => {
@@ -401,7 +409,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             { button_object_detection = lang("DETECTION_INACTIVE_CAM"); select_object_detection = ""; }
         else if (!app_data["STATUS"]["object_detection"]["models_loaded_status"][app_active_cam])
             { button_object_detection = lang("DETECTION_NOT_LOADED"); select_object_detection = ""; }
-        info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVES", [detection_model, detection_threshold]) + ":", select_object_detection + "<br/>&nbsp;<br/>" + button_object_detection );
+        info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVES", [detection_model, detection_threshold]) + ":",
+                             select_thresholds + "<br/>" +
+                             select_object_detection + "<br/>&nbsp;<br/>" + button_object_detection );
 
 
 	    info_text += tab.end();

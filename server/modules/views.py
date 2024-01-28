@@ -1305,7 +1305,12 @@ class BirdhouseViewArchive(BirdhouseClass):
 
     def _list_create_database_ok(self, date):
         """
-        check availability of couch db and/or json db
+        Check availability of archive DB (couch db and/or json db).
+
+        Parameters:
+            date (str): date in format YYYYMMDD
+        Returns:
+            bool: db exists
         """
         database_ok = False
         database_type = self.config.db_handler.db_type
@@ -1326,7 +1331,13 @@ class BirdhouseViewArchive(BirdhouseClass):
 
     def _list_create_file_data(self, archive_directory, database_ok):
         """
-        get data from existing database or return empty value
+        Get data from existing database or return empty value.
+
+        Parameters:
+            archive_directory (str): date string in format YYYYMMDD (= directory name in image archive)
+            database_ok (bool): db existing (else read from config file)
+        Returns:
+            dict: database entries
         """
         file_data = {}
         config_available = os.path.isfile(self.config.db_handler.file_path(config="backup", date=archive_directory))
@@ -1387,7 +1398,7 @@ class BirdhouseViewArchive(BirdhouseClass):
 
     def request_done(self):
         """
-        reset all values that lead to (re)creation of this view
+        Reset all values that lead to (re)creation of this view.
         """
         self.create_complete = False
         self.create = False

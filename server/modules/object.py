@@ -64,6 +64,10 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.config.object_detection_processing = self._processing
             self.config.object_detection_progress = self._processing_percentage
 
+            # !!! update unclear ?!
+            if self.id != "":
+                self.detect_settings = self.config.param["devices"]["cameras"][self.id]["object_detection"]
+
             self.thread_wait()
             self.thread_control()
         self.logging.info("Stopped OBJECT DETECTION for '" + self.id + "'.")
