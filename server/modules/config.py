@@ -786,7 +786,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
             # STATUS QUEUE: backup (with date)
             elif config_file == "backup":
-                for date in self.status_queue[config_file]:
+                dates_from_queue = list(self.status_queue[config_file])
+                for date in dates_from_queue:
 
                     entry_data = self.db_handler.read_cache(config_file, date)
                     entries = entry_data["files"]

@@ -1603,6 +1603,7 @@ class BirdhouseViewObjects(BirdhouseClass):
 
             count += 1
             category = "/objects/" + date + "/"
+            creation_mode = "keep"
 
             if self.config.db_handler.exists(config="backup", date=date):
 
@@ -1611,8 +1612,10 @@ class BirdhouseViewObjects(BirdhouseClass):
                 if changed or complete:
                     if changed:
                         self.logging.info("  * Objects in " + date + " have changed, start update ...")
+                        creation_mode = "from file (changed)"
                     else:
                         self.logging.info("  * Complete update for " + date + " requested ...")
+                        creation_mode = "from file (complete)"
 
                     changed_detections = self.camera[self.cameras[0]].object.summarize_detections(
                         archive_entries["files"])
@@ -1678,7 +1681,8 @@ class BirdhouseViewObjects(BirdhouseClass):
                             if label not in archive_detection_labels:
                                 archive_detection_labels.append(label)
 
-                    self.logging.info("  -> Read objects from " + category + ": " + str(archive_detection_labels))
+                    self.logging.info("  -> Objects " + category + ": " + str(len(archive_detection_labels)).rjust(3) +
+                                      " object(s) ... " + creation_mode)
 
                 else:
                     self.logging.debug("  -> No objects available in " + category + ".")

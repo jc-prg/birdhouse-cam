@@ -291,7 +291,8 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         response = {"command": ["archive object detection"], "camera": self.id}
         self._processing = True
         if self.detect_objects is not None and self.detect_objects.loaded:
-            self.logging.info("Starting object detection for " + self.id + " / " + date + " ...")
+            self.logging.info("Starting object detection for " + self.id + " / " + date +
+                              " / " + str(self.detect_settings["threshold"]) + "% ...")
             archive_data = self.config.db_handler.read(config="backup", date=date)
             archive_entries = archive_data["files"]
             archive_info = archive_data["info"]
