@@ -1995,7 +1995,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     show_img = self.camera[which_cam].img_support.select(timestamp=stamp,
                                                                          file_info=files_all[stamp].copy(),
                                                                          check_detection=check_detection)
-                    if show_img or backup:
+
+                    # !!! to be checked !!! when backup, show all files from same camera
+                    if show_img or (backup and files_all[stamp]["camera"] == which_cam):
                         # check maximum image size
                         if "lowres_size" in files_all[stamp]:
                             if files_all[stamp]["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
