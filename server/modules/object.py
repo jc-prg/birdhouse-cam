@@ -396,6 +396,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
                     if "favorit" in entries[stamp] and int(entries[stamp]["favorit"]) == 1:
                         detections[detection["label"]]["favorite"].append(stamp)
+                        detections[detection["label"]]["default"][camera].append(stamp)
 
                     elif "to_be_deleted" not in entries[stamp] or not int(entries[stamp]["to_be_deleted"]):
                         detections[detection["label"]]["default"][camera].append(stamp)
