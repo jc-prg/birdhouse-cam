@@ -55,11 +55,13 @@ class BirdhouseImageSupport(BirdhouseCameraClass):
         Returns:
             bool: True if image fulfills selection criteria
         """
+        select = False
+        camera_id = self.id
+
         if overwrite_threshold != "" or overwrite_detection_mode == "object":
             threshold = float(overwrite_threshold)
-        else:
+        elif self.param:
             threshold = float(self.param["similarity"]["threshold"])
-        camera_id = self.id
         if overwrite_camera != "":
             camera_id = overwrite_camera
         if overwrite_detection_mode != "":
@@ -67,28 +69,34 @@ class BirdhouseImageSupport(BirdhouseCameraClass):
         else:
             detection_mode = self.param["detection_mode"]
 
-        select = False
+        # if similarity data not available -> false
         if check_detection and "similarity" not in file_info:
             select = False
 
+        # if marked as to be deleted
         elif "to_be_deleted" in file_info and float(file_info["to_be_deleted"]) == 1:
             if timestamp[2:4] == "00":
                 self.image_to_select_last = timestamp
             select = False
 
+        # if correct camera
         elif ("camera" in file_info and file_info["camera"] == camera_id) or (
                 "camera" not in file_info and camera_id == "cam1"):
 
+            # if full hour images
             if timestamp[2:4] == "00" and timestamp[0:4] != self.image_to_select_last[0:4]:
                 self.image_to_select_last = timestamp
                 select = True
 
+            # if favorite image
             elif "favorit" in file_info and float(file_info["favorit"]) == 1:
                 select = True
 
+            # if objects detected
             elif "detections" in file_info and len(file_info["detections"]) > 0:
                 select = True
 
+            # else decide dependent if object or similarity mode
             elif check_detection:
                 if detection_mode == "similarity":
                     similarity = float(file_info["similarity"])
@@ -101,8 +109,9 @@ class BirdhouseImageSupport(BirdhouseCameraClass):
                     else:
                         file_info["detect_object"] = -1
 
-            elif not check_detection:
-                select = True
+            # ???
+            #elif not check_detection:
+            #    select = True
 
         info = file_info.copy()
         for value in ["camera", "to_be_deleted", "favorit", "similarity", "detect_object"]:

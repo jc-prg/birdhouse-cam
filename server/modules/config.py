@@ -983,7 +983,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         category = param["parameter"][0]
         entry_date = param["parameter"][1]
 
-        self.logging.info("Start to identify RECYCLE images based on detected object ...")
+        self.logging.info("Start to identify RECYCLE images based on detected objects ...")
         self.logging.info("- recycle object: " + category + "/" + entry_date + " / " + which_cam)
         self.logging.debug("- recycle object: " + str(param))
 
@@ -994,9 +994,11 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
         count = 0
         for entry_id in config_data:
-            self.logging.debug("..." + entry_id)
+            self.logging.debug("..." + entry_id + " from " + category + "/" + entry_date)
             select = self.img_support.select(timestamp=entry_id, file_info=config_data[entry_id], check_detection=True,
-                                             overwrite_detection_mode="object", overwrite_camera=which_cam)
+                                             overwrite_threshold=-1, overwrite_detection_mode="object",
+                                             overwrite_camera=which_cam)
+            self.logging.debug("   ..." + str(select))
             if select:
                 self.add_to_status_queue(config=category, date=entry_date, key=entry_id,
                                          change_status="to_be_deleted", status=0)

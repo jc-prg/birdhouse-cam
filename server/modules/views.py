@@ -1986,6 +1986,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     files_all[stamp]["date"] = date_backup[6:8] + "." + date_backup[4:6] + "." + date_backup[0:4]
                 if "time" not in files_all[stamp]:
                     files_all[stamp]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
+                if "to_be_deleted" in files_all[stamp] and int(files_all[stamp]["to_be_deleted"]) == 1:
+                    continue
 
                 if ((int(stamp) < int(time_now) or time_now == "000000")
                         and files_all[stamp]["datestamp"] == date_today) or backup:
@@ -1993,7 +1995,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     show_img = self.camera[which_cam].img_support.select(timestamp=stamp,
                                                                          file_info=files_all[stamp].copy(),
                                                                          check_detection=check_detection)
-                    if show_img:
+                    if show_img or backup:
                         # check maximum image size
                         if "lowres_size" in files_all[stamp]:
                             if files_all[stamp]["lowres_size"][0] > content["max_image_size"]["lowres"][0]:

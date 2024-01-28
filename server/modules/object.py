@@ -58,8 +58,8 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
             self._processing_percentage = 0
             if len(self.detect_queue_archive) > 0:
-                date = self.detect_queue_archive.pop()
-                self.analyze_archive_day(date)
+                [date, threshold] = self.detect_queue_archive.pop()
+                self.analyze_archive_day(date, threshold)
 
             self.config.object_detection_processing = self._processing
             self.config.object_detection_progress = self._processing_percentage
@@ -209,7 +209,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         else:
             self.logging.debug("Object detection not loaded (" + stamp + ")")
 
-    def analyze_archive_day_start(self, date):
+    def analyze_archive_day_start(self, date, threshold=-1):
         """
         Add object detection request for one date.
 
@@ -218,6 +218,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
         Parameters:
             date (str): archived date that shall be analyzed
+            threshold (float): threshold for analyzing
         Returns:
             dict: response for API
         """
@@ -234,11 +235,11 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                 "camera": self.id,
                 "status": "Added " + date + " to the queue."
             }
-            self.detect_queue_archive.append(date)
+            self.detect_queue_archive.append([date, threshold])
         self.logging.info("Added object detection request for " + date + " to the queue ...")
         return response
 
-    def analyze_archive_several_days_start(self, dates):
+    def analyze_archive_several_days_start(self, dates, threshold=-1):
         """
         Add object detection request for a list of dates.
 
@@ -247,6 +248,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
         Args:
             dates (list): list of archived dates that shall be analyzed
+            threshold (float): threshold for analyzing
         Returns:
             dict: response for API
         """
@@ -265,10 +267,10 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             }
             self.logging.info("Got a bundle of " + str(len(dates)) + " object detection requests ...")
             for date in dates:
-                self.analyze_archive_day_start(date)
+                self.analyze_archive_day_start(date, threshold)
         return response
 
-    def analyze_archive_day(self, date):
+    def analyze_archive_day(self, date, threshold):
         """
         Execute detection request for one day.
 
@@ -276,6 +278,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
         Parameters:
             date (str): date of day to be analyzed
+            threshold (float): threshold for analyzing
         Returns:
             dict: in case of direct call from API it returns an API response
         """
@@ -288,18 +291,23 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             }
             return response
 
+        if threshold == -1:
+            threshold = float(self.detect_settings["threshold"])
+        else:
+            threshold = float(threshold)
+
         response = {"command": ["archive object detection"], "camera": self.id}
         self._processing = True
         if self.detect_objects is not None and self.detect_objects.loaded:
             self.logging.info("Starting object detection for " + self.id + " / " + date +
-                              " / " + str(self.detect_settings["threshold"]) + "% ...")
+                              " / " + str(threshold) + "% ...")
             archive_data = self.config.db_handler.read(config="backup", date=date)
             archive_entries = archive_data["files"]
             archive_info = archive_data["info"]
             archive_info["detection_" + self.id] = {
                 "date": self.config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
                 "detected": False,
-                "threshold": self.detect_settings["threshold"],
+                "threshold": threshold,
                 "model": self.detect_settings["model"]
             }
 
@@ -317,7 +325,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
                     self.logging.debug("- " + date + "/" + stamp + ": " + path_hires_detect)
                     img, detect_info = self.detect_objects.analyze(file_path=path_hires,
-                                                                   threshold=self.detect_settings["threshold"],
+                                                                   threshold=threshold,
                                                                    return_image=True, render_detection=True)
                     if "error" in detect_info:
                         self.logging.error("Could not detect objects: " + detect_info["error"])
@@ -352,7 +360,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             archive_info["detection_" + self.id]["detected"] = True
             archive_info["detection_" + self.id]["labels"] = self.detect_objects.get_labels()
 
-            archive_detections = self.summarize_detections(archive_entries)
+            archive_detections = self.summarize_detections(archive_entries, threshold)
             self.config.queue.set_status_changed(date=date, change="objects")
             self.config.queue.entry_edit(config="backup", date=date, key="info", entry=archive_info)
             self.config.queue.entry_edit(config="backup", date=date, key="detection", entry=archive_detections)
@@ -371,7 +379,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         self._processing = False
         return response
 
-    def summarize_detections(self, entries):
+    def summarize_detections(self, entries, threshold=-1):
         """
         Check entries from files-section which detected objects are in and summarize for the archive configuration
 
@@ -380,6 +388,8 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         Returns:
             dict: entry for summarizing "detection" section in config file for images
         """
+        if threshold == -1:
+            threshold = self.detect_settings["threshold"]
         if not self.detect_active:
             return {}
 
@@ -406,14 +416,14 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                         detections[detection["label"]]["thumbnail"] = {
                             "stamp": stamp,
                             "confidence": detection["confidence"],
-                            "threshold": self.detect_settings["threshold"]
+                            "threshold": threshold
                         }
                     elif ("confidence" in detection
                             and detections[detection["label"]]["thumbnail"]["confidence"] < detection["confidence"]):
                         detections[detection["label"]]["thumbnail"] = {
                             "stamp": stamp,
                             "confidence": detection["confidence"],
-                            "threshold": self.detect_settings["threshold"]
+                            "threshold": threshold
                         }
 
         return detections
