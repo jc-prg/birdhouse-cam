@@ -24,9 +24,9 @@ app in English and German, ...
 ## Impressions
 
 <img src="info/images/birdcam_05.PNG" width="30%"><img src="info/images/birdcam_21.PNG" width="30%"><img src="info/images/birdcam_10.PNG" width="30%">
-<br/><br/>
+
 <img src="info/images/birdcam_17.PNG" width="30%"><img src="info/images/birdcam_18.PNG" width="30%"><img src="info/images/birdcam_19.PNG" width="30%">
-<br/><br/>
+ 
 <img src="info/images/birdcam_08.PNG" width="30%"><img src="info/images/birdcam_06.PNG" width="30%"><img src="info/images/birdcam_11.PNG" width="30%">
 
 
@@ -51,13 +51,13 @@ app in English and German, ...
   * e.g. every 20 seconds from sunrise to 20:00 local time (configurable in the device settings)
   * Similarity detection, filter photos with movement in a defined area (visualize differences)
   * camera and image settings configurable (brightness, contrast, ...)
-* **Managing photos and videos**
+* **Managing photos and videos** (admin)
+  * Archive photos with movement or detected objects and favorite photos once a day
   * Mark photos and videos as favorites or to be deleted
   * Mark a range of photos between two marked photos as to be deleted
-  * List favorite photos and videos
-  * Delete marked photos
-  * Archive photos with movement and favorite photos once a day
-* **Recording and streaming videos**
+  * View all favorite photos and videos
+  * Delete marked photos from server
+* **Recording and streaming videos** (admin)
   * create mp4 video incl. audio, works with iOS devices
   * Create video from all pictures of the current day
   * Trim videos
@@ -68,19 +68,19 @@ app in English and German, ...
 * **Listening audio stream** from microphone
   * under construction, currently browser only (no iPhone)
 * **Detecting birds** (objects) via PyTorch
-  * bird detection model in an early stage trained with a few European singing birds
-  * view with all detected birds and objects -> jump to other views filtered by bird
-  * filter by detected birds in archive and favorite view as well as for admins in complete view of current day
-  * batch detection for archive images (single day and multiple days)
-  * _live detection is experimental and slow on RPi 4 (admin view)_
-  * _no label editing via app yet_
+  * Bird detection model in an early stage trained with a few European singing birds
+  * View with all detected birds and objects -> jump to other views filtered by bird
+  * Filter by detected birds in archive and favorite view as well as for admins in complete view of current day
+  * Batch detection for archive images - single day and multiple days incl. individual detection threshold (admin)
+  * _Live detection is experimental and slow on RPi 4 (admin view)_
+  * _No label editing via app yet_
 * **Admin functionality** via app
   * Deny recording and admin functionality for specific IP addresses (e.g. router or proxy, to deny for access from the internet) or use password to login as administrator
-  * edit server settings (partly, other settings define in file .env)
-  * edit device settings, reconnect devices (devices must be added via config file)
-  * edit camera and image settings (contrast, saturation, hue, brightness ...)
-  * see amount of currently active streams
-  * download archived data (hires, config-files, object detection as YOLOv5)
+  * Edit server settings (partly, other settings define in file .env)
+  * Edit device settings, reconnect devices (devices must be added via config file)
+  * Edit camera and image settings (contrast, saturation, hue, brightness ...)
+  * See amount of currently active streams
+  * Download archived data (hires, config-files, object detection as YOLOv5)
 
 ## Birdhouse
 
