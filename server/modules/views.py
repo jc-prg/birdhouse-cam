@@ -1554,7 +1554,8 @@ class BirdhouseViewObjects(BirdhouseClass):
 
         if label_exists:
             for key in self.relevant_keys:
-                new_entry[key] = entry[key]
+                if key in entry:
+                    new_entry[key] = entry[key]
             new_entry["coordinates"] = coordinates
             new_entry["confidence"] = confidence
             new_entry["type"] = "label"
