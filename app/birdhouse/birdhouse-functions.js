@@ -243,7 +243,7 @@ function birdhouse_view_images_objects(object) {
         if (image_list[a] != "") {
             image_objects = document.getElementById(image_list[a]+"_objects");
             image_container = image_list[a] + "_container";
-            if (object == "EMPTY" && image_objects.value == "") {
+            if (object == "EMPTY" && image_objects.value.indexOf(",") < 0) {
                 image_list_active.push(image_list[a]);
                 elementVisible(image_container);
                 }
