@@ -325,13 +325,19 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
             var description_labels = "[center][div style=align:center;][br/][hr/]";
             var hires_description = description;
             var counted_labels = {}
+            var confidence = {};
             for (var i=0;i<entry["detections"].length;i++) {
                 if (!counted_labels[entry["detections"][i]["label"]]) { counted_labels[entry["detections"][i]["label"]] = 1; }
                 else                                                  { counted_labels[entry["detections"][i]["label"]] += 1; }
+
+                confidence[entry["detections"][i]["label"]] = Math.round(entry["detections"][i]["confidence"] * 1000)/10;
                 }
             Object.keys(counted_labels).forEach( key => {
+                var info = "";
                 var amount = counted_labels[key];
-                description_labels += "[div class=detection_label style=cursor:default]&nbsp;"+bird_lang(key)+"&nbsp;("+counted_labels[key]+")&nbsp;[/div]";
+                if (amount > 1) { info = amount; }
+                else            { info = confidence[key] + "%"; }
+                description_labels += "[div class=detection_label style=cursor:default]&nbsp;"+bird_lang(key)+"&nbsp;("+info+")&nbsp;[/div]";
                 });
             description_labels += "[/div][/center]";
             hires_description += description_labels;
