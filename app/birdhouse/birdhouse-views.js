@@ -556,13 +556,16 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
                 label_keys.push(key);
                 });
 
+            var onclick = "birdhouse_view_images_objects(\"EMPTY\"); birdhouse_labels_highlight(\"empty\", \"label_key_list\");";
+            label_information +=  "<div id='label_empty' class='detection_label' onclick='" + onclick + "'>&nbsp;" + lang("EMPTY") + "&nbsp;</div>";
+
             if (label_information != "") {
                     var onclick = "birdhouse_view_images_objects(\"\");  birdhouse_labels_highlight(\"all\", \"label_key_list\");";
                     label_information = "<div id='label_all' class='detection_label' onclick='" + onclick + "'>&nbsp;" + lang("ALL_IMAGES") + " (" + Object.entries(entries).length + ")&nbsp;</div>" + label_information;
                     html += birdhouse_OtherGroup("detection", lang("DETECTION"), label_information + "<div style='width:100%;height:25px;float:left;'></div>", true );
                     label_keys.push("all");
                 }
-               html += "<div id='label_key_list' style='display:none'>"+label_keys.join(",")+"</div>";
+            html += "<div id='label_key_list' style='display:none'>"+label_keys.join(",")+"</div>";
             }
         }
 

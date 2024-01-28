@@ -243,7 +243,11 @@ function birdhouse_view_images_objects(object) {
         if (image_list[a] != "") {
             image_objects = document.getElementById(image_list[a]+"_objects");
             image_container = image_list[a] + "_container";
-            if ((image_objects && image_objects.value && image_objects.value.indexOf(object) >= 0) || (object == "")) {
+            if (object == "EMPTY" && image_objects.value == "") {
+                image_list_active.push(image_list[a]);
+                elementVisible(image_container);
+                }
+            else if ((image_objects && image_objects.value && image_objects.value.indexOf(object) >= 0) || (object == "")) {
                 image_list_active.push(image_list[a]);
                 elementVisible(image_container);
             }
