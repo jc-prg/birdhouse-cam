@@ -714,7 +714,7 @@ function birdhouse_LIST_calendar(groups) {
 
         for (var i=0;i<dates[year].length;i++) {
             var onclick = "<!--CLOSE_ALL-->; birdhouse_groupToggle(\"Archive &nbsp; (" +year + "-" + dates[year][i] +")\", true);"
-            close_all += "birdhouse_groupToggle(\""+lang("ARCHIV")+" &nbsp; (" +year + "-" + dates[year][i] +")\", false);"
+            close_all += "birdhouse_groupToggle(\""+lang("ARCHIVE")+" &nbsp; (" +year + "-" + dates[year][i] +")\", false);"
             cell_2 += "<div class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;&nbsp;" + year + "-" + dates[year][i] + "&nbsp;&nbsp;&nbsp;</div>";
         }
         html += tab.row(cell_1, cell_2);
