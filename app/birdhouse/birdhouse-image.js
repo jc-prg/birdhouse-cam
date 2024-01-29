@@ -337,7 +337,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
                 var amount = counted_labels[key];
                 if (amount > 1) { info = amount; }
                 else            { info = confidence[key] + "%"; }
-                description_labels += "[div class=detection_label style=cursor:default;max-height:unset;height:unset;width:100px;]&nbsp;"+bird_lang(key)+"&nbsp;("+info+")&nbsp;[/div]";
+                description_labels += "[div class=detection_label style=cursor:default;]&nbsp;"+bird_lang(key)+"&nbsp;("+info+")&nbsp;[/div]";
                 });
             description_labels += "[/div][/center]";
             hires_description += description_labels;
@@ -360,7 +360,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
     else if (entry["type"] == "label") {
 		var lowres      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
 		var hires       = birdhouse_ImageURL(img_url + entry["directory"] + entry["hires_detect"]);
-		var description = "<div class='detection_label' style='float:none;cursor:default;'>"+title+"</div>";
+		var description = "<div class='detection_label' style='float:none;cursor:default;max-height:unset;height:unset;width:100px;'>"+title+"</div>";
         var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+title+"\");";
 
         same_img_size = true;
