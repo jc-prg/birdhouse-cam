@@ -26,6 +26,32 @@
       /* blur size and spread size are optional (they default to 0) */
 }
 
+.detection_label_function {
+    float         : left;
+    border-radius :  8px;
+    height        : 12px;
+    max-height    : 12px;
+    margin        :  5px;
+    padding       :  4px;
+    cursor        : pointer;
+    font-size     : 11px;
+
+    background    : #bbffbb;
+    color         : black;
+}
+
+.detection_label_function.glow {
+  box-shadow: 0px 0px 3px 3px #333;
+  /* in order: x offset, y offset, blur size, spread size, color */
+  /* blur size and spread size are optional (they default to 0) */
+}
+
+.detection_label_function:hover {
+      box-shadow: 0px 0px 2px 2px #700;
+      /* in order: x offset, y offset, blur size, spread size, color */
+      /* blur size and spread size are optional (they default to 0) */
+}
+
 .other_label {
     float         : left;
     border-radius :  8px;
@@ -61,6 +87,23 @@
     }
 
     .detection_label:hover {
+          box-shadow: 0px 0px 2px 2px #772;
+          /* in order: x offset, y offset, blur size, spread size, color */
+          /* blur size and spread size are optional (they default to 0) */
+    }
+
+    .detection_label_function {
+        background    : #0000AA;
+        color         : white;
+    }
+
+    .detection_label_function.glow {
+          box-shadow: 0px 0px 3px 3px #777;
+          /* in order: x offset, y offset, blur size, spread size, color */
+          /* blur size and spread size are optional (they default to 0) */
+    }
+
+    .detection_label_function:hover {
           box-shadow: 0px 0px 2px 2px #772;
           /* in order: x offset, y offset, blur size, spread size, color */
           /* blur size and spread size are optional (they default to 0) */

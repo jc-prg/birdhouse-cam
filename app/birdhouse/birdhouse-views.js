@@ -630,30 +630,32 @@ function birdhouse_LIST_calendar(groups) {
     var html = "";
     var group_html = "";
     var dates = {};
+    var years = [];
     var calendar_icon = "&#x1F5D3;&#xFE0F;";
 	var tab = new birdhouse_table();
 	tab.style_cells["vertical-align"] = "top";
 	tab.style_cells["padding"] = "3px";
 
-    Object.keys(groups).sort().forEach( group => {
+    Object.keys(groups).sort().reverse().forEach( group => {
         [year, month] = group.split("-");
-        if (!dates[year]) { dates[year] = []; }
+        if (!dates[year]) { dates[year] = []; years.push(year); }
         dates[year].push(month);
     });
 
     var close_all = "";
     html += tab.start();
-    Object.keys(dates).forEach( year => {
+    for (var j=0;j<years.length;j++) {
+        var year = years[j];
         var cell_1 = "<h1>" + calendar_icon + " " + year + "</h1>";
         var cell_2 = "";
 
         for (var i=0;i<dates[year].length;i++) {
             var onclick = "<!--CLOSE_ALL-->; birdhouse_groupToggle(\""+lang("ARCHIVE")+" &nbsp; (" +year + "-" + dates[year][i] +")\", true);"
             close_all += "birdhouse_groupToggle(\""+lang("ARCHIVE")+" &nbsp; (" +year + "-" + dates[year][i] +")\", false);"
-            cell_2 += "<div class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;&nbsp;" + year + "-" + dates[year][i] + "&nbsp;&nbsp;&nbsp;</div>";
-        }
+            cell_2 += "<div class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + year + "-" + dates[year][i] + "&nbsp;&nbsp;</div>";
+            }
         html += tab.row(cell_1, cell_2);
-    });
+        }
     html += tab.end();
     html += "<br/>&nbsp;<br/>";
     html = html.replaceAll("<!--CLOSE_ALL-->", close_all);
@@ -745,6 +747,7 @@ function birdhouse_LIST_favorite_groups(groups) {
 
 function birdhouse_LIST_label(entries, active_page, empty=true) {
     var html = "";
+    var video = false;
     if (entries != undefined &&  Object.keys(entries).length > 0) {
         var labels = {};
         var video_added = false;
@@ -762,12 +765,7 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
                     }
                 }
             if (active_page == "FAVORITES" && value["type"] == "video") {
-                label = "video";
-                if (!labels[label]) { labels[label] = []; }
-                if (!video_added) {
-                    labels[label].push(key);
-                    video_added = true;
-                    }
+                video = true;
                 }
             });
 
@@ -782,12 +780,18 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
 
         if (empty) {
             var onclick = "birdhouse_view_images_objects(\"EMPTY\"); birdhouse_labels_highlight(\"empty\", \"label_key_list\");";
-            label_information +=  "<div id='label_empty' class='detection_label' onclick='" + onclick + "'>&nbsp;" + lang("EMPTY") + "&nbsp;</div>";
+            label_information +=  "<div id='label_empty' class='detection_label_function' onclick='" + onclick + "'>&nbsp;" + lang("EMPTY") + "&nbsp;</div>";
+            }
+
+        if (video) {
+            var onclick = "birdhouse_view_images_objects(\"video\"); birdhouse_labels_highlight(\"video\", \"label_key_list\");";
+            label_information +=  "<div id='label_video' class='detection_label_function' onclick='" + onclick + "'>&nbsp;" + lang("VIDEO") + "&nbsp;</div>";
             }
 
         if (label_information != "") {
             var onclick = "birdhouse_view_images_objects(\"\");  birdhouse_labels_highlight(\"all\", \"label_key_list\");";
-            label_information = "<div id='label_all' class='detection_label' onclick='" + onclick + "'>&nbsp;" + lang("ALL_IMAGES") + " (" + Object.entries(entries).length + ")&nbsp;</div>" + label_information;
+            label_information = "<div id='label_all' class='detection_label_function' onclick='" + onclick + "'>&nbsp;" + lang("ALL_IMAGES") + " (" + Object.entries(entries).length + ")&nbsp;</div>" +
+                                label_information;
             html += birdhouse_OtherGroup("detection", lang("DETECTION"), label_information + "<div style='width:100%;height:25px;float:left;'></div>", true );
             label_keys.push("all");
         }

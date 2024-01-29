@@ -27,7 +27,7 @@ function birdhouse_OBJECTS(title, data) {
 	tab.style_cells["padding"] = "3px";
 
     // list of all available detections
-    var all_labels = "<div id='label_all' class='detection_label' onclick='birdhouse_OBJECTS_open();birdhouse_labels_highlight(\"all\",\"label_key_list\");'>&nbsp;&nbsp;"+lang("ALL_LABELS")+"&nbsp;&nbsp;</div>";
+    var all_labels = "<div id='label_all' class='detection_label_function' onclick='birdhouse_OBJECTS_open();birdhouse_labels_highlight(\"all\",\"label_key_list\");'>&nbsp;&nbsp;"+lang("ALL_LABELS")+"&nbsp;&nbsp;</div>";
     var all_labels_list = Object.keys(detections);
     all_labels_list.sort();
 
@@ -73,7 +73,7 @@ function birdhouse_OBJECTS(title, data) {
 
                 if (date_list.length > 10 && k == 8) {
                     onclick = "elementHidden(\"label_expand_click\");elementVisible(\"label_expand\");"
-                    default_dates += "<div id='label_expand_click' class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + lang("FURTHER_DAYS") + "&nbsp;...&nbsp;&nbsp;</div>";
+                    default_dates += "<div id='label_expand_click' class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + lang("FURTHER_DAYS", [date_list.length - 9]) + "&nbsp;...&nbsp;&nbsp;</div>";
                     default_dates += "<div id='label_expand' style='display:none;'>";
                     }
                 else if (date_list.length > 10 && k + 1 == date_list.length) {
