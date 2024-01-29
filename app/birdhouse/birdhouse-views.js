@@ -700,7 +700,7 @@ function birdhouse_LIST_calendar(groups) {
 	tab.style_cells["vertical-align"] = "top";
 	tab.style_cells["padding"] = "3px";
 
-    Object.keys(groups).sort().reverse().forEach( group => {
+    Object.keys(groups).sort().forEach( group => {
         [year, month] = group.split("-");
         if (!dates[year]) { dates[year] = []; }
         dates[year].push(month);
