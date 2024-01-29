@@ -532,8 +532,13 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         groups = groups2;
     }
 
+    // show date overview for archive groups
+    if (active_page == "ARCHIVE" && (active_date != "" || active_date != undefined)) {
+        html += birdhouse_LIST_calendar(groups);
+    }
+
     // show labels of detected birds / objects
-    if (active_page == "TODAY" || (active_page == "ARCHIVE" && active_date != "" && active_date != undefined) || active_page == "TODAY_COMPLETE" || active_page == "FAVORITES") {
+    if (active_page == "TODAY" || (active_page == "ARCHIVE" && (active_date != "" || active_date != undefined)) || active_page == "TODAY_COMPLETE" || active_page == "FAVORITES") {
 
         if (entries != undefined &&  Object.keys(entries).length > 0) {
             var labels = {};
@@ -644,8 +649,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         // check if no entries or still loading
 		if (entries_available == false && (active_page == "TODAY" || active_page == "ARCHIVE" || active_page == "FAVORITES")) {
 		    var empty = false;
-		    if (active_page == "FAVORITES" && server_status["view_favorite_loading"] == "done")                        { empty = true; }
-		    else if (active_page == "TODAY" && active_date != "" && server_status["view_archive_loading"] == "done")  { empty = true; }
+		    if (active_page == "FAVORITES" && server_status["view_favorite_loading"] == "done")                         { empty = true; }
+		    else if (active_page == "TODAY" && active_date != "" && server_status["view_archive_loading"] == "done")    { empty = true; }
 		    else if (active_page == "ARCHIVE" && active_date != "" && server_status["view_archive_loading"] == "done")  { empty = true; }
    			else {
    			    var progress_info = "";
@@ -685,3 +690,39 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    birdhouse_labels_highlight(selected_label);
 	    }
 	}
+
+function birdhouse_LIST_calendar(groups) {
+    var html = "";
+    var group_html = "";
+    var dates = {};
+    var calendar_icon = "&#x1F5D3;&#xFE0F;";
+	var tab = new birdhouse_table();
+	tab.style_cells["vertical-align"] = "top";
+	tab.style_cells["padding"] = "3px";
+
+    Object.keys(groups).sort().reverse().forEach( group => {
+        [year, month] = group.split("-");
+        if (!dates[year]) { dates[year] = []; }
+        dates[year].push(month);
+    });
+
+    var close_all = "";
+    html += tab.start();
+    Object.keys(dates).forEach( year => {
+        var cell_1 = "<h1>" + calendar_icon + " " + year + "</h1>";
+        var cell_2 = "";
+
+        for (var i=0;i<dates[year].length;i++) {
+            var onclick = "<!--CLOSE_ALL-->; birdhouse_groupToggle(\"Archive &nbsp; (" +year + "-" + dates[year][i] +")\", true);"
+            close_all += "birdhouse_groupToggle(\"Archive &nbsp; (" +year + "-" + dates[year][i] +")\", false);"
+            cell_2 += "<div class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;&nbsp;" + year + "-" + dates[year][i] + "&nbsp;&nbsp;&nbsp;</div>";
+        }
+        html += tab.row(cell_1, cell_2);
+    });
+    html += tab.end();
+    html += "<br/>&nbsp;<br/>";
+    html = html.replaceAll("<!--CLOSE_ALL-->", close_all);
+    group = birdhouse_OtherGroup("archive_calendar", lang("DATE_GROUPS"), html, true );
+
+    return html;
+}
