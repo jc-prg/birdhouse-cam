@@ -23,6 +23,7 @@
         .separator_group     { width  : 328px; font-size : 11px; }
         .thumbnail           { width :  98%;  }
         .thumbnail_container { width : 80px; }
+        .detection_label.image { width : 70px; }
 
         .camera_info_image .image_container {
             width  : 95%;
