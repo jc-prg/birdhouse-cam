@@ -18,6 +18,7 @@ services:
     - ./app:/usr/local/apache2/htdocs
     - ./data/images:/usr/local/apache2/htdocs/images
     - ./data/videos:/usr/local/apache2/htdocs/videos
+    - ./data/downloads:/usr/local/apache2/htdocs/downloads
     deploy:
       resources:
         limits:
