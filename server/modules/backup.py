@@ -1,5 +1,6 @@
 import os
 import time
+import shutil
 import cv2
 import threading
 from tqdm import tqdm
@@ -28,6 +29,9 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         self.text = BirdhouseTEXT()
 
     def run(self):
+        """
+        Control thread to create and delete downloads
+        """
         self.logging.info("Starting backup download handler ...")
         while self._running:
 
@@ -54,11 +58,15 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
     def add2queue(self, param):
         """
         add download to queue
+
+        Parameters:
+            param (dict): parameters from API request
         """
         stamp = str(time.time())
         self.downloads[stamp] = {
             "camera": param["which_cam"],
             "date": param["parameter"][0],
+            "entry_list": [],
             "package": "default",
             "time": time.time(),
             "created": False,
@@ -66,10 +74,25 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
             "download_path": "... in progress ...",
             "request_session": param["session_id"]
         }
+        # self.add2queue_test(stamp)
+
+    def add2queue_test(self, download_id):
+        self.downloads[download_id]["entry_list"] = [
+            "cam1_20240121_143420",
+            "cam1_20240121_144000",
+            "cam1_20240121_151220",
+            "cam1_20230515_054440",
+            "cam1_20230515_080900",
+            "cam2_20230427_190048",
+            "cam2_20230427_094618"
+        ]
 
     def waiting(self, param):
         """
         return downloads waiting for a specific session id
+
+        Parameters:
+            param (dict): parameters from API request (not used yet)
         """
         downloads = {}
         for download_id in self.downloads:
@@ -81,93 +104,223 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
     def create(self, download_id):
         """
         start download preparation: create a zip package to be downloaded
+
+        Parameters:
+            download_id (str): download id to identify download
         """
         camera = self.downloads[download_id]["camera"]
         date = self.downloads[download_id]["date"]
+        entry_list = self.downloads[download_id]["entry_list"]
         package = self.downloads[download_id]["package"]
         self.logging.info("Create download: " + camera + " / " + date + " / " + package)
 
-        self.create_yolov5(download_id)
+        # archive files of a day
+        if len(entry_list) == 0:
+            time_string = "[0-9][0-9][0-9][0-9][0-9][0-9]"
+            archive_path = str(os.path.join(birdhouse_main_directories["data"], birdhouse_directories["backup"]))
+            archive_files = {
+                "images": self.img_support.filename(image_type="hires", timestamp=time_string, camera=camera),
+                "config": "*.json",
+                "yolov5": "yolov5/*.txt"
+            }
+            archive_zip_file = "birdhouse-archive_" + date + "_" + camera + ".tar.gz"
+            archive_zip_path = str(os.path.join(birdhouse_main_directories["download"], archive_zip_file))
+            archive_zip_download = os.path.join("downloads", archive_zip_file)
 
-        time_string = "[0-9][0-9][0-9][0-9][0-9][0-9]"
-        archive_path = str(os.path.join(birdhouse_main_directories["data"], birdhouse_directories["backup"], date))
-        archive_files = {
-            "images": self.img_support.filename(image_type="hires", timestamp=time_string, camera=camera),
-            "config": "*.json",
-            "yolov5": "yolov5/*.txt"
-        }
-        archive_zip_file = "birdhouse-archive_" + date + "_" + camera + ".tar.gz"
-        archive_zip_path = os.path.join(birdhouse_main_directories["download"], archive_zip_file)
-        archive_zip_download = os.path.join("downloads", archive_zip_file)
+            self.create_YOLOv5(download_id)
 
-        if os.path.exists(archive_zip_path):
-            os.remove(archive_zip_path)
+            if os.path.exists(archive_zip_path):
+                os.remove(archive_zip_path)
 
-        for key in archive_files:
-            filename = archive_files[key].split("/")[-1]
-            archive_path_plus = str(os.path.join(archive_path, "/".join(archive_files[key].split("/")[:-1])))
-            command = "find " + archive_path_plus + " -name " + filename
-            command += " -exec tar "
-            command += " --transform='s,data/images/"+date+"/,"+date+"/,' "
-            command += " --transform='s,_big_,_"+date+"_,' "
-            command += " -rvf " + str(archive_zip_path) + " {} \;"
-            self.logging.info("Create download for archive " + date + " ... ")
-            self.logging.info(command)
-            os.system(command)
-            self.logging.info("-> done.")
+            for key in archive_files:
+                self.create_tar_gz(archive_path, date, archive_files[key], archive_zip_path)
+
+        # archive files from a list (format <cam_id>_<date:YYYYMMDD>_<time:HHMMSS>)
+        else:
+            archive_path = str(os.path.join(birdhouse_main_directories["data"], birdhouse_directories["backup"]))
+            archive_zip_file = "birdhouse-archive_list_"+self.config.local_time().strftime('%Y%m%d-%H%M%S')+".tar.gz"
+            archive_zip_path = str(os.path.join(birdhouse_main_directories["download"], archive_zip_file))
+            archive_zip_download = os.path.join("downloads", archive_zip_file)
+
+            archive_files = {}
+            archive_entries = {}
+
+            for entry in entry_list:
+                camera, datestamp, timestamp = entry.split("_")
+                if datestamp not in archive_entries:
+                    archive_entries[datestamp] = {}
+                if camera not in archive_entries[datestamp]:
+                    archive_entries[datestamp][camera] = []
+                archive_entries[datestamp][camera].append(timestamp)
+
+            self.logging.info(str(archive_entries))
+
+            self.create_YOLOv5(download_id, archive_entries)
+
+            for datestamp in archive_entries:
+                if datestamp not in archive_files:
+                    archive_files[datestamp] = {}
+                archive_files[datestamp] = {
+                    "config": "*.json",
+                    "yolov5": "yolov5/*.txt"
+                }
+                for camera in archive_entries[datestamp]:
+                    for timestamp in archive_entries[datestamp][camera]:
+                        archive_key = "image_"+timestamp+"_"+camera
+                        archive_files[datestamp][archive_key] = self.img_support.filename(image_type="hires",
+                                                                                          timestamp=timestamp,
+                                                                                          camera=camera)
+            for datestamp in archive_files:
+                for key in archive_files[datestamp]:
+                    self.create_tar_gz(archive_path, datestamp, archive_files[datestamp][key], archive_zip_path)
 
         self.downloads[download_id]["created"] = True
         self.downloads[download_id]["file_path"] = archive_zip_path
         self.downloads[download_id]["download_path"] = archive_zip_download
 
-    def create_yolov5(self, download_id):
+    def create_tar_gz(self, archive_path, archive_date, archive_files, archive_destination_path):
         """
-        create yolov5 files
+        Create tar archive or add files ...
+
+        Parameters:
+            archive_path (str): path to archive files
+            archive_date (str): date (sub-path) to archive files
+            archive_files (str): filenames to be archived
+            archive_destination_path (str): path to destination file
+        """
+        filename = archive_files.split("/")[-1]
+        archive_path_plus = str(os.path.join(archive_path, archive_date, "/".join(archive_files.split("/")[:-1])))
+        command = "find " + archive_path_plus + " -name " + filename
+        command += " -exec tar "
+        command += " --transform='s,data/images/" + archive_date + "/yolov5/,labels/,' "
+        command += " --transform='s,data/images/" + archive_date + "/," + archive_date + "/,' "
+        command += " --transform='s,_big_,_" + archive_date + "_,' "
+        command += " -rvf " + str(archive_destination_path) + " {} \;"
+        self.logging.info("Create download for archive " + archive_date + " - " + archive_files + " ... ")
+        self.logging.info(command)
+        os.system(command)
+        self.logging.info("-> done.")
+
+    def create_YOLOv5(self, download_id, archive_entries):
+        """
+        create YOLOv5 files
+
+        Parameters:
+            download_id (str): download id to identify download
+            archive_entries (dict): prepared list of files to be downloaded
         """
         camera = self.downloads[download_id]["camera"]
         date = self.downloads[download_id]["date"]
+        entry_list = self.downloads[download_id]["entry_list"]
         package = self.downloads[download_id]["package"]
-        classes = {}
 
-        archive_path = str(os.path.join(birdhouse_main_directories["data"], birdhouse_directories["backup"], date))
-        archive_path_info = str(os.path.join(archive_path, "yolov5"))
-        entries = self.config.db_handler.read("backup", date)
+        # if requested for a single date only
+        if len(entry_list) == 0:
+            archive_path = str(os.path.join(birdhouse_main_directories["data"], birdhouse_directories["backup"], date))
+            archive_path_info = str(os.path.join(archive_path, "yolov5"))
+            entries = self.config.db_handler.read("backup", date)
 
-        if ("info" in entries and "detection_" + camera in entries["info"]
-                and "detected" in entries["info"]["detection_"+camera]
-                and entries["info"]["detection_"+camera]["detected"]):
-            if "labels" in entries["info"]["detection_"+camera]:
-                labels = entries["info"]["detection_"+camera]["labels"]
+            if ("info" in entries and "detection_" + camera in entries["info"]
+                    and "detected" in entries["info"]["detection_"+camera]
+                    and entries["info"]["detection_"+camera]["detected"]):
+                if "labels" in entries["info"]["detection_"+camera]:
+                    labels = entries["info"]["detection_"+camera]["labels"]
+                else:
+                    labels = {}
             else:
-                labels = {}
-        else:
-            return
+                return
 
-        if not os.path.exists(archive_path_info):
+            if os.path.exists(archive_path_info):
+                shutil.rmtree(archive_path_info)
             os.makedirs(archive_path_info)
 
-        for stamp in entries["files"]:
-            entry = entries["files"][stamp]
-            size = entry["hires_size"]
-            if "detections" in entry:
-                filename = entry["hires"].replace(".jpeg", ".txt")
-                file_string = ""
-                for detection in entry["detections"]:
-                    if str(detection["class"]) not in classes:
-                        classes[detection["class"]] = detection["label"]
-                    file_string += str(detection["class"]) + " "
-                    [start_x, start_y, end_x, end_y] = detection["coordinates"]
-                    width = end_x - start_x
-                    height = end_y - start_y
-                    pos_x = start_x + (width/2)
-                    pos_y = start_y + (height/2)
-                    file_string += str(round(pos_x, 6)) + " " + str(round(pos_y, 6)) + " "
-                    file_string += str(round(width, 6)) + " " + str(round(height, 6)) + "\n"
-                    #file_string += " ".join(map(str, detection["coordinates"])) + "\n"
-                file_path = str(os.path.join(archive_path_info, filename))
-                self.text.write(file_path, file_string)
+            classes = {}
+            for stamp in entries["files"]:
+                classes = self.create_YOLOv5_file(entries["files"][stamp], archive_path_info, classes)
+
+            self.create_YOLOv5_classes(classes, labels, archive_path_info)
+
+        # if requested for a list of files
+        else:
+            model_saved = []
+            for datestamp in archive_entries:
+                archive_path = str(os.path.join(birdhouse_main_directories["data"],
+                                                birdhouse_directories["backup"], datestamp))
+                archive_path_info = str(os.path.join(archive_path, "yolov5"))
+                entries = self.config.db_handler.read("backup", datestamp)
+
+                for camera in archive_entries[datestamp]:
+                    if ("info" in entries and "detection_" + camera in entries["info"]
+                            and "detected" in entries["info"]["detection_"+camera]
+                            and entries["info"]["detection_"+camera]["detected"]):
+                        if "labels" in entries["info"]["detection_"+camera]:
+                            labels = entries["info"]["detection_"+camera]["labels"]
+                            model = entries["info"]["detection_"+camera]["model"]
+                            model = model.replace(".pt", "")
+                        else:
+                            labels = {}
+                            model = "no-model"
+                    else:
+                        continue
+
+                    if os.path.exists(archive_path_info):
+                        shutil.rmtree(archive_path_info)
+                    os.makedirs(archive_path_info)
+                    archive_path_info_model = os.path.join(archive_path_info, model)
+                    os.makedirs(archive_path_info_model)
+
+                    classes = {}
+                    for timestamp in archive_entries[datestamp][camera]:
+                        classes = self.create_YOLOv5_file(entries["files"][timestamp], archive_path_info_model, classes)
+
+                    self.create_YOLOv5_classes(classes, labels, archive_path_info_model, datestamp+"-"+camera)
+                    if model not in model_saved:
+                        self.create_YOLOv5_classes(classes, labels, archive_path_info_model)
+                        model_saved.append(model)
+
+    def create_YOLOv5_file(self, entry, archive_path_info, classes):
+        """
+        create YOLOv5 file for an entry
+
+        Parameters:
+            entry (dict): db entry for file
+            archive_path_info (str): destination path for the YOLOv5 file to be stored
+            classes (dict): growing list of used classes as input
+        Returns:
+            dict: growing list of classes
+        """
+        if "detections" in entry:
+            filename = entry["hires"].replace(".jpeg", ".txt")
+            file_string = ""
+            for detection in entry["detections"]:
+                if str(detection["class"]) not in classes:
+                    classes[detection["class"]] = detection["label"]
+                file_string += str(detection["class"]) + " "
+                [start_x, start_y, end_x, end_y] = detection["coordinates"]
+                width = end_x - start_x
+                height = end_y - start_y
+                pos_x = start_x + (width / 2)
+                pos_y = start_y + (height / 2)
+                file_string += str(round(pos_x, 6)) + " " + str(round(pos_y, 6)) + " "
+                file_string += str(round(width, 6)) + " " + str(round(height, 6)) + "\n"
+            file_path = str(os.path.join(archive_path_info, filename))
+            self.text.write(file_path, file_string)
+        return classes
+
+    def create_YOLOv5_classes(self, classes, labels, archive_path_info, extension=""):
+        """
+        Create file with used classes as classes.txt
+
+        Parameters:
+            classes (dict): class definition from detections
+            labels (dict): label definition from detection model
+            archive_path_info (str): destination path for the YOLOv5 file to be stored
+            extension (str): string to be added into the filename (e.g. date or camera id)
+        """
+        if extension != "":
+            extension = "_" + extension
         file_string = ""
-        file_path = str(os.path.join(archive_path_info, "classes.txt"))
+        file_path = str(os.path.join(archive_path_info, "classes"+extension+".txt"))
         if labels == {}:
             for class_id in classes:
                 file_string += str(classes[class_id]) + "\n"
@@ -179,6 +332,9 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
     def delete(self, download_id):
         """
         delete download files that are older than ...
+
+        Parameters:
+            download_id (str): download id to identify download
         """
         self.logging.info("Delete file from download folder: " + self.downloads[download_id]["file_path"])
         if self.downloads[download_id]["created"]:
