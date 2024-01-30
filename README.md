@@ -29,8 +29,9 @@ app in English and German, ...
  
 <img src="info/images/birdcam_08.PNG" width="30%"><img src="info/images/birdcam_06.PNG" width="30%"><img src="info/images/birdcam_11.PNG" width="30%">
 
-
 <img src="info/images/birdcam_12.PNG" width="30%"><img src="info/images/birdcam_13.PNG" width="30%"><img src="info/images/birdcam_22.PNG" width="30%">
+
+<img src="info/images/birdcam_41.PNG" width="30%"><img src="info/images/birdcam_42.PNG" width="30%"><img src="info/images/birdcam_43.PNG" width="30%">
 
 <img src="info/images/birdcam_23.PNG" width="30%"><img src="info/images/birdcam_15.PNG" width="30%"><img src="info/images/birdcam_16.PNG" width="30%">
 
