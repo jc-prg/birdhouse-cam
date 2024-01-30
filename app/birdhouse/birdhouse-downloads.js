@@ -60,3 +60,33 @@ function collect4download_image(entry) {
     if (collect4download_exists(entry)) { return img_dir + "checkbox-white1b.png"; }
     else                                { return img_dir + "checkbox-white0.png"; }
 }
+
+/*
+* request download for list of id's
+*/
+function archivDownload_requestList() {
+    if (app_collect_list.length == 0) {
+        appMsg.alert(lang("DOWNLOAD_NO_ENTRIES"));
+        return;
+        }
+    commands = ["archive-download-list"];
+    birdhouse_apiRequest('POST', commands, app_collect_list, archivDownload_requestDayWait, "", "collect4download_request");
+}
+
+/*
+* request download for data and specific camera
+*/
+function archivDownload_requestDay(date_stamp, camera) {
+    commands = ["archive-download-day", date_stamp, camera];
+	birdhouse_apiRequest('POST', commands, '', archivDownload_requestDayWait,'','birdhouse_archiveDayDownload(\"'+date_stamp+'\")');
+}
+
+/*
+* Open dialog to wait for a download link
+*/
+function archivDownload_requestDayWait(data) {
+    if (data["date"]) { appMsg.alert(lang("WAITING_FOR_DOWNLOAD") + ":<br/><div id='archive_download_link_"+data["date"]+"'></div>"); }
+    else { appMsg.alert(lang("WAITING_FOR_DOWNLOAD") + ":<br/><div id='archive_download_link'></div>"); }
+}
+
+

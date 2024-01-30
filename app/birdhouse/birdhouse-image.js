@@ -496,7 +496,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 
         if (app_collect4download) {
             if (entry["type"] == "image") {
-                var collect_entry    = entry["datestamp"]+"_"+entry["time"].replaceAll(":","");
+                var collect_entry    = entry["camera"]+"_"+entry["datestamp"]+"_"+entry["time"].replaceAll(":","");
                 var onclick_checkbox = "collect4download_toggle(\"" + collect_entry + "\", \""+img_id2+"\");";
                 onclick              = onclick_checkbox;
                 var img_checkbox     = collect4download_image(collect_entry);

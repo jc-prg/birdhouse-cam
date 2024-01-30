@@ -460,12 +460,12 @@ function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_d
 
     var button_object_detection = "<button onclick='birdhouse_archiveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \""+detection_date+"\", \"\", \"selection_threshold\");' class='bh-slider-button'  style='width:80px;'>Start</button>";
     var button_archive_deletion = "<button onclick='birdhouse_archiveDayDelete(\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button' style='width:80px;'>Delete</button>";
-    var button_archive_download = "<button onclick='birdhouse_archiveDayDownload(\""+active_date+"\", \""+app_active_cam+"\");' class='bh-slider-button' style='width:80px;'>Download</button>";
+    var button_archive_download = "<button onclick='archivDownload_requestDay(\""+active_date+"\", \""+app_active_cam+"\");' class='bh-slider-button' style='width:80px;'>"+lang("DOWNLOAD")+"</button>";
     var button_object_recycle   = "<button onclick='"+object_onclick+"' class='bh-slider-button'  style='width:80px;'>Recycle</button>";
 
-    var buttons_download_collection = "<div style='width:100%;float:left;'><button onclick='collect4download_activate();'  class='bh-slider-button' style='width:80px;'>collect</button>";
-    buttons_download_collection    += "<button onclick='collect4download_deactivate();' class='bh-slider-button' style='width:80px;'>stop</button>";
-    buttons_download_collection    += "<button onclick='alert(\"Not implemented yet.\");' class='bh-slider-button' style='width:80px;'>download</button></div><br/>";
+    var buttons_download_collection = "<div style='width:100%;float:left;'><button onclick='collect4download_activate();'  class='bh-slider-button' style='width:80px;'>"+lang("DOWNLOAD_START_COLLECTING")+"</button>";
+    buttons_download_collection    += "<button onclick='collect4download_deactivate();' class='bh-slider-button' style='width:80px;'>"+lang("DOWNLOAD_STOP_COLLECTING")+"</button>";
+    buttons_download_collection    += "<button onclick='archivDownload_requestList();' class='bh-slider-button' style='width:80px;'>"+lang("DOWNLOAD")+"</button></div><br/>";
     buttons_download_collection    += "<div style='width:100%;float:left;'>&nbsp;<br/>" + lang("COLLECTED_IMAGES") +": <text id='collect4download_amount'>0</text> " + lang("IMAGES") + "</div>";
 
     var available_thresholds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95];
@@ -642,6 +642,8 @@ function birdhouse_LIST_calendar(groups) {
 	tab.style_cells["vertical-align"] = "top";
 	tab.style_cells["padding"] = "3px";
 
+    if (!groups) { return html; }
+
     Object.keys(groups).sort().reverse().forEach( group => {
         [year, month] = group.split("-");
         if (!dates[year]) { dates[year] = []; years.push(year); }
@@ -758,6 +760,7 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
         var labels = {};
         var video_added = false;
         var label_information = "";
+        var label_keys = [];
 
         // identify detected objects in the images
         Object.entries(entries).forEach(([key, value]) => {
@@ -772,11 +775,11 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
                 }
             if (active_page == "FAVORITES" && value["type"] == "video") {
                 video = true;
+                label_keys.push("video");
                 }
             });
 
         // create labels
-        label_keys = [];
         Object.entries(labels).sort().forEach(([key, value]) => {
             console.log("     - " + key + ": " + value.length);
             var onclick = "birdhouse_view_images_objects(\""+key+"\"); birdhouse_labels_highlight(\""+key+"\", \"label_key_list\");";
@@ -787,6 +790,7 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
         if (empty) {
             var onclick = "birdhouse_view_images_objects(\"EMPTY\"); birdhouse_labels_highlight(\"empty\", \"label_key_list\");";
             label_information +=  "<div id='label_empty' class='detection_label_function' onclick='" + onclick + "'>&nbsp;" + lang("EMPTY") + "&nbsp;</div>";
+            label_keys.push("empty");
             }
 
         if (video) {
