@@ -493,7 +493,24 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 		    }
 		star                = "<div id='s_"+img_id2+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id2+"' src='"+img_dir+"star"+img_star+".png'       onclick='"+onclick_star+"'/>";
 		recycle             = "<div id='d_"+img_id2+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id2+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
-    }
+
+        if (app_collect4download) {
+            if (entry["type"] == "image") {
+                var collect_entry    = entry["datestamp"]+"_"+entry["time"].replaceAll(":","");
+                var onclick_checkbox = "collect4download_toggle(\"" + collect_entry + "\", \""+img_id2+"\");";
+                onclick              = onclick_checkbox;
+                var img_checkbox     = collect4download_image(collect_entry);
+                checkbox = "<div id='c_"+img_id2+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='checkbox_img' id='cb_"+img_id2+"' src='"+img_checkbox+"' onclick='"+onclick_checkbox+"'/>";
+                star = checkbox;
+                recycle = "";
+                }
+            else {
+                star    = "";
+                recycle = "";
+                onclick = "";
+                }
+            }
+        }
 
     var height = "";
     var container_style = "";

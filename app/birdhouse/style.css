@@ -231,6 +231,21 @@ img .play_button  {
     height   : 20px;
 }
 
+.checkbox {
+    position : relative;
+    top      : 3px;
+    left     : 5px;
+    width    : 20px;
+    height   : 20px;
+    z-index  : 62;
+    cursor   : pointer;
+}
+
+.checkbox_img {
+    width    : 20px;
+    height   : 20px;
+}
+
 /* configuration of hires overlay - image and video */
 
 .overlay {

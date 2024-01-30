@@ -31,6 +31,8 @@
         .recycle_img     { width   : 30px;  height   : 30px; }
         .star            { width   : 30px;  height   : 30px;  top : 25px; }
         .star_img        { width   : 30px;  height   : 30px; }
+        .checkbox        { width   : 30px;  height   : 30px;  top : 25px; }
+        .checkbox_img    { width   : 30px;  height   : 30px; }
         .weather_hide_if_small { display: block; }
 
     }
@@ -49,6 +51,8 @@
         .recycle_img     { width   : 30px;  height   : 30px; }
         .star            { width   : 30px;  height   : 30px;  top : 25px; }
         .star_img        { width   : 30px;  height   : 30px; }
+        .checkbox        { width   : 30px;  height   : 30px;  top : 25px; }
+        .checkbox_img    { width   : 30px;  height   : 30px; }
         .weather_hide_if_small { display: block; }
 
     }

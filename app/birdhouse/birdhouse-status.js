@@ -466,4 +466,6 @@ function birdhouseStatus_downloads(data) {
             });
         setTextById("archive_download_link", all_links);
         }
+    collect4download_amount = app_collect_list.length;
+    setTextById("collect4download_amount", collect4download_amount);
     }

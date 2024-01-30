@@ -29,6 +29,9 @@ var app_admin_allowed     = false;
 var app_data              = {};
 var app_bird_names        = {};
 
+var app_collect4download  = false;
+var app_collect_list      = [];
+
 var app_frame_header    = "frame1";
 var app_frame_content   = "frame2";
 var app_frame_info      = "frame3";
@@ -41,6 +44,7 @@ var birdhouse_js = [
     "birdhouse.js",
     "birdhouse-devices.js",
     "birdhouse-audio.js",
+    "birdhouse-downloads.js",
     "birdhouse-views.js",
     "birdhouse-views-index.js",
     "birdhouse-objects.js",

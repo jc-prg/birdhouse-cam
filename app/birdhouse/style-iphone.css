@@ -64,6 +64,8 @@
         .recycle_img     { width   : 20px;  height   : 20px; }
         .star            { width   : 20px;  height   : 20px;  top : 5px; }
         .star_img        { width   : 20px;  height   : 20px; }
+        .checkbox        { width   : 20px;  height   : 20px;  top : 5px; }
+        .checkbox_img    { width   : 20px;  height   : 20px; }
 
         .frame_column.wide { width : 695px; }
 

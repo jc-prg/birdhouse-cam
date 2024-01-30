@@ -463,6 +463,11 @@ function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_d
     var button_archive_download = "<button onclick='birdhouse_archiveDayDownload(\""+active_date+"\", \""+app_active_cam+"\");' class='bh-slider-button' style='width:80px;'>Download</button>";
     var button_object_recycle   = "<button onclick='"+object_onclick+"' class='bh-slider-button'  style='width:80px;'>Recycle</button>";
 
+    var buttons_download_collection = "<div style='width:100%;float:left;'><button onclick='collect4download_activate();'  class='bh-slider-button' style='width:80px;'>collect</button>";
+    buttons_download_collection    += "<button onclick='collect4download_deactivate();' class='bh-slider-button' style='width:80px;'>stop</button>";
+    buttons_download_collection    += "<button onclick='alert(\"Not implemented yet.\");' class='bh-slider-button' style='width:80px;'>download</button></div><br/>";
+    buttons_download_collection    += "<div style='width:100%;float:left;'>&nbsp;<br/>" + lang("COLLECTED_IMAGES") +": <text id='collect4download_amount'>0</text> " + lang("IMAGES") + "</div>";
+
     var available_thresholds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95];
     var select_thresholds = "<select id='selection_threshold' style='height:30px;width:60px;float:left;margin:3px;'>";
     for (var i=0;i<available_thresholds.length;i++) {
@@ -490,6 +495,7 @@ function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_d
     info_text += tab.row(lang("OBJECT_DETECTION_RECYCLE") + ":", button_object_recycle);
     info_text += tab.row(lang("DELETE_ARCHIVE") + ":", button_archive_deletion );
     info_text += tab.row(lang("DOWNLOAD_ARCHIVE") + ":", button_archive_download );
+    info_text += tab.row(lang("DOWNLOAD_ARCHIVE_COLLECT") + ":", buttons_download_collection );
     info_text += tab.end();
     info_text += "&nbsp;<br/>&nbsp;";
 
