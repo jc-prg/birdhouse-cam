@@ -35,7 +35,8 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         self.logging.info("Starting backup download handler ...")
         while self._running:
 
-            for download_id in self.downloads:
+            downloads_in_queue = list(self.downloads.keys())
+            for download_id in downloads_in_queue:
                 if not self.downloads[download_id]["created"]:
                     self.create(download_id)
                 elif self.downloads[download_id]["time"] + self.download_keep_time < time.time():
@@ -55,18 +56,23 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         self._processing = False
         self.delete_all_downloads()
 
-    def add2queue(self, param):
+    def add2queue(self, param, file_list=None):
         """
         add download to queue
 
         Parameters:
             param (dict): parameters from API request
+            file_list (list): optional, list of files - entry format YYYYMMDD_HHMMSS
         """
+        if file_list is None:
+            file_list = []
+        if len(param["parameter"]) == 0:
+            param["parameter"].append("")
         stamp = str(time.time())
         self.downloads[stamp] = {
             "camera": param["which_cam"],
             "date": param["parameter"][0],
-            "entry_list": [],
+            "entry_list": file_list,
             "package": "default",
             "time": time.time(),
             "created": False,
@@ -75,17 +81,6 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
             "request_session": param["session_id"]
         }
         # self.add2queue_test(stamp)
-
-    def add2queue_test(self, download_id):
-        self.downloads[download_id]["entry_list"] = [
-            "cam1_20240121_143420",
-            "cam1_20240121_144000",
-            "cam1_20240121_151220",
-            "cam1_20230515_054440",
-            "cam1_20230515_080900",
-            "cam2_20230427_190048",
-            "cam2_20230427_094618"
-        ]
 
     def waiting(self, param):
         """
@@ -192,7 +187,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         archive_path_plus = str(os.path.join(archive_path, archive_date, "/".join(archive_files.split("/")[:-1])))
         command = "find " + archive_path_plus + " -name " + filename
         command += " -exec tar "
-        command += " --transform='s,data/images/" + archive_date + "/yolov5/,labels/,' "
+        command += " --transform='s,data/images/" + archive_date + "/yolov5/,labels_,' "
         command += " --transform='s,data/images/" + archive_date + "/," + archive_date + "/,' "
         command += " --transform='s,_big_,_" + archive_date + "_,' "
         command += " -rvf " + str(archive_destination_path) + " {} \;"
@@ -201,7 +196,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         os.system(command)
         self.logging.info("-> done.")
 
-    def create_YOLOv5(self, download_id, archive_entries):
+    def create_YOLOv5(self, download_id, archive_entries=None):
         """
         create YOLOv5 files
 
@@ -225,20 +220,25 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
                     and entries["info"]["detection_"+camera]["detected"]):
                 if "labels" in entries["info"]["detection_"+camera]:
                     labels = entries["info"]["detection_"+camera]["labels"]
+                    model = entries["info"]["detection_" + camera]["model"]
+                    model = model.replace(".pt", "")
                 else:
                     labels = {}
+                    model = "no-model"
             else:
                 return
 
             if os.path.exists(archive_path_info):
                 shutil.rmtree(archive_path_info)
             os.makedirs(archive_path_info)
+            archive_path_info_model = os.path.join(archive_path_info, model)
+            os.makedirs(archive_path_info_model)
 
             classes = {}
             for stamp in entries["files"]:
-                classes = self.create_YOLOv5_file(entries["files"][stamp], archive_path_info, classes)
+                classes = self.create_YOLOv5_file(entries["files"][stamp], archive_path_info_model, classes)
 
-            self.create_YOLOv5_classes(classes, labels, archive_path_info)
+            self.create_YOLOv5_classes(classes, labels, archive_path_info_model)
 
         # if requested for a list of files
         else:
@@ -638,11 +638,17 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
         self.backup_running = False
 
-    def download_files(self, param):
+    def download_files(self, param, file_list=None):
         """
         add download requests to queue
+
+        Parameters:
+            param (dict): parameter from API request
+            file_list (list): optional, list of files - entry format YYYYMMDD_HHMMSS
+        Returns:
+            dict: API response
         """
-        self.download.add2queue(param)
+        self.download.add2queue(param, file_list)
         return {
             "command": "requested download files: " + param["parameter"][0] + "/" + param["which_cam"],
             "date": param["parameter"][0]

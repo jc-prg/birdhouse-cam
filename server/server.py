@@ -705,7 +705,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.startswith("/api"):
             param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup",
                             "last-answer", "favorit", "recycle", "update-views", "update-views-complete",
-                            "archive-object-detection", "archive-remove-day", "OBJECTS", "FAVORITES", "bird-names"]
+                            "archive-object-detection", "archive-remove-day", "archive-remove-list",
+                            "OBJECTS", "FAVORITES", "bird-names"]
 
             param["session_id"] = elements[2]
             param["command"] = elements[3]
@@ -782,6 +783,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         global camera
 
+        content_length = int(self.headers['Content-Length'])
+        if content_length >= 2:
+            post_data = self.rfile.read(content_length)
+            body_data = json.loads(post_data.decode('utf-8'))
+            srv_logging.debug("do_POST body data: " + str(body_data))
+        else:
+            body_data = None
+
         config.user_activity("set")
         param = self.path_split()
         which_cam = param["which_cam"]
@@ -808,8 +817,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # admin commands
         if param["command"] == "favorit":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = config.queue.set_status_favorite(param)
         elif param["command"] == "recycle":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = config.queue.set_status_recycle(param)
         elif param["command"] == "recycle-threshold":
             # http://localhost:8007/api/1682709071876/recycle-threshold/backup/20230421/95/cam1/
@@ -819,14 +830,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_logging.info("RECYCLE OBJECT")
             response = config.queue.set_status_recycle_object(param, which_cam)
         elif param["command"] == "recycle-range":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = config.queue.set_status_recycle_range(param)
         elif param["command"] == "create-short-video":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = camera[which_cam].video.create_video_trimmed_queue(param)
         elif param["command"] == "recreate-image-config":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = backup.create_image_config_api(param)
         elif param["command"] == "create-day-video":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = camera[which_cam].video.create_video_day_queue(param)
         elif param["command"] == "remove":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = backup.delete_marked_files_api(param)
         elif param["command"] == "archive-object-detection":
             parameters = param["parameter"]
@@ -841,16 +857,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                 response = camera[cam_id].object.analyze_archive_day_start(date, threshold)
         elif param["command"] == "archive-remove-day":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = backup.delete_archived_day(param)
         elif param["command"] == "archive-download-day":
-            msg = "API CALL '" + param["command"] + "' not implemented yet (" + str(self.path) + ")"
-            srv_logging.info(msg)
-            srv_logging.info(str(param))
-            #response = {"info": msg}
+            srv_logging.info(param["command"] + ": " + str(param))
             response = backup.download_files(param)
+        elif param["command"] == "archive-download-list":
+            srv_logging.info(param["command"] + ": " + str(param))
+            response = backup.download_files(param, body_data)
         elif param["command"] == "reconnect-camera":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = camera[which_cam].reconnect()
         elif param["command"] == "camera-settings":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = camera[which_cam].get_camera_settings(param)
         elif param["command"] == "start-recording":
             audio_filename = ""
