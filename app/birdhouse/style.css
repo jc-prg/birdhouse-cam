@@ -233,8 +233,8 @@ img .play_button  {
 
 .checkbox {
     position : relative;
-    top      : 3px;
-    left     : 5px;
+    top      : 10px;
+    left     : 10px;
     width    : 20px;
     height   : 20px;
     z-index  : 62;
