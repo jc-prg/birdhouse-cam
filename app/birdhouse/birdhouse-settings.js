@@ -139,17 +139,17 @@ function birdhouse_app_settings (name="Settings") {
 
         var main_settings_open = false;
         if (app_data["STATUS"]["server"]["initial_setup"]) {main_settings_open = true; }
-        html += birdhouse_OtherGroup( "server_settings", "Main Settings", html_entry, main_settings_open );
+        html += birdhouse_OtherGroup( "server_settings", "Main Settings", html_entry, main_settings_open, "settings" );
 
         var html_entry = this.api_calls();
         html_entry += "&nbsp;<br/>";
-        html += birdhouse_OtherGroup( "api_calls", "API Calls", html_entry, false );
+        html += birdhouse_OtherGroup( "api_calls", "API Calls", html_entry, false, "settings" );
 
         html_entry = this.server_side_settings();
-        html += birdhouse_OtherGroup( "SRV_SETTINGS", "Basic server settings <i>(edit in &quot;.env&quot;)</i>", html_entry, false );
+        html += birdhouse_OtherGroup( "SRV_SETTINGS", "Basic server settings <i>(edit in &quot;.env&quot;)</i>", html_entry, false, "settings" );
 
         html_entry = this.app_under_construction();
-        html += birdhouse_OtherGroup( "app_under_construction", "UNDER CONSTRUCTION", html_entry, false );
+        html += birdhouse_OtherGroup( "app_under_construction", "UNDER CONSTRUCTION", html_entry, false, "settings" );
 
         return html;
     }

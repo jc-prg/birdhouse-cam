@@ -101,6 +101,10 @@ h3 { margin : 4px; }
     background    : #222222;
     font-size     : 10px;
     }
+
+.separator_group.settings {
+    background    : #444460;
+    }
     
 /* configuration of elements on camera info page */
 

@@ -354,7 +354,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 				//--> doesn't work if image names double across the different groups; image IDs have to be changed (e.g. group id to be added)
             }
 			delete group_entries["999999"];
-			html += birdhouse_ImageGroup(title, group_entries, entry_count, entry_category, header_open, admin,
+			html += birdhouse_ImageGroup(active_page + "_" + group, title, group_entries, entry_count, entry_category, header_open, admin,
 			                             video_short, same_img_size, max_image_size_LR);
 			group_list.push(title);
 			count_groups += 1;
@@ -381,19 +381,19 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         else if (title.length == 8)                         { title = title.substring(6,8) + "." + title.substring(4,6) + "." + title.substring(0,4); }
 
         if (entries != undefined &&  Object.keys(entries).length > 0) {
-            html += birdhouse_ImageGroup(title, entries, entry_count, entry_category, header_open, admin, video_short, same_img_size, max_image_size_LR);
+            html += birdhouse_ImageGroup(title, title, entries, entry_count, entry_category, header_open, admin, video_short, same_img_size, max_image_size_LR);
 			group_list.push(title);
             entries_available = true;
             }
 
 		if (admin) {
 		        if (entries_yesterday != undefined && Object.keys(entries_yesterday).length > 0) {
-		            html += birdhouse_ImageGroup(lang("YESTERDAY"), entries_yesterday, entry_count, entry_category,
+		            html += birdhouse_ImageGroup(active_page+"_YESTERDAY",lang("YESTERDAY"), entries_yesterday, entry_count, entry_category,
 		                                         false, admin, video_short, same_img_size, max_image_size_LR);
 		            entries_available = true;
 		            }
 		        if (entries_delete != undefined && Object.keys(entries_delete).length > 0) {
-		            html += birdhouse_ImageGroup(lang("RECYCLE"), entries_delete, ["recycle"], entry_category, false,
+		            html += birdhouse_ImageGroup(active_page+"_RECYCLE", lang("RECYCLE"), entries_delete, ["recycle"], entry_category, false,
 		                                         admin, video_short, same_img_size, max_image_size_LR);
 		            entries_available = true;
 		            }
@@ -499,7 +499,7 @@ function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_d
     info_text += tab.end();
     info_text += "&nbsp;<br/>&nbsp;";
 
-    html += birdhouse_OtherGroup("settings", lang("SETTINGS"), info_text, false );
+    html += birdhouse_OtherGroup("settings", lang("SETTINGS"), info_text, false, "settings" );
     return html;
 }
 
@@ -556,7 +556,7 @@ function birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page,
 
     info_text += tab.end();
     info_text += "&nbsp;<br/>&nbsp;";
-    html += birdhouse_OtherGroup( "info", lang("SETTINGS"), info_text, false );
+    html += birdhouse_OtherGroup( "info", lang("SETTINGS"), info_text, false, "settings" );
     return html;
 }
 
@@ -590,7 +590,7 @@ function birdhouse_LIST_admin_today_complete(data, admin, camera, active_page, a
     info_text += tab.end();
     info_text += "&nbsp;<br/>&nbsp;";
 
-    html += birdhouse_OtherGroup( "info", lang("SETTINGS"), info_text, false );
+    html += birdhouse_OtherGroup( "info", lang("SETTINGS"), info_text, false, "settings" );
     return html;
 }
 

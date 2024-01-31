@@ -463,6 +463,8 @@ function birdhouse_groupToggle(id, open="toggle") {
 
 function birdhouse_groupOpen(id) {
     document.getElementById("group_"+id).style.display = "block";
+    app_header_opened["group_"+id] = true;
+
     if (document.getElementById("group_intro_"+id)) {
         document.getElementById("group_intro_"+id).style.display = "block";
     }
@@ -489,6 +491,8 @@ function birdhouse_groupOpen(id) {
 
 function birdhouse_groupClose(id) {
         document.getElementById("group_"+id).style.display = "none";
+        app_header_opened["group_"+id] = false;
+
         if (document.getElementById("group_intro_"+id)) { document.getElementById("group_intro_"+id).style.display = "none"; }
         document.getElementById("group_link_"+id).innerHTML = "(+)";
 }

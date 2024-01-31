@@ -231,7 +231,7 @@ function birdhouseDevices_cameras(data) {
 		html_temp += "<hr/>&nbsp;<br/><center>" + reconnect + create + birdhouse_edit_save(id="edit_"+camera, id_list, camera)+"</center><br/>";
 	    html_temp += "</div></div>";
 
-		html += birdhouse_OtherGroup( camera, camera_name, html_temp, false );
+		html += birdhouse_OtherGroup( camera, camera_name, html_temp, false, "settings" );
 	}
 	return [html, index_info];
 }
@@ -333,7 +333,7 @@ function birdhouseDevices_cameraSettings (data) {
         html_entry += tab.end();
         if (count == 0) {html_entry += "<center>No entries to edit.</center>"; }
         html_entry += "&nbsp;<br/>";
-        html += birdhouse_OtherGroup( camera+"_camera_1", camera.toUpperCase() + " - Camera Settings", html_entry, true );
+        html += birdhouse_OtherGroup( camera+"_camera_1", camera.toUpperCase() + " - Camera Settings", html_entry, true, "settings" );
 
         html_entry = tab.start();
         for (var i=0;i<camera_settings_read.length;i++) {
@@ -343,7 +343,7 @@ function birdhouseDevices_cameraSettings (data) {
         }
         html_entry += tab.end();
         html_entry += "&nbsp;<br/>";
-        html += birdhouse_OtherGroup( camera+"_camera_2", camera.toUpperCase() + " - Camera Values", html_entry, false );
+        html += birdhouse_OtherGroup( camera+"_camera_2", camera.toUpperCase() + " - Camera Values", html_entry, false, "settings" );
 
         html += "<center>&nbsp;<br/>";
         html += birdhouse_edit_save(id="edit_"+camera, id_list, camera);
@@ -428,7 +428,7 @@ function birdhouseDevices_sensors(data) {
 		html_entry += tab.end();
         html_entry += "</div>";
         html_entry += "</div>";
-		html += birdhouse_OtherGroup( sensor, sensor_name, html_entry, false );
+		html += birdhouse_OtherGroup( sensor, sensor_name, html_entry, false, "settings" );
 	}
 	return [html, index_info];
 }
@@ -484,7 +484,7 @@ function birdhouseDevices_weather(data) {
     if (weather_config["weather_active"] == false) {
         title += " &nbsp; <i>(inactive)</i>";
     }
-    html += birdhouse_OtherGroup( "weather_settings", title, html_entry, false );
+    html += birdhouse_OtherGroup( "weather_settings", title, html_entry, false, "settings" );
 
 	return [html, index_info];
 }
@@ -582,7 +582,7 @@ function birdhouseDevices_microphones(data) {
 
         html_entry += "</div></div>";
 
-        html += birdhouse_OtherGroup( micro, micro_name, html_entry, false );
+        html += birdhouse_OtherGroup( micro, micro_name, html_entry, false, "settings" );
 	}
 
 	return [html, index_info];

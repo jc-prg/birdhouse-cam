@@ -79,23 +79,28 @@ function birdhouse_Camera( main, view, onclick, camera, stream_server, admin_all
     }
 
 
-function birdhouse_OtherGroup( key, title, content, header_open) {
+function birdhouse_OtherGroup( key, title, content, header_open, css_class="") {
+    if (app_header_opened["group_"+key] != undefined) {
+        header_open = app_header_opened["group_"+key];
+        }
+
     var html = "";
     var display = "";
 	if (header_open == false) { display = "style='display:none;'"; }
 
-    html += birdhouse_OtherGroupHeader( key, title, header_open );
+    html += birdhouse_OtherGroupHeader( key, title, header_open, css_class);
     html += "<div id='group_"+key+"' "+display+">";
     html += content;
     html += "</div>";
     return html;
 }
 
-function birdhouse_OtherGroupHeader( key, title, header_open ) {
+function birdhouse_OtherGroupHeader( key, title, header_open, css_class="") {
+    if (css_class != "") { css_class = " " + css_class; }
 	var status = "−";
 	if (header_open == false) { status = "+"; }
 	var html   = "";
-	html += "<div id='group_header_"+key+"' class='separator_group' onclick='birdhouse_groupToggle(\""+key+"\")'>";
+	html += "<div id='group_header_"+key+"' class='separator_group"+css_class+"' onclick='birdhouse_groupToggle(\""+key+"\")'>";
 	html += "<text id='group_link_"+key+"' style='cursor:pointer;'>("+status+")</text> ";
 	html += title;
 	html += "</div>";
@@ -103,13 +108,13 @@ function birdhouse_OtherGroupHeader( key, title, header_open ) {
 }
 
 
-function birdhouse_ImageGroup( title, entries, entry_count, entry_category, header_open, admin=false, video_short=false,
+function birdhouse_ImageGroup( group_id, title, entries, entry_count, entry_category, header_open, admin=false, video_short=false,
                                same_img_size=false, max_lowres_size=0, max_text_lines=1) {
+
 	var count     = {};
 	var html      = "";
 	var image_ids = "";
 	var display   = "";
-	var group_id  = title;
 
 	if (admin) {
 		for (i=0;i<entry_count.length;i++) 	{ count[entry_count[i]] = 0; }
@@ -153,6 +158,10 @@ function birdhouse_ImageGroup( title, entries, entry_count, entry_category, head
 			    image_ids += " " + img_id2;
             }
 	}
+
+    if (app_header_opened["group_"+group_id] != undefined) {
+        header_open = app_header_opened["group_"+group_id];
+        }
 
 	if (header_open == false) {
 		display = "style='display:none;'";

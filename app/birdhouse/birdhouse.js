@@ -34,7 +34,7 @@ var app_bird_names        = {};
 
 var app_collect4download  = false;
 var app_collect_list      = [];
-var app_header_opened     = [];
+var app_header_opened     = {};
 
 var app_frame_header    = "frame1";
 var app_frame_content   = "frame2";
