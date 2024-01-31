@@ -547,7 +547,8 @@ birdhouse_client_presets = {
                "// Please edit not here, but in .env-File\n" +
                "var test		= " + birdhouse_env["test_instance"] + ";\n" +
                "var instance	= '" + birdhouse_env["which_instance"] + "';\n" +
-               "var server_port = '" + birdhouse_env["port_api"] + "';\n\n"
+               "var server_port = '" + birdhouse_env["port_api"] + "';\n\n" +
+               "app_scripts_loaded += 1;\n\n"
 }
 
 file_types = {

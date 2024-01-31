@@ -13,7 +13,10 @@ var color_code = {
 	"request" : "yellow",
 	"data"    : "gray"
 	}
-	
+
+loadingImage = "birdhouse/img/bird.gif";
+
+var app_loading_image     = "birdhouse/img/bird.gif";
 var app_available_cameras = [];
 var app_available_sensors = [];
 var app_available_micros  = [];
@@ -31,30 +34,31 @@ var app_bird_names        = {};
 
 var app_collect4download  = false;
 var app_collect_list      = [];
+var app_header_opened     = [];
 
 var app_frame_header    = "frame1";
 var app_frame_content   = "frame2";
 var app_frame_info      = "frame3";
 var app_frame_index     = "frame4";
 
+var app_scripts_loaded  = 0;
 var app_first_load      = true;
 var app_2nd_load        = true;
 
 var birdhouse_js = [
-    "birdhouse.js",
-    "birdhouse-devices.js",
+    "birdhouse-api-requests.js",
     "birdhouse-audio.js",
+    "birdhouse-charts.js",
+    "birdhouse-devices.js",
     "birdhouse-downloads.js",
+    "birdhouse-functions.js",
+    "birdhouse-image.js",
+    "birdhouse-objects.js",
+    "birdhouse-settings.js",
+    "birdhouse-status.js",
     "birdhouse-views.js",
     "birdhouse-views-index.js",
-    "birdhouse-objects.js",
-    "birdhouse-image.js",
-    "birdhouse-status.js",
     "birdhouse-weather.js",
-    "birdhouse-charts.js",
-    "birdhouse-functions.js",
-    "birdhouse-settings.js",
-    "birdhouse-api-requests.js",
     "video-player-template.js",
     "pinch-zoom.umd.js",
     "config_language.js",
@@ -75,8 +79,6 @@ var birdhouse_css = [
     "style-slider.css",
     "style-slider-dark.css",
 ];
-
-loadingImage = "birdhouse/img/bird.gif";
 
 
 function birdhousePrint_load(view="INDEX", camera="", date="", label="") {

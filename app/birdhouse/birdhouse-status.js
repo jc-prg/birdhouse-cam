@@ -469,3 +469,5 @@ function birdhouseStatus_downloads(data) {
     collect4download_amount = app_collect_list.length;
     setTextById("collect4download_amount", collect4download_amount);
     }
+
+app_scripts_loaded += 1;

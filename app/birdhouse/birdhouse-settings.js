@@ -375,5 +375,4 @@ function birdhouse_app_settings (name="Settings") {
 		}
 }
 
-
-
+app_scripts_loaded += 1;

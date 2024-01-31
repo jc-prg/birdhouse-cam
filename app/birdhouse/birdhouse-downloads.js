@@ -90,3 +90,4 @@ function archivDownload_requestDayWait(data) {
 }
 
 
+app_scripts_loaded += 1;

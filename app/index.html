@@ -90,9 +90,19 @@
     loadScripts("/birdhouse/", birdhouse_js);
     loadCss("/birdhouse/",     birdhouse_css);
 
-    setTimeout( function() {
-        startApp();
-    }, 1000 );
+    function wait_until_loaded() {
+        console.log("Scripts loaded: " + app_scripts_loaded + "/" + birdhouse_js.length);
+        if (app_scripts_loaded == birdhouse_js.length) {
+            startApp();
+            }
+        else {
+            setTimeout( function() {
+                wait_until_loaded();
+                }, 500 );
+            }
+        }
+
+    wait_until_loaded();
 
 </script>
 

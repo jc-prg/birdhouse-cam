@@ -138,3 +138,5 @@ function bird_lang(bird_name) {
         else                                { return bird_name; }
     }
 }
+
+app_scripts_loaded += 1;

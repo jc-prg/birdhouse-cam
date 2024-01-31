@@ -21,10 +21,12 @@ var app_session_id        = "";
 var app_status_commands   = ["last-answer"];
 
 
-//--------------------------------
-// create menu entries
-//--------------------------------
-
+/**
+* create menu entries for the app
+*
+* @param (dict) object - data returned form server API
+* @returns (array) - returns an array of array that contains the menu definition
+*/
 function app_menu_entries(data) {
 	var hideSettings     = "birdhouse_settings.toggle(true);";
 	var weather_active   = data["SETTINGS"]["localization"]["weather_active"];
@@ -186,5 +188,4 @@ function app_connection_lost(error=false) {
     app_connection_error = error;
 }
 
-
-
+app_scripts_loaded += 1;

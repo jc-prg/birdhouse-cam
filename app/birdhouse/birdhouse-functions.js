@@ -544,3 +544,4 @@ var loadJS = function(url, implementationCode, location) {
 
 birdhouse_initTooltip();
 
+app_scripts_loaded += 1;

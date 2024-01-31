@@ -151,4 +151,4 @@ function birdhouseChart_weatherOverview (entries, title_key="time", title_column
     return html;
 }
 
-
+app_scripts_loaded += 1;

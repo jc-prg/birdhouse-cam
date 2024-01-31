@@ -310,3 +310,4 @@ var language_app = {
 		}
 	}
 
+app_scripts_loaded += 1;

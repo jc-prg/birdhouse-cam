@@ -594,3 +594,5 @@ function birdhouseDevices_openOne(group_id) {
         else                                      { birdhouse_groupClose(birdhouse_device_list[i]); }
     }
 }
+
+app_scripts_loaded += 1;

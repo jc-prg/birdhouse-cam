@@ -185,3 +185,5 @@ function birdhouseAudioStream_image_header(on=true) {
     if (on) { document.getElementById('stream_toggle_header').setAttribute("src",img_on); }
     else    { document.getElementById('stream_toggle_header').setAttribute("src",img_off); }
 }
+
+app_scripts_loaded += 1;

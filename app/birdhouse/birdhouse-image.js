@@ -587,3 +587,5 @@ function birdhouse_ImageURL(URL) {
 	URL = URL.replace("https:/","https://");
 	return URL;
 	}
+
+app_scripts_loaded += 1;

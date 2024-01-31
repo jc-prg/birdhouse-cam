@@ -809,3 +809,5 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
     }
     return html;
 }
+
+app_scripts_loaded += 1;

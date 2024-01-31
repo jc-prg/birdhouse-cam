@@ -457,3 +457,5 @@ function birdhouse_AnswerRecreateImageConfig(data) {
 	appMsg.alert(lang("RECREATE_IMAGE_CONFIG"));
 	birdhouseReloadView();
 	}
+
+app_scripts_loaded += 1;

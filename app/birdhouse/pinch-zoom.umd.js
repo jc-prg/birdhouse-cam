@@ -921,3 +921,5 @@
 
     exports.default = PinchZoom;
 });
+
+app_scripts_loaded += 1;
