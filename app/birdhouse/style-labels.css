@@ -1,5 +1,22 @@
 /* labels for object detection */
 
+.download_label {
+    background:darkred;
+    color:white;
+    width:auto;
+    border-radius:7px;
+
+    position:relative;
+    top:-18px;
+    right:-12px;
+
+    z-index:100;
+    padding:3px;
+    font-size:8px;
+    min-width:14px;
+    text-align:center;
+}
+
 .detection_label {
     float         : left;
     border-radius :  8px;

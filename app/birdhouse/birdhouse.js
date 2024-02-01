@@ -249,6 +249,8 @@ function birdhouseSetMainStatus(data) {
 	
 function birdhouseHeaderFunctions() {
 	var html = "";
+	var download_info = "<img class='header_icon' src='birdhouse/img/download-white.png' onclick='archivDownload_requestList();' style='position:relative;right:22px;top:-2px;'>";
+	download_info = "<text class='download_label' id='collect4download_amount2'>0</text>" + download_info;
 	var switch_cam  = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();' style='position:relative;top:-4px;'>";
 	var reload_view = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
 	var audio_stream = "<img id='stream_toggle_header' class='header_icon_wide' src='birdhouse/img/icon_bird_mute.png' onclick='birdhouseAudioStream_toggle();'>";
@@ -262,6 +264,7 @@ function birdhouseHeaderFunctions() {
 	html = reload_view;
 	if (app_available_cameras != undefined && app_available_cameras.length > 1) { html += active_cam + switch_cam; }
 	if (app_available_cameras != undefined && app_available_micros.length > 1)  { html += active_mic; }
+	if (app_collect4download) { html = download_info + html; }
 /*
 	if (app_available_cameras == undefined)	{ html = reload_view + audio_stream + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
 	else if (app_available_cameras.length > 1) { html = reload_view + audio_stream + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info; }

@@ -308,8 +308,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
     // short list of images from today
     else if (active_page == "TODAY" && (active_date == "" || active_date == undefined)) {
-
         same_img_size = true;
+        html += birdhouse_LIST_label(entries, active_page);
         }
 
     // images from an archived day
@@ -769,6 +769,7 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
     var html = "";
     var video = false;
     var prefix = "";
+    var count_labels = 0;
     if (active_page == "FAVORITES") { prefix = "FAVORITES_"; }
 
     if (entries != undefined &&  Object.keys(entries).length > 0) {
@@ -786,11 +787,13 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
                     if (label == "") { label = "without-label"; }
                     if (!labels[label]) { labels[label] = []; }
                     labels[label].push(key);
+                    count_labels += 1;
                     }
                 }
             if (active_page == "FAVORITES" && value["type"] == "video") {
                 video = true;
                 label_keys.push("video");
+                count_labels += 1;
                 }
             });
 
@@ -813,7 +816,7 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
             label_information +=  "<div id='label_video' class='detection_label_function' onclick='" + onclick + "'>&nbsp;" + lang("VIDEO") + "&nbsp;</div>";
             }
 
-        if (label_information != "") {
+        if (count_labels > 0) {
             var onclick = "birdhouse_view_images_objects(\"\");  birdhouse_labels_highlight(\"all\", \"label_key_list\");";
             label_information = "<div id='label_all' class='detection_label_function' onclick='" + onclick + "'>&nbsp;" + lang("ALL_IMAGES") + " (" + Object.entries(entries).length + ")&nbsp;</div>" +
                                 label_information;
