@@ -234,7 +234,7 @@ var language_app = {
 		"NO_IMAGE_IN_ARCHIVE_2"  : "Empty for this<br/>date and camera",
 		"NO_WEATHER_CHANGE_SETTINGS" : "Weather from internet not activated, you can activate the weather in the settings.",
 		"NO_INTERNET_CHART"     : "<i>(without detailed chart due to missing internet connection)</i>",
-		"OBJECT_DETECTION"      : "object detection",
+		"OBJECT_DETECTION"      : "Object detection",
 		"DETECTION_PROGRESS"    : "Object detection in progress ...",
 		"OBJECT_DETECTION_DONE" : "Object detection finished.",
 		"OBJECT_DETECTION_INACTIVE"    : "Object detection not activated",
