@@ -653,11 +653,6 @@ function birdhouse_LIST_calendar(groups) {
         if (!dates[year]) { dates[year] = []; years.push(year); }
         dates[year].push(month);
     });
-    Object.keys(groups).sort().reverse().forEach( group => {
-        [year, month] = group.split("-");
-        if (!dates[year]) { dates[year] = []; years.push(year); }
-        dates[year].push(month);
-    });
 
     var close_all = "";
     html += tab.start();
