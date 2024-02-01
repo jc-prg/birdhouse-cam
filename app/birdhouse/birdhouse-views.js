@@ -439,6 +439,10 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
 	if ((active_page == "FAVORITES" || active_page == "TODAY") && selected_label != undefined) {
         selected_label = selected_label.replaceAll("%20", " ");
+
+        if (active_page == "FAVORITES") { var prefix = "FAVORITES_"}
+        else                            { var prefix = "";
+        }
 	    birdhouse_view_images_objects(selected_label);
 	    birdhouse_labels_highlight(selected_label);
 	    }
@@ -649,6 +653,11 @@ function birdhouse_LIST_calendar(groups) {
         if (!dates[year]) { dates[year] = []; years.push(year); }
         dates[year].push(month);
     });
+    Object.keys(groups).sort().reverse().forEach( group => {
+        [year, month] = group.split("-");
+        if (!dates[year]) { dates[year] = []; years.push(year); }
+        dates[year].push(month);
+    });
 
     var close_all = "";
     html += tab.start();
@@ -658,8 +667,8 @@ function birdhouse_LIST_calendar(groups) {
         var cell_2 = "";
 
         for (var i=0;i<dates[year].length;i++) {
-            var onclick = "<!--CLOSE_ALL-->; birdhouse_groupToggle(\""+lang("ARCHIVE")+" &nbsp; (" +year + "-" + dates[year][i] +")\", true);"
-            close_all += "birdhouse_groupToggle(\""+lang("ARCHIVE")+" &nbsp; (" +year + "-" + dates[year][i] +")\", false);"
+            var onclick = "<!--CLOSE_ALL-->; birdhouse_groupToggle(\"ARCHIVE_" +year + "-" + dates[year][i] +"\", true);"
+            close_all += "birdhouse_groupToggle(\"ARCHIVE_" +year + "-" + dates[year][i] +"\", false);"
             cell_2 += "<div class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + year + "-" + dates[year][i] + "&nbsp;&nbsp;</div>";
             }
         html += tab.row(cell_1, cell_2);
@@ -756,6 +765,9 @@ function birdhouse_LIST_favorite_groups(groups) {
 function birdhouse_LIST_label(entries, active_page, empty=true) {
     var html = "";
     var video = false;
+    var prefix = "";
+    if (active_page == "FAVORITES") { prefix = "FAVORITES_"; }
+
     if (entries != undefined &&  Object.keys(entries).length > 0) {
         var labels = {};
         var video_added = false;
