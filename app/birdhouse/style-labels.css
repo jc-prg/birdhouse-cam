@@ -3,15 +3,17 @@
 .download_label {
     background:darkred;
     color:white;
-    width:auto;
+    width:20px;
     border-radius:7px;
 
     position:relative;
-    top:-18px;
+    top:-16px;
     right:-12px;
 
     z-index:100;
     padding:3px;
+    padding-right:6px;
+    padding-left:6px;
     font-size:8px;
     min-width:14px;
     text-align:center;
