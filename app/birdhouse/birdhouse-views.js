@@ -551,13 +551,13 @@ function birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page,
     var detection_key = lang("OBJECT_DETECTION_FOR_ARCHIVES", [detection_model, detection_threshold]) + ":";
 
     if (!camera_settings[app_active_cam]["object_detection"]["active"]) {
-        detection_key           = lang("OBJECT_DETECTION");
+        detection_key           = lang("OBJECT_DETECTION") + ":";
         button_object_detection = "";
         select_object_detection = "";
         select_thresholds = lang("DETECTION_INACTIVE_CAM");
         }
     else if (!app_data["STATUS"]["object_detection"]["models_loaded_status"][app_active_cam]) {
-        detection_key           = lang("OBJECT_DETECTION");
+        detection_key           = lang("OBJECT_DETECTION") + ":";
         button_object_detection = "";
         select_object_detection = "";
         select_thresholds = lang("DETECTION_NOT_LOADED");
