@@ -235,7 +235,8 @@ function birdhouse_view_images_objects(object) {
     image_list_active = [];
 
     var prefix = "";
-    if (app_active_page == "FAVORITES") { prefix = "FAVORITES_"; }
+    if (app_active_page == "FAVORITES")      { prefix = "FAVORITES_"; }
+    if (app_active_page == "TODAY_COMPLETE") { prefix = "TODAY_COMPLETE_"; }
 
     for (var i=0;i<group_list.length;i++) {
         image_ids_in_group = document.getElementById("group_ids_"+prefix+group_list[i]).innerHTML.split(" ");
