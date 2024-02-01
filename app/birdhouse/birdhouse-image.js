@@ -87,16 +87,16 @@ function birdhouse_OtherGroup( key, title, content, header_open, css_class="") {
     var html = "";
     var display = "";
 	if (header_open == false) { display = "style='display:none;'"; }
+    if (css_class != "") { css_class = " " + css_class; }
 
     html += birdhouse_OtherGroupHeader( key, title, header_open, css_class);
-    html += "<div id='group_"+key+"' "+display+">";
+    html += "<div id='group_"+key+"' "+display+" class='separator_group_body"+css_class+"'>";
     html += content;
     html += "</div>";
     return html;
 }
 
 function birdhouse_OtherGroupHeader( key, title, header_open, css_class="") {
-    if (css_class != "") { css_class = " " + css_class; }
 	var status = "−";
 	if (header_open == false) { status = "+"; }
 	var html   = "";

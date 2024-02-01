@@ -62,11 +62,14 @@ function birdhouseDevices_status(index, show_button) {
             var button = "";
             var action = "<div style='float:left;'>";
             if (show_button) {
-                button = "<button onclick=\""+onclick+"\" class=\"button-video-edit\">&nbsp;"+lang("SHOW")+"&nbsp;</button>";
-                action = "<div style='float:left;'>" + button + "&nbsp;&nbsp;&nbsp;</div><div style='float:left;'>";
+                var device_key = "<text onclick=\""+onclick+"\" style=\"cursor:pointer;\"><u><b>" + key + "</b></u></text>";
+                action = "<div style='float:left;'>";
+                }
+            else {
+                var device_key = key;
                 }
             for (var a=0; a<index[i][key]["status"].length;a++) {
-                action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>";
+                action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>"; //
             }
             for (var a=index[i][key]["status"].length; a<3; a++) {
                 action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;height:24px;width:24px;'></div>";
@@ -78,7 +81,7 @@ function birdhouseDevices_status(index, show_button) {
                 action += "<br/><div style='padding:5px;width:100%;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
             }
             action += "</div>";
-            html_index += tab.row(key, action);
+            html_index += tab.row(device_key, action);
         });
     }
     html_index += tab.end();
@@ -582,6 +585,7 @@ function birdhouseDevices_microphones(data) {
 
         html_entry += "</div></div>";
 
+        html_entry = "test";
         html += birdhouse_OtherGroup( micro, micro_name, html_entry, false, "settings" );
 	}
 
