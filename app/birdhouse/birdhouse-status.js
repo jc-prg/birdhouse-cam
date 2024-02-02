@@ -446,7 +446,7 @@ function birdhouseStatus_system(data) {
             }
         }
     else {
-        setTextById("server_info_header", loading_dots_red);
+        setTextById("server_info_header", "");
         }
 
     var cpu_details = "";
