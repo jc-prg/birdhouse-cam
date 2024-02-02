@@ -71,10 +71,10 @@ function birdhouse_OBJECTS(title, data) {
                 default_dates += "<div class='other_label' onclick='"+onclick+"'>&nbsp;" + camera + ": " + date + "&nbsp;</div>";
                 day_count += 1;
 
-                if (date_list.length > 10 && k == 8) {
-                    onclick = "elementHidden(\"label_expand_click\");elementVisible(\"label_expand\");"
-                    default_dates += "<div id='label_expand_click' class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + lang("FURTHER_DAYS", [date_list.length - 9]) + "&nbsp;...&nbsp;&nbsp;</div>";
-                    default_dates += "<div id='label_expand' style='display:none;'>";
+                if (date_list.le ngth > 10 && k == 8) {
+                    onclick = "elementHidden(\"label_expand_click_"+key+"\");elementVisible(\"label_expand_"+key+"\");"
+                    default_dates += "<div id='label_expand_click_"+key+"' class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + lang("FURTHER_DAYS", [date_list.length - 9]) + "&nbsp;...&nbsp;&nbsp;</div>";
+                    default_dates += "<div id='label_expand_"+key+"' style='display:none;'>";
                     }
                 else if (date_list.length > 10 && k + 1 == date_list.length) {
                     default_dates += "</div>";
