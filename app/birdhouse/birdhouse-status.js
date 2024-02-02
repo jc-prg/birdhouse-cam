@@ -8,7 +8,10 @@ var header_color_error = "#993333";
 var header_color_warning = "#666633";
 var header_color_default = "";
 var weather_footer = [];
+var loading_dots_red   = '<span class="loading-dots"><span class="dot red"></span><span class="dot red"></span><span class="dot red"></span></span>';
+var loading_dots_green = '<span class="loading-dots"><span class="dot green"></span><span class="dot green"></span><span class="dot green"></span></span>';
 var app_processing_active = false;
+var app_server_error = false;
 
 function setHeaderColor(header_id, header_color) {
     header = document.getElementById("group_header_" + header_id);
@@ -57,6 +60,7 @@ function birdhouseStatus_print(data) {
     app_data       = data;
     weather_footer = [];
     app_processing_active = false;
+    app_server_error = false;
 
 
     // check page length vs. screen height
@@ -381,11 +385,44 @@ function birdhouseStatus_system(data) {
     var status_srv = data["STATUS"]["server"];
     var status_db  = data["STATUS"]["database"];
     var start_time = data["STATUS"]["start_time"];
+    var show_error = false;
 
     // add database information
     var db_info = "type=" + settings["database_type"]+"; ";
     if (settings["database_type"] == "couch") { db_info += "connected=" + status_db["db_connected_couch"]; }
     setTextById("system_info_database", db_info);
+
+    // db error
+    if (status_db["db_connected"].indexOf("False") >= 0) {
+        setTextById("system_info_db_connection", "<font color='red'>Error: " + status_db["db_connected"] + " (" + status_db["type"] + ")</font>");
+        show_error = true;
+        }
+    else {
+        setTextById("system_info_db_connection", "Connected: " + status_db["type"]);
+        }
+    if (status_db["handler_error"]) {
+        setTextById("system_info_db_handler", "<font color='red'>Error:</font> " + status_db["handler_error_msg"].toString());
+        show_error = true;
+        }
+    else {
+        setTextById("system_info_db_handler", "OK");
+        }
+    if (status_db["db_error"].indexOf("True") >= 0) {
+        setTextById("system_info_db_error", "<font color='red'>Error: " + status_db["db_error"] + "</font> " + status_db["db_error_msg"].toString());
+        show_error = true;
+        }
+    else {
+        setTextById("system_info_db_error", "OK");
+        }
+
+    // health check
+    if (status_srv["health_check"] != "OK") {
+        setTextById("system_health_check", "<font color='red'>" + status_srv["health_check"] + "</font>");
+        show_error = true;
+        }
+    else {
+        setTextById("system_health_check", status_srv["health_check"]);
+        }
 
     // add system information
     percentage_1 = (status_sys["mem_used"]/status_sys["mem_total"])*100;
@@ -400,12 +437,17 @@ function birdhouseStatus_system(data) {
     setTextById("system_info_hdd_total",        (Math.round(status_sys["hdd_total"]*10)/10)+" GB");
     setTextById("system_info_connection",       "Connected");
     setTextById("system_info_start_time",       start_time);
-    setTextById("system_info_db_connection",    "Connected=" + status_db["db_connected"] + " (" + status_db["type"] + ")");
-    setTextById("system_info_db_handler",       "Error=" + status_db["handler_error"] + " " + status_db["handler_error_msg"].toString());
-    setTextById("system_info_db_error",         "Error=" + status_db["db_error"] + " " + status_db["db_error_msg"].toString());
     setTextById("server_start_time",            lang("STARTTIME") + ": " + start_time);
     setTextById("system_queue_wait",            (Math.round(status_srv["queue_waiting_time"]*10)/10) + "s");
-    setTextById("system_health_check",           status_srv["health_check"]);
+
+    if (show_error || app_connection_error) {
+        if (getTextById("server_info_header") != loading_dots_red) {
+            setTextById("server_info_header", loading_dots_red);
+            }
+        }
+    else {
+        setTextById("server_info_header", loading_dots_red);
+        }
 
     var cpu_details = "";
     if (status_sys["cpu_usage_detail"]) {
@@ -509,15 +551,14 @@ function birdhouseStatus_processing(data) {
         "Loading object detection view":    "processing_object_view",
         "Video recording / processing":     "processing_video"
     }
-    var loading_dots = '<span class="loading-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
 
     if (data["STATUS"]["server"]["backup_process_running"])     { setTextById("processing_backup", lang("ACTIVE")); app_processing_active = true; }
     else                                                        { setTextById("processing_backup", lang("INACTIVE")); }
 
     if (app_processing_active) {
         var text = getTextById("processing_info_header");
-        if (text != loading_dots) {
-            setTextById("processing_info_header", loading_dots);
+        if (text != loading_dots_green) {
+            setTextById("processing_info_header", loading_dots_green);
             }
         }
     else { setTextById("processing_info_header", ""); }

@@ -483,6 +483,11 @@ img .play_button  {
   float: right;
 }
 
+#server_info_header {
+  display: block;
+  float: right;
+}
+
 .loading-dots {
   display: inline-block;
 }
@@ -494,7 +499,14 @@ img .play_button  {
   background-color: white;
   border-radius: 50%;
   margin-right: 4px;
-  animation: dot-animation 1.5s infinite;
+}
+
+.dot.red {
+  animation: dot-animation-red 1.5s infinite;
+}
+
+.dot.green {
+  animation: dot-animation-green 1.5s infinite;
 }
 
 .dot:nth-child(1) {
@@ -509,12 +521,24 @@ img .play_button  {
   animation-delay: 0.5s;
 }
 
-@keyframes dot-animation {
+@keyframes dot-animation-red {
   0% {
     background-color: white;
   }
   50% {
     background-color: red;
+  }
+  100% {
+    background-color: white;
+  }
+}
+
+@keyframes dot-animation-green {
+  0% {
+    background-color: white;
+  }
+  50% {
+    background-color: green;
   }
   100% {
     background-color: white;

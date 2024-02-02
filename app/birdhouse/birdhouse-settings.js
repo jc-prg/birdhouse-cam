@@ -82,10 +82,10 @@ function birdhouse_app_settings (name="Settings") {
         html += birdhouse_OtherGroup( "device_info", "Device Information", html_entry, open_settings["device_info"] );
 
         html_entry = this.process_information();
-        html += birdhouse_OtherGroup( "process_info", "Process Information &nbsp;<div id='processing_info_header'>.</div>", html_entry, open_settings["process_info"] );
+        html += birdhouse_OtherGroup( "process_info", "Process Information &nbsp;<div id='processing_info_header'></div>", html_entry, open_settings["process_info"] );
 
         html_entry = this.server_information();
-        html += birdhouse_OtherGroup( "server_info", "Server Information", html_entry, open_settings["server_info"] );
+        html += birdhouse_OtherGroup( "server_info", "Server Information &nbsp;<div id='server_info_header'></div>", html_entry, open_settings["server_info"] );
 
         if (this.setting_type == "SETTINGS") {
             html_entry = this.display_information();
