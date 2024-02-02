@@ -2387,7 +2387,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 else:
                     video_server = "<!--CURRENT_SERVER-->"
                 files = {
-                    "VIDEOFILE": "http://" + video_server + ":" + str(self.config.param["server"]["port_video"]) + "/",
+                    "VIDEOFILE": "http://" + video_server + ":" + str(birdhouse_env["port_video"]) + "/",
                     "THUMBNAIL": data["thumbnail"],
                     "LENGTH": str(data["length"]),
                     "VIDEOID": video_id,

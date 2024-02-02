@@ -232,8 +232,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 			video_values["ACTIVE"]     = app_active_cam;
 			video_values["LENGTH"]     = video[key]["length"];
 			video_values["THUMBNAIL"]  = "";
-			// video_values["VIDEOFILE"]  = video[key]["directory"] + video[key]["video_file"];
-			video_values["VIDEOFILE"]  = video_stream_server + video[key]["video_file"];
+			video_values["VIDEOFILE"]  = video[key]["directory"] + video[key]["video_file"];
 			video_values["JAVASCRIPT"] = trim_command;
 			videoplayer  = videoplayer_template;
 			for (let key in video_values) {
