@@ -393,7 +393,7 @@ function birdhouseStatus_system(data) {
     setTextById("system_info_database", db_info);
 
     // db error
-    if (status_db["db_connected"].indexOf("False") >= 0) {
+    if (!status_db["db_connected"] || status_db["db_connected"].toString().indexOf("False") >= 0) {
         setTextById("system_info_db_connection", "<font color='red'>Error: " + status_db["db_connected"] + " (" + status_db["type"] + ")</font>");
         show_error = true;
         }
