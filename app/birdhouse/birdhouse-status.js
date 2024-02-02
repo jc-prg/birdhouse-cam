@@ -498,7 +498,7 @@ function birdhouseStatus_detection(data) {
         setTextById("processing_object_detection", message_2);
         app_processing_active = true;
         }
-    else {
+    else if (data["STATUS"]["object_detection"]["progress"] != undefined) {
         setTextById("processing_object_detection", lang("INACTIVE"));
         }
 
