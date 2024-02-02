@@ -50,28 +50,29 @@ function birdhouse_app_settings (name="Settings") {
             "app_under_construction": false
             }
 
-        if (type == "PROCESSING") {
-            open_settings["process_info"] = true;
-            }
-        else {
-            open_settings["app_info_01"] = true;
-            }
-
         if (initial_setup) {
             open_settings["app_info_01"] = false;
             open_settings["server_info"] = false;
             open_settings["device_info"] = false;
 
-            var img = "<img src='"+app_loading_image+"' width='250'><br/>&nbsp;<br/>"
+            var img = "<img src='"+app_loading_image+"' width='250'><br/>&nbsp;<br/>";
             appMsg.confirm(img + lang("INITIAL_SETUP"), "console.log('.');", 400);
+            }
+        else if (this.setting_type == "INFO_ONLY") {
+            open_settings["app_info_01"]  = true;
+            open_settings["device_info"]  = true;
+            open_settings["process_info"] = true;
+        }
+        else if (this.setting_type == "PROCESSING") {
+            open_settings["process_info"] = true;
+            }
+        else {
+            open_settings["app_info_01"]  = true;
             }
 
         if (this.setting_type != "INFO_ONLY") {
             html  = "<h2>Information</h2>";
             html += "<hr style='border:1px solid gray;'>"
-        }
-        else {
-            open_settings["device_info"] = true;
         }
 
         html_entry = this.app_information();
