@@ -18,13 +18,13 @@ function birdhouse_app_settings (name="Settings") {
             setTextById(app_frame_content, html);
             }
       	setTimeout(function(){
-      	    birdhouse_settings.create_exec();
-		}, 2000);
+      	    birdhouse_settings.create_exec(type);
+		}, 500);
 		//birdhouse_KillActiveStreams();
     	window.scrollTo(0,0);
     }
 
-	this.create_exec = function () {
+	this.create_exec = function (type="") {
 
         this.tab = new birdhouse_table();
         this.tab.style_rows["height"] = "27px";
@@ -40,13 +40,21 @@ function birdhouse_app_settings (name="Settings") {
         this.current_server = current_server.split(":")[0];
 
         var open_settings = {
-            "app_info_01" : true,
+            "app_info_01" : false,
             "device_info" : false,
+            "process_info": false,
             "server_info" : false,
             "api_calls"   : false,
             "app_info_02" : false,
             "display_info": false,
             "app_under_construction": false
+            }
+
+        if (type == "PROCESSING") {
+            open_settings["process_info"] = true;
+            }
+        else {
+            open_settings["app_info_01"] = true;
             }
 
         if (initial_setup) {
@@ -67,10 +75,13 @@ function birdhouse_app_settings (name="Settings") {
         }
 
         html_entry = this.app_information();
-        html += birdhouse_OtherGroup( "app_info_01", "App Information (Version)", html_entry, open_settings["app_info_01"] );
+        html += birdhouse_OtherGroup( "app_info_01", "App Information (Versions)", html_entry, open_settings["app_info_01"] );
 
         html_entry = this.device_information();
         html += birdhouse_OtherGroup( "device_info", "Device Information", html_entry, open_settings["device_info"] );
+
+        html_entry = this.process_information();
+        html += birdhouse_OtherGroup( "process_info", "Process Information &nbsp;<div id='processing_info_header'>.</div>", html_entry, open_settings["process_info"] );
 
         html_entry = this.server_information();
         html += birdhouse_OtherGroup( "server_info", "Server Information", html_entry, open_settings["server_info"] );
@@ -88,7 +99,7 @@ function birdhouse_app_settings (name="Settings") {
             setTextById(app_frame_header, "<center><h2>" + lang("INFORMATION")) + "</h2></center>";
             setTextById("frame2", html)
             }
-        else if (this.setting_type == "SETTINGS") {
+        else if (this.setting_type == "SETTINGS" || this.setting_type == "PROCESSING") {
             html += "<br/>&nbsp<br/>";
             html += this.settings();
 
@@ -139,17 +150,17 @@ function birdhouse_app_settings (name="Settings") {
 
         var main_settings_open = false;
         if (app_data["STATUS"]["server"]["initial_setup"]) {main_settings_open = true; }
-        html += birdhouse_OtherGroup( "server_settings", "Main Settings", html_entry, main_settings_open, "settings" );
-
-        var html_entry = this.api_calls();
-        html_entry += "&nbsp;<br/>";
-        html += birdhouse_OtherGroup( "api_calls", "API Calls", html_entry, false, "settings" );
+        html += birdhouse_OtherGroup( "APP_SETTINGS", "Main APP Settings", html_entry, main_settings_open, "settings" );
 
         html_entry = this.server_side_settings();
-        html += birdhouse_OtherGroup( "SRV_SETTINGS", "Basic server settings <i>(edit in &quot;.env&quot;)</i>", html_entry, false, "settings" );
+        html += birdhouse_OtherGroup( "SRV_SETTINGS", "Main SERVER settings <i>(edit in &quot;.env&quot;)</i>", html_entry, false, "settings" );
+
+        html_entry = this.api_calls();
+        html_entry += "&nbsp;<br/>";
+        html += birdhouse_OtherGroup( "api_calls", "Development: API Calls", html_entry, false, "settings" );
 
         html_entry = this.app_under_construction();
-        html += birdhouse_OtherGroup( "app_under_construction", "UNDER CONSTRUCTION", html_entry, false, "settings" );
+        html += birdhouse_OtherGroup( "app_under_construction", "Development: Direct Links", html_entry, false, "settings" );
 
         return html;
     }
@@ -334,6 +345,33 @@ function birdhouse_app_settings (name="Settings") {
 	    return html;
 	}
 
+	this.process_information = function () {
+	    var html = "";
+        var tab      = new birdhouse_table();
+        tab.style_rows["height"] = "27px";
+        tab.style_cells["width"] = "50%";
+        tab.style_cells["vertical-align"] = "top";
+
+        var process_information = {
+            "Object Detection":                 "processing_object_detection",
+            "Download preparation":             "processing_downloads",
+            "Loading archive view":             "processing_archive_view",
+            "Loading favorite view":            "processing_favorite_view",
+            "Loading object detection view":    "processing_object_view",
+            "Backup process":                   "processing_backup",
+            "Video recording / processing":     "processing_video",
+        }
+
+        html += tab.start();
+        Object.entries(process_information).forEach(([key, value]) => {
+            html += tab.row(key+":", "<div id='" + value + "'>N/A</div>");
+        });
+        html += tab.end();
+        html += "<br/>&nbsp;<br/>";
+
+ 	    return html;
+	    }
+
 	this.app_under_construction = function() {
 		var html_entry = this.tab.start();
 		link = RESTurl + "stream.mjpg?cam1";
@@ -347,12 +385,12 @@ function birdhouse_app_settings (name="Settings") {
 		link = RESTurl + "pip/stream.mjpg?cam1+cam2:1";
 		html_entry += this.tab.row("Stream Picture-in-Picture:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
 
-        link = window.location.href.split("?")[0] + "?ARCHIVE";
-		html_entry += this.tab.row("Direct Link TODAY:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
-        link = window.location.href.split("?")[0] + "?FAVORITES";
-		html_entry += this.tab.row("Direct Link TODAY:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
-        link = window.location.href.split("?")[0] + "?TODAY";
-		html_entry += this.tab.row("Direct Link TODAY:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+        var direct_links = ["ARCHIVE", "FAVORITES", "TODAY", "SETTINGS", "INFO", "PROCESSING"];
+
+        for (var i=0;i<direct_links.length;i++) {
+            link = window.location.href.split("?")[0] + "?" + direct_links[i];
+            html_entry += this.tab.row("Direct Link "+direct_links[i]+":", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+            }
 
 		html_entry += this.tab.row("&nbsp;");
 		html_entry += this.tab.end();

@@ -8,6 +8,7 @@ var header_color_error = "#993333";
 var header_color_warning = "#666633";
 var header_color_default = "";
 var weather_footer = [];
+var app_processing_active = false;
 
 function setHeaderColor(header_id, header_color) {
     header = document.getElementById("group_header_" + header_id);
@@ -55,6 +56,8 @@ function birdhouseStatus_print(data) {
     // set latest status data to var app_data
     app_data       = data;
     weather_footer = [];
+    app_processing_active = false;
+
 
     // check page length vs. screen height
     var body = document.body, html = document.documentElement;
@@ -71,6 +74,7 @@ function birdhouseStatus_print(data) {
     birdhouseStatus_loadingViews(data);
     birdhouseStatus_detection(data);
     birdhouseStatus_downloads(data);
+    birdhouseStatus_processing(data);
 
     document.getElementById(app_frame_info).style.display = "block";
 
@@ -414,31 +418,46 @@ function birdhouseStatus_system(data) {
 
 function birdhouseStatus_loadingViews(data) {
     var views = ["object", "archive", "favorite"];
+
     for (var i=0;i<views.length;i++) {
         var status = data["STATUS"]["server"]["view_"+views[i]+"_loading"];
         var progress = data["STATUS"]["server"]["view_"+views[i]+"_progress"];
         if (status == "in progress") {
             setTextById("loading_status_"+views[i], progress);
+            setTextById("processing_"+views[i]+"_view", progress);
+            app_processing_active = true;
         }
         else if (status == "started") {
             setTextById("loading_status_"+views[i], lang("WAITING"));
+            setTextById("processing_"+views[i]+"_view", lang("WAITING"));
+            app_processing_active = true;
         }
         else if (status == "done") {
             setTextById("loading_status_"+views[i], lang("DONE"));
+            setTextById("processing_"+views[i]+"_view", lang("INACTIVE"));
         }
     }
 }
 
 function birdhouseStatus_detection(data) {
+
     if (data["STATUS"]["object_detection"]["progress"]) {
-        message = data["STATUS"]["object_detection"]["progress"] + " %";
+        message_1 = data["STATUS"]["object_detection"]["progress"] + " %";
+        message_2 = message_1;
         if (data["STATUS"]["object_detection"]["waiting"] > 1) {
-            message += "<br/><i>(" + lang("WAITING_DATES", [data["STATUS"]["object_detection"]["waiting"]]) + ")</i>";
+            message_1 += "<br/><i>(" + lang("WAITING_DATES", [data["STATUS"]["object_detection"]["waiting"]]) + ")</i>";
+            message_2 += " &nbsp; <i>(" + lang("WAITING_DATES", [data["STATUS"]["object_detection"]["waiting"]]) + ")</i>";
             }
         else if (data["STATUS"]["object_detection"]["waiting"] == 1) {
-            message += "<br/><i>(" + lang("WAITING_DATE") + ")</i>";
+            message_1 += "<br/><i>(" + lang("WAITING_DATE") + ")</i>";
+            message_2 += " &nbsp; <i>(" + lang("WAITING_DATE") + ")</i>";
             }
-        setTextById("last_answer_detection_progress", message);
+        setTextById("last_answer_detection_progress", message_1);
+        setTextById("processing_object_detection", message_2);
+        app_processing_active = true;
+        }
+    else {
+        setTextById("processing_object_detection", lang("INACTIVE"));
         }
 
     var status   = app_data["STATUS"]["object_detection"];
@@ -457,18 +476,51 @@ function birdhouseStatus_detection(data) {
 
 function birdhouseStatus_downloads(data) {
     if (data["STATUS"]["server"]["downloads"] != {}) {
-        var all_links = "";
+        var all_links_1 = "";
+        var all_links_2 = "<ul>";
+        var count_processes = 0;
+        var count_downloads = 0;
         Object.entries(data["STATUS"]["server"]["downloads"]).forEach(([key,value]) => {
-            if (value.indexOf("in progress") > 0)   {var link = "<i>" + lang("WAITING") + "</i>"; }
-            else                                    {var link = "<a href='"+value+"'>"+value+"</a>"; }
-            all_links += link + "<br/>";
+            if (value.indexOf("in progress") > 0)   { var link = "<i>" + lang("WAITING") + "</i>"; count_processes += 1; }
+            else                                    { var link = "<a href='"+value+"'>"+value+"</a>"; count_downloads += 1; }
+            all_links_1 += link + "<br/>";
+            all_links_2 += "<li>" + link + "</li>";
             setTextById("archive_download_link_" + key, link);
             });
-        setTextById("archive_download_link", all_links);
+        all_links_2 += "</ul>";
+        var message = count_processes + " Downloads under preparation. <br/>" + count_downloads + " Download ready: <br/>";
+        message    += all_links_2;
+        setTextById("archive_download_link", all_links_1);
         }
+    if (count_downloads + count_processes > 0)  { setTextById("processing_downloads", message); app_processing_active = true; }
+    else                                        { setTextById("processing_downloads", lang("INACTIVE")); }
+
     collect4download_amount = app_collect_list.length;
     setTextById("collect4download_amount", collect4download_amount);
     setTextById("collect4download_amount2", collect4download_amount);
     }
+
+function birdhouseStatus_processing(data) {
+    var process_information = {
+        "Object Detection":                 "processing_object_detection",
+        "Download preparation":             "processing_downloads",
+        "Loading archive view":             "processing_archive_view",
+        "Loading favorite view":            "processing_favorite_view",
+        "Loading object detection view":    "processing_object_view",
+        "Video recording / processing":     "processing_video"
+    }
+    var loading_dots = '<span class="loading-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
+
+    if (data["STATUS"]["server"]["backup_process_running"])     { setTextById("processing_backup", lang("ACTIVE")); app_processing_active = true; }
+    else                                                        { setTextById("processing_backup", lang("INACTIVE")); }
+
+    if (app_processing_active) {
+        var text = getTextById("processing_info_header");
+        if (text != loading_dots) {
+            setTextById("processing_info_header", loading_dots);
+            }
+        }
+    else { setTextById("processing_info_header", ""); }
+}
 
 app_scripts_loaded += 1;

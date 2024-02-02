@@ -87,7 +87,8 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 	    if (app_first_load) { app_first_load = false; }
 	    else                { app_2nd_load = false; }
 	    var param = window.location.href.split("?");
-	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "OBJECTS", "TODAY", "INFO", "WEATHER", "IMAGE_SETTINGS"];
+	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "OBJECTS", "TODAY", "INFO",
+	                   "WEATHER", "IMAGE_SETTINGS", "SETTINGS", "PROCESSING"];
 	    if (options.includes(param[1])) {
 	        view = param[1];
 	        app_active_page = param[1];
@@ -166,6 +167,7 @@ function birdhousePrint(data) {
 	else if (app_active_page == "IMAGE_SETTINGS")    { birdhouseDevices_cameraSettings(data); }
 	else if (app_active_page == "INDEX")             { birdhouse_INDEX(data, camera); }
 	else if (app_active_page == "INFO") 	         { birdhouse_settings.create("INFO_ONLY"); }
+	else if (app_active_page == "PROCESSING")        { birdhouse_settings.create("PROCESSING"); }
 	else if (app_active_page == "OBJECTS")           { birdhouse_OBJECTS(lang("BIRDS_DETECTED"), data); }
 	else if (app_active_page == "SETTINGS")          { birdhouse_settings.create(); }
 	else if (app_active_page == "TODAY")             { birdhouse_LIST(lang("TODAY"), data, camera); }

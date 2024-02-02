@@ -20,9 +20,16 @@ class BirdhouseViewTools(BirdhouseClass):
 
         self.logging.info("Connected view tools.")
 
-    def calculate_progress(self, view, number, cam, count, length) -> None:
+    def calculate_progress(self, view, number, cam, count, length):
         """
         show progress information in logging
+
+        Parameters:
+            view (str): view identifier
+            number (str): number of step for the view (e.g. '1/4')
+            cam (str): camera identifier
+            count (int): number of sub step already processed
+            length (int): total amount of sub steps to be processed
         """
         if view not in self.progress:
             self.progress[view] = ""
@@ -1517,11 +1524,11 @@ class BirdhouseViewObjects(BirdhouseClass):
         content["entries"] = files_archive
 
         self.views = content
+        self.loading = "done"
         self.create_complete = False
         self.logging.info(
             "Create data for object detection view done (" + str(round(time.time() - start_time, 1)) + "s)")
         self.config.db_handler.write("objects", "", content, create=True, save_json=True, no_cache=False)
-        self.loading = "done"
 
     def _list_get_detection_for_label(self, label, entry, favorite):
         """
@@ -1713,11 +1720,25 @@ class BirdhouseViewObjects(BirdhouseClass):
             dict: modified image entry to be used for the thumbnail
         """
         detect_position = []
+        if "directory" not in entry:
+            if "datestamp" in entry:
+                entry["directory"] = "/images/" + entry["datestamp"] + "/"
+            else:
+                entry["lowres"] = ""
+                entry["error"] = "could not create lowres (1)"
+                self.logging.warning("_list_create_label_thumbnail: image DB entry not OK for '" + label + "' - " + str(entry))
+                return entry
+
         if entry["directory"][0:1] == "/":
             entry["directory"] = entry["directory"][1:]
         hires_path = os.path.join(birdhouse_main_directories["data"], entry["directory"], entry["hires"])
         lowres_file = "image_" + label + "_lowres.jpg"
         lowres_path = os.path.join(birdhouse_main_directories["data"], entry["directory"], lowres_file)
+
+        if not os.path.exists(hires_path):
+            entry["lowres"] = ""
+            entry["error"] = "could not create lowres (2)"
+            return entry
 
         if os.path.exists(lowres_path):
             os.remove(lowres_path)
