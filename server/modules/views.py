@@ -594,14 +594,14 @@ class BirdhouseViewFavorite(BirdhouseClass):
                 del content["entries"][stamp]
 
         # images from today
-        today_date = self.config.local_time().strftime('%Y%m%d')
-        if not self.config.db_handler.exists(config="backup", date=today_date):
-            files_images = self._list_create_from_images("", complete)
-            if len(files_images) > 0:
-                content["groups"]["today"] = []
-                for stamp in files_images:
-                    content["entries"][stamp] = files_images[stamp].copy()
-                    content["groups"]["today"].append(stamp)
+        # today_date = self.config.local_time().strftime('%Y%m%d')
+        #if not self.config.db_handler.exists(config="backup", date=today_date):
+        #    files_images = self._list_create_from_images("", complete)
+        #    if len(files_images) > 0:
+        #        content["groups"]["today"] = []
+        #        for stamp in files_images:
+        #            content["entries"][stamp] = files_images[stamp].copy()
+        #            content["groups"]["today"].append(stamp)
 
         # videos
         files_videos = self._list_create_from_videos()
