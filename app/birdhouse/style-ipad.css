@@ -26,6 +26,7 @@
     
         .image_container.fixed_height { height  : 240px; }
         .thumbnail                    { width   : 155px; }
+        .thumbnail.error              { width   : 145px; }
 	    .frame_column.wide { width : 900px; }
         .recycle         { width   : 30px;  height   : 30px;  top : 30px; }
         .recycle_img     { width   : 30px;  height   : 30px; }
@@ -46,6 +47,7 @@
     
     	.frame_column.wide { width : 760px; }
         .thumbnail       { width   : 155px; }
+        .thumbnail.error { width   : 145px; }
         .image_container.fixed_height { height  : 240px; }
         .recycle         { width   : 30px;  height   : 30px;  top : 30px; }
         .recycle_img     { width   : 30px;  height   : 30px; }

@@ -332,7 +332,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         }
 
     // all videos
-    else if (active_page == "VIDEOS") {}
+    else if (active_page == "VIDEOS") {
+        html += birdhouse_LIST_calendar(groups);
+    }
 
     // ----------------------------------------
 
@@ -435,6 +437,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
 	birdhouse_frameHeader(page_title, page_status);
 	setTextById(app_frame_content, html);
+	birdhouse_ImageErrorSize();
 
 	if ((active_page == "FAVORITES" || active_page == "TODAY") && selected_label != undefined) {
         selected_label = selected_label.replaceAll("%20", " ");
@@ -564,6 +567,7 @@ function birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page,
 
     info_text += tab.row(detection_key, select_thresholds + "<br/>" +
                          select_object_detection + "<br/>&nbsp;<br/>" + button_object_detection );
+    info_text += tab.row(lang("UPDATE_VIEWS")+":", "<button onclick='birdhouse_forceUpdateViews();' class='bh-slider-button' style='width:80px;'>Update</button>");
 
     info_text += tab.end();
     info_text += "&nbsp;<br/>&nbsp;";
@@ -669,8 +673,8 @@ function birdhouse_LIST_calendar(groups) {
         var cell_2 = "";
 
         for (var i=0;i<dates[year].length;i++) {
-            var onclick = "<!--CLOSE_ALL-->; birdhouse_groupToggle(\"ARCHIVE_" +year + "-" + dates[year][i] +"\", true);"
-            close_all += "birdhouse_groupToggle(\"ARCHIVE_" +year + "-" + dates[year][i] +"\", false);"
+            var onclick = "<!--CLOSE_ALL-->; birdhouse_groupToggle(\""+app_active_page+"_" +year + "-" + dates[year][i] +"\", true);"
+            close_all += "birdhouse_groupToggle(\""+app_active_page+"_" +year + "-" + dates[year][i] +"\", false);"
             cell_2 += "<div class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + year + "-" + dates[year][i] + "&nbsp;&nbsp;</div>";
             }
         html += tab.row(cell_1, cell_2);

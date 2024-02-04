@@ -69,6 +69,17 @@ h3 { margin : 4px; }
     border        : 1px solid white;
 }
 
+.thumbnail.error {
+    text-align      : center;
+    vertical-align  : middle;
+    color           : white;
+    border          : white 1px solid;
+    background      : #660000;
+    padding         : 5px;
+    width           : 127px;
+    font-weight     : bold;
+}
+
 .thumbnail_container { 
     position      : relative; 
     top           : -40px; 

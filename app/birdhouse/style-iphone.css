@@ -58,6 +58,7 @@
         .image_container.fixed_height { height  : 230px; }
 
         .thumbnail           { width :  98%;  }
+        .thumbnail.error     { width :  96%;  }
         .thumbnail_container { width : 130px; }
 
         .recycle         { width   : 20px;  height   : 20px;  top : 12px; }

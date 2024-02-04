@@ -483,6 +483,7 @@ function birdhouseStatus_loadingViews(data) {
 
 function birdhouseStatus_detection(data) {
 
+    console.error(data["STATUS"]["object_detection"]["progress"]);
     if (data["STATUS"]["object_detection"]["progress"]) {
         message_1 = data["STATUS"]["object_detection"]["progress"] + " %";
         message_2 = message_1;
