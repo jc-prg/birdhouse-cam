@@ -593,16 +593,6 @@ class BirdhouseViewFavorite(BirdhouseClass):
             for stamp in delete_entries:
                 del content["entries"][stamp]
 
-        # images from today
-        # today_date = self.config.local_time().strftime('%Y%m%d')
-        #if not self.config.db_handler.exists(config="backup", date=today_date):
-        #    files_images = self._list_create_from_images("", complete)
-        #    if len(files_images) > 0:
-        #        content["groups"]["today"] = []
-        #        for stamp in files_images:
-        #            content["entries"][stamp] = files_images[stamp].copy()
-        #            content["groups"]["today"].append(stamp)
-
         # videos
         files_videos = self._list_create_from_videos()
         if len(files_videos) > 0:
@@ -2330,6 +2320,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         files_delete = {}
         files_show = {}
         content["entries"] = {}
+        content["groups"] = {}
 
         if self.config.db_handler.exists("videos"):
             files_all = self.config.db_handler.read_cache(config="videos")
@@ -2348,6 +2339,16 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 content["entries"] = files_show
             if len(files_delete) > 0 and param["admin_allowed"]:
                 content["entries_delete"] = files_delete
+
+        # videos
+        files_videos = content["entries"].copy()
+        if len(files_videos) > 0:
+            for entry_id in files_videos:
+                group = entry_id[0:4] + "-" + entry_id[4:6]
+                if group not in content["groups"]:
+                    content["groups"][group] = []
+                content["entries"][entry_id] = files_videos[entry_id].copy()
+                content["groups"][group].append(entry_id)
 
         content["view_count"] = ["all", "star", "detect", "recycle"]
         content["subtitle"] = presets.birdhouse_pages["videos"][0]
