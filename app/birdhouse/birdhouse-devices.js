@@ -585,7 +585,6 @@ function birdhouseDevices_microphones(data) {
 
         html_entry += "</div></div>";
 
-        html_entry = "test";
         html += birdhouse_OtherGroup( micro, micro_name, html_entry, false, "settings" );
 	}
 
