@@ -567,9 +567,9 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
         html += play_button;
         }
     else {
-        if (style == "") { style = "height:140px;"; }
+        //if (style == "") { style = "height:140px;"; }
         html += "<div class='thumbnail error' style='"+style+"' id='error_"+img_id2+"'>";
-        html += "&nbsp;<br>&nbsp;<br>"+lang("NO_IMAGE_IN_ARCHIVE")+"</div>";
+        html += lang("NO_IMAGE_IN_ARCHIVE")+"</div>";
         birdhouse_image_ids_error.push(img_id2);
         }
 	html += "    <br/><center><small>" + description + detect_sign + "</small></center>";

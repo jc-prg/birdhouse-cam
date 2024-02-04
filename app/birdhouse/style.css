@@ -24,13 +24,13 @@ h3 { margin : 4px; }
 /* header functions */
 
 .headerRight {
-  position 		: fixed;
-  top			: 8px;
-  right		: 40px;
-  height		: 25px;
-  width		: 150px;
-  color		: gray;
-  z-index		: 93;
+  position 		       : fixed;
+  top		           : 8px;
+  right		           : 40px;
+  height		       : 25px;
+  width		           : 150px;
+  color		           : gray;
+  z-index		       : 93;
   text-align           : right;
   font-family          : sans-serif;
   font-size            : 10px;
@@ -40,7 +40,7 @@ h3 { margin : 4px; }
 .header_icon {
   height               : 23px;
   width                : 23px;
-  cursor		: pointer;
+  cursor		       : pointer;
 }
 
 .header_icon_wide {
@@ -70,6 +70,7 @@ h3 { margin : 4px; }
 }
 
 .thumbnail.error {
+    display         : table-cell;
     text-align      : center;
     vertical-align  : middle;
     color           : white;
@@ -77,6 +78,7 @@ h3 { margin : 4px; }
     background      : #660000;
     padding         : 5px;
     width           : 127px;
+    height          : 140px;
     font-weight     : bold;
 }
 
