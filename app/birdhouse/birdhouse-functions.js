@@ -355,16 +355,15 @@ function birdhouse_imageOverlay(filename, description="", overlay_replace="", ov
         description = description.replaceAll(/\[/g,"<");
         description = description.replaceAll(/\]/g,">");
         html  = "";
-        html += "<div id=\"overlay_image_container\">";
+        html += "<div id=\"overlay_image_container\" onclick=\"event.stopPropagation();\">";
         html += "  <div id=\"overlay_close\" onclick='birdhouse_overlayHide();'>[X]</div>";
 
         if (overlay_replace != "") {
-            var onmouseover  = "document.getElementById(\""+overlay_id+"_replace\").style.display = \"block\";";
-            onmouseover     += "document.getElementById(\""+overlay_id+"\").style.display = \"none\";";
-            var onmouseout   = "document.getElementById(\""+overlay_id+"\").style.display = \"block\";";
-            onmouseout      += "document.getElementById(\""+overlay_id+"_replace\").style.display = \"none\";";
+            var onmouseover    = "birdhouse_imageOverlayToggle(\""+overlay_id+"\", select=\"replace\")";
+            var onmouseout     = "birdhouse_imageOverlayToggle(\""+overlay_id+"\", select=\"original\")";
+            var onmousetoggle  = "birdhouse_imageOverlayToggle(\""+overlay_id+"\")";
 
-            html += "  <div id=\"overlay_replace\" onmouseover='"+onmouseover+"' onmouseout='"+onmouseout+"' onclick='"+onmouseover+"'>[D]</div>";
+            html += "  <div id=\"overlay_replace\" onmouseover='"+onmouseover+"' onmouseout='"+onmouseout+"' onclick='"+onmousetoggle+"'>[D]</div>";
             html += "  <img id='"+overlay_id+"_replace' src='"+overlay_replace+"' style='display:none;'/>";
             }
         else {
@@ -400,6 +399,27 @@ function birdhouse_imageOverlay(filename, description="", overlay_replace="", ov
 */
 	    // check, how to destroy ...
 	}
+
+function birdhouse_imageOverlayToggle(overlay_id, select="") {
+    if (select == "") {
+        if (document.getElementById(overlay_id).style.display != "none") {
+            elementHidden(overlay_id);
+            elementVisible(overlay_id+"_replace");
+            }
+        else {
+            elementHidden(overlay_id+"_replace");
+            elementVisible(overlay_id);
+            }
+        }
+    else if (select == "replace") {
+        elementHidden(overlay_id);
+        elementVisible(overlay_id+"_replace");
+        }
+    else {
+        elementHidden(overlay_id+"_replace");
+        elementVisible(overlay_id);
+        }
+    }
 
 function birdhouse_videoOverlay(filename, description="", favorite="", to_be_deleted="") {
         check_iOS = iOS();
