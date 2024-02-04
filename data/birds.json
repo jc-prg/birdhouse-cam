@@ -1,12 +1,13 @@
 {
+  "BIRD": {"DE": "Vogel", "EN": "Bird"},
   "BLAUMEISE": {"DE": "Blaumeise", "EN": "Blue tit"},
   "BUNTSPECHT": {"DE": "Buntspecht", "EN": "Great spotted woodpecker"},
   "EICHELHAEHER": {"DE": "Eichelhäher", "EN": "Jay"},
   "GRUENSPECHT": {"DE": "Gr&uuml;nspecht", "EN": "Green woodpecker"},
   "KLEIBER": {"DE": "Kleiber", "EN": "Nuthatch"},
   "KOHLMEISE": {"DE": "Kohlmeise", "EN": "Great tit"},
-  "SPERLING": {"DE":  "Sperling", "EN":  "Sparrow"},
   "ROTKEHLCHEN": {"DE": "Rotkehlchen", "EN": "Robin"},
   "SCHWANZMEISE": {"DE": "Schwanzmeise", "EN": "Long-tailed tit"},
+  "SPERLING": {"DE":  "Sperling", "EN":  "Sparrow"},
   "WEIDENMEISE": {"DE": "Weidenmeise", "EN": "Willow tit"}
 }

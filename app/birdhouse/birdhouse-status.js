@@ -408,7 +408,7 @@ function birdhouseStatus_system(data) {
         setTextById("system_info_db_handler", "OK");
         }
     if (status_db["db_error"] || status_db["db_error"].toString( ).indexOf("True") >= 0) {
-        setTextById("system_info_db_error", "<font color='red'>Error: " + status_db["db_error"] + "</font> " + status_db["db_error_msg"].toString());
+        setTextById("system_info_db_error", "<font color='red'>Error: " + status_db["db_error"] + "</font> " + status_db["db_error_msg"].join("<br/>"));
         show_error = true;
         }
     else {

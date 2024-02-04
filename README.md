@@ -69,7 +69,7 @@ app in English and German, ...
 * **Listening audio stream** from microphone
   * under construction, currently browser only (no iPhone)
 * **Detecting birds** (objects) via PyTorch
-  * Bird detection model in an early stage trained with a few European singing birds
+  * Bird detection model in an early stage trained with [a few European singing birds](data/birds.json)
   * View with all detected birds and objects -> jump to other views filtered by bird
   * Filter by detected birds in archive and favorite view as well as for admins in complete view of current day
   * Batch detection for archive images - single day and multiple days incl. individual detection threshold (admin)

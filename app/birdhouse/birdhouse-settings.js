@@ -300,8 +300,8 @@ function birdhouse_app_settings (name="Settings") {
     	html_entry += this.tab.row("Health check:",        "<div id='system_health_check'>"+lang("PLEASE_WAIT")+"..</div>");
         html_entry += this.tab.row("<hr/>");
     	html_entry += this.tab.row("DB Connection:",       "<div id='system_info_db_connection'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("DB Handler Error:",    "<div id='system_info_db_handler'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("DB Error:",            "<div id='system_info_db_error'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("DB Handler:",          "<div id='system_info_db_handler'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("DB:",                  "<div id='system_info_db_error'>"+lang("PLEASE_WAIT")+"..</div>");
         html_entry += this.tab.row("<hr/>");
     	html_entry += this.tab.row("CPU Temperature:",     "<div id='system_info_cpu_temperature'>"+lang("PLEASE_WAIT")+"..</div>");
     	html_entry += this.tab.row("CPU Usage:",           "<div id='system_info_cpu_usage'>"+lang("PLEASE_WAIT")+"..</div>");
