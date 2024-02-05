@@ -18,9 +18,14 @@
     <script src="/modules/modules_1.1.js"></script>
     <script src="/framework/app-fw.js"></script>
     <script src="/birdhouse/birdhouse.js"></script>
+    <link rel="stylesheet" type="text/css" href="birdhouse/index.css" />
 
 </head>
 <body>
+
+<div id="loading_overlay" class="loading_overlay">
+    <img src="framework/img/loading3.gif">
+</div>
 
 <!-- APP specific html elements // START -->
 
@@ -90,9 +95,20 @@
     loadScripts("/birdhouse/", birdhouse_js);
     loadCss("/birdhouse/",     birdhouse_css);
 
-    setTimeout( function() {
-        startApp();
-    }, 1000 );
+    function wait_until_loaded() {
+        console.log("Scripts loaded: " + app_scripts_loaded + "/" + birdhouse_js.length);
+        if (app_scripts_loaded == birdhouse_js.length) {
+            elementHidden("loading_overlay");
+            startApp();
+            }
+        else {
+            setTimeout( function() {
+                wait_until_loaded();
+                }, 500 );
+            }
+        }
+
+    wait_until_loaded();
 
 </script>
 

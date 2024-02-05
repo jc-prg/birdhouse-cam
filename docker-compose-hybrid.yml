@@ -1,6 +1,6 @@
 #--------------------------------------------
-# Birdhouse Server and Database
-#----------------------------------------
+# Birdhouse Server and Database - HYBRID, server local other components docker
+#--------------------------------------------
 
 version: "3"
 
@@ -18,6 +18,11 @@ services:
     - ./app:/usr/local/apache2/htdocs
     - ./data/images:/usr/local/apache2/htdocs/images
     - ./data/videos:/usr/local/apache2/htdocs/videos
+    - ./data/downloads:/usr/local/apache2/htdocs/downloads
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_MAX_APP:-50M}
 
   birdhouse_db:
     image:  ${IMAGE_DB:-matthiasg/rpi-couchdb:latest}
@@ -30,6 +35,10 @@ services:
     environment:
       - 'COUCHDB_USER=${COUCHDB_USER}'
       - 'COUCHDB_PASSWORD=${COUCHDB_PASSWORD}'
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_MAX_COUCHDB:-200M}
     restart: always
     networks:
       my-net:
@@ -39,11 +48,15 @@ services:
     build: ${CONTAINER_VIDEO:-./config/container_video_rpi/}
     container_name: birdhouse_video
     volumes:
-      - ${BIRDHOUSE_DIR_LOGGING:-./log}:/log
-      - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:/projects/test/birdhouse-cam/
+      - ${BIRDHOUSE_DIR_LOGGING:-./log}:${BIRDHOUSE_DIR_LOGGING:-/log}
+      - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}
       - ./:/usr/src/app/
     ports:
       - "${BIRDHOUSE_VIDEO_PORT}:${BIRDHOUSE_VIDEO_PORT}"
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_MAX_STREAM:-100M}
     restart: on-failure
     networks:
       my-net:

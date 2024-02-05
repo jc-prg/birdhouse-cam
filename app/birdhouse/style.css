@@ -24,13 +24,13 @@ h3 { margin : 4px; }
 /* header functions */
 
 .headerRight {
-  position 		: fixed;
-  top			: 8px;
-  right		: 40px;
-  height		: 25px;
-  width		: 150px;
-  color		: gray;
-  z-index		: 93;
+  position 		       : fixed;
+  top		           : 8px;
+  right		           : 40px;
+  height		       : 25px;
+  width		           : 150px;
+  color		           : gray;
+  z-index		       : 93;
   text-align           : right;
   font-family          : sans-serif;
   font-size            : 10px;
@@ -40,7 +40,7 @@ h3 { margin : 4px; }
 .header_icon {
   height               : 23px;
   width                : 23px;
-  cursor		: pointer;
+  cursor		       : pointer;
 }
 
 .header_icon_wide {
@@ -69,6 +69,19 @@ h3 { margin : 4px; }
     border        : 1px solid white;
 }
 
+.thumbnail.error {
+    display         : table-cell;
+    text-align      : center;
+    vertical-align  : middle;
+    color           : white;
+    border          : white 1px solid;
+    background      : #660000;
+    padding         : 5px;
+    width           : 127px;
+    height          : 140px;
+    font-weight     : bold;
+}
+
 .thumbnail_container { 
     position      : relative; 
     top           : -40px; 
@@ -85,6 +98,18 @@ h3 { margin : 4px; }
     margin        : 2px;
 }
 
+.separator_group_body {
+}
+.separator_group_body.settings2 {
+        background:
+            linear-gradient(to top,     rgba(68, 68, 96, 0.05) 0%, rgba(68, 68, 96, 0.05) 95%, rgba(68, 68, 96, 0) 100%),
+            linear-gradient(to left,    rgba(68, 68, 96, 0.05) 0%, rgba(68, 68, 96, 0.05) 95%, rgba(68, 68, 96, 0) 100%),
+            linear-gradient(to right,   rgba(68, 68, 96, 0.05) 0%, rgba(68, 68, 96, 0.05) 95%, rgba(68, 68, 96, 0) 100%),
+            linear-gradient(to bottom,  rgba(68, 68, 96, 0.05) 0%, rgba(68, 68, 96, 0.05) 95%, rgba(68, 68, 96, 0) 100%);
+        border-radius: 20px;
+        padding: 20px;
+        }
+
 .separator_group {
     float         : left;
     width         : 98%;
@@ -100,6 +125,10 @@ h3 { margin : 4px; }
     color         : white;
     background    : #222222;
     font-size     : 10px;
+    }
+
+.separator_group.settings {
+    background    : #444460;
     }
     
 /* configuration of elements on camera info page */
@@ -231,6 +260,21 @@ img .play_button  {
     height   : 20px;
 }
 
+.checkbox {
+    position : relative;
+    top      : 10px;
+    left     : 10px;
+    width    : 20px;
+    height   : 20px;
+    z-index  : 62;
+    cursor   : pointer;
+}
+
+.checkbox_img {
+    width    : 20px;
+    height   : 20px;
+}
+
 /* configuration of hires overlay - image and video */
 
 .overlay {
@@ -285,7 +329,7 @@ img .play_button  {
 
 #overlay_close {
     position : relative;
-    top      : 40px;
+    top      : 50px;
     right    : -45%;
     z-index  : 74;
     cursor   : pointer;
@@ -293,7 +337,7 @@ img .play_button  {
 
 #overlay_replace {
     position : relative;
-    top      : 45px;
+    top      : 55px;
     right    : -45%;
     z-index  : 74;
     cursor   : pointer;
@@ -445,18 +489,71 @@ img .play_button  {
     border-bottom: 10px solid white;
 }
 
-/* labels for object detection */
+/* loading dots */
 
-.detection_label {
-    float         : left;
-    border-radius :  8px;
-    height        : 12px;
-    max-height    : 12px;
-    margin        :  5px;
-    padding       :  4px;
-    cursor        : pointer;
-    font-size     : 11px;
+#processing_info_header {
+  display: block;
+  float: right;
+}
 
-    background    : #bbbbff;
-    color         : black;
+#server_info_header {
+  display: block;
+  float: right;
+}
+
+.loading-dots {
+  display: inline-block;
+}
+
+.dot {
+  display:  inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: white;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+.dot.red {
+  animation: dot-animation-red 1.5s infinite;
+}
+
+.dot.green {
+  animation: dot-animation-green 1.5s infinite;
+}
+
+.dot:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+@keyframes dot-animation-red {
+  0% {
+    background-color: white;
+  }
+  50% {
+    background-color: red;
+  }
+  100% {
+    background-color: white;
+  }
+}
+
+@keyframes dot-animation-green {
+  0% {
+    background-color: white;
+  }
+  50% {
+    background-color: green;
+  }
+  100% {
+    background-color: white;
+  }
 }

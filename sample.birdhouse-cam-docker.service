@@ -1,0 +1,22 @@
+# This service is useful if you're planning to run the server without docker containers. To handle the server as
+# a service which automatically starts on system startup and automatically restarts copy and this service
+# to /etc/systemd/system/birdhouse-cam.service. Start with the following commands:
+#
+# $ sudo systemctl daemon-reload
+# $ sudo systemctl enable birdhouse-cam-docker.service
+
+[Unit]
+Description=Birdhouse-Cam Docker Service (Apache, DB, Videostream)
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=simple
+Restart=always
+WorkingDirectory=/projects/prod/birdhouse-cam/
+ExecStart=/usr/local/bin/docker-compose up -d
+ExecReload=/usr/local/bin/docker-compose restart
+ExecStop=/usr/local/bin/docker-compose stop
+
+[Install]
+WantedBy=multi-user.target

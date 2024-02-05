@@ -8,10 +8,17 @@ from modules.image import BirdhouseImageProcessing
 
 
 class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
+    """
+    Class to control the object detection for a camera.
+    """
 
     def __init__(self, camera_id, config):
         """
-        create instance of this class for a specific camera
+        Constructor method for initializing the class.
+
+        Parameters:
+            camera_id (str): id string to identify the camera from which this class is embedded
+            config (modules.config.BirdhouseConfig): reference to main config object
         """
         threading.Thread.__init__(self)
         BirdhouseCameraClass.__init__(self, class_id=camera_id + "-object", class_log="cam-object",
@@ -30,32 +37,49 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         self.detect_queue_archive = []
         self.last_model = None
         self.image_size_object_detection = self.detect_settings["detection_size"]
+        self._processing_percentage = 0
 
         self.thread_set_priority(4)
 
     def run(self):
         """
-        queue to analyze pictures of archive days
+        Manage queue to analyze pictures of archive days
+
+        Returns:
+            None
         """
         if not self.detect_active:
             self.logging.info("Do not start OBJECT DETECTION, can be changed in file '.env'.")
             return
 
-        self.logging.info("Starting OBJECT DETECTION for '"+self.id+"' ...")
+        self.logging.info("Starting OBJECT DETECTION for '" + self.id + "' ...")
         self.connect()
         while self._running:
 
+            self._processing_percentage = 0
             if len(self.detect_queue_archive) > 0:
-                date = self.detect_queue_archive.pop()
-                self.analyze_archive_images(date)
+                [date, threshold] = self.detect_queue_archive.pop()
+                self.analyze_archive_day(date, threshold)
+
+            self.config.object_detection_processing = self._processing
+            self.config.object_detection_progress = self._processing_percentage
+
+            # !!! update unclear ?!
+            if self.id != "":
+                self.detect_settings = self.config.param["devices"]["cameras"][self.id]["object_detection"]
 
             self.thread_wait()
             self.thread_control()
-        self.logging.info("Stopped OBJECT DETECTION for '"+self.id+"'.")
+        self.logging.info("Stopped OBJECT DETECTION for '" + self.id + "'.")
 
     def connect(self, first_load=True):
         """
         initialize models for object detection
+
+        Parameters:
+            first_load (bool): set True when initializing the first object of this class to import required modules
+        Returns:
+            None
         """
         if self.detect_active:
             try:
@@ -75,12 +99,20 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                             model_to_load = os.path.join(detection_custom_model_path, model_to_load)
                         self.logging.info("Initialize object detection model (" + self.name + ") ...")
                         self.logging.info(" -> '" + model_to_load + "'")
-                        self.detect_objects = self.DetectionModel(model_to_load)
-                        self.detect_live = self.detect_settings["live"]
-                        self.detect_loaded = True
-                        self.last_model = self.detect_settings["model"]
-                        birdhouse_status["object_detection"] = True
-                        self.logging.info(" -> '" + model_to_load + "': OK")
+                        if "/" not in model_to_load or os.path.exists(model_to_load):
+                            self.detect_objects = self.DetectionModel(model_to_load)
+                            if self.detect_objects.loaded:
+                                self.detect_live = self.detect_settings["live"]
+                                self.detect_loaded = True
+                                self.last_model = self.detect_settings["model"]
+                                birdhouse_status["object_detection"] = True
+                                self.logging.info(" -> '" + model_to_load + "': OK")
+                            else:
+                                self.detect_loaded = False
+                                self.logging.info(" -> '" + model_to_load + "': ERROR LOADING MODEL")
+                        else:
+                            self.detect_loaded = False
+                            self.logging.info(" -> '" + model_to_load + "': NOT FOUND")
                 else:
                     self.logging.info(" -> Object detection inactive (" + self.name + "), see settings.")
 
@@ -94,7 +126,12 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
     def reconnect(self, force_reload=False):
         """
-        reconnect, e.g., when the model has been changed
+        Reconnect, e.g., when connect didn't work due to an error or the model has been changed
+
+        Parameters:
+            force_reload (bool): force a reconnect even if already a model is set
+        Returns:
+            None
         """
         if self.detect_active:
             if self.last_model == self.detect_settings["model"] and self.detect_loaded and not force_reload:
@@ -110,32 +147,59 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
     def analyze_image(self, stamp, path_hires, image_hires, image_info):
         """
-        analyze image for objects, save in metadata incl. image with labels if detected
+        Analyze an image for objects.
+
+        Analyze an image for objects. Changes will be saved in metadata incl. image with labels if detected
+        using the config queue.
+
+        Parameters:
+            stamp (str): entry key which is the recording time in the format HHMMSS
+            path_hires (str): complete path to the hires image file
+            image_hires (numpy.ndarray): hires images, e.g., directly from the camera or read via cv2.imread()
+            image_info (dict): complete entry for the image
+        Returns:
+            None
         """
+        if not self.detect_active:
+            return
+
         start_time = time.time()
         if self.detect_objects is not None and self.detect_objects.loaded:
+            self.logging.debug("Analyze image: path=" + path_hires + "; model=" +
+                               self.detect_settings["model"] + "; threshold=" + str(self.detect_settings["threshold"]))
 
             path_hires_temp = path_hires.replace(".jpeg", "_temp.jpeg")
-            self.image.write(path_hires_temp, image_hires, scale_percent=self.image_size_object_detection)
-            img, detect_info = self.detect_objects.analyze(path_hires_temp, -1, False)
-            img = self.detect_visualize.render_detection(image_hires, detect_info, 1, self.detect_settings["threshold"])
-            img = self.image.draw_text_raw(img, stamp, (-80, -40), None, 0.5, (255, 255, 255), 1)
-
             if os.path.exists(path_hires_temp):
                 os.remove(path_hires_temp)
+            self.image.write(path_hires_temp, image_hires, scale_percent=self.image_size_object_detection)
+            img, detect_info = self.detect_objects.analyze(file_path=path_hires_temp,
+                                                           threshold=self.detect_settings["threshold"],
+                                                           return_image=False)
+            if "error" in detect_info:
+                self.logging.error("Couldn't detect objects: " + detect_info["error"])
+                return
+
+            img = self.detect_visualize.render_detection(img=image_hires, detection_info=detect_info,
+                                                         label_position=1, threshold=self.detect_settings["threshold"])
+
+            img = self.image.draw_text_raw(img, stamp, (-80, -40), None, 0.5, (255, 255, 255), 1)
+
             self.logging.debug("Current detection for " + stamp + ": " + str(detect_info))
 
             if len(detect_info["detections"]) > 0:
-                detections_to_save = []
-                for detect in detect_info["detections"]:
-                    if float(detect["confidence"] * 100) >= float(self.detect_settings["threshold"]):
-                        detections_to_save.append(detect.copy())
+                image_info["detections"] = detect_info["detections"]
+                image_info["hires_detect"] = image_info["hires"].replace(".jpeg", "_detect.jpeg")
+                path_hires_detect = path_hires.replace(".jpeg", "_detect.jpeg")
+                if os.path.exists(path_hires_detect):
+                    os.remove(path_hires_detect)
+                self.image.write(filename=path_hires_detect, image=img)
 
-                if len(detections_to_save) > 0:
-                    image_info["detections"] = detections_to_save
-                    image_info["hires_detect"] = image_info["hires"].replace(".jpeg", "_detect.jpeg")
-                    path_hires_detect = path_hires.replace(".jpeg", "_detect.jpeg")
-                    self.image.write(filename=path_hires_detect, image=img)
+            else:
+                image_info["detections"] = []
+                image_info["hires_detect"] = ""
+                path_hires_detect = path_hires.replace(".jpeg", "_detect.jpeg")
+                if os.path.exists(path_hires_detect):
+                    os.remove(path_hires_detect)
 
             image_info["detection_threshold"] = self.detect_settings["threshold"]
             image_info["info"]["duration_2"] = round(time.time() - start_time, 3)
@@ -145,59 +209,165 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         else:
             self.logging.debug("Object detection not loaded (" + stamp + ")")
 
-    def analyze_archive_images_start(self, date):
+    def analyze_archive_day_start(self, date, threshold=-1):
         """
-        add analyzing request to the queue
+        Add object detection request for one date.
+
+        Add object detection analyzing request to the queue for a specific date and camera.
+        The camera is defined when an object for a camera is build based on this class.
+
+        Parameters:
+            date (str): archived date that shall be analyzed
+            threshold (float): threshold for analyzing
+        Returns:
+            dict: response for API
         """
-        response = {
-            "command": ["archive object detection"],
-            "camera": self.id,
-            "status": "Added " + date + " to the queue."
-        }
-        self.detect_queue_archive.append(date)
+        if not self.detect_active:
+            response = {
+                "command": ["archive object detection"],
+                "camera": self.id,
+                "error": "Object detections is inactive",
+                "status": "Object detections is inactive"
+            }
+        else:
+            response = {
+                "command": ["archive object detection"],
+                "camera": self.id,
+                "status": "Added " + date + " to the queue."
+            }
+            self.detect_queue_archive.append([date, threshold])
+        self.logging.info("Added object detection request for " + date + " to the queue ...")
         return response
 
-    def analyze_archive_images(self, date):
+    def analyze_archive_several_days_start(self, dates, threshold=-1):
         """
-        detect objects for an archived day, replaces  detections if exist
+        Add object detection request for a list of dates.
+
+        Add object detection analyzing request to the queue for a list of dates and a specific camera.
+        The camera is defined when an object for a camera is build based on this class.
+
+        Args:
+            dates (list): list of archived dates that shall be analyzed
+            threshold (float): threshold for analyzing
+        Returns:
+            dict: response for API
         """
+        if not self.detect_active:
+            response = {
+                "command": ["archive object detection - list of dates"],
+                "camera": self.id,
+                "error": "Object detections is inactive",
+                "status": "Object detections is inactive"
+            }
+        else:
+            response = {
+                "command": ["archive object detection"],
+                "camera": self.id,
+                "status": "Added " + str(dates) + " to the queue."
+            }
+            self.logging.info("Got a bundle of " + str(len(dates)) + " object detection requests ...")
+            for date in dates:
+                self.analyze_archive_day_start(date, threshold)
+        return response
+
+    def analyze_archive_day(self, date, threshold):
+        """
+        Execute detection request for one day.
+
+        Detects objects for an archived day and replace detections if existing.
+
+        Parameters:
+            date (str): date of day to be analyzed
+            threshold (float): threshold for analyzing
+        Returns:
+            dict: in case of direct call from API it returns an API response
+        """
+        if not self.detect_active:
+            response = {
+                "command": ["archive object detection"],
+                "camera": self.id,
+                "error": "Object detections is inactive",
+                "status": "Object detections is inactive"
+            }
+            return response
+
+        if threshold == -1:
+            threshold = float(self.detect_settings["threshold"])
+        else:
+            threshold = float(threshold)
+
         response = {"command": ["archive object detection"], "camera": self.id}
         self._processing = True
         if self.detect_objects is not None and self.detect_objects.loaded:
-            self.logging.info("Starting object detection for " + self.id + " / " + date + " ...")
+            self.logging.info("Starting object detection for " + self.id + " / " + date +
+                              " / " + str(threshold) + "% ...")
             archive_data = self.config.db_handler.read(config="backup", date=date)
             archive_entries = archive_data["files"]
+            archive_info = archive_data["info"]
+            archive_info["detection_" + self.id] = {
+                "date": self.config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
+                "detected": False,
+                "threshold": threshold,
+                "model": self.detect_settings["model"]
+            }
+
+            count = 0
+            found = False
             for stamp in archive_entries:
                 if archive_entries[stamp]["camera"] == self.id and "hires" in archive_entries[stamp]:
 
-                    if "to_be_deleted" in archive_entries[stamp] and str(archive_entries[stamp]["to_be_delete"]) == 1:
+                    if "to_be_deleted" in archive_entries[stamp] and int(archive_entries[stamp]["to_be_deleted"]) == 1:
                         continue
 
                     path_hires = str(os.path.join(self.config.db_handler.directory("backup", date),
                                                   archive_entries[stamp]["hires"]))
                     path_hires_detect = str(path_hires.replace(".jpeg", "_detect.jpeg"))
 
-                    self.logging.info("- " + date + "/" + stamp + ": " + path_hires_detect)
+                    self.logging.debug("- " + date + "/" + stamp + ": " + path_hires_detect)
                     img, detect_info = self.detect_objects.analyze(file_path=path_hires,
-                                                                   threshold=self.detect_settings["threshold"],
+                                                                   threshold=threshold,
                                                                    return_image=True, render_detection=True)
-                    self.logging.info("- " + date + "/" + stamp + ": " +
+                    if "error" in detect_info:
+                        self.logging.error("Could not detect objects: " + detect_info["error"])
+                        continue
+
+                    self.logging.info("- " + date + "/" + stamp + "/" + self.id + ": " +
                                       str(len(detect_info["detections"])) + " objects detected")
-                    if os.path.exists(path_hires_detect):
-                        os.remove(path_hires_detect)
 
                     if len(detect_info["detections"]) > 0:
+                        if os.path.exists(path_hires_detect):
+                            os.remove(path_hires_detect)
                         self.image.write(path_hires_detect, img)
                         archive_entries[stamp]["detections"] = detect_info["detections"]
                         archive_entries[stamp]["hires_detect"] = path_hires_detect.split("/")[-1]
+                        self.config.queue.entry_add(config="backup", date=date, key=stamp, entry=archive_entries[stamp])
                     else:
+                        if os.path.exists(path_hires_detect):
+                            os.remove(path_hires_detect)
                         archive_entries[stamp]["detections"] = []
                         archive_entries[stamp]["hires_detect"] = ""
-                    self.config.queue.entry_add(config="backup", date=date, key=stamp, entry=archive_entries[stamp])
+                        self.config.queue.entry_add(config="backup", date=date, key=stamp, entry=archive_entries[stamp])
 
+                count += 1
+                self._processing_percentage = round(count / len(archive_entries) * 100, 1)
+                self.config.object_detection_processing = self._processing
+                self.config.object_detection_progress = self._processing_percentage
+                self.config.object_detection_waiting = len(self.detect_queue_archive)
+                self.config.object_detection_waiting_keys = self.detect_queue_archive
+                if self._processing_percentage == 100:
+                    time.sleep(2)
+
+            archive_info["detection_" + self.id]["detected"] = True
+            archive_info["detection_" + self.id]["labels"] = self.detect_objects.get_labels()
+
+            archive_detections = self.summarize_detections(archive_entries, threshold)
             self.config.queue.set_status_changed(date=date, change="objects")
-            self.config.queue.add_to_status_queue(config="backup", date=date, key="end",
-                                                  change_status="OBJECT_DETECTION_END", status=0)
+            self.config.queue.entry_edit(config="backup", date=date, key="info", entry=archive_info)
+            self.config.queue.entry_edit(config="backup", date=date, key="detection", entry=archive_detections)
+            if len(self.detect_queue_archive) == 0:
+                self.config.queue.add_to_status_queue(config="backup", date=date, key="end",
+                                                      change_status="OBJECT_DETECTION_END", status=0)
+                self.config.object_detection_build_views = True
             msg = "Object detection for " + date + " done, datasets are going to be saved."
             self.logging.info(msg)
             response["status"] = msg
@@ -208,3 +378,52 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
         self._processing = False
         return response
+
+    def summarize_detections(self, entries, threshold=-1):
+        """
+        Check entries from files-section which detected objects are in and summarize for the archive configuration
+
+        Parameters:
+            entries (dict): entries from "files" section of a config file for images
+        Returns:
+            dict: entry for summarizing "detection" section in config file for images
+        """
+        if threshold == -1:
+            threshold = self.detect_settings["threshold"]
+        if not self.detect_active:
+            return {}
+
+        self.logging.debug("Summarize detections from entries (" + str(len(entries)) + " entries)")
+        detections = {}
+        for stamp in entries:
+            if "detections" in entries[stamp]:
+                camera = entries[stamp]["camera"]
+                for detection in entries[stamp]["detections"]:
+                    if detection["label"] not in detections:
+                        detections[detection["label"]] = {"favorite": [], "default": {}}
+
+                    if camera not in detections[detection["label"]]["default"]:
+                        detections[detection["label"]]["default"][camera] = []
+
+                    if "favorit" in entries[stamp] and int(entries[stamp]["favorit"]) == 1:
+                        detections[detection["label"]]["favorite"].append(stamp)
+                        detections[detection["label"]]["default"][camera].append(stamp)
+
+                    elif "to_be_deleted" not in entries[stamp] or not int(entries[stamp]["to_be_deleted"]):
+                        detections[detection["label"]]["default"][camera].append(stamp)
+
+                    if "thumbnail" not in detections[detection["label"]] and "confidence" in detection:
+                        detections[detection["label"]]["thumbnail"] = {
+                            "stamp": stamp,
+                            "confidence": detection["confidence"],
+                            "threshold": threshold
+                        }
+                    elif ("confidence" in detection
+                            and detections[detection["label"]]["thumbnail"]["confidence"] < detection["confidence"]):
+                        detections[detection["label"]]["thumbnail"] = {
+                            "stamp": stamp,
+                            "confidence": detection["confidence"],
+                            "threshold": threshold
+                        }
+
+        return detections

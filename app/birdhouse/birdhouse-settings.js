@@ -18,13 +18,13 @@ function birdhouse_app_settings (name="Settings") {
             setTextById(app_frame_content, html);
             }
       	setTimeout(function(){
-      	    birdhouse_settings.create_exec();
-		}, 2000);
+      	    birdhouse_settings.create_exec(type);
+		}, 500);
 		//birdhouse_KillActiveStreams();
     	window.scrollTo(0,0);
     }
 
-	this.create_exec = function () {
+	this.create_exec = function (type="") {
 
         this.tab = new birdhouse_table();
         this.tab.style_rows["height"] = "27px";
@@ -40,8 +40,9 @@ function birdhouse_app_settings (name="Settings") {
         this.current_server = current_server.split(":")[0];
 
         var open_settings = {
-            "app_info_01" : true,
+            "app_info_01" : false,
             "device_info" : false,
+            "process_info": false,
             "server_info" : false,
             "api_calls"   : false,
             "app_info_02" : false,
@@ -54,26 +55,37 @@ function birdhouse_app_settings (name="Settings") {
             open_settings["server_info"] = false;
             open_settings["device_info"] = false;
 
-            var img = "<img src='"+app_loading_image+"' width='250'><br/>&nbsp;<br/>"
+            var img = "<img src='"+app_loading_image+"' width='250'><br/>&nbsp;<br/>";
             appMsg.confirm(img + lang("INITIAL_SETUP"), "console.log('.');", 400);
+            }
+        else if (this.setting_type == "INFO_ONLY") {
+            open_settings["app_info_01"]  = true;
+            open_settings["device_info"]  = true;
+            open_settings["process_info"] = true;
+        }
+        else if (this.setting_type == "PROCESSING") {
+            open_settings["process_info"] = true;
+            }
+        else {
+            open_settings["app_info_01"]  = true;
             }
 
         if (this.setting_type != "INFO_ONLY") {
             html  = "<h2>Information</h2>";
             html += "<hr style='border:1px solid gray;'>"
         }
-        else {
-            open_settings["device_info"] = true;
-        }
 
         html_entry = this.app_information();
-        html += birdhouse_OtherGroup( "app_info_01", "App Information (Version)", html_entry, open_settings["app_info_01"] );
+        html += birdhouse_OtherGroup( "app_info_01", "App Information (Versions)", html_entry, open_settings["app_info_01"] );
 
         html_entry = this.device_information();
         html += birdhouse_OtherGroup( "device_info", "Device Information", html_entry, open_settings["device_info"] );
 
+        html_entry = this.process_information();
+        html += birdhouse_OtherGroup( "process_info", "Process Information &nbsp;<div id='processing_info_header'></div>", html_entry, open_settings["process_info"] );
+
         html_entry = this.server_information();
-        html += birdhouse_OtherGroup( "server_info", "Server Information", html_entry, open_settings["server_info"] );
+        html += birdhouse_OtherGroup( "server_info", "Server Information &nbsp;<div id='server_info_header'></div>", html_entry, open_settings["server_info"] );
 
         if (this.setting_type == "SETTINGS") {
             html_entry = this.display_information();
@@ -88,7 +100,7 @@ function birdhouse_app_settings (name="Settings") {
             setTextById(app_frame_header, "<center><h2>" + lang("INFORMATION")) + "</h2></center>";
             setTextById("frame2", html)
             }
-        else if (this.setting_type == "SETTINGS") {
+        else if (this.setting_type == "SETTINGS" || this.setting_type == "PROCESSING") {
             html += "<br/>&nbsp<br/>";
             html += this.settings();
 
@@ -128,7 +140,7 @@ function birdhouse_app_settings (name="Settings") {
 
         var button2 = "";
         if (app_data["STATUS"]["server"]["initial_setup"]) {
-            button2 = "<button onclick='window.open(window.location.href.split(\"?\")[0]+\"?DEVICES\", \"_self\");' style='background:gray;width:100px;overflow:hidden;float:left;'>"+lang("DEVICE_SETTINGS")+"</button>";
+            button2 = "<button onclick='window.open(window.location.href.split(\"?\")[0]+\"?DEVICES\", \"_self\");' style='background:gray;width:100px;overflow:hidden;float:left;'>"+lang("DEVICE_SETTINGS_PROCEED")+"</button>";
             }
 
         html_entry += this.tab.row("&nbsp;");
@@ -139,17 +151,17 @@ function birdhouse_app_settings (name="Settings") {
 
         var main_settings_open = false;
         if (app_data["STATUS"]["server"]["initial_setup"]) {main_settings_open = true; }
-        html += birdhouse_OtherGroup( "server_settings", "Main Settings", html_entry, main_settings_open );
-
-        var html_entry = this.api_calls();
-        html_entry += "&nbsp;<br/>";
-        html += birdhouse_OtherGroup( "api_calls", "API Calls", html_entry, false );
+        html += birdhouse_OtherGroup( "APP_SETTINGS", "Main APP Settings", html_entry, main_settings_open, "settings" );
 
         html_entry = this.server_side_settings();
-        html += birdhouse_OtherGroup( "SRV_SETTINGS", "Basic server settings <i>(edit in &quot;.env&quot;)</i>", html_entry, false );
+        html += birdhouse_OtherGroup( "SRV_SETTINGS", "Main SERVER settings <i>(edit in &quot;.env&quot;)</i>", html_entry, false, "settings" );
+
+        html_entry = this.api_calls();
+        html_entry += "&nbsp;<br/>";
+        html += birdhouse_OtherGroup( "api_calls", "Development: API Calls", html_entry, false, "settings" );
 
         html_entry = this.app_under_construction();
-        html += birdhouse_OtherGroup( "app_under_construction", "UNDER CONSTRUCTION", html_entry, false );
+        html += birdhouse_OtherGroup( "app_under_construction", "Development: Direct Links", html_entry, false, "settings" );
 
         return html;
     }
@@ -227,6 +239,11 @@ function birdhouse_app_settings (name="Settings") {
             api_call   += "<button onclick='birdhouse_recordStopAudio(\""+micro+"\");' class='button-settings-api'>Stop "+micro+"</button>";
             html_entry += this.tab.row("API "+micro, api_call);
         }
+
+        api_call  = "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECTS/\",\"_blank\");' class='button-settings-api'>Objects</button>";
+        api_call  += "<button onclick='window.open(\"" + RESTurl + "api/no-id/FAVORITES/\",\"_blank\");' class='button-settings-api'>Favorites</button>";
+        html_entry += this.tab.row("API Other", api_call);
+
         html_entry += this.tab.end();
         this.tab.style_cells["width"] = "40%";
         return html_entry;
@@ -253,7 +270,7 @@ function birdhouse_app_settings (name="Settings") {
         html_entry = this.tab.start();
         html_entry += this.tab.row("Reload Interval:", app_reload_interval + "s");
         html_entry += this.tab.row("Active Camera:&nbsp;", app_active_cam);
-        html_entry += this.tab.row("Active Client Streams:&nbsp;", "<font id='show_stream_count_client'>0</font> Streams");
+        html_entry += this.tab.row("Active Client Streams:&nbsp;", "<font id='show_stream_count_client'>0 Streams</font>");
         html_entry += this.tab.row("Available Cameras:&nbsp;", app_available_cameras.length);
         html_entry += this.tab.row("Active Page:&nbsp;", app_active_page);
         html_entry += this.tab.row("Active Date:&nbsp;", app_active_date);
@@ -283,8 +300,8 @@ function birdhouse_app_settings (name="Settings") {
     	html_entry += this.tab.row("Health check:",        "<div id='system_health_check'>"+lang("PLEASE_WAIT")+"..</div>");
         html_entry += this.tab.row("<hr/>");
     	html_entry += this.tab.row("DB Connection:",       "<div id='system_info_db_connection'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("DB Handler Error:",    "<div id='system_info_db_handler'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("DB Error:",            "<div id='system_info_db_error'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("DB Handler:",          "<div id='system_info_db_handler'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("DB:",                  "<div id='system_info_db_error'>"+lang("PLEASE_WAIT")+"..</div>");
         html_entry += this.tab.row("<hr/>");
     	html_entry += this.tab.row("CPU Temperature:",     "<div id='system_info_cpu_temperature'>"+lang("PLEASE_WAIT")+"..</div>");
     	html_entry += this.tab.row("CPU Usage:",           "<div id='system_info_cpu_usage'>"+lang("PLEASE_WAIT")+"..</div>");
@@ -302,9 +319,59 @@ function birdhouse_app_settings (name="Settings") {
 	}
 
 	this.device_information = function () {
+	    var status   = app_data["STATUS"]["object_detection"];
+        var tab      = new birdhouse_table();
+        tab.style_rows["height"] = "27px";
+        tab.style_cells["width"] = "50%";
 
-	    return birdhouseDevices("", app_data, false);
+	    var html = birdhouseDevices("", app_data, false);
+
+        if (status["active"]) {
+            html += tab.start();
+            Object.entries(status["models_loaded"]).forEach(([key,value])=> {
+                var description = "Detection " + key + " (" + value + "):";
+                var action = "<div style='float:left;'>";
+                action += "<div id='status_" + key + "_detection_active' style='float:left;'><div id='black'></div></div>";
+                action += "<div id='status_" + key + "_detection_loaded' style='float:left;'><div id='black'></div></div>";
+
+                html += tab.row(description, action);
+                });
+            html += tab.end();
+            }
+        else {
+            html += "<i>" + lang("OBJECT_DETECTION_INACTIVE") + "</i><br/>&nbsp;";
+            }
+        html += "<br/>&nbsp;<br/>";
+
+	    return html;
 	}
+
+	this.process_information = function () {
+	    var html = "";
+        var tab      = new birdhouse_table();
+        tab.style_rows["height"] = "27px";
+        tab.style_cells["width"] = "50%";
+        tab.style_cells["vertical-align"] = "top";
+
+        var process_information = {
+            "Object Detection":                 "processing_object_detection",
+            "Download preparation":             "processing_downloads",
+            "Loading archive view":             "processing_archive_view",
+            "Loading favorite view":            "processing_favorite_view",
+            "Loading object detection view":    "processing_object_view",
+            "Backup process":                   "processing_backup",
+            "Video recording / processing":     "processing_video",
+        }
+
+        html += tab.start();
+        Object.entries(process_information).forEach(([key, value]) => {
+            html += tab.row(key+":", "<div id='" + value + "'>N/A</div>");
+        });
+        html += tab.end();
+        html += "<br/>&nbsp;<br/>";
+
+ 	    return html;
+	    }
 
 	this.app_under_construction = function() {
 		var html_entry = this.tab.start();
@@ -319,12 +386,12 @@ function birdhouse_app_settings (name="Settings") {
 		link = RESTurl + "pip/stream.mjpg?cam1+cam2:1";
 		html_entry += this.tab.row("Stream Picture-in-Picture:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
 
-        link = window.location.href.split("?")[0] + "?ARCHIVE";
-		html_entry += this.tab.row("Direct Link TODAY:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
-        link = window.location.href.split("?")[0] + "?FAVORITES";
-		html_entry += this.tab.row("Direct Link TODAY:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
-        link = window.location.href.split("?")[0] + "?TODAY";
-		html_entry += this.tab.row("Direct Link TODAY:", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+        var direct_links = ["ARCHIVE", "FAVORITES", "TODAY", "SETTINGS", "INFO", "PROCESSING"];
+
+        for (var i=0;i<direct_links.length;i++) {
+            link = window.location.href.split("?")[0] + "?" + direct_links[i];
+            html_entry += this.tab.row("Direct Link "+direct_links[i]+":", "<a href='"+link+"' target='_blank'>"+link+"</a>");
+            }
 
 		html_entry += this.tab.row("&nbsp;");
 		html_entry += this.tab.end();
@@ -347,5 +414,4 @@ function birdhouse_app_settings (name="Settings") {
 		}
 }
 
-
-
+app_scripts_loaded += 1;

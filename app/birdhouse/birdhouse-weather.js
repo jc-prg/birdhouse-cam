@@ -158,3 +158,5 @@ function birdhouseWeather( data ) {
     setTextById(app_frame_header, title);
 	setTextById(app_frame_content, html_weather);
 }
+
+app_scripts_loaded += 1;

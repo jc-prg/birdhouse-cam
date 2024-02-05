@@ -13,19 +13,23 @@ from http import server
 from datetime import datetime
 from urllib.parse import unquote
 
-from modules.backup import BirdhouseArchive
-from modules.camera import BirdhouseCamera
-from modules.micro import BirdhouseMicrophone
-from modules.config import BirdhouseConfig
+if len(sys.argv) == 0 or ("--help" not in sys.argv and "--shutdown" not in sys.argv):
+    from modules.backup import BirdhouseArchive
+    from modules.camera import BirdhouseCamera
+    from modules.micro import BirdhouseMicrophone
+    from modules.config import BirdhouseConfig
+    from modules.presets import srv_logging
+    from modules.views import BirdhouseViews
+    from modules.sensors import BirdhouseSensor
+    from modules.bh_class import BirdhouseClass
+
 from modules.presets import *
-from modules.presets import srv_logging
-from modules.views import BirdhouseViews
-from modules.sensors import BirdhouseSensor
 from modules.bh_class import BirdhouseClass
+from modules.bh_database import BirdhouseTEXT
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v1.0.7"}
-app_framework = "v1.0.7"
+api_description = {"name": "BirdhouseCAM", "version": "v1.0.8"}
+app_framework = "v1.0.8"
 srv_audio = None
 
 
@@ -182,16 +186,25 @@ def decode_url_string(string):
 
 class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
-    def __init__(self):
-        threading.Thread.__init__(self)
-        BirdhouseClass.__init__(self, class_id="srv-health", config=config)
-        self.thread_set_priority(5)
+    def __init__(self, maintain=False):
+        if not maintain:
+            threading.Thread.__init__(self)
+            BirdhouseClass.__init__(self, class_id="srv-health", config=config)
+            self.thread_set_priority(5)
 
-        self._initial = True
-        self._interval_check = 60 * 5
-        self._min_live_time = 65
-        self._thread_info = {}
-        self._health_status = None
+            self._initial = True
+            self._interval_check = 60 * 5
+            self._min_live_time = 65
+            self._thread_info = {}
+            self._health_status = None
+            self._shutdown_signal_file = "/tmp/birdhouse-cam-shutdown"
+            self._text_files = BirdhouseTEXT()
+            self.set_shutdown(False)
+            self.set_restart(False)
+        else:
+            self._shutdown_signal_file = "/tmp/birdhouse-cam-shutdown"
+            self._running = False
+            self._text_files = BirdhouseTEXT()
 
     def run(self):
         self.logging.info("Starting Server Health Check ...")
@@ -229,6 +242,16 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
                     self.logging.info("... OK.")
                     self._health_status = "OK"
 
+            if self.check_shutdown():
+                self.logging.info("SHUTDOWN SIGNAL send from outside.")
+                self.set_shutdown(False)
+                config.force_shutdown()
+
+            if self.check_restart():
+                self.logging.info("RESTART SIGNAL detected - shutdown and set START signal (requires check via crontab)")
+                self.set_start()
+                config.force_shutdown()
+
             if count == 4:
                 count = 0
                 self.logging.info("Live sign health check!")
@@ -237,6 +260,65 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
     def status(self):
         return self._health_status
+
+    def check_restart(self):
+        """
+        check if external shutdown signal has been set
+        """
+        if os.path.exists(self._shutdown_signal_file):
+            content = self._text_files.read(self._shutdown_signal_file)
+            if "REBOOT" in content:
+                return True
+        return False
+
+    def set_restart(self, restart=True):
+        """
+        set external shutdown signal ...
+        """
+        if restart:
+            self._text_files.write(self._shutdown_signal_file, "REBOOT")
+        else:
+            self._text_files.write(self._shutdown_signal_file, "")
+
+    def check_start(self):
+        """
+        check if external shutdown signal has been set
+        """
+        if os.path.exists(self._shutdown_signal_file):
+            content = self._text_files.read(self._shutdown_signal_file)
+            if "START" in content:
+                print("START signal set ... starting birdhouse server.")
+                return True
+        print("Check: no START signal present (file="+str(os.path.exists(self._shutdown_signal_file))+").")
+        return False
+
+    def set_start(self, restart=True):
+        """
+        set external shutdown signal ...
+        """
+        if restart:
+            self._text_files.write(self._shutdown_signal_file, "START")
+        else:
+            self._text_files.write(self._shutdown_signal_file, "")
+
+    def check_shutdown(self):
+        """
+        check if external shutdown signal has been set
+        """
+        if os.path.exists(self._shutdown_signal_file):
+            content = self._text_files.read(self._shutdown_signal_file)
+            if "SHUTDOWN" in content:
+                return True
+        return False
+
+    def set_shutdown(self, shutdown=True):
+        """
+        set external shutdown signal ...
+        """
+        if shutdown:
+            self._text_files.write(self._shutdown_signal_file, "SHUTDOWN")
+        else:
+            self._text_files.write(self._shutdown_signal_file, "")
 
 
 class ServerInformation(threading.Thread, BirdhouseClass):
@@ -247,19 +329,28 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         self.thread_set_priority(4)
 
         self._system_status = {}
-        self._device_status = {}
+        self._device_status = {
+            "cameras": {},
+            "sensors": {},
+            "microphones": {},
+            "available": {}
+        }
         self._srv_info_time = 0
         self.initial_camera_scan = initial_camera_scan
 
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
         self.microphones = None
 
-    def run(self) -> None:
+    def run(self):
+        """
+        Running thread to continuously update server information in the background.
+        """
         self.logging.info("Starting Server Information ...")
         while self._running:
             start_time = time.time()
-            self.read()
+            self.read_memory_usage()
             self.read_device_status()
+            self.read_available_devices()
 
             self._srv_info_time = round(time.time() - start_time, 2)
 
@@ -268,9 +359,10 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
         self.logging.info("Stopped Server Information.")
 
-    def read(self):
-        global srv_audio
-
+    def read_memory_usage(self):
+        """
+        Get data for current memory and HDD usage, to be requested via .get().
+        """
         system = {}
         try:
             # cpu information
@@ -325,11 +417,15 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             system["hdd_data"] = -1
             self.logging.warning("Was not able to get size of data dir: " + (str(cmd_data)) + " - " + str(e))
 
-        # threading information
-        # system["threads_active"] = str(threading.active_count())
-        # system["threads_info"] = str(threading.enumerate())
+        self._system_status = system.copy()
 
-        # read camera information
+    def read_available_devices(self):
+        """
+        Identify which video and audio devices are available on the system, to be requested via .get_device_status().
+        """
+        global srv_audio
+        system = {}
+
         process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
         output = process.communicate()[0]
         output = output.decode()
@@ -341,8 +437,8 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             output_2.append("/dev/picam")
 
         system["video_devices"] = {}
-        system["video_devices_02"] = {}
-        system["video_devices_03"] = self.initial_camera_scan["video_devices_03"]
+        system["video_devices_short"] = {}
+        system["video_devices_complete"] = self.initial_camera_scan["video_devices_complete"]
         for value in output_2:
             if ":" in value:
                 system["video_devices"][value] = []
@@ -350,15 +446,15 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             elif value != "":
                 value = value.replace("\t", "")
                 check_text = "NEW"
-                if value in system["video_devices_03"]:
-                    check = system["video_devices_03"][value]
+                if value in system["video_devices_complete"]:
+                    check = system["video_devices_complete"][value]
                     if check["image"]:
                         check_text = "OK"
                     else:
                         check_text = "ERROR"
                 system["video_devices"][last_key].append(value)
                 info = last_key.split(":")
-                system["video_devices_02"][value] = check_text + ": " + value + " (" + info[0] + ")"
+                system["video_devices_short"][value] = check_text + ": " + value + " (" + info[0] + ")"
 
         system["audio_devices"] = {}
         if microphones != {}:
@@ -381,21 +477,14 @@ class ServerInformation(threading.Thread, BirdhouseClass):
                                 "output": info.get("maxOutputChannels"),
                                 "sample_rate": info.get("defaultSampleRate")
                             }
-
-        self._system_status = system.copy()
+        self._device_status["available"] = system
 
     def read_device_status(self):
         """
-        get device data ever x seconds for a faster API response
+        Get device data ever x seconds for a faster API response
         """
         global microphones, camera, sensor
         # get microphone data and create streaming information
-        self._device_status = {
-            "cameras": {},
-            "sensors": {},
-            "microphones": {}
-        }
-
         for key in microphones:
             self._device_status["microphones"][key] = microphones[key].get_device_status()
 
@@ -408,11 +497,14 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             self._device_status["sensors"][key] = sensor[key].get_status()
 
     def get(self):
+        """
+        Get server data which are updated continuously in the background.
+        """
         return self._system_status
 
     def get_device_status(self):
         """
-        return device status
+        Get device data which are updated continuously in the background.
         """
         return self._device_status
 
@@ -611,10 +703,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 param["which_cam"] = elements[5]
 
         elif self.path.startswith("/api"):
+            param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup",
+                            "last-answer", "favorit", "recycle", "update-views", "update-views-complete",
+                            "archive-object-detection", "archive-remove-day", "archive-remove-list",
+                            "OBJECTS", "FAVORITES", "bird-names"]
+
             param["session_id"] = elements[2]
             param["command"] = elements[3]
-            last_is_cam = True
 
+            # start with hypothesis that the last param is the active cam
+            last_is_cam = True
             complete_cam = elements[len(elements) - 1]
             if "+" in complete_cam:
                 param["which_cam"] = complete_cam.split("+")[0]
@@ -622,13 +720,18 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                 param["which_cam"] = complete_cam
 
-            param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup",
-                            "last-answer", "favorit", "recycle", "update-views", "update-views-complete"]
-            if "command" in param and param["command"] not in param_no_cam:
+            # extra rule for TODAY
+            if param["command"] == "TODAY" and len(elements) > 5:
+                param["date"] = elements[4]
+                param["which_cam"] = elements[5]
+                last_is_cam = False
+
+            elif param["command"] not in param_no_cam:
                 if param["which_cam"] not in views.camera:
                     srv_logging.warning("Unknown camera requested: " + param["which_cam"] + " (" + self.path + ")")
                     param["which_cam"] = "cam1"
                     last_is_cam = False
+
             elif "command" in param and param["command"] in param_no_cam:
                 param["which_cam"] = "cam1"
                 last_is_cam = False
@@ -680,6 +783,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         global camera
 
+        content_length = int(self.headers['Content-Length'])
+        if content_length >= 2:
+            post_data = self.rfile.read(content_length)
+            body_data = json.loads(post_data.decode('utf-8'))
+            srv_logging.debug("do_POST body data: " + str(body_data))
+        else:
+            body_data = None
+
         config.user_activity("set")
         param = self.path_split()
         which_cam = param["which_cam"]
@@ -706,35 +817,59 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # admin commands
         if param["command"] == "favorit":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = config.queue.set_status_favorite(param)
         elif param["command"] == "recycle":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = config.queue.set_status_recycle(param)
         elif param["command"] == "recycle-threshold":
             # http://localhost:8007/api/1682709071876/recycle-threshold/backup/20230421/95/cam1/
             srv_logging.info("RECYCLE THRESHOLD")
             response = config.queue.set_status_recycle_threshold(param, which_cam)
+        elif param["command"] == "recycle-object-detection":
+            srv_logging.info("RECYCLE OBJECT")
+            response = config.queue.set_status_recycle_object(param, which_cam)
         elif param["command"] == "recycle-range":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = config.queue.set_status_recycle_range(param)
         elif param["command"] == "create-short-video":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = camera[which_cam].video.create_video_trimmed_queue(param)
         elif param["command"] == "recreate-image-config":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = backup.create_image_config_api(param)
         elif param["command"] == "create-day-video":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = camera[which_cam].video.create_video_day_queue(param)
         elif param["command"] == "remove":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = backup.delete_marked_files_api(param)
         elif param["command"] == "archive-object-detection":
-            [cam_id, date] = param["parameter"]
-            response = camera[cam_id].object.analyze_archive_images_start(date)
+            parameters = param["parameter"]
+            cam_id = parameters[0]
+            date = parameters[1]
+            threshold = -1
+            if len(parameters) > 2:
+                threshold = parameters[2]
+            if "_" in date:
+                date_list = date.split("_")
+                response = camera[cam_id].object.analyze_archive_several_days_start(date_list, threshold)
+            else:
+                response = camera[cam_id].object.analyze_archive_day_start(date, threshold)
         elif param["command"] == "archive-remove-day":
-            msg = "API CALL '" + param["command"] + "' not implemented yet (" + str(self.path) + ")"
-            srv_logging.info(msg)
-            srv_logging.info(str(param))
-            #response = {"info": msg}
+            srv_logging.info(param["command"] + ": " + str(param))
             response = backup.delete_archived_day(param)
+        elif param["command"] == "archive-download-day":
+            srv_logging.info(param["command"] + ": " + str(param))
+            response = backup.download_files(param)
+        elif param["command"] == "archive-download-list":
+            srv_logging.info(param["command"] + ": " + str(param))
+            response = backup.download_files(param, body_data)
         elif param["command"] == "reconnect-camera":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = camera[which_cam].reconnect()
         elif param["command"] == "camera-settings":
+            srv_logging.info(param["command"] + ": " + str(param))
             response = camera[which_cam].get_camera_settings(param)
         elif param["command"] == "start-recording":
             audio_filename = ""
@@ -789,12 +924,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             config.db_handler.clean_all_data("sensor")
             response = {"cleanup": "done"}
         elif param["command"] == "update-views":
-            views.archive_list_update(force=True)
-            views.favorite_list_update(force=True)
+            views.archive.list_update(force=True)
+            views.favorite.list_update(force=True)
+            views.object.list_update(force=True)
             response = {"update_views": "started"}
         elif param["command"] == "update-views-complete":
-            views.archive_list_update(force=True, complete=True)
-            views.favorite_list_update(force=True, complete=True)
+            views.archive.list_update(force=True, complete=True)
+            views.favorite.list_update(force=True, complete=True)
+            views.object.list_update(force=True, complete=True)
             response = {"update-views-complete": "started"}
         elif param["command"] == "force-backup":
             backup.start_backup()
@@ -804,6 +941,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_logging.info("FORCED SHUT-DOWN OF BIRDHOUSE SERVER .... !")
             srv_logging.info("-------------------------------------------")
             config.force_shutdown()
+            health_check.set_start()
             response = {"shutdown": "started"}
         elif param["command"] == "check-timeout":
             time.sleep(30)
@@ -903,7 +1041,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.endswith('favicon.ico'):
             self.stream_file(filetype='image/ico', content=read_image(file_directory=birdhouse_directories["html"], filename=self.path))
         elif self.path.startswith("/app/index.html"):
-            self.stream_file(filetype=file_types[".html"], content=read_html(directory=birdhouse_directories["html"], filename="index.html"))
+            self.stream_file(filetype=file_types[".html"], content=read_html(file_directory=birdhouse_directories["html"], filename="index.html"))
         elif file_ending in file_types:
             if "/images/" in self.path or "/videos/" in self.path or "/archive/" in self.path:
                 file_path = birdhouse_directories["data"]
@@ -912,10 +1050,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             if "text" in file_types[file_ending]:
                 self.stream_file(filetype=file_types[file_ending],
-                                 content=read_html(directory=file_path, filename=self.path))
+                                 content=read_html(file_directory=file_path, filename=self.path))
             elif "application" in file_types[file_ending]:
                 self.stream_file(filetype=file_types[file_ending],
-                                 content=read_html(directory=file_path, filename=self.path))
+                                 content=read_html(file_directory=file_path, filename=self.path))
             else:
                 self.stream_file(filetype=file_types[file_ending],
                                  content=read_image(file_directory=file_path, filename=self.path))
@@ -935,44 +1073,56 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         which_cam = param["which_cam"]
         command = param["command"]
 
-        srv_logging.debug("GET API request with '" + self.path + "'.")
-        srv_logging.debug(str(param))
+        config.user_activity("set", command)
 
-        # prepare API response
+        srv_logging.debug("GET API request with '" + self.path + "'.")
         api_response = {
             "API": api_description,
             "STATUS": {
-                "start_time": api_start,
-                "current_time": config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
                 "admin_allowed": self.admin_allowed(),
-                "check-version": version,
                 "api-call": status,
-                "reload": False,
-                "system": {},
-                "server": {
-                    "view_archive_loading": views.archive_loading,
-                    "view_favorite_loading": views.favorite_loading,
-                    "backup_process_running": backup.backup_running,
-                    "queue_waiting_time": config.queue.queue_wait,
-                    "health_check": health_check.status(),
-                    "object_detection": birdhouse_status["object_detection"],
-                    "initial_setup": config.param["server"]["initial_setup"],
-                    "last_answer": ""
-                },
+                "check-version": version,
+                "current_time": config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
+                "start_time": api_start,
+                "database": {},
                 "devices": {
                     "cameras": {},
                     "sensors": {},
                     "weather": {},
                     "microphones": {}
                 },
+                "reload": False,
+                "server": {
+                    "view_archive_loading": views.archive.loading,
+                    "view_favorite_loading": views.favorite.loading,
+                    "view_object_loading": views.object.loading,
+                    "view_archive_progress": views.tools.get_progress("archive"),
+                    "view_favorite_progress": views.tools.get_progress("favorite"),
+                    "view_object_progress": views.tools.get_progress("object"),
+                    "backup_process_running": backup.backup_running,
+                    "queue_waiting_time": config.queue.queue_wait,
+                    "health_check": health_check.status(),
+                    "downloads": backup.download_files_waiting(param),
+                    "initial_setup": config.param["server"]["initial_setup"],
+                    "last_answer": ""
+                },
+                "system": {},
+                "object_detection": {
+                    "active": birdhouse_status["object_detection"],
+                    "processing": config.object_detection_processing,
+                    "progress": config.object_detection_progress,
+                    "waiting": config.object_detection_waiting,
+                    "waiting_dates": config.object_detection_waiting_keys,
+                    "models_available": detection_models,
+                    "models_loaded": {},
+                    "models_loaded_status": {},
+                },
                 "view": {
                     "selected": which_cam,
                     "active_cam": which_cam,
                     "active_date": "",
                     "active_page": command
-                },
-                "database": {},
-                "detection_models": detection_models
+                }
             },
             "SETTINGS": {
                 "backup": {},
@@ -992,6 +1142,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             "WEATHER": {},
             "DATA": {}
         }
+        srv_logging.debug(str(param))
+
+        # prepare API response
 
         # prepare DATA section
         api_data = {
@@ -1010,7 +1163,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         request_times["0_initial"] = round(time.time() - request_start, 3)
 
-        cmd_views = ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL", "DEVICES"]
+        cmd_views = ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL",
+                     "DEVICES", "OBJECTS", "bird-names"]
         cmd_status = ["status", "list", "last-answer"]
         cmd_info = ["camera-param", "version", "reload"]
 
@@ -1018,13 +1172,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if command == "INDEX":
             content = views.index_view(param=param)
         elif command == "FAVORITES":
-            content = views.favorite_list(param=param)
+            content = views.favorite.list(param=param)
         elif command == "TODAY":
             content = views.list(param=param)
         elif command == "TODAY_COMPLETE":
             content = views.complete_list_today(param=param)
         elif command == "ARCHIVE":
-            content = views.archive_list(param=param)
+            content = views.archive.list(param=param)
+        elif command == "OBJECTS":
+            content = views.object.list(param=param)
         elif command == "VIDEOS":
             content = views.video_list(param=param)
         elif command == "VIDEO_DETAIL":
@@ -1032,15 +1188,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif command == "DEVICES":
             content = views.camera_list(param=param)
             api_response["STATUS"]["system"] = sys_info.get()
-            api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
+            api_response["STATUS"]["system"]["hdd_archive"] = views.archive.dir_size / 1024
         elif command == "status" or command == "list":
             content = {"last_answer": ""}
-            #if self.admin_allowed() and len(config.async_answers) > 0:
-            #    content["last_answer"] = config.async_answers.pop()
-            #    content["background_process"] = config.async_running
             api_response["STATUS"]["database"] = config.get_db_status()
             api_response["STATUS"]["system"] = sys_info.get()
-            api_response["STATUS"]["system"]["hdd_archive"] = views.archive_dir_size / 1024
+            api_response["STATUS"]["system"]["hdd_archive"] = views.archive.dir_size / 1024
         elif command == "last-answer":
             content = {"last_answer": ""}
             if len(config.async_answers) > 0:
@@ -1049,6 +1202,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif command == "reload":
             content = {}
             api_response["STATUS"]["reload"] = True
+        elif command == "bird-names":
+            content = {"birds": config.birds}
         elif command == "version":
             content = {}
             version["Code"] = "800"
@@ -1078,6 +1233,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if key in content:
                     api_response["STATUS"]["server"][key] = content[key]
 
+            for key in camera:
+                api_response["STATUS"]["object_detection"]["models_loaded_status"][key] = camera[key].object.detect_loaded
+                api_response["STATUS"]["object_detection"]["models_loaded"][key] = camera[key].object.detect_settings["model"]
+
             # collect data for new DATA section
             param_to_publish = ["backup", "localization", "title", "views", "info", "weather"]
             for key in param_to_publish:
@@ -1095,13 +1254,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
         if command in cmd_views:
-            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups",
-                                "chart_data", "weather_data", "days_available", "day_back", "day_forward"]
+            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups", "archive_exists",
+                                "chart_data", "weather_data", "days_available", "day_back", "day_forward", "birds"]
             for key in param_to_publish:
                 if key in content:
                     api_data["data"][key] = content[key]
 
-            param_to_publish = ["view", "view_count", "links", "subtitle", "max_image_size"]
+            param_to_publish = ["view", "view_count", "links", "subtitle", "max_image_size", "label"]
             for key in param_to_publish:
                 if key in content:
                     api_data["view"][key] = content[key]
@@ -1433,8 +1592,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         return
 
 
-#on_exception_setting()
-#sys.excepthook = on_exception
+on_exception_setting()
+sys.excepthook = on_exception
 
 
 if __name__ == "__main__":
@@ -1442,10 +1601,27 @@ if __name__ == "__main__":
     # help
     if len(sys.argv) > 0 and "--help" in sys.argv:
         print("jc://birdhouse/\n\nArguments:")
-        print("--help       Write this information")
-        print("--logfile    Write logging output to logfile '"+birdhouse_log_filename+"'")
-        print("--backup     Start backup directly (current date, delete directory before)")
+        print("--help            Write this information")
+        print("--logfile         Write logging output to logfile '"+birdhouse_log_filename+"'")
+        print("--backup          Start backup directly (current date, delete directory before)")
+        print("--shutdown        Send shutdown signal")
+        print("--restart         Send restart signal")
+        print("--check-if-start  Start if restart requested (-> request via crontab)")
         exit()
+
+    elif len(sys.argv) > 0 and "--shutdown" in sys.argv:
+        shutdown_thread = ServerHealthCheck(maintain=True)
+        shutdown_thread.set_shutdown()
+        exit()
+
+    elif len(sys.argv) > 0 and "--check-if-start" in sys.argv:
+        restart_thread = ServerHealthCheck(maintain=True)
+        if not restart_thread.check_start():
+            exit()
+
+    elif len(sys.argv) > 0 and "--restart" in sys.argv:
+        restart_thread = ServerHealthCheck(maintain=True)
+        restart_thread.set_restart()
 
     set_server_logging(sys.argv)
 
@@ -1453,10 +1629,14 @@ if __name__ == "__main__":
     ch_logging = set_logging('cam-handl')
     view_logging = set_logging("view-head")
 
+    time.sleep(2)
+
     srv_logging.info('-------------------------------------------')
     srv_logging.info('Starting ...')
     srv_logging.info('-------------------------------------------')
-    srv_logging.info('Logging into File: ' + str(birdhouse_log_as_file))
+    srv_logging.info('* Logging into File: ' + str(birdhouse_log_as_file))
+    srv_logging.info('* Cache handling: cache=' + str(birdhouse_cache) +
+                     ", cache_for_archive=" + str(birdhouse_cache_for_archive))
 
     check_submodules()
     set_error_images()
@@ -1516,7 +1696,7 @@ if __name__ == "__main__":
     backup.start()
     if len(sys.argv) > 0 and "--backup" in sys.argv:
         backup.backup_files()
-        views.archive_list_update()
+        views.archive.list_update()
 
     # check if config files for main image directory exists and create if not exists
     if not os.path.isfile(config.db_handler.file_path("images")):

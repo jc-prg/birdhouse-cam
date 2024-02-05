@@ -8,7 +8,7 @@ var app_setting_count     = 4;
 var app_setting_style     = "frame_column wide";
 var app_last_load         = 0;
 var app_title             = "jc://birdhouse/";
-var app_version           = "v1.0.7";
+var app_version           = "v1.0.8";
 var app_api_version       = "N/A";
 var app_api_dir           = "api/";
 var app_api_status        = "status";
@@ -18,27 +18,33 @@ var app_error_connect_image = "birdhouse/img/camera_na_server.jpg";
 var app_unique_stream_url = true;			// doesn't work for chrome (assumption: mjpeg-streams are not closed correctly)
 var app_unique_stream_id  = new Date().getTime();     // new ID per App-Start
 var app_session_id        = "";
+var app_status_commands   = ["last-answer"];
 
-//--------------------------------
-// create menu entries
-//--------------------------------
 
+/**
+* create menu entries for the app
+*
+* @param (dict) object - data returned form server API
+* @returns (array) - returns an array of array that contains the menu definition
+*/
 function app_menu_entries(data) {
-	var hideSettings    = "birdhouse_settings.toggle(true);";
-	var weather_active  = data["SETTINGS"]["localization"]["weather_active"];
-	var admin_type      = data["SETTINGS"]["server"]["admin_login"];
+	var hideSettings     = "birdhouse_settings.toggle(true);";
+	var weather_active   = data["SETTINGS"]["localization"]["weather_active"];
+	var detection_active = data["STATUS"]["object_detection"]["active"];
+	var admin_type       = data["SETTINGS"]["server"]["admin_login"];
 
 	var app_menu = [
 		[lang("LIVESTREAM"),   "script", hideSettings+"birdhousePrint_load('INDEX',   '"+app_active_cam+"');"],
-		[lang("FAVORITES"),    "script", hideSettings+"birdhousePrint_load('FAVORITES','"+app_active_cam+"');"],
 		[lang("TODAY"),        "script", hideSettings+"birdhousePrint_load('TODAY',   '"+app_active_cam+"');"],
+		[lang("FAVORITES"),    "script", hideSettings+"birdhousePrint_load('FAVORITES','"+app_active_cam+"');"],
 		[lang("VIDEOS"),       "script", hideSettings+"birdhousePrint_load('VIDEOS',  '"+app_active_cam+"');"],
-		[lang("ARCHIVE"),      "script", hideSettings+"birdhousePrint_load('ARCHIVE', '"+app_active_cam+"');"]
-		];
+        ];
 
-	if (weather_active) {
-	    app_menu.push([lang("WEATHER"),      "script", hideSettings+"birdhousePrint_load('WEATHER', '"+app_active_cam+"');"]);
-    }
+	if (detection_active) { app_menu.push([lang("BIRDS"),        "script", hideSettings+"birdhousePrint_load('OBJECTS',  '"+app_active_cam+"');"]); }
+
+    app_menu.push([lang("ARCHIVE"),      "script", hideSettings+"birdhousePrint_load('ARCHIVE', '"+app_active_cam+"');"]);
+
+	if (weather_active)   { app_menu.push([lang("WEATHER"),      "script", hideSettings+"birdhousePrint_load('WEATHER', '"+app_active_cam+"');"]); }
 
 	if (app_admin_allowed) {
 	    birdhouse_adminAnswer(true);
@@ -49,9 +55,9 @@ function app_menu_entries(data) {
 		["LINE"],
 		[lang("TODAY_COMPLETE"),"script", hideSettings+"birdhousePrint_load('TODAY_COMPLETE','"+app_active_cam+"');"],
 		["LINE"],
-		[lang("DEVICES"),   "script", hideSettings+"birdhousePrint_load('DEVICES','"+app_active_cam+"');"],
-		[lang("CAMERAS"),   "script", hideSettings+"birdhousePrint_load('CAMERA_SETTINGS','"+app_active_cam+"');"],
-		[lang("SETTINGS"),  "script", hideSettings+"birdhousePrint_load('SETTINGS','"+app_active_cam+"');"],
+		[lang("DEVICE_MENU"),   "script", hideSettings+"birdhousePrint_load('DEVICES','"+app_active_cam+"');"],
+		[lang("IMAGE_MENU"), "script", hideSettings+"birdhousePrint_load('IMAGE_SETTINGS','"+app_active_cam+"');"],
+		[lang("SETTINGS"),       "script", hideSettings+"birdhousePrint_load('SETTINGS','"+app_active_cam+"');"],
 		]);
 		if (admin_type == "LOGIN") {
     	    app_menu = app_menu.concat([
@@ -182,5 +188,4 @@ function app_connection_lost(error=false) {
     app_connection_error = error;
 }
 
-
-
+app_scripts_loaded += 1;

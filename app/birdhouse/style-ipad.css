@@ -25,12 +25,15 @@
     and (-webkit-min-device-pixel-ratio: 2) { 
     
         .image_container.fixed_height { height  : 240px; }
-        .thumbnail                    { width   : 155px; }
+        .thumbnail                    { width   : 145px; }
+        .thumbnail.error              { width   : 135px; height: 160px; }
 	    .frame_column.wide { width : 900px; }
         .recycle         { width   : 30px;  height   : 30px;  top : 30px; }
         .recycle_img     { width   : 30px;  height   : 30px; }
         .star            { width   : 30px;  height   : 30px;  top : 25px; }
         .star_img        { width   : 30px;  height   : 30px; }
+        .checkbox        { width   : 30px;  height   : 30px;  top : 25px; }
+        .checkbox_img    { width   : 30px;  height   : 30px; }
         .weather_hide_if_small { display: block; }
 
     }
@@ -43,12 +46,15 @@
     and (-webkit-min-device-pixel-ratio: 2) {
     
     	.frame_column.wide { width : 760px; }
-        .thumbnail       { width   : 155px; }
+        .thumbnail       { width   : 145px; }
+        .thumbnail.error { width   : 135px; height: 140px; }
         .image_container.fixed_height { height  : 240px; }
         .recycle         { width   : 30px;  height   : 30px;  top : 30px; }
         .recycle_img     { width   : 30px;  height   : 30px; }
         .star            { width   : 30px;  height   : 30px;  top : 25px; }
         .star_img        { width   : 30px;  height   : 30px; }
+        .checkbox        { width   : 30px;  height   : 30px;  top : 25px; }
+        .checkbox_img    { width   : 30px;  height   : 30px; }
         .weather_hide_if_small { display: block; }
 
     }

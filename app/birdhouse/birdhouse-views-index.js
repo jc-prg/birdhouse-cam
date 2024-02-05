@@ -200,3 +200,4 @@ index_template["offline"] = `
     </div>
 `
 
+app_scripts_loaded += 1;

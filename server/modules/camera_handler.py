@@ -53,7 +53,7 @@ class CameraInformation:
                 devices["short"][value] = value + " (" + info[0] + ")"
                 devices["complete"][value] = {"dev": value, "info": last_key, "image": False, "shape": []}
 
-        self.logging.info("Found "+str(len(devices["list"]))+" devices.")
+        self.logging.debug("Found "+str(len(devices["list"]))+" devices.")
         self.logging.debug(str(devices))
 
         return devices.copy()

@@ -11,7 +11,15 @@ class BirdhouseClass(object):
     """
 
     def __init__(self, class_id, class_log="", device_id="", config=None):
+        """
+        Constructor for this class
 
+        Parameters:
+            class_id (str): class id
+            class_log (str): string for logging message to identify messages from this class (max. 10 characters)
+            device_id (str): device id
+            config (modules.config.BirdhouseConfig): reference to main config handler
+        """
         if class_log == "":
             class_log = class_id
         if device_id == "":
@@ -47,15 +55,19 @@ class BirdhouseClass(object):
 
     def stop(self):
         """
-        stop if thread (set self._running = False)
+        Stop if thread (set self._running = False)
         """
-        self.logging.info("STOP SIGNAL SEND FROM SOMEWHERE ...")
+        self.logging.debug("STOP SIGNAL SEND FROM SOMEWHERE ...")
         self._running = False
         self._processing = False
 
     def raise_error(self, message, connect=False):
         """
         Report Error, set variables of modules
+
+        Parameters:
+            message (str): error message
+            connect (bool): set True if it's a connection error / fatal error
         """
         if connect:
             self.error_connect = True
@@ -90,13 +102,16 @@ class BirdhouseClass(object):
 
     def raise_warning(self, message):
         """
-        show warning message
+        Show warning message
+
+        Parameters:
+            message (str): warning message
         """
         self.logging.warning(self.id + ": " + message)
 
     def reset_error(self):
         """
-        remove all errors
+        Reset all error variables
         """
         self.error = False
         self.error_msg = []
@@ -106,7 +121,10 @@ class BirdhouseClass(object):
 
     def reset_error_check(self, error_timeout=-1):
         """
-        check if last error has been before x seconds and reset error status, if older
+        Check if last error has been before x seconds and reset error status, if older
+
+        Parameters:
+            error_timeout (float): waiting time until error gets reset, if not set default value is used
         """
         if error_timeout == -1:
             error_timeout = self.error_timeout
@@ -115,7 +133,7 @@ class BirdhouseClass(object):
 
     def health_signal(self):
         """
-        set var that can be requested
+        Set var that can be requested
         """
         self._health_check = time.time()
         self.thread_register()
@@ -123,24 +141,37 @@ class BirdhouseClass(object):
     def health_status(self):
         """
         return time sind last heath signal
+
+        Returns:
+            float: time since last health signal in seconds
         """
         return round(time.time() - self._health_check, 2)
 
-    def thread_wait(self):
+    def thread_wait(self, wait_time=-1):
         """
-        wait depending on priority
+        Wait depending on priority or wait_time set in parameters.
+
+        Parameters:
+            wait_time (float): possibility to overwrite waiting time set through priority.
         """
         start = time.time()
-        wait = self._thread_waiting_times[self._thread_priority]
-        if self._thread_slowdown:
-            wait = wait * 3
+        if wait_time == -1:
+            wait = self._thread_waiting_times[self._thread_priority]
+            if self._thread_slowdown:
+                wait = wait * 3
 
-        while start + wait > time.time() and not self.if_shutdown():
-            time.sleep(0.1)
+            while start + wait > time.time() and not self.if_shutdown():
+                time.sleep(0.05)
+        else:
+            while start + wait_time > time.time() and not self.if_shutdown():
+                time.sleep(0.01)
 
     def thread_set_priority(self, priority):
         """
-        set priority
+        Set priority which results in different waiting times for the thread -> def run(); self.thread_wait()
+
+        Parameters:
+            priority (int): set priority
         """
         priorities = len(self._thread_waiting_times)
         if 0 <= int(priority) <= priorities:
@@ -150,7 +181,11 @@ class BirdhouseClass(object):
 
     def thread_prio_process(self, start, pid):
         """
-        set central info that prio process is running
+        Set central info that prio process is running
+
+        Parameters:
+            start (datetime): timestamp
+            pid (str): process id
         """
         self.config.thread_ctrl["priority"] = {
             "process": start,
@@ -160,6 +195,11 @@ class BirdhouseClass(object):
     def if_other_prio_process(self, pid):
         """
         check if prio process with other ID
+
+        Parameters:
+            pid (str): process id
+        Returns:
+            bool: if other process has priority
         """
         priority = self.config.thread_ctrl["priority"]
         if priority["process"] and priority["pid"] != pid:
@@ -169,7 +209,13 @@ class BirdhouseClass(object):
 
     def thread_register_process(self, pid, name, status, progress):
         """
-        register progress in config vars (status: start, running, finished, remove; progres 0..1)
+        Register progress in config vars (status: start, running, finished, remove; progres 0..1)
+
+        Parameters:
+            pid (str): process id
+            name (str): name of the process
+            status (str): status of the process
+            progress (float): progress of the process
         """
         process_info = {
             "id": pid,
@@ -192,7 +238,10 @@ class BirdhouseClass(object):
 
     def thread_register(self, init=False):
         """
-        register class in config
+        Register instance of class in config
+
+        Parameters:
+            init (bool): set to True for first registration of an instance, else update
         """
         if self.config is None:
             return
@@ -229,7 +278,7 @@ class BirdhouseClass(object):
 
     def thread_control(self):
         """
-        central thread functionality
+        Central thread functionality, check if central shutdown signal is available and trigger all threads to stop
         """
         self.health_signal()
         if self.config is not None and self.config.thread_ctrl["shutdown"]:
@@ -237,31 +286,50 @@ class BirdhouseClass(object):
 
     def thread_slowdown(self, slowdown=True):
         """
-        set var to increase waiting time for the thread
+        Set var to increase or decrease waiting time for the thread
+
+        Parameters:
+            slowdown (bool): increase waiting time if True, decrease if False
         """
         self._thread_slowdown = slowdown
 
     def if_running(self):
         """
-        external check if running
+        External check if running
+
+        Returns:
+            bool: Status if thread is running
         """
         return self._running
 
     def if_paused(self):
         """
-        external check if paused
+        External check if paused
+
+        Returns:
+            bool: Status if thread is paused
         """
         return self._paused
 
     def if_processing(self):
         """
-        external check if paused
+        External check if paused
+
+        Returns:
+            bool: Status if processing is ongoing
         """
         return self._processing
 
     def if_error(self, message=False, length=False, count=False):
         """
-        external check if error
+        External check if error
+
+        Parameters:
+            message (bool): return error message(s)
+            length (bool): return amount of error messages (if not message=True)
+            count (bool): return amount of errors (if not message=True and not length=True)
+        Returns:
+            Any: requested value
         """
         if message:
             return self.error_msg
@@ -274,7 +342,10 @@ class BirdhouseClass(object):
 
     def if_shutdown(self):
         """
-        check if shutdown is requested
+        Check if shutdown is requested
+
+        Returns:
+            bool: Status if shutdown signal is set
         """
         if self.config is not None:
             return self.config.thread_ctrl["shutdown"]
@@ -283,8 +354,20 @@ class BirdhouseClass(object):
 
 
 class BirdhouseCameraClass(BirdhouseClass):
+    """
+    Extension of BirdhouseClass that extracts camera specific parameters to self.param and defines timezone
+    """
 
-    def __init__(self, class_id, class_log, camera_id, config):
+    def __init__(self, class_id, class_log="", camera_id="", config=None):
+        """
+        Constructor of this class.
+
+        Parameters:
+            class_id (str): class id
+            class_log (str): string for logging message to identify messages from this class (max. 10 characters)
+            camera_id (str): device id
+            config (modules.config.BirdhouseConfig): reference to main config handler
+        """
         BirdhouseClass.__init__(self, class_id, class_log, camera_id, config)
         if "devices" in self.config.param and "cameras" in self.config.param["devices"] \
                 and self.id in self.config.param["devices"]["cameras"]:
@@ -298,26 +381,46 @@ class BirdhouseCameraClass(BirdhouseClass):
 
 
 class BirdhouseDbClass(BirdhouseClass):
+    """
+    Main class for database classes.
+    """
 
     def __init__(self, class_id, class_log, config):
+        """
+        Constructor of this class
+
+        Parameters:
+            class_id (str): class id
+            class_log (str): string to identify messages of this class in logging
+            config (modules.config.BirdhouseConfig): reference to main config handler
+        """
         BirdhouseClass.__init__(self, class_id, class_log, "", config)
         self.locked = {}
 
     def lock(self, filename):
         """
         lock config file
+
+        Parameters:
+            filename (str): filename / db name of database to be locked
         """
         self.locked[filename] = True
 
     def unlock(self, filename):
         """
         unlock config file
+
+        Parameters:
+            filename (str): filename / db name of database to be unlocked
         """
         self.locked[filename] = False
 
     def wait_if_locked(self, filename):
         """
-        wait, while a file is locked for writing
+        Wait, while a file is locked for writing
+
+        Parameters:
+            filename (str): filename / db name of database - if locked, wait
         """
         wait = 0.2
         count = 0

@@ -7,13 +7,15 @@
 
 [Unit]
 Description=Birdhouse-Cam Service
-After=network.target
+After=birdhouse-cam-docker.service
 
 [Service]
-ExecStart=/projects/prod/birdhouse-cam/server/server.py
-ExecReload=/projects/prod/birdhouse-cam/server/server.py
-Type=notify
+WorkingDirectory=/projects/prod/birdhouse-cam/
+ExecStart=/usr/bin/python3
+#ExecReload=/projects/prod/birdhouse-cam/server/server.py --shutdown
+ExecStop=/projects/prod/birdhouse-cam/server/server.py --shutdown
+Type=simple
 Restart=always
 
 [Install]
-WantedBy=user.target
+WantedBy=multi-user.target

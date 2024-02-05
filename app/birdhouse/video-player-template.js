@@ -125,6 +125,7 @@ var videoplayer_template = `
   <br/>
 `
 
+app_scripts_loaded += 1;
 // END_OF_TEMPLATE
 
 

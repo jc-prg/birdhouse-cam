@@ -84,6 +84,9 @@ function birdhouse_adminAnswerReturn(data) {
         if (msg[0] == "RANGE_DONE") { button_tooltip.hide("info"); }
         birdhouseReloadView();
         }
+
+    birdhouseStatus_loadingViews(data);
+    birdhouseStatus_detection(data);
 }
 
 function birdhouse_loadSettings() {
@@ -144,14 +147,50 @@ function birdhouse_recycleThreshold(category, date, threshold, del, camera) {
     birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerEditSend,"","birdhouse_editData");
 }
 
-function birdhouse_archiveObjectDetection(camera, date_stamp, date) {
-    var message = lang("OBJECT_DETECTION_REQUEST", [date, getTextById("image_count_all_" + date)]);
-    appMsg.confirm(message, "birdhouse_archiveObjectDetection_exec('"+camera+"', '"+date_stamp+"');", 150);
+function birdhouse_recycleObject(category, date, del, camera) {
+    commands = ["recycle-object-detection", category, date, del, camera];
+    birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerEditSend,"","birdhouse_editData");
+}
+
+function birdhouse_archiveObjectDetection(camera, date_stamp, date, date_list="", threshold="") {
+    if (threshold != "") {
+        var threshold = document.getElementById(threshold).value;
+        }
+    if (date_list != "") {
+        var select = document.getElementById(date_list);
+        var options = select && select.options;
+        var result = [];
+        var result_dates = [];
+        var opt;
+        var count = 0;
+        for (var i=0; i<options.length; i++) {
+            opt = options[i];
+            if (opt.selected) {
+                var date_stamp = opt.value.split("_")[0];
+                var date = date_stamp.substring(6,8) + "." + date_stamp.substring(4,6) + "." + date_stamp.substring(0,4);
+                count +=  Number(opt.value.split("_")[1]);
+                result.push(date_stamp);
+                result_dates.push(date);
+           }    }
+        date_list = result_dates.join(", ");
+        date_stamp = result.join("_");
+        var message = lang("OBJECT_DETECTION_REQUESTS", [date_list, count, threshold]);
+    }
+    else {
+        var message = lang("OBJECT_DETECTION_REQUEST", [date, getTextById("image_count_all_" + date), threshold]);
+        }
+    appMsg.confirm(message, "birdhouse_archiveObjectDetection_exec('"+camera+"', '"+date_stamp+"', '" + threshold + "');", 150);
     }
 
-function birdhouse_archiveObjectDetection_exec(camera, date) {
-    commands = ["archive-object-detection", camera, date];
-	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
+function birdhouse_archiveObjectDetection_exec(camera, date, threshold) {
+    commands = ["archive-object-detection", camera, date, threshold];
+	birdhouse_apiRequest('POST', commands, '', birdhouse_archiveObjectDetection_progress,'','birdhouse_forceBackup');
+    }
+
+function birdhouse_archiveObjectDetection_progress(data) {
+
+    var msg = lang("DETECTION_PROGRESS") + "<br/><text id='last_answer_detection_progress'>0 %</text>";
+    appMsg.alert(msg);
     }
 
 function birdhouse_archiveDayDelete(date_stamp, date) {
@@ -161,7 +200,7 @@ function birdhouse_archiveDayDelete(date_stamp, date) {
 
 function birdhouse_archiveDayDelete_exec(date_stamp) {
     commands = ["archive-remove-day", date_stamp];
-	birdhouse_apiRequest('POST', commands, '', birdhouse_archiveDayDelete_done,'','birdhouse_forceBackup');
+	birdhouse_apiRequest('POST', commands, '', birdhouse_archiveDayDelete_done,'','birdhouse_archiveDayDelete_exec(\"'+date_stamp+'\")');
     }
 
 function birdhouse_archiveDayDelete_done(data) {
@@ -363,6 +402,16 @@ function birdhouse_showWeather() {
 	birdhouse_apiRequest('GET', commands, '', birdhouseWeather,'','birdhouseWeather');
 }
 
+function birdhouse_birdNamesRequest() {
+	commands = ["bird-names"];
+	birdhouse_apiRequest('GET', commands, '', birdhouse_birdNamesSet,'','birdhouse_birdNamesRequest()');
+}
+
+function birdhouse_birdNamesSet(data) {
+    app_bird_names = data["DATA"]["data"]["birds"];
+    console.log(app_bird_names);
+}
+
 function birdhouse_AnswerDelete(data) {
 	//console.log(data);
 	appMsg.alert(lang("DELETE_DONE") + "<br/>(" + data["STATUS"]["deleted_count"] + " " + lang("FILES")+")","");
@@ -408,3 +457,5 @@ function birdhouse_AnswerRecreateImageConfig(data) {
 	appMsg.alert(lang("RECREATE_IMAGE_CONFIG"));
 	birdhouseReloadView();
 	}
+
+app_scripts_loaded += 1;

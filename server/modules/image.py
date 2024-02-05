@@ -3,16 +3,213 @@ import cv2
 import os
 
 from skimage.metrics import structural_similarity as ssim
-from modules.bh_class import BirdhouseCameraClass
+from modules.bh_class import BirdhouseCameraClass, BirdhouseClass
+
+
+class BirdhouseImageSupport(BirdhouseCameraClass):
+    """
+    Class to evaluate image metadata against defined criteria
+    """
+
+    def __init__(self, camera_id, config):
+        """
+        Constructor to initialize class
+
+        Parameters:
+            camera_id (str): camera id
+            config (modules.config.BirdhouseConfig): settings for a camera
+        """
+        BirdhouseCameraClass.__init__(self, class_id="img-eval", camera_id=camera_id, config=config)
+
+        self.id = camera_id
+        self.image_to_select_last = "xxxxxx"
+
+    def differs(self, file_info):
+        """
+        check if similarity is under threshold
+
+        Parameters:
+            file_info (dict): DB entry of an image
+        Returns:
+            int: 1 if image difference is higher than threshold else 0
+        """
+        threshold = float(self.param["similarity"]["threshold"])
+        similarity = float(file_info["similarity"])
+        if similarity != 0 and similarity < threshold:
+            return 1
+        else:
+            return 0
+
+    def select(self, timestamp, file_info, check_detection=True,
+               overwrite_detection_mode="", overwrite_threshold="", overwrite_camera=""):
+        """
+        check image properties to decide if image is a selected one (for backup and view with selected images)
+
+        Parameters:
+            timestamp (str): timestamp of image (image-id) in format HHMMSS
+            file_info (dict): db entry for the image
+            check_detection (bool): check if detection (depending on mode, similarity or object)
+            overwrite_detection_mode (str): overwrite default setting for camera (options: 'object', 'similarity')
+            overwrite_threshold (float): overwrite default setting for camera
+            overwrite_camera (str): overwrite default setting for camera id (or use if camera id not set)
+        Returns:
+            bool: True if image fulfills selection criteria
+        """
+        select = False
+        camera_id = self.id
+
+        if overwrite_threshold != "" or overwrite_detection_mode == "object":
+            threshold = float(overwrite_threshold)
+        elif self.param:
+            threshold = float(self.param["similarity"]["threshold"])
+        if overwrite_camera != "":
+            camera_id = overwrite_camera
+        if overwrite_detection_mode != "":
+            detection_mode = overwrite_detection_mode
+        else:
+            detection_mode = self.param["detection_mode"]
+
+        # if similarity data not available -> false
+        if check_detection and "similarity" not in file_info:
+            select = False
+
+        # if marked as to be deleted
+        elif "to_be_deleted" in file_info and float(file_info["to_be_deleted"]) == 1:
+            if timestamp[2:4] == "00":
+                self.image_to_select_last = timestamp
+            select = False
+
+        # if correct camera
+        elif ("camera" in file_info and file_info["camera"] == camera_id) or (
+                "camera" not in file_info and camera_id == "cam1"):
+
+            # if full hour images
+            if timestamp[2:4] == "00" and timestamp[0:4] != self.image_to_select_last[0:4]:
+                self.image_to_select_last = timestamp
+                select = True
+
+            # if favorite image
+            elif "favorit" in file_info and float(file_info["favorit"]) == 1:
+                select = True
+
+            # if objects detected
+            elif "detections" in file_info and len(file_info["detections"]) > 0:
+                select = True
+
+            # else decide dependent if object or similarity mode
+            elif check_detection:
+                if detection_mode == "similarity":
+                    similarity = float(file_info["similarity"])
+                    if similarity != 0 and similarity < threshold:
+                        select = True
+                elif detection_mode == "object":
+                    if "detections" in file_info and len(file_info["detections"]) > 0:
+                        select = True
+                        file_info["detect_object"] = len(file_info["detections"])
+                    else:
+                        file_info["detect_object"] = -1
+
+            # ???
+            #elif not check_detection:
+            #    select = True
+
+        info = file_info.copy()
+        for value in ["camera", "to_be_deleted", "favorit", "similarity", "detect_object"]:
+            if value not in info or info[value] is None:
+                info[value] = -1
+        if "detections" not in file_info:
+            file_info["detections"] = []
+        self.logging.debug("Image to select: delete=" + str(float(info["to_be_deleted"])) +
+                           "; cam=" + str(info["camera"]) + "|" + camera_id +
+                           "; favorite=" + str(float(info["favorit"])) +
+                           "; stamp=" + timestamp + "|" + self.image_to_select_last +
+                           "; object=" + str(len(file_info["detections"])) +
+                           "; similarity=" + str(float(info["similarity"])) + "<" +
+                           str(threshold) +
+                           " -> " + str(select))
+        return select
+
+    def filename(self, image_type, timestamp, camera=""):
+        """
+        Create image filename from different parameters
+
+        Parameters:
+            image_type (str): available options: 'lowres', 'hires', 'thumb', 'detect', 'video', 'vimages'
+            timestamp (str): timestamp in the format 'HHMMSS'
+            camera (str): camera id
+        Returns:
+            str: filename
+        """
+        if camera != "":
+            camera += '_'
+
+        if image_type == "lowres":
+            filename = "image_" + camera + timestamp + ".jpg"
+        elif image_type == "hires":
+            filename = "image_" + camera + "big_" + timestamp + ".jpeg"
+        elif image_type == "detect":
+            filename = "image_" + camera + "big_" + timestamp + "_detect.jpeg"
+        elif image_type == "thumb":
+            filename = "video_" + camera + timestamp + "_thumb.jpeg"
+        elif image_type == "video":
+            filename = "video_" + camera + timestamp + ".mp4"
+        elif image_type == "vimages":
+            filename = "video_" + camera + timestamp + "_"
+        else:
+            filename = "image_" + camera + timestamp + ".jpg"
+
+        self.logging.debug("Created filename: " + filename)
+        return filename
+
+    def param_from_filename(self, filename):
+        """
+        Get parameters from image filename
+
+        Parameters:
+            filename (str): image filename (without path)
+        Returns:
+            dict: available info keys: 'stamp', 'type', 'cam'
+        """
+        if filename.endswith(".jpg"):
+            filename = filename.replace(".jpg", "")
+        elif filename.endswith(".jpeg"):
+            filename = filename.replace(".jpeg", "")
+        else:
+            return {"error": "not an image"}
+
+        parts = filename.split("_")
+        info = {"stamp": '', "type": 'lowres', "cam": 'cam1'}
+        if len(parts) == 2:
+            info["stamp"] = parts[1]
+        if len(parts) == 3 and parts[1] == "big":
+            info["stamp"] = parts[2]
+            info["type"] = "hires"
+        if len(parts) == 3:
+            info["cam"] = parts[1]
+            info["stamp"] = parts[2]
+        if len(parts) == 4:
+            info["cam"] = parts[1]
+            info["type"] = "hires"
+            info["stamp"] = parts[3]
+
+        self.logging.debug("Parameters from filename: " + str(info))
+        return info
 
 
 class BirdhouseImageProcessing(BirdhouseCameraClass):
     """
-    modify encoded and raw images
+    Class to modify encoded and raw images
     """
 
     def __init__(self, camera_id, config):
-        BirdhouseCameraClass.__init__(self, class_id=camera_id+"-img", class_log="image",
+        """
+        Constructor to initialize class.
+
+        Parameters:
+            camera_id (str): camera id
+            config (modules.config.BirdhouseConfig): reference to main config handler
+        """
+        BirdhouseCameraClass.__init__(self, class_id=camera_id + "-img", class_log="image",
                                       camera_id=camera_id, config=config)
 
         self.frame = None
@@ -31,11 +228,18 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         self.error_camera = False
         self.error_image = {}
 
-        self.logging.info("Connected IMAGE processing ("+self.id+") ...")
+        self.logging.info("Connected IMAGE processing (" + self.id + ") ...")
 
     def compare(self, image_1st, image_2nd, detection_area=None):
         """
-        calculate structural similarity index (SSIM) of two images
+        Calculate structural similarity index (SSIM) of two images
+
+        Parameters:
+            image_1st (bytearray): first image to be compared
+            image_2nd (bytearray): second image to be compared
+            detection_area (list): area of image to be compared (start_x, start_y, end_x, end_y)
+        Returns:
+            float: structural similarity index (SSIM)
         """
         if self.error_camera:
             return 0
@@ -47,7 +251,14 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def compare_raw(self, image_1st, image_2nd, detection_area=None):
         """
-        calculate structural similarity index (SSIM) of two images
+        Calculate structural similarity index (SSIM) of two images
+
+        Parameters:
+            image_1st (numpy.ndarray): first image to be compared (raw format)
+            image_2nd (numpy.ndarray): second image to be compared (raw format)
+            detection_area (list): area of image to be compared (start_x, start_y, end_x, end_y)
+        Returns:
+            float: structural similarity index (SSIM)
         """
         if self.error_camera:
             return 0
@@ -80,7 +291,13 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def compare_raw_show(self, image_1st, image_2nd):
         """
-        show in an image where the differences are
+        Show in an image where the differences are (colors: black, red; the images have to have the same size)
+
+        Parameters:
+            image_1st (numpy.ndarray): first image to be compared (raw format)
+            image_2nd (numpy.ndarray): second image to be compared (raw format)
+        Returns:
+            numpy.ndarray: image that visualizes the differences
         """
         image_diff = cv2.subtract(image_2nd, image_1st)
 
@@ -96,7 +313,12 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def convert_from_raw(self, raw):
         """
-        convert from raw image to image // untested
+        convert from raw image to image
+
+        Parameters:
+            raw (numpy.ndarray): input raw image
+        Returns:
+            bytearray: encoded image
         """
         try:
             encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 100]
@@ -111,6 +333,11 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def convert_to_raw(self, image):
         """
         convert from device to raw image -> to be modified with CV2
+
+        Parameters:
+            image (bytearray): encoded input image
+        Returns:
+            numpy.ndarray: raw image (or None if error)
         """
         if self.error_camera:
             return
@@ -126,6 +353,11 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def convert_to_gray_raw(self, raw):
         """
         convert image from RGB to gray scale image (e.g. for analyzing similarity)
+
+        Parameters:
+            raw (numpy.ndarray): input raw image
+        Returns:
+            numpy.ndarray: to gray scale converted raw image
         """
         # error in camera
         if self.error_camera:
@@ -148,6 +380,11 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def convert_from_gray_raw(self, raw):
         """
         convert image from RGB to gray scale image (e.g. for analyzing similarity)
+
+        Parameters:
+            raw (numpy.ndarray): gray scale input raw image
+        Returns:
+            numpy.ndarray: raw image in BGR
         """
         # error in camera
         if self.error_camera:
@@ -166,16 +403,30 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def crop(self, image, crop_area, crop_type="relative"):
         """
         crop encoded image
+
+        Parameters:
+            image (bytearray): encoded input image
+            crop_area (list): crop area (start_x, start_y, end_x, end_y), if relative float values from 0.0..1.0
+            crop_type (str): type of crop area definition; options: 'relative' (default), 'absolute'
+        Returns:
+            bytearray: encoded cropped image
         """
         raw = self.convert_to_raw(image)
-        raw = self.crop_raw(raw, crop_area, crop_type)
+        raw, area = self.crop_raw(raw, crop_area, crop_type)
         image = self.convert_from_raw(raw)
         return image
 
     def crop_raw(self, raw, crop_area, crop_type="relative"):
         """
-        crop image using relative dimensions (0.0 ... 1.0);
-        ensure dimension is dividable by 2, which is required to create a video based on this images
+        crop image using relative dimensions; ensure dimension is dividable by 2,
+        which is required to create a video based on this images
+
+        Parameters:
+            raw (numpy.ndarray): input raw image
+            crop_area (list): crop area (start_x, start_y, end_x, end_y), if relative float values from 0.0..1.0
+            crop_type (str): type of crop area definition; options: 'relative' (default), 'absolute'
+        Returns:
+            (numpy.ndarray, list): cropped raw image plus crop area
         """
         try:
             height = raw.shape[0]
@@ -200,6 +451,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
             self.logging.debug("H: " + str(y_start) + "-" + str(y_end) + " / W: " + str(x_start) + "-" + str(x_end))
             frame_cropped = raw[y_start:y_end, x_start:x_end]
+            # frame_cropped = raw[x_start:x_end, y_start:y_end]
             return frame_cropped, crop_area
 
         except Exception as e:
@@ -210,6 +462,13 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def crop_area_pixel(self, resolution, area, dimension=True):
         """
         calculate start & end pixel for relative area
+
+        Parameters:
+            resolution (Any): defined resolution in format '800x600' or in format [width, height]
+            area (list): relative definition of crop area (0, 0, 1, 1) with float values from 0.0..1.0
+            dimension (bool): add width and height or not
+        Returns:
+            list: values in pixel (x_start, y_start, x_end, y_end, x_width, y_height)
         """
         if "x" in resolution:
             resolution = resolution.split("x")
@@ -234,6 +493,17 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def draw_text(self, image, text, position=None, font=None, scale=None, color=None, thickness=0):
         """
         Add text on image
+
+        Parameters:
+            image (bytearray): encoded input image
+            text (str): string to be added
+            position (int, int): text position (x, y)
+            font (int): font type (see open-cv documentation)
+            scale (float): size of font (0..1)
+            color (tuple of int): text color in (R, G, B)
+            thickness (float): font thickness in pixel
+        Returns:
+            bytearray: encoded image with text
         """
         raw = self.convert_to_raw(image)
         raw = self.draw_text_raw(raw, text, position=position, font=font, scale=scale, color=color, thickness=thickness)
@@ -242,7 +512,18 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def draw_text_raw(self, raw, text, position=None, font=None, scale=None, color=None, thickness=0):
         """
-        Add text on image
+        Add text on raw image with a wide range of possible settings
+
+        Parameters:
+            raw (numpy.ndarray): input raw image
+            text (str): string to be added
+            position (int, int): text position (x, y)
+            font (int): font type (see open-cv documentation)
+            scale (float): size of font (0..1)
+            color (tuple of int): text color in (R, G, B)
+            thickness (float): font thickness in pixel
+        Returns:
+            numpy.ndarray: image with text
         """
         if position is None:
             position = self.text_default_position
@@ -272,7 +553,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         param = str(text) + ", " + str(position) + ", " + str(font) + ", " + str(scale) + ", " + str(
             color) + ", " + str(thickness)
-        self.logging.debug("draw_text_raw: "+param)
+        self.logging.debug("draw_text_raw: " + param)
         try:
             raw = cv2.putText(raw, text, tuple(position), font, scale, color, thickness, cv2.LINE_AA)
         except Exception as e:
@@ -281,8 +562,18 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         return raw
 
-    # !!! check if to be moved to EditStream
     def draw_date_raw(self, raw, overwrite_color=None, overwrite_position=None, offset=None):
+        """
+        write date into image
+
+        Parameters:
+            raw (numpy.ndarray): input raw image
+            overwrite_color (tuple of int): color as (R, G, B) if not default defined in settings
+            overwrite_position (int): position (1-4) if not default defined in settings
+            offset (int): offset from position in pixel
+        Returns:
+            numpy.ndarray: image with current date and time
+        """
         date_information = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
         font = self.text_default_font
@@ -314,6 +605,14 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def draw_area_raw(self, raw, area=(0, 0, 1, 1), color=(0, 0, 255), thickness=2):
         """
         draw as colored rectangle
+
+        Parameters:
+            raw (numpy.ndarray): raw image
+            area (list of float): area the rectangle shall cover, default is the complete image
+            color (tuple of int): color of the rectangle in (R, G, B); default is red (0, 0, 255)
+            thickness (int): thickness of the rectangle, default is 2 pixel
+        Returns:
+            numpy.ndarray: raw image with added rectangle
         """
         try:
             height = raw.shape[0]
@@ -332,6 +631,13 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def draw_warning_bullet_raw(self, raw, color=None):
         """
         add read circle in raw image (not cropped, depending on lowres position)
+
+        Parameters:
+            raw (numpy.ndarray): raw image
+            color (list of int): color of the bullet to be drawn (R, G, B); default is (0, 0, 255)
+        Returns:
+            numpy.ndarray: raw image with colored bullet in the upper right or upper left corner
+            (depending on lowres position)
         """
         (start_x, start_y, end_x, end_y) = self.param["image"]["crop_area"]
         position = self.config.param["views"]["index"]["lowres_position"]
@@ -351,30 +657,42 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def image_in_image_raw(self, raw, raw2, position=4, distance=10):
         """
-        add a smaller image in a larger image,
-        inspired by https://answers.opencv.org/question/231069/inserting-logo-in-an-image/
+        add a smaller image in a larger image
+
+        Parameters:
+            raw (numpy.ndarray): input raw image, main image
+            raw2 (numpy.ndarray): input raw image, small image as picture in picture (use lowres)
+            position (int): position in image (1: top left, 2: top right, 3: bottom right, 4: bottom left)
+            distance (int): distance to border of the frame in pixel
         """
         [w1, h1, ch1] = raw.shape
         [w2, h2, ch2] = raw2.shape
-        self.logging.debug("Insert images into image: big="+str(w1)+","+str(h1)+" / small="+str(w2)+","+str(h2))
+        self.logging.debug(
+            "Insert images into image: big=" + str(w1) + "," + str(h1) + " / small=" + str(w2) + "," + str(h2))
         # top left
         if position == 1:
-            raw[distance:w2+distance, distance:h2+distance] = raw2
+            raw[distance:w2 + distance, distance:h2 + distance] = raw2
         # top right
         if position == 2:
-            raw[distance:w2+distance, h1-(distance+h2):h1-distance] = raw2
+            raw[distance:w2 + distance, h1 - (distance + h2):h1 - distance] = raw2
         # bottom left
         if position == 3:
-            raw[w1-(distance+w2):w1-distance, distance:h2+distance] = raw2
+            raw[w1 - (distance + w2):w1 - distance, distance:h2 + distance] = raw2
         # bottom right
         if position == 4:
-            raw[w1-(distance+w2):w1-distance, h1-(distance+h2):h1-distance] = raw2
+            raw[w1 - (distance + w2):w1 - distance, h1 - (distance + h2):h1 - distance] = raw2
 
         return raw
 
     def rotate_raw(self, raw, degree):
         """
         rotate image
+
+        Parameters:
+            raw (numpy.ndarray): raw image to be rotated
+            degree (int): angle to rotate; options: 90, 180, 270
+        Returns:
+            numpy.ndarray: rotated raw image
         """
         self.logging.debug("Rotate image " + str(degree) + " ...")
         rotate_degree = "don't rotate"
@@ -395,6 +713,11 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def size(self, image):
         """
         Return size of raw image
+
+        Parameters:
+            image (bytearray): image to get the size of
+        Returns:
+            (int, int): sizes of resized image (width, height)
         """
         frame = self.convert_to_raw(image)
         try:
@@ -408,6 +731,13 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
     def write(self, filename, image, scale_percent=100):
         """
         Scale image and write to file
+
+        Parameters:
+            filename (str): relative path and filename starting from server directory
+            image (numpy.ndarray): raw image data as list of lists
+            scale_percent (int): target size of image in percent
+        Returns:
+            bool/str: status if successfully
         """
         image_path = os.path.join(self.config.main_directory, filename)
         self.logging.debug("Write image: " + image_path)
@@ -421,15 +751,20 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         except Exception as e:
             error_msg = "Can't save image and/or create thumbnail '" + image_path + "': " + str(e)
-            self.image.raise_error(error_msg)
+            self.raise_error(error_msg)
             return ""
 
     def read(self, filename):
         """
-        read image with given filename
+        Read image with given filename
+
+        Parameters:
+            filename (str): relative path and filename starting from server directory
+        Returns:
+            list/str: raw image data as list of lists
         """
         image_path = os.path.join(self.config.main_directory, filename)
-        self.logging.info("Read image: " + image_path)
+        self.logging.debug("Read image: " + image_path)
 
         try:
             image = cv2.imread(image_path)
@@ -438,14 +773,18 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         except Exception as e:
             error_msg = "Can't read image '" + image_path + "': " + str(e)
-            self.image.raise_error(error_msg)
+            self.raise_error(error_msg)
             return ""
-
-
 
     def size_raw(self, raw, scale_percent=100):
         """
         Return size of raw image
+
+        Parameters:
+            raw (numpy.ndarray): raw image to get the size of
+            scale_percent (int): calculate size when scaled
+        Returns:
+            (int, int): sizes of resized image (width, height)
         """
         try:
             if scale_percent != 100:
@@ -461,9 +800,16 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
     def resize_raw(self, raw, scale_percent=100, scale_size=None):
         """
-        resize raw image
+        Resize raw image
+
+        Parameters:
+            raw (numpy.ndarray): raw image to be resized
+            scale_percent (int): percentage the image shall be resized to
+            scale_size (list): concrete size (width, height) the image shall be resized to (priority before percentage)
+        Returns:
+            numpy.ndarray: resized image
         """
-        self.logging.debug("Resize image ("+str(scale_percent)+"% / "+str(scale_size)+")")
+        self.logging.debug("Resize image (" + str(scale_percent) + "% / " + str(scale_size) + ")")
         if scale_size is not None:
             [width, height] = scale_size
             try:
@@ -477,4 +823,3 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             except Exception as e:
                 self.raise_error("Could not resize raw image: " + str(e))
         return raw
-

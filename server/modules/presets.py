@@ -215,7 +215,8 @@ birdhouse_main_directories = {
     "project": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."),
     "app": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "app"),
     "log": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "log"),
-    "data": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data")
+    "data": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data"),
+    "download": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data/downloads")
 }
 
 # ------------------------------------
@@ -246,6 +247,8 @@ camera_list = []
 birdhouse_env = {}
 birdhouse_status = {"object_detection": False}
 birdhouse_picamera = False
+birdhouse_cache = True
+birdhouse_cache_for_archive = False
 
 set_global_configuration()
 
@@ -276,6 +279,7 @@ birdhouse_pages = {
     "cam_info": ("Ger&auml;te", "/cameras.html", "DEVICES"),
     "video_info": ("Video Info", "/video-info.html", ""),
     "videos": ("Videos", "/videos.html", "VIDEOS"),
+    "object": ("Birds", "/birds.html", "BIRDS"),
     "save": ("Speichern", "/image.jpg", "")
 }
 birdhouse_databases = {
@@ -300,6 +304,8 @@ birdhouse_directories = {
     "favorites": "images/",
     "sensor": "images/",
     "statistics": "images/",
+    "objects": "images/",
+    "custom_models": "custom_models/",
     "videos": "videos/",
     "videos_temp": "videos/images2video/",
     "audio_temp": "videos/images2video/",
@@ -307,9 +313,11 @@ birdhouse_directories = {
 }
 birdhouse_files = {
     "main": "config.json",
+    "birds": "birds.json",
     "backup": "config_images.json",
     "backup_info": "config_backup.json",
     "favorites": "config_favorites.json",
+    "objects": "config_objects.json",
     "images": "config_images.json",
     "videos": "config_videos.json",
     "sensor": "config_sensor.json",
@@ -318,12 +326,14 @@ birdhouse_files = {
 }
 birdhouse_dir_to_database = {
     "config": "config",
+    "birds": "birds",
     "images/config_images": "today_images",
     "images/config_sensor": "today_sensors",
     "images/config_weather": "today_weather",
     "images/config_statistics": "today_statistics",
     "images/config_backup": "archive_images",
     "images/config_favorites": "favorites",
+    "images/config_objects": "objects",
     "videos/config_videos": "archive_videos",
     "images/<DATE>/config_statistics": "archive_statistics",
     "images/<DATE>/config_images": "archive_images",
@@ -347,10 +357,14 @@ birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(na
 birdhouse_loglevel_default = logging.INFO
 birdhouse_loglevel_module = {}
 birdhouse_loglevel_modules_all = [
-    'root', 'backup', 'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object',
-    'cam-stream', 'config', 'config-Q', 'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
-    'server', 'srv-info', 'srv-health', 'video', 'video-srv', 'views', 'view-head', 'view-creat',
-    'weather', 'weather-py', 'weather-om', 'cam-handl', 'cam-info']
+    'root', 'backup', 'bu-dwnld', 'server', 'srv-info', 'srv-health',
+    'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object', 'cam-stream',
+    'cam-handl', 'cam-info',
+    'config', 'config-Q',
+    'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
+    'video', 'video-srv', "img-eval",
+    'views', 'view-head', 'view-chart', 'view-fav', 'view-arch', 'view-obj',
+    'weather', 'weather-py', 'weather-om']
 
 # add modules to the following lists to change their log_level
 birdhouse_loglevel_modules_info = ["server"]
@@ -395,6 +409,7 @@ birdhouse_default_cam = {
     "name": "NAME",
     "source": "/dev/video0",
     "active": True,
+    "detection_mode": "similarity",
     "record": True,
     "record_micro": "",
     "image": {
@@ -451,7 +466,7 @@ birdhouse_default_cam2 = birdhouse_default_cam.copy()
 birdhouse_default_cam2["name"] = "Outside"
 birdhouse_default_cam2["source"] = "/dev/video1"
 birdhouse_default_cam2["image_save"]["offset"] = "5"
-birdhouse_default_cam2["image_save"]["record_from"] = "sunrise-0"
+birdhouse_default_cam2["image_save"]["record_from"] = "sunrise+0"
 birdhouse_default_cam2["image_save"]["record_to"] = "sunset+0"
 
 birdhouse_default_micro = {
@@ -532,7 +547,8 @@ birdhouse_client_presets = {
                "// Please edit not here, but in .env-File\n" +
                "var test		= " + birdhouse_env["test_instance"] + ";\n" +
                "var instance	= '" + birdhouse_env["which_instance"] + "';\n" +
-               "var server_port = '" + birdhouse_env["port_api"] + "';\n\n"
+               "var server_port = '" + birdhouse_env["port_api"] + "';\n\n" +
+               "app_scripts_loaded += 1;\n\n"
 }
 
 file_types = {
@@ -550,11 +566,12 @@ file_types = {
 
 detection_default_models = ["yolov5n", "yolov5s", "yolov5m", "yolov5l", "yolov5x",
                             "yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6", "yolov5x6"]
-detection_custom_model_path = "server/modules/detection/custom_models/"
-detection_custom_models = glob.glob(detection_custom_model_path + "*.pt")
+detection_custom_model_path = os.path.join(birdhouse_main_directories["data"],
+                                           birdhouse_directories["custom_models"])
+detection_custom_models = glob.glob(os.path.join(detection_custom_model_path, "*.pt"))
 detection_models = []
 for directory in detection_custom_models:
-    directory = directory.replace(detection_custom_model_path, "")
+    directory = directory.replace(str(detection_custom_model_path), "")
     detection_models.append(directory)
 detection_models.extend(detection_default_models)
 
@@ -625,5 +642,6 @@ interesting_icons = {
     "other": "🌂 ☔ ❄ 🌈 🌬 🌡 ⚡ 🌞 ✨ ⭐ 🌟 💫 💦 🔅 🔆 ⛷ 🌍 🌎 🌏 🌐",
     "moons": "🌑 🌒 🌓 🌔 🌕 🌖 🌗 🌘",
     "weather": "🌤 🌦 🌧 🌨 🌩 🌪 ",
-    "clock": "🕐 🕒 🕓 🕔 🕕 🕖 🕗 🕘 🕙 🕚 🕛 🕜 🕝 🕞 🕟 🕠 🕡 🕢 🕣 🕤 🕥 🕦 🕧"
+    "clock": "🕐 🕒 🕓 🕔 🕕 🕖 🕗 🕘 🕙 🕚 🕛 🕜 🕝 🕞 🕟 🕠 🕡 🕢 🕣 🕤 🕥 🕦 🕧",
+    "calendar": "🗓️ 📅 📆 ⌚ ⏰ 🔔 🗒️ 📜 ⏳ ⌛"
 }
