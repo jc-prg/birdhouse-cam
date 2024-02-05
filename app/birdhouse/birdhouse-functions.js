@@ -355,7 +355,7 @@ function birdhouse_imageOverlay(filename, description="", overlay_replace="", ov
         description = description.replaceAll(/\[/g,"<");
         description = description.replaceAll(/\]/g,">");
         html  = "";
-        html += "<div id=\"overlay_image_container\" onclick=\"event.stopPropagation();\">";
+        html += "<div id=\"overlay_image_container\">";
         html += "  <div id=\"overlay_close\" onclick='birdhouse_overlayHide();'>[X]</div>";
 
         if (overlay_replace != "") {
@@ -364,41 +364,29 @@ function birdhouse_imageOverlay(filename, description="", overlay_replace="", ov
             var onmousetoggle  = "birdhouse_imageOverlayToggle(\""+overlay_id+"\")";
 
             html += "  <div id=\"overlay_replace\" onmouseover='"+onmouseover+"' onmouseout='"+onmouseout+"' onclick='"+onmousetoggle+"'>[D]</div>";
-            html += "  <img id='"+overlay_id+"_replace' src='"+overlay_replace+"' style='display:none;'/>";
+            html += "  <img id='"+overlay_id+"_replace' src='"+overlay_replace+"' style='display:none;'  onclick=\"event.stopPropagation();\"/>";
             }
         else {
             html += "  <div id=\"overlay_replace\">&nbsp;</div>";
             }
 
-        html += "    <img id='"+overlay_id+"' src='"+filename+"' style='display:block;'/>";
+        html += "    <img id='"+overlay_id+"' src='"+filename+"' style='display:block;'  onclick=\"event.stopPropagation();\"/>";
         html += "<br/>&nbsp;<br/>"+description+"</div>";
         document.getElementById("overlay_content").innerHTML = html;
 
+        //addTouchListenersScale(overlay_id, 1);
+        addTouchListenersScale("overlay_content", 1);
+
+        /*
         myElement = document.getElementById("overlay_content");
         if (existing) { delete pz; }
 	    var pz = new PinchZoom.default(myElement);
  	    setTimeout(function() {
 	        pz.update.bind(pz);
 	    }, 1000);
-
-
-/*
-        //destroy an object
-
-        var namespace = {};
-        namespace.someClassObj = {};
-        delete namespace.someClassObj;
-
-        // -----
-        // or: https://www.delftstack.com/howto/javascript/javascript-destroy-object/
-        // pz = undefined;
-
-	    pz.zoomFactor = 1;
-	    pz.offset = { x: 0, y: 0 };
-	    pz.update();
-*/
-	    // check, how to destroy ...
+	    */
 	}
+
 
 function birdhouse_imageOverlayToggle(overlay_id, select="") {
     if (select == "") {

@@ -5,9 +5,11 @@ a:link    { color  : blue; }
 a:visited { color  : darkblue; }
 a:hover   { color  : darkblue; font-weight : bold; }
 
-h1 { margin : 4px; }
-h2 { margin : 4px; }
-h3 { margin : 4px; }
+h1        { margin : 4px; }
+h2        { margin : 4px; }
+h3        { margin : 4px; }
+
+body      { touch-action: none; }
 
 .frame_column { color : black; }
 
