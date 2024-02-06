@@ -770,7 +770,8 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
         "edit"          : false,
         "detect_sign"   : "",
         "play_button"   : "",
-        "swipe"         : false
+        "swipe"         : false,
+        "style"         : ""
         };
 
     if (entry["date"])  { [day,month,year]  = entry["date"].split("."); }
