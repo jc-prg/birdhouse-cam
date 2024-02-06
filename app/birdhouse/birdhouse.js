@@ -61,7 +61,7 @@ var birdhouse_js = [
     "birdhouse-views-index.js",
     "birdhouse-weather.js",
     "video-player-template.js",
-    "pinch-zoom.umd.js",
+//    "pinch-zoom.umd.js",
     "config_language.js",
     "config_main.js",
     "config_stage.js"

@@ -113,7 +113,7 @@ function birdhouseDevices_cameras(data) {
 	    info["type"]  = "detection";
 	    info["id"]    = camera;
 	    camera_name   = camera.toUpperCase() + ": " + cameras[camera]["name"];
-	    camera_stream = birdhouse_Image(camera_name, info);
+	    camera_stream = birdhouse_Image(camera_name, "info", info);
 	    index_info[camera_name] = {};
 	    index_info[camera_name]["active"] = cameras[camera]["active"];
 	    index_info[camera_name]["group"]  = camera;
@@ -292,7 +292,7 @@ function birdhouseDevices_cameraSettings (data) {
 	    info["type"]  = "detection";
 	    info["id"]    = camera + "_img";
 	    camera_name   = camera.toUpperCase() + ": " + camera_settings[camera]["name"];
-	    camera_stream = birdhouse_Image(camera_name, info);
+	    camera_stream = birdhouse_Image(camera_name, "info", info);
 
 	    if (!camera_properties[camera] || (camera_properties[camera]["error"] || camera_settings[camera]["active"] == false)) {
 	        html += "&nbsp;<br/><center>";

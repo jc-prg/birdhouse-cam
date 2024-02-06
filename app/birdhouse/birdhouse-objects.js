@@ -88,7 +88,7 @@ function birdhouse_OBJECTS(title, data) {
         entry_information += favorite_label + default_dates;
 
         var html_entry = tab.start();
-        html_entry    += tab.row(birdhouse_Image(bird_lang(key), value), entry_information);
+        html_entry    += tab.row(birdhouse_Image(bird_lang(key), key, value), entry_information);
         html_entry    += tab.end();
 
         var bird_key = bird_lang(key);
@@ -100,6 +100,11 @@ function birdhouse_OBJECTS(title, data) {
 	setTextById(app_frame_content, html);
     }
 
+/*
+* open all or selected label group in birds / objects view
+*
+* @param (string) label: object class name / label of the group(s) to be opened
+*/
 function birdhouse_OBJECTS_open(label="all") {
 
     var all_labels = document.getElementById("label_key_list").innerHTML.split(",");
@@ -110,6 +115,12 @@ function birdhouse_OBJECTS_open(label="all") {
     if (label != "all")       { birdhouse_groupToggle("label_"+label, true); }
 }
 
+/*
+* highlight selected labels (show glow)
+*
+* @param (string) key: element id of the label to be highlighted
+* @param (string) list: element id of div that contains all available labels
+*/
 function birdhouse_labels_highlight(key, list="") {
     if (key == "") { key = "all"; }
     if (document.getElementById("label_"+key)) {
@@ -127,16 +138,23 @@ function birdhouse_labels_highlight(key, list="") {
     }
 }
 
-function bird_lang(bird_name) {
-    var key = bird_name.toUpperCase();
-    if (!app_bird_names)            { return bird_name; }
-    else if (!app_bird_names[key])  { return bird_name; }
+/*
+* translate bird class to selected language if available
+*
+* @param (string) bird_class: class name of detected bird (or object)
+* @returns (string): translation if available, otherwise bird class
+*/
+function bird_lang(bird_class) {
+    var key = bird_class.toUpperCase();
+    if (!app_bird_names)            { return bird_class; }
+    else if (!app_bird_names[key])  { return bird_class; }
     else {
         if (app_bird_names[key][LANG])      { return app_bird_names[key][LANG]; }
         else if (app_bird_names[key]["EN"]) { return app_bird_names[key]["EN"]; }
         else if (app_bird_names[key]["DE"]) { return app_bird_names[key]["DE"]; }
-        else                                { return bird_name; }
+        else                                { return bird_class; }
     }
 }
+
 
 app_scripts_loaded += 1;

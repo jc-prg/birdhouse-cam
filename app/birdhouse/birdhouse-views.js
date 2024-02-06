@@ -152,7 +152,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 		app_active_date         = key;
 		var short               = false;
 		var video_name          = video[key]["date"];
-		var video_stream        = birdhouse_Image("Complete", video[key]);
+		var video_stream        = birdhouse_Image("Complete", key, video[key]);
 		var video_stream_short  = "";
 
 		console.log(video_stream);
@@ -163,7 +163,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 		        Object.assign( video_short, video[key] );
 		        var short_video_file      = video[key]["video_file_short"];
 		        video_short["video_file"] = short_video_file;
-		        video_stream_short        = birdhouse_Image("Short", video_short);
+		        video_stream_short        = birdhouse_Image("Short", "short", video_short);
 		        }
 
 		console.log(video_stream);
@@ -336,6 +336,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         html += birdhouse_LIST_calendar(groups);
     }
 
+    birdhouse_overlayLoadImages(Object.keys(entries).sort().reverse(), entries, app_active_page, admin);
+
+
     // ----------------------------------------
 
 	// list today complete, favorites -> list in monthly or hourly groups
@@ -437,7 +440,6 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
 	birdhouse_frameHeader(page_title, page_status);
 	setTextById(app_frame_content, html);
-	birdhouse_ImageErrorSize();
 
 	if ((active_page == "FAVORITES" || active_page == "TODAY") && selected_label != undefined) {
         selected_label = selected_label.replaceAll("%20", " ");
