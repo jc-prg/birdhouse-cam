@@ -45,6 +45,9 @@ var app_scripts_loaded  = 0;
 var app_first_load      = true;
 var app_2nd_load        = true;
 
+/*
+* additional scripts and style sheet files to be loaded
+*/
 var birdhouse_js = [
     "birdhouse-api-requests.js",
     "birdhouse-audio.js",
@@ -83,6 +86,14 @@ var birdhouse_css = [
 ];
 
 
+/*
+* request loading of a specific view -> calls birdhousePrint() with retuned data
+*
+* @param (string) view: view to be requested; available: INDEX, TODAY, TODAY_COMPLETE, ARCHIVE, OBJECT, SETTINGS, FAVORITES, VIDEOS, VIDEO_DETAIL, PROCESSING, INFO, ...
+* @param (string) camera: camera id of active camera
+* @param (string) data: active date, to be combined with view TODAY in format YYYYMMDD
+* @param (string) label: active label, will simulate a click on a object/bird label when loaded the complete view
+*/
 function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 
 	if (app_first_load || app_2nd_load) {
@@ -110,7 +121,12 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 	console.debug("Request "+view+" / "+camera+" / "+date+" / "+label);
 	birdhouse_genericApiRequest("GET", commands, birdhousePrint);
 	}
-	
+
+/*
+* coordinate complete view creation (depending data returned to an API request)
+*
+* @param (dict) data: data returned from API
+*/
 function birdhousePrint(data) {
     //app_data = data;
 	console.debug("Request->Print ...");
@@ -156,7 +172,7 @@ function birdhousePrint(data) {
 	birdhouseAudioStream_load(server_link, birdhouseMicrophones);
     birdhouse_KillActiveStreams();
 	birdhouseSetMainStatus(data);
-	birdhousePrintTitle(data, app_active_page, camera);
+	birdhousePrintTitle(data, app_active_page);
     setTextById("headerRight", birdhouseHeaderFunctions() );
 
 	console.log("---> birdhousePrint: "+app_active_page+" / "+camera+" / "+date);
@@ -187,7 +203,13 @@ function birdhousePrint(data) {
 	    }
 	}
 
-function birdhousePrintTitle(data, active_page="", camera="") {
+/*
+* set title in the header and prepare footer for server data to be loaded
+*
+* @param (dict) data: data returned from API
+* @param (string) active_page: active page
+*/
+function birdhousePrintTitle(data, active_page="") {
 
 	var title         = document.getElementById("navTitle");
 	var data_view     = data["DATA"]["view"];
@@ -204,11 +226,22 @@ function birdhousePrintTitle(data, active_page="", camera="") {
 	setTextById("frame5", "<center><small><div id='server_start_time'>" + lang("PLEASE_WAIT") + "</div></small></center>");
 	}
 
+/*
+* cache latest data from API in the var app_data
+*
+* @param (dict) data: data returned from API
+*/
 function birdhouseLoadSettings(data) {
-    app_data = data;
 
+    app_data = data;
 }
 
+/*
+* This function sets main variables based on the provided data. It checks if certain data properties are defined
+* and active, and if so, it populates arrays with available cameras, sensors, and microphones.
+*
+* @param (dict) data: data returned from API
+*/
 function birdhouseSetMainVars(data) {
     //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
     var data_settings = data["SETTINGS"];
@@ -231,12 +264,15 @@ function birdhouseSetMainVars(data) {
 	    }
     }
 
+/*
+* This function sets main status variables based on the provided data. It checks if certain data properties are defined
+* and active, and if so, it populates the active page, micro, and date, and if logged in as admin.
+*
+* @param (dict) data: data returned from API
+*/
 function birdhouseSetMainStatus(data) {
     var status_view  = data["STATUS"]["view"];
     var status_admin = data["STATUS"]["admin_allowed"];
-
-	//if (status_view["active_cam"] != undefined && status_view["active_cam"] != "")
-	//                                                        { app_active_cam = status_view["active_cam"]; }
 
 	app_active_mic = app_available_micros[0];
 
@@ -248,9 +284,14 @@ function birdhouseSetMainStatus(data) {
 	                                                        { app_active_date = status_view["active_date"]; }
 	else                                                    { app_active_date = ""; }
 
-	if (status_admin != undefined)       { app_admin_allowed = status_admin; }
+	if (status_admin != undefined) { app_admin_allowed = status_admin; }
 	}
-	
+
+/*
+* create header icons depending on status information (active devices, active download, ...)
+*
+* @returns (string): html header content
+*/
 function birdhouseHeaderFunctions() {
 	var html = "";
 	var download_info   = "<img class='header_icon' src='birdhouse/img/download-white.png' onclick='archivDownload_requestList();' style='position:relative;right:22px;top:-2px;'>";
@@ -277,7 +318,10 @@ function birdhouseHeaderFunctions() {
 	html += "&nbsp;&nbsp;&nbsp;" + info;
 	return html;
 	}
-	
+
+/*
+* toggle between available cameras and trigger view reload
+*/
 function birdhouseSwitchCam() {
 	var current_cam = 0;
 	for (i=0;i<app_available_cameras.length;i++) {
@@ -292,6 +336,9 @@ function birdhouseSwitchCam() {
 	birdhousePrint_load(view=app_active_page, camera=app_available_cameras[next_cam], date=app_active_date);
 }
 
+/*
+* trigger view reload while keeping all the current settings (view, camera, date, ...)
+*/
 function birdhouseReloadView() {
 	console.log("----> birdhouseReloadView: "+app_active_page+"/"+app_active_cam+"/"+app_active_date);
 	app_recycle_range = {};
@@ -323,4 +370,5 @@ function birdhouseReloadView() {
 			}
 		}
 	}
+
 
