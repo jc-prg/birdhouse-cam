@@ -736,7 +736,7 @@ function birdhouse_LIST_chart_weather(data, active_page, camera) {
         chart_titles.push(title_s);
     }
     var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
-    chart    += birdhouseChart_weatherOverview(weather_data); // + "<br/>";
+    chart    += birdhouseWeather_OverviewChart(weather_data); // + "<br/>";
 
     if (chartJS_loaded) {
         if (active_page == "TODAY") {
@@ -748,7 +748,7 @@ function birdhouse_LIST_chart_weather(data, active_page, camera) {
         html     += birdhouse_OtherGroup( "chart", lang("WEATHER"), chart, true );
         }
     else {
-        var chart = birdhouseChart_weatherOverview(weather_data);
+        var chart = birdhouseWeather_OverviewChart(weather_data);
         chart += "<br/>&nbsp;";
         html     += birdhouse_OtherGroup( "chart", lang("WEATHER") + " " + lang("NO_INTERNET_CHART"), chart, false );
         }
