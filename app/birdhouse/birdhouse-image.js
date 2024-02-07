@@ -330,7 +330,7 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
 
 	console.log(app_active_page);
 
-	var image_data        = birdhouse_ImageDisplayData(title, entry_id, entry, app_active_page, admin);
+	var image_data        = birdhouse_ImageDisplayData(title, entry_id, entry, app_active_page, admin, video_short);
     var lowres            = image_data["lowres"];
     var hires             = image_data["hires"];
     var description       = image_data["description"];
@@ -467,7 +467,7 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
 * @param (boolean) admin: value if logged in as admin
 * @returns (dict): definition of title, lowres and hires links as well as other data to show the image
 */
-function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admin=false) {
+function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admin=false, video_short=false) {
 	const img_url = ""; // RESTurl;
 	var settings     = app_data["SETTINGS"];
 	var settings_cam = app_data["SETTINGS"]["devices"]["camera"];
