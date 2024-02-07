@@ -337,8 +337,12 @@ The bird detection is based on a relatively simple training with a few singing b
 continuously improve your own detection model you can use the module [jc://bird-detection/](https://github.com/jc-prg/bird-detection/). 
 Alternatively create a YOLOv5 model with different tools. Copy the *.pt file into the folder [data/custom_models/](data/custom_models/).
 
-Hint: if you're logged in as admin you can download the archived images per camera incl. YOLOv5 files with the detected
-birds or objects. By that you can adapt and use detected birds from your cameras for training.
+To use images from your own birdhouse, login as admin and go to the settings of an archived day. There you can download
+the data of a full day or activate the collection of images for download. When you activated the second option you can
+jump from day to day and mark all images you want to download. Use the icon in the header to start the download. In the
+download file you'll find all images incl. the config files as well as in a separate folder a YOLOv5 file per image
+and a file classes.txt with all labels of the model that has been used. Rename the labels_<model-name> folder to labels
+and use the module [jc://bird-detection/](https://github.com/jc-prg/bird-detection/) to prepare the data and train your model.
 
 ## Helping stuff
 
