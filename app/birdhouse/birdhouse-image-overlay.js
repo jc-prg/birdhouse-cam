@@ -111,12 +111,12 @@ function birdhouse_imageOverlayToggle(overlay_id, select="") {
 * @param (string) filename - filepath of video (incl. streaming server)
 * @param (string) description - description to be displayed below the video
 */
-function birdhouse_videoOverlay(filename, description="") {
-        check_iOS = iOS();
-        if (check_iOS == true) {
+function birdhouse_videoOverlay(filename, description="", swipe=false) {
+    check_iOS = iOS();
+    if (check_iOS == true && swipe == false) {
           window.location.href = filename;
           }
-        else {
+    else {
           document.getElementById("overlay").style.display = "block";
           document.getElementById("overlay_content").style.display = "block";
           document.getElementById("overlay_parent").style.display  = "block";
@@ -128,8 +128,18 @@ function birdhouse_videoOverlay(filename, description="") {
           html += "<video id='overlay_video' src=\"" + filename + "\" controls>Video not supported</video>"
           html += "<br/>&nbsp;<br/>"+description+"</div>";
 
-          document.getElementById("overlay_content").innerHTML = html;
+          if (swipe) {
+              html += '<div class="left-arrow" onclick="event.stopPropagation();prevImage()"></div>';
+              html += '<div class="right-arrow" onclick="event.stopPropagation();nextImage()"></div>';
           }
+
+          document.getElementById("overlay_content").innerHTML = html;
+          addTouchListenersScale("overlay_content", 1);
+
+          if (swipe) {
+              addTouchListenersSwipe("overlay_content");
+              }
+        }
 	}
 
 /**
@@ -160,16 +170,6 @@ function birdhouse_overlayHide() {
        document.getElementById("overlay").style.display = "none";
        document.getElementById("overlay_content").style.display = "none";
        document.getElementById("overlay_parent").style.display = "none";
-/*
-	    pz.zoomFactor = 2;
-	    pz.lastScale = 1;
-	    pz.offset = { x: 0, y: 0 };
-	    pz.initialOffset = { x: 0, y: 0 };
-        pz.setupMarkup();
-        pz.bindEvents();
-        pz.update();
-        pz.enable();
-*/
        }
 
 /*
@@ -220,7 +220,10 @@ function birdhouse_overlayShowByIndex(index) {
     if (img_data["description_hires"] != "" && img_data["description_hires"] != undefined) { description = img_data["description_hires"]; }
 
     //description += "..." + index + "/" + overlayImageList.length;
-    if (img_data["hires_stream"]) {
+    if (img_data["type"] == "video") {
+        birdhouse_videoOverlay(img_data["hires"], img_data["description"], img_data["swipe"]);
+        }
+    else if (img_data["hires_stream"]) {
         var [hires, stream_uid]     = birdhouse_StreamURL(app_active_cam, img_data["hires_stream"], "stream_list_5", true);
         birdhouse_imageOverlay(hires, description,  img_data["hires_detect"], img_data["swipe"]);
         }

@@ -477,7 +477,8 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
         "detect_sign"   : "",
         "play_button"   : "",
         "swipe"         : false,
-        "style"         : ""
+        "style"         : "",
+        "type"          : entry["type"]
         };
 
     if (entry["date"])  { [day,month,year]  = entry["date"].split("."); }
@@ -487,6 +488,7 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
 
     // activate swiping in overlay for some views
     if (active_page == "TODAY" || active_page == "TODAY_COMPLETE") { image_data["swipe"] = true; }
+    if (active_page == "FAVORITES") { image_data["swipe"] = true; }
 
     // individual image properties
     if (entry["type"] == "image") {
