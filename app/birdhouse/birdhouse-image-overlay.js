@@ -220,7 +220,13 @@ function birdhouse_overlayShowByIndex(index) {
     if (img_data["description_hires"] != "" && img_data["description_hires"] != undefined) { description = img_data["description_hires"]; }
 
     //description += "..." + index + "/" + overlayImageList.length;
-    birdhouse_imageOverlay(img_data["hires"], description,  img_data["hires_detect"], img_data["swipe"]);
+    if (img_data["hires_stream"]) {
+        var [hires, stream_uid]     = birdhouse_StreamURL(app_active_cam, img_data["hires_stream"], "stream_list_5", true);
+        birdhouse_imageOverlay(hires, description,  img_data["hires_detect"], img_data["swipe"]);
+        }
+    else {
+        birdhouse_imageOverlay(img_data["hires"], description,  img_data["hires_detect"], img_data["swipe"]);
+        }
     currentIndex = index;
 
     if (index == 0)                        {

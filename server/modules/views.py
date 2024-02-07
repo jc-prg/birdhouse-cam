@@ -2046,6 +2046,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             if not backup:
                 files_images["999999"] = {
                     "stream": "lowres/stream.mjpg?" + which_cam,
+                    "stream_hires": "stream.mjpg?" + which_cam,
                     "lowres": "lowres/stream.mjpg?" + which_cam,
                     "hires": "index.html?" + which_cam,
                     "camera": which_cam,
