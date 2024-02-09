@@ -359,9 +359,8 @@ img .play_button  {
   }
   
 #overlay_image {
-    max-width        : 95vw;
-    max-height       : 95vh;
-    //transform        : scale(0.98);
+    max-width        : 90vw;
+    max-height       : 80vh;
     margin           : auto;
     background-color : white;
     border           : 5px solid white;
@@ -369,9 +368,8 @@ img .play_button  {
   }
   
 #overlay_image_replace {
-    max-width        : 95vw;
-    max-height       : 95vh;
-    //transform        : scale(0.98);
+    max-width        : 90vw;
+    max-height       : 80vh;
     margin           : auto;
     background-color : white;
     border           : 5px solid white;
