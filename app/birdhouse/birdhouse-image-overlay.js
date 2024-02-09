@@ -42,6 +42,8 @@ function birdhouse_imageOverlay(filename, description="", overlay_replace="", sw
     document.getElementById("overlay").style.display         = "block";
     document.getElementById("overlay_content").style.display = "block";
     document.getElementById("overlay_parent").style.display  = "block";
+    document.body.style.overflow = 'hidden';
+
 
     description = description.replaceAll("[br/]","<br/>");
     description = description.replaceAll("[","<");
@@ -173,6 +175,7 @@ function birdhouse_overlayHide() {
        document.getElementById("overlay").style.display = "none";
        document.getElementById("overlay_content").style.display = "none";
        document.getElementById("overlay_parent").style.display = "none";
+       document.body.style.overflow = 'auto';
        }
 
 /*
@@ -294,66 +297,80 @@ function addTouchListeners(div_id, initScale=1) {
 * @param (string) div_id - element id of image to be scaled
 * @param (string) div_id - initial scaling factor, default=1
 */
-function addTouchListenersScale(div_id, initScale=1) {
+function addTouchListenersScale(div_id, initScale = 1) {
     var overlayImage = document.getElementById(div_id);
-    let initialPinchDistance = 0;
-    initialScale = initScale;
-    currentIndex = 0;
-    touchStartX = 0;
+    var startScale = false;
+    var initialPinchDistance = 0;
+
+    // Store the initial position
+    initialLeft = overlayImage.offsetLeft;
+    initialTop = overlayImage.offsetTop;
 
     overlayImage.addEventListener("touchstart", function(event) {
         if (event.touches.length === 2) {
+            startScale = true;
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
             initialPinchDistance = Math.hypot(
                 event.touches[1].pageX - event.touches[0].pageX,
                 event.touches[1].pageY - event.touches[0].pageY
             );
+
             const computedTransform = getComputedStyle(overlayImage).transform;
             if (computedTransform && computedTransform !== 'none') {
                 // Extract the scale from the transformation matrix
                 const matrixValues = computedTransform.split('(')[1].split(')')[0].split(',');
                 initialScale = parseFloat(matrixValues[0]);
             }
-        }
-      /*
-      else if (event.touches.length === 1) {
-        touchStartX = event.touches[0].clientX;
-      }
-      */
-        if (event.touches.length === 1) {
-            touchStartX = event.touches[0].clientX;
-            touchStartY = event.touches[0].clientY;
-            offsetX = overlayImage.offsetLeft;
-            offsetY = overlayImage.offsetTop;
+        } else {
+            startScale = false;
         }
     });
 
     overlayImage.addEventListener("touchmove", function(event) {
-        if (event.touches.length === 2) {
+        if (startScale && event.touches.length === 2) {
+            var touchMoveX = event.touches[0].clientX;
+            var touchMoveY = event.touches[0].clientY;
             const currentPinchDistance = Math.hypot(
                 event.touches[1].pageX - event.touches[0].pageX,
                 event.touches[1].pageY - event.touches[0].pageY
             );
-        const scale = initialScale * (currentPinchDistance / initialPinchDistance);
-        overlayImage.style.transform = `scale(${scale})`;
-        }
-        if (event.touches.length === 1) {
-            event.preventDefault(); // Prevent scrolling while swiping
-            var touchMoveX = event.touches[0].clientX;
-            var touchMoveY = event.touches[0].clientY;
+            const scale = initialScale * (currentPinchDistance / initialPinchDistance);
+            overlayImage.style.transform = `scale(${scale})`;
+
             var deltaX = touchMoveX - touchStartX;
             var deltaY = touchMoveY - touchStartY;
-            overlayImage.style.left = offsetX + deltaX + "px";
-            overlayImage.style.top = offsetY + deltaY + "px";
+            overlayImage.style.left = deltaX + "px";
+            overlayImage.style.top = deltaY + "px";
+        }
+    });
+
+    // Add double-tap event listener
+    var touch_time = 0;
+    overlayImage.addEventListener("touchstart", function(event) {
+        if (touch_time === 0) {
+            // Record the time of the first tap
+            touch_time = new Date().getTime();
+        } else {
+            // Calculate the time difference between the first and second tap
+            var diff = (new Date().getTime()) - touch_time;
+            if (diff < 800 && !startScale) {
+                // If the time difference is less than 800 milliseconds, it's a double tap
+                resetImage(); // Call the function to reset the image
+                touch_time = 0; // Reset touch time
+            } else {
+                // If the time difference is more than 800 milliseconds, it's not a double tap
+                touch_time = 0; // Reset touch time
             }
-        });
+        }
+    });
 
-        overlayImage.addEventListener("touchstart", function(event) {
-        });
-
-        overlayImage.addEventListener("touchmove", function(event) {
-
-        });
-
+    // Function to reset the image to its initial size and position
+    function resetImage() {
+        overlayImage.style.transform = `scale(${initScale})`;
+        overlayImage.style.left = initialLeft + "px";
+        overlayImage.style.top = initialTop + "px";
+    }
 }
 
 /*
@@ -363,35 +380,54 @@ function addTouchListenersScale(div_id, initScale=1) {
 */
 function addTouchListenersSwipe(div_id) {
     var overlayImage = document.getElementById(div_id);
+    var touchStartX = 0;
+    var touchStartTime = 0;
+    var initialScale = 1;
+    var initialLeft = 0;
+    var initialTop = 0;
+    var touchStartX = 0;
+    var touchStartY = 0;
 
     // Check if event listeners have already been added
     if (!overlayImage.hasSwipeListeners) {
         overlayImage.addEventListener("touchstart", function(event) {
             if (event.touches.length === 1) {
                 touchStartX = event.touches[0].clientX;
-                }
+                touchStartTime = Date.now(); // Record the start time
+            }
             swipeDetected = false; // Reset the flag on touchstart
-            });
+        });
 
         overlayImage.addEventListener("touchend", function(event) {
-            if (event.changedTouches.length === 1) { // Check if swipe hasn't been detected yet
+            if (event.changedTouches.length === 1) {
                 const touchEndX = event.changedTouches[0].clientX;
                 const deltaX = touchEndX - touchStartX;
-                if (Math.abs(deltaX) > 50) {
+                const touchDuration = Date.now() - touchStartTime; // Calculate touch duration
+
+                if (Math.abs(deltaX) > 100 && touchDuration < 1000) { // Check for 100px movement in less than 1 second
                     if (deltaX > 0) {
+                        resetImage();
                         prevImage();
                     } else {
+                        resetImage();
                         nextImage();
-                        }
-                    console.debug(deltaX);
                     }
+                    console.debug(deltaX);
                 }
-            });
+            }
+        });
 
         // Mark the element as having event listeners
         overlayImage.hasSwipeListeners = true;
-        }
     }
+
+    // Function to reset the image to its initial size and position
+    function resetImage() {
+        overlayImage.style.transform = `scale(${initialScale})`;
+        overlayImage.style.left = initialLeft + "px";
+        overlayImage.style.top = initialTop + "px";
+    }
+}
 
 /*
 * Function to show the next image
