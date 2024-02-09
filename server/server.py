@@ -527,6 +527,7 @@ class StreamingServerIPv6(socketserver.ThreadingMixIn, server.HTTPServer):
         self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
         super().server_bind()
 
+
 class StreamingHandler(server.BaseHTTPRequestHandler):
 
     def redirect(self, file):

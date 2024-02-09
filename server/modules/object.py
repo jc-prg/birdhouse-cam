@@ -54,7 +54,6 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
         self.logging.info("Starting OBJECT DETECTION for '" + self.id + "' ...")
         self.connect()
-        self._processing_percentage = 0
         while self._running:
 
             if len(self.detect_queue_archive) > 0:
