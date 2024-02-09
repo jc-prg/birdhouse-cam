@@ -360,7 +360,7 @@ img .play_button  {
   
 #overlay_image {
     max-width        : 90vw;
-    max-height       : 80vh;
+    max-height       : 70vh;
     margin           : auto;
     background-color : white;
     border           : 5px solid white;
@@ -369,7 +369,7 @@ img .play_button  {
   
 #overlay_image_replace {
     max-width        : 90vw;
-    max-height       : 80vh;
+    max-height       : 70vh;
     margin           : auto;
     background-color : white;
     border           : 5px solid white;
