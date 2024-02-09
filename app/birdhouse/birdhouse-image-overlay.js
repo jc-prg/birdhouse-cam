@@ -49,6 +49,7 @@ function birdhouse_imageOverlay(filename, description="", overlay_replace="", sw
 
     html  = "";
     html += "<div id=\"overlay_image_container\">";
+    html += "<div>";
     html += "  <div id=\"overlay_close\" onclick='birdhouse_overlayHide();'>[X]</div>";
     if (overlay_replace != "") {
         var onmouseover    = "birdhouse_imageOverlayToggle(\""+overlay_id+"\", select=\"replace\")";
@@ -65,6 +66,7 @@ function birdhouse_imageOverlay(filename, description="", overlay_replace="", sw
     html += "    <img id='"+overlay_id+"' src='"+filename+"' style='display:block;'  onclick=\"event.stopPropagation();\"/>";
     //html += "</div>";
     //html += "<div id=\"overlay_image_container2\">";
+    html += "</div>";
     html += "<br/>&nbsp;<br/><center>"+description+"</center></div>";
     if (swipe) {
       html += '<div class="left-arrow" onclick="event.stopPropagation();prevImage()"></div>';
