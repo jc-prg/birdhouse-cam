@@ -59,6 +59,12 @@ if (!$ipv6_address) { // || !filter_var("[$ipv6_address]", FILTER_VALIDATE_IP, F
     echo '<!DOCTYPE html>
     <html>
     <head>
+        <meta name="apple-mobile-web-app-capable" content="yes"></meta>
+        <meta name="apple-mobile-web-app-status-bar-style" content="black"></meta>
+        <META name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.3, maximum-scale=1.0"></META>
+        <LINK rel=apple-touch-icon             href="favicon.png"></LINK>
+        <LINK rel=apple-touch-icon-precomposed href="favicon.png"></LINK>
+
         <title>jc://birdhouse/</title>
     </head>
     <body style="background:#111111">
@@ -79,6 +85,12 @@ if (!$ipv6_address) { // || !filter_var("[$ipv6_address]", FILTER_VALIDATE_IP, F
     echo '<!DOCTYPE html>
     <html>
     <head>
+        <meta name="apple-mobile-web-app-capable" content="yes"></meta>
+        <meta name="apple-mobile-web-app-status-bar-style" content="black"></meta>
+        <META name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.3, maximum-scale=1.0"></META>
+        <LINK rel=apple-touch-icon             href="favicon.png"></LINK>
+        <LINK rel=apple-touch-icon-precomposed href="favicon.png"></LINK>
+
         <title>jc://birdhouse/</title>
     </head>
     <body style="background:#111111">

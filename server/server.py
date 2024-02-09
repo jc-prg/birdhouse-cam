@@ -7,6 +7,7 @@ import sys
 import psutil
 import subprocess
 import os
+import socket
 
 import socketserver
 from http import server
@@ -459,24 +460,24 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         system["audio_devices"] = {}
         if microphones != {}:
             first_mic = list(microphones.keys())[0]
-            if microphones[first_mic].connected:
-                info = microphones[first_mic].get_device_information()
-                srv_logging.debug("... mic-info: " + str(info))
+            #if microphones[first_mic].connected:
+            info = microphones[first_mic].get_device_information()
+            srv_logging.debug("... mic-info: " + str(info))
 
-                if 'deviceCount' in info:
-                    num_devices = info['deviceCount']
-                    for i in range(0, num_devices):
-                        dev_info = microphones["mic1"].get_device_information(i)
-                        if (dev_info.get('maxInputChannels')) > 0:
-                            name = dev_info.get('name')
-                            info = dev_info
-                            srv_logging.debug("... mic-info: " + str(info))
-                            system["audio_devices"][name] = {
-                                "id": i,
-                                "input": info.get("maxInputChannels"),
-                                "output": info.get("maxOutputChannels"),
-                                "sample_rate": info.get("defaultSampleRate")
-                            }
+            if 'deviceCount' in info:
+                num_devices = info['deviceCount']
+                for i in range(0, num_devices):
+                    dev_info = microphones["mic1"].get_device_information(i)
+                    if (dev_info.get('maxInputChannels')) > 0:
+                        name = dev_info.get('name')
+                        info = dev_info
+                        srv_logging.debug("... mic-info: " + str(info))
+                        system["audio_devices"][name] = {
+                            "id": i,
+                            "input": info.get("maxInputChannels"),
+                            "output": info.get("maxOutputChannels"),
+                            "sample_rate": info.get("defaultSampleRate")
+                        }
         self._device_status["available"] = system
 
     def read_device_status(self):
@@ -513,6 +514,17 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
 
+
+class StreamingServerIPv6(socketserver.ThreadingMixIn, server.HTTPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+    address_family = socket.AF_INET6
+
+    def server_bind(self):
+        # Override server_bind to allow both IPv4 and IPv6 connections
+        # Bind to the wildcard address ("::") to enable dual-stack support
+        self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+        super().server_bind()
 
 class StreamingHandler(server.BaseHTTPRequestHandler):
 
@@ -1723,8 +1735,9 @@ if __name__ == "__main__":
 
     # Start Webserver
     try:
-        address = ('0.0.0.0', int(birdhouse_env["port_api"]))
-        server = StreamingServer(address, StreamingHandler)
+        address = ('', int(birdhouse_env["port_api"]))
+        #server = StreamingServer(address, StreamingHandler)
+        server = StreamingServerIPv6(address, StreamingHandler)
         srv_logging.info("Starting WebServer on port " + str(birdhouse_env["port_api"]) + " ...")
         srv_logging.info(" -----------------------------> GO!\n")
         server.serve_forever()
