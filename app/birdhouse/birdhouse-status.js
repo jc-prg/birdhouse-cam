@@ -13,18 +13,33 @@ var loading_dots_green = '<span class="loading-dots"><span class="dot green"></s
 var app_processing_active = false;
 var app_server_error = false;
 
-function setHeaderColor(header_id, header_color) {
+/*
+* change the color of a group header, e.g., to visualize an error
+*
+* @param (string) header_id: id of the header to be colored
+* @param (string) header_color: html code or name of the color to be used, keep empty to get back to default
+*/
+function setHeaderColor(header_id, header_color="") {
     header = document.getElementById("group_header_" + header_id);
     if (header) {
         header.style.background = header_color;
         }
 }
 
+/*
+* change the color of an status bullet
+*
+* @param (string) status_id: id of status element
+* @param (string) status_color: color to be used, available: red, blue, green, yellow, black, white
+*/
 function setStatusColor(status_id, status_color) {
     var status = "<div id='" + status_color + "'></div>";
     setTextById(status_id, status);
 }
 
+/*
+* Check if app is connected to the server. If error visualize in several places ...
+*/
 function birdhouseStatus_connectionError() {
     var cameras     = app_data["SETTINGS"]["devices"]["cameras"];
     var microphones = app_data["SETTINGS"]["devices"]["microphones"];
@@ -52,6 +67,11 @@ function birdhouseStatus_connectionError() {
     setStatusColor(status_id="status_error_WEATHER", "black");
 }
 
+/*
+* Orchestration of all status functions
+*
+* @param (dict) data: response from API status request
+*/
 function birdhouseStatus_print(data) {
     //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
     console.debug("Update Status ...");
@@ -61,7 +81,6 @@ function birdhouseStatus_print(data) {
     weather_footer = [];
     app_processing_active = false;
     app_server_error = false;
-
 
     // check page length vs. screen height
     var body = document.body, html = document.documentElement;
@@ -88,6 +107,11 @@ function birdhouseStatus_print(data) {
     setTextById(app_frame_info, html);
 }
 
+/*
+* read latest camera status information and fill respective placeholders with information if exist
+*
+* @param (dict) data: response from API status request
+*/
 function birdhouseStatus_cameras(data) {
     // add camera information
     var cameras         = data["SETTINGS"]["devices"]["cameras"];
@@ -202,6 +226,11 @@ function birdhouseStatus_cameras(data) {
     setTextById("system_active_streams", camera_streams);
 }
 
+/*
+* read latest camera settings and fill respective placeholders with information if exist
+*
+* @param (dict) data: response from API status request
+*/
 function birdhouseStatus_cameraParam(data, camera) {
     // camera parameter (image settings)
     //var camera_status   = data["STATUS"]["devices"]["cameras"];
@@ -223,6 +252,11 @@ function birdhouseStatus_cameraParam(data, camera) {
     }
 }
 
+/*
+* read latest weather information and fill respective placeholders with weather information if exist
+*
+* @param (dict) data: response from API status request
+*/
 function birdhouseStatus_weather(data) {
     // weather information
     var weather         = data["WEATHER"];
@@ -282,6 +316,11 @@ function birdhouseStatus_weather(data) {
     setTextById("gps_coordinates", coordinates);
 }
 
+/*
+* read latest sensor status information and fill respective placeholders with information if exist
+*
+* @param (dict) data: response from API status request
+*/
 function birdhouseStatus_sensors(data) {
     // add sensor information
     var sensors         = data["SETTINGS"]["devices"]["sensors"];
@@ -346,6 +385,11 @@ function birdhouseStatus_sensors(data) {
     }
 }
 
+/*
+* read latest microphone status information and fill respective placeholders with information if exist
+*
+* @param (dict) data: response from API status request
+*/
 function birdhouseStatus_microphones(data) {
     // add micro information
     var microphones  = app_data["STATUS"]["devices"]["microphones"];
@@ -379,6 +423,12 @@ function birdhouseStatus_microphones(data) {
     }
 }
 
+/*
+* check a bunch of system status information and fill respective placeholders with status information (if exist)
+* this includes the following information: DB connection; health check; usage of memory, hdd and cpu; ...
+*
+* @param (dict) data: response from API status request
+*/
 function birdhouseStatus_system(data) {
     var settings   = data["SETTINGS"]["server"];
     var status_sys = data["STATUS"]["system"];
@@ -459,9 +509,11 @@ function birdhouseStatus_system(data) {
 }
 
 /*
-* check if views are still loading and fill respective placeholders (if exist)
+* check if views are still loading and fill respective placeholders with status information (if exist)
 *
 * @param (dict) data: response from API status request
+* @param (string) view: specific view
+* @return (string): loading status if specific view is set
 */
 function birdhouseStatus_loadingViews(data, view="") {
     var views = ["object", "archive", "favorite"];
@@ -491,6 +543,11 @@ function birdhouseStatus_loadingViews(data, view="") {
     }
 }
 
+/*
+* check running object detection and fill respective placeholders with status information
+*
+* @param (dict) data: response from API status request
+*/
 function birdhouseStatus_detection(data) {
 
     if (data["STATUS"]["object_detection"]["progress"]) {
@@ -526,6 +583,11 @@ function birdhouseStatus_detection(data) {
 
     }
 
+/*
+* check running download preparation processes and fill respective placeholders with status information
+*
+* @param (dict) data: response from API status request
+*/
 function birdhouseStatus_downloads(data) {
     if (data["STATUS"]["server"]["downloads"] != {}) {
         var all_links_1 = "";
@@ -553,7 +615,7 @@ function birdhouseStatus_downloads(data) {
     }
 
 /*
-* check running processes and fill respective placeholders (if exist)
+* check running processes and fill respective placeholders with status information (if exist)
 *
 * @param (dict) data: response from API status request
 */
