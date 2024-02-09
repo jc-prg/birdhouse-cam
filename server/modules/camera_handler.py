@@ -356,16 +356,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         read image and get properties - not implemented yet
         """
         image_properties = self.stream.capture_metadata()
-        requests = self.stream.capture_request()
-        image = requests.make_array("main")
-        metadata = requests.get_metadata()
-        requests.release()
-        properties = {
-            "camera": image_properties,
-            "image": image,
-            "metadata": metadata
-        }
-        return properties
+        return image_properties
 
     def set_black_white(self):
         """
