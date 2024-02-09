@@ -463,7 +463,6 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             #if microphones[first_mic].connected:
             info = microphones[first_mic].get_device_information()
             srv_logging.debug("... mic-info: " + str(info))
-            srv_logging.info("... mic-info: " + str(info))
 
             if 'deviceCount' in info:
                 num_devices = info['deviceCount']
@@ -480,7 +479,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
                             "sample_rate": info.get("defaultSampleRate")
                         }
 
-        srv_logging.info("... mic-info: " + str(system["audio_devices"]))
+        srv_logging.debug("... mic-info: " + str(system["audio_devices"]))
         self._device_status["available"] = system
 
     def read_device_status(self):
