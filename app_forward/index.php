@@ -59,14 +59,19 @@ if (!$ipv6_address) { // || !filter_var("[$ipv6_address]", FILTER_VALIDATE_IP, F
     echo '<!DOCTYPE html>
     <html>
     <head>
-        <title>Access Server</title>
+        <title>jc://birdhouse/</title>
     </head>
-    <body>
-        <h1>Welcome to the Server Access Portal</h1>
-        <p>
-            To access the server, please click the link below:
-            <a href="http://[<YOUR_IPV6_ADDRESS>]:8000">Click here to access server</a>
+    <body style="background:#111111">
+        <center>
+        <h1 style="color:#EEEEEE">jc://birdhouse/</h1>
+        <br/>&nbsp;
+        <p style="color:#EEEEEE">
+            <img src="bird.gif" style="width:250px;" /><br/>
+            <br/>&nbsp;
+            <br/>&nbsp;
+            Got no address from birdhouse server yet.
         </p>
+        </center>
     </body>
     </html>';
 } else {
@@ -74,14 +79,21 @@ if (!$ipv6_address) { // || !filter_var("[$ipv6_address]", FILTER_VALIDATE_IP, F
     echo '<!DOCTYPE html>
     <html>
     <head>
-        <title>Access Server</title>
+        <title>jc://birdhouse/</title>
     </head>
-    <body>
-        <h1>Welcome to the Server Access Portal</h1>
-        <p>
-            To access the server, please click the link below:
-            <a href="http://[' . $ipv6_address . ']:8000">Click here to access server</a>
+    <body style="background:#111111">
+        <center>
+        <h1 style="color:#EEEEEE">jc://birdhouse/</h1>
+        <br/>&nbsp;
+        <p style="color:#EEEEEE">
+            <a href="http://[' . $ipv6_address . ']:8000"><img src="bird.gif" style="width:250px;" /></a><br/>
+            <br/>&nbsp;
+            <br/>&nbsp;
+            Click
+            <a href="http://[' . $ipv6_address . ']:8000" style="color:yellow">here</a>
+            to get to the birdhouse.
         </p>
+        </center>
     </body>
     </html>';
 }
