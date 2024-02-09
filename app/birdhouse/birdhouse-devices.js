@@ -494,7 +494,7 @@ function birdhouseDevices_weather(data) {
 
 function birdhouseDevices_microphones(data) {
 	var micros  = app_data["SETTINGS"]["devices"]["microphones"];
-	var devices = app_data["STATUS"]["system"]["audio_devices"];
+	var devices = app_data["STATUS"]["devices"]["available"]["audio_devices"];
 	var admin 	= app_data["STATUS"]["admin_allowed"];
 	var mic_devices = {};
 	var html = "";
