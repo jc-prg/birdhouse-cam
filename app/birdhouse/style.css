@@ -338,9 +338,9 @@ img .play_button  {
 }
 
 #overlay_replace {
-    position : relative;
+    position : fixed;
     top      : 55px;
-    right    : -45%;
+    right    : 15px;
     z-index  : 74;
     cursor   : pointer;
 }
