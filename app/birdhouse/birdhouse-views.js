@@ -394,20 +394,6 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 			group_list.push(title);
             entries_available = true;
             }
-
-		if (admin) {
-		        if (entries_yesterday != undefined && Object.keys(entries_yesterday).length > 0) {
-		            html += birdhouse_ImageGroup(active_page+"_YESTERDAY",lang("YESTERDAY"), entries_yesterday, entry_count, entry_category,
-		                                         false, admin, video_short, same_img_size, max_image_size_LR);
-		            entries_available = true;
-		            }
-		        if (entries_delete != undefined && Object.keys(entries_delete).length > 0) {
-		            html += birdhouse_ImageGroup(active_page+"_RECYCLE", lang("RECYCLE"), entries_delete, ["recycle"], entry_category, false,
-		                                         admin, video_short, same_img_size, max_image_size_LR);
-		            entries_available = true;
-		            }
-		        }
-
         // check if no entries or still loading
 		if (entries_available == false && (active_page == "TODAY" || active_page == "ARCHIVE" || active_page == "FAVORITES")) {
 		    var empty = false;
@@ -430,6 +416,20 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
         html += "<div id='group_list' style='display:none;'>" + group_list.join(" ") + "</div>";
 		}
+
+    if (admin) {
+        if (entries_yesterday != undefined && Object.keys(entries_yesterday).length > 0) {
+            html += birdhouse_ImageGroup(active_page+"_YESTERDAY",lang("YESTERDAY"), entries_yesterday, entry_count, entry_category,
+                                         false, admin, video_short, same_img_size, max_image_size_LR);
+            entries_available = true;
+            }
+        if (entries_delete != undefined && Object.keys(entries_delete).length > 0) {
+            html += birdhouse_ImageGroup(active_page+"_RECYCLE", lang("RECYCLE"), entries_delete, ["recycle"], entry_category, false,
+                                         admin, video_short, same_img_size, max_image_size_LR);
+            entries_available = true;
+            }
+        }
+
 
 	// Set title
 	if (active_page == "TODAY" && active_date != "")    {
