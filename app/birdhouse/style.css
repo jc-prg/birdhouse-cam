@@ -332,7 +332,7 @@ img .play_button  {
 #overlay_close {
     position : fixed;
     top      : 30px;
-    right    : -15px;
+    right    : 15px;
     z-index  : 74;
     cursor   : pointer;
 }
