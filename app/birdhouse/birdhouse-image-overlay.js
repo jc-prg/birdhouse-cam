@@ -64,7 +64,7 @@ function birdhouse_imageOverlay(filename, description="", overlay_replace="", sw
         }
 
     html += "    <img id='"+overlay_id+"' src='"+filename+"' style='display:block;'  onclick=\"event.stopPropagation();\"/>";
-    html += "<br/>&nbsp;<br/>"+description+"</div>";
+    html += "<br/>&nbsp;<br/><p style='text-align:center;'>"+description+"</p></div>";
     if (swipe) {
       html += '<div class="left-arrow" onclick="event.stopPropagation();prevImage()"></div>';
       html += '<div class="right-arrow" onclick="event.stopPropagation();nextImage()"></div>';
