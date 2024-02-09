@@ -460,7 +460,6 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         system["audio_devices"] = {}
         if microphones != {}:
             first_mic = list(microphones.keys())[0]
-            #if microphones[first_mic].connected:
             info = microphones[first_mic].get_device_information()
             srv_logging.debug("... mic-info: " + str(info))
 
