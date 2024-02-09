@@ -302,35 +302,58 @@ function addTouchListenersScale(div_id, initScale=1) {
     touchStartX = 0;
 
     overlayImage.addEventListener("touchstart", function(event) {
-      if (event.touches.length === 2) {
-        initialPinchDistance = Math.hypot(
-          event.touches[1].pageX - event.touches[0].pageX,
-          event.touches[1].pageY - event.touches[0].pageY
-        );
-
-        const computedTransform = getComputedStyle(overlayImage).transform;
-
-        if (computedTransform && computedTransform !== 'none') {
-          // Extract the scale from the transformation matrix
-          const matrixValues = computedTransform.split('(')[1].split(')')[0].split(',');
-          initialScale = parseFloat(matrixValues[0]);
+        if (event.touches.length === 2) {
+            initialPinchDistance = Math.hypot(
+                event.touches[1].pageX - event.touches[0].pageX,
+                event.touches[1].pageY - event.touches[0].pageY
+            );
+            const computedTransform = getComputedStyle(overlayImage).transform;
+            if (computedTransform && computedTransform !== 'none') {
+                // Extract the scale from the transformation matrix
+                const matrixValues = computedTransform.split('(')[1].split(')')[0].split(',');
+                initialScale = parseFloat(matrixValues[0]);
+            }
         }
-
-      } else if (event.touches.length === 1) {
+      /*
+      else if (event.touches.length === 1) {
         touchStartX = event.touches[0].clientX;
       }
+      */
+        if (event.touches.length === 1) {
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+            offsetX = overlayImage.offsetLeft;
+            offsetY = overlayImage.offsetTop;
+        }
     });
 
     overlayImage.addEventListener("touchmove", function(event) {
-  if (event.touches.length === 2) {
-    const currentPinchDistance = Math.hypot(
-      event.touches[1].pageX - event.touches[0].pageX,
-      event.touches[1].pageY - event.touches[0].pageY
-    );
-    const scale = initialScale * (currentPinchDistance / initialPinchDistance);
-    overlayImage.style.transform = `scale(${scale})`;
-  }
-});
+        if (event.touches.length === 2) {
+            const currentPinchDistance = Math.hypot(
+                event.touches[1].pageX - event.touches[0].pageX,
+                event.touches[1].pageY - event.touches[0].pageY
+            );
+        const scale = initialScale * (currentPinchDistance / initialPinchDistance);
+        overlayImage.style.transform = `scale(${scale})`;
+        }
+        if (event.touches.length === 1) {
+            event.preventDefault(); // Prevent scrolling while swiping
+            var touchMoveX = event.touches[0].clientX;
+            var touchMoveY = event.touches[0].clientY;
+            var deltaX = touchMoveX - touchStartX;
+            var deltaY = touchMoveY - touchStartY;
+            overlayImage.style.left = offsetX + deltaX + "px";
+            overlayImage.style.top = offsetY + deltaY + "px";
+            }
+        });
+
+        overlayImage.addEventListener("touchstart", function(event) {
+        });
+
+        overlayImage.addEventListener("touchmove", function(event) {
+
+        });
+
 }
 
 /*
