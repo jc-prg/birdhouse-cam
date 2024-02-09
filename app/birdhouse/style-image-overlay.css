@@ -31,11 +31,11 @@
   }
 
   .right-arrow {
-    right: 50px;
+    right: 15px;
     clip-path: polygon(100% 50%, 0 0, 0 100%);
   }
 
   .left-arrow {
-    left: 50px;
+    left: 15px;
     clip-path: polygon(0 50%, 100% 0, 100% 100%);
   }
