@@ -54,9 +54,9 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
         self.logging.info("Starting OBJECT DETECTION for '" + self.id + "' ...")
         self.connect()
+        self._processing_percentage = 0
         while self._running:
 
-            self._processing_percentage = 0
             if len(self.detect_queue_archive) > 0:
                 [date, threshold] = self.detect_queue_archive.pop()
                 self.analyze_archive_day(date, threshold)
@@ -376,7 +376,9 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             response["error"] = msg
             self.logging.info(msg)
 
+        time.sleep(3)
         self._processing = False
+        self._processing_percentage = 0
         return response
 
     def summarize_detections(self, entries, threshold=-1):
