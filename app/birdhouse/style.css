@@ -331,7 +331,7 @@ img .play_button  {
 
 #overlay_close {
     position : fixed;
-    top      : 30px;
+    top      : 20px;
     right    : 15px;
     z-index  : 74;
     cursor   : pointer;
@@ -339,7 +339,7 @@ img .play_button  {
 
 #overlay_replace {
     position : fixed;
-    top      : 55px;
+    top      : 35px;
     right    : 15px;
     z-index  : 74;
     cursor   : pointer;
