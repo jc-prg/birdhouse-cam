@@ -526,7 +526,8 @@ birdhouse_preset = {
     "views": {
         "index": {
             "type": "overlay",
-            "lowres_position": 1
+            "lowres_pos_cam1": 1,
+            "lowres_pos_cam2": 1
         }
     },
     "weather": {

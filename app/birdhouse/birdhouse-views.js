@@ -18,6 +18,11 @@ function birdhouse_INDEX(data, camera, object=false) {
 	var active_cam    = {};
 	var other_cams    = [];
 	var stream_ui1, stream_uid2 = "";
+    var lowres_pos_cam1 = 0;
+
+	if (active_camera == "cam1" && index_view["lowres_pos_cam1"])       { lowres_position = index_view["lowres_pos_cam1"]; }
+	else if (active_camera == "cam2" && index_view["lowres_pos_cam2"])  { lowres_position = index_view["lowres_pos_cam2"]; }
+	else                                                                { lowres_position = index_view["lowres_position"]; }
 
     // if selected camera is not active, reset to use the first active camera
 	if (active_camera != undefined && cameras[active_camera] && cameras[active_camera]["active"] == false) { active_camera = undefined; }
@@ -80,12 +85,12 @@ function birdhouse_INDEX(data, camera, object=false) {
         if (index_view["type"] == "picture-in-picture" && other_cams.length > 0) {
             [replace_tags["CAM1_PIP_URL"], stream_uid1] = birdhouse_StreamURL(other_cams[0]["name"], stream_server + cameras[active_cam["name"]]["video"]["stream_pip"], "main_pip", true);
             replace_tags["CAM1_PIP_URL"]  = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-key}", other_cams[0]["name"]);
-            replace_tags["CAM1_PIP_URL"]  = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-pos}", index_view["lowres_position"]);
+            replace_tags["CAM1_PIP_URL"]  = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-pos}", lowres_position);
         }
         if (index_view["type"] != "picture-in-picture" && other_cams.length > 0) {
             replace_tags["CAM2_ID"]         = other_cams[0]["name"];
             [replace_tags["CAM2_LOWRES_URL"], stream_uid2] = birdhouse_StreamURL(other_cams[0]["name"], stream_server + cameras[other_cams[0]["name"]]["video"]["stream_lowres"], "2nd_lowres", true);
-            replace_tags["CAM2_LOWRES_POS"] = index_lowres_position[index_view["lowres_position"].toString()];
+            replace_tags["CAM2_LOWRES_POS"] = index_lowres_position[lowres_position.toString()];
         }
 
         var selected_view = "";

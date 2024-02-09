@@ -641,4 +641,5 @@ function birdhouseStatus_processing(data) {
     else { setTextById("processing_info_header", ""); }
 }
 
+
 app_scripts_loaded += 1;
