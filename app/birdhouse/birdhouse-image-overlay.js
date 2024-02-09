@@ -59,11 +59,12 @@ function birdhouse_imageOverlay(filename, description="", overlay_replace="", sw
         html += "  <img id='"+overlay_id+"_replace' src='"+overlay_replace+"' style='display:none;'  onclick=\"event.stopPropagation();\"/>";
         }
     else {
-
-        html += "  <div id=\"overlay_replace\">&nbsp;</div>";
+        html += "  <div id=\"overlay_replace\" style='display:none;'>&nbsp;</div>";
         }
 
     html += "    <img id='"+overlay_id+"' src='"+filename+"' style='display:block;'  onclick=\"event.stopPropagation();\"/>";
+    //html += "</div>";
+    //html += "<div id=\"overlay_image_container2\">";
     html += "<br/>&nbsp;<br/><center>"+description+"</center></div>";
     if (swipe) {
       html += '<div class="left-arrow" onclick="event.stopPropagation();prevImage()"></div>';

@@ -349,7 +349,7 @@ img .play_button  {
     display          : grid;
     opacity          : 100%;
     position         : fixed;
-    margin           : auto;
+    //margin           : auto;
     top              : 50%;
     left             : 50%;
     -ms-transform    : translate(-50%,-50%);
@@ -357,7 +357,7 @@ img .play_button  {
     //text-align       : center;
     z-index          : 73;
   }
-  
+
 #overlay_image {
     max-width        : 90vw;
     max-height       : 70vh;
