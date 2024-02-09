@@ -97,7 +97,7 @@
 
     function wait_until_loaded() {
         console.log("Scripts loaded: " + app_scripts_loaded + "/" + birdhouse_js.length);
-        if (app_scripts_loaded == birdhouse_js.length) {
+        if (birdhouse_modules_loaded() && modules_loaded() && framework_modules_loaded()) {
             elementHidden("loading_overlay");
             startApp();
             }

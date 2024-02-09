@@ -85,6 +85,10 @@ var birdhouse_css = [
     "style-slider-dark.css",
 ];
 
+function birdhouse_modules_loaded() {
+    if (app_scripts_loaded == birdhouse_js.length)  { return true; }
+    else                                            { return false; }
+}
 
 /*
 * request loading of a specific view -> calls birdhousePrint() with retuned data
