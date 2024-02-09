@@ -252,6 +252,10 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 
 function birdhouse_LIST(title, data, camera, header_open=true) {
 
+    if (title == "FAVORITES" && birdhouseStatus_loadingViews(app_data, "favorite") != "done") { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
+    if (title == "ARCHIVE"   && birdhouseStatus_loadingViews(app_data, "archive") != "done")  { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
+    if (title == "OBJECTS"   && birdhouseStatus_loadingViews(app_data, "object") != "done")   { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
+
 	var html              = "";
 	var entry_category    = [];
 	var same_img_size     = false;
@@ -336,8 +340,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         html += birdhouse_LIST_calendar(groups);
     }
 
-    birdhouse_overlayLoadImages(Object.keys(entries).sort().reverse(), entries, app_active_page, admin);
-
+    if (entries) {
+        birdhouse_overlayLoadImages(Object.keys(entries).sort().reverse(), entries, app_active_page, admin);
+        }
 
     // ----------------------------------------
 

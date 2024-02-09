@@ -458,26 +458,36 @@ function birdhouseStatus_system(data) {
         }
 }
 
-function birdhouseStatus_loadingViews(data) {
+/*
+* check if views are still loading and fill respective placeholders (if exist)
+*
+* @param (dict) data: response from API status request
+*/
+function birdhouseStatus_loadingViews(data, view="") {
     var views = ["object", "archive", "favorite"];
 
-    for (var i=0;i<views.length;i++) {
-        var status = data["STATUS"]["server"]["view_"+views[i]+"_loading"];
-        var progress = data["STATUS"]["server"]["view_"+views[i]+"_progress"];
-        if (status == "in progress") {
-            setTextById("loading_status_"+views[i], progress);
-            setTextById("processing_"+views[i]+"_view", progress);
-            app_processing_active = true;
+    if (view == "") {
+        for (var i=0;i<views.length;i++) {
+            var status = data["STATUS"]["server"]["view_"+views[i]+"_loading"];
+            var progress = data["STATUS"]["server"]["view_"+views[i]+"_progress"];
+            if (status == "in progress") {
+                setTextById("loading_status_"+views[i], progress);
+                setTextById("processing_"+views[i]+"_view", progress);
+                app_processing_active = true;
+            }
+            else if (status == "started") {
+                setTextById("loading_status_"+views[i], lang("WAITING"));
+                setTextById("processing_"+views[i]+"_view", lang("WAITING"));
+                app_processing_active = true;
+            }
+            else if (status == "done") {
+                setTextById("loading_status_"+views[i], lang("DONE"));
+                setTextById("processing_"+views[i]+"_view", lang("INACTIVE"));
+            }
         }
-        else if (status == "started") {
-            setTextById("loading_status_"+views[i], lang("WAITING"));
-            setTextById("processing_"+views[i]+"_view", lang("WAITING"));
-            app_processing_active = true;
-        }
-        else if (status == "done") {
-            setTextById("loading_status_"+views[i], lang("DONE"));
-            setTextById("processing_"+views[i]+"_view", lang("INACTIVE"));
-        }
+    }
+    else {
+         return data["STATUS"]["server"]["view_"+view+"_loading"];
     }
 }
 
@@ -542,6 +552,11 @@ function birdhouseStatus_downloads(data) {
     setTextById("collect4download_amount2", collect4download_amount);
     }
 
+/*
+* check running processes and fill respective placeholders (if exist)
+*
+* @param (dict) data: response from API status request
+*/
 function birdhouseStatus_processing(data) {
     var process_information = {
         "Object Detection":                 "processing_object_detection",
