@@ -602,17 +602,15 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
         }	}
         var stream_server = "";
         if (settings["server"]["ip4_stream_video"] && settings["server"]["ip4_stream_video"] != "") {
-            stream_server = settings["server"]["ip4_stream_video"] + ":" + settings["server"]["port_video"];
+            stream_server       = settings["server"]["ip4_stream_video"] + ":" + settings["server"]["port_video"];
+            var streaming_url   = "http://"+stream_server+"/";
         }
         else {
-            var this_server = window.location.href;
-            this_server     = this_server.split("//")[1];
-            this_server     = this_server.split("/")[0];
-            this_server     = this_server.split(":")[0];
-            stream_server   = this_server + ":" + settings["server"]["port_video"];
+            var this_server     = RESTurl_noport;
+            stream_server       = this_server + ":" + settings["server"]["port_video"];
+            var streaming_url   = "stream_server+"/";
         }
 
-        var streaming_url = "http://"+stream_server+"/";
 		var image_title   = "";
 		if (entry["title"] && entry["title"] != "") { image_title = "<b>" + entry["title"] + "</b>"; }
 		else                                        { image_title = entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }
