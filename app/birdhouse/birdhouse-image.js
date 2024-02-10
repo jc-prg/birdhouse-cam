@@ -608,7 +608,7 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
         else {
             var this_server     = RESTurl_noport;
             stream_server       = this_server + ":" + settings["server"]["port_video"];
-            var streaming_url   = "stream_server+"/";
+            var streaming_url   = stream_server + "/";
         }
 
 		var image_title   = "";
