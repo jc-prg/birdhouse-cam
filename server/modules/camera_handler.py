@@ -354,6 +354,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
     def get_properties_image(self):
         """
         read image and get properties - not implemented yet
+        see https://github.com/raspberrypi/picamera2/issues/168 (other metadata have to be saved)
         """
         image_properties = self.stream.capture_metadata()
         return image_properties

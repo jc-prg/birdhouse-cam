@@ -633,7 +633,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         line_scale = 8
 
         #raw = raw.copy()
-        lowres_position = self.config.param["views"]["index"]["lowres_position"]
+        #lowres_position = self.config.param["views"]["index"]["lowres_position"]
+        lowres_position = self.config.param["views"]["index"]["lowres_pos_"+self.id]
 
         if info_type == "setting":
             line_position = 160
@@ -789,7 +790,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         line_scale = 8
 
         #raw = raw.copy()
-        lowres_position = self.config.param["views"]["index"]["lowres_position"]
+        #lowres_position = self.config.param["views"]["index"]["lowres_position"]
+        lowres_position = self.config.param["views"]["index"]["lowres_pos_"+self.id]
 
         if info_type == "setting":
             line_position = 160
@@ -961,7 +963,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         image = raw.copy()
 
         if self.system_status["active"]:
-            lowres_position = self.config.param["views"]["index"]["lowres_position"]
+            #lowres_position = self.config.param["views"]["index"]["lowres_position"]
+            lowres_position = self.config.param["views"]["index"]["lowres_pos_"+self.id]
             size = self.config.param["devices"]["cameras"][self.id]["image"]["resolution_cropped"]
             self.logging.debug("...... " + self.name + " " + str(size))
 
@@ -2316,14 +2319,16 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if "video" in self.param and "max_length" in self.param["video"]:
             self.video.max_length = self.param["video"]["max_length"]
 
-        self.camera.source = self.param["source"]
-        self.camera_stream_raw.param = self.param
-        self.camera_stream_raw.source = self.param["source"]
-        for stream in self.camera_streams:
-            self.camera_streams[stream].param = self.param
-            self.camera_streams[stream].image.param = self.param
-            self.camera_streams[stream].source = self.param["source"]
-            self.camera_streams[stream].initial_connect_msg = self.initial_connect_msg
+        if self.camera:
+            self.camera.source = self.param["source"]
+            self.camera_stream_raw.param = self.param
+            self.camera_stream_raw.source = self.param["source"]
+            for stream in self.camera_streams:
+                self.camera_streams[stream].param = self.param
+                self.camera_streams[stream].image.param = self.param
+                self.camera_streams[stream].source = self.param["source"]
+                self.camera_streams[stream].initial_connect_msg = self.initial_connect_msg
+
         self.image.param = self.param
         self.video.param = self.param
         self.object.param = self.param

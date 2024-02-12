@@ -640,7 +640,8 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             (depending on lowres position)
         """
         (start_x, start_y, end_x, end_y) = self.param["image"]["crop_area"]
-        position = self.config.param["views"]["index"]["lowres_position"]
+        #position = self.config.param["views"]["index"]["lowres_position"]
+        position = self.config.param["views"]["index"]["lowres_pos_"+self.id]
         if position == 1:
             default_position = (end_x - 25, start_y + 30)
         else:
