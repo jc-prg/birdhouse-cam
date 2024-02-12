@@ -1268,7 +1268,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
         if command in cmd_views:
-            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups", "archive_exists",
+            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups", "archive_exists", "info",
                                 "chart_data", "weather_data", "days_available", "day_back", "day_forward", "birds"]
             for key in param_to_publish:
                 if key in content:

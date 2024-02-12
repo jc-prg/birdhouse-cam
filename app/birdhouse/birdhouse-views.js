@@ -468,6 +468,7 @@ function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_d
     var info_text               = "";
     var threshold_slider        = birdhouse_LIST_admin_threshold_slider(camera, active_page, active_date);
 	var camera_settings         = app_data["SETTINGS"]["devices"]["cameras"];
+	var archive_info            = data["DATA"]["data"]["info"];
 
     // <button onclick='birdhouse_forceBackup();' class='button-settings-api'>Force Backup</button>";
     var detection_model         = camera_settings[app_active_cam]["object_detection"]["model"]; // devices:cameras:"+camera+":object_detection:model
@@ -495,6 +496,13 @@ function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_d
     }
     select_thresholds += "</select>&nbsp;";
 
+    var detection_info = "";
+    if (archive_info && archive_info["detection_"+camera]) {
+        detection_info += "<div style='float:left;padding:3px;'>";
+        detection_info += lang("LAST_DETECTION") + ": <br/>" + archive_info["detection_"+camera]["date"] + " (" + archive_info["detection_"+camera]["model"] + ")";
+        detection_info += "</div>";
+        }
+
 	var tab = new birdhouse_table();
 	tab.style_cells["vertical-align"] = "top";
 	tab.style_cells["padding"] = "3px";
@@ -508,7 +516,8 @@ function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_d
             { button_object_detection = lang("DETECTION_INACTIVE_CAM"); }
         else if (!app_data["STATUS"]["object_detection"]["models_loaded_status"][app_active_cam])
             { button_object_detection = lang("DETECTION_NOT_LOADED"); }
-        info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model, detection_threshold]) + ":", select_thresholds + button_object_detection );
+        info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model, detection_threshold]) + ":",
+                             select_thresholds + button_object_detection + detection_info );
         }
     info_text += tab.row(lang("OBJECT_DETECTION_RECYCLE") + ":", button_object_recycle);
     info_text += tab.row(lang("DELETE_ARCHIVE") + ":", button_archive_deletion );
