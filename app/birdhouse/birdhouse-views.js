@@ -584,7 +584,7 @@ function birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page,
 
     info_text += tab.row(lang("UPDATE_VIEWS")+":",
                          "<button onclick='birdhouse_forceUpdateViews();' class='bh-slider-button' style='width:80px;'>Update</button>&nbsp;" +
-                         "<button onclick='birdhouse_forceUpdateViews(true);' class='bh-slider-button' style='width:80px;'>Update Complete</button>");
+                         "<button onclick='birdhouse_forceUpdateViews(true);' class='bh-slider-button' style='width:80px;'>Complete</button>");
     info_text += tab.end();
     info_text += "&nbsp;<br/>&nbsp;";
 
