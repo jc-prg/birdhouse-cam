@@ -1632,24 +1632,24 @@ class BirdhouseViewObjects(BirdhouseClass):
                     for label in archive_detect:
 
                         # !!!! recheck
-                        # -> reads from each file ...
-                        # -> checks if changed / (re)create objects summary => archive_entries["detection"]
-                            # -> "thumbnail" doesn't exist in archive_detect[label]
-                            # -> check if favorite and use hires?!; should be defined as favorite there?
-                        # -> recreates views
+                        # -> OK: if favorite in a day, use this as thumbnail entry for the label
+                        # -> OPEN: choose favorite thumbnail across all files .... ?!
 
                         # check if thumbnail based on confidence is defined
                         if "thumbnail" in archive_detect[label]:
                             thumbnail = archive_detect[label]["thumbnail"]
                             if thumbnail["stamp"] in archive_detect[label]["favorite"]:
                                 thumbnail["favorite"] = True
+                                has_favorite = True
                             else:
                                 thumbnail["favorite"] = False
+                                has_favorite = False
                             archive_entry = archive_entries["files"][thumbnail["stamp"]]
                             view_entry = self._list_get_detection_for_label(label, archive_entry, thumbnail["favorite"])
 
                             if label not in view_entries:
                                 view_entries[label]: dict = view_entry
+                                view_entries[label]["thumbnail_favorite"] = thumbnail["favorite"]
                                 view_entries[label]["detections"] = {
                                     "favorite": 0,
                                     "favorite_dates": [],
@@ -1658,9 +1658,11 @@ class BirdhouseViewObjects(BirdhouseClass):
                                     "default_dates": {},
                                     "total": 0
                                 }
-                            # view_entries[label]["favorite_thumbnail"] = thumbnail["favorite"]
-                            if ("confidence" in view_entry
-                                    and view_entry["confidence"] > view_entries[label]["confidence"]):
+
+                            if ((not view_entries[label]["thumbnail_favorite"] and has_favorite)
+                                    or ("confidence" in view_entry and
+                                        view_entry["confidence"] > view_entries[label]["confidence"])):
+
                                 detections = view_entries[label]["detections"].copy()
                                 view_entries[label] = view_entry
                                 view_entries[label]["detections"] = detections
