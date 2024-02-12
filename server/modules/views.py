@@ -1649,7 +1649,7 @@ class BirdhouseViewObjects(BirdhouseClass):
 
                             if label not in view_entries:
                                 view_entries[label]: dict = view_entry
-                                view_entries[label]["thumbnail_favorite"] = thumbnail["favorite"]
+                                view_entries[label]["thumbnail_favorite"] = has_favorite
                                 view_entries[label]["detections"] = {
                                     "favorite": 0,
                                     "favorite_dates": [],
@@ -1659,12 +1659,13 @@ class BirdhouseViewObjects(BirdhouseClass):
                                     "total": 0
                                 }
 
-                            if ((not view_entries[label]["thumbnail_favorite"] and has_favorite)
-                                    or ("confidence" in view_entry and
-                                        view_entry["confidence"] > view_entries[label]["confidence"])):
+                            if (not view_entries[label]["thumbnail_favorite"]
+                                    and (has_favorite or ("confidence" in view_entry
+                                         and view_entry["confidence"] > view_entries[label]["confidence"]))):
 
                                 detections = view_entries[label]["detections"].copy()
                                 view_entries[label] = view_entry
+                                view_entries[label]["thumbnail_favorite"] = has_favorite
                                 view_entries[label]["detections"] = detections
 
                     # second round, count detections
