@@ -1631,6 +1631,13 @@ class BirdhouseViewObjects(BirdhouseClass):
                     # Initial round: identify thumbnails
                     for label in archive_detect:
 
+                        # !!!! recheck
+                        # -> reads from each file ...
+                        # -> checks if changed / (re)create objects summary => archive_entries["detection"]
+                            # -> "thumbnail" doesn't exist in archive_detect[label]
+                            # -> check if favorite and use hires?!; should be defined as favorite there?
+                        # -> recreates views
+
                         # check if thumbnail based on confidence is defined
                         if "thumbnail" in archive_detect[label]:
                             thumbnail = archive_detect[label]["thumbnail"]
@@ -1646,13 +1653,14 @@ class BirdhouseViewObjects(BirdhouseClass):
                                 view_entries[label]["detections"] = {
                                     "favorite": 0,
                                     "favorite_dates": [],
-                                    "favorite_thumbnail": thumbnail["favorite"],
+                                    "favorite_thumbnail": False,
                                     "default": 0,
                                     "default_dates": {},
                                     "total": 0
                                 }
-                            elif ("confidence" in view_entry
-                                  and view_entry["confidence"] > view_entries[label]["confidence"]):
+                            # view_entries[label]["favorite_thumbnail"] = thumbnail["favorite"]
+                            if ("confidence" in view_entry
+                                    and view_entry["confidence"] > view_entries[label]["confidence"]):
                                 detections = view_entries[label]["detections"].copy()
                                 view_entries[label] = view_entry
                                 view_entries[label]["detections"] = detections
