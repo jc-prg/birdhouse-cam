@@ -529,7 +529,11 @@ function birdhouseStatus_loadingViews(data, view="") {
             }
             else if (status == "started") {
                 setTextById("loading_status_"+views[i], lang("WAITING"));
-                setTextById("processing_"+views[i]+"_view", lang("WAITING"));
+
+                if (views[i] != "object" || data["STATUS"]["object_detection"]["active"]) {
+                    setTextById("processing_"+views[i]+"_view", lang("WAITING"));
+                    }
+
                 app_processing_active = true;
             }
             else if (status == "done") {
