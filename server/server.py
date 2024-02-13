@@ -1494,16 +1494,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                             total_pixels_cam1 = frame_raw.shape[0] * frame_raw.shape[1]
                             total_pixels_cam2 = frame_raw_pip.shape[0] * frame_raw_pip.shape[1]
-                            desired_total_pixels_cam2 = total_pixels_cam1 / 6.5
+                            desired_total_pixels_cam2 = total_pixels_cam1 / 9
                             scale_factor = math.sqrt(desired_total_pixels_cam2 / total_pixels_cam2) * 100
-
-                            distance = 30
                             if frame_raw.shape[1] > 1000:
                                 distance = 50
-
-                            srv_logging.info(" frame: " + str(frame_raw.shape[0]) + "*" + str(frame_raw.shape[1]) + " / 5 " +
-                                             " / pip: " + str(frame_raw_pip.shape[0]) + "*" + str(frame_raw_pip.shape[1]) +
-                                             " / size %: " + str(scale_factor) + " / distance: " + str(distance))
+                            else:
+                                distance = 30
+                            srv_logging.debug(" PiP ... size %: " + str(scale_factor) + " / distance: " + str(distance))
 
                             frame_raw_pip = camera[which_cam2].image.resize_raw(frame_raw_pip, scale_factor)
                             frame_raw = camera[which_cam].image.image_in_image_raw(raw=frame_raw,
