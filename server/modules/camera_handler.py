@@ -161,10 +161,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.logging.info(" PiCamera2 GET: " + str(self.properties_get))
                 self.logging.info(" PiCamera2 SET: " + str(self.properties_set))
                 self.logging.info(" PiCamera2 IMG: " + str(self.get_properties_image()))
-
-                #self.logging.info(" PiCamera2 get properties: " + str(self.get_properties_available("get")))
-                #self.logging.info(" PiCamera2 get properties: " + str(self.get_properties_available("set")))
-                # self.logging.info(" PiCamera2 get img properties: " + str(self.get_properties_image()))
                 self.logging.info("------------------")
 
             self.first_connect = False
@@ -348,6 +344,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         if key == "init":
             self.properties_get = picamera_properties.copy()
+            image_properties = {}
+        else:
+            image_properties = self.get_properties_image()
 
         for picam_key in picamera_properties:
             picam_key_full = picamera_properties[picam_key][0]
@@ -368,11 +367,14 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                     self.logging.warning(msg)
 
             else:
-                try:
-                    value = eval("self.stream.still_configuration." + picam_key_full)
-                    self.properties_get[picam_key][0] = value
-                except Exception as e:
-                    self.logging.debug("Value not set yet, stays on default for '" + picam_key + "'. (" + str(e) + ")")
+                if picam_key_full in image_properties:
+                    self.properties_get[picam_key][0] = image_properties[picam_key_full]
+                else:
+                    try:
+                        value = eval("self.stream.still_configuration." + picam_key_full)
+                        self.properties_get[picam_key][0] = value
+                    except Exception as e:
+                        self.logging.debug("Value not set yet, stays on default for '" + picam_key + "'. (" + str(e) + ")")
 
         # !!! Assumption: start with default value, to be changed by configuration
         #     -> if set the value is, what has been set?! until there is a way to request data
