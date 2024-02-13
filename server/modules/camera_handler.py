@@ -142,8 +142,10 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
                 self.logging.info("------------------")
                 self.logging.info(" PiCamera2 initial config: " + str(self.configuration))
-                self.logging.info(" PiCamera2 get properties: " + str(self.get_properties()))
-                self.logging.info(" PiCamera2 get img properties: " + str(self.get_properties_image()))
+                self.logging.info(" PiCamera2 get properties: " + str(self.get_properties_available("get")))
+                self.logging.info("                         : " + str(self.get_properties("init")))
+                self.logging.info(" PiCamera2 get properties: " + str(self.get_properties_available("set")))
+                #self.logging.info(" PiCamera2 get img properties: " + str(self.get_properties_image()))
                 self.logging.info("------------------")
 
             self.stream.start()
