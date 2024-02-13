@@ -1496,8 +1496,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             if frame_raw.shape[1] > 1000:
                                 distance = 50
 
-                            srv_logging.info(" frame: " + str(frame_raw.shape[0]) + " / pip: " +
-                                             str(frame_raw_pip.shape[0]) + " / size %: " + str(size))
+                            srv_logging.info(" frame: " + str(frame_raw.shape[0]) + "*" + str(frame_raw.shape[2]) +
+                                             " / pip: " + str(frame_raw_pip.shape[0]) + "*" + str(frame_raw_pip.shape[1]) +
+                                             " / size %: " + str(size) + " / distance: " + str(distance))
 
                             frame_raw_pip = camera[which_cam2].image.resize_raw(frame_raw_pip, size)
                             frame_raw = camera[which_cam].image.image_in_image_raw(raw=frame_raw,
