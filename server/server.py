@@ -1489,12 +1489,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                                                       system_info=False,
                                                                       wait=False)
 
-                        size = (frame_raw.shape[0] / 6) / frame_raw_pip.shape[0] * 100
-                        frame_raw_pip = camera[which_cam2].image.resize_raw(frame_raw_pip, size)
-
                         if frame_raw_pip is not None and len(frame_raw_pip) > 0:
-                            frame_raw = camera[which_cam].image.image_in_image_raw(raw=frame_raw, raw2=frame_raw_pip,
-                                                                                   position=int(cam2_pos), distance=30)
+                            size = (frame_raw.shape[0] / 5) / frame_raw_pip.shape[0] * 100
+                            distance = 30
+                            if frame_raw.shape[0] > 1000:
+                                distance = 50
+
+                            srv_logging.debug(" frame: " + str(frame_raw.shape[0]) + " / pip: " +
+                                              str(frame_raw_pip.shape[0]) + " / size %: " + str(size))
+
+                            frame_raw_pip = camera[which_cam2].image.resize_raw(frame_raw_pip, size)
+                            frame_raw = camera[which_cam].image.image_in_image_raw(raw=frame_raw,
+                                                                                   raw2=frame_raw_pip,
+                                                                                   position=int(cam2_pos),
+                                                                                   distance=distance)
 
                 if stream_type == "camera" \
                         and not camera[which_cam].if_error() \
