@@ -140,16 +140,17 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.configuration = self.stream.create_still_configuration()
                 self.stream.configure(self.configuration)
 
+            self.stream.start()
+            time.sleep(0.5)
+
+            if self.first_connect:
                 self.logging.info("------------------")
                 self.logging.info(" PiCamera2 initial config: " + str(self.configuration))
                 self.logging.info(" PiCamera2 get properties: " + str(self.get_properties_available("get")))
                 self.logging.info("                         : " + str(self.get_properties("init")))
                 self.logging.info(" PiCamera2 get properties: " + str(self.get_properties_available("set")))
-                #self.logging.info(" PiCamera2 get img properties: " + str(self.get_properties_image()))
+                # self.logging.info(" PiCamera2 get img properties: " + str(self.get_properties_image()))
                 self.logging.info("------------------")
-
-            self.stream.start()
-            time.sleep(0.5)
 
         except Exception as err:
             self.raise_error("Can't connect to PiCamera2 '" + self.source + "': " + str(err))
