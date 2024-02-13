@@ -15,5 +15,5 @@ sudo apt-get -y install v4l-utils
 sudo apt-get -y install rpi.gpio
 
 pip3 install --upgrade pip
-pip3 install -r requirements.txt
-sudo pip3 install -r requirements.txt
+pip3 install -r requirements_rpi.txt
+sudo pip3 install -r requirements_rpi.txt

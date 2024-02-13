@@ -16,3 +16,5 @@ suntime
 geopy
 python-dotenv
 torch
+psutil
+tqdm
