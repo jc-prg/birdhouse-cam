@@ -854,8 +854,11 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         scale image to create lowres
         """
-        if self._size_lowres is None:
-            self._size_lowres = self.image.size_raw(raw=raw, scale_percent=self.param["image"]["preview_scale"])
+        self.logging.debug(" ... size:" + str(self.image.size_raw(raw)) +
+                           " ... scale: " + str(self.param["image"]["preview_scale"]) + " ... lowres: " +
+                           str(self.image.size_raw(raw=raw, scale_percent=self.param["image"]["preview_scale"])))
+
+        self._size_lowres = list(self.image.size_raw(raw=raw, scale_percent=self.param["image"]["preview_scale"]))
         lowres = self.image.resize_raw(raw=raw, scale_percent=100, scale_size=self._size_lowres)
 
         if lowres is not None:
