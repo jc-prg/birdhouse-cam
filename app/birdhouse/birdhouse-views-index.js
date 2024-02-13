@@ -154,7 +154,7 @@ index_template["default"] = `
         <center>
             <div class="livestream_2nd_container cam1cam2">
                 <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
-                    <img src="<!--CAM2_URL-->" id="stream_<!--CAM2_ID-->" class="livestream_2nd">
+                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_<!--CAM2_ID-->" class="livestream_2nd">
                 </a>
             </div>
         </center>
@@ -173,7 +173,7 @@ index_template["default_admin"] = `
         <center>
             <div class="livestream_2nd_container cam1cam2">
                 <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
-                    <img src="<!--CAM2_URL-->" id="stream_<!--CAM2_ID-->" class="livestream_2nd">
+                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_<!--CAM2_ID-->" class="livestream_2nd">
                 </a>
             </div>
         </center>
