@@ -205,7 +205,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             return
 
         if key in self.properties_get:
-            picam_key = self.properties_get[key][0]
+            #picam_key = self.properties_get[key][0]
+            picam_key = key
             try:
                 self.stream.set_controls({picam_key: value})
                 return True
