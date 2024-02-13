@@ -15,14 +15,22 @@ from modules.bh_class import BirdhouseCameraClass
 
 
 class CameraInformation:
+    """
+    Class to get camera information from the OS
+    """
 
     def __init__(self):
-
+        """
+        init logging instance
+        """
         self.logging = set_logging("cam-info")
 
     def get_available_cameras(self):
         """
         use v4l2_ctl to identify available cameras
+
+        Returns:
+            dict: different level of device definitions in a dict: 'list', 'short', 'complete'
         """
         try:
             process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
@@ -61,6 +69,9 @@ class CameraInformation:
     def get_available_camera_resolutions(self, source):
         """
         use v4l2_ctl to identify available camera resolutions
+
+        Parameters:
+            source (string): device definition, e.g. /dev/video0
         """
         try:
             process = subprocess.Popen(["v4l2-ctl -d " + source + " --list-formats-ext"],
@@ -114,6 +125,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
     def connect(self):
         """
         connect with PiCamera
+
+        Returns:
+            bool | str: True, False or 'WARNING' depending on connection status
         """
         self.reset_error()
         self.connected = False
@@ -127,7 +141,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.stream.configure(self.configuration)
 
                 self.logging.info("------------------")
-                self.logging.info(str(self.configuration))
+                self.logging.info(" PiCamera2 initial config: " + str(self.configuration))
+                self.logging.info(" PiCamera2 get properties: " + str(self.get_properties()))
+                self.logging.info(" PiCamera2 get img properties: " + str(self.get_properties_image()))
                 self.logging.info("------------------")
 
             self.stream.start()
@@ -161,6 +177,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
     def reconnect(self):
         """
         reconnect camera
+
+        Returns:
+            bool | str: True, False or 'WARNING' depending on connection status
         """
         self.disconnect()
         return self.connect()
@@ -357,13 +376,19 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         read image and get properties - not implemented yet
         see https://github.com/raspberrypi/picamera2/issues/168 (other metadata have to be saved)
+
+        Returns:
+            dict: list of available image properties
         """
         image_properties = self.stream.capture_metadata()
         return image_properties
 
     def set_black_white(self):
         """
-        set saturation to 0
+        set saturation to 0 (black and white)
+
+        Returns:
+            bool: status setting camera to black and white mode
         """
         try:
             self.stream.set_controls({"Saturation": 0})
@@ -375,6 +400,12 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
     def set_resolution(self, width, height):
         """
         set camera resolution
+
+        Parameters:
+            width (int): new image width
+            height (int): new image height
+        Returns:
+            bool: status setting camera resolution
         """
         try:
             config = self.stream.create_still_configuration({"size": (int(width), int(height))})
@@ -389,6 +420,11 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
     def get_resolution(self, maximum=False):
         """
         get resolution of the device
+
+        Parameters:
+            maximum (bool): get maximum resolution (True) or current resolution (False)
+        Returns:
+            [int, int]: width, height
         """
         if maximum:
             (width, height) = self.stream.camera_properties['PixelArraySize']
@@ -399,9 +435,12 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
     def camera_status(self, source, name):
         """
         check if given source can be connected as PiCamera and returns an image
-        Args:
-        * source = device string, should be "/dev/picam"
-        * name   = description for the camera
+
+        Parameters:
+            source (str): device string, should be "/dev/picam"
+            name (str): description for the camera
+        Returns:
+            dict: camera information: 'dev', 'info', 'image', 'shape'
         """
         camera_info = {"dev": source, "info": name, "image": False, "shape": []}
         if source == "/dev/picam" and birdhouse_env["rpi_64bit"]:
@@ -436,6 +475,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
     def if_connected(self):
         """
         check if camera is connected
+
+        Returns:
+            bool: connection status
         """
         return self.connected
 
