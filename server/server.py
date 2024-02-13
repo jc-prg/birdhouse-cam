@@ -1490,7 +1490,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                                                       wait=False)
 
                         if frame_raw_pip is not None and len(frame_raw_pip) > 0:
-                            size = (frame_raw.shape[1] / 5) / frame_raw_pip.shape[1] * 100
+                            size = (frame_raw.shape[0] / 4.5) / frame_raw_pip.shape[0] * 100
                             distance = 30
                             if frame_raw.shape[1] > 1000:
                                 distance = 50
