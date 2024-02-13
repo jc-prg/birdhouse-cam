@@ -1494,7 +1494,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                             total_pixels_cam1 = frame_raw.shape[0] * frame_raw.shape[1]
                             total_pixels_cam2 = frame_raw_pip.shape[0] * frame_raw_pip.shape[1]
-                            desired_total_pixels_cam2 = total_pixels_cam1 / 5
+                            desired_total_pixels_cam2 = total_pixels_cam1 / 6.5
                             scale_factor = math.sqrt(desired_total_pixels_cam2 / total_pixels_cam2) * 100
 
                             distance = 30
