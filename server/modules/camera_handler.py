@@ -210,7 +210,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.stream.set_controls({picam_key: value})
                 return True
             except Exception as err:
-                self.raise_error("Could not set to value for '" + str(picam_key) + "': " + str(err))
+                self.raise_error("Could not set to value for '" + str(picam_key) + "': " + str(err) +
+                                 " (" + str(key) + ": " + self.properties_get[key] + ")")
                 return False
         else:
             self.raise_error("Key '" + str(key) + "' is unknown!")

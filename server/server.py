@@ -1485,9 +1485,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     if stream_pip and which_cam2 != "" and which_cam2 in camera:
                         frame_raw_pip = camera[which_cam2].get_stream(stream_id=stream_id_int,
                                                                       stream_type=stream_type,
-                                                                      stream_resolution="lowres",
+                                                                      stream_resolution="hires",  # lowres
                                                                       system_info=False,
                                                                       wait=False)
+
+                        size = (frame_raw.shape[0] / 6) / frame_raw_pip.shape[0] * 100
+                        frame_raw_pip = camera[which_cam2].image.resize_raw(frame_raw_pip, size)
 
                         if frame_raw_pip is not None and len(frame_raw_pip) > 0:
                             frame_raw = camera[which_cam].image.image_in_image_raw(raw=frame_raw, raw2=frame_raw_pip,
