@@ -370,7 +370,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         properties_get_array = ["brightness", "saturation", "contrast", "gain", "sharpness"]
 """
 
-        self.logging.info(str(self.stream.still_configuration))
+        self.stream.set_controls({"Saturation": 0})
+        self.logging.info(str(self.stream.still_configuration.controls))
+        self.logging.info(str(self.stream.controls))
 
         for c_key in self.picamera_controls:
             self.properties_get[c_key] = self.picamera_controls[c_key].copy()
@@ -386,7 +388,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.properties_get[c_key].append(msg)
                 self.logging.warning(msg)
             try:
-                value = eval("self.stream.still_configuration." + c_key_full)
+                value = eval("self.stream.still_configuration.controls." + c_key_full)
                 self.properties_get[c_key][0] = value
             except Exception as e:
                 self.logging.info("Value not set yet, stays on default for '" + c_key_full + "'. (" + str(e) + ")")
@@ -405,7 +407,28 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             p_key_full = self.picamera_cam[p_key][0]
             self.properties_get[p_key][0] = self.stream.camera_properties[p_key_full]
 
-        """if key == "init":
+        """
+        
+        CameraConfiguration({
+            'use_case': 'still', 
+            'buffer_count': 1, 
+            'transform': <libcamera.Transform 'identity'>, 
+            'display': None, 
+            'encode': None, 
+            'colour_space': <libcamera.ColorSpace 'sYCC'>, 
+            'controls': <Controls: {
+                'NoiseReductionMode': <NoiseReductionModeEnum.HighQuality: 2>, 
+                'FrameDurationLimits': (100, 1000000000)
+                }>, 
+            'main': {'size': (2592, 1944), 'format': 'BGR888', 'stride': None, 'framesize': None}, 
+            'lores': None, 
+            'raw': {'size': None, 'format': None, 'stride': None, 'framesize': None}, 
+            'queue': True, 
+            'sensor': {'output_size': None, 'bit_depth': None}})
+0
+        
+        
+        if key == "init":
             self.properties_get = picamera_controls.copy()
             image_properties = {}
         else:
