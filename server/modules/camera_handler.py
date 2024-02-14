@@ -165,6 +165,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.configuration = self.stream.create_still_configuration()
                 self.stream.configure(self.configuration)
 
+            self.get_properties()
+            self.set_properties_init()
             self.stream.start()
             time.sleep(0.5)
 
@@ -177,8 +179,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             return False
         else:
             self.logging.info("- Connected.")
-            self.get_properties()
-            self.set_properties_init()
 
             if self.first_connect:
                 self.logging.info("------------------")
@@ -196,7 +196,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             image = self.stream.switch_mode_and_capture_array(self.configuration, "main")
             if image is None or len(image) == 0:
                 raise Exception("Returned empty image.")
-            self.set_properties_init()
             return True
 
         except Exception as err:
@@ -336,7 +335,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             dict | float: complete list of properties in format [current_value, "rwm", min_value, max_value]
                           or current value if key is set
         """
-
         self.logging.info("get_properties: " + str(self.stream.controls))
 
         for c_key in self.picamera_controls:
@@ -371,64 +369,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.properties_get[p_key] = self.picamera_cam[p_key].copy()
             p_key_full = self.picamera_cam[p_key][0]
             self.properties_get[p_key][0] = self.stream.camera_properties[p_key_full]
-
-        """
-        
-        CameraConfiguration({
-            'use_case': 'still', 
-            'buffer_count': 1, 
-            'transform': <libcamera.Transform 'identity'>, 
-            'display': None, 
-            'encode': None, 
-            'colour_space': <libcamera.ColorSpace 'sYCC'>, 
-            'controls': <Controls: {
-                'NoiseReductionMode': <NoiseReductionModeEnum.HighQuality: 2>, 
-                'FrameDurationLimits': (100, 1000000000)
-                }>, 
-            'main': {'size': (2592, 1944), 'format': 'BGR888', 'stride': None, 'framesize': None}, 
-            'lores': None, 
-            'raw': {'size': None, 'format': None, 'stride': None, 'framesize': None}, 
-            'queue': True, 
-            'sensor': {'output_size': None, 'bit_depth': None}})
-0
-        
-        
-        if key == "init":
-            self.properties_get = picamera_controls.copy()
-            image_properties = {}
-        else:
-            image_properties = self.get_properties_image()
-
-        for picam_key in picamera_properties:
-            picam_key_full = picamera_properties[picam_key][0]
-
-            if key == "init":
-                try:
-                    min_exp, max_exp, default_exp = self.stream.camera_controls[picam_key_full]
-                    self.properties_get[picam_key][0] = default_exp
-                    if self.properties_get[picam_key][2] == -1:
-                        self.properties_get[picam_key][2] = min_exp
-                    if self.properties_get[picam_key][3] == -1:
-                        self.properties_get[picam_key][3] = max_exp
-
-                except Exception as e:
-                    msg = "Could not get data for '" + picam_key_full + "': " + str(e)
-                    self.properties_get[picam_key][0] = -1
-                    self.properties_get[picam_key].append(msg)
-                    self.logging.warning(msg)
-
-            else:
-                if picam_key_full in image_properties:
-                    self.properties_get[picam_key][0] = image_properties[picam_key_full]
-                else:
-                    try:
-                        value = eval("self.stream.still_configuration." + picam_key_full)
-                        self.properties_get[picam_key][0] = value
-                    except Exception as e:
-                        self.logging.debug("Value not set yet, stays on default for '" + picam_key + "'. (" + str(e) + ")")
-"""
-        # !!! Assumption: start with default value, to be changed by configuration
-        #     -> if set the value is, what has been set?! until there is a way to request data
 
         if key in self.properties_get:
             return self.properties_get[key][0]
