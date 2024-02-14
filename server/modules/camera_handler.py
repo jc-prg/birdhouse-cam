@@ -318,34 +318,58 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
     def get_properties(self, key=""):
         """
-        get properties from camera
-        ---
-        "saturation": "Saturation", [0.0 .. 32.0]
-        "brightness": "Brightness", [-1.0 .. 1.0]
-        "temperature": "ColourTemperature", [integer]
-        "gain": "ColourGains", [0.0 .. 32.0]
-        "contrast": "Contrast", [0.0 .. 32.0]
-        "sharpness": "Sharpness", [0.0 .. 16.0]
-        "exposure": "ExposureTime",
-        "noise_reduction": "NoiseReductionMode" [Off, Fast, HighQuality]
-        ---
+        get properties from camera (camera_controls and image_properties)
+
+        Parameters:
+            key (str): available keys: saturation, brightness, contrast, gain, sharpness, temperature, exposure,
+                       noise_reduction, auto_wb; if not set return complete list of properties
+        Returns:
+            dict | float: complete list of properties in format [current_value, "rwm", min_value, max_value] or current value if key is set
         """
-        picamera_properties = {
+        picamera_controls = {
             "saturation":       ["Saturation",          "rwm", 0.0, 32.],
             "brightness":       ["Brightness",          "rwm", -1.0, 1.0],
             "contrast":         ["Contrast",            "rwm", 0.0, 32.0],
             "gain":             ["ColourGains",         "rw",  0.0, 32.0],
             "sharpness":        ["Sharpness",           "rw",  0.0, 16.0],
-            "temperature":      ["ColourTemperature",   "r",   -1, -1],
             "exposure":         ["ExposureTime",        "r",   -1, -1],
             "noise_reduction":  ["NoiseReductionMode",  "r",   -1, -1, ["Off", "Fast", "HighQuality"]],
-            "auto_wb":          ["AwbEnable",           "r",   -1, -1]
+            "auto_wb":          ["AwbEnable",           "r",   -1, -1],
+        }
+        picamera_image = {
+            "temperature":      ["ColourTemperature",   "r",   -1, -1],
+            "lux":              ["Lux",                 "r",   -1, -1]
         }
         properties_not_used = ["exposure", "auto_wb", "temperature", "noise_reduction"]
         properties_get_array = ["brightness", "saturation", "contrast", "gain", "sharpness"]
 
-        if key == "init":
-            self.properties_get = picamera_properties.copy()
+        for c_key in picamera_controls:
+            self.properties_get[c_key] = picamera_controls[c_key].copy()
+            c_key_full = picamera_controls[c_key][0]
+            try:
+                min_exp, max_exp, default_exp = self.stream.camera_controls[c_key_full]
+                self.properties_get[c_key][0] = default_exp
+                self.properties_get[c_key][2] = min_exp
+                self.properties_get[c_key][3] = max_exp
+            except Exception as e:
+                msg = "Could not get data for '" + c_key_full + "': " + str(e)
+                self.properties_get[c_key][0] = -1
+                self.properties_get[c_key].append(msg)
+                self.logging.warning(msg)
+            if c_key_full in self.configuration["controls"]:
+                self.properties_get[c_key][0] = self.configuration["controls"][c_key_full]
+
+        for i_key in picamera_image:
+            self.properties_get[i_key] = picamera_image[i_key].copy()
+            i_key_full = picamera_image[i_key][0]
+            image_properties = self.stream.capture_metadata()
+            if i_key_full in image_properties:
+                self.properties_get[i_key][0] = image_properties[i_key_full]
+            else:
+                self.properties_get[i_key][0] = -1
+
+        """if key == "init":
+            self.properties_get = picamera_controls.copy()
             image_properties = {}
         else:
             image_properties = self.get_properties_image()
@@ -377,11 +401,14 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                         self.properties_get[picam_key][0] = value
                     except Exception as e:
                         self.logging.debug("Value not set yet, stays on default for '" + picam_key + "'. (" + str(e) + ")")
-
+"""
         # !!! Assumption: start with default value, to be changed by configuration
         #     -> if set the value is, what has been set?! until there is a way to request data
 
-        return self.properties_get
+        if key == "":
+            return self.properties_get
+        else:
+            return self.properties_get[key][0]
 
     def get_properties_image(self):
         """
