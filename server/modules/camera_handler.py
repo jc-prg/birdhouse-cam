@@ -249,13 +249,13 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if "w" in self.picamera_controls[p_key][1]:
                 self.properties_set.append(p_key)
 
-        if key == "init":
-            if self.param["image"]["black_white"]:
-                self.param["image"]["saturation"] = 0
-            for c_key in self.param["image"]:
-                if c_key in self.properties_get and "w" in self.properties_get[c_key][1]:
-                    self.logging.info("... set " + c_key + "=" + self.param["image"][c_key])
-                    self.set_properties(c_key, self.param["image"][c_key])
+        if self.param["image"]["black_white"]:
+            self.param["image"]["saturation"] = 0
+
+        for c_key in self.param["image"]:
+            if c_key in self.properties_get and "w" in self.properties_get[c_key][1]:
+                self.logging.info("... set " + c_key + "=" + self.param["image"][c_key])
+                self.set_properties(c_key, self.param["image"][c_key])
 
     def set_properties(self, key, value=""):
         """
