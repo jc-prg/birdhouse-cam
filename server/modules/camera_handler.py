@@ -355,7 +355,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         get properties from camera (camera_controls, image_properties, and camera properties);
 
-        uses picamera2.camera_controls[..], picamera2.capture_metadata(), and picamera2.camera_properties[..]
+        uses picamera2.camera_controls[<full_key>], picamera2.still_configuration.<full_key>, picamera2.capture_metadata(), and picamera2.camera_properties[..]
 
         Parameters:
             key (str): available keys: saturation, brightness, contrast, gain, sharpness, temperature, exposure,
@@ -370,6 +370,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         properties_get_array = ["brightness", "saturation", "contrast", "gain", "sharpness"]
 """
 
+        self.logging.info(str(self.stream.still_configuration))
+
         for c_key in self.picamera_controls:
             self.properties_get[c_key] = self.picamera_controls[c_key].copy()
             c_key_full = self.picamera_controls[c_key][0]
@@ -383,13 +385,11 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.properties_get[c_key][0] = -1
                 self.properties_get[c_key].append(msg)
                 self.logging.warning(msg)
-
             try:
                 value = eval("self.stream.still_configuration." + c_key_full)
                 self.properties_get[c_key][0] = value
             except Exception as e:
                 self.logging.info("Value not set yet, stays on default for '" + c_key_full + "'. (" + str(e) + ")")
-
 
         for i_key in self.picamera_image:
             self.properties_get[i_key] = self.picamera_image[i_key].copy()
