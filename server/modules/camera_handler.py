@@ -196,6 +196,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             image = self.stream.switch_mode_and_capture_array(self.configuration, "main")
             if image is None or len(image) == 0:
                 raise Exception("Returned empty image.")
+            self.set_properties_init()
             return True
 
         except Exception as err:
