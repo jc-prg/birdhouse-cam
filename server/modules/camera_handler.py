@@ -113,7 +113,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.transform = None
         self.configuration = {}
         self.property_keys = None
-        self.properties_get = None
+        self.properties_get = {}
         self.properties_not_used = None
         self.properties_set = None
         self.connected = False
