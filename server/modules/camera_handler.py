@@ -254,7 +254,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         for c_key in self.param["image"]:
             if c_key in self.properties_get and "w" in self.properties_get[c_key][1]:
-                self.logging.info("... set " + c_key + "=" + self.param["image"][c_key])
+                self.logging.info("... set " + c_key + "=" + str(self.param["image"][c_key]))
                 self.set_properties(c_key, self.param["image"][c_key])
 
     def set_properties(self, key, value=""):
