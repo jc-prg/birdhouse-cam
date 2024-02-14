@@ -370,7 +370,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         properties_get_array = ["brightness", "saturation", "contrast", "gain", "sharpness"]
 """
 
-        configuration = self.stream.still_configuration
         for c_key in self.picamera_controls:
             self.properties_get[c_key] = self.picamera_controls[c_key].copy()
             c_key_full = self.picamera_controls[c_key][0]
@@ -384,8 +383,13 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.properties_get[c_key][0] = -1
                 self.properties_get[c_key].append(msg)
                 self.logging.warning(msg)
-            if c_key_full in configuration:
-                self.properties_get[c_key][0] = configuration[c_key_full]
+
+            try:
+                value = eval("self.stream.still_configuration." + c_key_full)
+                self.properties_get[c_key][0] = value
+            except Exception as e:
+                self.logging.info("Value not set yet, stays on default for '" + c_key_full + "'. (" + str(e) + ")")
+
 
         for i_key in self.picamera_image:
             self.properties_get[i_key] = self.picamera_image[i_key].copy()
