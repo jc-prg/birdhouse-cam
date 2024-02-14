@@ -405,10 +405,11 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         # !!! Assumption: start with default value, to be changed by configuration
         #     -> if set the value is, what has been set?! until there is a way to request data
 
-        if key == "":
-            return self.properties_get
-        else:
+        if key in self.properties_get:
             return self.properties_get[key][0]
+        else:
+            return self.properties_get
+
 
     def get_properties_image(self):
         """
