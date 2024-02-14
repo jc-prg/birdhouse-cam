@@ -177,8 +177,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             return False
         else:
             self.logging.info("- Connected.")
-            self.set_properties_init()
             self.get_properties()
+            self.set_properties_init()
 
             if self.first_connect:
                 self.logging.info("------------------")
