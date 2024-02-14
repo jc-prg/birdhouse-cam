@@ -178,7 +178,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         else:
             self.logging.info("- Connected.")
             self.get_properties()
-            self.set_properties(key="init")
+            self.set_properties_init()
 
             if self.first_connect:
                 self.logging.info("------------------")
@@ -240,6 +240,23 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                              "' by stream '" + stream + "': " + str(err))
             return
 
+    def set_properties_init(self):
+        """
+        set properties based on configuration file
+        """
+        self.properties_set = []
+        for p_key in self.picamera_controls:
+            if "w" in self.picamera_controls[p_key][1]:
+                self.properties_set.append(p_key)
+
+        if key == "init":
+            if self.param["image"]["black_white"]:
+                self.param["image"]["saturation"] = 0
+            for c_key in self.param["image"]:
+                if c_key in self.properties_get and "w" in self.properties_get[c_key][1]:
+                    self.logging.info("... set " + c_key + "=" + self.param["image"][c_key])
+                    self.set_properties(c_key, self.param["image"][c_key])
+
     def set_properties(self, key, value=""):
         """
         set properties / controls for picamera2
@@ -250,44 +267,34 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         Return:
             bool: status if set property
         """
-        if key == "init":
-            if self.param["image"]["black_white"]:
-                self.param["image"]["saturation"] = 0
-            for c_key in self.param["image"]:
-                if c_key in self.properties_get and "w" in self.properties_get[c_key][1]:
-                    self.set_properties(c_key, self.param["image"][c_key])
-            return True
+        if key in self.picamera_controls and "w" in self.picamera_controls[key][1]:
+            full_key = self.picamera_controls[key][0]
+            try:
+                self.stream.set_controls({full_key: value})
+                return True
+            except Exception as err:
+                self.raise_error("Could not set to value for '" + str(full_key) + "': " + str(err))
+                return False
+
+        elif key in self.picamera_controls:
+            full_key = self.picamera_controls[key][0]
+            self.raise_error("Could not set to value for '" + str(full_key) +
+                             "': property is classified as read only.")
+            return False
+
+        elif key in self.picamera_image:
+            full_key = self.picamera_image[key][0]
+            self.raise_error("Could not set to value for '" + str(full_key) + "': not implemented yet.")
+            return False
+
+        elif key in self.picamera_cam:
+            full_key = self.picamera_cam[key][0]
+            self.raise_error("Could not set to value for '" + str(full_key) + "': not implemented yet.")
+            return False
+
         else:
-            self.properties_set = []
-            if key in self.picamera_controls and "w" in self.picamera_controls[key][1]:
-                self.properties_set.append(key)
-                full_key = self.picamera_controls[key][0]
-                try:
-                    self.stream.set_controls({full_key: value})
-                    return True
-                except Exception as err:
-                    self.raise_error("Could not set to value for '" + str(full_key) + "': " + str(err))
-                    return False
-
-            elif key in self.picamera_controls:
-                full_key = self.picamera_controls[key][0]
-                self.raise_error("Could not set to value for '" + str(full_key) +
-                                 "': property is classified as read only.")
-                return False
-
-            elif key in self.picamera_image:
-                full_key = self.picamera_image[key][0]
-                self.raise_error("Could not set to value for '" + str(full_key) + "': not implemented yet.")
-                return False
-
-            elif key in self.picamera_cam:
-                full_key = self.picamera_cam[key][0]
-                self.raise_error("Could not set to value for '" + str(full_key) + "': not implemented yet.")
-                return False
-
-            else:
-                self.raise_error("Key '" + str(key) + "' is unknown!")
-                return False
+            self.raise_error("Key '" + str(key) + "' is unknown!")
+            return False
 
     def get_properties_available(self, keys="get"):
         """
