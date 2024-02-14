@@ -322,7 +322,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         Parameters:
             key (str): available keys: saturation, brightness, contrast, gain, sharpness, temperature, exposure,
-                       noise_reduction, auto_wb; if not set return complete list of properties
+                       auto_wb; if not set return complete list of properties
         Returns:
             dict | float: complete list of properties in format [current_value, "rwm", min_value, max_value] or current value if key is set
         """
@@ -333,7 +333,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             "gain":             ["ColourGains",         "rw",  0.0, 32.0],
             "sharpness":        ["Sharpness",           "rw",  0.0, 16.0],
             "exposure":         ["ExposureTime",        "r",   -1, -1],
-            "noise_reduction":  ["NoiseReductionMode",  "r",   -1, -1, ["Off", "Fast", "HighQuality"]],
             "auto_wb":          ["AwbEnable",           "r",   -1, -1],
         }
         picamera_image = {
