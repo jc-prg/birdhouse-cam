@@ -353,7 +353,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
     def get_properties(self, key=""):
         """
-        get properties from camera (camera_controls and image_properties)
+        get properties from camera (camera_controls, image_properties, and camera properties);
+
+        uses picamera2.camera_controls[..], picamera2.capture_metadata(), and picamera2.camera_properties[..]
 
         Parameters:
             key (str): available keys: saturation, brightness, contrast, gain, sharpness, temperature, exposure,
@@ -368,7 +370,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         properties_get_array = ["brightness", "saturation", "contrast", "gain", "sharpness"]
 """
 
-        self.configuration = self.stream.still_configuration
+        configuration = self.stream.still_configuration
         for c_key in self.picamera_controls:
             self.properties_get[c_key] = self.picamera_controls[c_key].copy()
             c_key_full = self.picamera_controls[c_key][0]
@@ -382,8 +384,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.properties_get[c_key][0] = -1
                 self.properties_get[c_key].append(msg)
                 self.logging.warning(msg)
-            if c_key_full in self.configuration["controls"]:
-                self.properties_get[c_key][0] = self.configuration["controls"][c_key_full]
+            if c_key_full in configuration:
+                self.properties_get[c_key][0] = configuration[c_key_full]
 
         for i_key in self.picamera_image:
             self.properties_get[i_key] = self.picamera_image[i_key].copy()
