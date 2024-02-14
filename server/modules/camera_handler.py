@@ -120,6 +120,27 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.available_devices = {}
         self.first_connect = True
 
+        self.picamera_controls = {
+            "saturation":       ["Saturation",          "rwm", 0.0, 32.],
+            "brightness":       ["Brightness",          "rwm", -1.0, 1.0],
+            "contrast":         ["Contrast",            "rwm", 0.0, 32.0],
+            "gain":             ["ColourGains",         "rw",  0.0, 32.0],
+            "sharpness":        ["Sharpness",           "rw",  0.0, 16.0],
+            "exposure":         ["ExposureTime",        "r",   -1, -1],
+            "auto_wb":          ["AwbEnable",           "r",   -1, -1],
+        }
+        self.picamera_image = {
+            "temperature":      ["ColourTemperature",   "r",   -1, -1],
+            "lux":              ["Lux",                 "r",   -1, -1]
+        }
+        self.picamera_cam = {
+            "camera_model":         ["Model", "r"],
+            "color_filter":         ["ColorFilterArrangement", "r"],
+            "pixel_size":           ["PixelArraySize", "r"],
+            "rotation":             ["Rotation", "r"],
+            "sensor_sensitivity":   ["SensorSensitivity", "r"]
+        }
+
         self.logging.info("Starting PiCamera2 support for '"+self.id+":"+source+"' ...")
 
     def connect(self):
@@ -219,27 +240,41 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
     def set_properties(self, key, value=""):
         """
-        set configuration for picamera2 using "Picamera2.create_still_configuration"
-        """
-        self.properties_set = []
-        if key == "init":
-            for prop_key in self.properties_get:
-                if "w" in self.properties_get[prop_key][1]:
-                    self.properties_set.append(prop_key)
-            return
+        set properties / controls for picamera2
 
-        if key in self.properties_get:
-            #picam_key = self.properties_get[key][0]
-            picam_key = key
+        Parameters:
+            key (str): internal key
+            value (str): value to be set
+        Return:
+            bool: status if set property
+        """
+        if key in self.picamera_controls and "w" in self.picamera_controls[key][1]:
+            full_key = self.picamera_controls[key][0]
             try:
-                self.stream.set_controls({picam_key: value})
+                self.stream.set_controls({full_key: value})
                 return True
             except Exception as err:
-                self.raise_error("Could not set to value for '" + str(picam_key) + "': " + str(err) +
-                                 " (" + str(key) + ": " + str(self.properties_get[key]) + ")")
+                self.raise_error("Could not set to value for '" + str(full_key) + "': " + str(err))
                 return False
+
+        elif key in self.picamera_controls:
+            full_key = self.picamera_controls[key][0]
+            self.raise_error("Could not set to value for '" + str(full_key) + "': property is classified as read only.")
+            return False
+
+        elif key in self.picamera_image:
+            full_key = self.picamera_image[key][0]
+            self.raise_error("Could not set to value for '" + str(full_key) + "': not implemented yet.")
+            return False
+
+        elif key in self.picamera_cam:
+            full_key = self.picamera_cam[key][0]
+            self.raise_error("Could not set to value for '" + str(full_key) + "': not implemented yet.")
+            return False
+
         else:
             self.raise_error("Key '" + str(key) + "' is unknown!")
+            return False
 
     def get_properties_available(self, keys="get"):
         """
@@ -324,27 +359,19 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             key (str): available keys: saturation, brightness, contrast, gain, sharpness, temperature, exposure,
                        auto_wb; if not set return complete list of properties
         Returns:
-            dict | float: complete list of properties in format [current_value, "rwm", min_value, max_value] or current value if key is set
+            dict | float: complete list of properties in format [current_value, "rwm", min_value, max_value]
+                          or current value if key is set
         """
-        picamera_controls = {
-            "saturation":       ["Saturation",          "rwm", 0.0, 32.],
-            "brightness":       ["Brightness",          "rwm", -1.0, 1.0],
-            "contrast":         ["Contrast",            "rwm", 0.0, 32.0],
-            "gain":             ["ColourGains",         "rw",  0.0, 32.0],
-            "sharpness":        ["Sharpness",           "rw",  0.0, 16.0],
-            "exposure":         ["ExposureTime",        "r",   -1, -1],
-            "auto_wb":          ["AwbEnable",           "r",   -1, -1],
-        }
-        picamera_image = {
-            "temperature":      ["ColourTemperature",   "r",   -1, -1],
-            "lux":              ["Lux",                 "r",   -1, -1]
-        }
+
+        """     
         properties_not_used = ["exposure", "auto_wb", "temperature", "noise_reduction"]
         properties_get_array = ["brightness", "saturation", "contrast", "gain", "sharpness"]
+"""
 
-        for c_key in picamera_controls:
-            self.properties_get[c_key] = picamera_controls[c_key].copy()
-            c_key_full = picamera_controls[c_key][0]
+        self.configuration = self.stream.still_configuration
+        for c_key in self.picamera_controls:
+            self.properties_get[c_key] = self.picamera_controls[c_key].copy()
+            c_key_full = self.picamera_controls[c_key][0]
             try:
                 min_exp, max_exp, default_exp = self.stream.camera_controls[c_key_full]
                 self.properties_get[c_key][0] = default_exp
@@ -358,14 +385,19 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if c_key_full in self.configuration["controls"]:
                 self.properties_get[c_key][0] = self.configuration["controls"][c_key_full]
 
-        for i_key in picamera_image:
-            self.properties_get[i_key] = picamera_image[i_key].copy()
-            i_key_full = picamera_image[i_key][0]
+        for i_key in self.picamera_image:
+            self.properties_get[i_key] = self.picamera_image[i_key].copy()
+            i_key_full = self.picamera_image[i_key][0]
             image_properties = self.stream.capture_metadata()
             if i_key_full in image_properties:
                 self.properties_get[i_key][0] = image_properties[i_key_full]
             else:
                 self.properties_get[i_key][0] = -1
+
+        for p_key in self.picamera_cam:
+            self.properties_get[p_key] = self.picamera_cam[p_key].copy()
+            p_key_full = self.picamera_cam[p_key][0]
+            self.properties_get[p_key][0] = self.stream.camera_properties[p_key_full]
 
         """if key == "init":
             self.properties_get = picamera_controls.copy()
@@ -408,7 +440,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             return self.properties_get[key][0]
         else:
             return self.properties_get
-
 
     def get_properties_image(self):
         """
