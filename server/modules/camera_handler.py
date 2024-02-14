@@ -257,6 +257,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.logging.info("... set " + c_key + "=" + str(self.param["image"][c_key]))
                 self.set_properties(c_key, self.param["image"][c_key])
 
+        self.logging.info(str(self.stream.controls))
+
     def set_properties(self, key, value=""):
         """
         set properties / controls for picamera2
@@ -298,72 +300,21 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
     def get_properties_available(self, keys="get"):
         """
-        get properties from Picamera,
+        get available properties from Picamera2 using different methods; for more details see the full
+        documentation: https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf; not all available properties
+        are implemented.
 
-        picam2.set_controls({"ExposureTime": 10000, "AnalogueGain": 1.0})
-        print(picam.controls)
+        picamera2.capture_metadata() ... 'SensorTimestamp', 'ColourCorrectionMatrix', 'FocusFoM', 'ColourTemperature',
+        'ColourGains', 'AeLocked', 'Lux', 'FrameDuration', 'SensorBlackLevels', 'DigitalGain', 'AnalogueGain',
+        'ScalerCrop', 'ExposureTime'
 
-        metadata = picam2.capture_metadata()
-        {
-        'SensorTimestamp': 9784996188000,
-        'ColourCorrectionMatrix': (1.88217031955719, -0.26385337114334106, -0.6183169484138489, -0.6379863619804382,
-                                   2.1166977882385254, -0.47871148586273193, -0.13631515204906464, -0.9951226711273193,
-                                   2.1314477920532227),
-        'FocusFoM': 859,
-        'ColourTemperature': 2585,
-        'ColourGains': (1.0264559984207153, 2.126723289489746),
-        'AeLocked': False,
-        'Lux': 54.87057876586914,
-        'FrameDuration': 66773,
-        'SensorBlackLevels': (1024, 1024, 1024, 1024),
-        'DigitalGain': 1.000415325164795,
-        'AnalogueGain': 8.0,
-        'ScalerCrop': (16, 0, 2560, 1920),
-        'ExposureTime': 66638
-        }
+        picamera2.camera_properties{} ... 'Model', 'UnitCellSize', 'Location', 'Rotation', 'PixelArraySize',
+        'PixelArrayActiveAreas', 'ColorFilterArrangement', 'ScalerCropMaximum', 'SystemDevices', 'SensorSensitivity'
 
-        ----
-        sample output from 'self.stream.camera_properties'
-        {
-            'Model': 'ov5647',
-            'UnitCellSize': (1400, 1400),
-            'Location': 2,
-            'Rotation': 0,
-            'PixelArraySize': (2592, 1944),
-            'PixelArrayActiveAreas': [(16, 6, 2592, 1944)],
-            'ColorFilterArrangement': 2,
-            'ScalerCropMaximum': (16, 0, 2560, 1920),
-            'SystemDevices': (20754, 20741, 20743, 20744),
-            'SensorSensitivity': 1.0
-        }
-        picam2.camera_configuration()
-        picam2.sensor_modes example
-        [
-            {'bit_depth': 10, 'crop_limits': (696, 528, 2664, 1980), 'exposure_limits': (31, 66512892),
-            'format': SRGGB10_CSI2P, 'fps': 120.05, 'size': (1332, 990), 'unpacked': 'SRGGB10'},
-            {'bit_depth': 12, 'crop_limits': (0, 440, 4056, 2160), 'exposure_limits': (60, 127156999),
-            'format': SRGGB12_CSI2P, 'fps': 50.03, 'size': (2028, 1080), 'unpacked': 'SRGGB12'}, ...
-        ]
-        picam2.create_preview_configuration()
-        picam2.create_still_configuration()
-        picam2.create_video_configuration()
-        picam2.preview_configuration.main.size = (800, 600)
-        picam2.configure("preview")
-        configuration_object.enable_lores()
-        configuration_object.enable_raw()
+        picamera2.sensor_modes[] ... 'bit_depth', 'crop_limits', 'exposure_limits', 'format', 'fps', 'size','unpacked'
 
-        self.configuration = {
-            {"size": (808, 606)},
-            raw={'format': 'SRGGB12'},
-            sensor={'output_size': mode['size'], 'bit_depth': mode['bit_depth']},
-            lores={"size": (320, 240)},
-            encode="lores",
-            colour_space=ColorSpace.Sycc()
-        }
-        stream: 'main', 'raw', 'lores', 'video', ...
-
-        ----
-        return keys for all properties that are implemented at the moment
+        Returns:
+            list: keys for all properties that are implemented at the moment
         """
         if keys == "get":
             return list(self.properties_get.keys())
