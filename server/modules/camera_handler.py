@@ -124,13 +124,14 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             "saturation":       ["Saturation",          "rwm", 0.0, 32.],
             "brightness":       ["Brightness",          "rwm", -1.0, 1.0],
             "contrast":         ["Contrast",            "rwm", 0.0, 32.0],
-            "gain":             ["ColourGains",         "rw",  0.0, 32.0],
             "sharpness":        ["Sharpness",           "rw",  0.0, 16.0],
-            "exposure":         ["ExposureTime",        "r",   -1, -1],
             "auto_wb":          ["AwbEnable",           "r",   -1, -1],
         }
         self.picamera_image = {
             "temperature":      ["ColourTemperature",   "r",   -1, -1],
+            "exposure":         ["ExposureTime",        "r",   -1, -1],
+            "gain_digital":     ["DigitalGain",         "r",   0.0, 32.0],
+            "gain_analogue":    ["AnalogueGain",        "r",   0.0, 32.0],
             "lux":              ["Lux",                 "r",   -1, -1]
         }
         self.picamera_cam = {
@@ -180,10 +181,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.logging.info("------------------")
                 self.logging.info(" PiCamera2 initial config: " + str(self.configuration))
                 self.logging.info(" PiCamera2 GET: " + str(self.properties_get))
-                self.logging.info(" PiCamera2 SET: " + str(self.properties_set))
-                self.logging.info(" PiCamera2 IMG: " + str(self.get_properties_image()))
-                self.logging.info(" . Still Config: " + str(self.stream.still_configuration))
-                self.logging.info(" . Cam Controls: " + str(self.stream.camera_controls))
+                #self.logging.info(" PiCamera2 IMG: " + str(self.get_properties_image()))
+                #self.logging.info(" . Still Config: " + str(self.stream.still_configuration))
+                #self.logging.info(" . Cam Controls: " + str(self.stream.camera_controls))
                 self.logging.info("------------------")
 
             self.first_connect = False
@@ -365,14 +365,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                           or current value if key is set
         """
 
-        """     
-        properties_not_used = ["exposure", "auto_wb", "temperature", "noise_reduction"]
-        properties_get_array = ["brightness", "saturation", "contrast", "gain", "sharpness"]
-"""
-
-        self.stream.set_controls({"Saturation": 0})
-        self.logging.info(str(self.stream.still_configuration.controls))
-        self.logging.info(str(self.stream.controls))
+        self.logging.debug(str(self.stream.controls))
 
         for c_key in self.picamera_controls:
             self.properties_get[c_key] = self.picamera_controls[c_key].copy()
@@ -388,10 +381,10 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.properties_get[c_key].append(msg)
                 self.logging.warning(msg)
             try:
-                value = eval("self.stream.still_configuration.controls." + c_key_full)
+                value = eval("self.stream.controls." + c_key_full)
                 self.properties_get[c_key][0] = value
             except Exception as e:
-                self.logging.info("Value not set yet, stays on default for '" + c_key_full + "'. (" + str(e) + ")")
+                self.logging.debug("Value not set yet, stays on default for '" + c_key_full + "'. (" + str(e) + ")")
 
         for i_key in self.picamera_image:
             self.properties_get[i_key] = self.picamera_image[i_key].copy()
