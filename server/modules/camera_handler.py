@@ -254,10 +254,10 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         for c_key in self.param["image"]:
             if c_key in self.properties_get and "w" in self.properties_get[c_key][1]:
-                self.logging.info("... set " + c_key + "=" + str(self.param["image"][c_key]))
-                self.set_properties(c_key, self.param["image"][c_key])
+                result = self.set_properties(c_key, self.param["image"][c_key])
+                self.logging.info("... set " + c_key + "=" + str(self.param["image"][c_key]) + " - " + str(result))
 
-        self.logging.info(str(self.stream.controls))
+        self.logging.info("set_properties_init: " + str(self.stream.controls))
 
     def set_properties(self, key, value=""):
         """
@@ -336,7 +336,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                           or current value if key is set
         """
 
-        self.logging.debug(str(self.stream.controls))
+        self.logging.info("get_properties: " + str(self.stream.controls))
 
         for c_key in self.picamera_controls:
             self.properties_get[c_key] = self.picamera_controls[c_key].copy()
