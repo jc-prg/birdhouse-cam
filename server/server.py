@@ -1621,8 +1621,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         return
 
 
-on_exception_setting()
-sys.excepthook = on_exception
+#on_exception_setting()
+#sys.excepthook = on_exception
 
 
 if __name__ == "__main__":
