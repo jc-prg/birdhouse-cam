@@ -255,7 +255,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.param["image"]["saturation"] = 0
             for c_key in self.param["image"]:
                 if c_key in self.properties_get and "w" in self.properties_get[c_key][1]:
-                    self.set_properties(c_key, self.param["camera"][c_key])
+                    self.set_properties(c_key, self.param["image"][c_key])
             return True
         else:
             self.properties_set = []
