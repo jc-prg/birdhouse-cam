@@ -193,10 +193,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.connected = True
 
         try:
-            self.logging.info(str(self.stream.controls))
             image = self.stream.switch_mode_and_capture_array(self.configuration, "main")
             self.set_properties_init()
-            self.logging.info(str(self.stream.controls))
             if image is None or len(image) == 0:
                 raise Exception("Returned empty image.")
             return True
@@ -233,7 +231,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         read image from camera
         """
         try:
-            #raw = self.stream.switch_mode_and_capture_array(self.configuration, "main")
             raw = self.stream.capture_array("main")
             if raw is None or len(raw) == 0:
                 raise Exception("Returned empty image.")
@@ -259,10 +256,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         for c_key in self.param["image"]:
             if c_key in self.properties_get and "w" in self.properties_get[c_key][1]:
                 result = self.set_properties(c_key, self.param["image"][c_key], True)
-                self.logging.info("... set " + c_key + "=" + str(self.param["image"][c_key]) + " - " + str(result))
+                self.logging.debug("... set " + c_key + "=" + str(self.param["image"][c_key]) + " - " + str(result))
         self.stream.start()
-
-        self.logging.info("set_properties_init: " + str(self.stream.controls))
 
     def set_properties(self, key, value="", init=False):
         """
@@ -275,11 +270,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         Return:
             bool: status if set property
         """
-
         if key in self.picamera_controls and "w" in self.picamera_controls[key][1]:
             full_key = self.picamera_controls[key][0]
             try:
-                #self.stream.set_controls({full_key: value})
                 if not init:
                     self.stream.stop()
                 self.configuration["controls"][full_key] = value
@@ -348,8 +341,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             dict | float: complete list of properties in format [current_value, "rwm", min_value, max_value]
                           or current value if key is set
         """
-        self.logging.info("get_properties: " + str(self.stream.controls))
-
         for c_key in self.picamera_controls:
             self.properties_get[c_key] = self.picamera_controls[c_key].copy()
             c_key_full = self.picamera_controls[c_key][0]
@@ -366,12 +357,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
             if c_key_full in self.configuration["controls"]:
                 self.properties_get[c_key][0] = self.configuration["controls"][c_key_full]
-
-            #try:
-            #    value = eval("self.stream.controls." + c_key_full)
-            #    self.properties_get[c_key][0] = value
-            #except Exception as e:
-            #    self.logging.debug("Value not set yet, stays on default for '" + c_key_full + "'. (" + str(e) + ")")
 
         for i_key in self.picamera_image:
             self.properties_get[i_key] = self.picamera_image[i_key].copy()
