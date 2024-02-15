@@ -552,6 +552,9 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def connect(self):
         """
         connect with camera
+
+        Returns:
+            bool: connection status
         """
         self.reset_error()
         self.connected = False
@@ -598,6 +601,9 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def reconnect(self):
         """
         reconnect camera
+
+        Returns:
+            bool: connection status
         """
         self.disconnect()
         return self.connect()
@@ -618,6 +624,11 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def read(self, stream="not set"):
         """
         read image from camera
+
+        Parameters:
+            stream (str): stream name
+        Returns:
+            numpy.ndarray: raw image
         """
         try:
             ref, raw = self.stream.read()
@@ -635,7 +646,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def set_properties(self, key, value=""):
         """
         set camera parameter ...
-        -----------------------------
+
         0. CV_CAP_PROP_POS_MSEC Current position of the video file in milliseconds.
         1. CV_CAP_PROP_POS_FRAMES 0-based index of the frame to be decoded/captured next.
         2. CV_CAP_PROP_POS_AVI_RATIO Relative position of the video file
@@ -654,6 +665,10 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         15. CV_CAP_PROP_EXPOSURE Exposure (only for cameras). [-7..-1] ... tbc.
         16. CV_CAP_PROP_CONVERT_RGB Boolean flags indicating whether images should be converted to RGB.
         17. CV_CAP_PROP_WHITE_BALANCE Currently unsupported [4000..7000]
+
+        Parameters:
+            key (str): key
+            value (float): value
         """
         self.properties_set = ["saturation", "brightness", "contrast", "framerate", "exposure",
                                "hue", "auto_white_balance", "auto_exposure", "gamma", "gain"]
@@ -687,6 +702,11 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def get_properties_available(self, keys="get"):
         """
         return keys for all properties that are implemented at the moment
+
+        Parameters:
+            keys (str): get keys: 'get' or 'set'
+        Returns:
+            list: list of keys
         """
         if keys == "get":
             return list(self.properties_get.keys())
