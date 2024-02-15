@@ -8,6 +8,14 @@ from logging.handlers import RotatingFileHandler
 
 
 def get_env(var_name):
+    """
+    get value from .env-file if exists
+
+    Parameters:
+        var_name (str): key in .env file
+    Returns:
+        Any: value from .env file
+    """
     try:
         value = os.environ.get(var_name)
     except Exception as e:
@@ -114,6 +122,9 @@ def set_global_configuration():
 
 
 def set_error_images():
+    """
+    read error images from disk into vars
+    """
     global birdhouse_error_images_raw, birdhouse_error_images
     import cv2
     for key in birdhouse_error_images:
@@ -126,6 +137,9 @@ def set_error_images():
 
 
 def check_submodules():
+    """
+    check if required submodules from git are installed otherwise show error message and quit
+    """
     global birdhouse_git_submodules, birdhouse_git_submodules_installed
 
     for key in birdhouse_git_submodules:
@@ -169,6 +183,9 @@ def set_log_directory():
 
 
 def set_loglevel():
+    """
+    set log level per module or class
+    """
     global birdhouse_loglevel_default, birdhouse_loglevel_modules_all, birdhouse_loglevel_module, \
         birdhouse_loglevel_modules_error, birdhouse_loglevel_modules_warning, birdhouse_loglevel_modules_info, \
         birdhouse_loglevel_modules_debug
@@ -191,6 +208,9 @@ def set_loglevel():
 def set_logging(name):
     """
     set logger and ensure it exists only once
+
+    Parameters:
+        name (str): logger name
     """
     global logger_exists, logger_list, loggers, birdhouse_loglevel_module
 
@@ -244,6 +264,9 @@ def set_logging(name):
 def set_server_logging(system_arguments):
     """
     set function for global logging
+
+    Parameters:
+        system_arguments (str): depending on system arguments and settings in .env file set if logging into file
     """
     global srv_logging, ch_logging, birdhouse_log_as_file, birdhouse_env, view_logging
 
