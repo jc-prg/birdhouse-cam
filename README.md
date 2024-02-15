@@ -93,7 +93,7 @@ Here are some options. Calculate with a little bit more space in the height for 
 ## Technology
 
 * IT Hardware
-  * Raspberry Pi 3B+, Raspberry Pi 4 (recommended)
+  * Raspberry Pi 3B+, Raspberry Pi 4 (recommended for two cameras and/or object detection)
   * Micro SD with 64 GByte
   * USB camera for outside view (and maybe inside view)
   * _optional:_ PiCamera with IR for the inside view (wide-angle, e.g., 110°)
