@@ -8,62 +8,109 @@ from logging.handlers import RotatingFileHandler
 
 
 def get_env(var_name):
-    return os.environ.get(var_name)
+    try:
+        value = os.environ.get(var_name)
+    except Exception as e:
+        value = None
+    return value
 
 
 def set_global_configuration():
     """
     read global vars from .env file
     """
-    global birdhouse_env
+    global birdhouse_env, birdhouse_loglevel_modules_debug, birdhouse_loglevel_modules_info, \
+        birdhouse_loglevel_modules_error, birdhouse_loglevel_modules_warning, birdhouse_loglevel_modules_all
+
     path = os.path.join(os.path.dirname(__file__), "../../.env")
     load_dotenv(path)
-    try:
-        birdhouse_env_keys = {
-            "database_type": "DATABASE_TYPE",
-            "database_cleanup": "DATABASE_DAILY_CLEANUP",
-            "rpi_active": "RPI_ACTIVE",
-            "rpi_64bit": "RPI_64BIT",
-            "couchdb_server": "COUCHDB_SERVER",
-            "couchdb_user": "COUCHDB_USER",
-            "couchdb_password": "COUCHDB_PASSWORD",
-            "couchdb_port": "COUCHDB_PORT",
-            "http_server": "BIRDHOUSE_HTTP_SERVER",
-            "port_http": "BIRDHOUSE_HTTP_PORT",
-            "port_api": "BIRDHOUSE_API_PORT",
-            "port_video": "BIRDHOUSE_VIDEO_PORT",
-            "server_audio": "BIRDHOUSE_AUDIO_SERVER",
-            "port_audio": "BIRDHOUSE_AUDIO_PORT",
-            "dir_project": "BIRDHOUSE_DIR_PROJECT",
-            "dir_logging": "BIRDHOUSE_DIR_LOGGING",
-            "log_to_file": "BIRDHOUSE_LOG2FILE",
-            "admin_ip4_deny": "ADMIN_IP4_DENY",
-            "admin_ip4_allow": "ADMIN_IP4_ALLOW",
-            "admin_password": "ADMIN_PASSWORD",
-            "admin_login": "ADMIN_LOGIN",
-            "detection_active": "OBJECT_DETECTION",
-            "test_instance": "BIRDHOUSE_INSTANCE",
-            "which_instance": "BIRDHOUSE_INSTANCE",
-            "installation_type": "BIRDHOUSE_INSTALLATION_TYPE",
-            "test_video_devices": "BIRDHOUSE_VIDEO_DEVICE_TEST"
-        }
+    birdhouse_env_keys = {
+        "admin_ip4_deny": "ADMIN_IP4_DENY",
+        "admin_ip4_allow": "ADMIN_IP4_ALLOW",
+        "admin_password": "ADMIN_PASSWORD",
+        "admin_login": "ADMIN_LOGIN",
+        "couchdb_server": "COUCHDB_SERVER",
+        "couchdb_user": "COUCHDB_USER",
+        "couchdb_password": "COUCHDB_PASSWORD",
+        "couchdb_port": "COUCHDB_PORT",
+        "database_type": "DATABASE_TYPE",
+        "database_cleanup": "DATABASE_DAILY_CLEANUP",
+        "detection_active": "OBJECT_DETECTION",
+        "dir_project": "BIRDHOUSE_DIR_PROJECT",
+        "dir_logging": "BIRDHOUSE_DIR_LOGGING",
+        "http_server": "BIRDHOUSE_HTTP_SERVER",
+        "installation_type": "BIRDHOUSE_INSTALLATION_TYPE",
+        "log_level": "BIRDHOUSE_LOG_LEVEL",
+        "log_level_debug": "BIRDHOUSE_LOG_DEBUG",
+        "log_level_info": "BIRDHOUSE_LOG_INFO",
+        "log_level_warning": "BIRDHOUSE_LOG_WARNING",
+        "log_level_error": "BIRDHOUSE_LOG_ERROR",
+        "log_to_file": "BIRDHOUSE_LOG2FILE",
+        "port_http": "BIRDHOUSE_HTTP_PORT",
+        "port_api": "BIRDHOUSE_API_PORT",
+        "port_audio": "BIRDHOUSE_AUDIO_PORT",
+        "port_video": "BIRDHOUSE_VIDEO_PORT",
+        "rpi_active": "RPI_ACTIVE",
+        "rpi_64bit": "RPI_64BIT",
+        "server_audio": "BIRDHOUSE_AUDIO_SERVER",
+        "test_instance": "BIRDHOUSE_INSTANCE",
+        "test_video_devices": "BIRDHOUSE_VIDEO_DEVICE_TEST",
+        "which_instance": "BIRDHOUSE_INSTANCE",
+    }
 
-        birdhouse_env = {}
-        for key in birdhouse_env_keys:
-            birdhouse_env[key] = get_env(birdhouse_env_keys[key])
-            if birdhouse_env[key] is None:
-                raise ValueError('Value in .env not found: ' + key)
+    birdhouse_env = {}
+    for key in birdhouse_env_keys:
+        birdhouse_env[key] = get_env(birdhouse_env_keys[key])
+        if birdhouse_env[key] is None:
+            print('Value in .env not found: ' + str(birdhouse_env_keys[key]))
 
-        for key in ["database_cleanup", "rpi_active", "rpi_64bit", "detection_active", "log_to_file",
-                    "test_video_devices"]:
+    for key in ["database_cleanup", "rpi_active", "rpi_64bit", "detection_active", "log_to_file",
+                "test_video_devices"]:
+        if birdhouse_env[key] is not None:
             birdhouse_env[key] = str(birdhouse_env[key]).lower() in ("true", "1", "yes", "on")
 
-        birdhouse_env["test_instance"] = str(birdhouse_env["test_instance"].upper() == "TEST").lower()
+    birdhouse_env["test_instance"] = str(birdhouse_env["test_instance"].upper() == "TEST").lower()
+
+    try:
+        for key in ["log_level"]:
+            if birdhouse_env[key].upper() in ["INFO", "DEBUG", "WARNING", "ERROR"]:
+                try:
+                    birdhouse_env[key] = eval("logging." + str(birdhouse_env[key]).upper())
+                except Exception as e:
+                    log_level = birdhouse_env[key]
+                    birdhouse_env[key] = None
+                    raise ValueError("Couldn't set log level logging." + str(log_level) + ": " + str(e))
+            else:
+                birdhouse_env[key] = None
 
     except Exception as e:
-        logging.error("Error reading configuration defined in the file '.env': " + str(e))
-        logging.error("Check or rebuild your configuration file based on the file 'sample.env'.")
+        print("Error reading configuration defined in the file '.env': " + str(e))
+        print("Check or rebuild your configuration file based on the file 'sample.env'.")
         os._exit(os.EX_CONFIG)
+
+    for key in ["log_level_debug", "log_level_info", "log_level_warning", "log_level_error"]:
+        try:
+            level = ""
+            if birdhouse_env[key] is not None and birdhouse_env[key] != "":
+                level = key.split("_")[2]
+                modules = birdhouse_env[key].split(",")
+                if level == "debug":
+                    birdhouse_loglevel_modules_debug = []
+                if level == "info":
+                    birdhouse_loglevel_modules_info = []
+                if level == "warning":
+                    birdhouse_loglevel_modules_warning = []
+                if level == "error":
+                    birdhouse_loglevel_modules_error = []
+
+                for module in modules:
+                    if module in birdhouse_loglevel_modules_all:
+                        eval("birdhouse_loglevel_modules_" + level + ".append('" + module + "')")
+                if level != "":
+                    print(str(eval("birdhouse_loglevel_modules_" + level)))
+
+        except Exception as e:
+            print("Error reading list of log levels ("+key+"|"+level+"|"+str(birdhouse_env[key])+"): " + str(e))
 
 
 def set_error_images():
@@ -126,6 +173,9 @@ def set_loglevel():
         birdhouse_loglevel_modules_error, birdhouse_loglevel_modules_warning, birdhouse_loglevel_modules_info, \
         birdhouse_loglevel_modules_debug
 
+    if birdhouse_env["log_level"] is not None:
+        birdhouse_loglevel_default = birdhouse_env["log_level"]
+
     for module in birdhouse_loglevel_modules_all:
         birdhouse_loglevel_module[module] = birdhouse_loglevel_default
     for module in birdhouse_loglevel_modules_info:
@@ -173,7 +223,7 @@ def set_logging(name):
             #    3) + '| %(levelname)-8s '+name.ljust(10)+' | %(message)s', # + "\n" + str(logger_list),
             #                               datefmt='%m/%d %H:%M:%S')
 
-            log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s '+name.ljust(10)+' | %(message)s',
+            log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s ' + name.ljust(10) + ' | %(message)s',
                                            datefmt='%m/%d %H:%M:%S')
             handler = RotatingFileHandler(filename=birdhouse_log_filename, mode='a',
                                           maxBytes=int(2.5 * 1024 * 1024),
@@ -202,7 +252,7 @@ def set_server_logging(system_arguments):
         print('-------------------------------------------')
         print('Starting ...')
         print('-------------------------------------------')
-        print("Using logfile "+birdhouse_log_filename+" ...")
+        print("Using logfile " + birdhouse_log_filename + " ...")
         birdhouse_log_as_file = True
 
 
@@ -242,6 +292,29 @@ birdhouse_git_submodules = {
     "jc-prg/app-framework": "app/framework"
 }
 
+
+# ------------------------------------
+# logging default settings
+# ------------------------------------
+birdhouse_loglevel_default = logging.INFO
+birdhouse_loglevel_module = {}
+birdhouse_loglevel_modules_all = [
+    'root', 'backup', 'bu-dwnld', 'server', 'srv-info', 'srv-health',
+    'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object', 'cam-stream',
+    'cam-handl', 'cam-info',
+    'config', 'config-Q',
+    'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
+    'video', 'video-srv', "img-eval",
+    'views', 'view-head', 'view-chart', 'view-fav', 'view-arch', 'view-obj',
+    'weather', 'weather-py', 'weather-om']
+
+# add modules to the following lists to change their log_level
+birdhouse_loglevel_modules_info = ["server"]
+birdhouse_loglevel_modules_debug = []
+birdhouse_loglevel_modules_warning = []
+birdhouse_loglevel_modules_error = []
+
+
 # ------------------------------------
 # global configuration
 # ------------------------------------
@@ -253,7 +326,6 @@ birdhouse_cache = True
 birdhouse_cache_for_archive = False
 
 set_global_configuration()
-
 
 # ------------------------------------
 # database configuration
@@ -344,7 +416,7 @@ birdhouse_dir_to_database = {
 }
 
 # ------------------------------------
-# logging
+# set logging
 # ------------------------------------
 logger_list = []
 loggers = {}
@@ -355,24 +427,6 @@ birdhouse_log_directory = ""
 birdhouse_log_filename = ""
 birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
                                          datefmt='%m/%d %H:%M:%S')
-
-birdhouse_loglevel_default = logging.INFO
-birdhouse_loglevel_module = {}
-birdhouse_loglevel_modules_all = [
-    'root', 'backup', 'bu-dwnld', 'server', 'srv-info', 'srv-health',
-    'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object', 'cam-stream',
-    'cam-handl', 'cam-info',
-    'config', 'config-Q',
-    'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
-    'video', 'video-srv', "img-eval",
-    'views', 'view-head', 'view-chart', 'view-fav', 'view-arch', 'view-obj',
-    'weather', 'weather-py', 'weather-om']
-
-# add modules to the following lists to change their log_level
-birdhouse_loglevel_modules_info = ["server"]
-birdhouse_loglevel_modules_debug = []
-birdhouse_loglevel_modules_warning = []
-birdhouse_loglevel_modules_error = []
 
 srv_logging = None
 ch_logging = None
