@@ -165,8 +165,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.configuration = self.stream.create_still_configuration()
                 self.stream.configure(self.configuration)
 
-            self.get_properties()
-            self.set_properties_init()
             self.stream.start()
             time.sleep(0.5)
 
@@ -180,6 +178,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         else:
             self.logging.info("- Connected.")
 
+            self.get_properties()
+            self.set_properties_init()
             if self.first_connect:
                 self.logging.info("------------------")
                 self.logging.info(" PiCamera2 initial config: " + str(self.configuration))
@@ -446,6 +446,10 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             dict: camera information: 'dev', 'info', 'image', 'shape'
         """
         camera_info = {"dev": source, "info": name, "image": False, "shape": []}
+        if birdhouse_env["test_video_devices"] is not None and not birdhouse_env["test_video_devices"]:
+            camera_info["image"] = True
+            return camera_info
+
         if source == "/dev/picam" and birdhouse_env["rpi_64bit"]:
             try:
                 from picamera2 import Picamera2
@@ -775,6 +779,10 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         * name   = description for the camera
         """
         camera_info = {"dev": source, "info": name, "image": False, "shape": []}
+        if birdhouse_env["test_video_devices"] is not None and not birdhouse_env["test_video_devices"]:
+            camera_info["image"] = True
+            return camera_info
+
         if source != "/dev/picam":
             try:
                 camera = cv2.VideoCapture(source, cv2.CAP_V4L)

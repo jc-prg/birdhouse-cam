@@ -44,7 +44,8 @@ def set_global_configuration():
             "detection_active": "OBJECT_DETECTION",
             "test_instance": "BIRDHOUSE_INSTANCE",
             "which_instance": "BIRDHOUSE_INSTANCE",
-            "installation_type": "BIRDHOUSE_INSTALLATION_TYPE"
+            "installation_type": "BIRDHOUSE_INSTALLATION_TYPE",
+            "test_video_devices": "BIRDHOUSE_VIDEO_DEVICE_TEST"
         }
 
         birdhouse_env = {}
@@ -53,7 +54,8 @@ def set_global_configuration():
             if birdhouse_env[key] is None:
                 raise ValueError('Value in .env not found: ' + key)
 
-        for key in ["database_cleanup", "rpi_active", "rpi_64bit", "detection_active", "log_to_file"]:
+        for key in ["database_cleanup", "rpi_active", "rpi_64bit", "detection_active", "log_to_file",
+                    "test_video_devices"]:
             birdhouse_env[key] = str(birdhouse_env[key]).lower() in ("true", "1", "yes", "on")
 
         birdhouse_env["test_instance"] = str(birdhouse_env["test_instance"].upper() == "TEST").lower()
