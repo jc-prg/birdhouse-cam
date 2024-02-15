@@ -121,10 +121,10 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.first_connect = True
 
         self.picamera_controls = {
-            "saturation":       ["Saturation",          "rwm", 0.0, 32.],
-            "brightness":       ["Brightness",          "rwm", -1.0, 1.0],
-            "contrast":         ["Contrast",            "rwm", 0.0, 32.0],
-            "sharpness":        ["Sharpness",           "rw",  0.0, 16.0],
+            "saturation":       ["Saturation",          "rwm", 0.0, 32.0, "float"],
+            "brightness":       ["Brightness",          "rwm", -1.0, 1.0, "float"],
+            "contrast":         ["Contrast",            "rwm", 0.0, 32.0, "float"],
+            "sharpness":        ["Sharpness",           "rw",  0.0, 16.0, "float"],
             "auto_wb":          ["AwbEnable",           "r",   -1, -1],
         }
         self.picamera_image = {

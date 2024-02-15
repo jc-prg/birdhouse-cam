@@ -10,6 +10,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
     var data   = "";
     var html   = "";
     var style  = "";
+    var step   = "1";
 
     if (fields.length == 1) { data = settings[fields[0]]; }
     else if (fields.length == 2) { data = settings[fields[0]][fields[1]]; }
@@ -87,12 +88,15 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         }
     else if (type == "range") {
         range = options.split(":");
+        if (options.indexOf(".") > 0)                       { step = "0.1"; }
+        else if (range.length > 2 && range[2] == "float")   { step = "0.1"; }
+
         style = "width:100px";
         if (range[0] == 0 && range[1] == 1) { style = "width:40px;"; }
         on_set    = "document.getElementById(\""+id+"\").value = this.value;";
         on_value  = "document.getElementById(\""+id+"_range\").value = this.value;";
         html += "<div class='bh-slidecontainer' style='float:left;width:100px;height:auto;'>";
-        html += "<input id='"+id+"_range' class='bh-slider' type='range' name='' min='"+range[0]+"' max='"+range[1]+"' style='"+style+"' onchange='"+on_set+on_change+"'>";
+        html += "<input id='"+id+"_range' class='bh-slider' type='range' name='' min='"+range[0]+"' max='"+range[1]+"' step='"+step+"' style='"+style+"' onchange='"+on_set+on_change+"'>";
         html += "</div><div style='float:left;margin-left:12px;'>";
         html += "<input id='"+id+"' class='bh-slider-value' style='width:30px;' onchange='"+on_value+"'>";
         html += "</div>";
