@@ -75,6 +75,7 @@ if (empty($stored_addresses)) {
     foreach ($stored_addresses as $birdhouse_identifier => $ipv6_address) {
         echo '<li style="color:#EEEEEE">
             Click here: <a href="http://[' . $ipv6_address . ']:8000" style="color:yellow">Birdhouse ' . $birdhouse_identifier . '</a>.<br/>&nbsp;
+            <img src="http://[' . $ipv6_address . ']:8007/lowres/stream.mjpg?cam1?' . $birdhouse_identifier . '?' . $birdhouse_identifier . '"  style="border:1px solid white;margin:8px;"/><br/>&nbsp;<br/>&nbsp;
         </li>';
     }
     echo "</ol></p>";
