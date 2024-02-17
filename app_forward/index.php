@@ -44,7 +44,13 @@ if (empty($stored_addresses)) {
     echo '<!DOCTYPE html>
     <html>
     <head>
-        <!-- Add your head content here -->
+        <meta name="apple-mobile-web-app-capable" content="yes"></meta>
+        <meta name="apple-mobile-web-app-status-bar-style" content="black"></meta>
+        <META name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.3, maximum-scale=1.0"></META>
+
+        <LINK rel=apple-touch-icon             href="favicon.png"></LINK>
+        <LINK rel=apple-touch-icon-precomposed href="favicon.png"></LINK>
+        <title>jc://birdhouse/</title>
     </head>
     <body style="background:#111111">
         <center>
@@ -61,7 +67,13 @@ if (empty($stored_addresses)) {
     echo '<!DOCTYPE html>
     <html>
     <head>
-        <!-- Add your head content here -->
+        <meta name="apple-mobile-web-app-capable" content="yes"></meta>
+        <meta name="apple-mobile-web-app-status-bar-style" content="black"></meta>
+        <META name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.3, maximum-scale=1.0"></META>
+
+        <LINK rel=apple-touch-icon             href="favicon.png"></LINK>
+        <LINK rel=apple-touch-icon-precomposed href="favicon.png"></LINK>
+        <title>jc://birdhouse/</title>
     </head>
     <body style="background:#111111">
         <center>
@@ -71,14 +83,14 @@ if (empty($stored_addresses)) {
     // Loop through each entry in the data and display links
     echo '<p style="color:#EEEEEE">
         <img src="bird.gif" style="width:250px;" /><br/>
-        <br/>&nbsp;<ol style="color:#EEEEEE">';
+        <br/>&nbsp;<div>';
     foreach ($stored_addresses as $birdhouse_identifier => $ipv6_address) {
-        echo '<li style="color:#EEEEEE">
-            Click here: <a href="http://[' . $ipv6_address . ']:8000" style="color:yellow">Birdhouse ' . $birdhouse_identifier . '</a>.<br/>&nbsp;
-            <img src="http://[' . $ipv6_address . ']:8007/lowres/stream.mjpg?cam1?' . $birdhouse_identifier . '?' . $birdhouse_identifier . '"  style="border:1px solid white;margin:8px;"/><br/>&nbsp;<br/>&nbsp;
-        </li>';
+        echo '<div style="float:left;color:#EEEEEE;text-align:center;width:50%;"><center>
+            <a href="http://[' . $ipv6_address . ']:8000" style="color:yellow">Birdhouse ' . $birdhouse_identifier . '</a><br/>
+            <img src="http://[' . $ipv6_address . ']:8007/lowres/stream.mjpg?cam1?' . $birdhouse_identifier . '?' . $birdhouse_identifier . '"  style="border:1px solid white;margin:8px;width:40vw;max-width:200px;"/><br/>&nbsp;<br/>&nbsp;
+        </center></div>';
     }
-    echo "</ol></p>";
+    echo "</div></p>";
 
     echo '</center>
     </body>
