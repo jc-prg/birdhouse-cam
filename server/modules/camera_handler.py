@@ -374,7 +374,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         for p_key in self.picamera_cam:
             self.properties_get[p_key] = self.picamera_cam[p_key].copy()
             p_key_full = self.picamera_cam[p_key][0]
-            self.properties_get[p_key][0] = self.stream.camera_properties[p_key_full]
+            if p_key_full in self.stream.camera_properties:
+                self.properties_get[p_key][0] = self.stream.camera_properties[p_key_full]
 
         if key in self.properties_get:
             return self.properties_get[key][0]
