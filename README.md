@@ -329,7 +329,21 @@ Therefor it's required to enable access to the following ports (if not changed d
 * **Videostream**: 8008
 * **Audiostream**: 8009
 
-See a sample configuration (e.g. to forward http://birdhouse.your.domain:443 to http://your-server-ip:8000) here: [sample.nginx.conf](sample.nginx.conf). Ensure, that all used ports are publicly shared via your router.
+See a sample configuration (e.g. to forward http://birdhouse.your.domain:443 to http://your-server-ip:8000) 
+here: [sample.nginx.conf](sample.nginx.conf). Ensure, that all used ports are publicly shared via your router.
+
+#### External access via IPv6 if your internet provider doesn't offer NAT
+
+If your provider doesn't offer Network Address Translation (NAT) another option is to get access via the IPv6 address
+of your birdhouse server. Install the PHP script in the folder [/app_forward](/app_forward) on an external webserver
+and add the following command to your crontab:
+
+```
+@reboot    /usr/bin/python3 /projects/local/birdhouse-cam/app_forward/request.py https://<your-external-server>/birdhouse/index.php
+```
+
+Open ```https://<your-external-server>/birdhouse/index.php``` in your browser to get an easy link to your birdhouse
+using its IPv6 address.
 
 ## Train bird detection
 
