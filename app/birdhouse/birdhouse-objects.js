@@ -101,18 +101,37 @@ function birdhouse_OBJECTS(title, data) {
     }
 
 /*
-* open all or selected label group in birds / objects view
+* open all or selected label group in birds / objects view or the today_complete view
 *
 * @param (string) label: object class name / label of the group(s) to be opened
+* @param (boolean) default_groups: use default group names (saved in <div id='group_list'>)
+* @param (string) active_page: active page, which is part of the group names but not in the 'group_list'
 */
-function birdhouse_OBJECTS_open(label="all") {
+function birdhouse_OBJECTS_open(label="all", default_groups=false, active_page) {
 
-    var all_labels = document.getElementById("label_key_list").innerHTML.split(",");
-    for (var i=0;i<all_labels.length;i++) {
-        if (label == "all" )  { birdhouse_groupToggle("label_"+all_labels[i], true); }
-        else                  { birdhouse_groupToggle("label_"+all_labels[i], false); }
-    }
-    if (label != "all")       { birdhouse_groupToggle("label_"+label, true); }
+    if (!default_groups) {
+        var all_labels = document.getElementById("label_key_list").innerHTML.split(",");
+        for (var i=0;i<all_labels.length;i++) {
+            if (label == "all" )  { birdhouse_groupToggle("label_"+all_labels[i], true); }
+            else                  { birdhouse_groupToggle("label_"+all_labels[i], false); }
+            }
+        if (label != "all")       { birdhouse_groupToggle("label_"+label, true); }
+        }
+    else {
+        var groups = getTextById("group_list").split(" ");
+        for (var i=0;i<groups.length;i++) {
+            if (groups[i] != "") {
+                var labels = getTextById("group_labels_"+active_page+"_"+groups[i]);
+                console.error(groups[i]);
+                console.error("group_labels_"+active_page+"_"+groups[i]);
+                console.error("-group_"+active_page+"_"+groups[i]+"-");
+                console.error(labels+"|"+label);
+                if (label == "all" )                        { birdhouse_groupToggle(active_page+"_"+groups[i], true); }
+                else if (labels.indexOf(label) >= 0)        { birdhouse_groupToggle(active_page+"_"+groups[i], true); }
+                else                                        { birdhouse_groupToggle(active_page+"_"+groups[i], false); }
+                }
+            }
+        }
 }
 
 /*
