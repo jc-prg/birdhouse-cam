@@ -3,6 +3,7 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+$timestamp = time();
 
 // File to store the IPv6 address and birdhouse identifier
 $ipv6_file = 'ipv6_address.txt';
@@ -86,8 +87,10 @@ if (empty($stored_addresses)) {
         <br/>&nbsp;<div>';
     foreach ($stored_addresses as $birdhouse_identifier => $ipv6_address) {
         echo '<div style="float:left;color:#EEEEEE;text-align:center;width:50%;"><center>
-            <a href="http://[' . $ipv6_address . ']:8000" style="color:yellow">Birdhouse ' . $birdhouse_identifier . '</a><br/>
-            <img src="http://[' . $ipv6_address . ']:8007/lowres/stream.mjpg?cam1?' . $birdhouse_identifier . '?' . $birdhouse_identifier . '"  style="border:1px solid white;margin:8px;width:40vw;max-width:200px;"/><br/>&nbsp;<br/>&nbsp;
+            <a href="http://[' . $ipv6_address . ']:8000" style="color:yellow">Birdhouse ' . $birdhouse_identifier . '<br/>
+            <img src="http://[' . $ipv6_address . ']:8007/lowres/stream.mjpg?cam1?' . $birdhouse_identifier . '?bh-' . $birdhouse_identifier . '-' . $timestamp . '"  style="border:1px solid white;margin:8px;width:40vw;max-width:200px;"/>
+            </a>
+            <br/>&nbsp;<br/>&nbsp;
         </center></div>';
     }
     echo "</div></p>";
