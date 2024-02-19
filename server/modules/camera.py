@@ -41,13 +41,14 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         self.active = False
 
         self.fps = None
-        self.fps_max = 12
+        self.fps_max = self.param["image"]["framerate"]
         self.fps_max_lowres = 3
         self.fps_slow = 2
         self.fps_average = []
-        self.duration_max = 1 / self.fps_max
-        self.duration_max_lowres = 1 / self.fps_max_lowres
-        self.duration_slow = 1 / self.fps_slow
+        self.duration_max = None
+        self.duration_max_lowres = None
+        self.duration_slow = None
+        self.set_duration_from_framerate()
 
         self.slow_stream = False
         self.maintenance_mode = False
@@ -250,6 +251,14 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         """
         self.slow_stream = slow_down
 
+    def set_duration_from_framerate(self):
+        """
+        set durations based on given frame rates
+        """
+        self.duration_max = 1 / self.fps_max
+        self.duration_max_lowres = 1 / self.fps_max_lowres
+        self.duration_slow = 1 / self.fps_slow
+
     def if_ready(self):
         """
         check if stream is ready to deliver images, connection to camera exists
@@ -355,14 +364,13 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self._connected = False
 
         self.fps = None
-        self.fps_max = 12
+        self.fps_max = self.param["image"]["framerate"]
         self.fps_max_lowres = 3
         self.fps_slow = 2
+        self.duration_max = None
+        self.duration_slow = None
+        self.set_duration_from_framerate()
         self.fps_object_detection = None
-        if self.resolution == "lowres":
-            self.fps_max = self.fps_max_lowres
-        self.duration_max = 1 / (self.fps_max + 1)
-        self.duration_slow = 1 / self.fps_slow
         self.slow_stream = False
         self.system_status = {
             "active": False,
@@ -1074,6 +1082,15 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         if color is None:
             self.system_status["color"] = default_color
 
+    def set_duration_from_framerate(self):
+        """
+        set duration values based on given framerate
+        """
+        if self.resolution == "lowres":
+            self.fps_max = self.fps_max_lowres
+        self.duration_max = 1 / (self.fps_max + 1)
+        self.duration_slow = 1 / self.fps_slow
+
     def kill(self):
         self._last_activity = 0
 
@@ -1167,7 +1184,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.image_time_last = {}
         self.image_time_current = {}
         self.image_time_rotate = {}
-        self.image_fps = {}
         self.image_streams = {}
         self.image_streams_to_kill = {}
         self.image_size_object_detection = self.detect_settings["detection_size"]
@@ -2311,7 +2327,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.image_time_last = {}
         self.image_time_current = {}
         self.image_time_rotate = {}
-        self.image_fps = {}
         self.image_streams = {}
         self.image_streams_to_kill = {}
         self.image_size_object_detection = self.detect_settings["detection_size"]
@@ -2326,11 +2341,16 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.camera.source = self.param["source"]
             self.camera_stream_raw.param = self.param
             self.camera_stream_raw.source = self.param["source"]
+            self.camera_stream_raw.fps_max = self.param["image"]["framerate"]
+            self.camera_stream_raw.set_duration_from_framerate()
+
             for stream in self.camera_streams:
                 self.camera_streams[stream].param = self.param
                 self.camera_streams[stream].image.param = self.param
                 self.camera_streams[stream].source = self.param["source"]
                 self.camera_streams[stream].initial_connect_msg = self.initial_connect_msg
+                self.camera_streams[stream].fps_max = self.param["image"]["framerate"]
+                self.camera_streams[stream].set_duration_from_framerate()
 
         self.image.param = self.param
         self.video.param = self.param

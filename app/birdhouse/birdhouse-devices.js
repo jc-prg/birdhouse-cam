@@ -188,7 +188,7 @@ function birdhouseDevices_cameras(data) {
             html_temp += birdhouse_OtherGroup( camera+"_detect_object", "Image Object Detection", html_entry, false );
             }
 
-		hours = "00,01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24";
+		var hours = "00,01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24";
         html_entry = tab.start();
 		html_entry += tab.row("- Record:",              birdhouse_edit_field(id="set_record_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
 		html_entry += tab.row("- Rhythm:",              "record every " + birdhouse_edit_field(id="set_record_rhythm_"+camera, field="devices:cameras:"+camera+":image_save:rhythm", type="select", options="05,10,15,20", data_type="string") + " s");
@@ -202,12 +202,14 @@ function birdhouseDevices_cameras(data) {
 		id_list += "set_record_"+camera+":set_record_rhythm_"+camera+":set_record_from_"+camera+":set_record_to_"+camera+":set_record_offset_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_record_image", "Image Recording", html_entry, false );
 
+        var frame_rates = "4,6,8,10,12,15,18,20,25";
         html_entry = tab.start();
 		html_entry += tab.row("- Recording active:",    birdhouse_edit_field(id="set_video_active_"+camera, field="devices:cameras:"+camera+":video:allow_recording", type="select", options="true,false", data_type="boolean"));
+		html_entry += tab.row("- Max framerate (HiRes):", birdhouse_edit_field(id="set_max_fps_"+camera, field="devices:cameras:"+camera+":image:framerate", type="select", options=frame_rates, data_type="integer"));
 		html_entry += tab.row("- Max length:",          birdhouse_edit_field(id="set_video_max_"+camera, field="devices:cameras:"+camera+":video:max_length", type="select", options="60,120,180,240,300", data_type="integer") + " seconds");
         html_entry += tab.end();
 
-		id_list += "set_video_active__"+camera+":set_video_max_"+camera+":";
+		id_list += "set_video_active__"+camera+":set_video_max_"+camera+":set_max_fps_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_record_video", "Video Recording", html_entry, false );
 
         html_entry = tab.start();
