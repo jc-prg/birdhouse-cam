@@ -7,6 +7,7 @@
 var birdhouse_active_video_streams  = {};
 var birdhouse_image_ids_error       = [];
 var birdhouse_image_ids             = [];
+var birdhouse_lowres_size           = {};
 
 
 /*
@@ -416,8 +417,15 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
         thumb_container_style += "width:" + thumbnail_width + "px;";
         }
 
-    if (entry["type"] == "addon")   { container_id = "lowres_today"; }
-    else                            { container_id = img_id2 + "_container"; }
+    if (entry["type"] == "addon")   {
+        container_id = "lowres_today";
+        var image_onload = "onload='error_img=document.getElementById(\"lowres_error_"+entry["camera"]+"\");error_img.height=this.height;error_img.width=this.width;'";
+        var image_onload = "";
+        }
+    else {
+        container_id = img_id2 + "_container";
+        var image_onload = "";
+        }
 
 	html += "<div id='"+container_id+"' class='image_container"+height+"' style='" + container_style + "'>";
 	html += "  <div class='star'>"+star+"</div>";
@@ -425,7 +433,7 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
     html += "  <div class='thumbnail_container' style='" + thumb_container_style + "'>";
 
     if (!img_missing) {
-        html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id2+"' class='thumbnail' style='"+style+"'/></a>";
+        html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id2+"' class='thumbnail' style='"+style+"' "+image_onload+"/></a>";
         if (entry["similarity"]) {
             html += "<input id='"+img_id2+"_similarity' value='"+entry["similarity"]+"' style='display:none;'>";
             }
@@ -460,7 +468,7 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
         html += "  <div class='star'></div>";
         html += "  <div class='recycle'></div>";
         html += "  <div class='thumbnail_container' style='" + thumb_container_style + "'>";
-        html += "     <div class='thumbnail error' style='width:" + thumbnail_width + "px;height:" + thumbnail_height + "px;'>&nbsp;<br/>&nbsp;<br/>"+lang("CONNECTION_ERROR")+"</div>"
+        html += "     <div class='thumbnail error' id='lowres_error_"+entry["camera"]+"' style='"+style+";padding:0px;'>"+lang("CONNECTION_ERROR")+"</div>"
         html += "    <br/>";
         html += "  </div>";
         html += "</div>";
