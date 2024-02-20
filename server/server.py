@@ -30,8 +30,8 @@ from modules.bh_class import BirdhouseClass
 from modules.bh_database import BirdhouseTEXT
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v1.0.8"}
-app_framework = "v1.0.8"
+api_description = {"name": "BirdhouseCAM", "version": "v1.0.9"}
+app_framework = "v1.0.9"
 srv_audio = None
 
 

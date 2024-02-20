@@ -1,4 +1,4 @@
-# Birdhouse Camera v1.0.9 (in progress)
+# Birdhouse Camera v1.0.9
 
 Raspberry Pi project to observe our birdhouse with two webcams: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, 
@@ -102,8 +102,8 @@ Here are some options. Calculate with a little bit more space in the height for 
 * Software
   * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, PyTorch/YOLOv5
   * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
-  * HTML, CSS, JavaScript, Pinch-Zoom
-  * jc://modules/, jc://app-framework/
+  * HTML, CSS, JavaScript, [ChartJS](https://www.chartjs.org/)
+  * [jc://modules/](https://github.com/jc-prg/modules/), [jc://app-framework/](https://github.com/jc-prg/app-framework/)
 
 ## Installation
 
@@ -399,12 +399,13 @@ and use the module [jc://bird-detection/](https://github.com/jc-prg/bird-detecti
 
 Thanks for your inspiration, code snippets, images:
 
-* [https://github.com/Freshman-tech/custom-html5-video](https://github.com/Freshman-tech/custom-html5-video)
-* [https://github.com/manuelstofer/pinchzoom](https://github.com/manuelstofer/pinchzoom)
-* [https://gifer.com/en/ZHug](https://gifer.com/en/ZHug)
-* [https://github.com/szazo/DHT11_Python](https://github.com/szazo/DHT11_Python)
-* [https://github.com/bullet64/DHT22_Python](https://github.com/bullet64/DHT22_Python)
-* [https://www.tunbury.org/audio-stream/](https://www.tunbury.org/audio-stream/)
-* [https://github.com/nicknochnack/YOLO-Drowsiness-Detection/blob/main/Drowsiness%20Detection%20Tutorial.ipynb](https://github.com/nicknochnack/YOLO-Drowsiness-Detection/blob/main/Drowsiness%20Detection%20Tutorial.ipynb)
+* [HTML5 Video Player](https://github.com/Freshman-tech/custom-html5-video)
+* [Flying Bird Image](https://gifer.com/en/ZHug)
+* [DHT11 Python](https://github.com/szazo/DHT11_Python)
+* [DHT22 Python](https://github.com/bullet64/DHT22_Python)
+* [Python Audio Stream](https://www.tunbury.org/audio-stream/)
+* [YOLO-Drowsiness-Detection](https://github.com/nicknochnack/YOLO-Drowsiness-Detection/blob/main/Drowsiness%20Detection%20Tutorial.ipynb)
+* [ChartJS](https://www.chartjs.org/)
+* [ChatGPT](https://chat.openai.com/)
 * ...
 
