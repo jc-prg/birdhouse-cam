@@ -56,7 +56,6 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         self.connect()
         while self._running:
 
-            self._processing_percentage = 0
             if len(self.detect_queue_archive) > 0:
                 [date, threshold] = self.detect_queue_archive.pop()
                 self.analyze_archive_day(date, threshold)
@@ -376,7 +375,9 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             response["error"] = msg
             self.logging.info(msg)
 
+        time.sleep(3)
         self._processing = False
+        self._processing_percentage = 0
         return response
 
     def summarize_detections(self, entries, threshold=-1):
@@ -399,6 +400,8 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             if "detections" in entries[stamp]:
                 camera = entries[stamp]["camera"]
                 for detection in entries[stamp]["detections"]:
+                    is_favorite = False
+
                     if detection["label"] not in detections:
                         detections[detection["label"]] = {"favorite": [], "default": {}}
 
@@ -408,6 +411,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                     if "favorit" in entries[stamp] and int(entries[stamp]["favorit"]) == 1:
                         detections[detection["label"]]["favorite"].append(stamp)
                         detections[detection["label"]]["default"][camera].append(stamp)
+                        is_favorite = True
 
                     elif "to_be_deleted" not in entries[stamp] or not int(entries[stamp]["to_be_deleted"]):
                         detections[detection["label"]]["default"][camera].append(stamp)
@@ -418,8 +422,16 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                             "confidence": detection["confidence"],
                             "threshold": threshold
                         }
-                    elif ("confidence" in detection
-                            and detections[detection["label"]]["thumbnail"]["confidence"] < detection["confidence"]):
+                    elif is_favorite or len(detections[detection["label"]]["favorite"]) == 0:
+                        detections[detection["label"]]["thumbnail"] = {
+                            "stamp": stamp,
+                            "confidence": detection["confidence"],
+                            "threshold": threshold
+                        }
+
+                    elif (len(detections[detection["label"]]["favorite"]) == 0 and "confidence" in detection and
+                          detections[detection["label"]]["thumbnail"]["confidence"] < detection["confidence"]):
+
                         detections[detection["label"]]["thumbnail"] = {
                             "stamp": stamp,
                             "confidence": detection["confidence"],

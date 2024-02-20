@@ -1,10 +1,15 @@
 //--------------------------------------
 // jc://birdhouse/, (c) Christoph Kloth
 //--------------------------------------
-// show and edit device information
+// weather view
 //--------------------------------------
 
 
+/*
+* create view with weather information: current weather, weather for the next three days, and if admin weather for 7 days
+*
+* @param (dict) data: data returned form server API for this view
+*/
 function birdhouseWeather( data ) {
     var settings        = data["SETTINGS"];
     var admin_allowed   = data["STATUS"]["admin_allowed"];
@@ -146,7 +151,7 @@ function birdhouseWeather( data ) {
 
     Object.keys(weather_data).forEach(date=>{
         chart   += "<b>" + date + "</b><br/>";
-        chart   += "<center>" + birdhouseChart_weatherOverview(weather_data[date], "key", false) + "</center>" ;
+        chart   += "<center>" + birdhouseWeather_OverviewChart(weather_data[date], "key", false) + "</center>" ;
         });
     html_weather += birdhouse_OtherGroup( "chart", lang("WEATHER") + " (3 " + lang("DAYS") + ")", chart, true );
     if (admin_allowed) {
@@ -158,5 +163,58 @@ function birdhouseWeather( data ) {
     setTextById(app_frame_header, title);
 	setTextById(app_frame_content, html_weather);
 }
+
+/*
+* create a three days weather overview chart
+*
+* @param (dict) entries: weather entries from server API
+* @param (string) title_key: title key
+* @param (boolean) title_column: show title above the chart
+*/
+function birdhouseWeather_OverviewChart (entries, title_key="time", title_column=true) {
+    var html = "";
+    var count = 0;
+    var weather_data = {};
+
+    Object.keys(entries).forEach( key => {
+        weather_data[entries[key][title_key]] = entries[key]["description_icon"];
+        /*
+        if (key.substring(2,4) == "00" && entries[key]["weather"]) {
+            weather_data[key.substring(0,2)+":"+key.substring(2,4)] = entries[key]["weather"]["description_icon"];
+        }
+        */
+    });
+
+    // width -> 8 if small; 16 if middle; 24 if big
+
+    if (title_column) {
+        html_row1 = "<td></td>";
+        html_row2 = "<td>"+lang("WEATHER")+": &nbsp;</td>";
+    }
+    else {
+        html_row1 = "";
+        html_row2 = "";
+    }
+    Object.keys(weather_data).sort().forEach(key => {
+        var td_class = "weather_hide_if_small";
+        if (Math.abs(count % 2) != 0 || Object.keys(weather_data).length <= 8) {
+             td_class = "weather_show";
+        }
+        if (count < 16) {
+            html_row1 += "<td class='"+td_class+"'>"+key+"<td>";
+            html_row2 += "<td class='"+td_class+"' style='font-size:14px;'><center>"+weather_data[key]+"<center><td>";
+        }
+        count += 1;
+    });
+    if (count == 0) { return ""; }
+    html += "<hr/><table border='0'>";
+    html += "<tr style='font-size:8px;'>" + html_row1 + "</tr>";
+    html += "<tr style='font-size:11px;'>" + html_row2 + "</tr>";
+    html +="</table>"
+    console.debug(weather_data);
+    //html += "&nbsp;<br/>&nbsp;";
+    return html;
+}
+
 
 app_scripts_loaded += 1;

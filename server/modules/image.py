@@ -640,7 +640,8 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             (depending on lowres position)
         """
         (start_x, start_y, end_x, end_y) = self.param["image"]["crop_area"]
-        position = self.config.param["views"]["index"]["lowres_position"]
+        #position = self.config.param["views"]["index"]["lowres_position"]
+        position = self.config.param["views"]["index"]["lowres_pos_"+self.id]
         if position == 1:
             default_position = (end_x - 25, start_y + 30)
         else:
@@ -728,6 +729,54 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             self.raise_warning("Could not analyze image (" + str(e) + ")")
             return [0, 0]
 
+    def size_raw(self, raw, scale_percent=100):
+        """
+        Return size of raw image
+
+        Parameters:
+            raw (numpy.ndarray): raw image to get the size of
+            scale_percent (int): calculate size when scaled
+        Returns:
+            (int, int): sizes of resized image (width, height)
+        """
+        try:
+            if scale_percent != 100:
+                width = int(raw.shape[1] * float(scale_percent) / 100)
+                height = int(raw.shape[0] * float(scale_percent) / 100)
+                raw = cv2.resize(raw, (width, height))
+            width = raw.shape[1]
+            height = raw.shape[0]
+            return [width, height]
+        except Exception as e:
+            self.raise_warning("Could not analyze image (" + str(e) + ")")
+            return [0, 0]
+
+    def resize_raw(self, raw, scale_percent=100, scale_size=None):
+        """
+        Resize raw image
+
+        Parameters:
+            raw (numpy.ndarray): raw image to be resized
+            scale_percent (int): percentage the image shall be resized to
+            scale_size (list): concrete size (width, height) the image shall be resized to (priority before percentage)
+        Returns:
+            numpy.ndarray: resized image
+        """
+        self.logging.debug("Resize image (" + str(scale_percent) + "% / " + str(scale_size) + ")")
+        if scale_size is not None:
+            [width, height] = scale_size
+            try:
+                raw = cv2.resize(raw, (width, height))
+            except Exception as e:
+                self.raise_error("Could not resize raw image: " + str(e))
+        elif scale_percent != 100:
+            [width, height] = self.size_raw(raw, scale_percent=scale_percent)
+            try:
+                raw = cv2.resize(raw, (width, height))
+            except Exception as e:
+                self.raise_error("Could not resize raw image: " + str(e))
+        return raw
+
     def write(self, filename, image, scale_percent=100):
         """
         Scale image and write to file
@@ -775,51 +824,3 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             error_msg = "Can't read image '" + image_path + "': " + str(e)
             self.raise_error(error_msg)
             return ""
-
-    def size_raw(self, raw, scale_percent=100):
-        """
-        Return size of raw image
-
-        Parameters:
-            raw (numpy.ndarray): raw image to get the size of
-            scale_percent (int): calculate size when scaled
-        Returns:
-            (int, int): sizes of resized image (width, height)
-        """
-        try:
-            if scale_percent != 100:
-                width = int(raw.shape[1] * float(scale_percent) / 100)
-                height = int(raw.shape[0] * float(scale_percent) / 100)
-                raw = cv2.resize(raw, (width, height))
-            height = raw.shape[0]
-            width = raw.shape[1]
-            return [width, height]
-        except Exception as e:
-            self.raise_warning("Could not analyze image (" + str(e) + ")")
-            return [0, 0]
-
-    def resize_raw(self, raw, scale_percent=100, scale_size=None):
-        """
-        Resize raw image
-
-        Parameters:
-            raw (numpy.ndarray): raw image to be resized
-            scale_percent (int): percentage the image shall be resized to
-            scale_size (list): concrete size (width, height) the image shall be resized to (priority before percentage)
-        Returns:
-            numpy.ndarray: resized image
-        """
-        self.logging.debug("Resize image (" + str(scale_percent) + "% / " + str(scale_size) + ")")
-        if scale_size is not None:
-            [width, height] = scale_size
-            try:
-                raw = cv2.resize(raw, (width, height))
-            except Exception as e:
-                self.raise_error("Could not resize raw image: " + str(e))
-        elif scale_percent != 100:
-            [width, height] = self.size_raw(raw, scale_percent=scale_percent)
-            try:
-                raw = cv2.resize(raw, (width, height))
-            except Exception as e:
-                self.raise_error("Could not resize raw image: " + str(e))
-        return raw

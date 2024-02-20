@@ -293,34 +293,32 @@ function birdhouse_recreateImageConfig(date="") {
 
 function birdhouse_recycleRange(group_id, index, status, lowres_file) {
 	console.log("birdhouse_recycleRange: "+group_id+"/"+index+"/"+lowres_file);
-	
-	if (group_id in app_recycle_range)              {}
-	else                                            { app_recycle_range[group_id]        = {}; }
-	if (status == 1)                                { app_recycle_range[group_id][index] = 1; }
-	else if (index in app_recycle_range[group_id])  { delete app_recycle_range[group_id][index]; }
+
+	if (status == 1)                                { app_recycle_range[index] = 1; }
+	else if (index in app_recycle_range[group_id])  { delete app_recycle_range[index]; }
 
 	console.log(app_recycle_range);
-	
-	info_text = document.getElementById("recycle_range_"+group_id+"_info");	
-	info_keys = Object.keys(app_recycle_range[group_id]);
+
+	info_text = document.getElementById("recycle_range_"+group_id+"_info");
+	info_keys = Object.keys(app_recycle_range);
 	info_keys.sort();
-	
+
 	info_text = document.getElementById("command_dropdown");
-	
+
 	if (info_keys.length == 1) {
 		info_text.innerHTML = lang("RANGE_ADD_ENTRY"); // + " ("+info_keys[0]+")";
 		button_tooltip.show("info");
 		}
 	else if (info_keys.length == 2) {
 		info_text.innerHTML = lang("RANGE_SELECTED"); // + " ("+info_keys[1]+"|"+info_keys[0]+")";
-		
+
 		var vars     = info_keys[0].split("/")
 		var newindex = info_keys[1] + "/" + vars[(vars.length-1)];
-		
+
 		var onclick  = "birdhouse_setRecycleRange(\""+newindex+"\", 1);";
 		onclick     += "document.getElementById(\"recycle_button\").innerHTML=\""+lang("PLEASE_WAIT")+"\";";
 		onclick     += "document.getElementById(\"recycle_button\").disabled=true;";
-		
+
 		info_text.innerHTML += "<br/><button id='recycle_button' onclick='"+onclick+"' class='button-video-edit' style='margin-top:6px;'>&nbsp;"+lang("RANGE_DELETE")+"&nbsp;</button>";
 		button_tooltip.show("info");
 		}

@@ -1,14 +1,14 @@
 
 .loading_overlay {
     position: absolute;
-    top: 3%;
-    left: 3%;
+    top: 0px;
+    left: 0px;
     z-index: 200;
     background: lightgray;
-    height: 94%;
-    width: 94%;
-    border-radius: 20px;
-    border: solid 5px gray;
+    height: 100%;
+    width: 100%;
+    border-radius: 0px;
+    border:0px;
     display: flex; /* Add flexbox */
     justify-content: center; /* Center horizontally */
     align-items: center; /* Center vertically */

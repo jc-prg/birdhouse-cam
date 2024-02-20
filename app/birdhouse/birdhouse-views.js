@@ -4,6 +4,13 @@
 // birdhouse views
 //--------------------------------------
 
+/*
+* create main index view with one or two video streams
+*
+* @param (dict) data: API response
+* @param (string) camera: ID of active camera
+* @param (boolean) object: object detection view (not in use at the moment)
+*/
 function birdhouse_INDEX(data, camera, object=false) {
 
 	var html          = "";
@@ -18,6 +25,11 @@ function birdhouse_INDEX(data, camera, object=false) {
 	var active_cam    = {};
 	var other_cams    = [];
 	var stream_ui1, stream_uid2 = "";
+    var lowres_pos_cam1 = 0;
+
+	if (active_camera == "cam1" && index_view["lowres_pos_cam1"])       { lowres_position = index_view["lowres_pos_cam1"]; }
+	else if (active_camera == "cam2" && index_view["lowres_pos_cam2"])  { lowres_position = index_view["lowres_pos_cam2"]; }
+	else                                                                { lowres_position = index_view["lowres_position"]; }
 
     // if selected camera is not active, reset to use the first active camera
 	if (active_camera != undefined && cameras[active_camera] && cameras[active_camera]["active"] == false) { active_camera = undefined; }
@@ -80,12 +92,12 @@ function birdhouse_INDEX(data, camera, object=false) {
         if (index_view["type"] == "picture-in-picture" && other_cams.length > 0) {
             [replace_tags["CAM1_PIP_URL"], stream_uid1] = birdhouse_StreamURL(other_cams[0]["name"], stream_server + cameras[active_cam["name"]]["video"]["stream_pip"], "main_pip", true);
             replace_tags["CAM1_PIP_URL"]  = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-key}", other_cams[0]["name"]);
-            replace_tags["CAM1_PIP_URL"]  = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-pos}", index_view["lowres_position"]);
+            replace_tags["CAM1_PIP_URL"]  = replace_tags["CAM1_PIP_URL"].replace("{2nd-camera-pos}", lowres_position);
         }
         if (index_view["type"] != "picture-in-picture" && other_cams.length > 0) {
             replace_tags["CAM2_ID"]         = other_cams[0]["name"];
             [replace_tags["CAM2_LOWRES_URL"], stream_uid2] = birdhouse_StreamURL(other_cams[0]["name"], stream_server + cameras[other_cams[0]["name"]]["video"]["stream_lowres"], "2nd_lowres", true);
-            replace_tags["CAM2_LOWRES_POS"] = index_lowres_position[index_view["lowres_position"].toString()];
+            replace_tags["CAM2_LOWRES_POS"] = index_lowres_position[lowres_position.toString()];
         }
 
         var selected_view = "";
@@ -140,6 +152,12 @@ function birdhouse_INDEX(data, camera, object=false) {
     if (!cameras[active_camera]["video"]["allow_recording"])   { elementHidden("admin_record_index"); }
 }
 
+/*
+* create view for video editing (detail for video view)
+*
+* @param (string) title: title to be displayed
+* @param (dict) data: API response for video specific request
+*/
 function birdhouse_VIDEO_DETAIL( title, data ) {
 
 	var html        = "";
@@ -152,7 +170,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 		app_active_date         = key;
 		var short               = false;
 		var video_name          = video[key]["date"];
-		var video_stream        = birdhouse_Image("Complete", video[key]);
+		var video_stream        = birdhouse_Image("Complete", key, video[key]);
 		var video_stream_short  = "";
 
 		console.log(video_stream);
@@ -163,7 +181,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 		        Object.assign( video_short, video[key] );
 		        var short_video_file      = video[key]["video_file_short"];
 		        video_short["video_file"] = short_video_file;
-		        video_stream_short        = birdhouse_Image("Short", video_short);
+		        video_stream_short        = birdhouse_Image("Short", "short", video_short);
 		        }
 
 		console.log(video_stream);
@@ -250,7 +268,19 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 	setTextById(app_frame_content,html);
 	}
 
+/*
+* coordinate list view creation for all lists (today, today complete, favorites, videos, object detection, ...)
+*
+* @param (string) title: title to be displayed
+* @param (dict) data: API response for list specific request
+* @param (string) camera: ID of active camera
+* @param (boolean) header_open: set if group header should be open
+*/
 function birdhouse_LIST(title, data, camera, header_open=true) {
+
+    if (title == "FAVORITES" && birdhouseStatus_loadingViews(app_data, "favorite") != "done") { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
+    if (title == "ARCHIVE"   && birdhouseStatus_loadingViews(app_data, "archive") != "done")  { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
+    if (title == "OBJECTS"   && birdhouseStatus_loadingViews(app_data, "object") != "done")   { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
 
 	var html              = "";
 	var entry_category    = [];
@@ -336,7 +366,10 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         html += birdhouse_LIST_calendar(groups);
     }
 
-    // ----------------------------------------
+    // load images for detail view with swipe feature
+    if (entries) {
+        birdhouse_overlayLoadImages(Object.keys(entries).sort().reverse(), entries, app_active_page, admin);
+        }
 
 	// list today complete, favorites -> list in monthly or hourly groups
 	if (groups != undefined && groups != {}) {
@@ -386,20 +419,6 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 			group_list.push(title);
             entries_available = true;
             }
-
-		if (admin) {
-		        if (entries_yesterday != undefined && Object.keys(entries_yesterday).length > 0) {
-		            html += birdhouse_ImageGroup(active_page+"_YESTERDAY",lang("YESTERDAY"), entries_yesterday, entry_count, entry_category,
-		                                         false, admin, video_short, same_img_size, max_image_size_LR);
-		            entries_available = true;
-		            }
-		        if (entries_delete != undefined && Object.keys(entries_delete).length > 0) {
-		            html += birdhouse_ImageGroup(active_page+"_RECYCLE", lang("RECYCLE"), entries_delete, ["recycle"], entry_category, false,
-		                                         admin, video_short, same_img_size, max_image_size_LR);
-		            entries_available = true;
-		            }
-		        }
-
         // check if no entries or still loading
 		if (entries_available == false && (active_page == "TODAY" || active_page == "ARCHIVE" || active_page == "FAVORITES")) {
 		    var empty = false;
@@ -423,6 +442,20 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         html += "<div id='group_list' style='display:none;'>" + group_list.join(" ") + "</div>";
 		}
 
+    if (admin) {
+        if (entries_yesterday != undefined && Object.keys(entries_yesterday).length > 0) {
+            html += birdhouse_ImageGroup(active_page+"_YESTERDAY",lang("YESTERDAY"), entries_yesterday, entry_count, entry_category,
+                                         false, admin, video_short, same_img_size, max_image_size_LR);
+            entries_available = true;
+            }
+        if (entries_delete != undefined && Object.keys(entries_delete).length > 0) {
+            html += birdhouse_ImageGroup(active_page+"_RECYCLE", lang("RECYCLE"), entries_delete, ["recycle"], entry_category, false,
+                                         admin, video_short, same_img_size, max_image_size_LR);
+            entries_available = true;
+            }
+        }
+
+
 	// Set title
 	if (active_page == "TODAY" && active_date != "")    {
 	    var archive_title = "<span style='cursor:pointer' onclick='app_active_page=\"ARCHIVE\";birdhouseReloadView();'>";
@@ -437,7 +470,6 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
 	birdhouse_frameHeader(page_title, page_status);
 	setTextById(app_frame_content, html);
-	birdhouse_ImageErrorSize();
 
 	if ((active_page == "FAVORITES" || active_page == "TODAY") && selected_label != undefined) {
         selected_label = selected_label.replaceAll("%20", " ");
@@ -451,11 +483,22 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	}
 
 
+/*
+* create admin functionalities for the archive view of a specific day
+*
+* @param (dict) data: API response for list specific request
+* @param (boolean) admin: logged in as admin
+* @param (string) camera: ID of active camera
+* @param (string) active page: currently active page
+* @param (string) active date: currently active date
+* @returns (string): html with admin functionality for archive view
+*/
 function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_date) {
     var html                    = "";
     var info_text               = "";
     var threshold_slider        = birdhouse_LIST_admin_threshold_slider(camera, active_page, active_date);
 	var camera_settings         = app_data["SETTINGS"]["devices"]["cameras"];
+	var archive_info            = data["DATA"]["data"]["info"];
 
     // <button onclick='birdhouse_forceBackup();' class='button-settings-api'>Force Backup</button>";
     var detection_model         = camera_settings[app_active_cam]["object_detection"]["model"]; // devices:cameras:"+camera+":object_detection:model
@@ -483,6 +526,13 @@ function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_d
     }
     select_thresholds += "</select>&nbsp;";
 
+    var detection_info = "";
+    if (archive_info && archive_info["detection_"+camera]) {
+        detection_info += "<div style='float:left;padding:3px;'>";
+        detection_info += lang("LAST_DETECTION") + ": <br/>" + archive_info["detection_"+camera]["date"] + " (" + archive_info["detection_"+camera]["model"] + ")";
+        detection_info += "</div>";
+        }
+
 	var tab = new birdhouse_table();
 	tab.style_cells["vertical-align"] = "top";
 	tab.style_cells["padding"] = "3px";
@@ -496,7 +546,8 @@ function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_d
             { button_object_detection = lang("DETECTION_INACTIVE_CAM"); }
         else if (!app_data["STATUS"]["object_detection"]["models_loaded_status"][app_active_cam])
             { button_object_detection = lang("DETECTION_NOT_LOADED"); }
-        info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model, detection_threshold]) + ":", select_thresholds + button_object_detection );
+        info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model, detection_threshold]) + ":",
+                             select_thresholds + button_object_detection + detection_info );
         }
     info_text += tab.row(lang("OBJECT_DETECTION_RECYCLE") + ":", button_object_recycle);
     info_text += tab.row(lang("DELETE_ARCHIVE") + ":", button_archive_deletion );
@@ -509,73 +560,97 @@ function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_d
     return html;
 }
 
+/*
+* create admin functionalities for the archive overview
+*
+* @param (dict) data: API response for list specific request
+* @param (boolean) admin: logged in as admin
+* @param (string) camera: ID of active camera
+* @param (string) active page: currently active page
+* @param (string) active date: currently active date
+* @returns (string): html with admin functionality for archive view
+*/
 function birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page, active_date) {
 
-    if (app_data["SETTINGS"]["server"]["detection_active"] == false) {  return "!!!"; }
+    var html    = "";
+    var tab     = new birdhouse_table();
+    tab.style_cells["vertical-align"] = "top";
+    tab.style_cells["padding"] = "3px";
 
-	var data_list         = data["DATA"];
-	var entries           = data_list["data"]["entries"];
-	var camera_settings   = app_data["SETTINGS"]["devices"]["cameras"];
-
-    var html                 = "";
-    var info_text            = "";
-    var detection_model      = camera_settings[app_active_cam]["object_detection"]["model"]; // devices:cameras:"+camera+":object_detection:model
-    var detection_threshold  = camera_settings[app_active_cam]["object_detection"]["threshold"];
-    var detection_date       = active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4);
-    var available_thresholds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95];
-
-    var select_thresholds = "<select id='selection_threshold' style='width:180px;'>";
-    for (var i=0;i<available_thresholds.length;i++) {
-        var this_selected = "";
-        if (available_thresholds[i]*1 == detection_threshold*1 ) { this_selected = "selected"; }
-        select_thresholds += "<option value='" + available_thresholds[i] + "' " + this_selected + ">" + available_thresholds[i] + "%</option>";
-    }
-    select_thresholds += "</select><br/>&nbsp;";
-    var select_object_detection = "<select id='selection_dates' multiple style='width:180px;height:100px;'>";
-    if (entries) {
-        Object.entries(entries).forEach(([key,value]) => {
-            var date = key.substring(6,8) + "." + key.substring(4,6) + "." + key.substring(0,4);
-            var detection = "";
-            if (value["detection"]) { detection = "; D";}
-            select_object_detection += "<option value='"+key+"_"+value["count_cam"]+"'>" + date + " (" + value["count_cam"] + " " + lang("IMAGES") + detection + ")</option>";
-            });
-        }
-    select_object_detection += "</select>";
-
-    var button_object_detection = "<button onclick='birdhouse_archiveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \"\", \"selection_dates\", \"selection_threshold\");' class='bh-slider-button'  style='width:80px;'>Start</button>";
-
-	var tab = new birdhouse_table();
-	tab.style_cells["vertical-align"] = "top";
-	tab.style_cells["padding"] = "3px";
-
+    var info_text = "";
     info_text += "&nbsp;";
     info_text += tab.start();
-    var detection_key = lang("OBJECT_DETECTION_FOR_ARCHIVES", [detection_model, detection_threshold]) + ":";
 
-    if (!camera_settings[app_active_cam]["object_detection"]["active"]) {
-        detection_key           = lang("OBJECT_DETECTION") + ":";
-        button_object_detection = "";
-        select_object_detection = "";
-        select_thresholds = lang("DETECTION_INACTIVE_CAM");
+    if (app_data["SETTINGS"]["server"]["detection_active"] == true) {
+
+        var data_list         = data["DATA"];
+        var entries           = data_list["data"]["entries"];
+        var camera_settings   = app_data["SETTINGS"]["devices"]["cameras"];
+
+        var detection_model      = camera_settings[app_active_cam]["object_detection"]["model"]; // devices:cameras:"+camera+":object_detection:model
+        var detection_threshold  = camera_settings[app_active_cam]["object_detection"]["threshold"];
+        var detection_date       = active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4);
+        var available_thresholds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95];
+
+        var select_thresholds = "<select id='selection_threshold' style='width:180px;'>";
+        for (var i=0;i<available_thresholds.length;i++) {
+            var this_selected = "";
+            if (available_thresholds[i]*1 == detection_threshold*1 ) { this_selected = "selected"; }
+            select_thresholds += "<option value='" + available_thresholds[i] + "' " + this_selected + ">" + available_thresholds[i] + "%</option>";
         }
-    else if (!app_data["STATUS"]["object_detection"]["models_loaded_status"][app_active_cam]) {
-        detection_key           = lang("OBJECT_DETECTION") + ":";
-        button_object_detection = "";
-        select_object_detection = "";
-        select_thresholds = lang("DETECTION_NOT_LOADED");
+        select_thresholds += "</select><br/>&nbsp;";
+        var select_object_detection = "<select id='selection_dates' multiple style='width:180px;height:100px;'>";
+        if (entries) {
+            Object.entries(entries).forEach(([key,value]) => {
+                var date = key.substring(6,8) + "." + key.substring(4,6) + "." + key.substring(0,4);
+                var detection = "";
+                if (value["detection"]) { detection = "; D";}
+                select_object_detection += "<option value='"+key+"_"+value["count_cam"]+"'>" + date + " (" + value["count_cam"] + " " + lang("IMAGES") + detection + ")</option>";
+                });
+            }
+        select_object_detection += "</select>";
+
+        var button_object_detection = "<button onclick='birdhouse_archiveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \"\", \"selection_dates\", \"selection_threshold\");' class='bh-slider-button'  style='width:80px;'>Start</button>";
+
+        var detection_key = lang("OBJECT_DETECTION_FOR_ARCHIVES", [detection_model, detection_threshold]) + ":";
+
+        if (!camera_settings[app_active_cam]["object_detection"]["active"]) {
+            detection_key           = lang("OBJECT_DETECTION") + ":";
+            button_object_detection = "";
+            select_object_detection = "";
+            select_thresholds       = lang("DETECTION_INACTIVE_CAM");
+            }
+        else if (!app_data["STATUS"]["object_detection"]["models_loaded_status"][app_active_cam]) {
+            detection_key           = lang("OBJECT_DETECTION") + ":";
+            button_object_detection = "";
+            select_object_detection = "";
+            select_thresholds       = lang("DETECTION_NOT_LOADED");
+            }
+
+        info_text += tab.row(detection_key,
+                             select_thresholds + "<br/>" + select_object_detection + "<br/>&nbsp;<br/>" + button_object_detection );
         }
 
-    info_text += tab.row(detection_key, select_thresholds + "<br/>" +
-                         select_object_detection + "<br/>&nbsp;<br/>" + button_object_detection );
-    info_text += tab.row(lang("UPDATE_VIEWS")+":", "<button onclick='birdhouse_forceUpdateViews();' class='bh-slider-button' style='width:80px;'>Update</button>");
-
+    info_text += tab.row(lang("UPDATE_VIEWS")+":",
+                         "<button onclick='birdhouse_forceUpdateViews();' class='bh-slider-button' style='width:80px;'>Update</button>&nbsp;" +
+                         "<button onclick='birdhouse_forceUpdateViews(true);' class='bh-slider-button' style='width:80px;'>Complete</button>");
     info_text += tab.end();
     info_text += "&nbsp;<br/>&nbsp;";
+
     html += birdhouse_OtherGroup( "info", lang("SETTINGS"), info_text, false, "settings" );
     return html;
 }
 
-function birdhouse_LIST_admin_today_complete(data, admin, camera, active_page, active_date) {
+/*
+* create admin functionalities for the today_complete view
+*
+* @param (dict) data: API response for list specific request
+* @param (boolean) admin: logged in as admin
+* @param (string) camera: ID of active camera
+* @param (string) active page: currently active page
+* @param (string) active date: currently active date
+* @returns (string): html with admin functionality for the today_complete view
+*/function birdhouse_LIST_admin_today_complete(data, admin, camera, active_page, active_date) {
 
     var html              = "";
     var info_text         = "";
@@ -609,6 +684,14 @@ function birdhouse_LIST_admin_today_complete(data, admin, camera, active_page, a
     return html;
 }
 
+/*
+* create slider to tryout and set the similarity detection threshold as one admin functionality in some views
+*
+* @param (string) camera: ID of active camera
+* @param (string) active page: currently active page
+* @param (string) active date: currently active date
+* @returns (string): html with slider
+*/
 function birdhouse_LIST_admin_threshold_slider(camera, active_page, active_date) {
 
 	var camera_settings     = app_data["SETTINGS"]["devices"]["cameras"];
@@ -646,6 +729,15 @@ function birdhouse_LIST_admin_threshold_slider(camera, active_page, active_date)
     return threshold_slider;
 }
 
+/*
+* create a group with all available years and months for direct access; the click on a month opens the
+* respective month and closes all the other. The calender starts opened when more than two month exists.
+*
+* @param (string) camera: ID of active camera
+* @param (string) active page: currently active page
+* @param (string) active date: currently active date
+* @returns (string): html with calendar
+*/
 function birdhouse_LIST_calendar(groups) {
 
     var html = "";
@@ -666,6 +758,7 @@ function birdhouse_LIST_calendar(groups) {
     });
 
     var close_all = "";
+    var count = 0;
     html += tab.start();
     for (var j=0;j<years.length;j++) {
         var year = years[j];
@@ -676,9 +769,12 @@ function birdhouse_LIST_calendar(groups) {
             var onclick = "<!--CLOSE_ALL-->; birdhouse_groupToggle(\""+app_active_page+"_" +year + "-" + dates[year][i] +"\", true);"
             close_all += "birdhouse_groupToggle(\""+app_active_page+"_" +year + "-" + dates[year][i] +"\", false);"
             cell_2 += "<div class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + year + "-" + dates[year][i] + "&nbsp;&nbsp;</div>";
+            count += 1;
             }
         html += tab.row(cell_1, cell_2);
         }
+    var header_open = false;
+    if (count > 2) { header_open = true; }
     html += tab.end();
     html += "<br/>&nbsp;<br/>";
     html = html.replaceAll("<!--CLOSE_ALL-->", close_all);
@@ -687,6 +783,14 @@ function birdhouse_LIST_calendar(groups) {
     return group_html;
 }
 
+/*
+* create a weather chart for different views (incl. last day / next day for archive view)
+*
+* @param (dict) data: API response for list specific request
+* @param (string) active page: currently active page
+* @param (string) camera: ID of active camera
+* @returns (string): html with weather chart
+*/
 function birdhouse_LIST_chart_weather(data, active_page, camera) {
     var html = "";
     var chart_titles = [];
@@ -734,7 +838,7 @@ function birdhouse_LIST_chart_weather(data, active_page, camera) {
         chart_titles.push(title_s);
     }
     var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
-    chart    += birdhouseChart_weatherOverview(weather_data); // + "<br/>";
+    chart    += birdhouseWeather_OverviewChart(weather_data); // + "<br/>";
 
     if (chartJS_loaded) {
         if (active_page == "TODAY") {
@@ -746,13 +850,19 @@ function birdhouse_LIST_chart_weather(data, active_page, camera) {
         html     += birdhouse_OtherGroup( "chart", lang("WEATHER"), chart, true );
         }
     else {
-        var chart = birdhouseChart_weatherOverview(weather_data);
+        var chart = birdhouseWeather_OverviewChart(weather_data);
         chart += "<br/>&nbsp;";
         html     += birdhouse_OtherGroup( "chart", lang("WEATHER") + " " + lang("NO_INTERNET_CHART"), chart, false );
         }
     return html;
 }
 
+/*
+* create list of groups for favorite view  in the format MM.YYYY instead out of YYYY-MM
+*
+* @param (array) groups: list of groups in american format
+* @returns (array): list of adapted groups
+*/
 function birdhouse_LIST_favorite_groups(groups) {
     var groups2 = {}
     Object.entries(groups).forEach(([key, value]) => {
@@ -768,6 +878,15 @@ function birdhouse_LIST_favorite_groups(groups) {
     return groups2;
 }
 
+/*
+* create a list of labels for detected objects, where a click on the label shows the respective images with
+* those objects and opens all groups, where those images are in
+*
+* @param (dict) entries: all images entries of the current view
+* @param (string) active page: currently active page
+* @param (boolean) empty: show label for images without detected objects (empty)
+* @returns (string): html with list of labels
+*/
 function birdhouse_LIST_label(entries, active_page, empty=true) {
     var html = "";
     var video = false;
@@ -804,12 +923,14 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
         Object.entries(labels).sort().forEach(([key, value]) => {
             console.log("     - " + key + ": " + value.length);
             var onclick = "birdhouse_view_images_objects(\""+key+"\"); birdhouse_labels_highlight(\""+key+"\", \"label_key_list\");";
+            if (active_page == "TODAY_COMPLETE") { onclick    += "birdhouse_OBJECTS_open(\""+key+"\", true, \""+active_page+"\");"; }
             label_information += "<div id='label_"+key+"' class='detection_label' onclick='" + onclick + "'>&nbsp;" + bird_lang(key) + " (" + value.length + ")&nbsp;</div>";
             label_keys.push(key);
             });
 
         if (empty) {
             var onclick = "birdhouse_view_images_objects(\"EMPTY\"); birdhouse_labels_highlight(\"empty\", \"label_key_list\");";
+            if (active_page == "TODAY_COMPLETE") { onclick    += "birdhouse_OBJECTS_open(\"empty\", true, \""+active_page+"\");"; }
             label_information +=  "<div id='label_empty' class='detection_label_function' onclick='" + onclick + "'>&nbsp;" + lang("EMPTY") + "&nbsp;</div>";
             label_keys.push("empty");
             }
@@ -821,6 +942,7 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
 
         if (count_labels > 0) {
             var onclick = "birdhouse_view_images_objects(\"\");  birdhouse_labels_highlight(\"all\", \"label_key_list\");";
+            if (active_page == "TODAY_COMPLETE") { onclick    += "birdhouse_OBJECTS_open(\"all\", true, \""+active_page+"\");"; }
             label_information = "<div id='label_all' class='detection_label_function' onclick='" + onclick + "'>&nbsp;" + lang("ALL_IMAGES") + " (" + Object.entries(entries).length + ")&nbsp;</div>" +
                                 label_information;
             html += birdhouse_OtherGroup("detection", lang("DETECTION"), label_information + "<div style='width:100%;height:25px;float:left;'></div>", true );
@@ -830,5 +952,6 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
     }
     return html;
 }
+
 
 app_scripts_loaded += 1;

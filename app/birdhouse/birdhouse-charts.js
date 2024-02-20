@@ -19,6 +19,10 @@ var chartJS_darkColors = ["red", "aquamarine", "chartreuse", "coral", "cadetblue
 				"forestgreen", "goldenrod", "greenyellow", "hotpink", "indigo"
 				];
 
+/*
+* load javascript file for chart rendering if not done before
+* see https://www.chartjs.org/docs/latest/ for details
+*/
 function birdhouse_loadChartJS() {
 
 	if (chartJS_loaded == false) {
@@ -36,6 +40,15 @@ function birdhouse_loadChartJS() {
 		}
 	}
 
+/*
+* render a specific chart, data have to be prepared in the required format
+* see https://www.chartjs.org/docs/latest/samples/line/line.html for details how to create line charts
+*
+* @param (string) title: title of the chart
+* @param (dict) data: prepared chart data, see documentation of chartjs.org
+* @param (string) type: type of chart, see documentation of chartjs.org
+* @param (boolean) sort_keys: define if keys/labels should be sorted
+*/
 function birdhouseChart_create(title, data, type="line", sort_keys=true) {
 
       	// https://www.chartjs.org/docs/latest/samples/line/line.html
@@ -106,49 +119,5 @@ function birdhouseChart_create(title, data, type="line", sort_keys=true) {
 	return html;
 	}
 
-function birdhouseChart_weatherOverview (entries, title_key="time", title_column=true) {
-    var html = "";
-    var count = 0;
-    var weather_data = {};
-
-    Object.keys(entries).forEach( key => {
-        weather_data[entries[key][title_key]] = entries[key]["description_icon"];
-        /*
-        if (key.substring(2,4) == "00" && entries[key]["weather"]) {
-            weather_data[key.substring(0,2)+":"+key.substring(2,4)] = entries[key]["weather"]["description_icon"];
-        }
-        */
-    });
-
-    // width -> 8 if small; 16 if middle; 24 if big
-
-    if (title_column) {
-        html_row1 = "<td></td>";
-        html_row2 = "<td>"+lang("WEATHER")+": &nbsp;</td>";
-    }
-    else {
-        html_row1 = "";
-        html_row2 = "";
-    }
-    Object.keys(weather_data).sort().forEach(key => {
-        var td_class = "weather_hide_if_small";
-        if (Math.abs(count % 2) != 0 || Object.keys(weather_data).length <= 8) {
-             td_class = "weather_show";
-        }
-        if (count < 16) {
-            html_row1 += "<td class='"+td_class+"'>"+key+"<td>";
-            html_row2 += "<td class='"+td_class+"' style='font-size:14px;'><center>"+weather_data[key]+"<center><td>";
-        }
-        count += 1;
-    });
-    if (count == 0) { return ""; }
-    html += "<hr/><table border='0'>";
-    html += "<tr style='font-size:8px;'>" + html_row1 + "</tr>";
-    html += "<tr style='font-size:11px;'>" + html_row2 + "</tr>";
-    html +="</table>"
-    console.debug(weather_data);
-    //html += "&nbsp;<br/>&nbsp;";
-    return html;
-}
 
 app_scripts_loaded += 1;

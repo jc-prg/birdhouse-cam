@@ -88,7 +88,7 @@ function birdhouse_OBJECTS(title, data) {
         entry_information += favorite_label + default_dates;
 
         var html_entry = tab.start();
-        html_entry    += tab.row(birdhouse_Image(bird_lang(key), value), entry_information);
+        html_entry    += tab.row(birdhouse_Image(bird_lang(key), key, value), entry_information);
         html_entry    += tab.end();
 
         var bird_key = bird_lang(key);
@@ -100,16 +100,46 @@ function birdhouse_OBJECTS(title, data) {
 	setTextById(app_frame_content, html);
     }
 
-function birdhouse_OBJECTS_open(label="all") {
+/*
+* open all or selected label group in birds / objects view or the today_complete view
+*
+* @param (string) label: object class name / label of the group(s) to be opened
+* @param (boolean) default_groups: use default group names (saved in <div id='group_list'>)
+* @param (string) active_page: active page, which is part of the group names but not in the 'group_list'
+*/
+function birdhouse_OBJECTS_open(label="all", default_groups=false, active_page) {
 
-    var all_labels = document.getElementById("label_key_list").innerHTML.split(",");
-    for (var i=0;i<all_labels.length;i++) {
-        if (label == "all" )  { birdhouse_groupToggle("label_"+all_labels[i], true); }
-        else                  { birdhouse_groupToggle("label_"+all_labels[i], false); }
-    }
-    if (label != "all")       { birdhouse_groupToggle("label_"+label, true); }
+    if (!default_groups) {
+        var all_labels = document.getElementById("label_key_list").innerHTML.split(",");
+        for (var i=0;i<all_labels.length;i++) {
+            if (label == "all" )  { birdhouse_groupToggle("label_"+all_labels[i], true); }
+            else                  { birdhouse_groupToggle("label_"+all_labels[i], false); }
+            }
+        if (label != "all")       { birdhouse_groupToggle("label_"+label, true); }
+        }
+    else {
+        var groups = getTextById("group_list").split(" ");
+        for (var i=0;i<groups.length;i++) {
+            if (groups[i] != "") {
+                var labels = getTextById("group_labels_"+active_page+"_"+groups[i]);
+                console.error(groups[i]);
+                console.error("group_labels_"+active_page+"_"+groups[i]);
+                console.error("-group_"+active_page+"_"+groups[i]+"-");
+                console.error(labels+"|"+label);
+                if (label == "all" )                        { birdhouse_groupToggle(active_page+"_"+groups[i], true); }
+                else if (labels.indexOf(label) >= 0)        { birdhouse_groupToggle(active_page+"_"+groups[i], true); }
+                else                                        { birdhouse_groupToggle(active_page+"_"+groups[i], false); }
+                }
+            }
+        }
 }
 
+/*
+* highlight selected labels (show glow)
+*
+* @param (string) key: element id of the label to be highlighted
+* @param (string) list: element id of div that contains all available labels
+*/
 function birdhouse_labels_highlight(key, list="") {
     if (key == "") { key = "all"; }
     if (document.getElementById("label_"+key)) {
@@ -127,16 +157,23 @@ function birdhouse_labels_highlight(key, list="") {
     }
 }
 
-function bird_lang(bird_name) {
-    var key = bird_name.toUpperCase();
-    if (!app_bird_names)            { return bird_name; }
-    else if (!app_bird_names[key])  { return bird_name; }
+/*
+* translate bird class to selected language if available
+*
+* @param (string) bird_class: class name of detected bird (or object)
+* @returns (string): translation if available, otherwise bird class
+*/
+function bird_lang(bird_class) {
+    var key = bird_class.toUpperCase();
+    if (!app_bird_names)            { return bird_class; }
+    else if (!app_bird_names[key])  { return bird_class; }
     else {
         if (app_bird_names[key][LANG])      { return app_bird_names[key][LANG]; }
         else if (app_bird_names[key]["EN"]) { return app_bird_names[key]["EN"]; }
         else if (app_bird_names[key]["DE"]) { return app_bird_names[key]["DE"]; }
-        else                                { return bird_name; }
+        else                                { return bird_class; }
     }
 }
+
 
 app_scripts_loaded += 1;

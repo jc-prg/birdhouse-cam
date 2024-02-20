@@ -7,7 +7,12 @@
 var birdhouse_active_video_streams  = {};
 var birdhouse_image_ids_error       = [];
 var birdhouse_image_ids             = [];
+var birdhouse_lowres_size           = {};
 
+
+/*
+* kill all active video streams in app and request a kill server side using birdhouse_killStream();
+*/
 function birdhouse_KillActiveStreams() {
     for (let key in birdhouse_active_video_streams) {
         if (birdhouse_active_video_streams[key] == true) {
@@ -18,6 +23,11 @@ function birdhouse_KillActiveStreams() {
     window.stop();
     }
 
+/*
+* Get a list of active video streams
+*
+* @returns (integer): amount of streams
+*/
 function birdhouse_CountActiveStreams() {
     count = 0;
     for (let key in birdhouse_active_video_streams) {
@@ -28,59 +38,16 @@ function birdhouse_CountActiveStreams() {
     return count;
 }
 
-function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false) {
-    var stream_server = RESTurl;
-    var stream_link   = stream_url;
-    var stream_id_ext = camera;
-
-    if (stream_link.indexOf("http:") > -1 || stream_link.indexOf("https:") > -1) {}
-    else { stream_link = stream_server + stream_link; }
-
-    if (new_uid)  {
-        app_unique_stream_id += 1;
-    }
-    var stream_uid    = app_unique_stream_id;
-
-    if (stream_id != "")        {
-        stream_link   += "&" + stream_id;
-        stream_id_ext += "&" + stream_id;
-        }
-    if (stream_uid)  {
-        stream_link   += "&" + stream_uid;
-        stream_id_ext += "&" + stream_uid;
-        }
-    birdhouse_active_video_streams[stream_id_ext] = true;
-
-	stream_link = stream_link.replaceAll("//", '/');
-	stream_link = stream_link.replace(":/","://");
-    return [stream_link, stream_id_ext];
-    }
-
-function birdhouse_Camera( main, view, onclick, camera, stream_server, admin_allowed=false ) {
-	var html      = "";
-	var style_cam = view;
-
-	if (main) { var container = 'main'; }
-	else      { var container = '2nd'; }
-
-    var [stream_link, stream_uid]  = birdhouse_StreamURL(camera["name"], camera["stream"], "stream_main", true);
-	var livestream     = "<img src='"+stream_link+"' id='stream_"+camera["name"]+"' class='livestream_"+container+"'/>";
-	var command_record = "birdhouse_recordStart(\""+camera["name"]+"\");"; //requestAPI(\"/stop/recording/cam2\");
-	var command_stop   = "birdhouse_recordStop(\""+camera["name"]+"\");"; //requestAPI(\"/stop/recording/cam2\");
-
-	html     += "<center><div class='livestream_"+container+"_container "+view+"'>";
-	html     += "  <a onclick='"+onclick+"' style='cursor:pointer;'>" + livestream + "</a>";
-	if (main && admin_allowed) {
-		html     += "  <div class='livestream_record "+view+"'>";
-		html     += "     <button onclick='"+command_record+"' class='button-video-record'>Record ("+camera["name"]+")</button> &nbsp;";
-		html     += "     <button onclick='"+command_stop+"'   class='button-video-record'>Stop ("+camera["name"]+")</button>";
-		html     += "  </div>";
-    }
-	html     += "</div></center>";
-	return html;
-    }
-
-
+/*
+* create a group with some html-content in it, that starts with a header and that can be opened and closed by clicking onto the header
+*
+* @param (string) key: unique key/identifier for the group (can be used to show or hide the group = group_id)
+* @param (string) title: titel for the group displayed in the header
+* @param (string) content: some html-based content
+* @param (boolean) header_open: definition if header starts opened or closed
+* @param (string) css_class: option to add a class definition; at the moment defined is 'settings' for a specific header color
+* @returns (string): html sequence to display the group
+*/
 function birdhouse_OtherGroup( key, title, content, header_open, css_class="") {
     if (app_header_opened["group_"+key] != undefined) {
         header_open = app_header_opened["group_"+key];
@@ -98,6 +65,15 @@ function birdhouse_OtherGroup( key, title, content, header_open, css_class="") {
     return html;
 }
 
+/*
+* create a header for a group
+*
+* @param (string) key: unique key/identifier for the group (can be used to show or hide the group = group_id)
+* @param (string) title: titel for the group displayed in the header
+* @param (boolean) header_open: definition if header starts opened or closed
+* @param (string) css_class: option to add a class definition; at the moment defined is 'settings' for a specific header color
+* @returns (string): html sequence to display the group header
+*/
 function birdhouse_OtherGroupHeader( key, title, header_open, css_class="") {
 	var status = "−";
 	if (header_open == false) { status = "+"; }
@@ -109,7 +85,23 @@ function birdhouse_OtherGroupHeader( key, title, header_open, css_class="") {
 	return html;
 }
 
-
+/*
+* create a group of images, that starts with a header and that can be opened and closed by clicking onto the header
+*
+* @param (string) group_id: unique key/identifier for the group (can be used to show or hide the group = group_id)
+* @param (string) title: titel for the group displayed in the header
+* @param (dict) entries: database entries with all elements to be displayed in the group
+* @param (array) entry_count: types that shall be counted in the header when logged in as admin, available: 'all', 'star', 'recycle', 'object', 'detect', 'data'
+* @param (string) entry_category: ... tbc.
+* @param (boolean) header_open: definition if header starts opened or closed
+* @param (boolean) admin: value if logged in as admin
+* @param (boolean) video_short: ... tbc.
+* @param (boolean) same_img_size: use a fixed height for all image containers
+* @param (dict) lowres_size: set lowres size using integers (pixel size) for the following values: 'container_width', 'container_height', 'thumbnail_width', 'thumbnail_height'
+* @param (integer) max_lowres_size: ... tbc.
+* @param (integer) max_text_lines: ... tbc.
+* @returns (string): html sequence to display the image group
+*/
 function birdhouse_ImageGroup( group_id, title, entries, entry_count, entry_category, header_open, admin=false, video_short=false,
                                same_img_size=false, max_lowres_size=0, max_text_lines=1) {
 
@@ -210,6 +202,7 @@ function birdhouse_ImageGroup( group_id, title, entries, entry_count, entry_cate
 
 	html += birdhouse_ImageGroupHeader( group_id, title, header_open, count );
 	html += "<div id='group_ids_"+group_id+"' style='display:none;'>" + image_ids + "</div>";
+	html += "<div id='group_labels_"+group_id+"' style='display:none;'><!--LABELS--></div>";
 	html += "<div id='group_"+group_id+"' "+display+">";
 
 	if (title == lang("RECYCLE")) {
@@ -232,19 +225,38 @@ function birdhouse_ImageGroup( group_id, title, entries, entry_count, entry_cate
 	//html += "<div class='separator'>&nbsp;</div>";
 
 	entry_keys = Object.keys(entries).sort().reverse();
+	var detection_labels = [];
 	for (var i=0;i<entry_keys.length;i++) {
 		key   = entry_keys[i];
 		var img_title = key;
-		//if (entry_keys[key]["type"] == "video") {  title = entry_keys[key]["date"]; }
-		html += birdhouse_Image(title=img_title, entry=entries[key], header_open=header_open, admin=admin,
+		html += birdhouse_Image(title=img_title, entry_id=key, entry=entries[key], header_open=header_open, admin=admin,
 		                        video_short=video_short, group_id=group_id, same_img_size=same_img_size,
 		                        lowres_size=lowres_size);
+		if (entries[key]["detections"]) {
+		    for (var j=0;j<entries[key]["detections"].length;j++) {
+		        var label = entries[key]["detections"][j]["label"];
+		        if (detection_labels.indexOf(label) < 0) { detection_labels.push(label); }
+		        }
+		    }
+		if ((!entries[key]["detections"] || entries[key]["detections"].length == 0) && (detection_labels.indexOf("empty") < 0)) {
+		    detection_labels.push("empty");
+		    }
     }
 
 	html += "</div>";
+    html = html.replace("<!--LABELS-->", detection_labels.join(","));
 	return html;
 }
 
+/*
+* create a header for an image group, for admins incl. information how many items of which type are in the group
+*
+* @param (string) key: unique key/identifier for the group (can be used to show or hide the group = group_id)
+* @param (string) title: titel for the group displayed in the header
+* @param (boolean) header_open: definition if header starts opened or closed
+* @param (dict) count: amount of different items to be displayed in the header when logged in as admin
+* @returns (string): html sequence to display the group header
+*/
 function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 	var status = "−";
     birdhouse_image_ids_error = [];
@@ -298,12 +310,24 @@ function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 	return html;
 	}
 
-function birdhouse_Image(title, entry, header_open=true, admin=false, video_short=false, group_id="", same_img_size=false, lowres_size=0) {
+/*
+* create lowres image incl. link to hires overlay image or video
+*
+* @param (string) title: image title, required for some image types, e.g., ...
+* @param (dict) entry: database entry for image
+* @param (boolean) header_open: value if image is defined for opened group or closed group (if closed, image will be loaded while opening)
+* @param (boolean) admin: value if logged in as admin
+* @param (boolean) video_short: ... tbc.
+* @param (string) group_id: ... tbc.
+* @param (boolean) same_img_size: use a fixed height for all image containers
+* @param (dict) lowres_size: set lowres size using integers (pixel size) for the following values: 'container_width', 'container_height', 'thumbnail_width', 'thumbnail_height'
+* @returns (string): html sequence to display lowres image
+*/
+function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, video_short=false, group_id="", same_img_size=false, lowres_size=0) {
+
+	if (entry["type"] == "data") { return ""; }
 
 	var html        = "";
-	var play_button = "";
-	var dont_load   = "";
-	var edit        = false;
 	var category    = "";
     var rotation    = 0;
 	var onclick_difference = "";
@@ -313,174 +337,30 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	var img_missing  = false;
 	var detect_sign  = "";
 
+	var dont_load   = "";
+	if (header_open == false) { dont_load = "data-"; }
 	if (entry["directory"] && entry["directory"].charAt(entry["directory"].length - 1) != "/") { entry["directory"] += "/"; }
 
 	console.log(app_active_page);
 
-	if (entry["type"] == "data") {
+	var image_data        = birdhouse_ImageDisplayData(title, entry_id, entry, app_active_page, admin, video_short);
+    var lowres            = image_data["lowres"];
+    var hires             = image_data["hires"];
+    var description       = image_data["description"];
+    var description_hires = image_data["description_hires"];
+    var onclick           = image_data["onclick"];
+	var style             = image_data["style"];
+    var edit              = image_data["edit"];
+    var img_id2           = image_data["img_id2"];
+    var play_button       = image_data["play_button"];
+    var img_missing       = image_data["img_missing"];
 
-		return "";
-    }
-	else if (entry["type"] == "image") {
-		var lowres      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
-		var hires       = birdhouse_ImageURL(img_url + entry["directory"] + entry["hires"]);
-		var description = entry["time"] + " (" + entry["similarity"] + "%)";
+    if (image_data["same_img_size"]) { same_img_size = image_data["same_img_size"]; }
 
-		if (app_active_page == "FAVORITES") {
-			[day,month,year]  = entry["date"].split(".");
-			[hour,minute,sec] = entry["time"].split(":");
-			description       = entry["date"]+" ("+hour+":"+minute+")";
-        }
-        else if (app_active_page == "TODAY") {
-			[hour,minute,sec] = entry["time"].split(":");
-		    description = hour + ":" + minute + " (" + entry["similarity"] + "%)";
-        }
-
-        if (entry["hires_detect"] && entry["detections"] && entry["detections"].length > 0) {
-            var description_labels = "[center][div style=align:center;][br/][hr/]";
-            var hires_description = description;
-            var counted_labels = {}
-            var confidence = {};
-            for (var i=0;i<entry["detections"].length;i++) {
-                if (!counted_labels[entry["detections"][i]["label"]]) { counted_labels[entry["detections"][i]["label"]] = 1; }
-                else                                                  { counted_labels[entry["detections"][i]["label"]] += 1; }
-
-                confidence[entry["detections"][i]["label"]] = Math.round(entry["detections"][i]["confidence"] * 1000)/10;
-                }
-            Object.keys(counted_labels).forEach( key => {
-                var info = "";
-                var amount = counted_labels[key];
-                if (amount > 1) { info = amount; }
-                else            { info = confidence[key] + "%"; }
-                description_labels += "[div class=detection_label style=cursor:default;]&nbsp;"+bird_lang(key)+"&nbsp;("+info+")&nbsp;[/div]";
-                });
-            description_labels += "[/div][/center]";
-            hires_description += description_labels;
-            var onclick = "birdhouse_imageOverlay(\""+hires+"\",\""+hires_description+"\", \""+birdhouse_ImageURL(img_url + entry["directory"] + entry["hires_detect"])+"\");"; detect_sign = "<sup>D</sup>";
-            }
-		else {
-		    var onclick = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");"; entry["hires_detect"] = "";
-		    }
-		description = description.replace(/\[br\/\]/g,"<br/>");
-
-        if (admin && entry["compare"][1] != "000000" && app_active_page == "TODAY_COMPLETE") {
-            var diff_image      = RESTurl + "compare/"+entry["compare"][0]+"/"+entry["compare"][1]+"/"+entry["similarity"]+"/image.jpg?"+entry["camera"];
-            onclick_diff        = "birdhouse_imageOverlay(\""+diff_image+"\",\"Difference Detection - "+description+"\");";
-            onclick_difference  = entry["time"] +" (<u onclick='"+onclick_diff+"' style='cursor:pointer;'>";
-            onclick_difference += entry["similarity"] + "%</u>)";
-    		description         = onclick_difference;
-        }
-		edit            = true;
-    }
-    else if (entry["type"] == "label") {
-		var lowres      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
-		var hires       = birdhouse_ImageURL(img_url + entry["directory"] + entry["hires_detect"]);
-		//var description = "<div class='detection_label' style='float:none;cursor:default;max-height:unset;height:unset;width:100px;'>"+title+"</div>";
-		var description = "<div class='detection_label image'>"+title+"</div>";
-        var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+title+"\");";
-
-        same_img_size = true;
-    }
-	else if (entry["type"] == "directory") {
-
-        var description = "";
-        var detection = "";
-        if (entry["detection"]) { detection = "<sup>D</sup>"; }
-    	if (entry["lowres"] == "" && entry["count_cam"] == 0) {
-            description += "<b>" + entry["date"] + "</b><br/>";
-            description += "<i>"+lang("NO_IMAGE_IN_ARCHIVE_2")+"</i>";
-            img_missing = true;
-    	    }
-        else {
-            var lowres      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
-            var onclick     = "birdhousePrint_load(view=\"TODAY\", camera = \""+entry["camera"]+"\", date=\""+entry["datestamp"]+"\");";
-            if (entry["count_cam"] != entry["count"]) {
-                description += "<b>" + entry["date"] + "</b>"+detection+"<br/>" + entry["count_cam"] + " / " + entry["count"];
-                if (entry["count_delete"] > 0) { description += "*"; }
-                description += "<br/><i>[" + Math.round(entry["dir_size"]*10)/10 + " MB]</i>";
-                }
-            else {
-                description += "<b>" + entry["date"] + "</b>"+detection+"<br/>" + entry["count_cam"];
-                description += "<br/><i>[" + Math.round(entry["dir_size"]*10)/10 + " MB]</i>";
-                }
-            }
-        }
-	else if (entry["type"] == "addon") {
-		var lowres = birdhouse_ImageURL(img_url + entry["lowres"]);
-		var [lowres, stream_uid]  = birdhouse_StreamURL(app_active_cam, entry["stream"], "stream_list_5", true);
-		var onclick     = "birdhousePrint_load(view=\"INDEX\", camera = \""+entry["camera"]+"\");";
-		var description = lang("LIVESTREAM");
-        }
-	else if (entry["type"] == "camera") {
-		var description = title;
-		//var lowres      = entry["video"]["stream"];
-		var [lowres, stream_uid] = birdhouse_StreamURL(entry["id"], entry["video"]["stream"], "image_stream", true);
-		var hires       = lowres;
-		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\");";
-    }
-	else if (entry["type"] == "detection") {
-		var description = title;
-		//var lowres      = entry["video"]["stream_detect"];
-		var [lowres, stream_uid] = birdhouse_StreamURL(entry["id"], entry["video"]["stream_detect"], "image_stream_detect", true);
-		var hires       = lowres;
-		var onclick     = "birdhouse_imageOverlay(\""+hires+"\",\""+description+"\", \"\", \"stream_overlay_"+entry["id"]+"\");";
-    }
-	else if (entry["type"] == "video") {
-		var note        = "";
-		var video_file  = entry["video_file"];
-		if (entry["video_file_short"] != undefined && entry["video_file_short"] != "") {
-			if (video_short) {
-				video_file  = entry["video_file_short"];
-				note = "*";
-        }	}
-        var stream_server = "";
-        if (settings["server"]["ip4_stream_video"] && settings["server"]["ip4_stream_video"] != "") {
-            stream_server = settings["server"]["ip4_stream_video"] + ":" + settings["server"]["port_video"];
-        }
-        else {
-            var this_server = window.location.href;
-            this_server     = this_server.split("//")[1];
-            this_server     = this_server.split("/")[0];
-            this_server     = this_server.split(":")[0];
-            stream_server   = this_server + ":" + settings["server"]["port_video"];
-        }
-
-        var streaming_url = "http://"+stream_server+"/";
-		var lowres      = birdhouse_ImageURL(img_url + entry["path"] + entry["thumbnail"]);
-		var hires       = birdhouse_ImageURL(streaming_url + video_file);
-		var description = "";
-		var image_title = "";
-		if (entry["title"] && entry["title"] != "") { image_title = "<b>" + entry["title"] + "</b>"; }
-		else                                        { image_title = entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }
-		if (title.indexOf("_") > 0) { description = entry["date"] + "[br/]" + image_title; }
-		else                        { description = title + "[br/]" + image_title; }
-
-		var onclick     = "birdhouse_videoOverlay(\""+hires+"\",\""+description+"\");";
-		var play_button = "<img src=\"birdhouse/img/play.png\" class=\"play_button\" style=\"min-width:auto;min-height:auto;\" onclick='"+onclick+"' />";
-		entry["lowres"] = entry["thumbnail"];
-		description     = description.replace(/\[br\/\]/g,"<br/>");
-		if (admin) {
-			var cmd_edit = "birdhousePrint_load(view=\"VIDEO_DETAIL\", camera=\""+app_active_cam+"\", date=\""+entry["date_start"]+"\");"
-			description += "<br/><a onclick='"+cmd_edit+"' style='cursor:pointer;'>"+lang("EDIT")+"</a>"+note;
-        }
-		edit            = true;
-    }
-
-	if (header_open == false) { dont_load = "data-"; }
-
-	var style       = "";
-	var star        = "";
-	var recycle     = "";
-
-	var img_id2 = "";
-    if (entry["type"] == "addon")           { img_id2 = "stream_lowres_" + app_active_cam; }
-    else if (entry["type"] == "detection")  { img_id2 = "stream_detect_" + entry["id"]; }
-    else                                    { img_id2 += entry["directory"] + entry["lowres"]; img_id2 = img_id2.replaceAll( "/", "_"); }
-
-	if (entry["favorit"] == 1 || entry["favorit"] == "1")                    { style = "border: 1px solid "+color_code["star"]+";"; }
-	else if (entry["to_be_deleted"] == 1 || entry["to_be_deleted"] == "1")   { style = "border: 1px solid "+color_code["recycle"]+";"; }
-	else if (entry["detections"] && entry["detections"].length > 0)          { style = "border: 1px solid "+color_code["object"]+";"; }
-	else if (entry["detect"] == 1)                                           { style = "border: 1px solid "+color_code["detect"]+";"; }
+	var star                    = "";
+	var recycle                 = "";
+	var thumbnail_width         = "";
+	var thumbnail_height        = "";
 
 	if (admin && edit) {
 		var img_id      = entry["category"];
@@ -537,8 +417,15 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
         thumb_container_style += "width:" + thumbnail_width + "px;";
         }
 
-    if (entry["type"] == "addon")   { container_id = "lowres_today"; }
-    else                            { container_id = img_id2 + "_container"; }
+    if (entry["type"] == "addon")   {
+        container_id = "lowres_today";
+        var image_onload = "onload='error_img=document.getElementById(\"lowres_error_"+entry["camera"]+"\");error_img.height=this.height;error_img.width=this.width;'";
+        var image_onload = "";
+        }
+    else {
+        container_id = img_id2 + "_container";
+        var image_onload = "";
+        }
 
 	html += "<div id='"+container_id+"' class='image_container"+height+"' style='" + container_style + "'>";
 	html += "  <div class='star'>"+star+"</div>";
@@ -546,7 +433,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
     html += "  <div class='thumbnail_container' style='" + thumb_container_style + "'>";
 
     if (!img_missing) {
-        html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id2+"' class='thumbnail' style='"+style+"'/></a>";
+        html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id2+"' class='thumbnail' style='"+style+"' "+image_onload+"/></a>";
         if (entry["similarity"]) {
             html += "<input id='"+img_id2+"_similarity' value='"+entry["similarity"]+"' style='display:none;'>";
             }
@@ -572,7 +459,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
         html += lang("NO_IMAGE_IN_ARCHIVE")+"</div>";
         birdhouse_image_ids_error.push(img_id2);
         }
-	html += "    <br/><center><small>" + description + detect_sign + "</small></center>";
+	html += "    <br/><center><small>" + description + "</small></center>";
 	html += "  </div>";
 	html += "</div>";
 
@@ -581,7 +468,7 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
         html += "  <div class='star'></div>";
         html += "  <div class='recycle'></div>";
         html += "  <div class='thumbnail_container' style='" + thumb_container_style + "'>";
-        html += "     <div class='thumbnail error' style='width:" + thumbnail_width + "px;height:" + thumbnail_height + "px;'>&nbsp;<br/>&nbsp;<br/>"+lang("CONNECTION_ERROR")+"</div>"
+        html += "     <div class='thumbnail error' id='lowres_error_"+entry["camera"]+"' style='"+style+";padding:0px;'>"+lang("CONNECTION_ERROR")+"</div>"
         html += "    <br/>";
         html += "  </div>";
         html += "</div>";
@@ -590,13 +477,247 @@ function birdhouse_Image(title, entry, header_open=true, admin=false, video_shor
 	return html;
 }
 
-function birdhouse_ImageErrorSize() {}
+/*
+* create description, links and other information for lowres images
+*
+* @param (string) title: image title, required for some image types, e.g., ... tbc.
+* @param (dict) entry: database entry for image
+* @param (string) active_page: information which page is opened
+* @param (boolean) admin: value if logged in as admin
+* @returns (dict): definition of title, lowres and hires links as well as other data to show the image
+*/
+function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admin=false, video_short=false) {
+	const img_url = ""; // RESTurl;
+	var settings     = app_data["SETTINGS"];
+	var settings_cam = app_data["SETTINGS"]["devices"]["camera"];
+	var detect_sign  = "<sup>D</sup>";
+    var image_data        = {
+        "img_id2"       : "",
+        "edit"          : false,
+        "detect_sign"   : "",
+        "play_button"   : "",
+        "swipe"         : false,
+        "style"         : "",
+        "type"          : entry["type"]
+        };
 
+    if (entry["date"])  { [day,month,year]  = entry["date"].split("."); }
+    else                { [day,month,year]  = ["","",""]; }
+    if (entry["time"])  { [hour,minute,sec] = entry["time"].split(":"); }
+    else                { [hour,minute,sec] = ["","",""]; }
+
+    // activate swiping in overlay for some views
+    if (active_page == "TODAY" || active_page == "TODAY_COMPLETE") { image_data["swipe"] = true; }
+    if (active_page == "FAVORITES") { image_data["swipe"] = true; }
+
+    // individual image properties
+    if (entry["type"] == "image") {
+        image_data["edit"]            = true;
+		image_data["lowres"]          = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
+		image_data["hires"]           = birdhouse_ImageURL(img_url + entry["directory"] + entry["hires"]);
+        image_data["hires_detect"]    = "";
+        image_data["detect_sign"]     = "";
+        //image_data["onclick"]         = "birdhouse_imageOverlay(\""+image_data["hires"]+"\",\""+image_data["description"]+"\");";
+
+        if (active_page == "FAVORITES")     { image_data["description"] = entry["date"]+" ("+hour+":"+minute+")"; }
+        else if (active_page == "TODAY")    { image_data["description"] = hour + ":" + minute + " (" + entry["similarity"] + "%)"; }
+        else                                { image_data["description"] = entry["time"] + " (" + entry["similarity"] + "%)"; }
+
+        // add detection labels to description if exists
+        if (entry["hires_detect"] && entry["detections"] && entry["detections"].length > 0) {
+            image_data["description_hires"]  = image_data["description"];
+            image_data["description_hires"] += "[center][div style=align:center;][br/][hr/]";
+            var counted_labels = {}
+            var confidence = {};
+            for (var i=0;i<entry["detections"].length;i++) {
+                if (!counted_labels[entry["detections"][i]["label"]]) { counted_labels[entry["detections"][i]["label"]] = 1; }
+                else                                                  { counted_labels[entry["detections"][i]["label"]] += 1; }
+
+                confidence[entry["detections"][i]["label"]] = Math.round(entry["detections"][i]["confidence"] * 1000)/10;
+                }
+            Object.keys(counted_labels).forEach( key => {
+                var info = "";
+                var amount = counted_labels[key];
+                if (amount > 1) { info = amount; }
+                else            { info = confidence[key] + "%"; }
+                image_data["description_hires"] += "[div class=detection_label style=cursor:default;]&nbsp;"+bird_lang(key)+"&nbsp;("+info+")&nbsp;[/div]";
+                });
+            image_data["description_hires"] += "[/div][/center]";
+            image_data["detect_sign"]        = detect_sign;
+            image_data["hires_detect"]       = birdhouse_ImageURL(img_url + entry["directory"] + entry["hires_detect"]);
+            //image_data["onclick"]            = "birdhouse_imageOverlay(\""+image_data["hires"]+"\",\""+image_data["description_hires"]+"\", \"" +
+            //                             birdhouse_ImageURL(img_url + entry["directory"] + entry["hires_detect"])+"\");";
+            }
+        // add link to comparision of image similarity if admin and view TODAY_COMPLETE
+        if (admin && entry["compare"][1] != "000000" && active_page == "TODAY_COMPLETE") {
+            let diff_image          = RESTurl + "compare/"+entry["compare"][0]+"/"+entry["compare"][1]+"/"+entry["similarity"]+"/image.jpg?"+entry["camera"];
+            let onclick_diff        = "birdhouse_imageOverlay(\""+diff_image+"\",\"Difference Detection - "+entry["description"]+"\");";
+            let onclick_difference  = entry["time"] +" (<u onclick='"+onclick_diff+"' style='cursor:pointer;'>";
+            onclick_difference     += entry["similarity"] + "%</u>)";
+    		image_data["description"]     = onclick_difference;
+            }
+
+        image_data["onclick"]      = "birdhouse_overlayShowById(\"" + entry_id + "\");";
+        image_data["description"] += image_data["detect_sign"];
+        }
+    else if (entry["type"] == "label") {
+		image_data["lowres"]        = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
+		image_data["hires"]         = birdhouse_ImageURL(img_url + entry["directory"] + entry["hires_detect"]);
+		image_data["description"]   = "<div class='detection_label image'>"+title+"</div>";
+        image_data["onclick"]       = "birdhouse_imageOverlay(\""+image_data["hires"]+"\",\""+title+"\");";
+        image_data["same_img_size"] = true;
+        }
+    else if (entry["type"] == "addon") {
+		var [lowres, stream_uid]    = birdhouse_StreamURL(app_active_cam, entry["stream"], "stream_list_5", true);
+		image_data["lowres"]        = lowres;
+		image_data["hires_stream"]  = entry["stream_hires"];
+		image_data["onclick"]       = "birdhousePrint_load(view=\"INDEX\", camera = \""+entry["camera"]+"\");";
+		image_data["description"]   = lang("LIVESTREAM");
+        }
+    else if (entry["type"] == "camera") {
+        image_data["description"] = title;
+		var [lowres, stream_uid] = birdhouse_StreamURL(entry["id"], entry["video"]["stream"], "image_stream", true);
+		image_data["lowres"]      = lowres;
+		image_data["hires"]       = lowres;
+		image_data["onclick"]     = "birdhouse_imageOverlay(\""+image_data["hires"]+"\",\""+image_data["description"]+"\");";
+        }
+    else if (entry["type"] == "detection") {
+		image_data["description"] = title;
+		var [lowres, stream_uid] = birdhouse_StreamURL(entry["id"], entry["video"]["stream_detect"], "image_stream_detect", true);
+		image_data["lowres"]      = lowres;
+		image_data["hires"]       = lowres;
+		image_data["onclick"]     = "birdhouse_imageOverlay(\""+image_data["hires"]+"\",\""+image_data["description"]+"\", \"\", false, \"stream_overlay_"+entry["id"]+"\");";
+        }
+    else if (entry["type"] == "directory") {
+        image_data["description"]  = "";
+        image_data["detect_sign"]  = "";
+        if (entry["detection"]) { image_data["detect_sign"] = detect_sign; }
+    	if (entry["lowres"] == "" && entry["count_cam"] == 0) {
+            image_data["description"] += "<b>" + entry["date"] + "</b><br/>";
+            image_data["description"] += "<i>"+lang("NO_IMAGE_IN_ARCHIVE_2")+"</i>";
+            image_data["img_missing"] = true;
+    	    }
+        else {
+            image_data["lowres"]      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
+            image_data["onclick"]     = "birdhousePrint_load(view=\"TODAY\", camera = \""+entry["camera"]+"\", date=\""+entry["datestamp"]+"\");";
+
+            if (entry["count_cam"] != entry["count"]) {
+                image_data["description"]  += "<b>" + entry["date"] + "</b>"+image_data["detect_sign"]+"<br/>" + entry["count_cam"] + " / " + entry["count"];
+                if (entry["count_delete"] > 0) { image_data["description"] += "*"; }
+                image_data["description"]  += "<br/><i>[" + Math.round(entry["dir_size"]*10)/10 + " MB]</i>";
+                }
+            else {
+                image_data["description"]  += "<b>" + entry["date"] + "</b>"+image_data["detect_sign"]+"<br/>" + entry["count_cam"];
+                image_data["description"]  += "<br/><i>[" + Math.round(entry["dir_size"]*10)/10 + " MB]</i>";
+                }
+            }
+        }
+    else if (entry["type"] == "video") {
+		var note        = "";
+		var video_file  = entry["video_file"];
+		if (entry["video_file_short"] != undefined && entry["video_file_short"] != "") {
+			if (video_short) {
+				video_file  = entry["video_file_short"];
+				note = "*";
+        }	}
+        var stream_server = "";
+        if (settings["server"]["ip4_stream_video"] && settings["server"]["ip4_stream_video"] != "") {
+            stream_server       = settings["server"]["ip4_stream_video"] + ":" + settings["server"]["port_video"];
+            var streaming_url   = "http://"+stream_server+"/";
+        }
+        else {
+            var this_server     = RESTurl_noport;
+            stream_server       = this_server + ":" + settings["server"]["port_video"];
+            var streaming_url   = stream_server + "/";
+        }
+
+		var image_title   = "";
+		if (entry["title"] && entry["title"] != "") { image_title = "<b>" + entry["title"] + "</b>"; }
+		else                                        { image_title = entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }
+
+		image_data["lowres"]      = birdhouse_ImageURL(img_url + entry["path"] + entry["thumbnail"]);
+		image_data["hires"]       = birdhouse_ImageURL(streaming_url + video_file);
+		image_data["description"] = "";
+		if (title.indexOf("_") > 0)                 { image_data["description"] = entry["date"] + "[br/]" + image_title; }
+		else                                        { image_data["description"] = title + "[br/]" + image_title; }
+
+		image_data["onclick"]     = "birdhouse_videoOverlay(\""+image_data["hires"]+"\",\""+image_data["description"]+"\");";
+		image_data["play_button"] = "<img src=\"birdhouse/img/play.png\" class=\"play_button\" style=\"min-width:auto;min-height:auto;\" onclick='"+image_data["onclick"]+"' />";
+
+		entry["lowres"]     = entry["thumbnail"];
+
+		if (admin) {
+			var cmd_edit = "birdhousePrint_load(view=\"VIDEO_DETAIL\", camera=\""+app_active_cam+"\", date=\""+entry["date_start"]+"\");"
+			image_data["description"] += "<br/><a onclick='"+cmd_edit+"' style='cursor:pointer;'>"+lang("EDIT")+"</a>"+note;
+            }
+        image_data["edit"] = true;
+        }
+
+    // further image properties -> img_id2
+    if (entry["type"] == "addon")                                           { image_data["img_id2"] = "stream_lowres_" + app_active_cam; }
+    else if (entry["type"] == "detection")                                  { image_data["img_id2"] = "stream_detect_" + entry["id"]; }
+    else                                                                    { image_data["img_id2"] += entry["directory"] + entry["lowres"]; image_data["img_id2"] = image_data["img_id2"].replaceAll( "/", "_"); }
+
+    // further image properties -> border style
+    if (entry["favorit"] == 1 || entry["favorit"] == "1")                   { image_data["style"] = "border: 1px solid "+color_code["star"]+";"; }
+	else if (entry["to_be_deleted"] == 1 || entry["to_be_deleted"] == "1")  { image_data["style"] = "border: 1px solid "+color_code["recycle"]+";"; }
+	else if (entry["detections"] && entry["detections"].length > 0)         { image_data["style"] = "border: 1px solid "+color_code["object"]+";"; }
+	else if (entry["detect"] == 1)                                          { image_data["style"] = "border: 1px solid "+color_code["detect"]+";"; }
+
+    image_data["description"] = image_data["description"].replaceAll("[br/]","<br/>");
+    return image_data;
+    }
+
+/*
+* create a complete streaming URL out of the given data
+*
+* @param (string) camera: id of the selected camera
+* @param (string) stream_url: relative URL of the stream
+* @param (integer) stream_id: unique id of the stream
+* @param (boolean) new_uid: create a new stream id
+* @returns (string, integer): returns the streaming link and the unique stream id
+*/
+function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false) {
+    var stream_server = RESTurl;
+    var stream_link   = stream_url;
+    var stream_id_ext = camera;
+
+    if (stream_link.indexOf("http:") > -1 || stream_link.indexOf("https:") > -1) {}
+    else { stream_link = stream_server + stream_link; }
+
+    if (new_uid)  {
+        app_unique_stream_id += 1;
+    }
+    var stream_uid    = app_unique_stream_id;
+
+    if (stream_id != "")        {
+        stream_link   += "&" + stream_id;
+        stream_id_ext += "&" + stream_id;
+        }
+    if (stream_uid)  {
+        stream_link   += "&" + stream_uid;
+        stream_id_ext += "&" + stream_uid;
+        }
+    birdhouse_active_video_streams[stream_id_ext] = true;
+
+	stream_link = stream_link.replaceAll("//", '/');
+	stream_link = stream_link.replace(":/","://");
+    return [stream_link, stream_id_ext];
+    }
+
+/*
+* ensure the image url has the right format as sometimes the the format isn't correct for some reason
+*
+* @param (string) URL: image url to be converted
+* @returns (string): correct image url
+*/
 function birdhouse_ImageURL(URL) {
 	URL = URL.replaceAll("//","/");
 	URL = URL.replace("http:/","http://");
 	URL = URL.replace("https:/","https://");
 	return URL;
 	}
+
+
 
 app_scripts_loaded += 1;

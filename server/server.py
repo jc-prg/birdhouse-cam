@@ -7,6 +7,8 @@ import sys
 import psutil
 import subprocess
 import os
+import socket
+import math
 
 import socketserver
 from http import server
@@ -28,8 +30,8 @@ from modules.bh_class import BirdhouseClass
 from modules.bh_database import BirdhouseTEXT
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v1.0.8"}
-app_framework = "v1.0.8"
+api_description = {"name": "BirdhouseCAM", "version": "v1.0.9"}
+app_framework = "v1.0.9"
 srv_audio = None
 
 
@@ -459,24 +461,25 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         system["audio_devices"] = {}
         if microphones != {}:
             first_mic = list(microphones.keys())[0]
-            if microphones[first_mic].connected:
-                info = microphones[first_mic].get_device_information()
-                srv_logging.debug("... mic-info: " + str(info))
+            info = microphones[first_mic].get_device_information()
+            srv_logging.debug("... mic-info: " + str(info))
 
-                if 'deviceCount' in info:
-                    num_devices = info['deviceCount']
-                    for i in range(0, num_devices):
-                        dev_info = microphones["mic1"].get_device_information(i)
-                        if (dev_info.get('maxInputChannels')) > 0:
-                            name = dev_info.get('name')
-                            info = dev_info
-                            srv_logging.debug("... mic-info: " + str(info))
-                            system["audio_devices"][name] = {
-                                "id": i,
-                                "input": info.get("maxInputChannels"),
-                                "output": info.get("maxOutputChannels"),
-                                "sample_rate": info.get("defaultSampleRate")
-                            }
+            if 'deviceCount' in info:
+                num_devices = info['deviceCount']
+                for i in range(0, num_devices):
+                    dev_info = microphones["mic1"].get_device_information(i)
+                    if (dev_info.get('maxInputChannels')) > 0:
+                        name = dev_info.get('name')
+                        info = dev_info
+                        srv_logging.debug("... mic-info: " + str(info))
+                        system["audio_devices"][name] = {
+                            "id": i,
+                            "input": info.get("maxInputChannels"),
+                            "output": info.get("maxOutputChannels"),
+                            "sample_rate": info.get("defaultSampleRate")
+                        }
+
+        srv_logging.debug("... mic-info: " + str(system["audio_devices"]))
         self._device_status["available"] = system
 
     def read_device_status(self):
@@ -512,6 +515,18 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
+
+
+class StreamingServerIPv6(socketserver.ThreadingMixIn, server.HTTPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+    address_family = socket.AF_INET6
+
+    def server_bind(self):
+        # Override server_bind to allow both IPv4 and IPv6 connections
+        # Bind to the wildcard address ("::") to enable dual-stack support
+        self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+        super().server_bind()
 
 
 class StreamingHandler(server.BaseHTTPRequestHandler):
@@ -1254,7 +1269,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
         if command in cmd_views:
-            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups", "archive_exists",
+            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups", "archive_exists", "info",
                                 "chart_data", "weather_data", "days_available", "day_back", "day_forward", "birds"]
             for key in param_to_publish:
                 if key in content:
@@ -1471,13 +1486,27 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     if stream_pip and which_cam2 != "" and which_cam2 in camera:
                         frame_raw_pip = camera[which_cam2].get_stream(stream_id=stream_id_int,
                                                                       stream_type=stream_type,
-                                                                      stream_resolution="lowres",
+                                                                      stream_resolution="hires",  # lowres
                                                                       system_info=False,
                                                                       wait=False)
 
                         if frame_raw_pip is not None and len(frame_raw_pip) > 0:
-                            frame_raw = camera[which_cam].image.image_in_image_raw(raw=frame_raw, raw2=frame_raw_pip,
-                                                                                   position=int(cam2_pos), distance=30)
+
+                            total_pixels_cam1 = frame_raw.shape[0] * frame_raw.shape[1]
+                            total_pixels_cam2 = frame_raw_pip.shape[0] * frame_raw_pip.shape[1]
+                            desired_total_pixels_cam2 = total_pixels_cam1 / 9
+                            scale_factor = math.sqrt(desired_total_pixels_cam2 / total_pixels_cam2) * 100
+                            if frame_raw.shape[1] > 1000:
+                                distance = 50
+                            else:
+                                distance = 30
+                            srv_logging.debug(" PiP ... size %: " + str(scale_factor) + " / distance: " + str(distance))
+
+                            frame_raw_pip = camera[which_cam2].image.resize_raw(frame_raw_pip, scale_factor)
+                            frame_raw = camera[which_cam].image.image_in_image_raw(raw=frame_raw,
+                                                                                   raw2=frame_raw_pip,
+                                                                                   position=int(cam2_pos),
+                                                                                   distance=distance)
 
                 if stream_type == "camera" \
                         and not camera[which_cam].if_error() \
@@ -1592,8 +1621,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         return
 
 
-on_exception_setting()
-sys.excepthook = on_exception
+#on_exception_setting()
+#sys.excepthook = on_exception
 
 
 if __name__ == "__main__":
@@ -1723,8 +1752,8 @@ if __name__ == "__main__":
 
     # Start Webserver
     try:
-        address = ('0.0.0.0', int(birdhouse_env["port_api"]))
-        server = StreamingServer(address, StreamingHandler)
+        address = ('', int(birdhouse_env["port_api"]))
+        server = StreamingServerIPv6(address, StreamingHandler)
         srv_logging.info("Starting WebServer on port " + str(birdhouse_env["port_api"]) + " ...")
         srv_logging.info(" -----------------------------> GO!\n")
         server.serve_forever()

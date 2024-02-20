@@ -8,7 +8,7 @@ var app_setting_count     = 4;
 var app_setting_style     = "frame_column wide";
 var app_last_load         = 0;
 var app_title             = "jc://birdhouse/";
-var app_version           = "v1.0.8";
+var app_version           = "v1.0.9";
 var app_api_version       = "N/A";
 var app_api_dir           = "api/";
 var app_api_status        = "status";
@@ -75,10 +75,11 @@ function app_menu_entries(data) {
 	return app_menu;
 }
 	
-//--------------------------------
-// function to request status, update menu etc. (including initial load)
-//--------------------------------
-
+/**
+* function to request status, update menu etc. (including initial load)
+*
+* @param (dict) object - data returned form server API
+*/
 function app_initialize(data) {
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 	app_api_version = data["API"]["version"];
@@ -86,14 +87,13 @@ function app_initialize(data) {
 
 	var settings = data["SETTINGS"];
     if (settings["localization"]["language"]) { LANG = settings["localization"]["language"]; }
-
 	}
 
-//--------------------------------
-// function to request status, update menu etc. (including initial load)
-//--------------------------------
-
-
+/**
+* function to request status, update menu etc. (including initial load)
+*
+* @param (dict) object - data returned form server API
+*/
 function app_status(data) {
 
 	if (reload) {
@@ -121,47 +121,50 @@ function app_status(data) {
 	app_last_load = Date.now();
 	}
 	
-//--------------------------------
-// add code when checked the status
-//--------------------------------
-
+/*
+* add code when checked the status
+*/
 function app_check_status() {
 	}
 	
-//--------------------------------
-// add code when menu icon is clicked
-//--------------------------------
-
+/*
+* add code when menu icon is clicked
+*/
 function app_click_menu() {
 	}
 	
-//--------------------------------
-// add code when forced a reload
-//--------------------------------
-
+/*
+* add code when forced a reload
+*
+* @param (dict) object - data returned form server API
+*/
 function app_force_reload(data) {
 	birdhouseReloadView();
 	}
-	
-//--------------------------------
-// add code when theme changed
-//--------------------------------
 
+/*
+* add code when theme changed
+*
+* @param (string) theme - active theme
+*/
 function app_theme_changed(theme) {
 	}
 
-//--------------------------------
-// add code when screen size changed
-//--------------------------------
-
+/*
+* add code when screen size changed
+*
+* @param (integer) width: screen width
+* @param (integer) height: screen height
+*/
 function app_screen_size_changed(width, height) {
 	console.log("Changed screen size to " + width + "x" + height);
 	}
 
-//--------------------------------
-// add code when connection is lost
-//--------------------------------
-
+/*
+* add code when connection is lost
+*
+* @param (boolean) error: true if connection error
+*/
 app_connection_error = false;
 function app_connection_lost(error=false) {
     if (app_connection_error != error) {
@@ -187,5 +190,6 @@ function app_connection_lost(error=false) {
     }
     app_connection_error = error;
 }
+
 
 app_scripts_loaded += 1;

@@ -1631,30 +1631,41 @@ class BirdhouseViewObjects(BirdhouseClass):
                     # Initial round: identify thumbnails
                     for label in archive_detect:
 
+                        # !!!! recheck
+                        # -> OK: if favorite in a day, use this as thumbnail entry for the label
+                        # -> OPEN: choose favorite thumbnail across all files .... ?!
+
                         # check if thumbnail based on confidence is defined
                         if "thumbnail" in archive_detect[label]:
                             thumbnail = archive_detect[label]["thumbnail"]
                             if thumbnail["stamp"] in archive_detect[label]["favorite"]:
                                 thumbnail["favorite"] = True
+                                has_favorite = True
                             else:
                                 thumbnail["favorite"] = False
+                                has_favorite = False
                             archive_entry = archive_entries["files"][thumbnail["stamp"]]
                             view_entry = self._list_get_detection_for_label(label, archive_entry, thumbnail["favorite"])
 
                             if label not in view_entries:
                                 view_entries[label]: dict = view_entry
+                                view_entries[label]["thumbnail_favorite"] = has_favorite
                                 view_entries[label]["detections"] = {
                                     "favorite": 0,
                                     "favorite_dates": [],
-                                    "favorite_thumbnail": thumbnail["favorite"],
+                                    "favorite_thumbnail": False,
                                     "default": 0,
                                     "default_dates": {},
                                     "total": 0
                                 }
-                            elif ("confidence" in view_entry
-                                  and view_entry["confidence"] > view_entries[label]["confidence"]):
+
+                            if (not view_entries[label]["thumbnail_favorite"]
+                                    and (has_favorite or ("confidence" in view_entry
+                                         and view_entry["confidence"] > view_entries[label]["confidence"]))):
+
                                 detections = view_entries[label]["detections"].copy()
                                 view_entries[label] = view_entry
+                                view_entries[label]["thumbnail_favorite"] = has_favorite
                                 view_entries[label]["detections"] = detections
 
                     # second round, count detections
@@ -1906,25 +1917,26 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         files_images = {}
         files_weather = None
         files_sensor = None
-
         content = {
             "active_cam": which_cam,
             "active_date": date_backup,
-            "label": "",
-            "view": "list",
-            "entries": {},
-            "entries_delete": {},
-            "entries_yesterday": {},
             "day_back": "",
             "day_forward": "",
             "days_available": [],
+            "entries": {},
+            "entries_delete": {},
+            "entries_yesterday": {},
+            "info": {},
+            "label": "",
             "links": {},
-            "subtitle": "",
             "max_image_size": {
                 "lowres": [0, 0],
                 "hires": [0, 0]
-            }
+            },
+            "subtitle": "",
+            "view": "list"
         }
+
         if len(param["parameter"]) >= 3:
             content["label"] = param["parameter"][2]
 
@@ -1946,6 +1958,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 self.logging.info("BACKUP/" + date_backup + ": no data found")
                 return content
 
+            if "info" in files_data:
+                content["info"] = files_data["info"]
             if "chart_data" in files_data:
                 content["chart_data"] = files_data["chart_data"].copy()
             if "weather_data" in files_data:
@@ -2046,6 +2060,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             if not backup:
                 files_images["999999"] = {
                     "stream": "lowres/stream.mjpg?" + which_cam,
+                    "stream_hires": "stream.mjpg?" + which_cam,
                     "lowres": "lowres/stream.mjpg?" + which_cam,
                     "hires": "index.html?" + which_cam,
                     "camera": which_cam,

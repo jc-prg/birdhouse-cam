@@ -14,7 +14,12 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
     def __init__(self, camera_id, camera, config):
         """
-        Initialize new thread and set initial parameters
+        Constructor method for initializing the class.
+
+        Parameters:
+            camera_id (str): id string to identify the camera from which this class is embedded
+            camera (modules.camera.BirdhouseCamera): reference to camera object
+            config (modules.config.BirdhouseConfig): reference to main config object
         """
         threading.Thread.__init__(self)
         BirdhouseCameraClass.__init__(self, class_id=camera_id+"-video", class_log="video",
@@ -49,7 +54,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
     def run(self):
         """
-        Thread control: queue to create or trim a video file
+        Thread control: start queue to create or trim a video file
         """
         self._running = True
         self.logging.info("Starting VIDEO processing for '"+self.id+"' ...")
@@ -119,6 +124,11 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     def filename(self, file_type="image"):
         """
         generate filename for images
+
+        Parameters:
+            file_type (str): file type to create filename (video, thumb, vimages)
+        Returns:
+            str: filename
         """
         if file_type == "video":
             return self.img_support.filename(image_type="video", timestamp=self.info["date_start"], camera=self.id)
@@ -132,6 +142,10 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     def record_start(self, micro="", audio_filename=""):
         """
         start video recoding
+
+        Parameters:
+            micro (str): id of microphone to get audio from
+            audio_filename (str): filename for audio to be recorded
         """
         response = {"command": ["start recording"]}
         self.micro = micro
@@ -167,6 +181,9 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     def record_stop(self):
         """
         stop video recoding
+
+        Returns:
+            dict: recording information
         """
         self.thread_prio_process(start=False, pid=self.id)
         response = {"command": ["stop recording"]}
@@ -206,6 +223,9 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     def record_stop_auto(self):
         """
         Check if maximum length is achieved
+
+        Returns:
+            bool: recording to be stopped due to maximum length
         """
         self.thread_prio_process(start=False, pid=self.id)
         if self.info["status"] == "recording":
@@ -219,6 +239,9 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     def record_info(self):
         """
         Get info of recording
+
+        Returns:
+            dict: recording information
         """
         if self.recording:
             self.info["length"] = round(self.config.local_time().timestamp() - self.info["stamp_start"], 1)
@@ -310,7 +333,10 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
     def create_video_image(self, image):
         """
-        Save image
+        Save image with predefined filename in temp directory
+
+        Parameters:
+            image (numpy.ndarray): image data
         """
         self.info["image_count"] += 1
         self.info["image_files"] = self.filename("vimages")
@@ -329,7 +355,12 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
     def create_video_day(self, filename, stamp, date):
         """
-        Create daily video from all single images available
+        Create daily video from all single images (of the current day) that are available
+
+        Parameters:
+            filename (str): input filename(s)
+            stamp (str): date and time stamp as part of the output files
+            date (str): date for the video to be created
         """
         camera = self.id
         cmd_videofile = "video_" + camera + "_" + stamp + ".mp4"
@@ -444,6 +475,11 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     def create_video_day_queue(self, param):
         """
         create a video of all existing images of the day
+
+        Parameters:
+            param (dict): parameters from the API request (not used at the moment)
+        Returns:
+            dict: information for the API response
         """
         response = {}
         which_cam = self.id
@@ -461,6 +497,13 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     def create_video_trimmed(self, video_id, start, end):
         """
         create a shorter video based on date and time
+
+        Parameters:
+            video_id (str): id of the video to be trimmed
+            start (float): start timecode
+            end (float): end timecode
+        Returns:
+            str: success state (OK, Error)
         """
         config_file = self.config.db_handler.read_cache("videos")
         if video_id in config_file:
@@ -488,7 +531,16 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     def create_video_trimmed_exec(self, input_file, output_file, start_timecode, end_timecode, framerate):
         """
         creates a shortened version of the video
-        """
+
+        Parameters:
+            input_file (str): filename of input file
+            output_file (str): filename for output file
+            start_timecode (float): start timecode
+            end_timecode (float): end timecode
+            framerate (float): framerate in frames per seconds
+        Returns:
+            str: success state (OK, Error)
+         """
         input_file = os.path.join(self.config.db_handler.directory("videos"), input_file)
         output_file = os.path.join(self.config.db_handler.directory("videos"), output_file)
 
@@ -502,6 +554,11 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     def create_video_trimmed_queue(self, param):
         """
         create a short video and save in DB (not deleting the old video at the moment)
+
+        Parameters:
+            param (dict): input from API request
+        Returns:
+            dict: information for API response
         """
         response = {}
         parameter = param["parameter"]

@@ -132,10 +132,11 @@ function birdhouse_app_settings (name="Settings") {
         html_entry += this.tab.row("<hr/>");
 
         html_entry += this.tab.row("Index View:&nbsp;",         birdhouse_edit_field(id="set_index_view", field="views:index:type", type="select", options="default,overlay,picture-in-picture", data_type="string") );
-        html_entry += this.tab.row("LowRes Position:&nbsp;",    birdhouse_edit_field(id="set_index_lowres", field="views:index:lowres_position", type="select", options="1,2,3,4", data_type="integer") );
+        html_entry += this.tab.row("LowRes Position (CAM1):&nbsp;",    birdhouse_edit_field(id="set_index_lowres", field="views:index:lowres_pos_cam1", type="select", options="1,2,3,4", data_type="integer") );
+        html_entry += this.tab.row("LowRes Position (CAM2):&nbsp;",    birdhouse_edit_field(id="set_index_lowres2", field="views:index:lowres_pos_cam2", type="select", options="1,2,3,4", data_type="integer") );
 
         var id_list = "set_preview_fav:set_initial_setup:set_language:";
-        id_list    += "set_timezone:set_title:set_backup:set_preview:set_rpi:set_index_lowres:set_index_view";
+        id_list    += "set_timezone:set_title:set_backup:set_preview:set_rpi:set_index_lowres:set_index_view:set_index_lowres2";
         //id_list    += ":set_db_server:set_db_clean_up:set_db_type:set_ip4_video_port:set_weather_location:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:";
 
         var button2 = "";

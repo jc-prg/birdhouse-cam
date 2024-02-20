@@ -15,14 +15,22 @@ from modules.bh_class import BirdhouseCameraClass
 
 
 class CameraInformation:
+    """
+    Class to get camera information from the OS
+    """
 
     def __init__(self):
-
+        """
+        init logging instance
+        """
         self.logging = set_logging("cam-info")
 
     def get_available_cameras(self):
         """
         use v4l2_ctl to identify available cameras
+
+        Returns:
+            dict: different level of device definitions in a dict: 'list', 'short', 'complete'
         """
         try:
             process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
@@ -61,6 +69,9 @@ class CameraInformation:
     def get_available_camera_resolutions(self, source):
         """
         use v4l2_ctl to identify available camera resolutions
+
+        Parameters:
+            source (string): device definition, e.g. /dev/video0
         """
         try:
             process = subprocess.Popen(["v4l2-ctl -d " + source + " --list-formats-ext"],
@@ -89,11 +100,19 @@ class CameraInformation:
 
 
 class BirdhousePiCameraHandler(BirdhouseCameraClass):
+    """
+    class to control PiCamera using PiCamera2
+    """
 
     def __init__(self, camera_id, source, config):
         """
         create instance for PiCamera2
         documentation: https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf
+
+        Parameters:
+            camera_id (str): camera identifier
+            source (str): source, e.g., /dev/video0
+            config (modules.config.BirdhouseConfig): reference to main config handler
         """
         BirdhouseCameraClass.__init__(self, class_id=camera_id+"-pi", class_log="cam-pi",
                                       camera_id=camera_id, config=config)
@@ -102,18 +121,46 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.transform = None
         self.configuration = {}
         self.property_keys = None
-        self.properties_get = None
+        self.properties_get = {}
         self.properties_not_used = None
         self.properties_set = None
         self.connected = False
         self.available_devices = {}
         self.first_connect = True
 
+        self.picamera_controls = {
+            "saturation":       ["Saturation",          "rwm", 0.0, 32.0, "float"],
+            "brightness":       ["Brightness",          "rwm", -1.0, 1.0, "float"],
+            "contrast":         ["Contrast",            "rwm", 0.0, 32.0, "float"],
+            "sharpness":        ["Sharpness",           "rw",  0.0, 16.0, "float"],
+            "auto_wb":          ["AwbEnable",           "r",   -1, -1],
+        }
+        self.picamera_image = {
+            "temperature":      ["ColourTemperature",   "r",   -1, -1],
+            "exposure":         ["ExposureTime",        "r",   -1, -1],
+            "focus":            ["FocusFoM",            "r",   -1, -1],
+            "gain_digital":     ["DigitalGain",         "r",   0.0, 32.0],
+            "gain_analogue":    ["AnalogueGain",        "r",   0.0, 32.0],
+            "lux":              ["Lux",                 "r",   -1, -1]
+        }
+        self.picamera_cam = {
+            "camera_model":         ["Model", "r"],
+            "color_filter":         ["ColorFilterArrangement", "r"],
+            "pixel_size":           ["PixelArraySize", "r"],
+            "rotation":             ["Rotation", "r"],
+            "sensor_sensitivity":   ["SensorSensitivity", "r"]
+        }
+        self.picamera_streams = ["raw", "main", "lores"]
+        self.picamera_stream = ["size", "format", "stride", "framesize"]
+
         self.logging.info("Starting PiCamera2 support for '"+self.id+":"+source+"' ...")
 
     def connect(self):
         """
         connect with PiCamera
+
+        Returns:
+            bool | str: True, False or 'WARNING' depending on connection status
         """
         self.reset_error()
         self.connected = False
@@ -125,10 +172,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.stream = Picamera2()
                 self.configuration = self.stream.create_still_configuration()
                 self.stream.configure(self.configuration)
-
-                self.logging.info("------------------")
-                self.logging.info(str(self.configuration))
-                self.logging.info("------------------")
 
             self.stream.start()
             time.sleep(0.5)
@@ -142,14 +185,20 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             return False
         else:
             self.logging.info("- Connected.")
-            self.get_properties(key="init")
-            self.set_properties(key="init")
+
+            self.get_properties()
+            self.set_properties_init()
+            if self.first_connect:
+                self.logging.debug("------------------")
+                self.logging.debug(" PiCamera2 initial config: " + str(self.configuration))
+                self.logging.debug(" PiCamera2 GET: " + str(self.properties_get))
+                self.logging.debug("------------------")
+
             self.first_connect = False
             self.connected = True
 
         try:
             image = self.stream.switch_mode_and_capture_array(self.configuration, "main")
-            #image = self.stream.capture_array()
             if image is None or len(image) == 0:
                 raise Exception("Returned empty image.")
             return True
@@ -161,6 +210,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
     def reconnect(self):
         """
         reconnect camera
+
+        Returns:
+            bool | str: True, False or 'WARNING' depending on connection status
         """
         self.disconnect()
         return self.connect()
@@ -183,7 +235,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         read image from camera
         """
         try:
-            #raw = self.stream.switch_mode_and_capture_array(self.configuration, "main")
             raw = self.stream.capture_array("main")
             if raw is None or len(raw) == 0:
                 raise Exception("Returned empty image.")
@@ -193,96 +244,87 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                              "' by stream '" + stream + "': " + str(err))
             return
 
-    def set_properties(self, key, value=""):
+    def set_properties_init(self):
         """
-        set configuration for picamera2 using "Picamera2.create_still_configuration"
+        set properties based on configuration file
         """
         self.properties_set = []
-        if key == "init":
-            for prop_key in self.properties_get:
-                if "w" in self.properties_get[prop_key][1]:
-                    self.properties_set.append(prop_key)
-            return
+        for p_key in self.picamera_controls:
+            if "w" in self.picamera_controls[p_key][1]:
+                self.properties_set.append(p_key)
 
-        if key in self.properties_get:
-            picam_key = self.properties_get[key][0]
+        if self.param["image"]["black_white"]:
+            self.param["image"]["saturation"] = 0
+
+        self.stream.stop()
+        for c_key in self.param["image"]:
+            if c_key in self.properties_get and "w" in self.properties_get[c_key][1]:
+                result = self.set_properties(c_key, self.param["image"][c_key], True)
+                self.logging.debug("... set " + c_key + "=" + str(self.param["image"][c_key]) + " - " + str(result))
+        self.stream.start()
+
+    def set_properties(self, key, value="", init=False):
+        """
+        set properties / controls for picamera2
+
+        Parameters:
+            key (str): internal key
+            value (str): value to be set
+            init (bool): initialization
+        Return:
+            bool: status if set property
+        """
+        if key in self.picamera_controls and "w" in self.picamera_controls[key][1]:
+            full_key = self.picamera_controls[key][0]
             try:
-                self.stream.set_controls({picam_key: value})
+                if not init:
+                    self.stream.stop()
+                self.configuration["controls"][full_key] = value
+                self.stream.configure(self.configuration)
+                if not init:
+                    self.stream.start()
                 return True
             except Exception as err:
-                self.raise_error("Could not set to value for '" + str(picam_key) + "': " + str(err))
+                self.raise_error("Could not set to value for '" + str(full_key) + "': " + str(err))
                 return False
+
+        elif key in self.picamera_controls:
+            full_key = self.picamera_controls[key][0]
+            self.raise_error("Could not set to value for '" + str(full_key) +
+                             "': property is classified as read only.")
+            return False
+
+        elif key in self.picamera_image:
+            full_key = self.picamera_image[key][0]
+            self.raise_error("Could not set to value for '" + str(full_key) + "': not implemented yet.")
+            return False
+
+        elif key in self.picamera_cam:
+            full_key = self.picamera_cam[key][0]
+            self.raise_error("Could not set to value for '" + str(full_key) + "': not implemented yet.")
+            return False
+
         else:
             self.raise_error("Key '" + str(key) + "' is unknown!")
+            return False
 
     def get_properties_available(self, keys="get"):
         """
-        get properties from Picamera,
+        get available properties from Picamera2 using different methods; for more details see the full
+        documentation: https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf; not all available properties
+        are implemented.
 
-        picam2.set_controls({"ExposureTime": 10000, "AnalogueGain": 1.0})
-        print(picam.controls)
+        picamera2.capture_metadata() ... 'SensorTimestamp', 'ColourCorrectionMatrix', 'FocusFoM', 'ColourTemperature',
+        'ColourGains', 'AeLocked', 'Lux', 'FrameDuration', 'SensorBlackLevels', 'DigitalGain', 'AnalogueGain',
+        'ScalerCrop', 'ExposureTime'
 
-        metadata = picam2.capture_metadata()
-        {
-        'SensorTimestamp': 9784996188000,
-        'ColourCorrectionMatrix': (1.88217031955719, -0.26385337114334106, -0.6183169484138489, -0.6379863619804382,
-                                   2.1166977882385254, -0.47871148586273193, -0.13631515204906464, -0.9951226711273193,
-                                   2.1314477920532227),
-        'FocusFoM': 859,
-        'ColourTemperature': 2585,
-        'ColourGains': (1.0264559984207153, 2.126723289489746),
-        'AeLocked': False,
-        'Lux': 54.87057876586914,
-        'FrameDuration': 66773,
-        'SensorBlackLevels': (1024, 1024, 1024, 1024),
-        'DigitalGain': 1.000415325164795,
-        'AnalogueGain': 8.0,
-        'ScalerCrop': (16, 0, 2560, 1920),
-        'ExposureTime': 66638
-        }
+        picamera2.camera_properties{} ... 'Model', 'UnitCellSize', 'Location', 'Rotation', 'PixelArraySize',
+        'PixelArrayActiveAreas', 'ColorFilterArrangement', 'ScalerCropMaximum', 'SystemDevices', 'SensorSensitivity'
 
-        ----
-        sample output from 'self.stream.camera_properties'
-        {
-            'Model': 'ov5647',
-            'UnitCellSize': (1400, 1400),
-            'Location': 2,
-            'Rotation': 0,
-            'PixelArraySize': (2592, 1944),
-            'PixelArrayActiveAreas': [(16, 6, 2592, 1944)],
-            'ColorFilterArrangement': 2,
-            'ScalerCropMaximum': (16, 0, 2560, 1920),
-            'SystemDevices': (20754, 20741, 20743, 20744),
-            'SensorSensitivity': 1.0
-        }
-        picam2.camera_configuration()
-        picam2.sensor_modes example
-        [
-            {'bit_depth': 10, 'crop_limits': (696, 528, 2664, 1980), 'exposure_limits': (31, 66512892),
-            'format': SRGGB10_CSI2P, 'fps': 120.05, 'size': (1332, 990), 'unpacked': 'SRGGB10'},
-            {'bit_depth': 12, 'crop_limits': (0, 440, 4056, 2160), 'exposure_limits': (60, 127156999),
-            'format': SRGGB12_CSI2P, 'fps': 50.03, 'size': (2028, 1080), 'unpacked': 'SRGGB12'}, ...
-        ]
-        picam2.create_preview_configuration()
-        picam2.create_still_configuration()
-        picam2.create_video_configuration()
-        picam2.preview_configuration.main.size = (800, 600)
-        picam2.configure("preview")
-        configuration_object.enable_lores()
-        configuration_object.enable_raw()
+        picamera2.sensor_modes[] ... 'bit_depth', 'crop_limits', 'exposure_limits', 'format', 'fps', 'size','unpacked'
 
-        self.configuration = {
-            {"size": (808, 606)},
-            raw={'format': 'SRGGB12'},
-            sensor={'output_size': mode['size'], 'bit_depth': mode['bit_depth']},
-            lores={"size": (320, 240)},
-            encode="lores",
-            colour_space=ColorSpace.Sycc()
-        }
-        stream: 'main', 'raw', 'lores', 'video', ...
-
-        ----
-        return keys for all properties that are implemented at the moment
+        Returns:
+            list: keys for all properties that are implemented at the moment
         """
         if keys == "get":
             return list(self.properties_get.keys())
@@ -292,75 +334,97 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
     def get_properties(self, key=""):
         """
-        get properties from camera
-        ---
-        "saturation": "Saturation", [0.0 .. 32.0]
-        "brightness": "Brightness", [-1.0 .. 1.0]
-        "temperature": "ColourTemperature", [integer]
-        "gain": "ColourGains", [0.0 .. 32.0]
-        "contrast": "Contrast", [0.0 .. 32.0]
-        "sharpness": "Sharpness", [0.0 .. 16.0]
-        "exposure": "ExposureTime",
-        "noise_reduction": "NoiseReductionMode" [Off, Fast, HighQuality]
-        ---
+        get properties from camera (camera_controls, image_properties, and camera properties);
+
+        uses picamera2.camera_controls[<full_key>], picamera2.still_configuration.<full_key>, picamera2.capture_metadata(), and picamera2.camera_properties[..]
+
+        Parameters:
+            key (str): available keys: saturation, brightness, contrast, gain, sharpness, temperature, exposure,
+                       auto_wb; if not set return complete list of properties
+        Returns:
+            dict | float: complete list of properties in format [current_value, "rwm", min_value, max_value]
+                          or current value if key is set
         """
-        picamera_properties = {
-            "saturation":       ["Saturation",          "rwm", 0.0, 32.],
-            "brightness":       ["Brightness",          "rwm", -1.0, 1.0],
-            "contrast":         ["Contrast",            "rwm", 0.0, 32.0],
-            "gain":             ["ColourGains",         "rw",  0.0, 32.0],
-            "sharpness":        ["Sharpness",           "rw",  0.0, 16.0],
-            "temperature":      ["ColourTemperature",   "r",   -1, -1],
-            "exposure":         ["ExposureTime",        "r",   -1, -1],
-            "noise_reduction":  ["NoiseReductionMode",  "r",   -1, -1, ["Off", "Fast", "HighQuality"]],
-            "auto_wb":          ["AwbEnable",           "r",   -1, -1]
-        }
-        properties_not_used = ["exposure", "auto_wb", "temperature", "noise_reduction"]
-        properties_get_array = ["brightness", "saturation", "contrast", "gain", "sharpness"]
+        for c_key in self.picamera_controls:
+            self.properties_get[c_key] = self.picamera_controls[c_key].copy()
+            c_key_full = self.picamera_controls[c_key][0]
+            try:
+                min_exp, max_exp, default_exp = self.stream.camera_controls[c_key_full]
+                self.properties_get[c_key][0] = default_exp
+                self.properties_get[c_key][2] = min_exp
+                self.properties_get[c_key][3] = max_exp
+            except Exception as e:
+                msg = "Could not get data for '" + c_key_full + "': " + str(e)
+                self.properties_get[c_key][0] = -1
+                self.properties_get[c_key].append(msg)
+                self.logging.warning(msg)
 
-        if key == "init":
-            self.properties_get = picamera_properties.copy()
+            if c_key_full in self.configuration["controls"]:
+                self.properties_get[c_key][0] = self.configuration["controls"][c_key_full]
 
-        for picam_key in picamera_properties:
-            picam_key_full = picamera_properties[picam_key][0]
-
-            if key == "init":
-                try:
-                    min_exp, max_exp, default_exp = self.stream.camera_controls[picam_key_full]
-                    self.properties_get[picam_key][0] = default_exp
-                    if self.properties_get[picam_key][2] == -1:
-                        self.properties_get[picam_key][2] = min_exp
-                    if self.properties_get[picam_key][3] == -1:
-                        self.properties_get[picam_key][3] = max_exp
-
-                except Exception as e:
-                    msg = "Could not get data for '" + picam_key_full + "': " + str(e)
-                    self.properties_get[picam_key][0] = -1
-                    self.properties_get[picam_key].append(msg)
-                    self.logging.warning(msg)
-
+        for i_key in self.picamera_image:
+            self.properties_get[i_key] = self.picamera_image[i_key].copy()
+            i_key_full = self.picamera_image[i_key][0]
+            image_properties = self.stream.capture_metadata()
+            if i_key_full in image_properties:
+                self.properties_get[i_key][0] = image_properties[i_key_full]
             else:
-                try:
-                    value = eval("self.stream.still_configuration." + picam_key_full)
-                    self.properties_get[picam_key][0] = value
-                except Exception as e:
-                    self.logging.debug("Value not set yet, stays on default for '" + picam_key + "'. (" + str(e) + ")")
+                self.properties_get[i_key][0] = -1
 
-        # !!! Assumption: start with default value, to be changed by configuration
-        #     -> if set the value is, what has been set?! until there is a way to request data
+        for p_key in self.picamera_cam:
+            self.properties_get[p_key] = self.picamera_cam[p_key].copy()
+            p_key_full = self.picamera_cam[p_key][0]
+            if p_key_full in self.stream.camera_properties:
+                self.properties_get[p_key][0] = self.stream.camera_properties[p_key_full]
 
-        return self.properties_get
+        if key in self.properties_get:
+            return self.properties_get[key][0]
+        else:
+            return self.properties_get
 
     def get_properties_image(self):
         """
         read image and get properties - not implemented yet
+
+        Returns:
+            dict: list image properties brightness, contrast, saturation (calculated from image)
         """
         image_properties = {}
+        raw = self.read()
+
+        if raw is None:
+            return image_properties
+
+        if len(raw.shape) > 2:
+            gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = raw
+
+        try:
+            cols, rows = gray.shape
+            image_properties["brightness"] = np.sum(gray) / (255 * cols * rows)
+        except cv2.error as err:
+            self.raise_error("Could not measure brightness: " + str(err))
+
+        try:
+            image_properties["contrast"] = gray.std()
+        except cv2.error as err:
+            self.raise_error("Could not measure contrast: " + str(err))
+
+        try:
+            img_hsv = cv2.cvtColor(raw, cv2.COLOR_BGR2HSV)
+            image_properties["saturation"] = img_hsv[:, :, 1].mean()
+        except cv2.error as err:
+            self.raise_error("Could not measure saturation: " + str(err))
+
         return image_properties
 
     def set_black_white(self):
         """
-        set saturation to 0
+        set saturation to 0 (black and white)
+
+        Returns:
+            bool: status setting camera to black and white mode
         """
         try:
             self.stream.set_controls({"Saturation": 0})
@@ -372,6 +436,12 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
     def set_resolution(self, width, height):
         """
         set camera resolution
+
+        Parameters:
+            width (int): new image width
+            height (int): new image height
+        Returns:
+            bool: status setting camera resolution
         """
         try:
             config = self.stream.create_still_configuration({"size": (int(width), int(height))})
@@ -386,6 +456,11 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
     def get_resolution(self, maximum=False):
         """
         get resolution of the device
+
+        Parameters:
+            maximum (bool): get maximum resolution (True) or current resolution (False)
+        Returns:
+            [int, int]: width, height
         """
         if maximum:
             (width, height) = self.stream.camera_properties['PixelArraySize']
@@ -396,11 +471,18 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
     def camera_status(self, source, name):
         """
         check if given source can be connected as PiCamera and returns an image
-        Args:
-        * source = device string, should be "/dev/picam"
-        * name   = description for the camera
+
+        Parameters:
+            source (str): device string, should be "/dev/picam"
+            name (str): description for the camera
+        Returns:
+            dict: camera information: 'dev', 'info', 'image', 'shape'
         """
         camera_info = {"dev": source, "info": name, "image": False, "shape": []}
+        if birdhouse_env["test_video_devices"] is not None and not birdhouse_env["test_video_devices"]:
+            camera_info["image"] = True
+            return camera_info
+
         if source == "/dev/picam" and birdhouse_env["rpi_64bit"]:
             try:
                 from picamera2 import Picamera2
@@ -433,13 +515,27 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
     def if_connected(self):
         """
         check if camera is connected
+
+        Returns:
+            bool: connection status
         """
         return self.connected
 
 
 class BirdhouseCameraHandler(BirdhouseCameraClass):
+    """
+    class to control USB camera and PiCamera using Open-CV2
+    """
 
     def __init__(self, camera_id, source, config):
+        """
+        create instance of USB camera or PiCamera
+
+        Parameters:
+            camera_id (str): camera identifier
+            source (str): source, e.g., /dev/video0
+            config (modules.config.BirdhouseConfig): reference to main config handler
+        """
         BirdhouseCameraClass.__init__(self, class_id=camera_id+"-ctrl", class_log="cam-other",
                                       camera_id=camera_id, config=config)
         self.source = source
@@ -457,6 +553,9 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def connect(self):
         """
         connect with camera
+
+        Returns:
+            bool: connection status
         """
         self.reset_error()
         self.connected = False
@@ -503,6 +602,9 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def reconnect(self):
         """
         reconnect camera
+
+        Returns:
+            bool: connection status
         """
         self.disconnect()
         return self.connect()
@@ -523,6 +625,11 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def read(self, stream="not set"):
         """
         read image from camera
+
+        Parameters:
+            stream (str): stream name
+        Returns:
+            numpy.ndarray: raw image
         """
         try:
             ref, raw = self.stream.read()
@@ -540,7 +647,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def set_properties(self, key, value=""):
         """
         set camera parameter ...
-        -----------------------------
+
         0. CV_CAP_PROP_POS_MSEC Current position of the video file in milliseconds.
         1. CV_CAP_PROP_POS_FRAMES 0-based index of the frame to be decoded/captured next.
         2. CV_CAP_PROP_POS_AVI_RATIO Relative position of the video file
@@ -559,6 +666,10 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         15. CV_CAP_PROP_EXPOSURE Exposure (only for cameras). [-7..-1] ... tbc.
         16. CV_CAP_PROP_CONVERT_RGB Boolean flags indicating whether images should be converted to RGB.
         17. CV_CAP_PROP_WHITE_BALANCE Currently unsupported [4000..7000]
+
+        Parameters:
+            key (str): key
+            value (float): value
         """
         self.properties_set = ["saturation", "brightness", "contrast", "framerate", "exposure",
                                "hue", "auto_white_balance", "auto_exposure", "gamma", "gain"]
@@ -592,6 +703,11 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def get_properties_available(self, keys="get"):
         """
         return keys for all properties that are implemented at the moment
+
+        Parameters:
+            keys (str): get keys: 'get' or 'set'
+        Returns:
+            list: list of keys
         """
         if keys == "get":
             return list(self.properties_get.keys())
@@ -653,7 +769,10 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
 
     def get_properties_image(self):
         """
-        read image and get properties
+        read image and get properties - not implemented yet
+
+        Returns:
+            dict: list image properties brightness, contrast, saturation (calculated from image)
         """
         image_properties = {}
         raw = self.read()
@@ -688,6 +807,9 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def set_black_white(self):
         """
         set saturation to 0
+
+        Returns:
+            bool: black and white or not?
         """
         try:
             self.stream.set(cv2.CAP_PROP_SATURATION, 0)
@@ -699,6 +821,12 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def set_resolution(self, width, height):
         """
         set camera resolution
+
+        Parameters:
+            width (int): image width
+            height (int): image height
+        Returns:
+            bool: setting status
         """
         try:
             self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, width)
@@ -711,6 +839,11 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def get_resolution(self, maximum=False):
         """
         get camera resolution
+
+        Parameters:
+            maximum (bool): return maximum or current size
+        Returns:
+            (int, int): (width, height)
         """
         if maximum:
             high_value = 10000
@@ -722,11 +855,18 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def camera_status(self, source, name):
         """
         check if given source can be connected as PiCamera and returns an image
-        Args:
-        * source = device string, should be "/dev/picam"
-        * name   = description for the camera
+
+        Parameters:
+            source (str): device string, should be "/dev/picam"
+            name (str): description for the camera
+        Returns:
+            dict: camera status
         """
         camera_info = {"dev": source, "info": name, "image": False, "shape": []}
+        if birdhouse_env["test_video_devices"] is not None and not birdhouse_env["test_video_devices"]:
+            camera_info["image"] = True
+            return camera_info
+
         if source != "/dev/picam":
             try:
                 camera = cv2.VideoCapture(source, cv2.CAP_V4L)
@@ -769,6 +909,9 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
     def if_connected(self):
         """
         check if camera is connected
+
+        Returns:
+            bool: connection status
         """
         return self.connected
 

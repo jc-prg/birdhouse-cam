@@ -1,4 +1,4 @@
-# Birdhouse Camera v1.0.8
+# Birdhouse Camera v1.0.9
 
 Raspberry Pi project to observe our birdhouse with two webcams: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, 
@@ -93,7 +93,7 @@ Here are some options. Calculate with a little bit more space in the height for 
 ## Technology
 
 * IT Hardware
-  * Raspberry Pi 3B+, Raspberry Pi 4 (recommended)
+  * Raspberry Pi 3B+, Raspberry Pi 4 (recommended for two cameras and/or object detection)
   * Micro SD with 64 GByte
   * USB camera for outside view (and maybe inside view)
   * _optional:_ PiCamera with IR for the inside view (wide-angle, e.g., 110°)
@@ -102,8 +102,8 @@ Here are some options. Calculate with a little bit more space in the height for 
 * Software
   * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, PyTorch/YOLOv5
   * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
-  * HTML, CSS, JavaScript, Pinch-Zoom
-  * jc://modules/, jc://app-framework/
+  * HTML, CSS, JavaScript, [ChartJS](https://www.chartjs.org/)
+  * [jc://modules/](https://github.com/jc-prg/modules/), [jc://app-framework/](https://github.com/jc-prg/app-framework/)
 
 ## Installation
 
@@ -329,7 +329,21 @@ Therefor it's required to enable access to the following ports (if not changed d
 * **Videostream**: 8008
 * **Audiostream**: 8009
 
-See a sample configuration (e.g. to forward http://birdhouse.your.domain:443 to http://your-server-ip:8000) here: [sample.nginx.conf](sample.nginx.conf). Ensure, that all used ports are publicly shared via your router.
+See a sample configuration (e.g. to forward http://birdhouse.your.domain:443 to http://your-server-ip:8000) 
+here: [sample.nginx.conf](sample.nginx.conf). Ensure, that all used ports are publicly shared via your router.
+
+#### External access via IPv6 if your internet provider doesn't offer NAT
+
+If your provider doesn't offer Network Address Translation (NAT) another option is to get access via the IPv6 address
+of your birdhouse server. Install the PHP script in the folder [/app_forward](/app_forward) on an external webserver
+and add the following command to your crontab:
+
+```
+@reboot    /usr/bin/python3 /projects/local/birdhouse-cam/app_forward/request.py https://<your-external-server>/birdhouse/index.php
+```
+
+Open ```https://<your-external-server>/birdhouse/index.php``` in your browser to get an easy link to your birdhouse
+using its IPv6 address.
 
 ## Train bird detection
 
@@ -337,8 +351,12 @@ The bird detection is based on a relatively simple training with a few singing b
 continuously improve your own detection model you can use the module [jc://bird-detection/](https://github.com/jc-prg/bird-detection/). 
 Alternatively create a YOLOv5 model with different tools. Copy the *.pt file into the folder [data/custom_models/](data/custom_models/).
 
-Hint: if you're logged in as admin you can download the archived images per camera incl. YOLOv5 files with the detected
-birds or objects. By that you can adapt and use detected birds from your cameras for training.
+To use images from your own birdhouse, login as admin and go to the settings of an archived day. There you can download
+the data of a full day or activate the collection of images for download. When you activated the second option you can
+jump from day to day and mark all images you want to download. Use the icon in the header to start the download. In the
+download file you'll find all images incl. the config files as well as in a separate folder a YOLOv5 file per image
+and a file classes.txt with all labels of the model that has been used. Rename the labels_<model-name> folder to labels
+and use the module [jc://bird-detection/](https://github.com/jc-prg/bird-detection/) to prepare the data and train your model.
 
 ## Helping stuff
 
@@ -381,12 +399,13 @@ birds or objects. By that you can adapt and use detected birds from your cameras
 
 Thanks for your inspiration, code snippets, images:
 
-* [https://github.com/Freshman-tech/custom-html5-video](https://github.com/Freshman-tech/custom-html5-video)
-* [https://github.com/manuelstofer/pinchzoom](https://github.com/manuelstofer/pinchzoom)
-* [https://gifer.com/en/ZHug](https://gifer.com/en/ZHug)
-* [https://github.com/szazo/DHT11_Python](https://github.com/szazo/DHT11_Python)
-* [https://github.com/bullet64/DHT22_Python](https://github.com/bullet64/DHT22_Python)
-* [https://www.tunbury.org/audio-stream/](https://www.tunbury.org/audio-stream/)
-* [https://github.com/nicknochnack/YOLO-Drowsiness-Detection/blob/main/Drowsiness%20Detection%20Tutorial.ipynb](https://github.com/nicknochnack/YOLO-Drowsiness-Detection/blob/main/Drowsiness%20Detection%20Tutorial.ipynb)
+* [HTML5 Video Player](https://github.com/Freshman-tech/custom-html5-video)
+* [Flying Bird Image](https://gifer.com/en/ZHug)
+* [DHT11 Python](https://github.com/szazo/DHT11_Python)
+* [DHT22 Python](https://github.com/bullet64/DHT22_Python)
+* [Python Audio Stream](https://www.tunbury.org/audio-stream/)
+* [YOLO-Drowsiness-Detection](https://github.com/nicknochnack/YOLO-Drowsiness-Detection/blob/main/Drowsiness%20Detection%20Tutorial.ipynb)
+* [ChartJS](https://www.chartjs.org/)
+* [ChatGPT](https://chat.openai.com/)
 * ...
 

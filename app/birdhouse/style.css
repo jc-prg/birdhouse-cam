@@ -5,9 +5,11 @@ a:link    { color  : blue; }
 a:visited { color  : darkblue; }
 a:hover   { color  : darkblue; font-weight : bold; }
 
-h1 { margin : 4px; }
-h2 { margin : 4px; }
-h3 { margin : 4px; }
+h1        { margin : 4px; }
+h2        { margin : 4px; }
+h3        { margin : 4px; }
+
+body      { touch-action: none; }
 
 .frame_column { color : black; }
 
@@ -328,17 +330,17 @@ img .play_button  {
 }
 
 #overlay_close {
-    position : relative;
-    top      : 50px;
-    right    : -45%;
+    position : fixed;
+    top      : 10px;
+    right    : 15px;
     z-index  : 74;
     cursor   : pointer;
 }
 
 #overlay_replace {
-    position : relative;
-    top      : 55px;
-    right    : -45%;
+    position : fixed;
+    top      : 30px;
+    right    : 15px;
     z-index  : 74;
     cursor   : pointer;
 }
@@ -347,19 +349,18 @@ img .play_button  {
     display          : grid;
     opacity          : 100%;
     position         : fixed;
-    margin           : auto;
+    //margin           : auto;
     top              : 50%;
     left             : 50%;
     -ms-transform    : translate(-50%,-50%);
     transform        : translate(-50%,-50%);
-    text-align       : center;
+    //text-align       : center;
     z-index          : 73;
   }
-  
+
 #overlay_image {
-    max-width        : 95vw;
-    max-height       : 95vh;
-    //transform        : scale(0.98);
+    max-width        : 90vw;
+    max-height       : 70vh;
     margin           : auto;
     background-color : white;
     border           : 5px solid white;
@@ -367,9 +368,8 @@ img .play_button  {
   }
   
 #overlay_image_replace {
-    max-width        : 95vw;
-    max-height       : 95vh;
-    //transform        : scale(0.98);
+    max-width        : 90vw;
+    max-height       : 70vh;
     margin           : auto;
     background-color : white;
     border           : 5px solid white;

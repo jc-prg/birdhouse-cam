@@ -10,6 +10,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
     var data   = "";
     var html   = "";
     var style  = "";
+    var step   = "1";
 
     if (fields.length == 1) { data = settings[fields[0]]; }
     else if (fields.length == 2) { data = settings[fields[0]][fields[1]]; }
@@ -87,12 +88,15 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         }
     else if (type == "range") {
         range = options.split(":");
+        if (options.indexOf(".") > 0)                       { step = "0.1"; }
+        else if (range.length > 2 && range[2] == "float")   { step = "0.1"; }
+
         style = "width:100px";
         if (range[0] == 0 && range[1] == 1) { style = "width:40px;"; }
         on_set    = "document.getElementById(\""+id+"\").value = this.value;";
         on_value  = "document.getElementById(\""+id+"_range\").value = this.value;";
         html += "<div class='bh-slidecontainer' style='float:left;width:100px;height:auto;'>";
-        html += "<input id='"+id+"_range' class='bh-slider' type='range' name='' min='"+range[0]+"' max='"+range[1]+"' style='"+style+"' onchange='"+on_set+on_change+"'>";
+        html += "<input id='"+id+"_range' class='bh-slider' type='range' name='' min='"+range[0]+"' max='"+range[1]+"' step='"+step+"' style='"+style+"' onchange='"+on_set+on_change+"'>";
         html += "</div><div style='float:left;margin-left:12px;'>";
         html += "<input id='"+id+"' class='bh-slider-value' style='width:30px;' onchange='"+on_value+"'>";
         html += "</div>";
@@ -339,140 +343,6 @@ function birdhouse_Links(link_list) {
 		} }
 	return html;
 	}
-
-function birdhouse_imageOverlay(filename, description="", overlay_replace="", overlay_id="overlay_image") {
-
-        if (document.getElementById("overlay_content")) { existing = true; }
-        else                                            { existing = false; }
-
-        var overlay = "<div id=\"overlay_content\" class=\"overlay_content\" onclick=\"birdhouse_overlayHide();\"><!--overlay--></div>";
-        setTextById("overlay_content",overlay);
-        document.getElementById("overlay").style.display         = "block";
-        document.getElementById("overlay_content").style.display = "block";
-        document.getElementById("overlay_parent").style.display  = "block";
-        
-        description = description.replaceAll(/\[br\/\]/g,"<br/>");
-        description = description.replaceAll(/\[/g,"<");
-        description = description.replaceAll(/\]/g,">");
-        html  = "";
-        html += "<div id=\"overlay_image_container\" onclick=\"event.stopPropagation();\">";
-        html += "  <div id=\"overlay_close\" onclick='birdhouse_overlayHide();'>[X]</div>";
-
-        if (overlay_replace != "") {
-            var onmouseover    = "birdhouse_imageOverlayToggle(\""+overlay_id+"\", select=\"replace\")";
-            var onmouseout     = "birdhouse_imageOverlayToggle(\""+overlay_id+"\", select=\"original\")";
-            var onmousetoggle  = "birdhouse_imageOverlayToggle(\""+overlay_id+"\")";
-
-            html += "  <div id=\"overlay_replace\" onmouseover='"+onmouseover+"' onmouseout='"+onmouseout+"' onclick='"+onmousetoggle+"'>[D]</div>";
-            html += "  <img id='"+overlay_id+"_replace' src='"+overlay_replace+"' style='display:none;'/>";
-            }
-        else {
-            html += "  <div id=\"overlay_replace\">&nbsp;</div>";
-            }
-
-        html += "    <img id='"+overlay_id+"' src='"+filename+"' style='display:block;'/>";
-        html += "<br/>&nbsp;<br/>"+description+"</div>";
-        document.getElementById("overlay_content").innerHTML = html;
-
-        myElement = document.getElementById("overlay_content");
-        if (existing) { delete pz; }
-	    var pz = new PinchZoom.default(myElement);
- 	    setTimeout(function() {
-	        pz.update.bind(pz);
-	    }, 1000);
-
-
-/*
-        //destroy an object
-
-        var namespace = {};
-        namespace.someClassObj = {};
-        delete namespace.someClassObj;
-
-        // -----
-        // or: https://www.delftstack.com/howto/javascript/javascript-destroy-object/
-        // pz = undefined;
-
-	    pz.zoomFactor = 1;
-	    pz.offset = { x: 0, y: 0 };
-	    pz.update();
-*/
-	    // check, how to destroy ...
-	}
-
-function birdhouse_imageOverlayToggle(overlay_id, select="") {
-    if (select == "") {
-        if (document.getElementById(overlay_id).style.display != "none") {
-            elementHidden(overlay_id);
-            elementVisible(overlay_id+"_replace");
-            }
-        else {
-            elementHidden(overlay_id+"_replace");
-            elementVisible(overlay_id);
-            }
-        }
-    else if (select == "replace") {
-        elementHidden(overlay_id);
-        elementVisible(overlay_id+"_replace");
-        }
-    else {
-        elementHidden(overlay_id+"_replace");
-        elementVisible(overlay_id);
-        }
-    }
-
-function birdhouse_videoOverlay(filename, description="", favorite="", to_be_deleted="") {
-        check_iOS = iOS();
-        if (check_iOS == true) {
-          window.location.href = filename;
-          }
-        else {
-          document.getElementById("overlay").style.display = "block";
-          document.getElementById("overlay_content").style.display = "block";
-          document.getElementById("overlay_parent").style.display  = "block";
-          
-          description = description.replace(/\[br\/\]/g,"<br/>");
-          html  = "";
-          html += "<div id=\"overlay_close\" onclick='birdhouse_overlayHide();'>[X]</div>";
-          html += "<div id=\"overlay_image_container\">";
-          html += "<video id='overlay_video' src=\"" + filename + "\" controls>Video not supported</video>"
-          html += "<br/>&nbsp;<br/>"+description+"</div>";
-
-          document.getElementById("overlay_content").innerHTML = html;
-          }
-	}
-
-function birdhouse_videoOverlayToggle(status="") {
-        video_edit1 = document.getElementById("camera_video_edit");
-        video_edit2 = document.getElementById("camera_video_edit_overlay");
-        if (video_edit1 != null) {
-        	if (status == "") {
-	        	if (video_edit1.style.display == "none")	{ video_edit1.style.display = "block"; video_edit2.style.display = "block"; }
-        		else						{ video_edit1.style.display = "none";  video_edit2.style.display = "none"; }
-        		}
-        	else if (status == false) { video_edit1.style.display = "none";  video_edit2.style.display = "none"; }
-        	else if (status == true)  { video_edit1.style.display = "block"; video_edit2.style.display = "block"; }
-        	}
-	else {
-	        console.error("birdhouse_videoOverlayToggle: Video edit doesn't exist.");
-		}
-	}
-
-function birdhouse_overlayHide() {
-       document.getElementById("overlay").style.display = "none";
-       document.getElementById("overlay_content").style.display = "none";
-       document.getElementById("overlay_parent").style.display = "none";
-/*
-	    pz.zoomFactor = 2;
-	    pz.lastScale = 1;
-	    pz.offset = { x: 0, y: 0 };
-	    pz.initialOffset = { x: 0, y: 0 };
-        pz.setupMarkup();
-        pz.bindEvents();
-        pz.update();
-        pz.enable();
-*/
-       }
 
 
 function birdhouse_groupToggle(id, open="toggle") {
