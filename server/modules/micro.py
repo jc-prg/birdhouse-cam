@@ -8,10 +8,17 @@ from modules.bh_class import BirdhouseClass
 
 
 class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
+    """
+    class to control microphones for streaming and recording
+    """
 
     def __init__(self, device_id, config):
         """
-        Initialize new thread and set initial parameters
+        Constructor method for initializing the class.
+
+        Parameters:
+            device_id (str): id string to identify the microphone from which this class is embedded
+            config (modules.config.BirdhouseConfig): reference to main config object
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id=device_id + "-main", class_log="mic-main",
@@ -52,7 +59,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
     def run(self):
         """
-        Start streaming
+        Start control audio streaming and recording
         """
         self.logging.info("Start microphone handler for '" + self.id + "' ...")
         self.connect()
@@ -181,6 +188,12 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         create file header for streaming file (duration in seconds, default = 1800s / 30min)
         info: https://docs.fileformat.com/audio/wav/
+
+        Parameters:
+            size (bool): get data size incl. header (True) or complete header (default / False)
+            duration (int): duration of audio data in seconds
+        Returns:
+            Any: data size incl. header or file header
         """
         datasize = duration * self.RATE * self.CHANNELS * self.BITS_PER_SAMPLE // 8
         sample_rate = int(self.RATE)
@@ -208,6 +221,11 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
     def get_device_information(self, i=None):
         """
         return device list or single device information
+
+        Parameters:
+            i (int): index for API device info
+        Returns:
+            dict: device information (id, name, maxInputChannels, maxOutputChannels, defaultSampleRate)
         """
         empty = {
             "id": None,
@@ -231,6 +249,12 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                 return empty
 
     def get_chunk(self):
+        """
+        get chunk of data from microphone
+
+        Returns:
+            bytes: change of audio data from microphone
+        """
         data = None
         self.last_active = time.time()
         if self.connected and not self.error and len(self.chunk) > 0:
@@ -238,6 +262,12 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         return data
 
     def get_first_chunk(self):
+        """
+        get first chunk from microphone
+
+        Returns:
+            bytes: change of audio data from microphone
+        """
         self.logging.info("Start new stream ...")
         self.last_active = time.time()
         self.restart_stream = True
@@ -301,7 +331,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
     def record_process(self):
         """
-        write to file
+        write to file recorded audio data to an audio that can be integrated into the video file creation
         """
         self.logging.info(" <-- " + self.id + " --- " + str(time.time()) + " ... (" +
                           str(round(time.time() - self.record_start_time, 3)) + ")")

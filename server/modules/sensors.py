@@ -39,10 +39,17 @@ except Exception as e:
 
 
 class BirdhouseSensor(threading.Thread, BirdhouseClass):
+    """
+    class to control DHT11 and DHT22 sensors connected to a Raspberry Pi
+    """
 
     def __init__(self, sensor_id, config):
         """
-        Initialize new thread and set initial parameters
+        Constructor method for initializing the class.
+
+        Parameters:
+            sensor_id (str): id string to identify the sensor
+            config (modules.config.BirdhouseConfig): reference to main config object
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, "SENSORS", "sensors", sensor_id, config)
@@ -83,7 +90,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
 
     def run(self):
         """
-        Start recording from sensors
+        Start recording from sensors and continuously read data from sensor
         """
         count = 0
         self.reset_error()
@@ -172,13 +179,13 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
 
     def stop(self):
         """
-        Stop sensors
+        Stop reading from sensor
         """
         self._running = False
 
     def connect(self):
         """
-        connect with sensor
+        connect with sensor and read initial values
         """
         temp = ""
         self.reset_error()
@@ -253,12 +260,18 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
     def get_values(self):
         """
         get values from all sensors
+
+        Returns:
+            dict: copy of current values
         """
         return self.values.copy()
 
     def get_status(self):
         """
-        return all error status information
+        get all error status information
+
+        Returns:
+            dict: sensor status and error details
         """
         global error_module
         error = {

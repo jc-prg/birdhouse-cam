@@ -184,7 +184,7 @@ class BirdhouseClass(object):
         Set central info that prio process is running
 
         Parameters:
-            start (datetime): timestamp
+            start (bool): starting process
             pid (str): process id
         """
         self.config.thread_ctrl["priority"] = {
