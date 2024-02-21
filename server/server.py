@@ -1660,12 +1660,23 @@ if __name__ == "__main__":
 
     time.sleep(2)
 
-    srv_logging.info('-------------------------------------------')
-    srv_logging.info('Starting ...')
-    srv_logging.info('-------------------------------------------')
-    srv_logging.info('* Logging into File: ' + str(birdhouse_log_as_file))
-    srv_logging.info('* Cache handling: cache=' + str(birdhouse_cache) +
-                     ", cache_for_archive=" + str(birdhouse_cache_for_archive))
+    if birdhouse_loglevel_module["server"] == logging.WARNING:
+        srv_logging.warning('-------------------------------------------')
+        srv_logging.warning('Starting ... log level WARNING')
+        srv_logging.warning('-------------------------------------------')
+
+    elif birdhouse_loglevel_module["server"] == logging.ERROR:
+        srv_logging.error('-------------------------------------------')
+        srv_logging.error('Starting ... log level ERROR')
+        srv_logging.error('-------------------------------------------')
+
+    else:
+        srv_logging.info('-------------------------------------------')
+        srv_logging.info('Starting ...')
+        srv_logging.info('-------------------------------------------')
+        srv_logging.info('* Logging into File: ' + str(birdhouse_log_as_file))
+        srv_logging.info('* Cache handling: cache=' + str(birdhouse_cache) +
+                         ", cache_for_archive=" + str(birdhouse_cache_for_archive))
 
     check_submodules()
     set_error_images()
