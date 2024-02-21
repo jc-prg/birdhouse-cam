@@ -115,7 +115,7 @@ def set_global_configuration():
                     if module in birdhouse_loglevel_modules_all:
                         eval("birdhouse_loglevel_modules_" + level + ".append('" + module + "')")
                 if level != "":
-                    print(str(eval("birdhouse_loglevel_modules_" + level)))
+                    print(level.upper() + ": " + str(eval("birdhouse_loglevel_modules_" + level)))
 
         except Exception as e:
             print("Error reading list of log levels ("+key+"|"+level+"|"+str(birdhouse_env[key])+"): " + str(e))
