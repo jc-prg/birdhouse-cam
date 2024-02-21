@@ -1660,12 +1660,12 @@ if __name__ == "__main__":
 
     time.sleep(2)
 
-    if birdhouse_loglevel_module["server"] == logging.WARNING:
+    if birdhouse_loglevel_default == "WARNING":
         srv_logging.warning('-------------------------------------------')
         srv_logging.warning('Starting ... log level WARNING')
         srv_logging.warning('-------------------------------------------')
 
-    elif birdhouse_loglevel_module["server"] == logging.ERROR:
+    elif birdhouse_loglevel_default == "ERROR":
         srv_logging.error('-------------------------------------------')
         srv_logging.error('Starting ... log level ERROR')
         srv_logging.error('-------------------------------------------')
