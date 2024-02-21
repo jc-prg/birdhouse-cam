@@ -5,6 +5,7 @@
     left: 0px;
     z-index: 200;
     background: lightgray;
+    border: solid 0px lightgray;
     height: 100%;
     width: 100%;
     border-radius: 0px;
@@ -15,6 +16,6 @@
 }
 
 @media (prefers-color-scheme: dark) {
-    .loading_overlay { background: #111111; border: solid 0px #333333; }
+    .loading_overlay { background: #111111; border: solid 0px #111111; }
     body { background: #111111; }
 }
