@@ -214,7 +214,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
 
         # if requested for a single date only
         if len(entry_list) == 0:
-            self.logging.debug(" * for single date: " + str(date) + "/" + camera)
+            self.logging.debug("* for single date: " + str(date) + "/" + camera)
             archive_path = str(os.path.join(birdhouse_main_directories["data"], birdhouse_directories["backup"], date))
             archive_path_info = str(os.path.join(archive_path, "yolov5"))
             entries = self.config.db_handler.read("backup", date)
@@ -250,7 +250,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         # if requested for a list of files
         else:
             model_saved = []
-            self.logging.debug(" * for " + str(len(archive_entries)) + " dates ...")
+            self.logging.debug("* for " + str(len(archive_entries)) + " dates ...")
             for datestamp in archive_entries:
                 archive_path = str(os.path.join(birdhouse_main_directories["data"],
                                                 birdhouse_directories["backup"], datestamp))
@@ -624,8 +624,14 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                     files_backup["info"]["detection_" + cam] = {
                         "date": self.config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
                         "threshold": camera_settings["object_detection"]["threshold"],
-                        "model": camera_settings["object_detection"]["model"]
+                        "model": camera_settings["object_detection"]["model"],
+                        "detected": False
                     }
+
+                if len(files_backup["detection"].keys()) > 0:
+                    labels = self.camera[cam].object.detect_objects.get_labels()
+                    files_backup["info"]["detection_" + cam]["detected"] = True
+                    files_backup["info"]["detection_" + cam]["labels"] = labels
 
             # create chart data from sensor and weather data vor archive
             files_backup["chart_data"] = self.views.create.chart_data_new(data_image=files_chart,

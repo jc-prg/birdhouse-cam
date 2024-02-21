@@ -2221,7 +2221,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             camera_string += system["video_devices_complete"][key]["info"].split(" (")[0].split(":")[0] + ") "
 
             if "error" in system["video_devices_complete"][key]:
-                self.logging.warning(camera_string + " - ERROR: " + str(system["video_devices_complete"][key]["error"]))
+                self.logging.info(camera_string + " - ERROR: " + str(system["video_devices_complete"][key]["error"]))
                 birdhouse_initial_connect_msg[key] += ", error='" + str(system["video_devices_complete"][key]["error"]) + "'"
             else:
                 self.logging.warning(camera_string + " - OK")
