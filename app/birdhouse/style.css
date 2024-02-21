@@ -30,7 +30,7 @@ body      { touch-action: none; }
   top		           : 8px;
   right		           : 40px;
   height		       : 25px;
-  width		           : 150px;
+  width		           : 60vh;
   color		           : gray;
   z-index		       : 93;
   text-align           : right;
