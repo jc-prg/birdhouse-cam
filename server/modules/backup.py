@@ -627,11 +627,12 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                         "model": camera_settings["object_detection"]["model"],
                         "detected": False
                     }
+                detections = self.camera[cam].object.summarize_detections(files_backup["files"])
+                if len(detections) > 0:
+                    labels = self.camera[cam].object.detect_objects.get_labels()
+                    files_backup["info"]["detection_" + cam]["detected"] = True
+                    files_backup["info"]["detection_" + cam]["labels"] = labels
 
-                    if "detection" in files_backup and len(files_backup["detection"]) > 0:
-                        labels = self.camera[cam].object.detect_objects.get_labels()
-                        files_backup["info"]["detection_" + cam]["detected"] = True
-                        files_backup["info"]["detection_" + cam]["labels"] = labels
 
             # create chart data from sensor and weather data vor archive
             files_backup["chart_data"] = self.views.create.chart_data_new(data_image=files_chart,
