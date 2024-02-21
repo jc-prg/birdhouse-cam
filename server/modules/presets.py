@@ -238,7 +238,7 @@ def set_logging(name):
             log_level = birdhouse_loglevel_module[name]
             logger.setLevel(log_level)
 
-        if log_as_file:
+        if log_as_file and os.access(birdhouse_log_filename, os.W_OK):
             # log_format = logging.Formatter(fmt='%(asctime)s |' + str(len(logger_list)).zfill(
             #    3) + '| %(levelname)-8s '+name.ljust(10)+' | %(message)s', # + "\n" + str(logger_list),
             #                               datefmt='%m/%d %H:%M:%S')
@@ -257,6 +257,10 @@ def set_logging(name):
                                 level=log_level)
 
         logger.debug("___ Init logger '" + name + "', into_file=" + str(log_as_file))
+
+        if log_as_file and not os.access(birdhouse_log_filename, os.W_OK):
+            logger.warning("Could not write to log file " + birdhouse_log_filename)
+
         loggers[name] = logger
         return logger
 
