@@ -204,6 +204,9 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
             download_id (str): download id to identify download
             archive_entries (dict): prepared list of files to be downloaded
         """
+        self.logging.debug("Start YOLOv5 creation for download ID " + str(download_id) +
+                           " (" + str(archive_entries) + ") ...")
+
         camera = self.downloads[download_id]["camera"]
         date = self.downloads[download_id]["date"]
         entry_list = self.downloads[download_id]["entry_list"]
@@ -211,6 +214,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
 
         # if requested for a single date only
         if len(entry_list) == 0:
+            self.logging.debug(" * for single date: " + str(date) + "/" + camera)
             archive_path = str(os.path.join(birdhouse_main_directories["data"], birdhouse_directories["backup"], date))
             archive_path_info = str(os.path.join(archive_path, "yolov5"))
             entries = self.config.db_handler.read("backup", date)
@@ -222,10 +226,13 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
                     labels = entries["info"]["detection_"+camera]["labels"]
                     model = entries["info"]["detection_" + camera]["model"]
                     model = model.replace(".pt", "")
+                    self.logging.debug("* model: " + str(model) + " / labels: " + str(labels))
                 else:
                     labels = {}
                     model = "no-model"
+                    self.logging.debug("* no model defined")
             else:
+                self.logging.debug("* no detection found")
                 return
 
             if os.path.exists(archive_path_info):
@@ -243,6 +250,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         # if requested for a list of files
         else:
             model_saved = []
+            self.logging.debug(" * for " + str(len(archive_entries)) + " dates ...")
             for datestamp in archive_entries:
                 archive_path = str(os.path.join(birdhouse_main_directories["data"],
                                                 birdhouse_directories["backup"], datestamp))
@@ -257,10 +265,13 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
                             labels = entries["info"]["detection_"+camera]["labels"]
                             model = entries["info"]["detection_"+camera]["model"]
                             model = model.replace(".pt", "")
+                            self.logging.debug("* model: " + str(model) + " / labels: " + str(labels))
                         else:
                             labels = {}
                             model = "no-model"
+                            self.logging.debug("* no model defined")
                     else:
+                        self.logging.debug("* no detection found")
                         continue
 
                     if os.path.exists(archive_path_info):
@@ -305,6 +316,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
                 file_string += str(round(width, 6)) + " " + str(round(height, 6)) + "\n"
             file_path = str(os.path.join(archive_path_info, filename))
             self.text.write(file_path, file_string)
+            self.logging.debug(" * write file " + file_path)
         return classes
 
     def create_YOLOv5_classes(self, classes, labels, archive_path_info, extension=""):
@@ -328,6 +340,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
             for label in labels:
                 file_string += labels[label] + "\n"
         self.text.write(file_path, file_string)
+        self.logging.debug(" * write file " + file_path)
 
     def delete(self, download_id):
         """
