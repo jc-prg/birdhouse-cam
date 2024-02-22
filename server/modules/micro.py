@@ -12,7 +12,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
     class to control microphones for streaming and recording
     """
 
-    def __init__(self, device_id, config):
+    def __init__(self, device_id, config, first_micro=False):
         """
         Constructor method for initializing the class.
 
@@ -34,6 +34,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.stream = None
         self.connected = False
         self.chunk = None
+        self.first_micro = first_micro
 
         self.recording = False
         self.recording_processing = False
@@ -134,14 +135,19 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             self.audio.terminate()
             time.sleep(1)
             self.audio = pyaudio.PyAudio()
-            #self.audio = pyaudio.PyAudio()
 
         self.info = self.audio.get_host_api_info_by_index(0)
         num_devices = self.info.get('deviceCount')
-        self.logging.info("Identified " + str(num_devices) + " audio devices:")
-        for i in range(0, num_devices):
-            self.logging.info(" - " + str(i).rjust(2) + ": " +
-                              str(self.audio.get_device_info_by_host_api_device_index(0, i).get('name')))
+
+        if self.first_micro:
+            self.logging.info("Identified " + str(num_devices) + " audio devices:")
+            for i in range(0, num_devices):
+                check = self.audio.get_device_info_by_host_api_device_index(0, i)
+                is_micro = ((check.get("input") is not None and check.get("input") > 0) or
+                            (check.get("maxInputChannels") is not None and check.get("maxInputChannels") > 0))
+                self.logging.info(" - " + str(i).rjust(2) + ": " + check.get("name").ljust(40) + " : micro=" +
+                                  str(is_micro))
+                self.logging.debug(" - " + str(check))
 
         if not self.param["active"]:
             self.logging.info("Device '" + self.id + "' is inactive, did not connect.")
@@ -153,7 +159,9 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             return
 
         self.device = self.audio.get_device_info_by_host_api_device_index(0, self.DEVICE)
-        if self.device.get('input') == 0:
+        is_micro = ((self.device.get("input") is not None and self.device.get("input") > 0) or
+                    (self.device.get("maxInputChannels") is not None and self.device.get("maxInputChannels") > 0))
+        if not is_micro:
             self.raise_error("... AUDIO device '" + str(self.DEVICE) + "' is not a microphone / has no input (" +
                              self.device.get('name') + ")")
             return

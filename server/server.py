@@ -1702,10 +1702,12 @@ if __name__ == "__main__":
         sensor[sen].start()
 
     # start microphones
+    first_micro = True
     microphones = {}
     for mic in config.param["devices"]["microphones"]:
-        microphones[mic] = BirdhouseMicrophone(device_id=mic, config=config)
+        microphones[mic] = BirdhouseMicrophone(device_id=mic, config=config, first_micro=first_micro)
         microphones[mic].start()
+        first_micro = False
 
     # start cameras
     camera_first = True
