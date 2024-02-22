@@ -233,13 +233,13 @@ function birdhouse_recordStopAudio(micro) {
 
 function birdhouse_forceBackup(camera) {
 	commands = ["force-backup",camera];
-	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceBackup');
 	}
 
 function birdhouse_forceUpdateViews(complete=false) {
     if (complete)   { commands = ["update-views-complete"]; }
 	else            { commands = ["update-views"]; }
-	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceUpdateViews');
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceUpdateViews');
 	}
 
 function birdhouse_forceRestart() {
@@ -249,7 +249,7 @@ function birdhouse_forceRestart() {
 
 function birdhouse_forceRestart_exec() {
 	commands = ["force-restart"];
-	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceRestart');
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceRestart');
 	}
 
 function birdhouse_killStream(camera_id, stream_id) {
@@ -283,7 +283,7 @@ function birdhouse_removeDataToday() {
 
 function birdhouse_removeDataToday_exec() {
 	commands = ["clean-data-today"];
-	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_removeDataToday');
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_removeDataToday');
 }
 
 function birdhouse_recreateImageConfig(date="") {
@@ -437,6 +437,12 @@ function birdhouse_AnswerCreateDay(data) {
 function birdhouse_AnswerOther(data) {
 	//console.log(data);
 	appMsg.alert(lang("DONE"));
+	birdhouseReloadView();
+	}
+
+function birdhouse_AnswerRequested(data) {
+	//console.log(data);
+	appMsg.alert(lang("REQUEST_SEND"));
 	birdhouseReloadView();
 	}
 
