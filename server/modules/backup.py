@@ -12,6 +12,9 @@ from modules.image import BirdhouseImageSupport
 
 
 class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
+    """
+    create tar gz archives incl. YOLOv5 files to be downloaded
+    """
 
     def __init__(self, config):
         """
@@ -370,10 +373,18 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
 
 
 class BirdhouseArchive(threading.Thread, BirdhouseClass):
+    """
+    class to archive and download images files
+    """
 
     def __init__(self, config, camera, views):
         """
         Initialize new thread and set initial parameters
+
+        Parameters:
+            config (modules.config.BirdhouseConfig): reference to config handler
+            camera (dict[str, modules.config.BirdhouseCamera]): reference to camera handler
+            views (dict[str, modules.views.BirdhouseViews]): reference to view handler
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="backup", config=config)
@@ -391,7 +402,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
     def run(self):
         """
-        start backup in the background
+        start backup handler
         """
         backup_started = False
         self.logging.info("Starting backup handler ...")
@@ -439,6 +450,9 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
     def backup_files(self, other_date=""):
         """
         Backup files with threshold to folder with date ./images/YYMMDD/
+
+        Parameters:
+            other_date (str): other date if not today
         """
         self.backup_running = True
         if other_date == "":
@@ -633,7 +647,6 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                     files_backup["info"]["detection_" + cam]["detected"] = True
                     files_backup["info"]["detection_" + cam]["labels"] = labels
 
-
             # create chart data from sensor and weather data vor archive
             files_backup["chart_data"] = self.views.create.chart_data_new(data_image=files_chart,
                                                                           data_sensor=data_sensor,
@@ -676,7 +689,10 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
     def download_files_waiting(self, param):
         """
-        return downloads waiting for a specific session id
+        check if downloads waiting for a specific session id
+
+        Returns:
+            status if downloads are waiting
         """
         return self.download.waiting(param)
 
@@ -751,6 +767,10 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
     def create_image_config(self, date="", recreate=False):
         """
         Initial compare files to create new config file
+
+        Parameters:
+            date (str): create config file for this date
+            recreate (bool): recreate config file completely
         """
         time.sleep(1)
         if date == "":
@@ -775,6 +795,11 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
     def create_image_config_api(self, param):
         """
         Call (re)creation via API and return JSON answer
+
+        Parameters:
+            param (dict): parameters from API request
+        Returns:
+            dict: information for API response
         """
         response = {"command": ["recreate main image config file", param["parameter"]]}
         self.create_image_config(date="", recreate=True)
@@ -783,6 +808,9 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
     def _create_image_config_save(self, date=""):
         """
         create and save image config
+
+        Parameters:
+            date (str): date of config file to be saved
         """
         camera_list = []
         for cam in self.camera:
@@ -827,6 +855,11 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
     def _create_image_config_analyze(self, file_list, init=False, subdir=""):
         """
         Compare image files and write to config file (incl. sensor data if exist)
+
+        Parameters:
+            file_list (list): list of files to be analyzed
+            init (bool): initialize
+            subdir (str): subdirectory
         """
         if self._processing:
             # this part potentially can be removed again
@@ -984,6 +1017,11 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
     def delete_marked_files_api(self, param):
         """
         set / unset recycling
+
+        Parameters:
+            param (dict): parameters from API request
+        Returns:
+            dict: information for API response
         """
         date = ""
         config = ""
@@ -1020,6 +1058,13 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
     def _delete_marked_files_exec(self, config="images", date="", delete_not_used=False):
         """
         delete files which are marked to be recycled for a specific date + database entry
+
+        Parameters:
+            config (str): type of configuration (images, backup, videos)
+            date (str): date of archive where files shall be deleted
+            delete_not_used (bool): delete unused files
+        Returns:
+            dict: information for API response
         """
         response = {}
         del_file_types = ["lowres", "hires", "video_file", "thumbnail"]
@@ -1128,6 +1173,11 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
     def delete_archived_day(self, param):
         """
         delete complete directory incl. files in it and trigger recreation of archive and favorite view
+
+        Parameters:
+            param (dict): parameters from API request
+        Returns:
+            dict: information for API response
         """
         date = param["parameter"][0]
         response = {"command": ["delete archived date '" + date + "'"]}
