@@ -294,6 +294,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
                 print("START signal set ... waiting " + str(self._wait_till_start) + "s to starting birdhouse server.")
                 self._text_files.write(self._shutdown_signal_file, "")
                 time.sleep(self._wait_till_start)
+                print("Starting ...")
                 return True
         print("Check: no START signal present (file="+str(os.path.exists(self._shutdown_signal_file))+").")
         return False
