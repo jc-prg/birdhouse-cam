@@ -778,7 +778,7 @@ function birdhouse_LIST_calendar(groups) {
     html += tab.end();
     html += "<br/>&nbsp;<br/>";
     html = html.replaceAll("<!--CLOSE_ALL-->", close_all);
-    group_html = birdhouse_OtherGroup("archive_calendar", lang("CALENDAR"), html, true );
+    group_html = birdhouse_OtherGroup("archive_calendar", lang("CALENDAR"), html, header_open);
 
     return group_html;
 }
