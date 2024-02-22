@@ -292,8 +292,6 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             content = self._text_files.read(self._shutdown_signal_file)
             if "START" in content:
                 print("START signal set ... waiting " + str(self._wait_till_start) + "s to starting birdhouse server.")
-                srv_logging.info("START signal set ... waiting " + str(self._wait_till_start) +
-                                  "s to starting birdhouse server.")
                 self._text_files.write(self._shutdown_signal_file, "")
                 time.sleep(self._wait_till_start)
                 return True
