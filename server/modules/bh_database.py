@@ -11,8 +11,17 @@ from modules.bh_class import BirdhouseClass, BirdhouseDbClass
 
 
 class BirdhouseTEXT(BirdhouseDbClass):
+    """
+    class to read and write text files
+    """
 
     def __init__(self, config=""):
+        """
+        Constructor to initialize class
+
+        Parameters:
+            config (str|modules.config.BirdhouseConfig): reference to config handler or empty string
+        """
         if config != "":
             BirdhouseDbClass.__init__(self, "TEXT", "DB-text", config)
         else:
@@ -24,6 +33,11 @@ class BirdhouseTEXT(BirdhouseDbClass):
     def read(self, filename):
         """
         read json file including check if locked
+
+        Parameters:
+            filename (str): file incl. path to read
+        Returns:
+            str: file content
         """
         try:
             self.wait_if_locked(filename)
@@ -39,6 +53,10 @@ class BirdhouseTEXT(BirdhouseDbClass):
     def write(self, filename, data):
         """
         write json file including locking mechanism
+
+        Parameters:
+            filename (str): file incl. path to write
+            data (str): text data to write into the file
         """
         self.wait_if_locked(filename)
         try:
@@ -55,8 +73,17 @@ class BirdhouseTEXT(BirdhouseDbClass):
 
 
 class BirdhouseJSON(BirdhouseDbClass):
+    """
+    class to read and write json data in text files
+    """
 
     def __init__(self, config) -> None:
+        """
+        Constructor to initialize class
+
+        Parameters:
+            config (modules.config.BirdhouseConfig): reference to config handler
+        """
         BirdhouseDbClass.__init__(self, "JSON", "DB-json", config)
         self.locked = {}
         self.connected = True
@@ -66,6 +93,11 @@ class BirdhouseJSON(BirdhouseDbClass):
     def read(self, filename) -> dict:
         """
         read json file including check if locked
+
+        Parameters:
+            filename (str): file incl. path to read
+        Returns:
+            dict: file content
         """
         try:
             self.wait_if_locked(filename)
@@ -82,6 +114,10 @@ class BirdhouseJSON(BirdhouseDbClass):
     def write(self, filename, data) -> None:
         """
         write json file including locking mechanism
+
+        Parameters:
+            filename (str): file incl. path to write
+            data (dict): json data to write into the file
         """
         self.wait_if_locked(filename)
         try:
@@ -100,6 +136,11 @@ class BirdhouseJSON(BirdhouseDbClass):
     def exists(self, filename) -> bool:
         """
         check if file exists
+
+        Parameters:
+            filename (str): file incl. path to check
+        Returns:
+            bool: status if file exists
         """
         result = os.path.exists(filename)
         self.logging.debug("File exists=" + str(result) + "; File=" + filename)
@@ -107,10 +148,17 @@ class BirdhouseJSON(BirdhouseDbClass):
 
 
 class BirdhouseCouchDB(BirdhouseDbClass):
+    """
+    class to read and write date from CouchDB
+    """
 
     def __init__(self, config, db):
         """
-        initialize
+        Constructor to initialize class
+
+        Parameters:
+            config (modules.config.BirdhouseConfig): reference to config handler
+            db (dict): database configuration (db_usr, db_pwd, db_server, db_port)
         """
         BirdhouseDbClass.__init__(self, "COUCH", "DB-couch", config)
         self.locked = {}
@@ -132,9 +180,12 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         self.connected = self.connect()
         self.logging.info("Connected CouchDB handler (" + self.db_url + ").")
 
-    def connect(self) -> bool:
+    def connect(self):
         """
         connect to database incl. retry
+
+        Returns:
+            bool: connection status
         """
         connects2db = 0
         max_connects = 5
@@ -172,9 +223,12 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         else:
             return False
 
-    def check_db(self) -> bool:
+    def check_db(self):
         """
         check if required DB exists or create (under construction)
+
+        Returns:
+            bool: status if db exists
         """
         self.logging.info(" - Check if DB exist ... ")
         self.logging.debug(str(self.database_definition))
@@ -193,6 +247,9 @@ class BirdhouseCouchDB(BirdhouseDbClass):
     def create(self, db_key):
         """
         create a database in couch_db
+
+        Parameters:
+            db_key (str): database name
         """
         self.logging.debug("   -> create DB " + db_key)
         try:
@@ -235,6 +292,11 @@ class BirdhouseCouchDB(BirdhouseDbClass):
     def filename2keys(self, filename):
         """
         translate filename to keys
+
+        Parameters:
+            filename (str): filename to be translated into database key
+        Returns:
+            str: db_key
         """
         date = ""
         database = ""
@@ -261,9 +323,14 @@ class BirdhouseCouchDB(BirdhouseDbClass):
 
         return [database, date]
 
-    def read(self, filename) -> dict:
+    def read(self, filename):
         """
         read data from DB
+
+        Parameters:
+            filename (str): filename to be translated into db_key
+        Returns:
+            dict: data from database
         """
         data = {}
         [db_key, date] = self.filename2keys(filename)
@@ -295,6 +362,11 @@ class BirdhouseCouchDB(BirdhouseDbClass):
     def write(self, filename, data, create=False) -> None:
         """
         read data from DB
+
+        Parameters:
+            filename (str): filename to be translated into db_key
+            data (dict): data to be saved in the database
+            create (bool): create database if not exists
         """
         [db_key, date] = self.filename2keys(filename)
         self.logging.debug("-----> WRITE: " + filename + " (" + self.basic_directory + ")")
@@ -346,9 +418,14 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         self.changed_data = True
         return
 
-    def exists(self, filename) -> bool:
+    def exists(self, filename):
         """
         check if db exists
+
+        Parameters:
+            filename (str): filename to be translated into db_key
+        Returns:
+            bool: status if database exists
         """
         [db_key, date] = self.filename2keys(filename)
         self.logging.debug("-----> CHECK DB: " + db_key + "/" + date)
