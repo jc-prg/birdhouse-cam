@@ -1113,8 +1113,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         Parameters:
             camera_id (str): camera ID
             config (modules.config.BirdhouseConfig): reference to main config handler
-            sensor (modules.sensors.BirdhouseSensor): reference to sensor handler
-            microphones (modules.micro.BirdhouseMicrophone): reference to microphone handler
+            sensor (dict[str, modules.sensors.BirdhouseSensor]): reference to sensor handler
+            microphones (dict[str, modules.micro.BirdhouseMicrophone]): reference to microphone handler
             first_cam (bool): set True for the first camera to load relevant Python modules only once
         """
         threading.Thread.__init__(self)

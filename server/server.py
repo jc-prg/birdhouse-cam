@@ -4,6 +4,8 @@ import threading
 import json
 import signal
 import sys
+import time
+
 import psutil
 import subprocess
 import os
@@ -190,6 +192,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
     def __init__(self, maintain=False):
         self._shutdown_signal_file = "/tmp/birdhouse-cam-shutdown"
+        self._wait_till_start = 60
         if not maintain:
             threading.Thread.__init__(self)
             BirdhouseClass.__init__(self, class_id="srv-health", config=config)
@@ -288,8 +291,11 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
         if os.path.exists(self._shutdown_signal_file):
             content = self._text_files.read(self._shutdown_signal_file)
             if "START" in content:
-                print("START signal set ... starting birdhouse server.")
+                print("START signal set ... waiting " + str(self._wait_till_start) + "s to starting birdhouse server.")
+                self.logging.info("START signal set ... waiting " + str(self._wait_till_start) +
+                                  "s to starting birdhouse server.")
                 self._text_files.write(self._shutdown_signal_file, "")
+                time.sleep(self._wait_till_start)
                 return True
         print("Check: no START signal present (file="+str(os.path.exists(self._shutdown_signal_file))+").")
         return False
