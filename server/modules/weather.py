@@ -9,14 +9,25 @@ from modules.bh_class import BirdhouseClass
 
 
 class BirdhouseGPS(object):
+    """
+    class to look up GPS position or address (https://pypi.org/project/geopy/)
+    """
 
     def __init__(self):
-        return
+        """
+        Constructor to initialize class (nothing to do)
+        """
+        pass
 
     @staticmethod
     def look_up_location(location):
         """
         look up location (https://pypi.org/project/geopy/)
+
+        Parameters:
+            location (str): name of location
+        Returns:
+            tuple[float, float, str]: latitude, longitude, location
         """
         geo_locator = Nominatim(user_agent="Weather App")
         try:
@@ -29,6 +40,11 @@ class BirdhouseGPS(object):
     def look_up_gps(gps_coordinates):
         """
         look up location (https://pypi.org/project/geopy/)
+
+        Parameters:
+            gps_coordinates (tuple[float, float]): GPS latitude, longitude
+        Returns:
+            [float, float, str]: latitude, longitude, location
         """
         geo_locator = Nominatim(user_agent="Weather App")
         try:
@@ -39,10 +55,17 @@ class BirdhouseGPS(object):
 
 
 class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
+    """
+    class to get weather data via python weather (in the main class at the moment)
+    """
 
     def __init__(self, config, location):
         """
-        get weather data via python weather (in the main class at the moment)
+        Constructor to initialize class
+
+        Parameters:
+            config (modules.config.BirdhouseClass): reference to config handler
+            location (tuple[float, float, str]): GPS latitude, longitude, address
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="weather-py", config=config)
@@ -91,7 +114,11 @@ class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
 
     def _extract_icon(self, icon_type, icon_object):
         """
-        extract icons
+        extract icons from data
+
+        Parameters:
+            icon_type (str): tbc.
+            icon_object (str): tbc.
         """
         if icon_type != "":
             icon_string = str(icon_object)
@@ -122,7 +149,7 @@ class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
     async def _get_weather(self):
         """
         get complete weather data set for a specific data
-        https://pypi.org/project/python-weather/
+        (https://pypi.org/project/python-weather/)
         """
         # declare the client. format defaults to the metric system (celcius, km/h, etc.)
         async with python_weather.Client(unit=python_weather.METRIC) as client:
@@ -214,17 +241,26 @@ class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
     def get_data(self):
         """
         return weather data from cache
+
+        Returns:
+            dict: weather information
         """
         data = self.weather_info.copy()
         return data
 
 
 class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
+    """
+    class to get weather data using Open Metheo API; API get hourly updated (https://open-meteo.com/ (without API key))
+    """
 
     def __init__(self, config, gps_location):
         """
-        get weather data using Open Metheo API; API get hourly updated
-        * https://open-meteo.com/ (without API key)
+        Constructor to initialize class
+
+        Parameters:
+            config (modules.config.BirdhouseConfig): reference to config handler
+            gps_location (tuple[float, float, str]): GPS latitude, longitude, address
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="weather-om", config=config)
@@ -278,6 +314,11 @@ class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
     def _weather_descriptions(self, weather_code):
         """
         check if weather code exists and return description
+
+        Parameters:
+            weather_code (int): weather code
+        Returns:
+            str: description for weather code
         """
         if str(weather_code) in self.weather_descriptions:
             return self.weather_descriptions[str(weather_code)]
@@ -287,6 +328,11 @@ class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
     def _weather_icons(self, weather_code):
         """
         check if weather code exists and return icon
+
+        Parameters:
+            weather_code (int): weather code
+        Returns:
+            str: icon for weather code
         """
         if str(weather_code) in self.weather_icons:
             return self.weather_icons[str(weather_code)]
@@ -392,6 +438,9 @@ class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
     def set_location(self, settings):
         """
         settings for weather
+
+        Parameters:
+            settings (dict): weather settings
         """
         self.weather_location = settings["gps_location"]
         self.update_settings = True
@@ -399,6 +448,9 @@ class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
     def get_data(self):
         """
         return weather data from cache
+
+        Returns:
+            dict: weather information
         """
         if not self.error:
             data = self.weather_info.copy()
@@ -408,11 +460,16 @@ class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
 
 
 class BirdhouseWeather(threading.Thread, BirdhouseClass):
+    """
+    class to get and control weather data from OpenMetheo or Python Weather
+    """
 
     def __init__(self, config):
         """
-        start weather and sunrise function
-        # https://pypi.org/project/python-weather/
+        start weather and sunrise function (https://pypi.org/project/python-weather/, https://api.open-meteo.com/)
+
+        Parameters:
+            config (modules.config.BirdhouseConfig): reference to config handler
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="weather", config=config)
@@ -520,6 +577,9 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
     def active(self, active):
         """
         set if active or inactive (used via config.py)
+
+        Parameters:
+            active (bool): active
         """
         self.weather_active = active
         if active:
@@ -530,6 +590,9 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
     def connect(self, param):
         """
         (re)connect to weather module
+
+        Parameters:
+            param (dict): weather parameters
         """
         self.weather_source = param["source"]
         self.logging.info("(Re)connect weather module (source="+self.weather_source+")")
@@ -563,6 +626,11 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
     def get_gps_info(self, param):
         """
         lookup GPS information to be saved in the main configuration
+
+        Parameters:
+            param (dict): weather parameters
+        Returns:
+            dict: updated weather parameters
         """
         self.weather_city = param["location"]
         self.weather_gps = self.gps.look_up_location(self.weather_city)
@@ -576,6 +644,11 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
     def get_weather_info(self, info_type="all"):
         """
         return information with different level of detail
+
+        Parameters:
+            info_type (str): type of weather data (status, current_small, current)
+        Returns:
+            dict: weather information
         """
         if "current" not in self.weather_info:
             self.raise_error("Weather data not correct (get_weather_info): " + str(self.weather_info))
@@ -608,7 +681,19 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
         return self.weather_info
 
     def get_sunrise(self):
+        """
+        get sunrise time
+
+        Returns:
+            str: sunrise time of today
+        """
         return self.sunrise_today
 
     def get_sunset(self):
+        """
+        get sunset time
+
+        Returns:
+            str: sunset time of today
+        """
         return self.sunset_today
