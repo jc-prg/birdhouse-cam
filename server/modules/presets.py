@@ -648,8 +648,7 @@ file_types = {
     '.jpeg': 'image/jpg',
 }
 
-detection_default_models = ["yolov5n", "yolov5s", "yolov5m", "yolov5l", "yolov5x",
-                            "yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6", "yolov5x6"]
+detection_default_models = ["yolov8n", "yolov8s", "yolov8m", "yolov8l", "yolov8x"]
 detection_custom_model_path = os.path.join(birdhouse_main_directories["data"],
                                            birdhouse_directories["custom_models"])
 detection_custom_models = glob.glob(os.path.join(detection_custom_model_path, "*.pt"))

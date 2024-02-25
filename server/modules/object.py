@@ -83,7 +83,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         if self.detect_active:
             try:
                 if first_load or not birdhouse_status["object_detection"]:
-                    from modules.detection.detection import DetectionModel, ImageHandling
+                    from modules.detection.detection_v8 import DetectionModel, ImageHandling
                     self.DetectionModel = DetectionModel
                     self.detect_visualize = ImageHandling()
 

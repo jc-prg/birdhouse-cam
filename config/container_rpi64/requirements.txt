@@ -20,3 +20,4 @@ torch
 #picamera2
 #psutil
 #tqdm
+ultralytics
