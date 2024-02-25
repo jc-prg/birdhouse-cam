@@ -119,22 +119,24 @@ function birdhouse_ImageGroup( group_id, title, entries, entry_count, entry_cate
 			img_id2 += entries[key]["directory"] + entries[key]["lowres"];
 			img_id2 = img_id2.replaceAll( "/", "_");
 
-            if (entries[key]["type"] != "data") {
-                if (count["star"] != undefined && parseInt(entries[key]["favorit"]) == 1) {
-                    count["star"]    += 1;
-                }
-                else if (count["recycle"] != undefined && (entries[key]["to_be_deleted"]) == 1)	{
-                    count["recycle"] += 1;
-                }
-                else if (count["object"] != undefined && entries[key]["detections"] && entries[key]["detections"].length > 0) {
-                    count["object"]  += 1;
-                }
-                else if (count["detect"] != undefined && parseInt(entries[key]["detect"]) == 1) {
-                    count["detect"]  += 1;
+            if (entries[key] != undefined) {
+                if (entries[key]["type"] != "data") {
+                    if (count["star"] != undefined && parseInt(entries[key]["favorit"]) == 1) {
+                        count["star"]    += 1;
+                    }
+                    else if (count["recycle"] != undefined && (entries[key]["to_be_deleted"]) == 1)	{
+                        count["recycle"] += 1;
+                    }
+                    else if (count["object"] != undefined && entries[key]["detections"] && entries[key]["detections"].length > 0) {
+                        count["object"]  += 1;
+                    }
+                    else if (count["detect"] != undefined && parseInt(entries[key]["detect"]) == 1) {
+                        count["detect"]  += 1;
+                    }
                 }
             }
-			if (count["data"] == undefined && count["all"] != undefined) { }
-			if (count["data"] != undefined && entries[key]["type"] == "data") { count["data"] += 1; }
+            if (count["data"] == undefined && count["all"] != undefined) { }
+            if (count["data"] != undefined && entries[key]["type"] == "data") { count["data"] += 1; }
         }
 		if (count["all"] != undefined && count["data"] != undefined) { count["all"] -= count["data"]; }
     }
