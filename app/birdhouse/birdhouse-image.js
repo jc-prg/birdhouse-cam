@@ -141,15 +141,17 @@ function birdhouse_ImageGroup( group_id, title, entries, entry_count, entry_cate
 
 	for (let key in entries) {
 			var img_id2 = "";
-			if (entries[key]["lowres"] != undefined) {
-                img_id2 += entries[key]["directory"] + entries[key]["lowres"];
-                img_id2 = img_id2.replaceAll( "/", "_");
-			    image_ids += " " + img_id2;
-            }
-			if (entries[key]["thumbnail"] != undefined) {
-                img_id2 += entries[key]["directory"] + entries[key]["thumbnail"];
-                img_id2 = img_id2.replaceAll( "/", "_");
-			    image_ids += " " + img_id2;
+			if (entries[key] != undefined) {
+                if (entries[key]["lowres"] != undefined) {
+                    img_id2 += entries[key]["directory"] + entries[key]["lowres"];
+                    img_id2 = img_id2.replaceAll( "/", "_");
+                    image_ids += " " + img_id2;
+                }
+                if (entries[key]["thumbnail"] != undefined) {
+                    img_id2 += entries[key]["directory"] + entries[key]["thumbnail"];
+                    img_id2 = img_id2.replaceAll( "/", "_");
+                    image_ids += " " + img_id2;
+                }
             }
 	}
 
@@ -227,21 +229,23 @@ function birdhouse_ImageGroup( group_id, title, entries, entry_count, entry_cate
 	entry_keys = Object.keys(entries).sort().reverse();
 	var detection_labels = [];
 	for (var i=0;i<entry_keys.length;i++) {
-		key   = entry_keys[i];
-		var img_title = key;
-		html += birdhouse_Image(title=img_title, entry_id=key, entry=entries[key], header_open=header_open, admin=admin,
-		                        video_short=video_short, group_id=group_id, same_img_size=same_img_size,
-		                        lowres_size=lowres_size);
-		if (entries[key]["detections"]) {
-		    for (var j=0;j<entries[key]["detections"].length;j++) {
-		        var label = entries[key]["detections"][j]["label"];
-		        if (detection_labels.indexOf(label) < 0) { detection_labels.push(label); }
-		        }
-		    }
-		if ((!entries[key]["detections"] || entries[key]["detections"].length == 0) && (detection_labels.indexOf("empty") < 0)) {
-		    detection_labels.push("empty");
-		    }
-    }
+        key   = entry_keys[i];
+        if (entries[key] != undefined) {
+            var img_title = key;
+            html += birdhouse_Image(title=img_title, entry_id=key, entry=entries[key], header_open=header_open, admin=admin,
+                                    video_short=video_short, group_id=group_id, same_img_size=same_img_size,
+                                    lowres_size=lowres_size);
+            if (entries[key]["detections"]) {
+                for (var j=0;j<entries[key]["detections"].length;j++) {
+                    var label = entries[key]["detections"][j]["label"];
+                    if (detection_labels.indexOf(label) < 0) { detection_labels.push(label); }
+                    }
+                }
+            if ((!entries[key]["detections"] || entries[key]["detections"].length == 0) && (detection_labels.indexOf("empty") < 0)) {
+                detection_labels.push("empty");
+                }
+            }
+        }
 
 	html += "</div>";
     html = html.replace("<!--LABELS-->", detection_labels.join(","));
