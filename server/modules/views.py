@@ -635,15 +635,14 @@ class BirdhouseViewFavorite(BirdhouseClass):
         favorites = {}
         main_directory = self.config.db_handler.directory(config="backup")
         dir_list = self.tools.get_directories(main_directory)
-
-        # main_directory = self.config.db_handler.directory(config="backup")
-        # dir_list = other_data.keys()
         dir_list = list(reversed(sorted(dir_list)))
+
         self.logging.info("  -> ARCHIVE Directories: " + str(len(dir_list)))
         self.logging.debug(str(dir_list))
 
         count_entries = 0
         for archive_directory in dir_list:
+
             count_entries += 1
             favorites_dir = self._list_create_from_images(archive_directory, complete)
             for key in favorites_dir:
