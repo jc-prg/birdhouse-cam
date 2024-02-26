@@ -374,7 +374,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self.slow_stream = False
         self.system_status = {
             "active": False,
-            "color": "default",
+            "color": [],
             "line1": "",
             "line2": ""
         }
@@ -973,7 +973,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
         image = raw.copy()
 
-        if self.system_status["active"]:
+        if self.system_status["active"] and self.resolution == "hires":
             #lowres_position = self.config.param["views"]["index"]["lowres_position"]
             lowres_position = self.config.param["views"]["index"]["lowres_pos_"+self.id]
             size = self.config.param["devices"]["cameras"][self.id]["image"]["resolution_cropped"]
@@ -1000,6 +1000,15 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             image = self.image.draw_text_raw(raw=image, text=self.system_status["line2"],
                                              font=cv2.QT_FONT_NORMAL, color=self.system_status["color"],
                                              position=pos_line2, scale=0.4, thickness=1)
+        elif self.system_status["active"] and self.resolution == "lowres":
+            [x1, y1, x2, y2] = [10, 10, 36, 36]
+            pos_line1 = [15, 31]
+
+            cv2.rectangle(image, (x1, y1), (x2, y2), self.system_status["color"], 1)
+            image = self.image.draw_text_raw(raw=image, text=self.system_status["line1"],
+                                             font=cv2.QT_FONT_NORMAL, color=self.system_status["color"],
+                                             position=pos_line1, scale=0.8, thickness=2)
+
         return image.copy()
 
     def stream_count(self):
@@ -1672,6 +1681,15 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(
                 current_time.strftime("%H:%M:%S")))
 
+    def video_recording_cancel(self):
+        """
+        cancel video recording
+
+        Returns:
+            dict: information for API response
+        """
+        return self.video.record_cancel()
+
     def measure_usage(self, current_time, stamp):
         """
         measure usage from time to time
@@ -2186,6 +2204,12 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         show system info in specific streams
         """
         self.camera_streams["camera_hires"].set_system_info(active, line1, line2, color)
+
+    def set_system_info_lowres(self, active, sign="", color=""):
+        """
+        show system info in specific streams
+        """
+        self.camera_streams["camera_lowres"].set_system_info(active, sign, "", color)
 
     def get_available_devices(self):
         """

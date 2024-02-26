@@ -910,9 +910,9 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         if entry_id in config_data:
             self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="favorit",
                                      status=entry_value)
-            if entry_value == 1:
+            if int(entry_value) == 1:
                 self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted",
-                                         status=1)
+                                         status=0)
         else:
             response["error"] = "no entry found with stamp " + entry_id
 
@@ -959,7 +959,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
             self.logging.debug("- OK " + entry_id)
             self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="to_be_deleted",
                                      status=entry_value)
-            if entry_value == 1:
+            if int(entry_value) == 1:
                 self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="favorit",
                                          status=0)
         else:

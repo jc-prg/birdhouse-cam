@@ -337,6 +337,16 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.logging.info("Stopping recording of '" + self.recording_filename + "' with " +
                           str(len(self.recording_frames)) + " chunks ...")
 
+    def record_cancel(self):
+        """
+        stop recording and clear cache
+        """
+        self.logging.info("Canceled recording of audio stream.")
+        self.recording = False
+        self.recording_processing = False
+        self.recording_frames = []
+        self.record_start_time = None
+
     def record_process(self):
         """
         write to file recorded audio data to an audio that can be integrated into the video file creation

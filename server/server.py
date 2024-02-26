@@ -917,6 +917,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if microphones[which_mic].param["active"] and microphones[which_mic].connected:
                     microphones[which_mic].record_stop()
             response = camera[which_cam].video.record_stop()
+        elif param["command"] == "cancel-recording":
+            for key in camera:
+                response = camera[key].video_recording_cancel()
+            for key in microphones:
+                microphones[key].record_cancel()
+            response["command"] = param["command"]
         elif param["command"] == "start-recording-audio":
             which_mic = self.path.split("/")[-2]
             srv_logging.info("start-recording-audio: " + which_mic)
@@ -1529,6 +1535,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         line1 = "Recording"
                         line2 = time_l + " / " + framerate + " (max " + str(camera[which_cam].video.max_length) + "s)"
                         camera[which_cam].set_system_info(True, line1, line2, (0, 0, 100))
+                        camera[which_cam].set_system_info_lowres(True, "R", (0, 0, 100))
 
                     elif camera[which_cam].video.processing:
                         srv_logging.debug("VIDEO PROCESSING")
@@ -1542,9 +1549,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         line1 = "Processing"
                         line2 = time_e + " / " + progress
                         camera[which_cam].set_system_info(True, line1, line2, (0, 255, 255))
+                        camera[which_cam].set_system_info_lowres(True, "P", (0, 255, 255))
 
                     else:
                         camera[which_cam].set_system_info(False)
+                        camera[which_cam].set_system_info_lowres(False)
 
                 if not stream_active:
                     self.stream_video_end()

@@ -416,13 +416,20 @@ img .play_button  {
 }
 
 .button-video-record {
-    width            : 100px;
+    width            : 30px;
     height           : 28px;
     background       : gray;
     border-radius    : 5px;
     margin           : 2px;
-    color            : black;
+    color            : white;
     border           : 1px solid white;
+    cursor           : pointer;
+}
+
+.button-video-record:disabled {
+    background       : #333333;
+    color            : #aaaaaa;
+    cursor           : default;
 }
 
 .button-settings-api {

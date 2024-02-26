@@ -178,6 +178,19 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             response["error"] = "camera is already recording " + self.camera.id
         return response
 
+    def record_cancel(self):
+        self.thread_prio_process(start=False, pid=self.id)
+        response = {"command": ["cancel recording"]}
+        if self.camera.active and not self.camera.error and self.recording:
+            self.logging.info("Cancel video recording (" + self.id + ") ...")
+            self.recording = False
+            self.cleanup()
+        elif not self.camera.active:
+            response["error"] = "camera is not active " + self.camera.id
+        elif not self.recording:
+            response["error"] = "camera isn't recording " + self.camera.id
+        return response
+
     def record_stop(self):
         """
         stop video recoding
@@ -576,3 +589,12 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
         return response
 
+    def cleanup(self):
+        """
+        remove all files from last recording
+        """
+        cmd_delete = "rm " + os.path.join(self.config.db_handler.directory("videos_temp"),
+                                          self.filename("vimages") + "*.jpg")
+        self.logging.info(cmd_delete)
+        message = os.system(cmd_delete)
+        self.logging.debug(message)
