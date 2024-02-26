@@ -613,12 +613,6 @@ class BirdhouseViewFavorite(BirdhouseClass):
                 content["entries"][entry_id] = files_archive[entry_id].copy()
                 content["groups"][group].append(entry_id)
 
-        cleanup_groups = []
-        for group in content["groups"]:
-            if group in dirlist:
-                cleanup_groups.append(group)
-        content["groups"] = cleanup_groups
-
         self.views = content
         self.create_complete = False
         self.logging.info("Create data for favorite view done (" + str(round(time.time() - start_time, 1)) + "s)")
