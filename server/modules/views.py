@@ -556,8 +556,9 @@ class BirdhouseViewFavorite(BirdhouseClass):
         self.logging.info("Create data for favorite view (complete=" + str(complete) + ") ...")
         self.loading = "in progress"
 
-        if self.config.db_handler.exists("favorites", "") and not complete:
-            content = self.config.db_handler.read("favorites", "")
+        if self.config.db_handler.exists("favorites") and not complete:
+            content = self.config.db_handler.read("favorites")
+
         else:
             content = {
                 "active_cam": "none",
@@ -592,6 +593,9 @@ class BirdhouseViewFavorite(BirdhouseClass):
 
             for stamp in delete_entries:
                 del content["entries"][stamp]
+
+        # clean up groups
+        content["groups"] = {}
 
         # videos
         files_videos = self._list_create_from_videos()
