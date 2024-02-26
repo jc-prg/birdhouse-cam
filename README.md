@@ -81,7 +81,7 @@ app in English and German, ...
   * Edit device settings, reconnect devices (devices must be added via config file)
   * Edit camera and image settings (contrast, saturation, hue, brightness ...)
   * See amount of currently active streams
-  * Download archived data (hires, config-files, object detection as YOLOv5)
+  * Download archived data (hires, config-files, object detection as YOLOv8)
 
 ## Birdhouse
 
@@ -100,7 +100,7 @@ Here are some options. Calculate with a little bit more space in the height for 
   * _optional:_ Small USB Microphone
   * _optional:_ DHT11 / DHT22 Sensor
 * Software
-  * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, PyTorch/YOLOv5
+  * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, YOLOv8
   * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
   * HTML, CSS, JavaScript, [ChartJS](https://www.chartjs.org/)
   * [jc://modules/](https://github.com/jc-prg/modules/), [jc://app-framework/](https://github.com/jc-prg/app-framework/)
@@ -349,12 +349,12 @@ using its IPv6 address.
 
 The bird detection is based on a relatively simple training with a few singing birds. If you want to use and 
 continuously improve your own detection model you can use the module [jc://bird-detection/](https://github.com/jc-prg/bird-detection/). 
-Alternatively create a YOLOv5 model with different tools. Copy the *.pt file into the folder [data/custom_models/](data/custom_models/).
+Alternatively create a YOLOv8 model with different tools. Copy the *.pt file into the folder [data/custom_models/](data/custom_models/).
 
 To use images from your own birdhouse, login as admin and go to the settings of an archived day. There you can download
 the data of a full day or activate the collection of images for download. When you activated the second option you can
 jump from day to day and mark all images you want to download. Use the icon in the header to start the download. In the
-download file you'll find all images incl. the config files as well as in a separate folder a YOLOv5 file per image
+download file you'll find all images incl. the config files as well as in a separate folder a YOLOv8 file per image
 and a file classes.txt with all labels of the model that has been used. Rename the labels_<model-name> folder to labels
 and use the module [jc://bird-detection/](https://github.com/jc-prg/bird-detection/) to prepare the data and train your model.
 
