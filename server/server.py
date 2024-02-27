@@ -1133,6 +1133,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "last_answer": ""
                 },
                 "system": {},
+                "video_recording": {},
                 "object_detection": {
                     "active": birdhouse_status["object_detection"],
                     "processing": config.object_detection_processing,
@@ -1170,7 +1171,27 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         }
         srv_logging.debug(str(param))
 
-        # prepare API response
+        for cam_id in camera:
+            api_response["STATUS"]["video_recording"][cam_id] = {}
+            active = camera[cam_id].active
+            if camera[cam_id].if_error():
+                active = False
+            if camera[cam_id].video.recording or camera[cam_id].video.processing:
+                api_response["STATUS"]["video_recording"][cam_id] = {
+                    "active":     active,
+                    "processing": camera[cam_id].video.processing,
+                    "recording":  camera[cam_id].video.recording,
+                    "error":      camera[cam_id].if_error(),
+                    "info":       camera[cam_id].video.record_info()
+                }
+            else:
+                api_response["STATUS"]["video_recording"][cam_id] = {
+                    "active":     active,
+                    "processing": camera[cam_id].video.processing,
+                    "recording":  camera[cam_id].video.recording,
+                    "error":      camera[cam_id].if_error(),
+                    "info":       {}
+                }
 
         # prepare DATA section
         api_data = {

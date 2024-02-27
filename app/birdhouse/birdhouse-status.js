@@ -98,6 +98,7 @@ function birdhouseStatus_print(data) {
     birdhouseStatus_detection(data);
     birdhouseStatus_downloads(data);
     birdhouseStatus_processing(data);
+    birdhouseStatus_recordButtons(data);
 
     document.getElementById(app_frame_info).style.display = "block";
 
@@ -585,6 +586,52 @@ function birdhouseStatus_detection(data) {
         });
 
     }
+
+/*
+* check recording status and set recording buttons on index view
+*
+* @param (dict) data: response from API status request
+*/
+function birdhouseStatus_recordButtons(data) {
+    status_data  = data["STATUS"]["video_recording"];
+    p_video      = document.getElementById("processing_video");
+    p_video_info = "";
+
+    Object.entries(status_data).forEach(([key,value]) => {
+        b_start  = document.getElementById("rec_start_"+key);
+        b_stop   = document.getElementById("rec_stop_"+key);
+        b_cancel = document.getElementById("rec_cancel_"+key);
+
+        if (p_video != undefined) {
+            p_video_info += key.toUpperCase() + ": ";
+            if (value["error"])                                   { p_video_info += "error "; }
+            else if (!value["processing"] && !value["recording"]) { p_video_info += "inactive"; }
+            else if (value["active"])                             { p_video_info += "OK "; }
+
+            if (value["recording"])       { p_video_info += "; recording (" + value["info"]["length"] + "s)<br/>"; }
+            else if (value["processing"]) { p_video_info += "; processing (" + value["info"]["percent"] + "%)<br/>"; }
+            else                          { p_video_info += "<br/>"}
+            }
+
+        if (b_start != undefined) {
+            if (value["active"])            { b_start.disabled = ""; } else { b_start.disabled = "disabled"; }
+            if (value["recording"])         { b_start.disabled = "disabled"; b_start.style.color = "red"; }
+            else if (value["processing"])   { b_start.disabled = "disabled"; b_start.style.color = "yellow"; }
+            else                            { b_start.style.color = "white"; }
+            }
+        if (b_stop != undefined) {
+            if (value["active"])                                { b_stop.disabled = ""; } else { b_stop.disabled = "disabled"; }
+            if (!value["recording"] && !value["processing"])    { b_stop.disabled = "disabled"; }
+            }
+        if (b_cancel != undefined) {
+            if (value["active"])                                { b_cancel.disabled = ""; } else { b_cancel.disabled = "disabled"; }
+            if (!value["recording"] && !value["processing"])    { b_cancel.disabled = "disabled"; }
+            }
+    });
+
+    if (p_video_info == "") { p_video_info = "inactive"; }
+    setTextById("processing_video", p_video_info);
+}
 
 /*
 * check running download preparation processes and fill respective placeholders with status information
