@@ -35,6 +35,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
             "crf": 18
         }
         self.process_id = ""
+        self.process = None
 
         self.ffmpeg_handler_available = ["cmd-line", "python-ffmpeg", "ffmpeg-python", "ffmpeg-progress"]
         self.ffmpeg_handler = "ffmpeg-progress"
@@ -92,7 +93,8 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         cmd_ffmpeg = cmd_ffmpeg.replace("  ", " ")
         cmd_parts = cmd_ffmpeg.split(" ")
         self.logging.info('ffmpeg-progress: START ' + str(cmd_parts))
-        return sp.Popen(cmd_parts).pid
+        self.process = sp.Popen(cmd_parts)
+        return self.process.pid
 
     def on_message_handler(self, percent: float, fr_cnt: int, total_frames: int, elapsed: float):
         """
@@ -247,3 +249,13 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
             self.raise_error(
                 "Error during ffmpeg video trimming (" + self.id + " / " + self.ffmpeg_handler + "): " + str(err))
             return False
+
+    def cancel_process(self):
+        """
+        cancel running process
+        """
+        if self.process:
+            self.process.terminate()
+            self.logging.info("Terminate running ffmpeg process.")
+        else:
+            self.logging.warning("No ffmpeg process running to terminate.")

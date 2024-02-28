@@ -181,6 +181,11 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     def record_cancel(self):
         self.thread_prio_process(start=False, pid=self.id)
         response = {"command": ["cancel recording"]}
+        if self.camera.active and not self.camera.error and self.processing:
+            self.logging.info("Cancel video processing (" + self.id + ") ...")
+            self.ffmpeg.cancel_process()
+            self.processing = False
+            self.cleanup()
         if self.camera.active and not self.camera.error and self.recording:
             self.logging.info("Cancel video recording (" + self.id + ") ...")
             self.recording = False
