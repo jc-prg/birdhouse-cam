@@ -319,7 +319,8 @@ function birdhouseHeaderFunctions() {
 	else if (app_available_cameras.length > 1) { html = reload_view + audio_stream + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info; }
 	else { html = reload_view + audio_stream + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
 */
-	html += "&nbsp;&nbsp;&nbsp;" + info;
+    setTextById("headerRightToolTip", info)
+	html += "&nbsp;&nbsp;&nbsp;";// + info;
 	return html;
 	}
 

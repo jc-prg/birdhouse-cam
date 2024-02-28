@@ -348,7 +348,7 @@ function birdhouse_recycleRange(group_id, index, status, lowres_file) {
 		onclick     += "document.getElementById(\"recycle_button\").innerHTML=\""+lang("PLEASE_WAIT")+"\";";
 		onclick     += "document.getElementById(\"recycle_button\").disabled=true;";
 
-		info_text.innerHTML += "<br/><button id='recycle_button' onclick='"+onclick+"' class='button-video-edit' style='margin-top:6px;'>&nbsp;"+lang("RANGE_DELETE")+"&nbsp;</button>";
+		info_text.innerHTML += "<br/><button id='recycle_button' onclick='"+onclick+"' class='button-video-edit' style='margin-top:6px;float:unset;'>&nbsp;"+lang("RANGE_DELETE")+"&nbsp;</button>";
 		button_tooltip.show("info");
 		}
 	else {

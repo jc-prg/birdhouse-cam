@@ -416,6 +416,7 @@ img .play_button  {
 }
 
 .button-video-record {
+    vertical-align   : middle;
     width            : 30px;
     height           : 28px;
     background       : gray;
@@ -425,6 +426,7 @@ img .play_button  {
     border           : 1px solid white;
     cursor           : pointer;
 }
+
 
 .button-video-record:disabled {
     background       : #333333;
