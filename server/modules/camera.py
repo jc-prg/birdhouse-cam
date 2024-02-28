@@ -1155,7 +1155,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.weather_sunset = None
 
         self.detect_objects = None
-        self.detect_birds = None
         self.detect_visualize = None
         self.detect_live = False
         self.detect_settings = self.param["object_detection"]
@@ -2020,13 +2019,15 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.detect_frame_last = image
         self.detect_frame_id_last = self.get_stream_image_id()
 
-        if self.detect_objects and self.detect_objects.loaded and not self.if_error():
+        if self.object and self.object.detect_loaded and not self.if_error():
             path_hires = str(os.path.join(self.config.db_handler.directory("images"),
                                           "_temp_"+str(self.id)+"_"+str(stream_id)+".jpg"))
             try:
                 self.write_image(path_hires, image, scale_percent=self.image_size_object_detection)
-                img, detect_info = self.detect_objects.analyze(path_hires, self.detect_settings["threshold"], False)
-                img = self.detect_visualize.render_detection(image, detect_info, 1, self.detect_settings["threshold"])
+                img, detect_info = self.object.detect_objects.analyze(path_hires, self.detect_settings["threshold"],
+                                                                      False)
+                img = self.object.detect_visualize.render_detection(image, detect_info, 1,
+                                                                    self.detect_settings["threshold"])
                 if os.path.exists(path_hires):
                     os.remove(path_hires)
                 return img
@@ -2036,8 +2037,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 image = self.image.draw_text_raw(raw=image, text=msg, position=(20, -40), font=None, scale=0.6,
                                                  color=(255, 255, 255), thickness=1)
 
-        elif not self.detect_objects or not self.detect_objects.loaded:
-            msg = "Object detection not loaded."
+        elif not self.object or not self.object.detect_loaded:
+            msg = "Object detection not loaded." + str(self.object.detect_loaded)
             image = self.image.draw_text_raw(raw=image, text=msg, position=(20, -40), font=None, scale=0.6,
                                              color=(255, 255, 255), thickness=1)
 
