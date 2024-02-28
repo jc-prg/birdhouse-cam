@@ -512,6 +512,10 @@ img .play_button  {
   display: inline-block;
 }
 
+.admin_status_client_full { display: none; }
+.admin_status_client_small { display: block; }
+
+
 .dot {
   display:  inline-block;
   width: 8px;

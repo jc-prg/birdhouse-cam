@@ -125,6 +125,7 @@ function birdhouseStatus_cameras(data) {
             if (camera_status[camera]["active_streams"] == 1) { stream = lang("STREAM"); } else { stream = lang("STREAMS"); }
             setTextById("show_stream_count_"+camera, camera_status[camera]["active_streams"] + " " + stream);
             setTextById("show_stream_fps_"+camera,   "("+camera_status[camera]["stream_raw_fps"]+" fps)");
+            setTextById("show_stream_info_"+camera,   "("+camera_status[camera]["active_streams"] + ": " + camera_status[camera]["stream_raw_fps"]+"fps)");
             setTextById("show_stream_object_fps_"+camera,   "("+camera_status[camera]["stream_object_fps"]+" fps)");
             camera_streams += cameras[camera]["image"]["current_streams"];
 
@@ -179,16 +180,19 @@ function birdhouseStatus_cameras(data) {
                 setHeaderColor(header_id=camera+"_error", header_color=header_color_error);
                 setHeaderColor(header_id=camera, header_color=header_color_error);
                 setStatusColor(status_id="status_error_"+camera, "red");
+                setStatusColor(status_id="status_error2_"+camera, "red");
             }
             else if (camera_status[camera]["active"] && error_count > 0) {
                 setHeaderColor(header_id=camera+"_error", header_color=header_color_warning);
                 setHeaderColor(header_id=camera, header_color=header_color_warning);
                 setStatusColor(status_id="status_error_"+camera, "yellow");
+                setStatusColor(status_id="status_error2_"+camera, "yellow");
             }
             else {
                 setHeaderColor(header_id=camera+"_error", header_color="");
                 setHeaderColor(header_id=camera, header_color="");
                 setStatusColor(status_id="status_error_"+camera, "green");
+                setStatusColor(status_id="status_error2_"+camera, "green");
             }
 
             // image recording working correctly
@@ -197,9 +201,11 @@ function birdhouseStatus_cameras(data) {
             }
             else if (camera_status[camera]["record_image_active"]) {
                 setStatusColor(status_id="status_error_record_"+camera, "green");
+                setStatusColor(status_id="status_error2_record_"+camera, "green");
             }
             else {
                 setStatusColor(status_id="status_error_record_"+camera, "black");
+                setStatusColor(status_id="status_error2_record_"+camera, "black");
             }
 
             // camera activated
@@ -209,7 +215,9 @@ function birdhouseStatus_cameras(data) {
             else {
                 setStatusColor(status_id="status_active_"+camera, "black");
                 setStatusColor(status_id="status_error_"+camera, "black");
+                setStatusColor(status_id="status_error2_"+camera, "black");
                 setStatusColor(status_id="status_error_record_"+camera, "black");
+                setStatusColor(status_id="status_error2_record_"+camera, "black");
                 }
 
             if (cameras[camera]["image"]["crop_area"]) {
@@ -614,18 +622,19 @@ function birdhouseStatus_recordButtons(data) {
             }
 
         if (b_start != undefined) {
-            if (value["active"])            { b_start.disabled = ""; } else { b_start.disabled = "disabled"; }
-            if (value["recording"])         { b_start.disabled = "disabled"; b_start.style.color = "red"; }
+            if (!value["active"])           { b_start.disabled = "disabled"; b_start.style.color = "white";}
+            else if (value["recording"])    { b_start.disabled = "disabled"; b_start.style.color = "red"; }
             else if (value["processing"])   { b_start.disabled = "disabled"; b_start.style.color = "yellow"; }
-            else                            { b_start.style.color = "white"; }
+            else                            { b_start.disabled = ""; b_start.style.color = "lightgray"; }
             }
         if (b_stop != undefined) {
-            if (value["active"])                                { b_stop.disabled = ""; } else { b_stop.disabled = "disabled"; }
-            if (!value["recording"] && !value["processing"])    { b_stop.disabled = "disabled"; }
+            if (value["recording"])         { b_stop.disabled = ""; }
+            else                            { b_stop.disabled = "disabled"; }
             }
         if (b_cancel != undefined) {
-            if (value["active"])                                { b_cancel.disabled = ""; } else { b_cancel.disabled = "disabled"; }
-            if (!value["recording"] && !value["processing"])    { b_cancel.disabled = "disabled"; }
+            if (value["recording"] || value["processing"])        { b_cancel.disabled = ""; }
+            else if (!value["recording"] && !value["processing"]) { b_cancel.disabled = "disabled"; }
+            else                                                  { b_cancel.disabled = "disabled"; }
             }
     });
 

@@ -8,6 +8,9 @@
     .separator_group { width : 98%; }
     .image_container.fixed_height { height : 250px; }
 
+    .admin_status_client_full { display: block; }
+    .admin_status_client_small { display: none; }
+
     .camera_info_image { width : 30%; max-height : 120px; }
     .camera_info_image.video_edit { max-height : none; }
     .camera_info_image.video_edit .image_container img {
