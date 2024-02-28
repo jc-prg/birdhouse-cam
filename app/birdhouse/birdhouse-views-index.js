@@ -53,7 +53,7 @@ index_template["admin"] = `
         <table border="0" width="100%">
             <tr>
                 <td>
-                    <div style="width:55px;float:left;height:20px;padding:5px;"><b><!--CAM1_ID-->:</b></div>
+                    <div style="width:50px;float:left;height:20px;padding:5px;"><b><!--CAM1_ID-->:</b></div>
                     <div style="float:left;width:250px;" class="admin_status_client_full">
                         <div style="float:left;height:20px;padding-top:1px;" id="status_error_<!--CAM1_ID-->"><div id="black"></div></div>
                         <div style="float:left;height:20px;padding-top:1px;" id="status_error_record_<!--CAM1_ID-->"><div id="black"></div></div>
@@ -61,7 +61,7 @@ index_template["admin"] = `
                         <div style="float:left;height:20px;padding:5px;display:block;width:70px;" id="show_stream_fps_<!--CAM1_ID-->">(0 fps)</div>
                         <div style="float:left;height:20px;padding:5px;display:none;width:70px;" id="show_stream_object_fps_<!--CAM1_ID-->">(0&nbsp;fps)</div>
                     </div>
-                    <div style="float:left;width:125px;" class="admin_status_client_small">
+                    <div style="float:left;width:130px;" class="admin_status_client_small">
                         <div style="float:left;height:20px;padding-top:1px;" id="status_error2_<!--CAM1_ID-->"><div id="black"></div></div>
                         <div style="float:left;height:20px;padding-top:1px;" id="status_error2_record_<!--CAM1_ID-->"><div id="black"></div></div>
                         <div style="float:left;height:20px;padding:5px;" id="show_stream_info_<!--CAM1_ID-->">(0: 0fps)</div>
@@ -70,14 +70,14 @@ index_template["admin"] = `
             </tr>
              <tr id="admin_status_index">
                 <td>
-                    <div style="width:55px;float:left;height:20px;padding:5px;"><b><!--CAM2_ID-->:</b></div>
+                    <div style="width:50px;float:left;height:20px;padding:5px;"><b><!--CAM2_ID-->:</b></div>
                     <div style="float:left;width:250px;" class="admin_status_client_full">
                         <div style="float:left;height:20px;" id="status_error_<!--CAM2_ID-->"><div id="black"></div></div>
                         <div style="float:left;height:20px;" id="status_error_record_<!--CAM2_ID-->"><div id="black"></div></div>
                         <div style="float:left;height:20px;padding:5px;" id="show_stream_count_<!--CAM2_ID-->">0 Streams</div>
                         <div style="float:left;height:20px;padding:5px;" id="show_stream_fps_<!--CAM2_ID-->">(0 fps)</div>
                     </div>
-                    <div style="float:left;width:125px;" class="admin_status_client_small">
+                    <div style="float:left;width:130px;" class="admin_status_client_small">
                         <div style="float:left;height:20px;" id="status_error2_<!--CAM2_ID-->"><div id="black"></div></div>
                         <div style="float:left;height:20px;" id="status_error2_record_<!--CAM2_ID-->"><div id="black"></div></div>
                         <div style="float:left;height:20px;padding:5px;" id="show_stream_info_<!--CAM2_ID-->">(0: 0fps)</div>
