@@ -416,7 +416,10 @@ function toggleVideoEdit() {
         		}
         	else						{ 
         		video_edit1.style.display = "none"; 
-        		video_edit2.style.display = "none"; 
+        		video_edit2.style.display = "none";
+
+               var video = document.getElementById("video");
+               if (video != undefined) { video.pause(); }
         		}
         	}
 	else {

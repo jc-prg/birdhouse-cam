@@ -176,6 +176,11 @@ function birdhouse_overlayHide() {
        document.getElementById("overlay_content").style.display = "none";
        document.getElementById("overlay_parent").style.display = "none";
        document.body.style.overflow = 'auto';
+
+       var video = document.getElementById("overlay_video");
+       if (video != undefined) { video.pause(); }
+       var video = document.getElementById("video");
+       if (video != undefined) { video.pause();  }
        }
 
 /*
