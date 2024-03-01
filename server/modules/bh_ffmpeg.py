@@ -18,7 +18,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         """
         Constructor method for initializing the class.
 
-        Parameters:
+        Args:
             camera_id (str): id string to identify the camera from which this class is embedded
             config (modules.config.BirdhouseConfig): reference to main config object
         """
@@ -73,7 +73,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         """
         callback function to get transcoding progress information - to be validated / experimental and not in use
 
-        Parameters:
+        Args:
             infile (str): filename of input file
             outfile (str): filename for output file
             vstats_path (str): filename for progress information
@@ -101,7 +101,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         """
         get progress information and safe in a central dict - to be validated / experimental not in use
 
-        Parameters:
+        Args:
             percent (float): progress in percent
             fr_cnt (int): frame count
             total_frames (int): total frames of the video
@@ -127,7 +127,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         """
         create video file from images files
 
-        Parameters:
+        Args:
             process_id (str): process identifier
             input_filenames (str): input filename
             framerate (str): framerate in frames per second
@@ -208,7 +208,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         """
         trim a video using ffmpeg
 
-        Parameters:
+        Args:
             input_filename (str): input filename
             output_filename (str): output filename for trimmed video
             start_timecode (float): start timecode for trimmed video

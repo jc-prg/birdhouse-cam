@@ -14,7 +14,7 @@ def get_env(var_name):
     """
     get value from .env-file if exists
 
-    Parameters:
+    Args:
         var_name (str): key in .env file
     Returns:
         Any: value from .env file
@@ -49,7 +49,7 @@ def identify_ipv6(server_url, ipv6):
     """
     create URL with IPv6 and send request to external server
 
-    Parameters:
+    Args:
         server_url (str): server url
         ipv6 (str): IPv6 address
     """

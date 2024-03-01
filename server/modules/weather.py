@@ -24,7 +24,7 @@ class BirdhouseGPS(object):
         """
         look up location (https://pypi.org/project/geopy/)
 
-        Parameters:
+        Args:
             location (str): name of location
         Returns:
             tuple[float, float, str]: latitude, longitude, location
@@ -41,7 +41,7 @@ class BirdhouseGPS(object):
         """
         look up location (https://pypi.org/project/geopy/)
 
-        Parameters:
+        Args:
             gps_coordinates (tuple[float, float]): GPS latitude, longitude
         Returns:
             [float, float, str]: latitude, longitude, location
@@ -63,7 +63,7 @@ class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
         """
         Constructor to initialize class
 
-        Parameters:
+        Args:
             config (modules.config.BirdhouseClass): reference to config handler
             location (tuple[float, float, str]): GPS latitude, longitude, address
         """
@@ -116,7 +116,7 @@ class BirdhouseWeatherPython(threading.Thread, BirdhouseClass):
         """
         extract icons from data
 
-        Parameters:
+        Args:
             icon_type (str): tbc.
             icon_object (str): tbc.
         """
@@ -258,7 +258,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
         """
         Constructor to initialize class
 
-        Parameters:
+        Args:
             config (modules.config.BirdhouseConfig): reference to config handler
             gps_location (tuple[float, float, str]): GPS latitude, longitude, address
         """
@@ -315,7 +315,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
         """
         check if weather code exists and return description
 
-        Parameters:
+        Args:
             weather_code (int): weather code
         Returns:
             str: description for weather code
@@ -329,7 +329,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
         """
         check if weather code exists and return icon
 
-        Parameters:
+        Args:
             weather_code (int): weather code
         Returns:
             str: icon for weather code
@@ -439,7 +439,7 @@ class BirdhouseWeatherOpenMeteo(threading.Thread, BirdhouseClass):
         """
         settings for weather
 
-        Parameters:
+        Args:
             settings (dict): weather settings
         """
         self.weather_location = settings["gps_location"]
@@ -468,7 +468,7 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
         """
         start weather and sunrise function (https://pypi.org/project/python-weather/, https://api.open-meteo.com/)
 
-        Parameters:
+        Args:
             config (modules.config.BirdhouseConfig): reference to config handler
         """
         threading.Thread.__init__(self)
@@ -578,7 +578,7 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
         """
         set if active or inactive (used via config.py)
 
-        Parameters:
+        Args:
             active (bool): active
         """
         self.weather_active = active
@@ -591,7 +591,7 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
         """
         (re)connect to weather module
 
-        Parameters:
+        Args:
             param (dict): weather parameters
         """
         self.weather_source = param["source"]
@@ -627,7 +627,7 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
         """
         lookup GPS information to be saved in the main configuration
 
-        Parameters:
+        Args:
             param (dict): weather parameters
         Returns:
             dict: updated weather parameters
@@ -645,7 +645,7 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
         """
         return information with different level of detail
 
-        Parameters:
+        Args:
             info_type (str): type of weather data (status, current_small, current)
         Returns:
             dict: weather information

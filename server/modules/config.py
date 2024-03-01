@@ -22,7 +22,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         Constructor to initialize class.
 
-        Parameters:
+        Args:
              config (modules.config.BirdhouseConfig): reference to main configuration handler
              db_type (str): database type (json, couch, both)
              main_directory (str): root directory of the server
@@ -71,7 +71,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         (re)connect database
 
-        Parameters:
+        Args:
             db_type (str): database type (json, couch, both)
         """
         if db_type is None:
@@ -85,7 +85,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         set DB type: JSON, CouchDB, BOTH
 
-        Parameters:
+        Args:
             db_type (str): database type (json, couch, both)
         """
         self.logging.info("  -> database handler set database type (" + db_type + ")")
@@ -163,7 +163,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         return complete path of config file
 
-        Parameters:
+        Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
         Returns:
@@ -175,7 +175,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         return directory of config file
 
-        Parameters:
+        Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
         Returns:
@@ -200,7 +200,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         create directory for database file if not exists
 
-        Parameters:
+        Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
         """
@@ -218,7 +218,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         check if file or DB exists
 
-        Parameters:
+        Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
         Returns:
@@ -244,7 +244,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         check if data are available in the cache
 
-        Parameters:
+        Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
         Returns:
@@ -261,7 +261,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         read data from database (for all db types)
 
-        Parameters:
+        Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
         Returns:
@@ -301,7 +301,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         get date from cache, if available (else read from source)
 
-        Parameters:
+        Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
         Returns:
@@ -335,7 +335,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         write data to database (for all types)
 
-        Parameters:
+        Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
             data (dict): complete data for database
@@ -379,7 +379,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         create a copy of a complete of the JSON database file if type is json or both
 
-        Parameters:
+        Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
             add (dict): string to be added to the filename (default = "copy")
@@ -393,7 +393,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         add / update date in cache
 
-        Parameters:
+        Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
             data (dict): complete data for database
@@ -442,7 +442,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         remove all entries from a database
 
-        Parameters:
+        Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
         """
@@ -489,7 +489,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         remove data from cache
 
-        Parameters:
+        Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
         """
@@ -508,7 +508,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         lock file if JSON
 
-        Parameters:
+        Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
         Returns:
@@ -522,7 +522,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         lock file if JSON
 
-        Parameters:
+        Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
         Returns:
@@ -542,7 +542,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         Constructor to initialize class.
 
-        Parameters:
+        Args:
              config (modules.config.BirdhouseConfig): reference to main configuration handler
              db_handler (modules.config.BirdhouseConfigDBHandler): reference to db handler
         """
@@ -887,7 +887,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         add status change to queue, e.g., used to change to_be_deleted or favorite status
 
-        Parameters:
+        Args:
             config (str): database key
             date (str): date if image archive database (YYYYMMDD)
             key (str): key of entry to be edited
@@ -906,7 +906,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         add, remove or edit complete entry using a queue
 
-        Parameters:
+        Args:
             config (str): database key
             date (str): date if image archive database (YYYYMMDD)
             key (str): key of entry to be edited
@@ -924,7 +924,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         set / unset favorite status - transform API request to queue entry
 
-        Parameters:
+        Args:
              param (dict): parameters from API request
         Returns:
             dict: information for API response
@@ -972,7 +972,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         Set / unset recycling for single image - transform API request to queue entry
 
-        Parameters:
+        Args:
             param (dict): parameters given via API
         Returns:
             dict: API response
@@ -1022,7 +1022,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         Set / unset recycling based on given threshold
 
-        Parameters:
+        Args:
             param (dict): parameters given via API
             which_cam (str): id of selected camera
         Returns:
@@ -1064,7 +1064,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         Set / unset recycling based on given threshold
 
-        Parameters:
+        Args:
             param (dict): parameters given via API
             which_cam (str): id of selected camera
         Returns:
@@ -1119,7 +1119,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         set / unset recycling -> range from-to
 
-        Parameters:
+        Args:
             param (dict): parameters given via API
         Returns:
             dict: API response
@@ -1198,7 +1198,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         set status of an archive entry to changed - in central file and in date specific backup file
 
-        Parameters:
+        Args:
             date (str): date of changed database
             change (str): view that has to be recreated: archive, favorite, object
             is_changed (bool): status - True if change and False if recreation has be done
@@ -1235,7 +1235,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         get status, if changed - from central file and from date specific backup file
 
-        Parameters:
+        Args:
             date (str): date of changed database
             change (str): view that has to be recreated: archive, favorite, object
         Returns:
@@ -1258,7 +1258,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         add entry to config file using the queue
 
-        Parameters:
+        Args:
             config (str): database key
             date (str): date of database if archive image database
             key (str): entry key of entry to be added
@@ -1270,7 +1270,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         edit entry in config file using the queue
 
-        Parameters:
+        Args:
             config (str): database key
             date (str): date of database if archive image database
             key (str): entry key of entry to be changed
@@ -1283,7 +1283,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         delete entry from config file using the queue
 
-        Parameters:
+        Args:
             config (str): database key
             date (str): date of database if archive image database
             key (str): entry key of entry to be deleted
@@ -1295,7 +1295,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         cleaning image entry keeping activity and sensor data for charts using the queue
 
-        Parameters:
+        Args:
             config (str): database key
             date (str): date of database if archive image database
             key (str): entry key of entry to be changed
@@ -1310,7 +1310,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         """
         Constructor to initialize class
 
-        Parameters:
+        Args:
             param_init (dict): initial parameters
             main_directory (str): main directory (location of main script)
         """
@@ -1497,7 +1497,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         """
         change configuration base on dict in form
 
-        Parameters:
+        Args:
             config (str): database name
             config_data (dict): selected vars to be changed in the format dict["key1:key2:key3"] = "value"
             date (str): date of database if required (format: YYYYMMDD)
@@ -1634,7 +1634,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         """
         set user activity
 
-        Parameters:
+        Args:
             cmd (str): options are 'get' or 'set'
             param (str): options are empty, 'status' or 'last_answer'
         Returns:
@@ -1659,7 +1659,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         """
         set handler for views
 
-        Parameters:
+        Args:
             views (modules.views.BirdhouseViews): reference to view handler
         """
         self.views = views
@@ -1669,7 +1669,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         """
         set device signal
 
-        Parameters:
+        Args:
             device (str): device id
             key (str): parameter key
             value (Any): parameter value
@@ -1682,7 +1682,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         """
         check device signal
 
-        Parameters:
+        Args:
             device (str): device id
             key (str): parameter key
         Returns:
@@ -1706,7 +1706,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         """
         get changes documented in backup_info
 
-        Parameters:
+        Args:
             category (str): category of changes (favorite, archive, object)
         Returns:
             dict: list of dates where changes in the respective category have happend

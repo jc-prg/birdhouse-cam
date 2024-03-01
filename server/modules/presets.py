@@ -11,7 +11,7 @@ def get_env(var_name):
     """
     get value from .env-file if exists
 
-    Parameters:
+    Args:
         var_name (str): key in .env file
     Returns:
         Any: value from .env file
@@ -209,7 +209,7 @@ def set_logging(name):
     """
     set logger and ensure it exists only once
 
-    Parameters:
+    Args:
         name (str): logger name
     """
     global logger_exists, logger_list, loggers, birdhouse_loglevel_module
@@ -269,7 +269,7 @@ def set_server_logging(system_arguments):
     """
     set function for global logging
 
-    Parameters:
+    Args:
         system_arguments (str): depending on system arguments and settings in .env file set if logging into file
     """
     global srv_logging, ch_logging, birdhouse_log_as_file, birdhouse_env, view_logging

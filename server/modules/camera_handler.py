@@ -70,7 +70,7 @@ class CameraInformation:
         """
         use v4l2_ctl to identify available camera resolutions
 
-        Parameters:
+        Args:
             source (string): device definition, e.g. /dev/video0
         """
         try:
@@ -109,7 +109,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         create instance for PiCamera2
         documentation: https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf
 
-        Parameters:
+        Args:
             camera_id (str): camera identifier
             source (str): source, e.g., /dev/video0
             config (modules.config.BirdhouseConfig): reference to main config handler
@@ -267,7 +267,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         set properties / controls for picamera2
 
-        Parameters:
+        Args:
             key (str): internal key
             value (str): value to be set
             init (bool): initialization
@@ -338,7 +338,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         uses picamera2.camera_controls[<full_key>], picamera2.still_configuration.<full_key>, picamera2.capture_metadata(), and picamera2.camera_properties[..]
 
-        Parameters:
+        Args:
             key (str): available keys: saturation, brightness, contrast, gain, sharpness, temperature, exposure,
                        auto_wb; if not set return complete list of properties
         Returns:
@@ -437,7 +437,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         set camera resolution
 
-        Parameters:
+        Args:
             width (int): new image width
             height (int): new image height
         Returns:
@@ -457,7 +457,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         get resolution of the device
 
-        Parameters:
+        Args:
             maximum (bool): get maximum resolution (True) or current resolution (False)
         Returns:
             [int, int]: width, height
@@ -472,7 +472,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         check if given source can be connected as PiCamera and returns an image
 
-        Parameters:
+        Args:
             source (str): device string, should be "/dev/picam"
             name (str): description for the camera
         Returns:
@@ -531,7 +531,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         """
         create instance of USB camera or PiCamera
 
-        Parameters:
+        Args:
             camera_id (str): camera identifier
             source (str): source, e.g., /dev/video0
             config (modules.config.BirdhouseConfig): reference to main config handler
@@ -626,7 +626,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         """
         read image from camera
 
-        Parameters:
+        Args:
             stream (str): stream name
         Returns:
             numpy.ndarray: raw image
@@ -667,7 +667,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         16. CV_CAP_PROP_CONVERT_RGB Boolean flags indicating whether images should be converted to RGB.
         17. CV_CAP_PROP_WHITE_BALANCE Currently unsupported [4000..7000]
 
-        Parameters:
+        Args:
             key (str): key
             value (float): value
         """
@@ -704,7 +704,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         """
         return keys for all properties that are implemented at the moment
 
-        Parameters:
+        Args:
             keys (str): get keys: 'get' or 'set'
         Returns:
             list: list of keys
@@ -822,7 +822,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         """
         set camera resolution
 
-        Parameters:
+        Args:
             width (int): image width
             height (int): image height
         Returns:
@@ -840,7 +840,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         """
         get camera resolution
 
-        Parameters:
+        Args:
             maximum (bool): return maximum or current size
         Returns:
             (int, int): (width, height)
@@ -856,7 +856,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         """
         check if given source can be connected as PiCamera and returns an image
 
-        Parameters:
+        Args:
             source (str): device string, should be "/dev/picam"
             name (str): description for the camera
         Returns:

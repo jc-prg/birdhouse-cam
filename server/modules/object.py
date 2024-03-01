@@ -16,7 +16,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         """
         Constructor method for initializing the class.
 
-        Parameters:
+        Args:
             camera_id (str): id string to identify the camera from which this class is embedded
             config (modules.config.BirdhouseConfig): reference to main config object
         """
@@ -75,7 +75,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         """
         initialize models for object detection
 
-        Parameters:
+        Args:
             first_load (bool): set True when initializing the first object of this class to import required modules
         Returns:
             None
@@ -127,7 +127,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         """
         Reconnect, e.g., when connect didn't work due to an error or the model has been changed
 
-        Parameters:
+        Args:
             force_reload (bool): force a reconnect even if already a model is set
         Returns:
             None
@@ -151,7 +151,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         Analyze an image for objects. Changes will be saved in metadata incl. image with labels if detected
         using the config queue.
 
-        Parameters:
+        Args:
             stamp (str): entry key which is the recording time in the format HHMMSS
             path_hires (str): complete path to the hires image file
             image_hires (numpy.ndarray): hires images, e.g., directly from the camera or read via cv2.imread()
@@ -215,7 +215,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         Add object detection analyzing request to the queue for a specific date and camera.
         The camera is defined when an object for a camera is build based on this class.
 
-        Parameters:
+        Args:
             date (str): archived date that shall be analyzed
             threshold (float): threshold for analyzing
         Returns:
@@ -275,7 +275,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
         Detects objects for an archived day and replace detections if existing.
 
-        Parameters:
+        Args:
             date (str): date of day to be analyzed
             threshold (float): threshold for analyzing
         Returns:

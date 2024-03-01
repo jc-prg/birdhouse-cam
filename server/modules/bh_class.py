@@ -14,7 +14,7 @@ class BirdhouseClass(object):
         """
         Constructor for this class
 
-        Parameters:
+        Args:
             class_id (str): class id
             class_log (str): string for logging message to identify messages from this class (max. 10 characters)
             device_id (str): device id
@@ -65,7 +65,7 @@ class BirdhouseClass(object):
         """
         Report Error, set variables of modules
 
-        Parameters:
+        Args:
             message (str): error message
             connect (bool): set True if it's a connection error / fatal error
         """
@@ -104,7 +104,7 @@ class BirdhouseClass(object):
         """
         Show warning message
 
-        Parameters:
+        Args:
             message (str): warning message
         """
         self.logging.warning(self.id + ": " + message)
@@ -123,7 +123,7 @@ class BirdhouseClass(object):
         """
         Check if last error has been before x seconds and reset error status, if older
 
-        Parameters:
+        Args:
             error_timeout (float): waiting time until error gets reset, if not set default value is used
         """
         if error_timeout == -1:
@@ -151,7 +151,7 @@ class BirdhouseClass(object):
         """
         Wait depending on priority or wait_time set in parameters.
 
-        Parameters:
+        Args:
             wait_time (float): possibility to overwrite waiting time set through priority.
         """
         start = time.time()
@@ -170,7 +170,7 @@ class BirdhouseClass(object):
         """
         Set priority which results in different waiting times for the thread -> def run(); self.thread_wait()
 
-        Parameters:
+        Args:
             priority (int): set priority
         """
         priorities = len(self._thread_waiting_times)
@@ -183,7 +183,7 @@ class BirdhouseClass(object):
         """
         Set central info that prio process is running
 
-        Parameters:
+        Args:
             start (bool): starting process
             pid (str): process id
         """
@@ -196,7 +196,7 @@ class BirdhouseClass(object):
         """
         check if prio process with other ID
 
-        Parameters:
+        Args:
             pid (str): process id
         Returns:
             bool: if other process has priority
@@ -211,7 +211,7 @@ class BirdhouseClass(object):
         """
         Register progress in config vars (status: start, running, finished, remove; progres 0..1)
 
-        Parameters:
+        Args:
             pid (str): process id
             name (str): name of the process
             status (str): status of the process
@@ -240,7 +240,7 @@ class BirdhouseClass(object):
         """
         Register instance of class in config
 
-        Parameters:
+        Args:
             init (bool): set to True for first registration of an instance, else update
         """
         if self.config is None:
@@ -288,7 +288,7 @@ class BirdhouseClass(object):
         """
         Set var to increase or decrease waiting time for the thread
 
-        Parameters:
+        Args:
             slowdown (bool): increase waiting time if True, decrease if False
         """
         self._thread_slowdown = slowdown
@@ -324,7 +324,7 @@ class BirdhouseClass(object):
         """
         External check if error
 
-        Parameters:
+        Args:
             message (bool): return error message(s)
             length (bool): return amount of error messages (if not message=True)
             count (bool): return amount of errors (if not message=True and not length=True)
@@ -362,7 +362,7 @@ class BirdhouseCameraClass(BirdhouseClass):
         """
         Constructor of this class.
 
-        Parameters:
+        Args:
             class_id (str): class id
             class_log (str): string for logging message to identify messages from this class (max. 10 characters)
             camera_id (str): device id
@@ -389,7 +389,7 @@ class BirdhouseDbClass(BirdhouseClass):
         """
         Constructor of this class
 
-        Parameters:
+        Args:
             class_id (str): class id
             class_log (str): string to identify messages of this class in logging
             config (modules.config.BirdhouseConfig): reference to main config handler
@@ -401,7 +401,7 @@ class BirdhouseDbClass(BirdhouseClass):
         """
         lock config file
 
-        Parameters:
+        Args:
             filename (str): filename / db name of database to be locked
         """
         self.locked[filename] = True
@@ -410,7 +410,7 @@ class BirdhouseDbClass(BirdhouseClass):
         """
         unlock config file
 
-        Parameters:
+        Args:
             filename (str): filename / db name of database to be unlocked
         """
         self.locked[filename] = False
@@ -419,7 +419,7 @@ class BirdhouseDbClass(BirdhouseClass):
         """
         Wait, while a file is locked for writing
 
-        Parameters:
+        Args:
             filename (str): filename / db name of database - if locked, wait
         """
         wait = 0.2

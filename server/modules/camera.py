@@ -27,7 +27,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         """
         Constructor to initialize camera class.
 
-        Parameters:
+        Args:
             camera_id (str): camera ID
             config (modules.config.BirdhouseConfig): reference to main config handler
         """
@@ -303,7 +303,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         Constructor to initialize camera class.
 
-        Parameters:
+        Args:
             camera_id (str): camera ID
             config (modules.config.BirdhouseConfig): reference to main config handler
             stream_raw (BirdhouseCameraStreamRaw): reference to raw stream handler
@@ -919,7 +919,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         Add date and time to the image (top left).
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): input raw image
         Returns:
             numpy.ndarray: raw image with date and time information
@@ -940,7 +940,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         Add framerate into the image (bottom left)
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): input raw image
         Returns:
             numpy.ndarray: raw image with framerate information
@@ -965,7 +965,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         Add information if recording or processing to image (if activated).
         Use self.set_system_info() to set values and activate.
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): input raw image
         Returns:
             numpy.ndarray: raw image with system information added (if set activated)
@@ -1084,7 +1084,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         """
         format message -> added via edit_add_system_info
 
-        Parameters:
+        Args:
             active (bool): if active
             line1 (str): text for first line in big letters
             line2 (str): text for second line in small letters
@@ -1128,7 +1128,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         Constructor to initialize camera class.
 
-        Parameters:
+        Args:
             camera_id (str): camera ID
             config (modules.config.BirdhouseConfig): reference to main config handler
             sensor (dict[str, modules.sensors.BirdhouseSensor]): reference to sensor handler
@@ -1332,7 +1332,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         start or restart camera handler
 
-        Parameters:
+        Args:
             init (bool): set True for initial start and False if restarting
         """
         self.reload_time = time.time()
@@ -1549,7 +1549,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         pause image recording and reconnect try
 
-        Parameters:
+        Args:
             command (bool): if start or stop pause
         """
         self._paused = command
@@ -1558,7 +1558,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         check for camera error and errors in streams
 
-        Parameters:
+        Args:
             message (bool): if True return error messages
             length (bool): if True return amount of error messages
             details (bool): if True return details as string
@@ -1633,7 +1633,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         Reconnect after API call
 
-        Parameters:
+        Args:
             directly (bool): dont wait for next iteration
         """
         if directly and self.camera is not None:
@@ -1669,7 +1669,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         Record video image for video, trigger video and audio creation when recording is stopped.
 
-        Parameters:
+        Args:
             current_time (datetime): current time for logging
         """
         if self.error:
@@ -1718,7 +1718,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         measure usage from time to time
 
-        Parameters:
+        Args:
             stamp (str): time stamp of measurement
         """
         if time.time() - self.usage_time > self.usage_interval:
@@ -1753,7 +1753,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         record images as defined in settings
 
-        Parameters:
+        Args:
             current_time (datetime): current time in datetime format
             stamp (str): time stamp of measurement
             similarity (float): similarity value (not used at the moment)
@@ -1862,7 +1862,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         check if image recording is currently active depending on settings (start and end time incl. sunset or sunrise)
 
-        Parameters:
+        Args:
             current_time (datetime): current time, if not set get time fresh from the system
             check_in_general (bool): create recording time information for API
         """
@@ -2015,7 +2015,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         get image for video stream
 
-        Parameters:
+        Args:
             stream_id (str): unique stream ID give from app
             stream_type (str): stream type: camera, normalized, setting
             stream_resolution (str): resolution: hires, lowres
@@ -2049,7 +2049,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         get image with rendered labels of detected objects
 
-        Parameters:
+        Args:
             stream_id (str): unique stream ID give from app
             stream_type (str): stream type: camera, normalized, setting
             stream_resolution (str): resolution: hires, lowres
@@ -2125,7 +2125,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         check if stream has to be killed
 
-        Parameters:
+        Args:
             ext_stream_id (str): external stream id defined by app
             int_stream_id (float): internal stream id defined by server
         Returns:
@@ -2144,7 +2144,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         mark streams to be killed
 
-        Parameters:
+        Args:
             ext_stream_id (str): stream id defined by app
         """
         self.logging.debug("set_image_stream_kill: " + ext_stream_id)
@@ -2154,7 +2154,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         set all streams active or inactive
 
-        Parameters:
+        Args:
             active (bool): True for active and False for inactive
         """
         for stream_id in self.camera_streams:
@@ -2164,7 +2164,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         return all status and error information
 
-        Parameters:
+        Args:
             info (str): define which information to get: all, properties
         Returns:
             dict: camera status information
@@ -2264,7 +2264,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         change camera settings
 
-        Parameters:
+        Args:
             param (dict): parameters given via API
         Returns:
             dict: API response
@@ -2288,7 +2288,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         show system info in specific streams
 
-        Parameters:
+        Args:
             active (bool): if active
             line1 (str): text for first line in big letters
             line2 (str): text for second line in small letters
@@ -2300,7 +2300,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         show system info in specific streams
 
-        Parameters:
+        Args:
             active (bool): if active
             sign (str): sign to be displayed, should be a single character
             color ((int,int,int)): text color as (r,g,b)
@@ -2357,7 +2357,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         set maintenance_mode in all streams
 
-        Parameters:
+        Args:
             active (bool): if active
             line1 (str): text for first line in big letters
             line2 (str): text for second line in small letters
@@ -2373,7 +2373,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         Scale image and write to file
 
-        Parameters:
+        Args:
             filename (str): path to image file
             image (numpy.ndarray); image to write
             scale_percent (int): scale factor
@@ -2397,7 +2397,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         read image with given filename
 
-        Parameters:
+        Args:
             filename (str): path to image file
         Returns:
             numpy.ndarray: image from file
@@ -2419,7 +2419,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         slow down all video streams for this camera, e.g. while recording
 
-        Parameters:
+        Args:
             slow_down (bool): slow down status to be set
         """
         self.camera_stream_raw.slow_down(slow_down)

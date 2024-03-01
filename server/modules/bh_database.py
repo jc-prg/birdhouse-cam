@@ -19,7 +19,7 @@ class BirdhouseTEXT(BirdhouseDbClass):
         """
         Constructor to initialize class
 
-        Parameters:
+        Args:
             config (str|modules.config.BirdhouseConfig): reference to config handler or empty string
         """
         if config != "":
@@ -34,7 +34,7 @@ class BirdhouseTEXT(BirdhouseDbClass):
         """
         read json file including check if locked
 
-        Parameters:
+        Args:
             filename (str): file incl. path to read
         Returns:
             str: file content
@@ -54,7 +54,7 @@ class BirdhouseTEXT(BirdhouseDbClass):
         """
         write json file including locking mechanism
 
-        Parameters:
+        Args:
             filename (str): file incl. path to write
             data (str): text data to write into the file
         """
@@ -81,7 +81,7 @@ class BirdhouseJSON(BirdhouseDbClass):
         """
         Constructor to initialize class
 
-        Parameters:
+        Args:
             config (modules.config.BirdhouseConfig): reference to config handler
         """
         BirdhouseDbClass.__init__(self, "JSON", "DB-json", config)
@@ -94,7 +94,7 @@ class BirdhouseJSON(BirdhouseDbClass):
         """
         read json file including check if locked
 
-        Parameters:
+        Args:
             filename (str): file incl. path to read
         Returns:
             dict: file content
@@ -115,7 +115,7 @@ class BirdhouseJSON(BirdhouseDbClass):
         """
         write json file including locking mechanism
 
-        Parameters:
+        Args:
             filename (str): file incl. path to write
             data (dict): json data to write into the file
         """
@@ -137,7 +137,7 @@ class BirdhouseJSON(BirdhouseDbClass):
         """
         check if file exists
 
-        Parameters:
+        Args:
             filename (str): file incl. path to check
         Returns:
             bool: status if file exists
@@ -156,7 +156,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         """
         Constructor to initialize class
 
-        Parameters:
+        Args:
             config (modules.config.BirdhouseConfig): reference to config handler
             db (dict): database configuration (db_usr, db_pwd, db_server, db_port)
         """
@@ -248,7 +248,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         """
         create a database in couch_db
 
-        Parameters:
+        Args:
             db_key (str): database name
         """
         self.logging.debug("   -> create DB " + db_key)
@@ -293,7 +293,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         """
         translate filename to keys
 
-        Parameters:
+        Args:
             filename (str): filename to be translated into database key
         Returns:
             str: db_key
@@ -327,7 +327,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         """
         read data from DB
 
-        Parameters:
+        Args:
             filename (str): filename to be translated into db_key
         Returns:
             dict: data from database
@@ -363,7 +363,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         """
         read data from DB
 
-        Parameters:
+        Args:
             filename (str): filename to be translated into db_key
             data (dict): data to be saved in the database
             create (bool): create database if not exists
@@ -422,7 +422,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         """
         check if db exists
 
-        Parameters:
+        Args:
             filename (str): filename to be translated into db_key
         Returns:
             bool: status if database exists

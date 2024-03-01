@@ -47,7 +47,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         """
         Constructor method for initializing the class.
 
-        Parameters:
+        Args:
             sensor_id (str): id string to identify the sensor
             config (modules.config.BirdhouseConfig): reference to main config object
         """

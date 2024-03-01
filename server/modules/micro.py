@@ -16,7 +16,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         Constructor method for initializing the class.
 
-        Parameters:
+        Args:
             device_id (str): id string to identify the microphone from which this class is embedded
             config (modules.config.BirdhouseConfig): reference to main config object
         """
@@ -197,7 +197,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         create file header for streaming file (duration in seconds, default = 1800s / 30min)
         info: https://docs.fileformat.com/audio/wav/
 
-        Parameters:
+        Args:
             size (bool): get data size incl. header (True) or complete header (default / False)
             duration (int): duration of audio data in seconds
         Returns:
@@ -230,7 +230,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         return device list or single device information
 
-        Parameters:
+        Args:
             i (int): index for API device info
         Returns:
             dict: device information (id, name, maxInputChannels, maxOutputChannels, defaultSampleRate)

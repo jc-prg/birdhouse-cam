@@ -24,7 +24,7 @@ class BirdhouseViewTools(BirdhouseClass):
         """
         show progress information in logging
 
-        Parameters:
+        Args:
             view (str): view identifier
             number (str): number of step for the view (e.g. '1/4')
             cam (str): camera identifier
@@ -481,7 +481,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         """
         Constructor method for initializing the class.
 
-        Parameters:
+        Args:
             config (modules.config.BirdhouseConfig): reference to main config object
             tools (BirdhouseViewTools): reference to tooling object
         """
@@ -505,7 +505,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         """
         Get view definition for favorites
 
-        Parameters:
+        Args:
             param (dict): parameter given via API
         Returns:
             dict: favorite view definition for API response
@@ -531,7 +531,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         """
         Trigger recreation of the favorit list
 
-        Parameters:
+        Args:
             force (bool): force update, don't wait for regular cycle
             complete (bool): recreate data from files
         """
@@ -547,7 +547,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         """
         Page with pictures (and videos) marked as favorites and sorted by date
 
-        Parameters:
+        Args:
             complete (bool): recreate data from files
         Returns:
             dict: favorite data for view definition
@@ -627,7 +627,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         """
         Get favorites from archive
 
-        Parameters:
+        Args:
             complete (bool): recreate data from files
         Returns:
             dict: favorite data for view definition
@@ -655,7 +655,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         """
         Get favorites from current day
 
-        Parameters:
+        Args:
             date (str): date string in formate YYYYMMDD
             complete (bool): recreate data from files
         Returns:
@@ -801,7 +801,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         """
         Constructor method for initializing the class.
 
-        Parameters:
+        Args:
             config (modules.config.BirdhouseConfig): reference to main config object
             tools (BirdhouseViewTools): reference to tooling object
             camera (dict): reference to global camera object
@@ -832,7 +832,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         """
         Get data for list of archive from cache (or an empty list if still loading).
 
-        Parameters:
+        Args:
             param (dict): parameter given via API
         Returns:
             dict: archive view definition for API response
@@ -857,7 +857,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         """
         Trigger recreation of the favorit list.
 
-        Parameters:
+        Args:
             force (bool): don't wait for next update cycle
             complete (bool): scan complete information from files, not cached data from database
         """
@@ -873,7 +873,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         """
         Create list data for backup/archive directory
 
-        Parameters:
+        Args:
             complete (bool): read complete information from files or cached information from database
         """
         camera_settings = self.config.param["devices"]["cameras"]
@@ -1137,7 +1137,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         """
         select / create preview image for archive (thumbnail for date in archive overview)
 
-        Parameters:
+        Args:
             cam (str): camera-id
             image_title (str): string to identify preview image based on a specific time
             archive_directory (str): file directory where images files are stored
@@ -1309,7 +1309,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         """
         Check availability of archive DB (couch db and/or json db).
 
-        Parameters:
+        Args:
             date (str): date in format YYYYMMDD
         Returns:
             bool: db exists
@@ -1335,7 +1335,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         """
         Get data from existing database or return empty value.
 
-        Parameters:
+        Args:
             archive_directory (str): date string in format YYYYMMDD (= directory name in image archive)
             database_ok (bool): db existing (else read from config file)
         Returns:
@@ -1416,7 +1416,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         """
         Constructor method for initializing the class.
 
-        Parameters:
+        Args:
             config (modules.config.BirdhouseConfig): reference to main config object
             tools (BirdhouseViewTools): reference to tooling object
             camera (dict): reference to global camera object
@@ -1447,7 +1447,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         """
         Get data for list of favorites from cache.
 
-        Parameters:
+        Args:
             param (dict): parameter given via API
         Returns:
             dict: view definition for API response
@@ -1470,7 +1470,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         """
         Trigger recreation of the favorit list.
 
-        Parameters:
+        Args:
             force (bool): don't wait for next update cycle
             complete (bool): scan complete information from files, not cached data from database
         """
@@ -1489,7 +1489,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         """
         Collect or create data for objects view.
 
-        Parameters:
+        Args:
             complete (bool): read complete information from files or cached information from database
         """
         if not self.detect_active:
@@ -1529,7 +1529,7 @@ class BirdhouseViewObjects(BirdhouseClass):
 
         Creates label entry, if detection exists. Checks if favorite entry.
 
-        Parameters:
+        Args:
             label (str): label for object
             entry (dict): image entry to be checked and modified
             favorite (bool): filter for favorite entries
@@ -1585,7 +1585,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         Analyzes all available archived entries for existing object detection and updates or creates database
         of object detection as base for the object detection view?
 
-        Parameters:
+        Args:
             complete (bool): if complete, the image entries in the archive are scanned for available detections
         Returns:
             dict: db entry per available labels
@@ -1717,7 +1717,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         """
         Create a thumbnail for a specific label.
 
-        Parameters:
+        Args:
             label (str): label that shall get a thumbnail
             entry (dict): image entry the thumbnail shall be generated from
         Returns:
@@ -1785,7 +1785,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         Constructor method for initializing the class.
 
-        Parameters:
+        Args:
             config (modules.config.BirdhouseConfig): reference to main config object
             camera (dict): reference to global camera object
         """
@@ -1877,7 +1877,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         Index page with live-streaming pictures
 
-        Parameters:
+        Args:
             param (dict): parameters given via API
         Returns:
             dict: view definition for index view
@@ -1899,7 +1899,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         View definition for page with pictures (and videos) of a single day
 
-        Parameters:
+        Args:
             param (dict): parameters given via API
         Returns:
             dict: image list view definition for API response (single day)
@@ -2178,7 +2178,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         View definition for list of archive days from cache (or an empty list if still loading).
 
-        Parameters:
+        Args:
             param (dict): parameter given via API
         Returns:
             dict: archive view definition for API response
@@ -2189,7 +2189,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         Return view definition for page with all cameras.
 
-        Parameters:
+        Args:
             param (dict): parameter given via API
         Returns:
             dict: camera view definition for API response
@@ -2216,7 +2216,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         Return view definition for a page with all pictures of the current day.
 
-        Parameters:
+        Args:
             param (dict): parameter given via API
         Returns:
             dict: complete day view definition for API response
@@ -2316,7 +2316,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         Get view definition for favorites
 
-        Parameters:
+        Args:
             param (dict): parameter given via API
         Returns:
             dict: favorite view definition for API response
@@ -2327,7 +2327,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         Get view definition for page with all videos
 
-        Parameters:
+        Args:
             param (dict): parameter given via API
         Returns:
             dict: video view definition for API response
@@ -2382,7 +2382,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         """
         Get view definition to show details and edit options for a video file
 
-        Parameters:
+        Args:
             param (dict): parameter given via API
         Returns:
             dict: video view definition for API response

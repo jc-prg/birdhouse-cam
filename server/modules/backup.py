@@ -20,7 +20,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         thread to create tar archives from archived data and return download link
 
-        Parameters:
+        Args:
             config (modules.config.BirdhouseConfig): reference to main config handler
         """
         threading.Thread.__init__(self)
@@ -63,7 +63,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         add download to queue
 
-        Parameters:
+        Args:
             param (dict): parameters from API request
             file_list (list): optional, list of files - entry format YYYYMMDD_HHMMSS
         """
@@ -89,7 +89,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         return downloads waiting for a specific session id
 
-        Parameters:
+        Args:
             param (dict): parameters from API request (not used yet)
         """
         downloads = {}
@@ -103,7 +103,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         start download preparation: create a zip package to be downloaded
 
-        Parameters:
+        Args:
             download_id (str): download id to identify download
         """
         camera = self.downloads[download_id]["camera"]
@@ -180,7 +180,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         Create tar archive or add files ...
 
-        Parameters:
+        Args:
             archive_path (str): path to archive files
             archive_date (str): date (sub-path) to archive files
             archive_files (str): filenames to be archived
@@ -203,7 +203,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         create YOLOv5 files
 
-        Parameters:
+        Args:
             download_id (str): download id to identify download
             archive_entries (dict): prepared list of files to be downloaded
         """
@@ -296,7 +296,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         create YOLOv5 file for an entry
 
-        Parameters:
+        Args:
             entry (dict): db entry for file
             archive_path_info (str): destination path for the YOLOv5 file to be stored
             classes (dict): growing list of used classes as input
@@ -326,7 +326,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         Create file with used classes as classes.txt
 
-        Parameters:
+        Args:
             classes (dict): class definition from detections
             labels (dict): label definition from detection model
             archive_path_info (str): destination path for the YOLOv5 file to be stored
@@ -349,7 +349,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         delete download files that are older than ...
 
-        Parameters:
+        Args:
             download_id (str): download id to identify download
         """
         self.logging.info("Delete file from download folder: " + self.downloads[download_id]["file_path"])
@@ -381,7 +381,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         """
         Initialize new thread and set initial parameters
 
-        Parameters:
+        Args:
             config (modules.config.BirdhouseConfig): reference to config handler
             camera (dict[str, modules.config.BirdhouseCamera]): reference to camera handler
             views (dict[str, modules.views.BirdhouseViews]): reference to view handler
@@ -451,7 +451,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         """
         Backup files with threshold to folder with date ./images/YYMMDD/
 
-        Parameters:
+        Args:
             other_date (str): other date if not today
         """
         self.backup_running = True
@@ -675,7 +675,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         """
         add download requests to queue
 
-        Parameters:
+        Args:
             param (dict): parameter from API request
             file_list (list): optional, list of files - entry format YYYYMMDD_HHMMSS
         Returns:
@@ -768,7 +768,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         """
         Initial compare files to create new config file
 
-        Parameters:
+        Args:
             date (str): create config file for this date
             recreate (bool): recreate config file completely
         """
@@ -796,7 +796,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         """
         Call (re)creation via API and return JSON answer
 
-        Parameters:
+        Args:
             param (dict): parameters from API request
         Returns:
             dict: information for API response
@@ -809,7 +809,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         """
         create and save image config
 
-        Parameters:
+        Args:
             date (str): date of config file to be saved
         """
         camera_list = []
@@ -856,7 +856,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         """
         Compare image files and write to config file (incl. sensor data if exist)
 
-        Parameters:
+        Args:
             file_list (list): list of files to be analyzed
             init (bool): initialize
             subdir (str): subdirectory
@@ -975,7 +975,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         """
         Get image date from files and add to database entries
 
-        Parameters:
+        Args:
             file_list (list): list of filenames (without path)
             files (dict): database with file entries
             subdir (str): not used yet ... ?!
@@ -1018,7 +1018,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         """
         set / unset recycling
 
-        Parameters:
+        Args:
             param (dict): parameters from API request
         Returns:
             dict: information for API response
@@ -1059,7 +1059,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         """
         delete files which are marked to be recycled for a specific date + database entry
 
-        Parameters:
+        Args:
             config (str): type of configuration (images, backup, videos)
             date (str): date of archive where files shall be deleted
             delete_not_used (bool): delete unused files
@@ -1174,7 +1174,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         """
         delete complete directory incl. files in it and trigger recreation of archive and favorite view
 
-        Parameters:
+        Args:
             param (dict): parameters from API request
         Returns:
             dict: information for API response

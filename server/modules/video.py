@@ -16,7 +16,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         Constructor method for initializing the class.
 
-        Parameters:
+        Args:
             camera_id (str): id string to identify the camera from which this class is embedded
             camera (modules.camera.BirdhouseCamera): reference to camera object
             config (modules.config.BirdhouseConfig): reference to main config object
@@ -126,7 +126,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         generate filename for images
 
-        Parameters:
+        Args:
             file_type (str): file type to create filename (video, thumb, vimages)
         Returns:
             str: filename
@@ -144,7 +144,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         start video recoding
 
-        Parameters:
+        Args:
             micro (str): id of microphone to get audio from
             audio_filename (str): filename for audio to be recorded
         """
@@ -376,7 +376,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         Save image with predefined filename in temp directory
 
-        Parameters:
+        Args:
             image (numpy.ndarray): image data
         """
         self.info["image_count"] += 1
@@ -398,7 +398,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         Create daily video from all single images (of the current day) that are available
 
-        Parameters:
+        Args:
             filename (str): input filename(s)
             stamp (str): date and time stamp as part of the output files
             date (str): date for the video to be created
@@ -517,7 +517,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         create a video of all existing images of the day
 
-        Parameters:
+        Args:
             param (dict): parameters from the API request (not used at the moment)
         Returns:
             dict: information for the API response
@@ -539,7 +539,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         create a shorter video based on date and time
 
-        Parameters:
+        Args:
             video_id (str): id of the video to be trimmed
             start (float): start timecode
             end (float): end timecode
@@ -573,7 +573,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         creates a shortened version of the video
 
-        Parameters:
+        Args:
             input_file (str): filename of input file
             output_file (str): filename for output file
             start_timecode (float): start timecode
@@ -596,7 +596,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         create a short video and save in DB (not deleting the old video at the moment)
 
-        Parameters:
+        Args:
             param (dict): input from API request
         Returns:
             dict: information for API response
@@ -621,7 +621,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         remove all files from last recording
 
-        Parameters:
+        Args:
             output_file (str): in case the video creation has started the started file can be deleted also
         """
         cmd_delete = "rm " + os.path.join(self.config.db_handler.directory("videos_temp"),
