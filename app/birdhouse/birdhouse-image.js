@@ -317,6 +317,69 @@ function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 	}
 
 /*
+* Check if group is open and depending on give value open or close the group
+*
+* @param (string) id: unique key/identifier of the group
+* @param (string/boolean) open: command, default is "toggle", other values are true (open) or false (close)
+*/
+function birdhouse_groupToggle(id, open="toggle") {
+    if (open == "toggle") {
+        if (document.getElementById("group_"+id).style.display == "none")   { birdhouse_groupOpen(id); }
+        else                                                                { birdhouse_groupClose(id); }
+    }
+    else {
+        if (open == true)   { birdhouse_groupOpen(id); }
+        else                { birdhouse_groupClose(id); }
+    }
+}
+
+/*
+* Open content section of a group
+*
+* @param (string) id: unique key/identifier of the group
+*/
+function birdhouse_groupOpen(id) {
+    document.getElementById("group_"+id).style.display = "block";
+    app_header_opened["group_"+id] = true;
+
+    if (document.getElementById("group_intro_"+id)) {
+        document.getElementById("group_intro_"+id).style.display = "block";
+    }
+    if (document.getElementById("group_ids_"+id)) {
+        images = document.getElementById("group_ids_"+id).innerHTML;
+    }
+    else {
+        images = "";
+    }
+    document.getElementById("group_link_"+id).innerHTML = "(&minus;)";
+    image_list = images.split(" ");
+    for (let i=0; i<image_list.length; i++) {
+        if (image_list[i] != "") {
+            img      = document.getElementById(image_list[i]);
+            if (img != undefined) {
+                img_file = img.getAttribute('data-src');
+                if (img_file) {
+                    img.src  = img_file;
+                }
+            }
+        }
+    }
+}
+
+/*
+* Close content section of a group
+*
+* @param (string) id: unique key/identifier of the group
+*/
+function birdhouse_groupClose(id) {
+        document.getElementById("group_"+id).style.display = "none";
+        app_header_opened["group_"+id] = false;
+
+        if (document.getElementById("group_intro_"+id)) { document.getElementById("group_intro_"+id).style.display = "none"; }
+        document.getElementById("group_link_"+id).innerHTML = "(+)";
+}
+
+/*
 * create lowres image incl. link to hires overlay image or video
 *
 * @param (string) title: image title, required for some image types, e.g., ...

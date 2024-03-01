@@ -4,6 +4,10 @@
 // additional functions 
 //--------------------------------------
 
+/*
+* The following 4 functions are used to create a dialog to edit parameters of different types,
+* to validate the input and to hand it over to the API functions.
+*/
 function birdhouse_edit_field(id, field, type="input", options="", data_type="string", on_change="") {
     var fields = field.split(":");
     var settings = app_data["SETTINGS"];
@@ -187,7 +191,10 @@ function birdhouse_edit_send(id_list, camera) {
     else { birdhouse_editData(info, camera); }
 }
 
-
+/*
+* The following 2 functions are used to initialize and integrate the tool tip from jc://modules/ for this app.
+* At the moment it's used in the form of a speech bubbel for range deletion.
+*/
 function birdhouse_initTooltip() {
 	tooltip_mode     	= "other";
 	tooltip_width    	= 160;
@@ -204,7 +211,10 @@ function birdhouse_tooltip( tooltip_element, tooltip_content, name, left="" ) {
 	return result;
 	}
 
-
+/*
+* Check all images of the current view if their similarity is above the threshold and sets the display to
+* "block" if yes and to "none" if not.
+*/
 function birdhouse_view_images_threshold(threshold) {
     group_list = document.getElementById("group_list").innerHTML.split(" ");
     image_list = [];
@@ -232,7 +242,10 @@ function birdhouse_view_images_threshold(threshold) {
     //alert("birdhouse_view_images_threshold: threshold=" + threshold + "; all=" + image_list.length + "; select=" + image_list_active.length);
 }
 
-
+/*
+* Check all images of the current view if the given object is detected in the image and sets the display to
+* "block" if yes and to "none" if not.
+*/
 function birdhouse_view_images_objects(object) {
     group_list = document.getElementById("group_list").innerHTML.split(" ");
     image_list = [];
@@ -271,6 +284,9 @@ function birdhouse_view_images_objects(object) {
 }
 
 
+/*
+* The following 2 functions are use to format and display content in the header and footer frame.
+*/
 function birdhouse_frameHeader(title, status_id="") {
     if (status_id != "") {
         title = "<div id='"+status_id+"' style='float:left;'><div id='black'></div></div>" + title;
@@ -283,7 +299,19 @@ function birdhouse_frameFooter(content) {
     setTextById(app_frame_index, "<center>" + content + "</center>");
 }
 
-
+/*
+* Class to create an easy table with two columns in a predefined and adaptable format.
+*
+* Usage:
+*   var tab = birdhouse_table();
+*   tab.style_rows["padding"] = "5px";
+*   tab.update_settings();
+*
+*   var html = "";
+*   html += tab.start();
+*   html += tab.row("Content column 1", "Content column 2");
+*   html += tab.end();
+*/
 function birdhouse_table () {
 
     this.style_table_string = "";
@@ -332,6 +360,9 @@ function birdhouse_table () {
 	}
 }
 
+/*
+* Create link list for the footer out of link information from API response
+*/
 function birdhouse_Links(link_list) {
 	var html = "";
 	var keys = Object.keys(link_list);
@@ -344,55 +375,11 @@ function birdhouse_Links(link_list) {
 	return html;
 	}
 
-
-function birdhouse_groupToggle(id, open="toggle") {
-    if (open == "toggle") {
-        if (document.getElementById("group_"+id).style.display == "none")   { birdhouse_groupOpen(id); }
-        else                                                                { birdhouse_groupClose(id); }
-    }
-    else {
-        if (open == true)   { birdhouse_groupOpen(id); }
-        else                { birdhouse_groupClose(id); }
-    }
-}
-
-function birdhouse_groupOpen(id) {
-    document.getElementById("group_"+id).style.display = "block";
-    app_header_opened["group_"+id] = true;
-
-    if (document.getElementById("group_intro_"+id)) {
-        document.getElementById("group_intro_"+id).style.display = "block";
-    }
-    if (document.getElementById("group_ids_"+id)) {
-        images = document.getElementById("group_ids_"+id).innerHTML;
-    }
-    else {
-        images = "";
-    }
-    document.getElementById("group_link_"+id).innerHTML = "(&minus;)";
-    image_list = images.split(" ");
-    for (let i=0; i<image_list.length; i++) {
-        if (image_list[i] != "") {
-            img      = document.getElementById(image_list[i]);
-            if (img != undefined) {
-                img_file = img.getAttribute('data-src');
-                if (img_file) {
-                    img.src  = img_file;
-                }
-            }
-        }
-    }
-}
-
-function birdhouse_groupClose(id) {
-        document.getElementById("group_"+id).style.display = "none";
-        app_header_opened["group_"+id] = false;
-
-        if (document.getElementById("group_intro_"+id)) { document.getElementById("group_intro_"+id).style.display = "none"; }
-        document.getElementById("group_link_"+id).innerHTML = "(+)";
-}
-
-
+/*
+* Check if the app runs on iOS
+*
+* @returns (boolean): true if runs on iOS
+*/
 function iOS() {
   return [
     'iPad Simulator',
@@ -406,15 +393,18 @@ function iOS() {
   || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
 }
 
+/*
+* Show / hide video editing overlay (toggle depending on current status)
+*/
 function toggleVideoEdit() {
         video_edit1 = document.getElementById("camera_video_edit");
         video_edit2 = document.getElementById("camera_video_edit_overlay");
         if (video_edit1 != null) {
-        	if (video_edit1.style.display == "none")	{ 
+        	if (video_edit1.style.display == "none") {
         		video_edit1.style.display = "block"; 
         		video_edit2.style.display = "block"; 
         		}
-        	else						{ 
+        	else {
         		video_edit1.style.display = "none"; 
         		video_edit2.style.display = "none";
 
@@ -426,6 +416,9 @@ function toggleVideoEdit() {
 	        console.error("toggleVideoEdit: Video edit doesn't exist.");
 		}
 	}
+
+
+//-----------------------------------------
 
 var loadJS = function(url, implementationCode, location) {
     //url is URL of external file, implementationCode is the code
@@ -441,8 +434,6 @@ var loadJS = function(url, implementationCode, location) {
 
     location.appendChild(scriptTag);
 }
-
-//-----------------------------------------
 
 birdhouse_initTooltip();
 
