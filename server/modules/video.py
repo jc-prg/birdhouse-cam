@@ -183,17 +183,20 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         response = {"command": ["cancel recording"]}
         if self.camera.active and not self.camera.error and self.processing:
             self.logging.info("Cancel video processing (" + self.id + ") ...")
-            self.ffmpeg.cancel_process()
+            filename = self.ffmpeg.cancel_process()
             self.processing = False
-            self.cleanup()
+            self.cleanup(filename)
         if self.camera.active and not self.camera.error and self.recording:
             self.logging.info("Cancel video recording (" + self.id + ") ...")
             self.recording = False
+            self.processing = False
             self.cleanup()
         elif not self.camera.active:
             response["error"] = "camera is not active " + self.camera.id
         elif not self.recording:
             response["error"] = "camera isn't recording " + self.camera.id
+
+        self.info = {"start": 0, "start_stamp": 0, "status": "ready"}
         return response
 
     def record_stop(self):
@@ -594,12 +597,21 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
         return response
 
-    def cleanup(self):
+    def cleanup(self, output_file=""):
         """
         remove all files from last recording
+
+        Parameters:
+            output_file (str): in case the video creation has started the started file can be deleted also
         """
         cmd_delete = "rm " + os.path.join(self.config.db_handler.directory("videos_temp"),
                                           self.filename("vimages") + "*.jpg")
         self.logging.info(cmd_delete)
         message = os.system(cmd_delete)
         self.logging.debug(message)
+
+        if output_file != "":
+            cmd_delete = "rm " + output_file
+            self.logging.info(cmd_delete)
+            message = os.system(cmd_delete)
+            self.logging.debug(message)

@@ -67,6 +67,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
                            "-crf " + str(self.output_codec["crf"]) + " " + \
                            "-ss {START_TIME} -to {END_TIME} " + \
                            "{OUTPUT_FILENAME}"
+        self.current_output_file = ""
 
     def ffmpeg_callback(self, infile, outfile, vstats_path):
         """
@@ -136,6 +137,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
             booL: success state
         """
         self.process_id = process_id
+        self.current_output_file = output_filename
         try:
             if self.ffmpeg_handler == "ffmpeg-python":
                 (
@@ -253,9 +255,14 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
     def cancel_process(self):
         """
         cancel running process
+
+        Returns:
+            str: output filename
         """
         if self.process:
             self.process.terminate()
             self.logging.info("Terminate running ffmpeg process.")
+            return self.current_output_file
         else:
             self.logging.warning("No ffmpeg process running to terminate.")
+            return ""
