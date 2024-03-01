@@ -511,6 +511,7 @@ birdhouse_default_cam = {
         "date_time_color": (255, 255, 255),
         "date_time_size": 0.4
     },
+    "image_presets": {},
     "image_save": {
         "path": "images",
         "color": "ORIGINAL",
