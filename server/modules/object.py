@@ -380,11 +380,34 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         self._processing_percentage = 0
         return response
 
+    def remove_detection_day(self, date):
+        """
+        remove all object detection information from the data
+
+        Args:
+            date (str): date in format YYYYMMDD
+        """
+        archive_data = self.config.db_handler.read(config="backup", date=date)
+        archive_entries = archive_data["files"]
+        archive_info = archive_data["info"]
+        del archive_data["info"]["detection_" + self.id]
+
+        keys = archive_entries.keys()
+        for entry_id in keys:
+            entry = archive_entries[entry_id]
+            if entry["camera"] == self.id and "detections" in entry:
+                archive_entries[entry_id]["detection"] = []
+
+        archive_detections = self.summarize_detections(archive_entries)
+        self.config.queue.entry_edit(config="backup", date=date, key="files", entry=archive_entries)
+        self.config.queue.entry_edit(config="backup", date=date, key="info", entry=archive_info)
+        self.config.queue.entry_edit(config="backup", date=date, key="detection", entry=archive_detections)
+
     def summarize_detections(self, entries, threshold=-1):
         """
         Check entries from files-section which detected objects are in and summarize for the archive configuration
 
-        Parameters:
+        Args:
             entries (dict): entries from "files" section of a config file for images
         Returns:
             dict: entry for summarizing "detection" section in config file for images
