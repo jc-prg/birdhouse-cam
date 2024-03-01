@@ -2120,6 +2120,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             "record_image": self.record,
             "record_image_error": self.record_image_error,
             "record_image_last": time.time() - self.record_image_last,
+            "record_image_last_string": self.record_image_last_string,
             "record_image_active": recording_active,
             "record_image_last_compare": self.record_image_last_compare,
             "record_image_start": self.record_image_start,
