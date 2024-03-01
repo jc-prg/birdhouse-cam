@@ -664,6 +664,9 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
     def execute_edit_queue(self):
         """
         execute entries in edit_queue if exist
+
+        Returns:
+            booL: view update required
         """
         config_files = ["images", "videos", "backup", "sensor", "weather", "statistics"]
         count_files = 0
@@ -800,6 +803,9 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
     def execute_status_queue(self):
         """
         execute entries in status_queue if exist
+
+        Returns:
+            booL: view update required
         """
         config_files = ["images", "videos", "backup", "sensor", "weather", "statistics"]
         count_files = 0
@@ -877,12 +883,17 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         self.status_queue_in_progress = False
         return update_views
 
-    def execute_range_queue(self):
-        pass
-
     def add_to_status_queue(self, config, date, key, change_status, status):
         """
-        add status change to queue
+        add status change to queue, e.g., used to change to_be_deleted or favorite status
+
+        Parameters:
+            config (str): database key
+            date (str): date if image archive database (YYYYMMDD)
+            key (str): key of entry to be edited
+            change_status (str): parameter to be edited or specific process signals:
+                                 "RANGE_END", "DELETE_RANGE_DONE", "OBJECT_DETECTION_DONE"
+            status (Any): value to be set
         """
         if config != "backup":
             self.status_queue[config].append([date, key, change_status, status])
@@ -894,14 +905,14 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
     def add_to_edit_queue(self, config, date, key, entry, command):
         """
         add, remove or edit complete entry using a queue
-        """
-        #start = time.time()
-        #while self.edit_queue_in_progress:  # and start + self.queue_timeout > time.time():
-        #    time.sleep(0.2)
-        #if time.time() - start > 1:
-        #    self.logging.info("WAIT add_to_edit_queue: " + config + "|" + date + "|" + key + "|" + command +
-        #                      " ... " + str(time.time() - start))
 
+        Parameters:
+            config (str): database key
+            date (str): date if image archive database (YYYYMMDD)
+            key (str): key of entry to be edited
+            entry (dict): modified data of the entry
+            command (str): command how to deal with the entry: add, edit, delete, keep_data
+        """
         if config != "backup":
             self.edit_queue[config].append([key, entry, command])
         elif config == "backup":
@@ -909,27 +920,14 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                 self.edit_queue[config][date] = []
             self.edit_queue[config][date].append([key, entry, command])
 
-    def add_to_range_queue(self, config, date, key, entry, command):
-        """
-        add, remove or edit complete entry using a queue
-        """
-        #start = time.time()
-        #while self.range_queue_in_progress:  # and start + self.queue_timeout > time.time():
-        #    time.sleep(0.2)
-        #if time.time() - start > 1:
-        #    self.logging.info("WAIT add_to_range_queue: " + config + "|" + date + "|" + key + "|" + command +
-        #                      " ... " + str(time.time() - start))
-
-        if config != "backup":
-            self.range_queue[config].append([key, entry, command])
-        elif config == "backup":
-            if date not in self.range_queue[config]:
-                self.range_queue[config][date] = []
-            self.range_queue[config][date].append([key, entry, command])
-
     def set_status_favorite(self, param):
         """
-        set / unset favorite -> redesigned
+        set / unset favorite status - transform API request to queue entry
+
+        Parameters:
+             param (dict): parameters from API request
+        Returns:
+            dict: information for API response
         """
         self.logging.debug("Status favorite: " + str(param))
 
@@ -972,7 +970,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
     def set_status_recycle(self, param):
         """
-        Set / unset recycling for single image.
+        Set / unset recycling for single image - transform API request to queue entry
 
         Parameters:
             param (dict): parameters given via API
@@ -1199,6 +1197,11 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
     def set_status_changed(self, date, change="archive", is_changed=True):
         """
         set status of an archive entry to changed - in central file and in date specific backup file
+
+        Parameters:
+            date (str): date of changed database
+            change (str): view that has to be recreated: archive, favorite, object
+            is_changed (bool): status - True if change and False if recreation has be done
         """
         allowed_status = ["favorites", "archive", "objects"]
         if change == "all":
@@ -1231,6 +1234,12 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
     def get_status_changed(self, date, change="archive"):
         """
         get status, if changed - from central file and from date specific backup file
+
+        Parameters:
+            date (str): date of changed database
+            change (str): view that has to be recreated: archive, favorite, object
+        Returns:
+            bool: change status - True if change and False if recreation has be done
         """
         return_value = False
         backup_info = self.db_handler.read("backup_info", "")
@@ -1248,12 +1257,24 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
     def entry_add(self, config, date, key, entry):
         """
         add entry to config file using the queue
+
+        Parameters:
+            config (str): database key
+            date (str): date of database if archive image database
+            key (str): entry key of entry to be added
+            entry (dict): modified entry data
         """
         self.add_to_edit_queue(config, date, key, entry, "add")
 
     def entry_edit(self, config, date, key, entry):
         """
         edit entry in config file using the queue
+
+        Parameters:
+            config (str): database key
+            date (str): date of database if archive image database
+            key (str): entry key of entry to be changed
+            entry (dict): modified entry data
         """
         self.logging.debug("Request to edit data (" + config + "/" + date + "/" + key + ").")
         self.add_to_edit_queue(config, date, key, entry, "edit")
@@ -1261,6 +1282,11 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
     def entry_delete(self, config, date, key):
         """
         delete entry from config file using the queue
+
+        Parameters:
+            config (str): database key
+            date (str): date of database if archive image database
+            key (str): entry key of entry to be deleted
         """
         self.logging.debug("Request to delete data (" + config + "/" + date + "/" + key + ").")
         self.add_to_edit_queue(config, date, key, {}, "delete")
@@ -1268,6 +1294,11 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
     def entry_keep_data(self, config, date, key):
         """
         cleaning image entry keeping activity and sensor data for charts using the queue
+
+        Parameters:
+            config (str): database key
+            date (str): date of database if archive image database
+            key (str): entry key of entry to be changed
         """
         self.logging.debug("Request to keep data and delete image reference (" + config + "/" + date + "/" + key + ").")
         self.add_to_edit_queue(config, date, key, {}, "keep_data")
