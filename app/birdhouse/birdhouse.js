@@ -173,7 +173,7 @@ function birdhousePrint(data) {
 	birdhouseCameras     = data_settings["devices"]["cameras"];
 	birdhouseMicrophones = data_settings["devices"]["microphones"];
 
-	birdhouseAudioStream_load(server_link, birdhouseMicrophones);
+	birdhouseAudioStream_load(birdhouseMicrophones);
     birdhouse_KillActiveStreams();
 	birdhouseSetMainStatus(data);
 	birdhousePrintTitle(data, app_active_page);

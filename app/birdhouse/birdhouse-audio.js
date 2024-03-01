@@ -10,7 +10,12 @@ var birdhouse_infinity = false;
 var birdhouse_active_audio_streams = {};
 var birdhouse_player_id = {};
 
-function birdhouseAudioStream_load(server, microphones) {
+/*
+* Create an audio object for each defined microphone if not exists and load given audio stream
+*
+* @params (dict) microphones: microphone settings
+*/
+function birdhouseAudioStream_load(microphones) {
     var audio_container = "audio_stream_container";
 
     if (!document.getElementById(audio_container)) {
@@ -41,6 +46,11 @@ function birdhouseAudioStream_load(server, microphones) {
     }
 }
 
+/*
+* Create URL for given microphone
+*
+* @returns (str): stream url for microphone
+*/
 function birdhouseAudioStream_URL(micro, player) {
         //url = "http://"+micros[micro]["stream_server"]+"/"+micro+".mp3";
         var timestamp = new Date().getTime();
@@ -50,6 +60,11 @@ function birdhouseAudioStream_URL(micro, player) {
         return url;
 }
 
+/*
+* Start playback for audio stream
+*
+* @param (str) mic: microphone id
+*/
 function birdhouseAudioStream_play(mic) {
     var id = "stream_"+mic;
     var player = document.getElementById(id);
@@ -84,6 +99,13 @@ function birdhouseAudioStream_play(mic) {
     }
 }
 
+/*
+* Collect information for playback of audio stream and set into element <div id='"playback_info_" + mic'></div>
+*
+* @param (str) mic: microphone identifier
+* @param (object) player: reference to player handler
+* @param (integer) error: if != 0 return error information
+*/
 function birdhouseAudioStream_playback_info(mic, player, error=0) {
     var id = "stream_"+mic;
     if (player.error || error != 0) {
@@ -112,6 +134,11 @@ function birdhouseAudioStream_playback_info(mic, player, error=0) {
     setTextById("playback_info_" + mic, info);
 }
 
+/*
+* Stop playback of audio stream for microphone
+*
+* @param (str) mic: microphone identifier
+*/
 function birdhouseAudioStream_stop(mic) {
     var id = "stream_"+mic;
     var player = document.getElementById(id);
@@ -121,6 +148,13 @@ function birdhouseAudioStream_stop(mic) {
     birdhouse_stream_play[mic] = false;
 }
 
+/*
+* Toggle between audio stream if two or more are configured or activate a specific one. This function changes
+* images and controls and stops playback if active stream is playing.
+*
+* @param (str) mic: microphone id
+* @param (str) add_id: string to add to id of image element
+*/
 function birdhouseAudioStream_toggle(mic="", add_id="") {
     for (let micro in birdhouseMicrophones) { if (mic == "" && birdhouseMicrophones[micro]["active"]) { mic = micro; }}
     var id = "stream_"+mic;
@@ -159,6 +193,12 @@ function birdhouseAudioStream_toggle(mic="", add_id="") {
     }
 }
 
+/*
+* Toggle between images incl. micro information
+*
+* @param (str) mic: microphone id
+* @param (str) add_id: string to add to id of image element
+*/
 function birdhouseAudioStream_toggle_image(mic, add_id="") {
     var html = "";
     html += "<div id='toggle_stream_"+mic+"_"+add_id+"_container' class='audiostream_bird_container'>";
@@ -168,6 +208,11 @@ function birdhouseAudioStream_toggle_image(mic, add_id="") {
     return html;
 }
 
+/*
+* return image element (big bird for settings)
+*
+* @param (boolean) on: true for singing bird and false for silent bird
+*/
 function birdhouseAudioStream_image(on=true) {
     var img_on = 'birdhouse/img/bird_sing_on.png';
     var img_off = 'birdhouse/img/bird_sing_off.png';
@@ -177,6 +222,11 @@ function birdhouseAudioStream_image(on=true) {
     else { return "<img src='"+img_off+"' style='"+size+"'>"; }
 }
 
+/*
+* return image element (small bird icon for header)
+*
+* @param (boolean) on: true for singing bird and false for silent bird
+*/
 function birdhouseAudioStream_image_header(on=true) {
     var img_on = 'birdhouse/img/icon_bird_sing.png';
     var img_off = 'birdhouse/img/icon_bird_mute.png';
