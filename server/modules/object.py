@@ -386,22 +386,32 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
         Args:
             date (str): date in format YYYYMMDD
+        Returns:
+            dict: information for API response
         """
+        response = {
+            "command": ["archive remove object detection"],
+            "camera": self.id,
+            "status": "Remove object detection data from " + date + " (use queue)."
+        }
+
         archive_data = self.config.db_handler.read(config="backup", date=date)
         archive_entries = archive_data["files"]
         archive_info = archive_data["info"]
-        del archive_data["info"]["detection_" + self.id]
+        if "detection_" + self.id in archive_data["info"]:
+            del archive_data["info"]["detection_" + self.id]
 
         keys = archive_entries.keys()
         for entry_id in keys:
             entry = archive_entries[entry_id]
             if entry["camera"] == self.id and "detections" in entry:
-                archive_entries[entry_id]["detection"] = []
+                archive_entries[entry_id]["detections"] = []
+                self.config.queue.entry_edit(config="backup", date=date, key=entry_id, entry=archive_entries[entry_id])
 
         archive_detections = self.summarize_detections(archive_entries)
-        self.config.queue.entry_edit(config="backup", date=date, key="files", entry=archive_entries)
         self.config.queue.entry_edit(config="backup", date=date, key="info", entry=archive_info)
         self.config.queue.entry_edit(config="backup", date=date, key="detection", entry=archive_detections)
+        return response
 
     def summarize_detections(self, entries, threshold=-1):
         """

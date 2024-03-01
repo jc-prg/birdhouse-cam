@@ -182,9 +182,19 @@ function birdhouse_archiveObjectDetection(camera, date_stamp, date, date_list=""
     appMsg.confirm(message, "birdhouse_archiveObjectDetection_exec('"+camera+"', '"+date_stamp+"', '" + threshold + "');", 150);
     }
 
+function birdhouse_archiveRemoveObjectDetection(camera, date_stamp, date) {
+    var message = lang("OBJECT_DETECTION_REQUEST_REMOVE", [date]);
+    appMsg.confirm(message, "birdhouse_archiveRemoveObjectDetection_exec('"+camera+"', '"+date_stamp+"');", 150);
+    }
+
 function birdhouse_archiveObjectDetection_exec(camera, date, threshold) {
     commands = ["archive-object-detection", camera, date, threshold];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_archiveObjectDetection_progress,'','birdhouse_forceBackup');
+    }
+
+function birdhouse_archiveRemoveObjectDetection_exec(camera, date) {
+    commands = ["remove-archive-object-detection", camera, date];
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
     }
 
 function birdhouse_archiveObjectDetection_progress(data) {

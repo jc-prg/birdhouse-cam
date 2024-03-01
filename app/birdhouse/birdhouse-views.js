@@ -508,6 +508,7 @@ function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_d
     object_onclick             += "setTimeout(function(){ birdhouseReloadView(); }, 1000);"
 
     var button_object_detection = "<button onclick='birdhouse_archiveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \""+detection_date+"\", \"\", \"selection_threshold\");' class='bh-slider-button'  style='width:80px;'>Start</button>";
+    var button_object_detection_rm = "<button onclick='birdhouse_archiveRemoveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button'  style='width:80px;'>Remove</button>";
     var button_archive_deletion = "<button onclick='birdhouse_archiveDayDelete(\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button' style='width:80px;'>Delete</button>";
     var button_archive_download = "<button onclick='archivDownload_requestDay(\""+active_date+"\", \""+app_active_cam+"\");' class='bh-slider-button' style='width:80px;'>"+lang("DOWNLOAD")+"</button>";
     var button_object_recycle   = "<button onclick='"+object_onclick+"' class='bh-slider-button'  style='width:80px;'>Recycle</button>";
@@ -549,6 +550,7 @@ function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_d
         info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model, detection_threshold]) + ":",
                              select_thresholds + button_object_detection + detection_info );
         }
+    info_text += tab.row(lang("OBJECT_DETECTION_REMOVE") + ":", button_object_detection_rm);
     info_text += tab.row(lang("OBJECT_DETECTION_RECYCLE") + ":", button_object_recycle);
     info_text += tab.row(lang("DELETE_ARCHIVE") + ":", button_archive_deletion );
     info_text += tab.row(lang("DOWNLOAD_ARCHIVE") + ":", button_archive_download );

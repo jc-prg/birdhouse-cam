@@ -864,6 +864,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif param["command"] == "remove":
             srv_logging.info(param["command"] + ": " + str(param))
             response = backup.delete_marked_files_api(param)
+        elif param["command"] == "remove-archive-object-detection":
+            parameters = param["parameter"]
+            cam_id = parameters[0]
+            date = parameters[1]
+            response = camera[cam_id].object.remove_detection_day(date)
         elif param["command"] == "archive-object-detection":
             parameters = param["parameter"]
             cam_id = parameters[0]
