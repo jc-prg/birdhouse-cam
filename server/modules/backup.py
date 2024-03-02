@@ -572,7 +572,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                             if "detections" in update_new and len(update_new["detections"]) > 0:
                                 files_backup["info"]["detection_" + cam] = True
 
-                            update_new["directory"] = self.config.db_handler.directory("images", backup_date)
+                            update_new["directory"] = "/" + self.config.db_handler.directory("images", backup_date)+"/"
 
                             if os.path.isfile(os.path.join(dir_source, file_lowres)) and \
                                     os.path.isfile(os.path.join(dir_source, file_hires)):
@@ -937,7 +937,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                     files_new[key]["lowres_size"] = [width_l, height_l]
                     files_new[key]["datestamp"] = subdir
                     files_new[key]["date"] = subdir[6:8] + "." + subdir[4:6] + "." + subdir[0:4]
-                    files_new[key]["directory"] = self.config.db_handler.directory("images", subdir, False)
+                    files_new[key]["directory"] = "/" + self.config.db_handler.directory("images", subdir, False) + "/"
                     files_new[key]["type"] = "image"
 
                     if len(filename_last) > 0:
