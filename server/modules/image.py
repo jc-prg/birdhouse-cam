@@ -62,8 +62,10 @@ class BirdhouseImageSupport(BirdhouseCameraClass):
             threshold = float(overwrite_threshold)
         elif self.param:
             threshold = float(self.param["similarity"]["threshold"])
+
         if overwrite_camera != "":
             camera_id = overwrite_camera
+
         if overwrite_detection_mode != "":
             detection_mode = overwrite_detection_mode
         else:
@@ -92,10 +94,6 @@ class BirdhouseImageSupport(BirdhouseCameraClass):
             elif "favorit" in file_info and float(file_info["favorit"]) == 1:
                 select = True
 
-            # if objects detected
-            elif "detections" in file_info and len(file_info["detections"]) > 0:
-                select = True
-
             # else decide dependent if object or similarity mode
             elif check_detection:
                 if detection_mode == "similarity":
@@ -108,10 +106,6 @@ class BirdhouseImageSupport(BirdhouseCameraClass):
                         file_info["detect_object"] = len(file_info["detections"])
                     else:
                         file_info["detect_object"] = -1
-
-            # ???
-            #elif not check_detection:
-            #    select = True
 
         info = file_info.copy()
         for value in ["camera", "to_be_deleted", "favorit", "similarity", "detect_object"]:

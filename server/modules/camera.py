@@ -2485,6 +2485,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.camera_streams[stream].set_duration_from_framerate()
 
         self.image.param = self.param
+        self.img_support.param = self.param
         self.video.param = self.param
         self.object.param = self.param
 
