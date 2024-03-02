@@ -1,4 +1,4 @@
-# Birdhouse Camera v1.0.9
+# Birdhouse Camera v1.1.0
 
 Raspberry Pi project to observe our birdhouse with two webcams: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, 
@@ -23,24 +23,19 @@ app in English and German, ...
 
 ## Impressions
 
-<img src="info/images/birdcam_05.PNG" width="30%"><img src="info/images/birdcam_21.PNG" width="30%"><img src="info/images/birdcam_10.PNG" width="30%">
+<img src="info/images/birdcam_002.PNG" width="19%">
+<img src="info/images/birdcam_003.PNG" width="19%">
+<img src="info/images/birdcam_004.PNG" width="19%">
+<img src="info/images/birdcam_014.PNG" width="19%">
+<img src="info/images/birdcam_022.PNG" width="19%">
+<img src="info/images/birdcam_023.PNG" width="19%">
+<img src="info/images/birdcam_025.PNG" width="19%">
+<img src="info/images/birdcam_032.PNG" width="19%">
+<img src="info/images/birdcam_033.PNG" width="19%">
+<img src="info/images/birdcam_034.PNG" width="19%">
 
-<img src="info/images/birdcam_17.PNG" width="30%"><img src="info/images/birdcam_18.PNG" width="30%"><img src="info/images/birdcam_19.PNG" width="30%">
- 
-<img src="info/images/birdcam_08.PNG" width="30%"><img src="info/images/birdcam_06.PNG" width="30%"><img src="info/images/birdcam_11.PNG" width="30%">
+Find further impressions [here](info/impressions.md).
 
-<img src="info/images/birdcam_12.PNG" width="30%"><img src="info/images/birdcam_13.PNG" width="30%"><img src="info/images/birdcam_22.PNG" width="30%">
-
-<img src="info/images/birdcam_41.PNG" width="30%"><img src="info/images/birdcam_42.PNG" width="30%"><img src="info/images/birdcam_43.PNG" width="30%">
-
-<img src="info/images/birdcam_23.PNG" width="30%"><img src="info/images/birdcam_15.PNG" width="30%"><img src="info/images/birdcam_16.PNG" width="30%">
-
-<img src="info/images/birdcam_01.PNG" width="30%"><img src="info/images/birdcam_02.PNG" width="30%"><img src="info/images/birdcam_24.PNG" width="30%">
-
-<img src="info/images/birdcam_25.PNG" width="30%"><img src="info/images/birdcam_32.PNG" width="30%"><img src="info/images/birdcam_31.PNG" width="30%">
-
-<br/><br/>
-<img src="info/images/birdcam_14.PNG" width="90%">
 
 ## Main Features
 
@@ -66,9 +61,10 @@ app in English and German, ...
   * via internet for a defined location (python_weather OR [Open Meteo](https://open-meteo.com/))
   * from sensors connected to the Raspberry Pi (DHT11/DHT22)
   * GPS lookup for cities or addresses via GeoPy to set weather location
-* **Listening audio stream** from microphone
-  * under construction, currently browser only (no iPhone)
-* **Detecting birds** (objects) via PyTorch
+* **Listening and recording audio stream** from microphone
+  * listening currently browser only (no iPhone)
+  * recording audio with video stream
+* **Detecting birds** (objects) via YOLOv8
   * Bird detection model in an early stage trained with [a few European singing birds](data/birds.json)
   * View with all detected birds and objects -> jump to other views filtered by bird
   * Filter by detected birds in archive and favorite view as well as for admins in complete view of current day
@@ -112,7 +108,7 @@ Here are some options. Calculate with a little bit more space in the height for 
   * Install a fresh image on an SDCard (https://www.raspberrypi.com/software/)
   * Recommended OS (due to restrictions: PyTorch require 64bit, picamera doesn't support 64bit any more, 
     and picamera2 + libcamera doesn't work in docker container yet (requires Raspbian OS 64bit > bullseye)) 
-    * Raspbian OS Lite 64bit for **object detection** using PyTorch
+    * Raspbian OS Lite 64bit for **object detection** using YOLOv8
     * Raspbian OS Lite 32bit if you want to use a **PiCamera** and the Docker version 
       
   * Install git: ```sudo apt-get install git```
