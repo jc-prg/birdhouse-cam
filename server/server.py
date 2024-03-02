@@ -978,7 +978,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             time.sleep(30)
             response = {"check": "timeout"}
         elif param["command"] == "edit-presets":
-            edit_param = param["parameter"].split("###")
+            edit_param = str(param["parameter"]).split("###")
             data = {}
             for entry in edit_param:
                 if "==" in entry:
@@ -1011,6 +1011,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 response["check-pwd"] = True
             else:
                 response["check-pwd"] = False
+        elif param["command"] == "reset-image-presets":
+            response = camera[which_cam].reset_image_presets()
+            srv_logging.info(str(param))
         elif param["command"] == "--template-to-implement-new-POST-command--":
             msg = "API CALL '" + param["command"] + "' not implemented yet (" + str(self.path) + ")"
             srv_logging.info(msg)

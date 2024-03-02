@@ -191,6 +191,11 @@ function birdhouse_edit_send(id_list, camera) {
     else { birdhouse_editData(info, camera); }
 }
 
+function birdhouse_edit_other(command, description) {
+    var html = "<button onclick='"+command+"' style='background:gray;width:100px;float:left;'>"+description+"</button>";
+    return html;
+}
+
 /*
 * The following 2 functions are used to initialize and integrate the tool tip from jc://modules/ for this app.
 * At the moment it's used in the form of a speech bubbel for range deletion.

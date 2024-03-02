@@ -1259,7 +1259,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.video = BirdhouseVideoProcessing(camera_id=self.id, camera=self, config=self.config)
 
         if not self.error and self.param["video"]["allow_recording"]:
-            self.camera_enable_recording()
+            self.video_recording_start()
 
     def _init_stream_raw(self):
         """
@@ -1554,63 +1554,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         self._paused = command
 
-    def if_error(self, message=False, length=False, details=False):
-        """
-        check for camera error and errors in streams
-
-        Args:
-            message (bool): if True return error messages
-            length (bool): if True return amount of error messages
-            details (bool): if True return details as string
-        Returns:
-            Any: error information
-        """
-        if message:
-            return self.error_msg
-        elif length:
-            return len(self.error_msg)
-        elif details:
-            error_list = "Errors: " + self.id + "=" + str(self.error) + " (" + str(len(self.error_msg)) + "); "
-            error_list += self.id + "-img=" + str(self.image.if_error()) + " ("
-            error_list += str(self.image.if_error(length=True)) + "); "
-            error_list += self.id + "-sRaw=" + str(self.camera_stream_raw.if_error()) + " ("
-            error_list += str(self.camera_stream_raw.if_error(length=True)) + "); "
-            for stream in self.camera_streams:
-                error_list += self.id + "-sEdit-" + stream + "=" + str(self.camera_streams[stream].if_error()) + " ("
-                error_list += str(self.camera_streams[stream].if_error(length=True)) + "); "
-            error_list += "\n"
-            return error_list
-
-        if self.error:
-            return self.error
-
-        for stream in self.camera_streams:
-            if self.camera_streams[stream].if_error(message=False, length=True) > self._stream_errors_max_accepted:
-                self.raise_warning("Camera doesn't work correctly: More than " + str(self._stream_errors_max_accepted) +
-                                   " errors in EDIT stream '" + stream + "'...")
-                self._stream_errors += 1
-
-        return False
-
-    def reset_error_all(self):
-        """
-        reset errors for all relevant classes
-        """
-        self.reset_error()
-        self._stream_errors = 0
-        if self.image is not None:
-            self.image.reset_error()
-        if self.video is not None:
-            self.video.reset_error()
-        if self.camera is not None:
-            self.camera.reset_error()
-        if self.camera_stream_raw is not None:
-            self.camera_stream_raw.reset_error()
-        for stream_id in self.camera_streams:
-            if self.camera_streams[stream_id] is not None:
-                self.camera_streams[stream_id].reset_error()
-        self.record_image_error = False
-
     def connect(self):
         """
         initial connect of all relevant streams and devices
@@ -1657,14 +1600,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         response = {"command": ["reconnect camera"], "camera": self.id}
         return response
 
-    def camera_enable_recording(self):
-        """
-        start recording and set current image size
-        """
-        if not self.video.if_running():
-            self.video.start()
-            self.video.image_size = self.image_size
-
     def video_recording(self, current_time):
         """
         Record video image for video, trigger video and audio creation when recording is stopped.
@@ -1705,6 +1640,14 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(
                 current_time.strftime("%H:%M:%S")))
 
+    def video_recording_start(self):
+        """
+        start recording and set current image size
+        """
+        if not self.video.if_running():
+            self.video.start()
+            self.video.image_size = self.image_size
+
     def video_recording_cancel(self):
         """
         cancel video recording
@@ -1713,41 +1656,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             dict: information for API response
         """
         return self.video.record_cancel()
-
-    def measure_usage(self, stamp):
-        """
-        measure usage from time to time
-
-        Args:
-            stamp (str): time stamp of measurement
-        """
-        if time.time() - self.usage_time > self.usage_interval:
-            self.logging.debug("... check usage!")
-
-            self.usage_time = time.time()
-            this_stamp = stamp[0:4]
-            statistics = self.config.db_handler.read(config="statistics")
-
-            if statistics == {}:
-                statistics[self.id] = {}
-                self.config.db_handler.write(config="statistics", date="", data=statistics, create=True, save_json=True)
-            elif self.id not in statistics:
-                statistics[self.id] = {}
-                self.config.db_handler.write(config="statistics", date="", data=statistics, create=True, save_json=True)
-
-            count = 0
-            for stream_id in self.camera_streams:
-                count += self.camera_streams[stream_id].get_active_streams()
-
-            statistics[self.id][this_stamp] = {
-                #"active_streams_raw": self.camera_stream_raw.get_active_streams(),
-                "active_streams": count,
-                "stream_framerate": self.camera_stream_raw.get_framerate(),
-                "camera_error": self.if_error(),
-                "camera_raw_error": self.camera_stream_raw.if_error()
-            }
-
-            self.config.queue.entry_add(config="statistics", date="", key=self.id, entry=statistics[self.id].copy())
 
     def image_recording(self, current_time, stamp, similarity, sensor_last):
         """
@@ -1986,6 +1894,41 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.record_image_end = str(int(record_to_hour)).zfill(2) + ":" + str(int(record_to_minute)).zfill(2)
 
         return is_active
+
+    def measure_usage(self, stamp):
+        """
+        measure usage from time to time
+
+        Args:
+            stamp (str): time stamp of measurement
+        """
+        if time.time() - self.usage_time > self.usage_interval:
+            self.logging.debug("... check usage!")
+
+            self.usage_time = time.time()
+            this_stamp = stamp[0:4]
+            statistics = self.config.db_handler.read(config="statistics")
+
+            if statistics == {}:
+                statistics[self.id] = {}
+                self.config.db_handler.write(config="statistics", date="", data=statistics, create=True, save_json=True)
+            elif self.id not in statistics:
+                statistics[self.id] = {}
+                self.config.db_handler.write(config="statistics", date="", data=statistics, create=True, save_json=True)
+
+            count = 0
+            for stream_id in self.camera_streams:
+                count += self.camera_streams[stream_id].get_active_streams()
+
+            statistics[self.id][this_stamp] = {
+                #"active_streams_raw": self.camera_stream_raw.get_active_streams(),
+                "active_streams": count,
+                "stream_framerate": self.camera_stream_raw.get_framerate(),
+                "camera_error": self.if_error(),
+                "camera_raw_error": self.camera_stream_raw.if_error()
+            }
+
+            self.config.queue.entry_add(config="statistics", date="", key=self.id, entry=statistics[self.id].copy())
 
     def get_image_raw(self):
         """
@@ -2379,6 +2322,93 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.camera_stream_raw.slow_down(slow_down)
         for stream in self.camera_streams:
             self.camera_streams[stream].slow_down(slow_down)
+
+    def reset_image_presets(self):
+        """
+        reset image presets to default (delete configuration from main config file)
+
+        Returns:
+            dict: information for API response
+        """
+        self.logging.info("Resetting image presets for camera '" + self.id + "' ...")
+        response = {"command": "reset-image-presets"}
+        main_config = self.config.db_handler.read("main")
+        camera_settings = main_config["devices"]["cameras"][self.id].copy()
+        try:
+            for key in camera_settings["image_presets"]:
+                if key in camera_settings["camera"]:
+                    camera_settings["image_presets"][key] = camera_settings["camera"][key][0]
+                else:
+                    del camera_settings["image_presets"][key]
+            main_config["devices"]["cameras"][self.id] = camera_settings.copy()
+
+            self.config.db_handler.write("main", "", main_config)
+            self.update_main_config()
+            self.reconnect()
+            self.logging.info("Reset done.")
+
+        except Exception as e:
+            response["error"] = "Error while removing image presets: " + str(e)
+            self.raise_error(response["error"])
+
+        return response
+
+    def reset_error_all(self):
+        """
+        reset errors for all relevant classes
+        """
+        self.reset_error()
+        self._stream_errors = 0
+        if self.image is not None:
+            self.image.reset_error()
+        if self.video is not None:
+            self.video.reset_error()
+        if self.camera is not None:
+            self.camera.reset_error()
+        if self.camera_stream_raw is not None:
+            self.camera_stream_raw.reset_error()
+        for stream_id in self.camera_streams:
+            if self.camera_streams[stream_id] is not None:
+                self.camera_streams[stream_id].reset_error()
+        self.record_image_error = False
+
+    def if_error(self, message=False, length=False, details=False):
+        """
+        check for camera error and errors in streams
+
+        Args:
+            message (bool): if True return error messages
+            length (bool): if True return amount of error messages
+            details (bool): if True return details as string
+        Returns:
+            Any: error information
+        """
+        if message:
+            return self.error_msg
+        elif length:
+            return len(self.error_msg)
+        elif details:
+            error_list = "Errors: " + self.id + "=" + str(self.error) + " (" + str(len(self.error_msg)) + "); "
+            error_list += self.id + "-img=" + str(self.image.if_error()) + " ("
+            error_list += str(self.image.if_error(length=True)) + "); "
+            error_list += self.id + "-sRaw=" + str(self.camera_stream_raw.if_error()) + " ("
+            error_list += str(self.camera_stream_raw.if_error(length=True)) + "); "
+            for stream in self.camera_streams:
+                error_list += self.id + "-sEdit-" + stream + "=" + str(self.camera_streams[stream].if_error()) + " ("
+                error_list += str(self.camera_streams[stream].if_error(length=True)) + "); "
+            error_list += "\n"
+            return error_list
+
+        if self.error:
+            return self.error
+
+        for stream in self.camera_streams:
+            if self.camera_streams[stream].if_error(message=False, length=True) > self._stream_errors_max_accepted:
+                self.raise_warning("Camera doesn't work correctly: More than " + str(self._stream_errors_max_accepted) +
+                                   " errors in EDIT stream '" + stream + "'...")
+                self._stream_errors += 1
+
+        return False
 
     def if_only_lowres(self):
         """

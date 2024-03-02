@@ -132,6 +132,11 @@ function birdhouse_cameraSettings(camera, key, value) {
 	birdhouse_apiRequest('POST', commands, '', '','','birdhouse_cameraSettings');
 }
 
+function birdhouse_cameraResetPresets(camera) {
+	commands = ["reset-image-presets",camera];
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_cameraResetPresets');
+}
+
 function birdhouse_checkTimeout() {
 	commands = ["check_timeout"];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_checkTimeout');

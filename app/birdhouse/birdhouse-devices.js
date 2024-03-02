@@ -625,6 +625,7 @@ function birdhouseDevices_cameraSettings (data) {
 
         html += "<center>&nbsp;<br/>";
         html += birdhouse_edit_save(id="edit_"+camera, id_list, camera);
+        html += birdhouse_edit_other("birdhouse_cameraResetPresets(\""+camera+"\");", lang("RESET"));
         html += "</center>";
 
         html += "</div></div>";
