@@ -323,7 +323,7 @@ function birdhouse_app_settings (name="Settings") {
 	    var status   = app_data["STATUS"]["object_detection"];
         var tab      = new birdhouse_table();
         tab.style_rows["height"] = "27px";
-        tab.style_cells["width"] = "50%";
+        tab.style_cells["min-width"] = "150px";
 
 	    var html = birdhouseDevices("", app_data, false);
 

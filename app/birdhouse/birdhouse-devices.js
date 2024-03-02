@@ -42,14 +42,14 @@ function birdhouseDevices( title, data, show_settings=true ) {
 function birdhouseDevices_status(index, show_button) {
 	var tab     = new birdhouse_table();
 	tab.style_rows["height"] = "27px";
-	tab.style_cells["width"] = "50%";
+	tab.style_cells["min-width"] = "150px";
 
     var html_index = "";
     if (show_button) {
         html_index += "<div class='camera_info'>";
         html_index += "<div class='camera_info_image'>&nbsp;<br/>";
-        html_index +=  "<div id='loading_img'><img src='"+app_loading_image+"' style='width:50%;'></div>";
-        html_index += "<br/>&nbsp;</div>";
+        html_index += "<div id='loading_img'><img src='"+app_loading_image+"' style='width:50%;max-width:100px;'></div>";
+        html_index += "</div>";
         html_index += "<div class='camera_info_text'>";
     }
 
@@ -75,10 +75,10 @@ function birdhouseDevices_status(index, show_button) {
                 action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;height:24px;width:24px;'></div>";
             }
             if (!show_button && (index[i][key]["type"] == "camera" || index[i][key]["type"] == "microphone")) {
-                action += "<div style='float:left;padding:5px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
+                action += "<div style='float:left;padding:5px;width:70px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
             }
             else if (index[i][key]["type"] == "camera" || index[i][key]["type"] == "microphone") {
-                action += "<br/><div style='padding:5px;width:100%;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
+                action += "<div style='padding:5px;float:left;width:70px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
             }
             action += "</div>";
             html_index += tab.row(device_key, action);
