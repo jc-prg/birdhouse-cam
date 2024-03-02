@@ -490,9 +490,6 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                 for cam in self.camera:
                     files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
                 files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
-                #                files_backup["info"]["size"] = sum(
-                #                    os.path.getsize(os.path.join(directory, f)) for f in os.listdir(directory) if
-                #                    os.path.isfile(os.path.join(directory, f)))
                 files_backup["info"]["size"] = sum(
                     os.path.getsize(os.path.join(backup_directory, f)) for f in os.listdir(backup_directory) if
                     f.endswith(".jpeg") or f.endswith(".jpg") or f.endswith(".json"))
@@ -575,7 +572,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                             if "detections" in update_new and len(update_new["detections"]) > 0:
                                 files_backup["info"]["detection_" + cam] = True
 
-                            update_new["directory"] = os.path.join(self.config.directories["images"], backup_date)
+                            update_new["directory"] = self.config.db_handler.directory("images", backup_date)
 
                             if os.path.isfile(os.path.join(dir_source, file_lowres)) and \
                                     os.path.isfile(os.path.join(dir_source, file_hires)):
@@ -940,7 +937,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                     files_new[key]["lowres_size"] = [width_l, height_l]
                     files_new[key]["datestamp"] = subdir
                     files_new[key]["date"] = subdir[6:8] + "." + subdir[4:6] + "." + subdir[0:4]
-                    files_new[key]["directory"] = "images/" + subdir
+                    files_new[key]["directory"] = self.config.db_handler.directory("images", subdir, False)
                     files_new[key]["type"] = "image"
 
                     if len(filename_last) > 0:

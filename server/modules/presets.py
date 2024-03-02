@@ -405,6 +405,7 @@ birdhouse_directories = {
     "favorites": "images/",
     "sensor": "images/",
     "statistics": "images/",
+    "today": "00_today/",
     "objects": "images/",
     "custom_models": "custom_models/",
     "videos": "videos/",

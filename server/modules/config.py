@@ -171,17 +171,26 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         return os.path.join(self.directory(config, date), self.files[config])
 
-    def directory(self, config, date=""):
+    def directory(self, config, date="", include_main=True):
         """
         return directory of config file
 
         Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
+            include_main (bool): include main directory for an absolute path
         Returns:
             str: directory of database file
         """
-        dir_path = os.path.join(self.main_directory, self.directories["data"], self.directories[config], date)
+        if config == "images" and date == "" and date != "EMPTY":
+            date = self.directories["today"]
+        elif date == "EMPTY":
+            date = ""
+
+        if include_main:
+            dir_path = os.path.join(self.main_directory, self.directories["data"], self.directories[config], date)
+        else:
+            dir_path = os.path.join(self.directories[config], date)
         if ".." in dir_path:
             elements = dir_path.split("/")
             path_new = []
@@ -204,14 +213,19 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
         """
-        if not os.path.isdir(self.directory(config)):
+        if not os.path.isdir(self.directory(config, "EMPTY")):
             self.logging.info("Creating directory for " + config + " ...")
+            os.mkdir(self.directory(config, "EMPTY"))
+            self.logging.info("OK.")
+
+        if config == "images" and not os.path.isdir(self.directory(config)):
+            self.logging.info("Creating directory for " + config + "/" + birdhouse_directories["today"] + " ...")
             os.mkdir(self.directory(config))
             self.logging.info("OK.")
 
-        if date != "" and not os.path.isdir(os.path.join(self.directory(config), date)):
+        if date != "" and not os.path.isdir(self.directory(config, date)):
             self.logging.info("Creating directory for " + config + " ...")
-            os.mkdir(os.path.join(self.directory(config), date))
+            os.mkdir(self.directory(config, date))
             self.logging.info("OK.")
 
     def exists(self, config, date=""):

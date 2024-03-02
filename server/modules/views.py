@@ -725,12 +725,12 @@ class BirdhouseViewFavorite(BirdhouseClass):
                 if "type" not in favorites[new]:
                     favorites[new]["type"] = "image"
                 favorites[new]["category"] = category + stamp
-                favorites[new]["directory"] = "/" + self.config.directories["images"]
+                favorites[new]["directory"] = "/" + self.config.db_handler.directory("images", "", False)
                 for key in fields_not_required:
                     if key in favorites[new]:
                         del favorites[new][key]
                 if not today:
-                    favorites[new]["directory"] += "/" + date + "/"
+                    favorites[new]["directory"] = "/" + self.config.db_handler.directory("images", date, False)
                 favorites[new]["directory"] = favorites[new]["directory"].replace("//", "/")
                 files_today_count += 1
 
@@ -778,7 +778,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
                 favorites[new]["date"] = date
                 favorites[new]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
                 favorites[new]["category"] = category + date
-                favorites[new]["directory"] = "/" + self.config.directories["videos"]
+                favorites[new]["directory"] = "/" + self.config.db_handler.directory("videos", "", False)
 
         self.logging.info("  -> VIDEO Favorites: " + str(files_video_count))
         return favorites.copy()
@@ -937,6 +937,9 @@ class BirdhouseViewArchive(BirdhouseClass):
             # check if new directories are available
             count = 0
             for archive_directory in dir_list:
+                if archive_directory in presets.birdhouse_directories["today"]:
+                    continue
+
                 count += 1
                 if ((len(archive_directory) == 8 and archive_directory not in backup_entries)
                         or cam not in backup_entries[archive_directory]):
@@ -995,7 +998,7 @@ class BirdhouseViewArchive(BirdhouseClass):
                             "datestamp": date,
                             "date": date[6:8] + "." + date[4:6] + "." + date[0:4],
                             "detection": False,
-                            "directory": "images/" + date + "/",
+                            "directory": self.config.db_handler.directory("images", date, False),
                             "dir_size": 0,
                             "dir_size_cam": 0,
                             "lowres": "",
@@ -1288,7 +1291,7 @@ class BirdhouseViewArchive(BirdhouseClass):
             dir_detections = True
 
         content["entries"][archive_directory] = {
-            "directory": self.config.directories["backup"] + archive_directory + "/",
+            "directory": self.config.db_handler.directory("backup", archive_directory, False),
             "type": "directory",
             "camera": cam,
             "date": file_data["info"]["date"],
@@ -1602,6 +1605,8 @@ class BirdhouseViewObjects(BirdhouseClass):
 
         count = 0
         for date in dir_list:
+            if date in presets.birdhouse_directories["today"]:
+                continue
 
             count += 1
             category = "/objects/" + date + "/"
@@ -1664,6 +1669,7 @@ class BirdhouseViewObjects(BirdhouseClass):
 
                             if (not view_entries[label]["thumbnail_favorite"]
                                     and (has_favorite or ("confidence" in view_entry
+                                         and "confidence" in view_entries[label]
                                          and view_entry["confidence"] > view_entries[label]["confidence"]))):
 
                                 detections = view_entries[label]["detections"].copy()
@@ -1726,7 +1732,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         detect_position = []
         if "directory" not in entry:
             if "datestamp" in entry:
-                entry["directory"] = "/images/" + entry["datestamp"] + "/"
+                entry["directory"] = self.config.db_handler.directory("images", entry["datestamp"], False)
             else:
                 entry["lowres"] = ""
                 entry["error"] = "could not create lowres (1)"
@@ -1970,7 +1976,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
             check_detection = False
             category = "/backup/" + date_backup + "/"
-            subdirectory = date_backup + "/"
+            subdirectory = date_backup
             time_now = "000000"
 
             content["subtitle"] = presets.birdhouse_pages["backup"][0] + " " + files_data["info"]["date"]
@@ -2048,7 +2054,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                             files_today[stamp]["type"] = "image"
                         files_today[stamp]["category"] = category + stamp
                         files_today[stamp]["detect"] = self.camera[which_cam].img_support.differs(files_today[stamp])
-                        files_today[stamp]["directory"] = "/" + self.config.directories["images"] + subdirectory
+                        files_today[stamp]["directory"] = "/" + self.config.db_handler.directory("images", subdirectory,
+                                                                                                 False)
 
                         if "type" in files_today[stamp] and files_today[stamp]["type"] != "data":
                             count += 1
@@ -2274,7 +2281,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                             files_part[stamp]["detect"] = self.camera[which_cam].img_support.differs(
                                 file_info=files_part[stamp])
                             files_part[stamp]["category"] = category + stamp
-                            files_part[stamp]["directory"] = "/" + self.config.directories["images"]
+                            files_part[stamp]["directory"] = "/" + self.config.db_handler.directory("images", "", False)
                             count += 1
 
                             if "lowres_size" in files_part[stamp]:
