@@ -23,16 +23,12 @@ app in English and German, ...
 
 ## Impressions
 
-<img src="info/images/birdcam_002.PNG" width="19%">
-<img src="info/images/birdcam_003.PNG" width="19%">
-<img src="info/images/birdcam_004.PNG" width="19%">
-<img src="info/images/birdcam_014.PNG" width="19%">
-<img src="info/images/birdcam_022.PNG" width="19%">
-<img src="info/images/birdcam_023.PNG" width="19%">
-<img src="info/images/birdcam_025.PNG" width="19%">
-<img src="info/images/birdcam_032.PNG" width="19%">
-<img src="info/images/birdcam_033.PNG" width="19%">
-<img src="info/images/birdcam_034.PNG" width="19%">
+<img src="info/images/birdcam_002.PNG" width="19%"><img src="info/images/birdcam_003.PNG" width="19%"><img 
+     src="info/images/birdcam_004.PNG" width="19%"><img src="info/images/birdcam_014.PNG" width="19%"><img 
+     src="info/images/birdcam_022.PNG" width="19%">
+<img src="info/images/birdcam_023.PNG" width="19%"><img src="info/images/birdcam_025.PNG" width="19%"><img 
+     src="info/images/birdcam_032.PNG" width="19%"><img src="info/images/birdcam_033.PNG" width="19%"><img 
+     src="info/images/birdcam_034.PNG" width="19%">
 
 Find further impressions [here](info/impressions.md).
 
