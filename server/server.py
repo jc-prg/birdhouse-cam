@@ -1432,12 +1432,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             path_2nd = os.path.join(config.db_handler.directory("images"), filename_2nd)
             path_diff = os.path.join(config.db_handler.directory("images"), filename_diff)
 
-            image_1st = camera[which_cam].read_image(path_1st)
-            image_2nd = camera[which_cam].read_image(path_2nd)
+            image_1st = camera[which_cam].image.read(path_1st)
+            image_2nd = camera[which_cam].image.read(path_2nd)
             image_diff = camera[which_cam].image.compare_raw_show(image_1st, image_2nd)
             image_diff = camera[which_cam].image.draw_text_raw(image_diff, "-> " + param[2] + ":" + param[3] + ":" +
                                                                param[4], position=(10, 20), scale=0.5, thickness=1)
-            camera[which_cam].write_image(path_diff, image_diff)
+            camera[which_cam].image.write(path_diff, image_diff)
 
             time.sleep(0.5)
             self.stream_file(filetype='image/jpeg',
@@ -1447,7 +1447,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif '/image.jpg' in self.path:
             filename = "_image_temp_" + which_cam + ".jpg"
             img_path = os.path.join(config.db_handler.directory("images"), filename)
-            camera[which_cam].write_image(img_path, camera[which_cam].get_stream(stream_id="file",
+            camera[which_cam].image.write(img_path, camera[which_cam].get_stream(stream_id="file",
                                                                                  stream_type="camera",
                                                                                  stream_resolution="hires"))
             time.sleep(2)

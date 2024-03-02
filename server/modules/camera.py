@@ -1841,8 +1841,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 path_hires = os.path.join(self.config.db_handler.directory("images"),
                                           self.img_support.filename("hires", stamp, self.id))
                 self.logging.debug("WRITE:" + path_lowres)
-                self.write_image(filename=path_hires, image=image_hires)
-                self.write_image(filename=path_lowres, image=image_hires,
+                self.image.write(filename=path_hires, image=image_hires)
+                self.image.write(filename=path_lowres, image=image_hires,
                                  scale_percent=self.param["image"]["preview_scale"])
 
                 if self.detect_active and self.detect_settings["active"] and os.path.exists(path_hires):
@@ -2078,7 +2078,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             path_hires = str(os.path.join(self.config.db_handler.directory("images"),
                                           "_temp_"+str(self.id)+"_"+str(stream_id)+".jpg"))
             try:
-                self.write_image(path_hires, image, scale_percent=self.image_size_object_detection)
+                self.image.write(path_hires, image, scale_percent=self.image_size_object_detection)
                 img, detect_info = self.object.detect_objects.analyze(path_hires, self.detect_settings["threshold"],
                                                                       False)
                 img = self.object.detect_visualize.render_detection(image, detect_info, 1,
@@ -2368,52 +2368,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.camera_streams[stream].set_maintenance_mode(active, line1, line2, True)
         if not active:
             self.logging.info("Stopped maintenance mode for CAMERA '" + self.id + ". ")
-
-    def write_image(self, filename, image, scale_percent=100):
-        """
-        Scale image and write to file
-
-        Args:
-            filename (str): path to image file
-            image (numpy.ndarray); image to write
-            scale_percent (int): scale factor
-        """
-        image_path = os.path.join(self.config.main_directory, filename)
-        self.logging.debug("Write image: " + image_path)
-
-        try:
-            if scale_percent != 100:
-                width = int(image.shape[1] * float(scale_percent) / 100)
-                height = int(image.shape[0] * float(scale_percent) / 100)
-                image = cv2.resize(image, (width, height))
-            return cv2.imwrite(image_path, image)
-
-        except Exception as e:
-            error_msg = "Can't save image and/or create thumbnail '" + image_path + "': " + str(e)
-            self.image.raise_error(error_msg)
-            return ""
-
-    def read_image(self, filename):
-        """
-        read image with given filename
-
-        Args:
-            filename (str): path to image file
-        Returns:
-            numpy.ndarray: image from file
-        """
-        image_path = os.path.join(self.config.main_directory, filename)
-        self.logging.info("Read image: " + image_path)
-
-        try:
-            image = cv2.imread(image_path)
-            self.logging.debug(" --> " + str(image.shape))
-            return image
-
-        except Exception as e:
-            error_msg = "Can't read image '" + image_path + "': " + str(e)
-            self.image.raise_error(error_msg)
-            return ""
 
     def slow_down_streams(self, slow_down=True):
         """
