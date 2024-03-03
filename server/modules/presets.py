@@ -288,13 +288,13 @@ def set_server_logging(system_arguments):
 # ------------------------------------
 
 birdhouse_main_directories = {
-    "modules": os.path.dirname(os.path.abspath(__file__)),
-    "working": os.path.dirname(os.path.abspath(__name__)),
-    "server": os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."),
-    "project": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."),
-    "app": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "app"),
-    "log": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "log"),
-    "data": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data"),
+    "modules":  os.path.dirname(os.path.abspath(__file__)),
+    "working":  os.path.dirname(os.path.abspath(__name__)),
+    "server":   os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."),
+    "project":  os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."),
+    "app":      os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "app"),
+    "log":      os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "log"),
+    "data":     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data"),
     "download": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data/downloads")
 }
 
@@ -396,51 +396,51 @@ birdhouse_databases = {
     "archive_videos": {}
 }
 birdhouse_directories = {
-    "backup": "images/",
-    "backup_info": "images/",
-    "html": "../app/",
-    "data": "../data/",
-    "main": "",
-    "images": "images/",
-    "favorites": "images/",
-    "sensor": "images/",
-    "statistics": "images/",
-    "today": "00_today/",
-    "objects": "images/",
-    "custom_models": "custom_models/",
-    "videos": "videos/",
-    "videos_temp": "videos/images2video/",
-    "audio_temp": "videos/images2video/",
-    "weather": "images/"
+    "backup":           "images/",
+    "backup_info":      "images/",
+    "html":             "../app/",
+    "data":             "../data/",
+    "main":             "",
+    "images":           "images/",
+    "favorites":        "images/",
+    "sensor":           "images/",
+    "statistics":       "images/",
+    "today":            "00_today/",
+    "objects":          "images/",
+    "custom_models":    "custom_models/",
+    "videos":           "videos/",
+    "videos_temp":      "videos/images2video/",
+    "audio_temp":       "videos/images2video/",
+    "weather":          "images/"
 }
 birdhouse_files = {
-    "main": "config.json",
-    "birds": "birds.json",
-    "backup": "config_images.json",
-    "backup_info": "config_backup.json",
-    "favorites": "config_favorites.json",
-    "objects": "config_objects.json",
-    "images": "config_images.json",
-    "videos": "config_videos.json",
-    "sensor": "config_sensor.json",
-    "statistics": "config_statistics.json",
-    "weather": "config_weather.json"
+    "main":             "config.json",
+    "birds":            "birds.json",
+    "backup":           "config_images.json",
+    "backup_info":      "config_backup.json",
+    "favorites":        "config_favorites.json",
+    "objects":          "config_objects.json",
+    "images":           "config_images.json",
+    "videos":           "config_videos.json",
+    "sensor":           "config_sensor.json",
+    "statistics":       "config_statistics.json",
+    "weather":          "config_weather.json"
 }
 birdhouse_dir_to_database = {
-    "config": "config",
-    "birds": "birds",
-    "images/config_sensor": "today_sensors",
-    "images/config_weather": "today_weather",
-    "images/config_statistics": "today_statistics",
-    "images/config_backup": "archive_images",
-    "images/config_favorites": "favorites",
-    "images/config_objects": "objects",
-    "videos/config_videos": "archive_videos",
-    "images/00_today/config_images": "today_images",
-    "images/<DATE>/config_images": "archive_images",
-    "images/<DATE>/config_statistics": "archive_statistics",
-    "images/<DATE>/config_sensors": "archive_sensors",
-    "images/<DATE>/config_weather": "archive_weather"
+    birdhouse_directories["main"] + "config":                       "config",
+    birdhouse_directories["main"] + "birds":                        "birds",
+    birdhouse_directories["backup"] + "config_backup":              "archive_images",
+    birdhouse_directories["favorites"] + "config_favorites":        "favorites",
+    birdhouse_directories["objects"] + "config_objects":            "objects",
+    birdhouse_directories["sensor"] + "config_sensor":              "today_sensors",
+    birdhouse_directories["statistics"] + "config_statistics":      "today_statistics",
+    birdhouse_directories["videos"] + "config_videos":              "archive_videos",
+    birdhouse_directories["weather"] + "config_weather":            "today_weather",
+    birdhouse_directories["images"] + "<DATE>/config_images":       "archive_images",
+    birdhouse_directories["images"] + "<DATE>/config_statistics":   "archive_statistics",
+    birdhouse_directories["images"] + "<DATE>/config_sensors":      "archive_sensors",
+    birdhouse_directories["images"] + "<DATE>/config_weather":      "archive_weather",
+    birdhouse_directories["images"] + birdhouse_directories["today"] + "config_images": "today_images"
 }
 
 # ------------------------------------
