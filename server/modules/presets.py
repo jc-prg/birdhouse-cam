@@ -372,16 +372,16 @@ if birdhouse_env["installation_type"].upper() != "DOCKER":
     birdhouse_couchdb["db_basedir"] = birdhouse_env["dir_project"] + "data/"
 
 birdhouse_pages = {
-    "live": ("Live-Stream", "/index.html", "INDEX"),
-    "backup": ("Archiv", "/list_backup.html", "ARCHIVE"),
-    "today": ("Heute", "/list_short.html", "TODAY"),
-    "today_complete": ("Alle heute", "/list_new.html", "TODAY_COMPLETE"),
-    "favorit": ("Favoriten", "/list_star.html", "FAVORITES"),
-    "cam_info": ("Ger&auml;te", "/cameras.html", "DEVICES"),
-    "video_info": ("Video Info", "/video-info.html", ""),
-    "videos": ("Videos", "/videos.html", "VIDEOS"),
-    "object": ("Birds", "/birds.html", "BIRDS"),
-    "save": ("Speichern", "/image.jpg", "")
+    "live":             ("Live-Stream", "/index.html", "INDEX"),
+    "backup":           ("Archiv", "/list_backup.html", "ARCHIVE"),
+    "today":            ("Heute", "/list_short.html", "TODAY"),
+    "today_complete":   ("Alle heute", "/list_new.html", "TODAY_COMPLETE"),
+    "favorit":          ("Favoriten", "/list_star.html", "FAVORITES"),
+    "cam_info":         ("Ger&auml;te", "/cameras.html", "DEVICES"),
+    "video_info":       ("Video Info", "/video-info.html", ""),
+    "videos":           ("Videos", "/videos.html", "VIDEOS"),
+    "object":           ("Birds", "/birds.html", "BIRDS"),
+    "save":             ("Speichern", "/image.jpg", "")
 }
 birdhouse_databases = {
     "config": {},
@@ -429,7 +429,6 @@ birdhouse_files = {
 birdhouse_dir_to_database = {
     "config": "config",
     "birds": "birds",
-    "images/config_images": "today_images",
     "images/config_sensor": "today_sensors",
     "images/config_weather": "today_weather",
     "images/config_statistics": "today_statistics",
@@ -437,8 +436,9 @@ birdhouse_dir_to_database = {
     "images/config_favorites": "favorites",
     "images/config_objects": "objects",
     "videos/config_videos": "archive_videos",
-    "images/<DATE>/config_statistics": "archive_statistics",
+    "images/00_today/config_images": "today_images",
     "images/<DATE>/config_images": "archive_images",
+    "images/<DATE>/config_statistics": "archive_statistics",
     "images/<DATE>/config_sensors": "archive_sensors",
     "images/<DATE>/config_weather": "archive_weather"
 }
