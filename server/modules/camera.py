@@ -2058,7 +2058,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.statistics.register(self.id.lower() + "_raw_error", "Stream Error " + self.id.upper())
 
         else:
-            self.logging.info("Measure stream usage ...")
+            self.logging.debug("Measure stream usage ...")
 
             count = 0
             for stream_id in self.camera_streams:
