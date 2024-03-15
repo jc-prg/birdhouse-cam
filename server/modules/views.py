@@ -1787,13 +1787,14 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
     Class to create, update and deliver views for the birdhouse app
     """
 
-    def __init__(self, camera, config):
+    def __init__(self, camera, config, statistic):
         """
         Constructor method for initializing the class.
 
         Args:
             config (modules.config.BirdhouseConfig): reference to main config object
             camera (dict): reference to global camera object
+            statistic (modules.statistics.BirdhouseStatistic): reference to statistic handler
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="views", config=config)
@@ -1804,6 +1805,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.camera = camera
         self.which_cam = ""
         self.force_reload = False
+        self.statistic = statistic
 
         self.today_dir_size = 0  # not implemented yet
 
@@ -2192,6 +2194,28 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             dict: archive view definition for API response
         """
         return self.archive.list(param)
+
+    def statistic_list(self, param):
+        """
+        create list of statistic data
+
+        Args:
+            param (dict): parameter given via API
+        Returns:
+            dict: camera view definition for API response
+        """
+        which_cam = param["which_cam"]
+        content = {"view": "list_statistics", "entries": {}, "param": param}
+
+        for cam in self.camera:
+            content["entries"][cam] = self.statistic.get_chart_data(cam)
+        content["entries"]["srv"] = self.statistic.get_chart_data("srv")
+
+        content["view_count"] = []
+        content["subtitle"] = presets.birdhouse_pages["statistics"][0]
+        content["links"] = self.tools.print_links_json(link_list=("live", "favorit", "today", "videos", "backup"),
+                                                       cam=which_cam)
+        return content
 
     def camera_list(self, param):
         """

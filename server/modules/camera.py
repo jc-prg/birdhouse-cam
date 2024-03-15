@@ -1271,7 +1271,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
     Camera handler to control camera, record images, coordinate sensor and microphone and save data to database.
     """
 
-    def __init__(self, camera_id, config, sensor, microphones, first_cam=False):
+    def __init__(self, camera_id, config, sensor, microphones, statistics, first_cam=False):
         """
         Constructor to initialize camera class.
 
@@ -1304,6 +1304,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.cam_param = None
         self.cam_param_image = None
         self.sensor = sensor
+        self.statistics = statistics
         self.microphones = microphones
         self.micro = None
         self.weather_active = self.config.param["weather"]["active"]
@@ -1386,6 +1387,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.camera_scan = self.get_available_devices()
 
         self.connect()
+        self.measure_usage(init=True)
 
     def _init_image_processing(self):
         """
@@ -1637,7 +1639,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     self.video_recording(current_time)
 
                 # Check and record active streams
-                self.measure_usage(stamp)
+                self.measure_usage()
 
                 # Video Recording
                 if self.if_other_prio_process(self.id) or self.if_only_lowres() or self.video.processing \
@@ -2042,40 +2044,30 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         return is_active
 
-    def measure_usage(self, stamp):
+    def measure_usage(self, init=False):
         """
         measure usage from time to time
 
         Args:
-            stamp (str): time stamp of measurement
+            init (bool): initialize usage
         """
-        if time.time() - self.usage_time > self.usage_interval:
-            self.logging.debug("... check usage!")
+        if init:
+            self.statistics.register(self.id.lower() + "_streams", "Streams " + self.id.upper())
+            self.statistics.register(self.id.lower() + "_framerate", "Framerate " + self.id.upper())
+            self.statistics.register(self.id.lower() + "_error", "Camera Error " + self.id.upper())
+            self.statistics.register(self.id.lower() + "_raw_error", "Stream Error " + self.id.upper())
 
-            self.usage_time = time.time()
-            this_stamp = stamp[0:4]
-            statistics = self.config.db_handler.read(config="statistics")
-
-            if statistics == {}:
-                statistics[self.id] = {}
-                self.config.db_handler.write(config="statistics", date="", data=statistics, create=True, save_json=True)
-            elif self.id not in statistics:
-                statistics[self.id] = {}
-                self.config.db_handler.write(config="statistics", date="", data=statistics, create=True, save_json=True)
+        else:
+            self.logging.info("Measure stream usage ...")
 
             count = 0
             for stream_id in self.camera_streams:
                 count += self.camera_streams[stream_id].get_active_streams()
 
-            statistics[self.id][this_stamp] = {
-                #"active_streams_raw": self.camera_stream_raw.get_active_streams(),
-                "active_streams": count,
-                "stream_framerate": self.camera_stream_raw.get_framerate(),
-                "camera_error": self.if_error(),
-                "camera_raw_error": self.camera_stream_raw.if_error()
-            }
-
-            self.config.queue.entry_add(config="statistics", date="", key=self.id, entry=statistics[self.id].copy())
+            self.statistics.set(self.id.lower() + "_streams", count)
+            self.statistics.set(self.id.lower() + "_framerate", self.camera_stream_raw.get_framerate())
+            self.statistics.set(self.id.lower() + "_error", self.if_error())
+            self.statistics.set(self.id.lower() + "_raw_error", self.camera_stream_raw.if_error())
 
     def get_image_raw(self):
         """

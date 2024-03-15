@@ -304,9 +304,9 @@ birdhouse_main_directories = {
 birdhouse_initial_connect_msg = {}
 birdhouse_error_images_raw = {}
 birdhouse_error_images = {
-    "setting": "camera_error_settings.jpg",
-    "camera": "camera_error_hires.jpg",
-    "lowres": "camera_error_lowres.png"
+    "setting":  "camera_error_settings.jpg",
+    "camera":   "camera_error_hires.jpg",
+    "lowres":   "camera_error_lowres.png"
 }
 
 # ------------------------------------
@@ -314,9 +314,9 @@ birdhouse_error_images = {
 # ------------------------------------
 birdhouse_git_submodules_installed = False
 birdhouse_git_submodules = {
-    "jc-prg/bird-detection": "server/modules/detection",
-    "jc-prg/modules": "app/modules",
-    "jc-prg/app-framework": "app/framework"
+    "jc-prg/bird-detection":    "server/modules/detection",
+    "jc-prg/modules":           "app/modules",
+    "jc-prg/app-framework":     "app/framework"
 }
 
 
@@ -328,7 +328,7 @@ birdhouse_loglevel_module = {}
 birdhouse_loglevel_modules_all = [
     'root', 'backup', 'bu-dwnld', 'server', 'srv-info', 'srv-health',
     'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object', 'cam-stream',
-    'cam-handl', 'cam-info',
+    'cam-handl', 'cam-info', 'statistics',
     'config', 'config-Q',
     'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
     'video', 'video-srv', "img-eval",
@@ -381,6 +381,7 @@ birdhouse_pages = {
     "video_info":       ("Video Info", "/video-info.html", ""),
     "videos":           ("Videos", "/videos.html", "VIDEOS"),
     "object":           ("Birds", "/birds.html", "BIRDS"),
+    "statistics":       ("Statistic", "/statistic.html", "STATISTIC"),
     "save":             ("Speichern", "/image.jpg", "")
 }
 birdhouse_databases = {
@@ -395,6 +396,7 @@ birdhouse_databases = {
     "archive_weather": {},
     "archive_videos": {}
 }
+birdhouse_db_daily_refresh = ["today_images", "today_weather", "today_sensor", "today_statistics"]
 birdhouse_directories = {
     "backup":           "images/",
     "backup_info":      "images/",
@@ -404,7 +406,7 @@ birdhouse_directories = {
     "images":           "images/",
     "favorites":        "images/",
     "sensor":           "images/",
-    "statistics":       "images/",
+    "statistics":       "other/",
     "today":            "00_today/",
     "objects":          "images/",
     "custom_models":    "custom_models/",

@@ -696,8 +696,37 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                 self.logging.debug("    -> Execute edit queue: " + config_file + " ... (" +
                                    str(len(self.edit_queue[config_file])) + " entries)")
 
+            # statistic file
+            if config_file == "statistics":
+
+                entries = self.db_handler.read_cache(config_file)
+                self.db_handler.lock(config_file)
+
+                count_files += 1
+                count_edit = 0
+
+                entries_in_queue = len(self.edit_queue[config_file]) > 0
+                while entries_in_queue:
+                    entries_in_queue = len(self.edit_queue[config_file]) > 0
+                    if entries_in_queue:
+                        self.logging.debug("Edit queue POP (1): " + str(self.edit_queue[config_file][-1]))
+                        [key, entry, command] = self.edit_queue[config_file].pop()
+                        count_entries += 1
+                        if command == "add" or command == "edit":
+                            entries["data"][key] = entry
+                            count_edit += 1
+                        elif command == "delete" and key in entries:
+                            del entries["data"][key]
+                            count_edit += 1
+                        elif command == "info":
+                            entries["info"] = entry
+                            count_edit += 1
+
+                self.db_handler.unlock(config_file)
+                self.db_handler.write(config_file, "", entries)
+
             # EDIT QUEUE: today, video (without date)
-            if config_file != "backup" and len(self.edit_queue[config_file]) > 0:
+            elif config_file != "backup" and len(self.edit_queue[config_file]) > 0:
 
                 entries = self.db_handler.read_cache(config_file)
                 self.db_handler.lock(config_file)
@@ -1280,6 +1309,19 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         self.add_to_edit_queue(config, date, key, entry, "add")
 
+    def entry_other(self, config, date, key, entry, command):
+        """
+        add entry to config file using the queue
+
+        Args:
+            config (str): database key
+            date (str): date of database if archive image database
+            key (str): entry key of entry to be added
+            entry (dict): modified entry data
+            command (str): command to be executed
+        """
+        self.add_to_edit_queue(config, date, key, entry, command)
+
     def entry_edit(self, config, date, key, entry):
         """
         edit entry in config file using the queue
@@ -1455,6 +1497,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                     self.db_handler.clean_all_data(config="sensor")
                     self.db_handler.clean_all_data(config="weather")
                     self.db_handler.clean_all_data(config="downloads")
+                    self.db_handler.clean_all_data(config="statistics")
                     self.param["info"]["last_day_running"] = date_today
                     self.last_day_running = date_today
                     self.db_handler.write(config="main", date="", data=self.param)
