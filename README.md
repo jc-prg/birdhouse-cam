@@ -28,14 +28,14 @@ app in English and German, ...
      src="info/images/birdcam_022.PNG" width="19%">
 <img src="info/images/birdcam_023.PNG" width="19%"> <img src="info/images/birdcam_025.PNG" width="19%"> <img 
      src="info/images/birdcam_032.PNG" width="19%"> <img src="info/images/birdcam_033.PNG" width="19%"> <img 
-     src="info/images/birdcam_034.PNG" width="19%">
+     src="info/images/birdcam_100.PNG" width="19%">
 
 Find further impressions [here](info/impressions.md).
 
 
 ## Main Features
 
-* **WebApp for Browser and SmartPhone** (English and German, optimized for iPhone)
+* **Birdhouse web-app for Browser and SmartPhone** (English and German, optimized for iPhone)
 * **Watching live stream** with 1 or 2 cameras (RPi4 recommend for fluent stream) 
   * via Raspberry Pi camera
   * USB web cam (e.g. RPi cam inside and USB web cam outside)
@@ -74,6 +74,7 @@ Find further impressions [here](info/impressions.md).
   * Edit camera and image settings (contrast, saturation, hue, brightness ...)
   * See amount of currently active streams
   * Download archived data (hires, config-files, object detection as YOLOv8)
+* **Forwarding web-app** as entry point for one or more birdhouses using IPv6 addresses
 
 ## Birdhouse
 
@@ -215,11 +216,11 @@ _Note:_ This installation is not fully tested yet. Recommend are (1) and (3).
    1. Install via ```sudo crontab -e```. Add the following lines:
        ```bash
       # birdhouse-cam: start database, web-server, and videoserver
-      @reboot     /usr/local/bin/docker-compose -f /projects/prod/birdhouse-cam/docker-compose-hybrid.yml up -docker
+      @reboot     /usr/local/bin/docker-compose -f /<path_to_script>/docker-compose-hybrid.yml up -docker
       # birdhouse-cam: start birdhouse server
-      @reboot     /usr/bin/python3 /projects/prod/birdhouse-cam/server/server.py
+      @reboot     /usr/bin/python3 /<path_to_script>/server/server.py
       # birdhouse-cam: start if restart has been requested 
-      * * * * *   /usr/bin/python3 /projects/prod/birdhouse-cam/server/server.py --check-if-start > /tmp/birdhouse-cam-cron 2>&1
+      * * * * *   /usr/bin/python3 /<path_to_script>/server/server.py --check-if-start > /tmp/birdhouse-cam-cron 2>&1
        ```
    2. Alternatively create a system service to automatically start and restart the server (experimental)
        ```bash 
@@ -327,15 +328,18 @@ here: [sample.nginx.conf](sample.nginx.conf). Ensure, that all used ports are pu
 #### External access via IPv6 if your internet provider doesn't offer NAT
 
 If your provider doesn't offer Network Address Translation (NAT) another option is to get access via the IPv6 address
-of your birdhouse server. Install the PHP script in the folder [/app_forward](/app_forward) on an external webserver
-and add the following command to your crontab:
+of your birdhouse server:
 
-```
-@reboot    /usr/bin/python3 /projects/local/birdhouse-cam/app_forward/request.py https://<your-external-server>/birdhouse/index.php
-```
-
-Open ```https://<your-external-server>/birdhouse/index.php``` in your browser to get an easy link to your birdhouse
-using its IPv6 address.
+* Configure your router in a way that your birdhouse server is accessible from the internet by its IPv6 address.
+* Install the PHP script in the folder [/app_forward](/app_forward) on an external webserver.
+* Change the BIRDHOUSE_ID in the [.env](sample.env)-file if you want to use this entry point for more than one birdhouse.
+* Change the BIRDHOUSE_APP_FORWARD in the [.env](sample.env)-file to the URL of your external webserver.
+* Add the following command to the crontab on the birdhouse server using ```sudo crontab -e```.
+    ```
+    @reboot    /usr/bin/python3 /<path_to_script>/app_forward/request.py
+    ```
+* Open ```https://<your-external-server>/birdhouse/``` in your browser to get an easy link to your birdhouses
+  using its IPv6 addresses.
 
 ## Train bird detection
 
