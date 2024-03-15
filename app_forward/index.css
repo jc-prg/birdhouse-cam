@@ -2,11 +2,26 @@ body {
     background  : #111111
 }
 
+label {
+    color: yellow;
+}
+
 .image {
     border      : 1px solid white;
     margin      : 8px;
     width       : 40vw;
+    max-width   : 250px;
+}
+
+.image_error {
+    border      : 1px solid white;
+    width       : 40vw;
     max-width   : 200px;
+    height      : 300px;
+    background  : #333333;
+    color       : red;
+    vertical-align  : middle;
+
 }
 
 .image_container {

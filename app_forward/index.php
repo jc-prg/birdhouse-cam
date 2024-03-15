@@ -21,20 +21,23 @@ function getStoredIPv6Addresses($file) {
 
 // Function to save the IPv6 address and birdhouse identifier to file
 function saveIPv6Address($file, $ipv6, $birdhouse_identifier, $port_http, $port_api) {
-    $birdhouse_info = {
-        "id":   $birdhouse_identifier,
-        "ipv6": $ipv6,
-        "http": $port_http,
-        "api":  $port_api
-        };
+    $birdhouse_info = array(
+        "id" =>   $birdhouse_identifier,
+        "ipv6" => $ipv6,
+        "http" => $port_http,
+        "api" =>  $port_api
+        );
     $stored_addresses = getStoredIPv6Addresses($file);
     $stored_addresses[$birdhouse_identifier] = $birdhouse_info;
     file_put_contents($file, json_encode($stored_addresses));
-}
 
+    echo json_encode($birdhouse_info);
+}
 // Check if script is called with parameter to identify and save IPv6 address
 if (isset($_GET['identify_ipv6']) && isset($_GET['identify_birdhouse'])) {
     // Get the IPv6 address and birdhouse identifier from the HTTP request
+    echo json_encode($_GET);
+
     $client_ipv6 = $_GET['identify_ipv6'];
     $birdhouse_identifier = $_GET['identify_birdhouse'];
     $port_api  = $_GET['api'];
