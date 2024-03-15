@@ -48,13 +48,16 @@ function birdhouse_loadChartJS() {
 * @param (dict) data: prepared chart data, see documentation of chartjs.org
 * @param (string) type: type of chart, see documentation of chartjs.org
 * @param (boolean) sort_keys: define if keys/labels should be sorted
+* @param (string) id: id of div element
+* @param (dict) size: possibility to overwrite size of chart, e.g., {"height": "100px", "width": "90%"}
 */
-function birdhouseChart_create(title, data, type="line", sort_keys=true) {
+function birdhouseChart_create(title, data, type="line", sort_keys=true, id="birdhouseChart", size="") {
 
       	// https://www.chartjs.org/docs/latest/samples/line/line.html
       	// data = { "label1" : [1, 2, 3], "label2" : [1, 2, 3] };
 
 	var html 	= "";
+	var canvas_size = {"height": "200px", "width": "100%"};
     var data_keys	= Object.keys(data);
     if (sort_keys)	{ data_keys = data_keys.sort(); }
 
@@ -90,14 +93,19 @@ function birdhouseChart_create(title, data, type="line", sort_keys=true) {
             });
         }
 
-    html += "<div><canvas id=\"birdhouseChart\" style=\"height:200px;width:100%;\"></canvas></div>\n";
+    var canvas_style = "";
+    Object.keys(size).forEach((key)        => { canvas_size[key] = size[key]; });
+    Object.keys(canvas_size).forEach((key) => { canvas_style += key+":"+canvas_size[key]+";"; });
+    html += "<div><canvas id=\""+id+"\" style=\""+canvas_style+"\"></canvas></div>\n";
 
     const chart_labels = data_keys;
     const chart_data   = {
         labels   : chart_labels,
         datasets : data_sets
         };
-    chartJS_config = {
+
+    if (chartJS_config == undefined) { chartJS_config = {}; }
+    chartJS_config[id] = {
         type : type,
         data : chart_data,
         options : {
@@ -114,7 +122,7 @@ function birdhouseChart_create(title, data, type="line", sort_keys=true) {
             }
         };
     setTimeout(function() {
-        chartJS_chart = new Chart(document.getElementById('birdhouseChart'), chartJS_config );
+        chartJS_chart = new Chart(document.getElementById(id), chartJS_config[id] );
         }, 1000 );
 	return html;
 	}

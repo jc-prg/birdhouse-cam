@@ -484,6 +484,35 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
 
 /*
+* create view with server and usage statistics
+*
+* @param (string) title: title to be displayed
+* @param (dict) data: API response for list specific request
+*/
+function birdhouse_STATISTICS(title, data) {
+	var html        = "";
+	var admin       = data["STATUS"]["admin_allowed"];
+	var statistics  = data["DATA"]["data"]["entries"];
+	var camera_status = data["STATUS"]["devices"]["cameras"];
+
+    Object.keys(statistics).forEach((key) => {
+        //html += "<center><h2>" + lang("TODAY") + ": " + key + "<center></h2><br/>";
+        var open = true;
+        var info = "";
+        var status = camera_status[key];
+        if (status != undefined && status["active"] == false) { open = false; info = "<i>(" + lang("INACTIVE") + ")</i>"; }
+
+        var chart = "&nbsp;<br/>";
+        chart += birdhouseChart_create(title=statistics[key]["titles"], data=statistics[key]["data"],
+                                      type="line", sort_keys=true, id="statisticsChart_"+key, size={"height": "200px"});
+        chart += "<br/>&nbsp;<br/>";
+        html  += birdhouse_OtherGroup( "chart_"+key, lang("TODAY") + " " + key + " " + info, chart, open );
+    });
+
+	setTextById(app_frame_content, html);
+}
+
+/*
 * create admin functionalities for the archive view of a specific day
 *
 * @param (dict) data: API response for list specific request

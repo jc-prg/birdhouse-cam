@@ -54,6 +54,7 @@ function app_menu_entries(data) {
 		app_menu = app_menu.concat([
 		["LINE"],
 		[lang("TODAY_COMPLETE"),"script", hideSettings+"birdhousePrint_load('TODAY_COMPLETE','"+app_active_cam+"');"],
+		[lang("STATISTICS"),"script", hideSettings+"birdhousePrint_load('STATISTICS','"+app_active_cam+"');"],
 		["LINE"],
 		[lang("DEVICE_MENU"),   "script", hideSettings+"birdhousePrint_load('DEVICES','"+app_active_cam+"');"],
 		[lang("IMAGE_MENU"), "script", hideSettings+"birdhousePrint_load('IMAGE_SETTINGS','"+app_active_cam+"');"],
