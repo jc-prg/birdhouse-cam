@@ -99,7 +99,7 @@ if (empty($stored_addresses)) {
             <h1 style="color:#EEEEEE">jc://birdhouse/</h1>
             <br/>&nbsp;
             <p style="color:#EEEEEE">
-            <img src="bird.gif" style="width:250px;" /><br/>
+            <img src="bird.gif" style="width:200px;" /><br/>
             <br/>&nbsp;<div id="birdhouses"></div></p>
         </center>
     <script src="index.js"></script>
