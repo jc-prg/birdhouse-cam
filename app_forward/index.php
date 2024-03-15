@@ -70,32 +70,28 @@ if (empty($stored_addresses)) {
     <head>
         <meta name="apple-mobile-web-app-capable" content="yes"></meta>
         <meta name="apple-mobile-web-app-status-bar-style" content="black"></meta>
-        <META name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.3, maximum-scale=1.0"></META>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.3, maximum-scale=1.0"></meta>
 
-        <LINK rel=apple-touch-icon             href="favicon.png"></LINK>
-        <LINK rel=apple-touch-icon-precomposed href="favicon.png"></LINK>
+        <link rel="apple-touch-icon"             href="favicon.png"></link>
+        <link rel="apple-touch-icon-precomposed" href="favicon.png"></link>
+        <link rel="stylesheet" type="text/css"   href="index.css"></link>
+
         <title>jc://birdhouse/</title>
+
+        <script>
+            var birdhouses = ' . json_encode($stored_addresses) . ';
+            var timestamp = ' . $timestamp . ';
+        </script>
     </head>
     <body style="background:#111111">
         <center>
             <h1 style="color:#EEEEEE">jc://birdhouse/</h1>
-            <br/>&nbsp;';
-
-    // Loop through each entry in the data and display links
-    echo '<p style="color:#EEEEEE">
-        <img src="bird.gif" style="width:250px;" /><br/>
-        <br/>&nbsp;<div>';
-    foreach ($stored_addresses as $birdhouse_identifier => $ipv6_address) {
-        echo '<div style="float:left;color:#EEEEEE;text-align:center;width:50%;"><center>
-            <a href="http://[' . $ipv6_address . ']:8000" style="color:yellow">Birdhouse ' . $birdhouse_identifier . '<br/>
-            <img src="http://[' . $ipv6_address . ']:8007/lowres/stream.mjpg?cam1?' . $birdhouse_identifier . '?bh-' . $birdhouse_identifier . '-' . $timestamp . '"  style="border:1px solid white;margin:8px;width:40vw;max-width:200px;"/>
-            </a>
-            <br/>&nbsp;<br/>&nbsp;
-        </center></div>';
-    }
-    echo "</div></p>";
-
-    echo '</center>
+            <br/>&nbsp;
+            <p style="color:#EEEEEE">
+            <img src="bird.gif" style="width:250px;" /><br/>
+            <br/>&nbsp;<div id="birdhouses"></div></p>
+        </center>
+    <script src="index.js"></script>
     </body>
     </html>';
 }

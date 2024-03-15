@@ -1,0 +1,17 @@
+body {
+    background  : #111111
+}
+
+.image {
+    border      : 1px solid white;
+    margin      : 8px;
+    width       : 40vw;
+    max-width   : 200px;
+}
+
+.image_container {
+    float       : left;
+    color       : #EEEEEE;
+    text-align  : center;
+    width       : 50%;
+}
