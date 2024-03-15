@@ -2207,9 +2207,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         which_cam = param["which_cam"]
         content = {"view": "list_statistics", "entries": {}, "param": param}
 
-        for cam in self.camera:
-            content["entries"][cam] = self.statistic.get_chart_data(cam)
-        content["entries"]["srv"] = self.statistic.get_chart_data("srv")
+        entry_list = list(self.camera.keys())
+        entry_list.append("srv")
+        content["entries"] = self.statistic.get_chart_data([])
 
         content["view_count"] = []
         content["subtitle"] = presets.birdhouse_pages["statistics"][0]

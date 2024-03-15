@@ -490,14 +490,16 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 * @param (dict) data: API response for list specific request
 */
 function birdhouse_STATISTICS(title, data) {
-	var html        = "";
-	var admin       = data["STATUS"]["admin_allowed"];
-	var statistics  = data["DATA"]["data"]["entries"];
+	var html          = "";
+	var admin         = data["STATUS"]["admin_allowed"];
+	var statistics    = data["DATA"]["data"]["entries"];
 	var camera_status = data["STATUS"]["devices"]["cameras"];
+	var open_category = ["cpu", "streams", "framerate"];
 
-    Object.keys(statistics).forEach((key) => {
+    Object.keys(statistics).sort().forEach((key) => {
         //html += "<center><h2>" + lang("TODAY") + ": " + key + "<center></h2><br/>";
-        var open = true;
+        if (open_category.indexOf(key) > -1) { var open = true; }
+        else                                 { var open = false; }
         var info = "";
         var status = camera_status[key];
         if (status != undefined && status["active"] == false) { open = false; info = "<i>(" + lang("INACTIVE") + ")</i>"; }
@@ -506,7 +508,7 @@ function birdhouse_STATISTICS(title, data) {
         chart += birdhouseChart_create(title=statistics[key]["titles"], data=statistics[key]["data"],
                                       type="line", sort_keys=true, id="statisticsChart_"+key, size={"height": "200px"});
         chart += "<br/>&nbsp;<br/>";
-        html  += birdhouse_OtherGroup( "chart_"+key, lang("TODAY") + " " + key + " " + info, chart, open );
+        html  += birdhouse_OtherGroup( "chart_"+key, lang("TODAY") + " " + key.toUpperCase() + " " + info, chart, open );
     });
 
 	setTextById(app_frame_content, html);

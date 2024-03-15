@@ -109,32 +109,76 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
         """
         self._statistics[key] = value
 
-    def get_chart_data(self, category, date=""):
+    def get_chart_data(self, categories, date="", values=False):
         """
         Create chart input data for statistics view
 
         Args:
-            category (str): statistics category (srv, cam1, cam2)
+            categories (list): statistics category (srv, cam1, cam2)
             date (str): date (default="" for today)
+            values (bool): devices (default) or values
         Returns:
              dict[str, Any]: data formatted for chart.js
         """
-        chart = {"data": {}, "titles": []}
+        chart = {}
         chart_data = self.config.db_handler.read_cache("statistics")
+        chart_value = {}
+        chart_values = {"data": {}, "info": {}}
 
-        if category not in chart_data["info"]:
-            chart["error"] = "category '" + category + "' not found in statistic data."
-
-        else:
-            titles = list(chart_data["info"][category].keys())
-            chart["titles"] = list(chart_data["info"][category].values())
-            for stamp in chart_data["data"]:
-                values = []
-                for key in titles:
-                    if key in chart_data["data"][stamp][category]:
-                        values.append(chart_data["data"][stamp][category][key])
+        values = True
+        # reformat values if requested
+        if values:
+            for key in chart_data["info"]:
+                for value in chart_data["info"][key]:
+                    if "error" == value:
+                        chart_value["error:" + key] = key + ":" + value
+                    elif "raw_error" == value:
+                        chart_value["error:raw-" + key] = key + ":" + value
+                    elif "_" in value:
+                        cat, val = value.split("_")
+                        chart_value[cat + ":" + val + "-" + key] = key + ":" + value
                     else:
-                        values.append(key)
-                chart["data"][stamp] = values
+                        chart_value[value + ":" + key] = key + ":" + value
+
+            for key in chart_value:
+                k_cat, k_val = key.split(":")
+                v_cat, v_val = chart_value[key].split(":")
+                if k_cat not in chart_values["info"]:
+                    chart_values["info"][k_cat] = {}
+                chart_values["info"][k_cat][k_val] = chart_data["info"][v_cat][v_val]
+
+            for stamp in chart_data["data"]:
+                chart_values["data"][stamp] = {}
+                for key in chart_value:
+                    k_cat, k_val = key.split(":")
+                    v_cat, v_val = chart_value[key].split(":")
+                    if k_cat not in chart_values["data"][stamp]:
+                        chart_values["data"][stamp][k_cat] = {}
+                    if v_cat in chart_data["data"][stamp] and v_val in chart_data["data"][stamp][v_cat]:
+                        chart_values["data"][stamp][k_cat][k_val] = chart_data["data"][stamp][v_cat][v_val]
+
+        # create chart data
+        if len(categories) == 0:
+            categories = list(chart_values["info"].keys())
+            chart_data = chart_values
+
+        for category in categories:
+            chart[category] = {"titles": [], "data": {}}
+
+            if category not in chart_data["info"]:
+                chart[category]["error"] = "category '" + category + "' not found in statistic data."
+
+            else:
+                titles = list(chart_data["info"][category].keys())
+                chart[category]["titles"] = list(chart_data["info"][category].values())
+                for stamp in chart_data["data"]:
+                    values = []
+                    for key in titles:
+                        if category in chart_data["data"][stamp]:
+                            if key in chart_data["data"][stamp][category]:
+                                values.append(chart_data["data"][stamp][category][key])
+                            else:
+                                values.append(key)
+                    chart[category]["data"][stamp] = values
 
         return chart
