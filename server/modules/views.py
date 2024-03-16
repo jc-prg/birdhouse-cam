@@ -937,7 +937,7 @@ class BirdhouseViewArchive(BirdhouseClass):
             # check if new directories are available
             count = 0
             for archive_directory in dir_list:
-                if archive_directory in presets.birdhouse_directories["today"]:
+                if archive_directory in presets.birdhouse_directories["today"] or "today" in archive_directory:
                     continue
 
                 count += 1
@@ -967,7 +967,7 @@ class BirdhouseViewArchive(BirdhouseClass):
             self.tools.calculate_progress("archive", "4/4", "", count_entries, len(backup_entries))
 
             # if archive directory doesn't exist anymore, remove
-            if not os.path.isdir(archive_directory):
+            if not os.path.isdir(archive_directory) or "today" in date:
                 self.logging.warning("Directory '" + archive_directory + "' doesn't exist, remove DB entry.")
                 deleted_dates.append(date)
 

@@ -381,7 +381,7 @@ birdhouse_pages = {
     "video_info":       ("Video Info", "/video-info.html", ""),
     "videos":           ("Videos", "/videos.html", "VIDEOS"),
     "object":           ("Birds", "/birds.html", "BIRDS"),
-    "statistics":       ("Statistic", "/statistic.html", "STATISTIC"),
+    "statistics":       ("Statistics", "/statistic.html", "STATISTICS"),
     "save":             ("Speichern", "/image.jpg", "")
 }
 birdhouse_databases = {
