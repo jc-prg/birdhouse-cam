@@ -2103,7 +2103,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                                 files_yesterday[stamp]["category"] = category + stamp
                                 files_yesterday[stamp]["detect"] = self.camera[which_cam].img_support.differs(
                                     file_info=files_yesterday[stamp])
-                                files_yesterday[stamp]["directory"] = "/"+self.config.db_handler.directory("images")+"/"
+                                files_yesterday[stamp]["directory"] = "/"+self.config.db_handler.directory("images", "",
+                                                                                                           False)+"/"
                                 if "type" in files_yesterday[stamp] and files_yesterday[stamp]["type"] != "data":
                                     count += 1
 
@@ -2121,9 +2122,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                                 if "type" not in files_recycle[stamp]:
                                     files_recycle[stamp]["type"] = "image"
                                 files_recycle[stamp]["category"] = category + stamp
-                                files_recycle[stamp]["directory"] = ("/" + self.config.db_handler.directory("images",
-                                                                                                           subdirectory)
-                                                                     + "/")
+                                files_recycle[stamp]["directory"] = "/" + self.config.db_handler.directory("images",
+                                                                                                           subdirectory,
+                                                                                                           False) + "/"
                                 if "type" in files_recycle[stamp] and files_recycle[stamp]["type"] != "data":
                                     count += 1
 

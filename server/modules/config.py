@@ -184,6 +184,9 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         if config == "images" and date == "" and date != "EMPTY":
             date = self.directories["today"]
+        elif config == "today":
+            config = "images"
+            date = self.directories["today"]
         elif date == "EMPTY":
             date = ""
 
@@ -368,17 +371,17 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 self.directory(config, date)
             filename = self.file_path(config, date)
             if self.db_type == "json":
-                self.json.write(filename, data)
+                self.json.write(filename, data, create)
             elif self.db_type == "couch" and "config.json" in filename:
                 self.couch.write(filename, data, create)
-                self.json.write(filename, data)
+                self.json.write(filename, data, create)
             elif self.db_type == "couch":
                 self.couch.write(filename, data, create)
                 if save_json:
-                    self.json.write(filename, data)
+                    self.json.write(filename, data, create)
             elif self.db_type == "both":
                 self.couch.write(filename, data, create)
-                self.json.write(filename, data)
+                self.json.write(filename, data, create)
             else:
                 self.raise_error("Unknown DB type (" + str(self.db_type) + ")")
 
@@ -1470,6 +1473,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         Run thread with core function: ensure reconnect, delete data when date changes
         """
         self.logging.info("Starting config handler (" + self.main_directory + ") ...")
+        self.main_config_create_dirs()
 
         count = 0
         self.param = self.db_handler.read("main")
@@ -1549,6 +1553,18 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         Reload main configuration
         """
         self.param = self.db_handler.read("main")
+
+    def main_config_create_dirs(self):
+        """
+        create main data directories
+        """
+        self.logging.info("Check if data directories exist ...")
+        for key in birdhouse_directories:
+            path = self.db_handler.directory(key, date="", include_main=True)
+            self.logging.debug("============ " + key + " = " + path)
+            if not os.path.exists(path):
+                self.logging.info("Create data directory: " + path)
+                os.makedirs(path)
 
     def main_config_edit(self, config, config_data, date=""):
         """

@@ -111,16 +111,25 @@ class BirdhouseJSON(BirdhouseDbClass):
             self.raise_error("Could not read JSON file: " + filename + " - " + str(e))
             return {}
 
-    def write(self, filename, data) -> None:
+    def write(self, filename, data, create=False):
         """
         write json file including locking mechanism
 
         Args:
             filename (str): file incl. path to write
             data (dict): json data to write into the file
+            create (bool): create directory from path if not exists
         """
         self.wait_if_locked(filename)
         try:
+            file_path = filename.split("/")
+            file = file_path[-1]
+            path = filename.replace(file, "")
+            if not os.path.exists(path) and not create:
+                raise "Path '" + path + "' doesn't exist."
+            elif not os.path.exists(path):
+                os.makedirs(path)
+
             self.locked[filename] = True
             with open(filename, 'wb') as json_file:
                 json.dump(data, codecs.getwriter('utf-8')(json_file), ensure_ascii=False, sort_keys=True, indent=4)
@@ -359,7 +368,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             self.raise_error("CouchDB ERROR read: " + filename + " - " + db_key + "/" + date + " - " + str(e))
             return {}
 
-    def write(self, filename, data, create=False) -> None:
+    def write(self, filename, data, create=False):
         """
         read data from DB
 
