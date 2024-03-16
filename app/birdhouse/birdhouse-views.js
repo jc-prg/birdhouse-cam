@@ -511,6 +511,7 @@ function birdhouse_STATISTICS(title, data) {
         html  += birdhouse_OtherGroup( "chart_"+key, lang("TODAY") + " " + key.toUpperCase() + " " + info, chart, open );
     });
 
+	birdhouse_frameHeader(lang("STATISTICS"));
 	setTextById(app_frame_content, html);
 }
 
