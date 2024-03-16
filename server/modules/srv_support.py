@@ -183,6 +183,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         self.sensor = sensor_handler
         self.statistics = statistics
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+        self.main_dir = birdhouse_main_directories["project"]
 
         self.statistics.register("srv_cpu", "CPU Usage")
         self.statistics.register("srv_cpu_temp", "CPU Temperature")
