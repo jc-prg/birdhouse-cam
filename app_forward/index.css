@@ -20,6 +20,7 @@ label {
 
 .image_error {
     border      : 1px solid white;
+    margin      : 8px;
     width       : 40vw;
     max-width   : 250px;
     height      : 300px;

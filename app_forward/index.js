@@ -49,7 +49,7 @@ function checkAvailability(key, apiURL) {
             // You can access properties of the data object as needed
           })
           .catch(error => {
-              var error_msg = 'This birdhouse is currently not available: ' + error;
+              var error_msg = 'This birdhouse is currently not available. <br/>&nbsp;<br/><small>' + error + '</small>';
               document.getElementById("bh-" + key).style.display = "none";
               document.getElementById("bh-error-" + key).style.display = "block";
               error_msg = error_msg.replaceAll(":", ": ");
@@ -62,6 +62,7 @@ function checkAvailability(key, apiURL) {
       });
 }
 
+var interval = 0;
 
 Object.entries(birdhouses).forEach(([key,value]) => {
     html += '<div class="image_container"><center>';
@@ -74,11 +75,9 @@ Object.entries(birdhouses).forEach(([key,value]) => {
     html += '<div class="image_error" id="bh-error-' + key + '" style="display:none;">Test</div>';
 
     html += '<br/>&nbsp;<br/>&nbsp;</center></div>';
-
-    // API endpoint
-    checkAvailability();
-    setInterval(function() { checkAvailability(); }, 3000);
-    //checkAvailability();
 });
+
+checkAvailability();
+interval = setInterval(function() { checkAvailability(); }, 5000);
 
 document.getElementById('birdhouses').innerHTML = html;

@@ -100,8 +100,9 @@ if (empty($stored_addresses)) {
     </head>
     <body>
         <center>
-            <h1 style="color:#EEEEEE">jc://birdhouse/</h1>
+            &nbsp;
             <br/>
+            <h1 style="color:#EEEEEE">jc://birdhouse/</h1>
             <p style="color:#EEEEEE">
             <img src="bird.gif" style="width:200px;" /><br/>
             <br/>&nbsp;<div id="birdhouses"></div></p>
