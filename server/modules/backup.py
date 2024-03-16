@@ -510,10 +510,10 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             file_sensor_copy = os.path.join(self.config.db_handler.directory(config="images", date=backup_date),
                                             self.config.files["sensor"])
             file_weather = self.config.db_handler.file_path(config="weather")
-            file_weather_copy = os.path.join(self.config.db_handler.directory(config="weather", date=backup_date),
+            file_weather_copy = os.path.join(self.config.db_handler.directory(config="images", date=backup_date),
                                              self.config.files["weather"])
             file_stats = self.config.db_handler.file_path(config="statistics")
-            file_stats_copy = os.path.join(self.config.db_handler.directory(config="statistics", date=backup_date),
+            file_stats_copy = os.path.join(self.config.db_handler.directory(config="images", date=backup_date),
                                            self.config.files["statistics"])
 
             stamps = list(reversed(sorted(files.keys())))
