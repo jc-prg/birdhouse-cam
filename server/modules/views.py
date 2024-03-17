@@ -1739,11 +1739,13 @@ class BirdhouseViewObjects(BirdhouseClass):
                 self.logging.warning("_list_create_label_thumbnail: image DB entry not OK for '" + label + "' - " + str(entry))
                 return entry
 
+        entry["directory"] = self.config.db_handler.directory("images", entry["datestamp"], False)
         if entry["directory"][0:1] == "/":
             entry["directory"] = entry["directory"][1:]
-        hires_path = os.path.join(birdhouse_main_directories["data"], entry["directory"], entry["hires"])
+
+        hires_path = os.path.join(self.config.db_handler.directory("images", entry["datestamp"]), entry["hires"])
         lowres_file = "image_" + label + "_lowres.jpg"
-        lowres_path = os.path.join(birdhouse_main_directories["data"], entry["directory"], lowres_file)
+        lowres_path = os.path.join(self.config.db_handler.directory("images", entry["datestamp"]), lowres_file)
 
         if not os.path.exists(hires_path):
             entry["lowres"] = ""
