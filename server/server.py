@@ -1090,9 +1090,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                          no_cache=True)
 
     def do_GET_image(self, which_cam):
-        """
-        create images as response
-        """
         # show compared images
         if '/compare/' in self.path and '/image.jpg' in self.path:
             srv_logging.debug("Compare: Create and return image that shows differences to the former image ...")
@@ -1115,10 +1112,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             image_diff = camera[which_cam].image.draw_text_raw(image_diff, "-> " + param[2] + ":" + param[3] + ":" +
                                                                param[4], position=(10, 20), scale=0.5, thickness=1)
             camera[which_cam].image.write(path_diff, image_diff)
+            srv_logging.debug("---->" + str(path_diff))
+            srv_logging.debug("---->" + str(config.db_handler.directory("images", "", False)))
 
             time.sleep(0.5)
             self.stream_file(filetype='image/jpeg',
-                             content=read_image(file_directory="../data/images/", filename=filename_diff))
+                             content=read_image(file_directory="../data/"+config.db_handler.directory("images", "", False),
+                                                filename=filename_diff))
 
         # extract and show single image (creates images with a longer delay ?)
         elif '/image.jpg' in self.path:
