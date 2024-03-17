@@ -146,7 +146,7 @@ function birdhouseWeather( data ) {
     //console.error(weather_data);
 
     var chart     = "&nbsp;<br/>";
-    chart        += birdhouseChart_create(title=chart_data["titles"],data=chart_data["data"]);
+    chart        += birdhouseChart_create(label="", titles=chart_data["titles"],data=chart_data["data"]);
     chart        += "<br/>&nbsp;<br/>";
 
     Object.keys(weather_data).forEach(date=>{

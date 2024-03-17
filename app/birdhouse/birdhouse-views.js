@@ -495,7 +495,24 @@ function birdhouse_STATISTICS(title, data) {
 	var statistics    = data["DATA"]["data"]["entries"];
 	var camera_status = data["STATUS"]["devices"]["cameras"];
 	var open_category = ["cpu", "streams", "framerate"];
+	var system_data   = app_data["STATUS"]["system"];
 
+    // resource usage
+    pie_data = { "titles": [], "data": []}
+    pie_data["titles"].push("Data");
+    pie_data["data"].push(system_data["hdd_data"] - system_data["hdd_archive"]);
+    pie_data["titles"].push("Archive");
+    pie_data["data"].push(system_data["hdd_archive"]);
+    pie_data["titles"].push("System");
+    pie_data["data"].push(system_data["hdd_used"] - system_data["hdd_data"]);
+    pie_data["titles"].push("Available");
+    pie_data["data"].push(system_data["hdd_total"] - system_data["hdd_used"]);
+
+    chart = birdhouseChart_create(label="HDD Usage", titles=pie_data["titles"], data=pie_data["data"], type="pie", sort_keys=false,
+                                  id="hdd_pie", size={"height": "270px", "width":"270px"});
+    html  += birdhouse_OtherGroup( "chart_hdd_pie", lang("TODAY") + " HDD Usage", chart+"<br/>&nbsp;", true );
+
+    // statistics of the current day
     Object.keys(statistics).sort().forEach((key) => {
         //html += "<center><h2>" + lang("TODAY") + ": " + key + "<center></h2><br/>";
         if (open_category.indexOf(key) > -1) { var open = true; }
@@ -505,11 +522,12 @@ function birdhouse_STATISTICS(title, data) {
         if (status != undefined && status["active"] == false) { open = false; info = "<i>(" + lang("INACTIVE") + ")</i>"; }
 
         var chart = "&nbsp;<br/>";
-        chart += birdhouseChart_create(title=statistics[key]["titles"], data=statistics[key]["data"],
-                                      type="line", sort_keys=true, id="statisticsChart_"+key, size={"height": "200px"});
+        chart += birdhouseChart_create(label="", titles=statistics[key]["titles"], data=statistics[key]["data"],
+                                      type="line", sort_keys=true, id="statisticsChart_"+key, size={"height": "250px", "width": "100%"});
         chart += "<br/>&nbsp;<br/>";
         html  += birdhouse_OtherGroup( "chart_"+key, lang("TODAY") + " " + key.toUpperCase() + " " + info, chart, open );
     });
+
 
 	birdhouse_frameHeader(lang("STATISTICS"));
 	setTextById(app_frame_content, html);
@@ -871,7 +889,7 @@ function birdhouse_LIST_chart_weather(data, active_page, camera) {
         title_s = title_s.replace("&ouml;", "ö");
         chart_titles.push(title_s);
     }
-    var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
+    var chart = birdhouseChart_create(label="", titles=chart_titles,data=chart_data["data"]);
     chart    += birdhouseWeather_OverviewChart(weather_data); // + "<br/>";
 
     if (chartJS_loaded) {

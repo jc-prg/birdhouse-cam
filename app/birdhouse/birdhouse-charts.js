@@ -44,6 +44,7 @@ function birdhouse_loadChartJS() {
 * render a specific chart, data have to be prepared in the required format
 * see https://www.chartjs.org/docs/latest/samples/line/line.html for details how to create line charts
 *
+* @param (string) label: dataset name for pie charts
 * @param (string) title: title of the chart
 * @param (dict) data: prepared chart data, see documentation of chartjs.org
 * @param (string) type: type of chart, see documentation of chartjs.org
@@ -51,13 +52,13 @@ function birdhouse_loadChartJS() {
 * @param (string) id: id of div element
 * @param (dict) size: possibility to overwrite size of chart, e.g., {"height": "100px", "width": "90%"}
 */
-function birdhouseChart_create(title, data, type="line", sort_keys=true, id="birdhouseChart", size="") {
+function birdhouseChart_create(label, titles, data, type="line", sort_keys=true, id="birdhouseChart", size="") {
 
       	// https://www.chartjs.org/docs/latest/samples/line/line.html
       	// data = { "label1" : [1, 2, 3], "label2" : [1, 2, 3] };
 
 	var html 	= "";
-	var canvas_size = {"height": "200px", "width": "100%"};
+	var canvas_size = {"height": "unset", "width": "unset"};
     var data_keys	= Object.keys(data);
     if (sort_keys)	{ data_keys = data_keys.sort(); }
 
@@ -71,32 +72,49 @@ function birdhouseChart_create(title, data, type="line", sort_keys=true, id="bir
     var data_sets   = [];
 	var colors  = [];
 
-	if (appTheme == "dark") { colors = chartJS_darkColors; }
-	else { colors = chartJS_defaultColors; }
+	if (appTheme == "dark") { colors = chartJS_darkColors;    border_pie = "white"; }
+	else                    { colors = chartJS_defaultColors; border_pie = "white"; }
 
-    for (var x=0;x<data_rows;x++) {
-        var data_var = [];
-        for (var i=0;i<data_keys.length;i++) {
-            var key       = data_keys[i];
-            data_var.push(data[key][x]);
+    if (type == "line") {
+        for (var x=0;x<data_rows;x++) {
+            var data_var = [];
+            for (var i=0;i<data_keys.length;i++) {
+                var key       = data_keys[i];
+                data_var.push(data[key][x]);
+                }
+            if (Array.isArray(titles)) { myTitle = titles[x]; }
+            else                      { myTitle = titles; }
+
+            data_sets.push({
+                label : (x+1)+": "+myTitle,
+                backgroundColor : colors[x],
+                borderColor : colors[x],
+                borderWidth : 1,
+                pointRadius : 0.5,
+                data : data_var
+                });
             }
-        if (Array.isArray(title)) { myTitle = title[x]; }
-        else                      { myTitle = title; }
-
-        data_sets.push({
-            label : (x+1)+": "+myTitle,
-            backgroundColor : colors[x],
-            borderColor : colors[x],
-            borderWidth : 1,
-            pointRadius : 0.5,
-            data : data_var
-            });
+        }
+    else if (type == "pie") {
+        data_keys = titles;
+        data_sets = [{
+            label: label,
+            data: data,
+            backgroundColor : colors,
+            borderColor: border_pie,
+            borderWidth: 1,
+            hoverOffset: 40
+            }];
+        }
+    else {
+        console.error("birdhouseChart_create: Doesn't support chart type '" + type + "'.");
         }
 
     var canvas_style = "";
     Object.keys(size).forEach((key)        => { canvas_size[key] = size[key]; });
     Object.keys(canvas_size).forEach((key) => { canvas_style += key+":"+canvas_size[key]+";"; });
-    html += "<div><canvas id=\""+id+"\" style=\""+canvas_style+"\"></canvas></div>\n";
+    html += "<div style=\""+canvas_style+"\"><canvas id=\""+id+"\" style=\""+canvas_style+"\"></canvas></div>\n";
+
 
     const chart_labels = data_keys;
     const chart_data   = {
@@ -109,18 +127,22 @@ function birdhouseChart_create(title, data, type="line", sort_keys=true, id="bir
         type : type,
         data : chart_data,
         options : {
-        responsive: true,
+            responsive: true,
             plugins: {
                 legend: {
-            position: "right",
-            align: "middle",
-            labels : {
-                boxHeight : 12,
-                boxWidth : 12,
+                    position: "right",
+                    align: "middle",
+                    labels : {
+                        boxHeight : 12,
+                        boxWidth : 12,
+                        }
+                    }
                 }
-            }}
             }
         };
+    if (label != "") {
+        //chartJS_config[id].options.plugins.title = {text: label, display: true}
+    }
     setTimeout(function() {
         chartJS_chart = new Chart(document.getElementById(id), chartJS_config[id] );
         }, 1000 );
