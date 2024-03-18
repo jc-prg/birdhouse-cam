@@ -475,9 +475,12 @@ function birdhouseStatus_system(data) {
         }
 
     // health check
-    if (status_srv["health_check"] != "OK") {
+    if (status_srv["health_check"] != "OK" && status_srv["health_check"] != undefined) {
         setTextById("system_health_check", "<font color='red'>" + status_srv["health_check"] + "</font>");
         show_error = true;
+        }
+    else if (status_srv["health_check"] == undefined) {
+        setTextById("system_health_check", "starting");
         }
     else {
         setTextById("system_health_check", status_srv["health_check"]);
