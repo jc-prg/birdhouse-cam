@@ -322,7 +322,7 @@ function birdhouse_deleteMarkedFiles(param1,param2) {
 
 function birdhouse_removeDataToday() {
 
-    appMsg.confirm("Remove all the data from today?", "birdhouse_removeDataToday_exec();", 250);
+    appMsg.confirm("Remove all the data from today?", "birdhouse_removeDataToday_exec();", 150);
 }
 
 function birdhouse_removeDataToday_exec() {
@@ -331,6 +331,11 @@ function birdhouse_removeDataToday_exec() {
 }
 
 function birdhouse_recreateImageConfig(date="") {
+
+    appMsg.confirm(lang("RECREATE_IMG_CONFIG")+"?", "birdhouse_recreateImageConfig_exec();", 150);
+}
+
+function birdhouse_recreateImageConfig_exec(date="") {
 	commands = ["recreate-image-config", date=""];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRecreateImageConfig,'','birdhouse_recreateImageConfig');
 	}

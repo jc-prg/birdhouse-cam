@@ -735,6 +735,8 @@ function birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page,
     info_text += tab.row("&nbsp;&nbsp;" + lang("RECORDING_TIMES") + ":", lang("FROM_TO_EVERY", [record_from, record_to, rhythm]));
     info_text += tab.row("&nbsp;&nbsp;" + lang("VIDEO") + ":", create );
     info_text += tab.row("&nbsp;&nbsp;" + lang("THRESHOLD") + ":", threshold_slider );
+    info_text += tab.row("&nbsp;&nbsp;" + lang("RECREATE_IMG_CONFIG") + ":",
+                         "<button onclick='birdhouse_recreateImageConfig();' class='bh-slider-button' style='width:100px'>"+lang("START")+"</button>" );
     info_text += tab.end();
     info_text += "&nbsp;<br/>&nbsp;";
 

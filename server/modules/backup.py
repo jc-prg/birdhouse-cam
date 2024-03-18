@@ -395,6 +395,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         self.archive_data = False
         self.backup_start = False
         self.backup_running = False
+        self.recreate_config = False
 
         self.img_support = BirdhouseImageSupport("", config)
         self.download = BirdhouseArchiveDownloads(config)
@@ -435,6 +436,13 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                 date = self.views.archive.config_recreate.pop()
                 self._create_image_config_save(date)
                 self.views.archive.config_recreate_progress = False
+
+            if self.recreate_config:
+                files = self.create_image_config(date="", recreate=True)
+                if files is not None:
+                    self.config.db_handler.write(config="images", date="", data=files, create=True, save_json=True)
+                self.config.async_answers.append(["CREATE_IMG_CONFIG_DONE"])
+                self.recreate_config = False
 
             self.thread_control()
             self.thread_wait()
@@ -799,9 +807,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             dict: information for API response
         """
         response = {"command": ["recreate main image config file", param["parameter"]]}
-        files = self.create_image_config(date="", recreate=True)
-        if files is not None:
-            self.config.db_handler.write(config="images", date="", data=files, create=True, save_json=True)
+        self.recreate_config = True
         return response
 
     def _create_image_config_save(self, date=""):
