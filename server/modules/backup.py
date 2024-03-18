@@ -414,7 +414,6 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             if (int(check_stamp) == int(self.config.param["backup"]["time"])
                     or self.backup_start) and not backup_started:
                 backup_started = True
-                self.backup_start = False
                 if self.backup_start:
                     self.logging.info("Starting forced backup ...")
                 else:
@@ -427,6 +426,9 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                 while self._running and count < 60:
                     time.sleep(1)
                     count += 1
+                if self.backup_start:
+                    self.config.async_answers.append(["BACKUP_DONE"])
+                    self.backup_start = False
                 self.logging.info("Backup DONE.")
             else:
                 backup_started = False
