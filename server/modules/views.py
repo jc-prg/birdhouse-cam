@@ -447,12 +447,18 @@ class BirdhouseViewCharts(BirdhouseClass):
 
         return weather
 
-    def statistic_data(self, data) -> dict:
+    def statistic_data(self, data):
         """
         create chart format out of statistic data
-        ----
-        titles - cam1_active, cam1_fps, cam2_active, cam2_fps
-        data - {"HHMM": [cam1_active, cam1_fps, cam2_active, cam2_fps], "HHMM": [cam1_active, cam1_fps, cam2_active, cam2_fps], ...}
+
+        Args:
+            data (dict): data from statistics database
+        Returns:
+            dict: data in chart format:
+                  chart = {"titles": [], "data": {}}
+                  titles = [cam1_active, cam1_fps, cam2_active, cam2_fps, ...]
+                  data = {"HHMM": [cam1_active, cam1_fps, cam2_active, cam2_fps], "HHMM": [cam1_active, cam1_fps,
+                          cam2_active, cam2_fps], ...}
         """
         self.logging.debug("create_statistic_data")
         chart = {"titles": [], "data": {}}
