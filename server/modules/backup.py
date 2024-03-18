@@ -782,7 +782,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
         # file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and "_big" not in f]
         # file_list = [f for f in os.listdir(path) if "_big" not in f and os.path.isfile(os.path.join(path, f))]
-        file_list = [f for f in os.listdir(path) if "_big" not in f and (f.endswith(".jpg") or f.endswith("jpeg"))]
+        file_list = [f for f in os.listdir(path) if "_big" and "_diff" not in f and (f.endswith(".jpg") or f.endswith("jpeg"))]
 
         file_list.sort(reverse=True)
         files = self._create_image_config_analyze(file_list=file_list, init=True, subdir=date)
@@ -799,7 +799,9 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             dict: information for API response
         """
         response = {"command": ["recreate main image config file", param["parameter"]]}
-        self.create_image_config(date="", recreate=True)
+        files = self.create_image_config(date="", recreate=True)
+        if files is not None:
+            self.config.db_handler.write(config="images", date="", data=files, create=True, save_json=True)
         return response
 
     def _create_image_config_save(self, date=""):
@@ -862,14 +864,20 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             # this part potentially can be removed again
             self.logging.warning("Compare Files already processing ...")
             return
-        self._processing = True
 
-        if os.path.isfile(self.config.db_handler.file_path("images")) and subdir == "":
+        self._processing = True
+        self.logging.info("Start recreation for " + str(len(file_list)) + " image files ...")
+
+        if os.path.isfile(self.config.db_handler.file_path("images")) and subdir == "" and not init:
             files = self.config.db_handler.read_cache(config='images')
+            self.logging.debug("Use existing config file.")
+
         else:
             files = {}
+            self.logging.debug("Start with a fresh config file.")
             files = self._create_image_config_get_filelist(file_list=file_list, files=files, subdir=subdir)
 
+            self.logging.debug("Integrate sensor data ...")
             if os.path.isfile(self.config.db_handler.file_path("sensor")):
                 sensor_data = self.config.db_handler.read_cache(config="sensor")
                 for key in files:
@@ -882,6 +890,8 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                                 del files[key]["sensor"]["activity"]
                             if "date" in files[key]["sensor"]:
                                 del files[key]["sensor"]["date"]
+
+            self.logging.debug("Integration of sensor data done.")
 
         count = 0
         files_new = files.copy()
@@ -897,6 +907,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
         for cam in self.config.param["devices"]["cameras"]:
             filename_last = ""
+            key_last = ""
             image_current = ""
             image_hires = ""
             image_last = ""
@@ -915,6 +926,8 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                     filename = ""
                     filename_hires = files_new[key]["hires"]
                     filename_lowres = files_new[key]["lowres"]
+                    self.logging.debug("- Identify image data: " + key + "/" + cam + "/" + filename_lowres + "/" +
+                                       filename_hires)
                     try:
                         filename = os.path.join(self.config.db_handler.directory(config="images"),
                                                 subdir, filename_lowres)
@@ -926,6 +939,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                                                 subdir, filename_hires)
                         image_hires = cv2.imread(str(filename))
                         height_h, width_h = image_hires.shape[:2]
+                        self.logging.debug("  OK.")
 
                     except Exception as e:
                         self.raise_error("Could not load image: " + str(filename) + " ... " + str(e))
@@ -935,19 +949,22 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                     files_new[key]["size"] = len(image_hires)
                     files_new[key]["hires_size"] = [width_h, height_h]
                     files_new[key]["lowres_size"] = [width_l, height_l]
-                    files_new[key]["datestamp"] = subdir
-                    files_new[key]["date"] = subdir[6:8] + "." + subdir[4:6] + "." + subdir[0:4]
-                    files_new[key]["directory"] = "/" + self.config.db_handler.directory("images", subdir, False) + "/"
+                    if subdir != "":
+                        files_new[key]["datestamp"] = subdir
+                        files_new[key]["date"] = subdir[6:8] + "." + subdir[4:6] + "." + subdir[0:4]
+                        files_new[key]["time"] = key[0:2] + ":" + key[2:4] + ":" + key[4:6]
+                        files_new[key]["directory"] = self.config.db_handler.directory("images", subdir, False)
                     files_new[key]["type"] = "image"
 
+                    self.logging.debug("- compare image " + filename_lowres + " with last image " + filename_last)
                     if len(filename_last) > 0:
                         detection_area = self.camera[cam].param["similarity"]["detection_area"]
                         score = self.camera[cam].image.compare_raw(image_current, image_last, detection_area)
-                        files_new[key]["compare"] = (filename_lowres, filename_last)
+                        files_new[key]["compare"] = (key, key_last)
                         files_new[key]["similarity"] = score
                         count += 1
                     else:
-                        files_new[key]["compare"] = filename_lowres
+                        files_new[key]["compare"] = [key]
                         files_new[key]["similarity"] = 0
 
                     if init:
@@ -959,6 +976,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                             " - " + str(files_new[key]["similarity"]) + "%  " + sensor_str)
 
                     filename_last = filename_lowres
+                    key_last = key
                     image_last = image_current
 
                     self.config.queue.entry_add(config="images", date=subdir, key=key, entry=files_new[key])
@@ -977,6 +995,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             files (dict): database with file entries
             subdir (str): not used yet ... ?!
         """
+        count = 0
         for file in file_list:
             if ".jpg" in file:
 
@@ -984,10 +1003,12 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                 if "error" in analyze:
                     continue
 
+                count += 1
                 which_cam = analyze["cam"]
                 timestamp = analyze["stamp"]
                 files[timestamp] = {}
                 files[timestamp]["camera"] = which_cam
+                files[timestamp]["recreate"] = 1
 
                 if "cam" in file:
                     files[timestamp]["lowres"] = self.img_support.filename(image_type="lowres", timestamp=timestamp,
@@ -1006,9 +1027,15 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                     files[timestamp]["date"] = timestamp2.strftime("%d.%m.%Y")
                     files[timestamp]["time"] = timestamp2.strftime("%H:%M:%S")
 
+                else:
+                    files[timestamp]["datestamp"] = subdir
+                    files[timestamp]["date"] = subdir[6:8] + "." + subdir[4:6] + "." + subdir[0:4]
+                    files[timestamp]["time"] = timestamp[0:2] + ":" + timestamp[2:4] + "." + timestamp[4:6]
+
                 if "sensor" not in files[timestamp]:
                     files[timestamp]["sensor"] = {}
 
+        self.logging.debug("Extracted infos for " + str(count) + " out of " + str(len(file_list)) + " files ...")
         return files
 
     def delete_marked_files_api(self, param):
