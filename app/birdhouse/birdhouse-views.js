@@ -510,7 +510,13 @@ function birdhouse_STATISTICS(title, data) {
 
     chart = birdhouseChart_create(label="HDD Usage", titles=pie_data["titles"], data=pie_data["data"], type="pie", sort_keys=false,
                                   id="hdd_pie", size={"height": "270px", "width":"270px"});
-    html  += birdhouse_OtherGroup( "chart_hdd_pie", lang("TODAY") + " HDD Usage", chart+"<br/>&nbsp;", true );
+
+    // !!! Rework Format
+    chart += "<br/>&nbsp;<br/>";
+    chart += "Max parallel streams: " + statistics["streams"]["info"]["max"] + "<br/>";
+    chart += "Total viewing time: " + statistics["streams"]["info"]["views"] + "min<br/>&nbsp;";
+
+    html  += birdhouse_OtherGroup( "chart_hdd_pie", lang("TODAY") + " HDD Usage", chart, true );
 
     // statistics of the current day
     Object.keys(statistics).sort().forEach((key) => {
