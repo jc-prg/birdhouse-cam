@@ -926,6 +926,19 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                     filename = ""
                     filename_hires = files_new[key]["hires"]
                     filename_lowres = files_new[key]["lowres"]
+
+                    if subdir != "":
+                        files_new[key]["datestamp"] = subdir
+                        files_new[key]["date"] = subdir[6:8] + "." + subdir[4:6] + "." + subdir[0:4]
+                        files_new[key]["time"] = key[0:2] + ":" + key[2:4] + ":" + key[4:6]
+                        files_new[key]["directory"] = self.config.db_handler.directory("images", subdir, False)
+
+                    files_new[key]["to_be_deleted"] = 0
+                    files_new[key]["favorit"] = 0
+                    files_new[key]["type"] = "image"
+                    files_new[key]["compare"] = [key]
+                    files_new[key]["similarity"] = 0
+
                     self.logging.debug("- Identify image data: " + key + "/" + cam + "/" + filename_lowres + "/" +
                                        filename_hires)
                     try:
@@ -942,19 +955,13 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                         self.logging.debug("  OK.")
 
                     except Exception as e:
+                        self.config.queue.entry_add(config="images", date=subdir, key=key, entry=files_new[key])
                         self.raise_error("Could not load image: " + str(filename) + " ... " + str(e))
+                        continue
 
-                    files_new[key]["to_be_deleted"] = 0
-                    files_new[key]["favorit"] = 0
                     files_new[key]["size"] = len(image_hires)
                     files_new[key]["hires_size"] = [width_h, height_h]
                     files_new[key]["lowres_size"] = [width_l, height_l]
-                    if subdir != "":
-                        files_new[key]["datestamp"] = subdir
-                        files_new[key]["date"] = subdir[6:8] + "." + subdir[4:6] + "." + subdir[0:4]
-                        files_new[key]["time"] = key[0:2] + ":" + key[2:4] + ":" + key[4:6]
-                        files_new[key]["directory"] = self.config.db_handler.directory("images", subdir, False)
-                    files_new[key]["type"] = "image"
 
                     self.logging.debug("- compare image " + filename_lowres + " with last image " + filename_last)
                     if len(filename_last) > 0:
@@ -963,9 +970,6 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                         files_new[key]["compare"] = (key, key_last)
                         files_new[key]["similarity"] = score
                         count += 1
-                    else:
-                        files_new[key]["compare"] = [key]
-                        files_new[key]["similarity"] = 0
 
                     if init:
                         sensor_str = ""
