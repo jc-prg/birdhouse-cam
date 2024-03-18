@@ -181,4 +181,13 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
                                 values.append(key)
                     chart[category]["data"][stamp] = values
 
+                if category == "streams":
+                    chart[category]["info"] = {"max": 0, "views": 0}
+                    for stamp in chart[category]["data"]:
+                        for value in chart[category]["data"][stamp]:
+                            if "int" in str(type(value)):
+                                if value > chart[category]["info"]["max"]:
+                                    chart[category]["info"]["max"] = value
+                                chart[category]["info"]["views"] += value
+
         return chart
