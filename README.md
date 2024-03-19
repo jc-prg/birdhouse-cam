@@ -283,6 +283,11 @@ At least for a Raspberry Pi 3B+ the following configuration should be done to en
     ```
 * NOTE: the file [sample.env](sample.env) defines memory limits that should fit for Raspberry Pi 3B+.
 
+#### Set memory usage
+
+In the file [.env](sample.env) there are memory limit defined for several components. This limits should work for
+default usage. If an error 104 occurs in the CouchDB remove the limit for the respective container.
+
 #### Configure swap file on Ubuntu
 
 * Update swap memory (see also [https://bitlaunch.io/](https://bitlaunch.io/blog/how-to-create-and-adjust-swap-space-in-ubuntu-20-04/))
@@ -386,6 +391,9 @@ and use the module [jc://bird-detection/](https://github.com/jc-prg/bird-detecti
   # check storage used by docker stuff
   $ sudo docker system df
   $ sudo docker system df -v
+  
+  # show statistics such as memory and cpu usage
+  $ sudo docker stats
   
   # clean up unused container, images, build cache, networks
   $ sudo docker system prune

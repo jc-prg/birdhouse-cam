@@ -250,6 +250,9 @@ class BirdhouseCouchDB(BirdhouseDbClass):
                     self.create(db_key)
                 except Exception as e:
                     self.raise_error("  -> Could not create DB " + db_key + "! " + str(e))
+                    if "104" in str(e):
+                        self.raise_error("  -> Increase or remove memory limits in .env to avoid this error.\n" +
+                                         "     And ensure that a swap file is available and used (see README.md).")
                     return False
         return True
 
