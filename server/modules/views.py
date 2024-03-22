@@ -701,7 +701,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         if complete:
             from_file = True
             update_mode += " from file (complete)"
-        elif self.config.queue.get_status_changed(date=date, change="favorites"):
+        elif self.config.queue.get_status_changed(date=date, change="favorites", both=False):
             from_file = True
             update_mode += " from file (changed=" + date + ")"
         elif "favorites" not in files_complete:
@@ -930,7 +930,7 @@ class BirdhouseViewArchive(BirdhouseClass):
                 if date not in backup_entries:
                     backup_entries[date] = {}
                 backup_entries[date][cam] = archive_info[cam]["entries"][date].copy()
-                if self.config.queue.get_status_changed(date=date, change="archive"):
+                if self.config.queue.get_status_changed(date=date, change="archive", both=False):
                     backup_entries[date]["changed"] = True
                     backup_entries[date]["exists"] = True
                 if "changed" not in backup_entries[date]:
@@ -1621,7 +1621,7 @@ class BirdhouseViewObjects(BirdhouseClass):
             if self.config.db_handler.exists(config="backup", date=date):
 
                 archive_entries = self.config.db_handler.read(config="backup", date=date)
-                changed = self.config.queue.get_status_changed(date, "objects")
+                changed = self.config.queue.get_status_changed(date=date, change="objects", both=False)
                 if changed or complete:
                     if changed:
                         self.logging.info("  * Objects in " + date + " have changed, start update ...")

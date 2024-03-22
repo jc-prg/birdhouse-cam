@@ -1278,25 +1278,26 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                 backup_file["info"]["changed_"+change] = False
         self.db_handler.write("backup_info", "", backup_info, create=False, save_json=True, no_cache=True)
 
-    def get_status_changed(self, date, change="archive"):
+    def get_status_changed(self, date, change="archive", both=True):
         """
         get status, if changed - from central file and from date specific backup file
 
         Args:
             date (str): date of changed database
             change (str): view that has to be recreated: archive, favorite, object
+            both (bool): check backup_info and individual backup file (True) or only backup_info (False)
         Returns:
             bool: change status - True if change and False if recreation has be done
         """
         return_value = False
-        backup_info = self.db_handler.read("backup_info", "")
+        backup_info = self.db_handler.read_cache("backup_info", "")
         backup_file = self.db_handler.read("backup", date)
         if "changes" in backup_info:
             if (change in backup_info["changes"] and date in backup_info["changes"][change]
                     and backup_info["changes"][change]):
                 return_value = True
-        if ("info" in backup_file and "changed_"+change in backup_file["info"]
-                and backup_file["info"]["changed_"+change]):
+        if both and ("info" in backup_file and "changed_"+change in backup_file["info"]
+                     and backup_file["info"]["changed_"+change]):
             return_value = True
         self.logging.debug("get_status_changed: " + change + "/" + date + "/" + str(return_value))
         return return_value
