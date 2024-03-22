@@ -68,7 +68,7 @@ class CameraInformation:
                     devices["list"][last_key] = []
                 devices["list"][last_key].append(value)
                 devices["short"][value] = value + " (" + info[0] + ")"
-                devices["complete"][value] = {"dev": value, "info": last_key, "image": False, "shape": []}
+                devices["complete"][value] = {"dev": value, "info": last_key, "image": False, "shape": [], "bus": ""}
 
                 for line in ls_usb:
                     if info[0] in line:
