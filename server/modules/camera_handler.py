@@ -628,6 +628,9 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             bool: connection status
         """
         self.disconnect()
+        time.sleep(1)
+        self.reset_usb()
+        time.sleep(3)
         return self.connect()
 
     def disconnect(self):
@@ -642,6 +645,24 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
                 self.logging.debug("- Release of camera did not work: " + str(err))
         else:
             self.logging.debug("- Camera not yet connected.")
+
+    def reset_usb(self):
+        """
+        Reset USB camera if bus information available
+        """
+        camera_info = self.camera_status(self.source, self.id)
+        if camera_info["bus"] != "":
+            try:
+                process = subprocess.Popen(["usbreset "+camera_info["bus"]], stdout=subprocess.PIPE, shell=True)
+                output = process.communicate()[0]
+                output = output.decode()
+                if " ok" not in output:
+                    raise ("Could not reset USB device " + self.source + " bus " + camera_info["bus"])
+            except Exception as e:
+                self.logging.error("Reset of USB camera failed: " + str(e))
+        else:
+            self.logging.warning("Reset of USB camera not possible, not bus information for " + self.source)
+
 
     def read(self, stream="not set"):
         """
