@@ -57,8 +57,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 self.write_cache_to_json()
             else:
                 wait = round(update_time + self.backup_interval - time.time())
-                self.logging.debug("Wait to write cache to JSON ... " +
-                                   str(wait) + "s")
+                self.logging.debug("Wait to write cache to JSON ... " + str(wait) + "s")
                 if wait > 20:
                     time.sleep(10)
 
@@ -1516,6 +1515,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             connected = self.db_handler.get_db_status()["db_connected"]
             messages = len(self.db_handler.get_db_status()["db_error_msg"])
             if not connected or messages >= 5:
+                self.logging.info("... DB Connection: " + self.db_handler.db_type + " - " + str(connected))
                 time.sleep(5)
                 self.db_handler.connect()
 

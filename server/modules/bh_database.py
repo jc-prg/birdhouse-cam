@@ -230,6 +230,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             self.logging.info("Connected.")
             return True
         else:
+            self.logging.warning("Error CouchDB database check.")
             return False
 
     def check_db(self):
