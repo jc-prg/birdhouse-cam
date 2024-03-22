@@ -95,7 +95,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             self.logging.info("  -> database handler - db_type=" + self.db_type + ".")
             return True
         elif self.db_type == "couch" or self.db_type == "both":
-            if self.couch is None or not self.couch.connected:
+            if self.couch is None or not self.couch.connected or self.couch.error:
                 self.couch = BirdhouseCouchDB(self.config, self.db)
             if not self.couch.connected:
                 self.db_type = "json"
