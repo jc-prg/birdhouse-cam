@@ -658,6 +658,8 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
                 output = output.decode()
                 if " ok" not in output:
                     raise ("Could not reset USB device " + self.source + " bus " + camera_info["bus"])
+                else:
+                    self.logging.info("Reset of USB camera " + self.source + " done (Bus " + camera_info["bus"] + ").")
             except Exception as e:
                 self.logging.error("Reset of USB camera failed: " + str(e))
         else:
