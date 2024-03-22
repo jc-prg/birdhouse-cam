@@ -581,6 +581,10 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         self.reset_error()
         self.connected = False
 
+        time.sleep(1)
+        self.reset_usb()
+        time.sleep(3)
+
         self.logging.info("Try to connect camera '" + self.id + "/" + self.source + "' ...")
         try:
             if self.stream is not None and self.stream.isOpened():
@@ -628,9 +632,6 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             bool: connection status
         """
         self.disconnect()
-        time.sleep(1)
-        self.reset_usb()
-        time.sleep(3)
         return self.connect()
 
     def disconnect(self):
