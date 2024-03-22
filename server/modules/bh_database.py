@@ -198,6 +198,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         """
         connects2db = 0
         max_connects = 5
+        self.reset_error()
         while connects2db < max_connects + 1:
 
             if connects2db == 8 or connects2db == 15 or connects2db == 25:
