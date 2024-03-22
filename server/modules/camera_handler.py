@@ -884,6 +884,11 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             dict: camera status
         """
         camera_info = {"dev": source, "info": name, "image": False, "shape": []}
+        devices = self.camera_info.get_available_cameras()["complete"]
+        for key in devices:
+            if devices[key]["dev"] == source:
+                camera_info["bus"] = devices[key]["bus"]
+
         if birdhouse_env["test_video_devices"] is not None and not birdhouse_env["test_video_devices"]:
             camera_info["image"] = True
             return camera_info
