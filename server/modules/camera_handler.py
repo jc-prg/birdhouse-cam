@@ -41,6 +41,15 @@ class CameraInformation:
             ch_logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
             return system
 
+        try:
+            process = subprocess.Popen(["lsusb"], stdout=subprocess.PIPE, shell=True)
+            ls_usb = process.communicate()[0]
+            ls_usb = ls_usb.decode()
+            ls_usb = ls_usb.split("\n")
+        except Exception as e:
+            ch_logging.warning("Could not video device bus information. Check, if lsusb is installed. " + str(e))
+            return system
+
         last_key = "none"
         if birdhouse_env["rpi_active"]:
             output.append("PiCamera:")
@@ -60,6 +69,12 @@ class CameraInformation:
                 devices["list"][last_key].append(value)
                 devices["short"][value] = value + " (" + info[0] + ")"
                 devices["complete"][value] = {"dev": value, "info": last_key, "image": False, "shape": []}
+
+                for line in ls_usb:
+                    if info[0] in line:
+                        usb_values = line.split(":")
+                        usb_values = usb_values[0].split(" ")
+                        devices["complete"][value]["bus"] = usb_values[1] + "/" + usb_values[3]
 
         self.logging.debug("Found "+str(len(devices["list"]))+" devices.")
         self.logging.debug(str(devices))
