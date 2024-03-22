@@ -132,9 +132,11 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 "handler_error_msg": self.error_msg
             }
         elif self.db_type == "both":
+            connected = (self.couch.connected and self.json.connected)
             db_info = {
                 "type": self.db_type,
-                "db_connected": "couch=" + str(self.couch.connected) + " / json=" + str(self.json.connected),
+                "db_connected": connected,
+                "db_connected_info": "couch=" + str(self.couch.connected) + " / json=" + str(self.json.connected),
                 "db_connected_couch": self.couch.connected,
                 "db_connected_json": self.json.connected,
                 "db_error": "couch=" + str(self.couch.error) + " / json=" + str(self.json.error),

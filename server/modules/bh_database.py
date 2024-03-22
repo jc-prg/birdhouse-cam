@@ -450,8 +450,11 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             return False
         try:
             if db_key in self.database:
+                time.sleep(0.01)
                 database = self.database[db_key]
+                time.sleep(0.01)
                 doc = database.get("main")
+                time.sleep(0.01)
                 doc_data = doc["data"]
                 if date != "":
                     if date in doc_data:
