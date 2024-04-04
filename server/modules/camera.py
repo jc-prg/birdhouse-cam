@@ -1537,6 +1537,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         set resolution and identify max. resolution for USB cameras
         """
         self.logging.debug("Initialize camera settings ...")
+        self.camera.camera_create_test_image("start init camera settings")
         if self.camera is None or not self.camera.if_connected():
             return
 
@@ -1576,7 +1577,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         # return properties as values
         self.param["camera"] = self.camera.get_properties()
-        self.camera.camera_create_test_image("initialized camera settings")
         self.logging.debug("Initialized camera settings for '" + self.id + "'.")
 
     def _init_microphone(self):
