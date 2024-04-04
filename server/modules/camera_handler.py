@@ -711,7 +711,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         Reset USB camera if bus information available
         """
         camera_info = self.camera_status(self.source, self.id)
-        if camera_info["bus"] != "":
+        if "bus" in camera_info and camera_info["bus"] != "":
             try:
                 process = subprocess.Popen(["usbreset "+camera_info["bus"]], stdout=subprocess.PIPE, shell=True)
                 output = process.communicate()[0]
