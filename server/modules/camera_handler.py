@@ -221,7 +221,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             else:
                 image_path = os.path.join(birdhouse_main_directories["data"], "test_connect_" + self.id + ".jpg")
                 cv2.imwrite(image_path, image)
-                self.logging.debug("- Done.")
+                self.logging.debug("- Done, see test image: " + image_path)
             return True
 
         except Exception as err:
