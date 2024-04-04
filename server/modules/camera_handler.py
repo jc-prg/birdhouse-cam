@@ -250,6 +250,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         read image from camera
         """
+        self.logging.debug("Read image from PiCamera")
         try:
             raw = self.stream.capture_array("main")
             if raw is None or len(raw) == 0:
