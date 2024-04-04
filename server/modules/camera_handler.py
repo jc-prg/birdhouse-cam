@@ -383,12 +383,15 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if c_key_full in self.configuration["controls"]:
                 self.properties_get[c_key][0] = self.configuration["controls"][c_key_full]
 
+
+        time.sleep(10)
         self.logging.debug("(2) Get camera and stream properties for '" + self.id + "' (PiCamera2)")
         for i_key in self.picamera_image:
             self.properties_get[i_key] = self.picamera_image[i_key].copy()
             i_key_full = self.picamera_image[i_key][0]
             self.logging.debug("- " + str(i_key))
             try:
+                # the following command breaks complete server after an update / upgrade of the OS in 04-2024
                 #image_properties = self.stream.capture_metadata()
                 image_properties = {}
                 if i_key_full in image_properties:
