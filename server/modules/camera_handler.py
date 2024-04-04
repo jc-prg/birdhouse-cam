@@ -258,6 +258,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             raw = self.stream.capture_array("main")
             if raw is None or len(raw) == 0:
                 raise Exception("Returned empty image.")
+            else:
+                self.logging.debug("- Done.")
             return raw
         except Exception as err:
             self.raise_error("- Error reading image from PiCamera2 '" + self.source +
@@ -383,8 +385,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if c_key_full in self.configuration["controls"]:
                 self.properties_get[c_key][0] = self.configuration["controls"][c_key_full]
 
-
-        time.sleep(10)
         self.logging.debug("(2) Get camera and stream properties for '" + self.id + "' (PiCamera2)")
         for i_key in self.picamera_image:
             self.properties_get[i_key] = self.picamera_image[i_key].copy()
@@ -682,7 +682,6 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         else:
             self.logging.warning("Reset of USB camera not possible, not bus information for " + self.source)
 
-
     def read(self, stream="not set"):
         """
         read image from camera
@@ -692,6 +691,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         Returns:
             numpy.ndarray: raw image
         """
+        self.logging.debug("Read image from '" + self.id + "' ...")
         try:
             ref, raw = self.stream.read()
             check = str(type(raw))
@@ -699,6 +699,8 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
                 raise Exception("Error reading image.")
             if "NoneType" in check or len(raw) == 0:
                 raise Exception("Returned empty image.")
+            else:
+                self.logging.debug("- Done.")
             return raw
         except Exception as err:
             self.raise_error("- Error reading image from camera '" + self.source +
