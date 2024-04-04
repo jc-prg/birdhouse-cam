@@ -655,8 +655,8 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             if not self.stream.isOpened():
                 self.raise_error("- Can't connect to camera '" + self.source + "': not isOpen()")
                 return False
-            self.camera_create_test_image("Camera is opened.")
             time.sleep(0.5)
+            self.camera_create_test_image("Camera is opened.")
         except Exception as err:
             self.raise_error("- Can't connect to camera '" + self.source + "': " + str(err))
             return False
