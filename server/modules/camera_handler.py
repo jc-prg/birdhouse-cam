@@ -214,9 +214,12 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.connected = True
 
         try:
+            self.logging.debug("Switch mode and capture first image")
             image = self.stream.switch_mode_and_capture_array(self.configuration, "main")
             if image is None or len(image) == 0:
                 raise Exception("Returned empty image.")
+            else:
+                self.logging.debug("- Done.")
             return True
 
         except Exception as err:
