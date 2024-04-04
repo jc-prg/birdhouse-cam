@@ -365,6 +365,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             dict | float: complete list of properties in format [current_value, "rwm", min_value, max_value]
                           or current value if key is set
         """
+        self.logging.debug("(1) Get camera and stream properties for '" + self.id + "' (PiCamera2)")
         for c_key in self.picamera_controls:
             self.properties_get[c_key] = self.picamera_controls[c_key].copy()
             c_key_full = self.picamera_controls[c_key][0]
@@ -382,6 +383,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if c_key_full in self.configuration["controls"]:
                 self.properties_get[c_key][0] = self.configuration["controls"][c_key_full]
 
+        self.logging.debug("(2) Get camera and stream properties for '" + self.id + "' (PiCamera2)")
         for i_key in self.picamera_image:
             self.properties_get[i_key] = self.picamera_image[i_key].copy()
             i_key_full = self.picamera_image[i_key][0]
@@ -391,12 +393,14 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             else:
                 self.properties_get[i_key][0] = -1
 
+        self.logging.debug("(3) Get camera and stream properties for '" + self.id + "' (PiCamera2)")
         for p_key in self.picamera_cam:
             self.properties_get[p_key] = self.picamera_cam[p_key].copy()
             p_key_full = self.picamera_cam[p_key][0]
             if p_key_full in self.stream.camera_properties:
                 self.properties_get[p_key][0] = self.stream.camera_properties[p_key_full]
 
+        self.logging.debug("(4) Get camera and stream properties for '" + self.id + "' (PiCamera2)")
         if key in self.properties_get:
             return self.properties_get[key][0]
         else:
