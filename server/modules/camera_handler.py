@@ -215,7 +215,11 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         try:
             self.logging.debug("Switch mode and capture first image")
+            text = str(self.config.local_time())
             image = self.stream.switch_mode_and_capture_array(self.configuration, "main")
+            image = cv2.putText(image, str(text), (30, 40), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (0, 0, 0),
+                                1, cv2.LINE_AA)
+
             if image is None or len(image) == 0:
                 raise Exception("Returned empty image.")
             else:
