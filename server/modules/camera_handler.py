@@ -510,6 +510,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         Returns:
             dict: camera information: 'dev', 'info', 'image', 'shape'
         """
+        self.logging.debug("Camera status: " + str(source) + " / " + str(name))
+
         camera_info = {"dev": source, "info": name, "image": False, "shape": []}
         devices = self.camera_info.get_available_cameras()["complete"]
         for key in devices:
@@ -925,6 +927,8 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         Returns:
             dict: camera status
         """
+        self.logging.debug("Camera status: " + str(source) + " / " + str(name))
+
         camera_info = {"dev": source, "info": name, "image": False, "shape": []}
         devices = self.camera_info.get_available_cameras()["complete"]
         for key in devices:
@@ -935,7 +939,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             camera_info["image"] = True
             return camera_info
 
-        if source != "/dev/picam":
+        if source != "/dev/picam" and "video13" not in source:
             try:
                 camera = cv2.VideoCapture(source, cv2.CAP_V4L)
                 time.sleep(0.1)

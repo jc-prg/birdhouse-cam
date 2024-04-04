@@ -1382,14 +1382,13 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.initial_connect_msg = {}
         self.maintenance_mode = False
 
-        self.connect()
-
         self.camera_scan = {}
         self.camera_info = CameraInformation()
         self.img_support = BirdhouseImageSupport(self.id, self.config)
         if first_cam:
             self.camera_scan = self.get_available_devices()
 
+        self.connect()
         self.measure_usage(init=True)
 
     def _init_image_processing(self):
@@ -1532,7 +1531,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.camera_streams[stream].reload_success = self.reload_success
             self.camera_streams[stream].reload_tried = self.reload_tried
             self.camera_streams[stream].reload_time = self.reload_time
-
 
     def _init_camera_settings(self):
         """
@@ -2438,7 +2436,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
             if "error" in system["video_devices_complete"][key]:
                 self.logging.info(camera_string + " - ERROR: " + str(system["video_devices_complete"][key]["error"]))
-                birdhouse_initial_connect_msg[key] += ", error='" + str(system["video_devices_complete"][key]["error"]) + "'"
+                birdhouse_initial_connect_msg[key] += (", error='" + str(system["video_devices_complete"][key]["error"])
+                                                       + "'")
             else:
                 self.logging.info(camera_string + " - OK")
 
