@@ -655,6 +655,11 @@ class BirdhouseViewFavorite(BirdhouseClass):
                 favorites[key] = favorites_dir[key].copy()
             self.tools.calculate_progress("favorite", "1/1", "", count_entries, len(dir_list))
 
+            if self.if_shutdown():
+                self.logging.info("Interrupt creating the favorite list.")
+                return
+
+
         return favorites.copy()
 
     def _list_create_from_images(self, date="", complete=False):
