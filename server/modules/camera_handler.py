@@ -564,6 +564,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             return camera_info
 
         if source == "/dev/picam" and birdhouse_env["rpi_64bit"]:
+            if self.connected:
+                self.stream.stop()
+
             try:
                 self.logging.debug("Check if PiCamera is connected and works ...")
                 from picamera2 import Picamera2
@@ -595,6 +598,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 error_msg = "Error connecting PiCamera:" + str(e)
                 camera_info["error"] = error_msg
                 self.logging.debug(error_msg)
+
+            if self.connected:
+                self.stream.start()
 
         elif not birdhouse_env["rpi_64bit"]:
             camera_info["error"] = "PiCamera2 is only supported on 64bit OS, check configuration in .env-file."
