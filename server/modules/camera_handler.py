@@ -627,6 +627,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         self.connected = False
         self.available_devices = {}
         self.camera_info = CameraInformation()
+        self.create_test_images = True
 
         self.logging.info("Starting CAMERA support for '"+self.id+":"+source+"' ...")
 
