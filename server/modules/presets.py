@@ -249,7 +249,7 @@ def set_logging(name, device=""):
             log_format_string = '%(asctime)s | %(levelname)-8s ' + name.ljust(10) + ' | %(message)s'
             if device != "":
                 log_format_string = ('%(asctime)s | %(levelname)-8s ' + name.ljust(10) + ' | '
-                                     + device.ljust(5) + ' | %(message)s')
+                                     + device + ' | %(message)s')
 
             log_format = logging.Formatter(fmt=log_format_string,
                                            datefmt='%m/%d %H:%M:%S')
@@ -263,7 +263,7 @@ def set_logging(name, device=""):
             log_format_string = '%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s'
             if device != "":
                 log_format_string = ('%(asctime)s | %(levelname)-8s ' + name.ljust(10) + ' | '
-                                     + device.ljust(5) + ' | %(message)s')
+                                     + device + ' | %(message)s')
             logging.basicConfig(format=log_format_string,
                                 datefmt='%m/%d %H:%M:%S',
                                 level=log_level)
