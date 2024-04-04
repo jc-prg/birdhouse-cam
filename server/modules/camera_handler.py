@@ -571,6 +571,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.logging.debug("Check if PiCamera is connected and works ...")
                 from picamera2 import Picamera2
                 picam2_test = Picamera2()
+                config = picam2_test.create_still_configuration()
+                picam2_test.configure(config)
                 picam2_test.start()
 
                 self.logging.debug("PiCamera started ...")
