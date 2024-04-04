@@ -939,7 +939,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             camera_info["image"] = True
             return camera_info
 
-        if source != "/dev/picam" and "video13" not in source:
+        if source != "/dev/picam":
             try:
                 camera = cv2.VideoCapture(source, cv2.CAP_V4L)
                 time.sleep(0.1)
