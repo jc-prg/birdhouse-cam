@@ -219,6 +219,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if image is None or len(image) == 0:
                 raise Exception("Returned empty image.")
             else:
+                image_path = os.path.join(birdhouse_main_directories["data"], "camera_connect_" + self.id + ".jpg")
+                cv2.imwrite(image_path, image)
                 self.logging.debug("- Done.")
             return True
 
