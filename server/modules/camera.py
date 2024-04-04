@@ -1508,6 +1508,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.reload_tried = time.time()
         if self.connected:
+            self.logging.debug("Camera '" + self.id + "' connected, initialize settings ...")
             self.camera_stream_raw.set_camera_handler(self.camera)
             self.reload_success = time.time()
             self.record_image_reload = time.time()
@@ -1527,10 +1528,13 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.camera_streams[stream].reload_tried = self.reload_tried
             self.camera_streams[stream].reload_time = self.reload_time
 
+        self.logging.debug("Camera connect done: " + str(self.connected))
+
     def _init_camera_settings(self):
         """
-        set resolution and identify max. resoltion for USB cameras
+        set resolution and identify max. resolution for USB cameras
         """
+        self.logging.debug("Initialize camera settings ...")
         if self.camera is None or not self.camera.if_connected():
             return
 
@@ -1707,6 +1711,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         initial connect of all relevant streams and devices
         """
+        self.logging.debug("Initial connect of all camera components for '" + self.id + "' ...")
         self._init_image_processing()
         self._init_video_processing()
         self._init_stream_raw()
