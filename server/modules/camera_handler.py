@@ -270,6 +270,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         set properties based on configuration file
         """
+        self.logging.debug("Set initial properties ...")
         self.properties_set = []
         for p_key in self.picamera_controls:
             if "w" in self.picamera_controls[p_key][1]:
@@ -296,6 +297,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         Return:
             bool: status if set property
         """
+        self.logging.debug("Set property: " + key + "-" + str(value) + " (" + str(init) + ")")
+
         if key in self.picamera_controls and "w" in self.picamera_controls[key][1]:
             full_key = self.picamera_controls[key][0]
             try:
