@@ -920,261 +920,262 @@ class BirdhouseViewArchive(BirdhouseClass):
         archive_changed = {}
         archive_info = self.config.db_handler.read("backup_info", "")
 
-        if archive_info == {}:
+        if archive_info == {} or "info" not in archive_info:
             recreate = True
 
         if recreate:
-            pass
-            # .................................
-            # .................................
-            # .................................
-            # .................................
+            self.logging.info("Create data for archive view from '" + main_directory +
+                              "' (complete=" + str(self.create_complete) + ") ...")
+            self.logging.info("- Get archive directory information (" + db_type + " | " + main_directory + ") ...")
+            self.logging.info("- Found " + str(len(dir_list)) + " archive directories.")
+            self.logging.debug("  -> " + str(dir_list))
 
-        self.logging.info("Create data for archive view from '" + main_directory +
-                          "' (complete=" + str(self.create_complete) + ") ...")
-        self.logging.info("- Get archive directory information (" + db_type + " | " + main_directory + ") ...")
-        self.logging.info("- Found " + str(len(dir_list)) + " archive directories.")
-        self.logging.debug("  -> " + str(dir_list))
-
-        # prepare data
-        backup_entries = {}
-        cam_count = 0
-        for cam in self.camera:
-
-            # create new values in archive file if they don't exist
-            if cam not in archive_info or archive_info[cam] == {}:
-                archive_info[cam] = archive_template.copy()
-                archive_info[cam]["active_cam"] = cam
-
-            archive_changed[cam] = archive_template.copy()
-            archive_changed[cam]["active_cam"] = cam
-
-            # create list per data (from lists per camera) and check if entries in databases have been changed
-            count = 0
-            cam_count += 1
-            for date in archive_info[cam]["entries"]:
-                count += 1
-                if date not in backup_entries:
-                    backup_entries[date] = {}
-                backup_entries[date][cam] = archive_info[cam]["entries"][date].copy()
-                if self.config.queue.get_status_changed(date=date, change="archive", both=False):
-                    backup_entries[date]["changed"] = True
-                    backup_entries[date]["exists"] = True
-                if "changed" not in backup_entries[date]:
-                    backup_entries[date]["changed"] = False
-                if "exists" not in backup_entries[date]:
-                    backup_entries[date]["exists"] = False
-                self.tools.calculate_progress("archive", str(cam_count) + "/4", cam, count,
-                                              len(archive_info[cam]["entries"]))
-
-            # check if new directories are available
-            count = 0
-            for archive_directory in dir_list:
-                if archive_directory in presets.birdhouse_directories["today"] or "today" in archive_directory:
-                    continue
-
-                count += 1
-                if ((len(archive_directory) == 8 and archive_directory not in backup_entries)
-                        or cam not in backup_entries[archive_directory]):
-                    if archive_directory not in backup_entries:
-                        backup_entries[archive_directory] = {}
-                    if cam not in backup_entries[archive_directory]:
-                        backup_entries[archive_directory][cam] = {}
-                    backup_entries[archive_directory] = {"changed": True, "exists": False}
-                    self.tools.calculate_progress("archive", "2/4", cam, count, len(dir_list))
-
-            # stop if shutdown signal was send
-            if self.if_shutdown():
-                self.logging.info("Interrupt creating the archive list due to shutdown command ...")
-                return
-
-        # update data for those dates where necessary + measure total size
-        count_entries = 0
-        deleted_dates = []
-        for date in backup_entries:
-
-            # check if archive directory still exists
-            archive_directory = self.config.db_handler.directory(config="backup", date=date)
-
-            count_entries += 1
-            self.tools.calculate_progress("archive", "4/4", "", count_entries, len(backup_entries))
-
-            # if archive directory doesn't exist anymore, remove
-            if not os.path.isdir(archive_directory) or "today" in date:
-                self.logging.warning("Directory '" + archive_directory + "' doesn't exist, remove DB entry.")
-                deleted_dates.append(date)
-
-            # if archive directory still exists
-            else:
-                # check availability of couch db and/or json db
-                database_ok = self._list_create_database_ok(date)
-
-                # update for those dates where necessary
-                for cam in self.camera:
-
-                    log_info = ""
-                    log_info_2 = ""
-
-                    # if directory doesn't exist yet read entries from database of the respective date
-                    if ((backup_entries[date]["changed"] and not backup_entries[date]["exists"])
-                            or not database_ok or self.create_complete):
-
-                        log_info = ("new [database_ok=" + str(database_ok) + ", complete=" + str(self.create_complete) +
-                                    ", exists=" + str(backup_entries[date]["exists"]) +
-                                    ", changed=" + str(backup_entries[date]["changed"]) + "]")
-                        backup_entries[date][cam] = {
-                            "camera": cam,
-                            "count": 0,
-                            "count_delete": 0,
-                            "count_cam": 0,
-                            "count_data": 0,
-                            "datestamp": date,
-                            "date": date[6:8] + "." + date[4:6] + "." + date[0:4],
-                            "detection": False,
-                            "directory": self.config.db_handler.directory("images", date, False),
-                            "dir_size": 0,
-                            "dir_size_cam": 0,
-                            "lowres": "",
-                            "type": "directory"
-                        }
-
-                        # Trigger recreation of config file in date-directory, if config file doesn't exist
-                        config_images = self.config.db_handler.read("backup", date)
-                        config_images_file = self.config.db_handler.file_path("backup", date)
-                        if config_images == {}:
-                            start_time = time.time()
-                            self.logging.info("     * Start recreation of config file for " + date + " ...")
-                            self.config_recreate_progress = True
-                            self.config_recreate.append(date)
-
-                            while self.config_recreate_progress or start_time + 20 > time.time():
-                                time.sleep(0.2)
-                            if self.config_recreate_progress:
-                                self.logging.warning("     * Recreation of config file for " + date +
-                                                     " takes longer than expected, don't wait longer here.")
-                            else:
-                                self.logging.info("     * Recreated of config file for " + date + ".")
-                        else:
-                            self.logging.info("     * DB " + date + " available (" + config_images_file + ")")
-                            if "detection" in config_images and len(config_images["detection"]):
-                                backup_entries[date][cam]["detection"] = True
-
-                        # Extract data from config file
-                        file_data = self._list_create_file_data(date, True)
-                        backup_entries[date][cam] = self._list_create_from_database(cam, archive_info[cam],
-                                                                                    date, file_data)
-
-                    # if just change re-read entries from database of the respective date
-                    elif (backup_entries[date]["changed"] and backup_entries[date]["exists"]) or complete:
-                        log_info = "changed"
-                        file_data = self._list_create_file_data(date, database_ok)
-                        backup_entries[date][cam] = self._list_create_from_database(cam, archive_info[cam],
-                                                                                    date, file_data)
-
-                    # else stay with the existing data
-                    else:
-                        log_info = "keep"
-                        pass
-
-                    if cam in backup_entries[date] and "dir_size_cam" in backup_entries[date][cam]:
-                        log_info_2 = "    (" + str(backup_entries[date][cam]["dir_size_cam"]).rjust(5) + " MB)"
-
-                    if log_info != "keep" and log_info != "changed":
-                        self.logging.info("     * DB " + date + " -> " + log_info)
-                    else:
-                        log_info_2 = log_info + " " + log_info_2
-                    self.logging.info("  -> Archive " + str(count_entries).zfill(4) + ": " +
-                                      date + "/" + cam + " ... " + log_info_2)
-
-            # stop if shutdown signal was send
-            if self.if_shutdown():
-                self.logging.info("Interrupt creating the archive list.")
-                return
-
-        # remove unused entries
-        for date in deleted_dates:
-            del backup_entries[date]
-
-        for cam in archive_changed:
-            archive_changed[cam]["entries"] = {}
-
-        # process data to be saved
-        for date in backup_entries:
-            dir_size_date = 0
+            # prepare data
+            backup_entries = {}
+            cam_count = 0
             for cam in self.camera:
-                if cam in backup_entries[date]:
 
-                    self.logging.debug("........" + str(cam) + "/" + backup_entries[date][cam]["camera"])
-                    self.logging.debug("........" + str(backup_entries[date][cam]))
+                # create new values in archive file if they don't exist
+                if cam not in archive_info or archive_info[cam] == {}:
+                    archive_info[cam] = archive_template.copy()
+                    archive_info[cam]["active_cam"] = cam
 
-                    backup_entry = backup_entries[date][cam].copy()
+                archive_changed[cam] = archive_template.copy()
+                archive_changed[cam]["active_cam"] = cam
 
-                    # copy entries to new dict that will be saved
-                    archive_changed[cam]["entries"][date] = backup_entry
+                # create list per data (from lists per camera) and check if entries in databases have been changed
+                count = 0
+                cam_count += 1
+                for date in archive_info[cam]["entries"]:
+                    count += 1
+                    if date not in backup_entries:
+                        backup_entries[date] = {}
+                    backup_entries[date][cam] = archive_info[cam]["entries"][date].copy()
+                    if self.config.queue.get_status_changed(date=date, change="archive", both=False):
+                        backup_entries[date]["changed"] = True
+                        backup_entries[date]["exists"] = True
+                    if "changed" not in backup_entries[date]:
+                        backup_entries[date]["changed"] = False
+                    if "exists" not in backup_entries[date]:
+                        backup_entries[date]["exists"] = False
+                    self.tools.calculate_progress("archive", str(cam_count) + "/4", cam, count,
+                                                  len(archive_info[cam]["entries"]))
 
-                    # calculate total values
-                    if "dir_size_cam" in backup_entry and "count_cam" in backup_entry:
-                        dir_size_date += backup_entry["dir_size_cam"]
-                        archive_total_size += backup_entry["dir_size_cam"]
-                        archive_total_count += backup_entry["count_cam"]
+                # check if new directories are available
+                count = 0
+                for archive_directory in dir_list:
+                    if archive_directory in presets.birdhouse_directories["today"] or "today" in archive_directory:
+                        continue
 
-                    # create groups
-                    backup_group = date[0:4] + "-" + date[4:6]
-                    if backup_group not in archive_changed[cam]["groups"]:
-                        archive_changed[cam]["groups"][backup_group] = []
-                    if date not in archive_changed[cam]["groups"][backup_group]:
-                        archive_changed[cam]["groups"][backup_group].append(date)
+                    count += 1
+                    if ((len(archive_directory) == 8 and archive_directory not in backup_entries)
+                            or cam not in backup_entries[archive_directory]):
+                        if archive_directory not in backup_entries:
+                            backup_entries[archive_directory] = {}
+                        if cam not in backup_entries[archive_directory]:
+                            backup_entries[archive_directory][cam] = {}
+                        backup_entries[archive_directory] = {"changed": True, "exists": False}
+                        self.tools.calculate_progress("archive", "2/4", cam, count, len(dir_list))
 
-                    # add additional information
-                    archive_changed[cam]["view_count"] = ["all"]
-                    archive_changed[cam]["subtitle"] = (presets.birdhouse_pages["backup"][0] + " (" +
-                                                        self.camera[cam].name + ")")
-                    archive_changed[cam]["chart_data"] = {"data": {}, "titles": ["Activity"], "info": "not implemented"}
+                # stop if shutdown signal was send
+                if self.if_shutdown():
+                    self.logging.info("Interrupt creating the archive list due to shutdown command ...")
+                    return
 
+            # update data for those dates where necessary + measure total size
+            count_entries = 0
+            deleted_dates = []
+            for date in backup_entries:
+
+                # check if archive directory still exists
+                archive_directory = self.config.db_handler.directory(config="backup", date=date)
+
+                count_entries += 1
+                self.tools.calculate_progress("archive", "4/4", "", count_entries, len(backup_entries))
+
+                # if archive directory doesn't exist anymore, remove
+                if not os.path.isdir(archive_directory) or "today" in date:
+                    self.logging.warning("Directory '" + archive_directory + "' doesn't exist, remove DB entry.")
+                    deleted_dates.append(date)
+
+                # if archive directory still exists
                 else:
-                    archive_changed[cam]["entries"][date] = {}
+                    # check availability of couch db and/or json db
+                    database_ok = self._list_create_database_ok(date)
 
-                self.logging.debug("........" + str(archive_changed[cam]["entries"][date]))
-                self.logging.debug("........" + cam + "\n")
+                    # update for those dates where necessary
+                    for cam in self.camera:
 
-            for cam in self.camera:
-                if date in archive_changed[cam]["entries"]:
-                    archive_changed[cam]["entries"][date]["dir_size"] = dir_size_date
+                        log_info = ""
+                        log_info_2 = ""
 
-            self.config.queue.set_status_changed(date=date, change="archive", is_changed=False)
+                        # if directory doesn't exist yet read entries from database of the respective date
+                        if ((backup_entries[date]["changed"] and not backup_entries[date]["exists"])
+                                or not database_ok or self.create_complete):
 
-            # stop if shutdown signal was send
-            if self.if_shutdown():
-                self.logging.info("Interrupt creating the archive list.")
-                return
+                            log_info = ("new [database_ok=" + str(database_ok) + ", complete=" + str(
+                                self.create_complete) +
+                                        ", exists=" + str(backup_entries[date]["exists"]) +
+                                        ", changed=" + str(backup_entries[date]["changed"]) + "]")
+                            backup_entries[date][cam] = {
+                                "camera": cam,
+                                "count": 0,
+                                "count_delete": 0,
+                                "count_cam": 0,
+                                "count_data": 0,
+                                "datestamp": date,
+                                "date": date[6:8] + "." + date[4:6] + "." + date[0:4],
+                                "detection": False,
+                                "directory": self.config.db_handler.directory("images", date, False),
+                                "dir_size": 0,
+                                "dir_size_cam": 0,
+                                "lowres": "",
+                                "type": "directory"
+                            }
 
-        # get information what has been changed
-        backup_info = self.config.db_handler.read("backup_info", "")
-        if "changes" in backup_info:
-            changed_values = backup_info["changes"]
+                            # Trigger recreation of config file in date-directory, if config file doesn't exist
+                            config_images = self.config.db_handler.read("backup", date)
+                            config_images_file = self.config.db_handler.file_path("backup", date)
+                            if config_images == {}:
+                                start_time = time.time()
+                                self.logging.info("     * Start recreation of config file for " + date + " ...")
+                                self.config_recreate_progress = True
+                                self.config_recreate.append(date)
+
+                                while self.config_recreate_progress or start_time + 20 > time.time():
+                                    time.sleep(0.2)
+                                if self.config_recreate_progress:
+                                    self.logging.warning("     * Recreation of config file for " + date +
+                                                         " takes longer than expected, don't wait longer here.")
+                                else:
+                                    self.logging.info("     * Recreated of config file for " + date + ".")
+                            else:
+                                self.logging.info("     * DB " + date + " available (" + config_images_file + ")")
+                                if "detection" in config_images and len(config_images["detection"]):
+                                    backup_entries[date][cam]["detection"] = True
+
+                            # Extract data from config file
+                            file_data = self._list_create_file_data(date, True)
+                            backup_entries[date][cam] = self._list_create_from_database(cam, archive_info[cam],
+                                                                                        date, file_data)
+
+                        # if just change re-read entries from database of the respective date
+                        elif (backup_entries[date]["changed"] and backup_entries[date]["exists"]) or complete:
+                            log_info = "changed"
+                            file_data = self._list_create_file_data(date, database_ok)
+                            backup_entries[date][cam] = self._list_create_from_database(cam, archive_info[cam],
+                                                                                        date, file_data)
+
+                        # else stay with the existing data
+                        else:
+                            log_info = "keep"
+                            pass
+
+                        if cam in backup_entries[date] and "dir_size_cam" in backup_entries[date][cam]:
+                            log_info_2 = "    (" + str(backup_entries[date][cam]["dir_size_cam"]).rjust(5) + " MB)"
+
+                        if log_info != "keep" and log_info != "changed":
+                            self.logging.info("     * DB " + date + " -> " + log_info)
+                        else:
+                            log_info_2 = log_info + " " + log_info_2
+                        self.logging.info("  -> Archive " + str(count_entries).zfill(4) + ": " +
+                                          date + "/" + cam + " ... " + log_info_2)
+
+                # stop if shutdown signal was send
+                if self.if_shutdown():
+                    self.logging.info("Interrupt creating the archive list.")
+                    return
+
+            # remove unused entries
+            for date in deleted_dates:
+                del backup_entries[date]
+
+            for cam in archive_changed:
+                archive_changed[cam]["entries"] = {}
+
+            # process data to be saved
+            for date in backup_entries:
+                dir_size_date = 0
+                for cam in self.camera:
+                    if cam in backup_entries[date]:
+
+                        self.logging.debug("........" + str(cam) + "/" + backup_entries[date][cam]["camera"])
+                        self.logging.debug("........" + str(backup_entries[date][cam]))
+
+                        backup_entry = backup_entries[date][cam].copy()
+
+                        # copy entries to new dict that will be saved
+                        archive_changed[cam]["entries"][date] = backup_entry
+
+                        # calculate total values
+                        if "dir_size_cam" in backup_entry and "count_cam" in backup_entry:
+                            dir_size_date += backup_entry["dir_size_cam"]
+                            archive_total_size += backup_entry["dir_size_cam"]
+                            archive_total_count += backup_entry["count_cam"]
+
+                        # create groups
+                        backup_group = date[0:4] + "-" + date[4:6]
+                        if backup_group not in archive_changed[cam]["groups"]:
+                            archive_changed[cam]["groups"][backup_group] = []
+                        if date not in archive_changed[cam]["groups"][backup_group]:
+                            archive_changed[cam]["groups"][backup_group].append(date)
+
+                        # add additional information
+                        archive_changed[cam]["view_count"] = ["all"]
+                        archive_changed[cam]["subtitle"] = (presets.birdhouse_pages["backup"][0] + " (" +
+                                                            self.camera[cam].name + ")")
+                        archive_changed[cam]["chart_data"] = {"data": {}, "titles": ["Activity"],
+                                                              "info": "not implemented"}
+
+                    else:
+                        archive_changed[cam]["entries"][date] = {}
+
+                    self.logging.debug("........" + str(archive_changed[cam]["entries"][date]))
+                    self.logging.debug("........" + cam + "\n")
+
+                for cam in self.camera:
+                    if date in archive_changed[cam]["entries"]:
+                        archive_changed[cam]["entries"][date]["dir_size"] = dir_size_date
+
+                self.config.queue.set_status_changed(date=date, change="archive", is_changed=False)
+
+                # stop if shutdown signal was send
+                if self.if_shutdown():
+                    self.logging.info("Interrupt creating the archive list.")
+                    return
+
+            # get information what has been changed
+            backup_info = self.config.db_handler.read("backup_info", "")
+            if "changes" in backup_info:
+                changed_values = backup_info["changes"]
+            else:
+                changed_values = {}
+            archive_changed["changes"] = changed_values
+
+            # save data in backup database
+            self.dir_size = archive_total_size
+            if "info" not in archive_changed:
+                archive_changed["info"] = {}
+
+            archive_changed["info"]["total_size"] = self.dir_size
+            archive_changed["info"]["total_files"] = archive_total_count
+            archive_changed["info"]["total_archives"] = count_entries
+
+            self.logging.debug(":::::::::::" + str(archive_changed))
+            self.views = archive_changed.copy()
+            self.config.db_handler.write("backup_info", "", archive_changed)
+
+            self.logging.info("  => Total archive size: " + str(round(archive_total_size, 2)) + " MByte in " +
+                              str(round(archive_total_count, 2)) + " files and " + str(count_entries) + " directories")
+            self.logging.info("     Time required for loading: " + str(round(time.time() - start_time, 1)) + "s")
+
         else:
-            changed_values = {}
-        archive_changed["changes"] = changed_values
+            self.logging.info("Read archive information from database.")
+            self.views = archive_info.copy()
+            self.dir_size = archive_info["info"]["total_size"]
 
-        # save data in backup database
-        self.dir_size = archive_total_size
-        if "info" not in archive_changed:
-            archive_changed["info"] = {"dir_size": -1}
-
-        archive_changed["info"]["total_size"] = self.dir_size
-        archive_changed["info"]["total_files"] = archive_total_count
-        archive_changed["info"]["total_archives"] = count_entries
-
-        self.logging.debug(":::::::::::" + str(archive_changed))
-        self.views = archive_changed.copy()
-
-        self.config.db_handler.write("backup_info", "", archive_changed)
         self.loading = "done"
         self.create_complete = False
-
-        self.logging.info("  => Total archive size: " + str(round(archive_total_size, 2)) + " MByte in " +
-                          str(round(archive_total_count, 2)) + " files and " + str(count_entries) + " directories")
-        self.logging.info("     Time required for loading: " + str(round(time.time() - start_time, 1)) + "s")
 
     def _list_create_preview(self, cam, image_title, archive_directory, file_data):
         """
@@ -1540,13 +1541,15 @@ class BirdhouseViewObjects(BirdhouseClass):
         if not self.detect_active:
             return
 
+        content = {}
         start_time = time.time()
         self.logging.info("Create data for object detection view (complete=" + str(complete) + ") ...")
         self.loading = "in progress"
 
         if self.config.db_handler.exists("objects", ""):
             content = self.config.db_handler.read("objects", "")
-        else:
+
+        if not self.config.db_handler.exists("objects", "") or content == {}:
             content = {
                 "active_cam": "none",
                 "view": "objects",
@@ -1556,6 +1559,7 @@ class BirdhouseViewObjects(BirdhouseClass):
                 "groups": {},
                 "changes": True
             }
+            recreate = True
 
         if recreate:
             # in progress: get detection information from archive files
@@ -1870,7 +1874,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         self.favorite.load_from_archives = False
         self.archive.load_from_archives = False
-        self.object.load_from_archives = False
+        self.object.load_from_archives = True
 
     def run(self):
         """
