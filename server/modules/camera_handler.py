@@ -533,7 +533,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         except Exception as e:
             self.logging.warning("Could not save test image: " + image_path + " / " + str(e))
 
-
     def camera_status(self, source, name):
         """
         check if given source can be connected as PiCamera and returns an image

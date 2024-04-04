@@ -1576,6 +1576,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         # return properties as values
         self.param["camera"] = self.camera.get_properties()
+        self.camera.camera_create_test_image("initialized camera settings")
         self.logging.debug("Initialized camera settings for '" + self.id + "'.")
 
     def _init_microphone(self):
