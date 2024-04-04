@@ -261,6 +261,9 @@ def set_logging(name, device=""):
 
         else:
             log_format_string = '%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s'
+            if device != "":
+                log_format_string = ('%(asctime)s | %(levelname)-8s ' + name.ljust(10) + ' | '
+                                     + device.ljust(5) + ' | %(message)s')
             logging.basicConfig(format=log_format_string,
                                 datefmt='%m/%d %H:%M:%S',
                                 level=log_level)
