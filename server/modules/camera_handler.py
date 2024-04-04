@@ -399,8 +399,10 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.logging.debug("- " + str(i_key))
             try:
                 # the following command breaks complete server after an update / upgrade of the OS in 04-2024
-                #image_properties = self.stream.capture_metadata()
-                image_properties = {}
+                if not self.connected:
+                    self.stream.start()
+                image_properties = self.stream.capture_metadata()
+                #image_properties = {}
                 if i_key_full in image_properties:
                     self.properties_get[i_key][0] = image_properties[i_key_full]
                 else:
