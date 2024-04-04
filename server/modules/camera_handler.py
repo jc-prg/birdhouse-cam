@@ -142,7 +142,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.connected = False
         self.available_devices = {}
         self.first_connect = True
-        self.create_test_images = False
+        self.create_test_images = True
 
         self.picamera_controls = {
             "saturation":       ["Saturation",          "rwm", 0.0, 32.0, "float"],
