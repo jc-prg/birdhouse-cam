@@ -549,12 +549,13 @@ class BirdhouseViewFavorite(BirdhouseClass):
         if force:
             self.force_reload = True
 
-    def list_create(self, complete=False):
+    def list_create(self, complete=False, recreate=True):
         """
         Page with pictures (and videos) marked as favorites and sorted by date
 
         Args:
             complete (bool): recreate data from files
+            recreate (bool): recreate favorite data from archives
         Returns:
             dict: favorite data for view definition
         """
@@ -574,57 +575,63 @@ class BirdhouseViewFavorite(BirdhouseClass):
                 "entries": {},
                 "groups": {}
             }
+            recreate = True
 
-        # check existing directories
-        main_directory = self.config.db_handler.directory(config="backup")
-        dir_list = self.tools.get_directories(main_directory)
-        self.logging.debug(str(dir_list))
-        delete_entries = []
-        if not complete:
-            for stamp in content["entries"]:
-                entry: dict = content["entries"][stamp]
+        if recreate:
 
-                if "_" in stamp:
-                    date_stamp = stamp.split("_")[0]
-                elif "datestamp" in entry:
-                    date_stamp = entry["datestamp"]
-                elif "date" in entry and len(entry["date"].split(".")) == 3:
-                    day, month, year = entry["date"].split(".")
-                    date_stamp = year + month + day
-                else:
-                    continue
+            # check existing directories
+            main_directory = self.config.db_handler.directory(config="backup")
+            dir_list = self.tools.get_directories(main_directory)
+            self.logging.debug(str(dir_list))
+            delete_entries = []
+            if not complete:
+                for stamp in content["entries"]:
+                    entry: dict = content["entries"][stamp]
 
-                if date_stamp not in dir_list:
-                    delete_entries.append(stamp)
+                    if "_" in stamp:
+                        date_stamp = stamp.split("_")[0]
+                    elif "datestamp" in entry:
+                        date_stamp = entry["datestamp"]
+                    elif "date" in entry and len(entry["date"].split(".")) == 3:
+                        day, month, year = entry["date"].split(".")
+                        date_stamp = year + month + day
+                    else:
+                        continue
 
-            for stamp in delete_entries:
-                del content["entries"][stamp]
+                    if date_stamp not in dir_list:
+                        delete_entries.append(stamp)
 
-        # clean up groups
-        content["groups"] = {}
+                for stamp in delete_entries:
+                    del content["entries"][stamp]
 
-        # videos
-        files_videos = self._list_create_from_videos()
-        if len(files_videos) > 0:
-            for entry_id in files_videos:
-                group = entry_id[0:4] + "-" + entry_id[4:6]
-                if group not in content["groups"]:
-                    content["groups"][group] = []
-                content["entries"][entry_id] = files_videos[entry_id].copy()
-                content["groups"][group].append(entry_id)
+            # clean up groups
+            content["groups"] = {}
 
-        # archive images
-        files_archive = self._list_create_from_archive(complete)
-        if files_archive is None:
-            return
+            # videos
+            files_videos = self._list_create_from_videos()
+            if len(files_videos) > 0:
+                for entry_id in files_videos:
+                    group = entry_id[0:4] + "-" + entry_id[4:6]
+                    if group not in content["groups"]:
+                        content["groups"][group] = []
+                    content["entries"][entry_id] = files_videos[entry_id].copy()
+                    content["groups"][group].append(entry_id)
 
-        if len(files_archive) > 0:
-            for entry_id in files_archive:
-                group = entry_id[0:4] + "-" + entry_id[4:6]
-                if group not in content["groups"]:
-                    content["groups"][group] = []
-                content["entries"][entry_id] = files_archive[entry_id].copy()
-                content["groups"][group].append(entry_id)
+            # archive images
+            files_archive = self._list_create_from_archive(complete)
+            if files_archive is None:
+                return
+
+            if len(files_archive) > 0:
+                for entry_id in files_archive:
+                    group = entry_id[0:4] + "-" + entry_id[4:6]
+                    if group not in content["groups"]:
+                        content["groups"][group] = []
+                    content["entries"][entry_id] = files_archive[entry_id].copy()
+                    content["groups"][group].append(entry_id)
+
+        else:
+            self.logging.info("Loaded favorite data from database.")
 
         self.views = content
         self.create_complete = False
@@ -1827,6 +1834,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.timeout_living_last = time.time()
         self.timeout_living_signal = 20
 
+        self.create_initial = False
         self.create_archive = True
         self.create_archive_complete = False
 
@@ -1862,7 +1870,10 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             if self.favorite.create and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
                 if not self.if_shutdown():
-                    self.favorite.list_create(self.favorite.create_complete)
+                    if self.create_initial:
+                        self.favorite.list_create(self.favorite.create_complete)
+                    else:
+                        self.favorite.list_create(self.favorite.create_complete, False)
                     self.favorite.request_done()
 
             # if archive to be read again (from time to time and depending on user activity)
