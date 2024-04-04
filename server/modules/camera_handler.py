@@ -218,7 +218,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             text = str(self.config.local_time())
             image = self.stream.switch_mode_and_capture_array(self.configuration, "main")
             image = cv2.putText(image, str(text), (30, 40), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (0, 0, 0),
-                                1, cv2.LINE_AA)
+                                2, cv2.LINE_AA)
+            image = cv2.putText(image, str(text), (30, 80), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (255, 255, 255),
+                                2, cv2.LINE_AA)
 
             if image is None or len(image) == 0:
                 raise Exception("Returned empty image.")
