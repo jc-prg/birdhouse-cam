@@ -615,6 +615,9 @@ class BirdhouseViewFavorite(BirdhouseClass):
 
         # archive images
         files_archive = self._list_create_from_archive(complete)
+        if files_archive is None:
+            return
+
         if len(files_archive) > 0:
             for entry_id in files_archive:
                 group = entry_id[0:4] + "-" + entry_id[4:6]
@@ -658,7 +661,6 @@ class BirdhouseViewFavorite(BirdhouseClass):
             if self.if_shutdown():
                 self.logging.info("Interrupt creating the favorite list.")
                 return
-
 
         return favorites.copy()
 
