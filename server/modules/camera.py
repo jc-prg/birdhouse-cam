@@ -1579,6 +1579,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                               str(self.param["image"]["resolution"]))
 
         # return properties as values
+        self.camera.camera_create_test_image("get properties")
         self.param["camera"] = self.camera.get_properties()
         self.logging.debug("Initialized camera settings for '" + self.id + "'.")
 
