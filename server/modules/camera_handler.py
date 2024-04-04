@@ -483,9 +483,11 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         try:
             config = self.stream.create_still_configuration({"size": (int(width), int(height))})
+            self.logging.debug("Set resolution: " + str({"size": (int(width), int(height))}))
             self.stream.stop()
             self.stream.configure(config)
             self.stream.start()
+            self.logging.debug("Set resolution: Done.")
             return True
         except Exception as err:
             self.raise_error("Could not set resolution: " + str(err))
