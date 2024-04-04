@@ -110,7 +110,7 @@ class CameraInformation:
 
         except Exception as e:
             self.logging.error("Could not grab video device resolutions for '" + source +
-                          "'. Check, if v4l2-ctl is installed. " + str(e))
+                               "'. Check, if v4l2-ctl is installed. " + str(e))
             return {}
 
 
@@ -585,7 +585,10 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                     picam2_test.close()
 
             except Exception as e:
-                camera_info["error"] = "Error connecting camera:" + str(e)
+                error_msg = "Error connecting PiCamera:" + str(e)
+                camera_info["error"] = error_msg
+                self.logging.debug(error_msg)
+
         elif not birdhouse_env["rpi_64bit"]:
             camera_info["error"] = "PiCamera2 is only supported on 64bit OS, check configuration in .env-file."
         else:
