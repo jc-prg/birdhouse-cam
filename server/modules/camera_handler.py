@@ -950,6 +950,12 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         height = self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)
         return [width, height]
 
+    def camera_create_test_image(self, context="", image=None):
+        """
+        not implemented for USB cameras
+        """
+        return
+
     def camera_status(self, source, name):
         """
         check if given source can be connected as PiCamera and returns an image
