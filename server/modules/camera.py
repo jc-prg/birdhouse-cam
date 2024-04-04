@@ -2221,7 +2221,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         Returns:
             bool: status if killed stream
         """
-        self.logging.debug("get_image_stream_kill: " + str(ext_stream_id))
+        #self.logging.debug("get_image_stream_kill: " + str(ext_stream_id))
         if ext_stream_id in self.image_streams_to_kill:
             self.logging.debug("get_image_stream_kill - True: " + str(ext_stream_id))
             del self.image_streams_to_kill[ext_stream_id]
