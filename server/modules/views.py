@@ -1874,7 +1874,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         self.favorite.load_from_archives = False
         self.archive.load_from_archives = False
-        self.object.load_from_archives = True
+        self.object.load_from_archives = False
 
     def run(self):
         """
