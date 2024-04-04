@@ -522,6 +522,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         if not self.create_test_images:
             return
 
+        image_path = os.path.join(birdhouse_main_directories["data"], "test_connect_" + self.id + ".jpg")
         try:
             if image is None:
                 image = self.stream.capture_array("main")
@@ -532,7 +533,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             image = cv2.putText(image, str(text), (30, 80), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (255, 255, 255),
                                 2, cv2.LINE_AA)
 
-            image_path = os.path.join(birdhouse_main_directories["data"], "test_connect_" + self.id + ".jpg")
             cv2.imwrite(image_path, image)
 
             self.logging.debug("Save test image: " + context)
@@ -655,6 +655,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             if not self.stream.isOpened():
                 self.raise_error("- Can't connect to camera '" + self.source + "': not isOpen()")
                 return False
+            self.camera_create_test_image("Camera is opened.")
             time.sleep(0.5)
         except Exception as err:
             self.raise_error("- Can't connect to camera '" + self.source + "': " + str(err))
@@ -960,9 +961,35 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
 
     def camera_create_test_image(self, context="", image=None):
         """
-        not implemented for USB cameras
+        create test image incl. date and context information
+
+        Args:
+            image (numpy.ndarray): image to be saved
+            context (str): name the context here
         """
-        return
+        if not self.create_test_images:
+            return
+
+        image_path = os.path.join(birdhouse_main_directories["data"], "test_connect_" + self.id + ".jpg")
+        try:
+            if image is None:
+                ref, image = self.stream.read()
+                if not ref:
+                    return
+
+            text = str(self.config.local_time()) + " - " + context
+            image = cv2.putText(image, str(text), (30, 40), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (0, 0, 0),
+                                2, cv2.LINE_AA)
+            image = cv2.putText(image, str(text), (30, 80), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (255, 255, 255),
+                                2, cv2.LINE_AA)
+
+            cv2.imwrite(image_path, image)
+
+            self.logging.debug("Save test image: " + context)
+            self.logging.debug("               : " + image_path)
+
+        except Exception as e:
+            self.logging.warning("Could not save test image: " + image_path + " / " + str(e))
 
     def camera_status(self, source, name):
         """
