@@ -565,17 +565,23 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         if source == "/dev/picam" and birdhouse_env["rpi_64bit"]:
             try:
+                self.logging.debug("Check if PiCamera is connected and works ...")
                 from picamera2 import Picamera2
                 picam2_test = Picamera2()
                 picam2_test.start()
+
+                self.logging.debug("PiCamera started ...")
                 time.sleep(0.5)
                 image = picam2_test.capture_array()
 
                 if image is None or len(image) == 0:
                     camera_info["error"] = "Returned empty image."
+                    self.logging.debug("PiCamera returned empty image!")
                 else:
-                    path_raw = str(os.path.join(self.config.db_handler.directory(config="images"),
-                                                "..", "test_connect_" + source.replace("/", "_") + ".jpeg"))
+                    img_path = os.path.join(self.config.db_handler.directory(config="images"),
+                                            "..", "test_connect_" + source.replace("/", "_") + ".jpeg")
+                    self.logging.debug("PiCamera returned image, try to save image as " + img_path)
+                    path_raw = str(img_path)
                     cv2.imwrite(path_raw, image)
                     if "error" in camera_info:
                         del camera_info["error"]
@@ -583,6 +589,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                     camera_info["shape"] = image.shape
                     picam2_test.stop()
                     picam2_test.close()
+                    self.logging.debug("Closed connection to PiCamera.")
 
             except Exception as e:
                 error_msg = "Error connecting PiCamera:" + str(e)
