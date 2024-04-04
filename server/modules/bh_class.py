@@ -51,7 +51,7 @@ class BirdhouseClass(object):
             self.config = config
             self.thread_register(init=True)
 
-        self.logging = set_logging(class_log)
+        self.logging = set_logging(class_log, device_id)
 
     def stop(self):
         """
