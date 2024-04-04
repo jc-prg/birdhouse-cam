@@ -220,7 +220,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 raise Exception("Returned empty image.")
             else:
                 self.create_test_image(image, "switch mode and capture first image")
-                self.logging.debug("- Done, see test image: " + image_path)
+                self.logging.debug("- Done.")
             return True
 
         except Exception as err:
@@ -246,6 +246,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         image_path = os.path.join(birdhouse_main_directories["data"], "test_connect_" + self.id + ".jpg")
         cv2.imwrite(image_path, image)
+
+        self.logging.debug("Save test image: " + image_path)
 
     def reconnect(self):
         """
