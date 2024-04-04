@@ -501,6 +501,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
         self.create_complete = False
         self.force_reload = False
         self.reload_counter = ""
+        self.load_from_archives = False
 
         self.links_default = ("live", "today", "videos", "backup")
         self.links_admin = ("live", "today", "today_complete", "videos", "backup")
@@ -838,6 +839,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         self.create_complete = False
         self.force_reload = False
         self.reload_counter = ""
+        self.load_from_archives = False
 
         # to be validated ....
         self.config_recreate = []
@@ -889,12 +891,13 @@ class BirdhouseViewArchive(BirdhouseClass):
         if force:
             self.force_reload = True
 
-    def list_create(self, complete=False):
+    def list_create(self, complete=False, recreate=True):
         """
         Create list data for backup/archive directory
 
         Args:
             complete (bool): read complete information from files or cached information from database
+            recreate (bool): recreate data from archive directories
         """
         camera_settings = self.config.param["devices"]["cameras"]
         archive_total_size = 0
@@ -916,6 +919,16 @@ class BirdhouseViewArchive(BirdhouseClass):
 
         archive_changed = {}
         archive_info = self.config.db_handler.read("backup_info", "")
+
+        if archive_info == {}:
+            recreate = True
+
+        if recreate:
+            pass
+            # .................................
+            # .................................
+            # .................................
+            # .................................
 
         self.logging.info("Create data for archive view from '" + main_directory +
                           "' (complete=" + str(self.create_complete) + ") ...")
@@ -1135,9 +1148,6 @@ class BirdhouseViewArchive(BirdhouseClass):
                 self.logging.info("Interrupt creating the archive list.")
                 return
 
-        self.logging.debug(":::::::::::" + str(archive_changed))
-        self.views = archive_changed.copy()
-
         # get information what has been changed
         backup_info = self.config.db_handler.read("backup_info", "")
         if "changes" in backup_info:
@@ -1148,6 +1158,16 @@ class BirdhouseViewArchive(BirdhouseClass):
 
         # save data in backup database
         self.dir_size = archive_total_size
+        if "info" not in archive_changed:
+            archive_changed["info"] = {"dir_size": -1}
+
+        archive_changed["info"]["total_size"] = self.dir_size
+        archive_changed["info"]["total_files"] = archive_total_count
+        archive_changed["info"]["total_archives"] = count_entries
+
+        self.logging.debug(":::::::::::" + str(archive_changed))
+        self.views = archive_changed.copy()
+
         self.config.db_handler.write("backup_info", "", archive_changed)
         self.loading = "done"
         self.create_complete = False
@@ -1457,6 +1477,7 @@ class BirdhouseViewObjects(BirdhouseClass):
         self.create_complete = False
         self.force_reload = False
         self.reload_counter = ""
+        self.load_from_archives = False
 
         self.links_default = ("live", "today", "videos", "backup")
         self.links_admin = ("live", "today", "today_complete", "videos", "backup")
@@ -1508,12 +1529,13 @@ class BirdhouseViewObjects(BirdhouseClass):
             if force:
                 self.force_reload = True
 
-    def list_create(self, complete=False):
+    def list_create(self, complete=False, recreate=True):
         """
         Collect or create data for objects view.
 
         Args:
             complete (bool): read complete information from files or cached information from database
+            recreate (bool): recreate from archive files
         """
         if not self.detect_active:
             return
@@ -1535,9 +1557,12 @@ class BirdhouseViewObjects(BirdhouseClass):
                 "changes": True
             }
 
-        # in progress: get detection information from archive files
-        files_archive = self._list_create_from_archive(complete)
-        content["entries"] = files_archive
+        if recreate:
+            # in progress: get detection information from archive files
+            files_archive = self._list_create_from_archive(complete)
+            content["entries"] = files_archive
+        else:
+            self.logging.info("Read object detection data from database.")
 
         self.views = content
         self.loading = "done"
@@ -1834,7 +1859,6 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.timeout_living_last = time.time()
         self.timeout_living_signal = 20
 
-        self.create_initial = False
         self.create_archive = True
         self.create_archive_complete = False
 
@@ -1843,6 +1867,10 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.archive = BirdhouseViewArchive(config, self.tools, self.camera)
         self.favorite = BirdhouseViewFavorite(config, self.tools)
         self.object = BirdhouseViewObjects(config, self.tools, self.camera)
+
+        self.favorite.load_from_archives = False
+        self.archive.load_from_archives = False
+        self.object.load_from_archives = False
 
     def run(self):
         """
@@ -1870,24 +1898,33 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             if self.favorite.create and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
                 if not self.if_shutdown():
-                    if self.create_initial:
+                    if self.favorite.load_from_archives:
                         self.favorite.list_create(self.favorite.create_complete)
                     else:
                         self.favorite.list_create(self.favorite.create_complete, False)
+                        self.favorite.load_from_archives = True
                     self.favorite.request_done()
 
             # if archive to be read again (from time to time and depending on user activity)
             if self.archive.create and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
                 if not self.if_shutdown():
-                    self.archive.list_create(self.archive.create_complete)
+                    if self.archive.load_from_archives:
+                        self.archive.list_create(self.archive.create_complete)
+                    else:
+                        self.archive.list_create(self.archive.create_complete, False)
+                        self.archive.load_from_archives = True
                     self.archive.request_done()
 
             # if archive to be read again (from time to time and depending on user activity)
             if self.object.create and (count > count_rebuild or self.force_reload):
                 time.sleep(1)
                 if not self.if_shutdown():
-                    self.object.list_create(self.object.create_complete)
+                    if self.object.load_from_archives:
+                        self.object.list_create(self.object.create_complete)
+                    else:
+                        self.object.list_create(self.object.create_complete, False)
+                        self.object.load_from_archives = True
                     self.object.request_done()
 
             if self.force_reload:
