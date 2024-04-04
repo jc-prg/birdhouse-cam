@@ -1214,6 +1214,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             self.reset_error()
             if not silent:
                 self.logging.info("Stopped maintenance mode for '"+self.id+"/"+self.type+"/"+self.resolution+"'.")
+            else:
+                self.logging.debug("Stopped maintenance mode for '"+self.id+"/"+self.type+"/"+self.resolution+"'.")
 
     def set_system_info(self, active, line1="", line2="", color=None):
         """
@@ -1574,6 +1576,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         # return properties as values
         self.param["camera"] = self.camera.get_properties()
+        self.logging.debug("Initialized camera settings.")
 
     def _init_microphone(self):
         """
