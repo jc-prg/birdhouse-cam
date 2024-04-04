@@ -482,13 +482,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             bool: status setting camera resolution
         """
         try:
-
-            #config = self.stream.create_still_configuration({"size": (int(width), int(height))})
             self.configuration["main"]["size"] = (int(width), int(height))
-
-            self.logging.debug("Set resolution: " + str({"size": (int(width), int(height))}))
+            self.logging.debug("Set resolution: " + str(self.configuration["main"]["size"]))
             self.stream.stop()
-            #self.stream.configure(config)
             self.stream.configure(self.configuration)
             self.stream.start()
             time.sleep(1)
