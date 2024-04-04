@@ -215,24 +215,37 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         try:
             self.logging.debug("Switch mode and capture first image")
-            text = str(self.config.local_time())
             image = self.stream.switch_mode_and_capture_array(self.configuration, "main")
-            image = cv2.putText(image, str(text), (30, 40), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (0, 0, 0),
-                                2, cv2.LINE_AA)
-            image = cv2.putText(image, str(text), (30, 80), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (255, 255, 255),
-                                2, cv2.LINE_AA)
-
             if image is None or len(image) == 0:
                 raise Exception("Returned empty image.")
             else:
-                image_path = os.path.join(birdhouse_main_directories["data"], "test_connect_" + self.id + ".jpg")
-                cv2.imwrite(image_path, image)
+                self.create_test_image(image, "switch mode and capture first image")
                 self.logging.debug("- Done, see test image: " + image_path)
             return True
 
         except Exception as err:
             self.raise_warning("- Error reading first image from PiCamera '"+self.source+"': " + str(err))
             return "WARNING"
+
+    def create_test_image(self, image=None, context=""):
+        """
+        create test image incl. date and context information
+
+        Args:
+            image (numpy.ndarray): image to be saved
+            context (str): name the context here
+        """
+        if image is None:
+            image = self.stream.capture_array("main")
+
+        text = str(self.config.local_time()) + " - " + context
+        image = cv2.putText(image, str(text), (30, 40), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (0, 0, 0),
+                            2, cv2.LINE_AA)
+        image = cv2.putText(image, str(text), (30, 80), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (255, 255, 255),
+                            2, cv2.LINE_AA)
+
+        image_path = os.path.join(birdhouse_main_directories["data"], "test_connect_" + self.id + ".jpg")
+        cv2.imwrite(image_path, image)
 
     def reconnect(self):
         """
