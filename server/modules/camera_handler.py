@@ -527,7 +527,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             image_path = os.path.join(birdhouse_main_directories["data"], "test_connect_" + self.id + ".jpg")
             cv2.imwrite(image_path, image)
 
-            self.logging.debug("Save test image: " + image_path)
+            self.logging.debug("Save test image: " + context)
+            self.logging.debug("               : " + image_path)
 
         except Exception as e:
             self.logging.warning("Could not save test image: " + image_path + " / " + str(e))
