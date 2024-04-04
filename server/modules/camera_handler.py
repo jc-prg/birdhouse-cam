@@ -487,6 +487,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.stream.stop()
             self.stream.configure(config)
             self.stream.start()
+            time.sleep(1)
             self.logging.debug("Set resolution: Done.")
             return True
         except Exception as err:
