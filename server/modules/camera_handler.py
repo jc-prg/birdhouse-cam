@@ -142,6 +142,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.connected = False
         self.available_devices = {}
         self.first_connect = True
+        self.create_test_images = False
 
         self.picamera_controls = {
             "saturation":       ["Saturation",          "rwm", 0.0, 32.0, "float"],
@@ -483,6 +484,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         try:
             self.configuration["main"]["size"] = (int(width), int(height))
+            self.configuration["raw"]["size"] = (int(width), int(height))
             self.logging.debug("Set resolution: " + str(self.configuration["main"]["size"]))
             self.stream.stop()
             self.stream.configure(self.configuration)
@@ -517,6 +519,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             image (numpy.ndarray): image to be saved
             context (str): name the context here
         """
+        if not self.create_test_images:
+            return
+
         try:
             if image is None:
                 image = self.stream.capture_array("main")
