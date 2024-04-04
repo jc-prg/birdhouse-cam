@@ -219,35 +219,13 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if image is None or len(image) == 0:
                 raise Exception("Returned empty image.")
             else:
-                self.create_test_image(image, "switch mode and capture first image")
+                self.camera_create_test_image("switch mode and capture first image", image)
                 self.logging.debug("- Done.")
             return True
 
         except Exception as err:
             self.raise_warning("- Error reading first image from PiCamera '"+self.source+"': " + str(err))
             return "WARNING"
-
-    def create_test_image(self, image=None, context=""):
-        """
-        create test image incl. date and context information
-
-        Args:
-            image (numpy.ndarray): image to be saved
-            context (str): name the context here
-        """
-        if image is None:
-            image = self.stream.capture_array("main")
-
-        text = str(self.config.local_time()) + " - " + context
-        image = cv2.putText(image, str(text), (30, 40), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (0, 0, 0),
-                            2, cv2.LINE_AA)
-        image = cv2.putText(image, str(text), (30, 80), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (255, 255, 255),
-                            2, cv2.LINE_AA)
-
-        image_path = os.path.join(birdhouse_main_directories["data"], "test_connect_" + self.id + ".jpg")
-        cv2.imwrite(image_path, image)
-
-        self.logging.debug("Save test image: " + image_path)
 
     def reconnect(self):
         """
@@ -306,8 +284,10 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         for c_key in self.param["image_presets"]:
             if c_key in self.properties_get and "w" in self.properties_get[c_key][1]:
                 result = self.set_properties(c_key, self.param["image_presets"][c_key], True)
-                self.logging.debug("... set " + c_key + "=" + str(self.param["image_presets"][c_key]) + " - " + str(result))
+                self.logging.debug("... set " + c_key + "=" + str(self.param["image_presets"][c_key]) + " - " +
+                                   str(result))
         self.stream.start()
+        self.camera_create_test_image("set properties init")
 
     def set_properties(self, key, value="", init=False):
         """
@@ -525,6 +505,28 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         else:
             (width, height) = self.stream.still_configuration.main.size
         return [width, height]
+
+    def camera_create_test_image(self, context="", image=None):
+        """
+        create test image incl. date and context information
+
+        Args:
+            image (numpy.ndarray): image to be saved
+            context (str): name the context here
+        """
+        if image is None:
+            image = self.stream.capture_array("main")
+
+        text = str(self.config.local_time()) + " - " + context
+        image = cv2.putText(image, str(text), (30, 40), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (0, 0, 0),
+                            2, cv2.LINE_AA)
+        image = cv2.putText(image, str(text), (30, 80), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (255, 255, 255),
+                            2, cv2.LINE_AA)
+
+        image_path = os.path.join(birdhouse_main_directories["data"], "test_connect_" + self.id + ".jpg")
+        cv2.imwrite(image_path, image)
+
+        self.logging.debug("Save test image: " + image_path)
 
     def camera_status(self, source, name):
         """
