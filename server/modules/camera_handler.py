@@ -387,6 +387,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         for i_key in self.picamera_image:
             self.properties_get[i_key] = self.picamera_image[i_key].copy()
             i_key_full = self.picamera_image[i_key][0]
+            self.logging.debug("- " + str(i_key))
             try:
                 image_properties = self.stream.capture_metadata()
                 if i_key_full in image_properties:
