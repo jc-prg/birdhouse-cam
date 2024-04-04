@@ -387,11 +387,14 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         for i_key in self.picamera_image:
             self.properties_get[i_key] = self.picamera_image[i_key].copy()
             i_key_full = self.picamera_image[i_key][0]
-            image_properties = self.stream.capture_metadata()
-            if i_key_full in image_properties:
-                self.properties_get[i_key][0] = image_properties[i_key_full]
-            else:
-                self.properties_get[i_key][0] = -1
+            try:
+                image_properties = self.stream.capture_metadata()
+                if i_key_full in image_properties:
+                    self.properties_get[i_key][0] = image_properties[i_key_full]
+                else:
+                    self.properties_get[i_key][0] = -1
+            except Exception as e:
+                self.logging.error("Could not capture metadata from stream: " + str(e))
 
         self.logging.debug("(3) Get camera and stream properties for '" + self.id + "' (PiCamera2)")
         for p_key in self.picamera_cam:
