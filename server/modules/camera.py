@@ -1560,7 +1560,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.camera.camera_create_test_image("set resolution")
             dimensions = self.param["image"]["resolution"].split("x")
             self.logging.debug("Set resolution for '" + self.id + "': " + str(dimensions))
-            self.camera.set_resolution(width=float(dimensions[0]), height=float(dimensions[1]))
+            #self.camera.set_resolution(width=float(dimensions[0]), height=float(dimensions[1]))
 
             self.camera.camera_create_test_image("get resolution")
             current = self.camera.get_resolution()
