@@ -1537,17 +1537,19 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         set resolution and identify max. resolution for USB cameras
         """
         self.logging.debug("Initialize camera settings ...")
-        self.camera.camera_create_test_image("start init camera settings")
         if self.camera is None or not self.camera.if_connected():
             return
 
         # set saturation, contrast, brightness
+        self.camera.camera_create_test_image("set initial properties")
         available_settings = self.camera.get_properties_available()
         for key in available_settings:
             if key in self.param["image_presets"] and float(self.param["image_presets"][key]) != -1:
+                self.logging.debug("Set properties: " + key + "=" + str(self.param["image_presets"][key]))
                 self.camera.set_properties(key, float(self.param["image_presets"][key]))
 
         # set resolutions, define grop area
+        self.camera.camera_create_test_image("get resolutions")
         current = self.camera.get_resolution()
         self.logging.info("- Current resolution: " + str(current))
 
@@ -1555,6 +1557,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.logging.debug("- Maximum resolution: " + str(self.max_resolution))
 
         if "x" in self.param["image"]["resolution"]:
+            self.camera.camera_create_test_image("set resolution")
             dimensions = self.param["image"]["resolution"].split("x")
             self.logging.debug("Set resolution for '" + self.id + "': " + str(dimensions))
             self.camera.set_resolution(width=float(dimensions[0]), height=float(dimensions[1]))
