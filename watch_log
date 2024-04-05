@@ -22,7 +22,7 @@ NC='\x1b[0m' # No Color
 monitor_logfile() {
     date
     echo
-    tail -n 60 $LOGFILE | sed -e "s/\(INFO\)/$GREEN&$NC/g" -e "s/\(WARNING\)/$YELLOW&$NC/g" -e "s/\(ERROR\|CRITICAL\)/$RED&$NC/g" -e "s/\(OK\)/$MAGENTA&$NC/g" -e "s/\(DEBUG\)/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/"
+    tail -n 60 $LOGFILE | sed -e "s/\(INFO\)/$GREEN&$NC/g" -e "s/\(WARNING\)/$YELLOW&$NC/g" -e "s/\(ERROR\|CRITICAL\)/$RED&$NC/g" -e "s/\(OK\)/$GREEN&$NC/g" -e "s/\(DEBUG\)/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/"
 }
 
 loop_logfile() {
