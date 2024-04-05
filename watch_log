@@ -28,7 +28,12 @@ TEXT_DEBUG='\(DEBUG\)'
 # Function to monitor logfile
 monitor_logfile() {
     DATE=`date`
-    echo "$DATE       ... end with <Strg+C>"
+    INFO="... end with <Strg+C>"
+    term_width=$(tput cols)
+    text_length=${#text}
+    spaces_to_add=$((term_width - text_length))
+
+    echo "$DATE$spaces_to_add... end with <Strg+C>"
     echo
     tail -n 60 $LOGFILE | sed -e "s/$TEXT_GREEN/$GREEN&$NC/g" -e "s/$TEXT_YELLOW/$YELLOW&$NC/g" -e "s/$TEXT_MAGENTA/$MAGENTA&$NC/g" -e "s/$TEXT_RED/$RED&$NC/g" -e "s/$TEXT_DEBUG/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/" -e "s/$TEXT_CYAN/$CYAN&$NC/g"
     #tail -n 60 $LOGFILE | sed -e "s/$TEXT_GREEN/$GREEN&$NC/g" -e "s/$TEXT_YELLOW/$YELLOW&$NC/g" -e "s/$TEXT_RED/$RED&$NC/g" -e "s/\(OK\)/$GREEN&$NC/g" -e "s/\(DEBUG\)/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/"
