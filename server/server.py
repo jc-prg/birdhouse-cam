@@ -640,9 +640,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             backup.start_backup()
             response = {"backup": "started"}
         elif param["command"] == "force-restart":
-            srv_logging.info("-------------------------------------------")
+            srv_logging.info("---------------------------------------------")
             srv_logging.info("FORCE SHUTDOWN OF BIRDHOUSE SERVER ...")
-            srv_logging.info("-------------------------------------------")
+            srv_logging.info("---------------------------------------------")
             config.force_shutdown()
             health_check.set_start()
             response = {"shutdown": "started"}
@@ -1378,19 +1378,19 @@ if __name__ == "__main__":
     time.sleep(2)
 
     if birdhouse_loglevel_default == logging.WARNING:
-        srv_logging.warning('-------------------------------------------')
+        srv_logging.warning('---------------------------------------------')
         srv_logging.warning('Starting ... log level WARNING')
-        srv_logging.warning('-------------------------------------------')
+        srv_logging.warning('---------------------------------------------')
 
     elif birdhouse_loglevel_default == logging.ERROR:
-        srv_logging.error('-------------------------------------------')
+        srv_logging.error('---------------------------------------------')
         srv_logging.error('Starting ... log level ERROR')
-        srv_logging.error('-------------------------------------------')
+        srv_logging.error('---------------------------------------------')
 
     else:
-        srv_logging.info('-------------------------------------------')
+        srv_logging.info('---------------------------------------------')
         srv_logging.info('Starting ...')
-        srv_logging.info('-------------------------------------------')
+        srv_logging.info('---------------------------------------------')
         srv_logging.info('* Logging into File: ' + str(birdhouse_log_as_file))
         srv_logging.info('* Cache handling: cache=' + str(birdhouse_cache) +
                          ", cache_for_archive=" + str(birdhouse_cache_for_archive))
@@ -1514,7 +1514,7 @@ if __name__ == "__main__":
         server.shutdown()
         time.sleep(5)
         srv_logging.info("Stopped WebServer.")
-        srv_logging.info("-------------------------------------------")
+        srv_logging.info("---------------------------------------------")
 
         count_running_threads = 0
         for thread in threading.enumerate():
@@ -1532,6 +1532,6 @@ if __name__ == "__main__":
 
         if count_running_threads > 0:
             srv_logging.info("-> Killing the " + str(count_running_threads) + " threads that could not be stopped ...")
-        srv_logging.info("-------------------------------------------")
+        srv_logging.info("---------------------------------------------")
         os._exit(os.EX_OK)
 
