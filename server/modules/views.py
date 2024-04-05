@@ -2244,7 +2244,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             if date_backup != "":
                 content["archive_exists"] = {}
                 for camera in self.archive.views:
-                    if (date_backup in self.archive.views[camera]["entries"]
+                    if ("entries" in self.archive.views[camera] and date_backup in self.archive.views[camera]["entries"]
                             and self.archive.views[camera]["entries"][date_backup]["count_cam"] > 0):
                         content["archive_exists"][camera] = True
                     else:
