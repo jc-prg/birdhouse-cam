@@ -15,6 +15,12 @@ CYAN='\x1b[96m'
 WHITE='\x1b[97m'
 NC='\x1b[0m' # No Color
 
+TEXT_GREEN='\(INFO\|OK\)'
+TEXT_YELLOW='\(WARNING\)'
+TEXT_RED='\(ERROR\|CRITICAL\)'
+TEXT_CYAN='\(---\)'
+TEXT_DEBUG='\(DEBUG\)'
+
 
 # watch -n 1 "tail -n 20 logfile.txt | grep --color=always -E 'ERROR|WARNING' | sed 's/ERROR/\o033[1;31m&\o033[0m/g' | sed 's/WARNING/\o033[1;33m&\o033[0m/g'"
 
@@ -22,7 +28,8 @@ NC='\x1b[0m' # No Color
 monitor_logfile() {
     date
     echo
-    tail -n 60 $LOGFILE | sed -e "s/\(INFO\)/$GREEN&$NC/g" -e "s/\(WARNING\)/$YELLOW&$NC/g" -e "s/\(ERROR\|CRITICAL\)/$RED&$NC/g" -e "s/\(OK\)/$GREEN&$NC/g" -e "s/\(DEBUG\)/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/"
+    tail -n 60 $LOGFILE | sed -e "s/$TEXT_GREEN/$GREEN&$NC/g" -e "s/$TEXT_YELLOW/$YELLOW&$NC/g" -e "s/$TEXT_RED/$RED&$NC/g" -e "s/$TEXT_DEBUG/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/" -e "s/$TEXT_CYAN/$CYAN&$NC/g"
+    #tail -n 60 $LOGFILE | sed -e "s/$TEXT_GREEN/$GREEN&$NC/g" -e "s/$TEXT_YELLOW/$YELLOW&$NC/g" -e "s/$TEXT_RED/$RED&$NC/g" -e "s/\(OK\)/$GREEN&$NC/g" -e "s/\(DEBUG\)/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/"
 }
 
 loop_logfile() {
