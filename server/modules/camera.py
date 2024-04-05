@@ -449,7 +449,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         Returns:
             bool: status if loaded images correctly
         """
-        if "resolution_cropped" in self.param["image"]:
+        if "resolution_cropped" in self.param["image"] and (self.type == "camera" or self.type == "normalized"):
             resolution = self.param["image"]["resolution_cropped"]
         elif "resolution_current" in self.param["image"]:
             resolution = self.param["image"]["resolution_current"]
