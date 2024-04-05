@@ -33,6 +33,7 @@ monitor_logfile() {
     #tail -n 60 $LOGFILE | sed -e "s/$TEXT_GREEN/$GREEN&$NC/g" -e "s/$TEXT_YELLOW/$YELLOW&$NC/g" -e "s/$TEXT_RED/$RED&$NC/g" -e "s/\(OK\)/$GREEN&$NC/g" -e "s/\(DEBUG\)/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/"
 }
 
+# Function to continuously watch updates
 loop_logfile() {
   while true; do
     clear  # Clear the screen before each update
@@ -41,11 +42,14 @@ loop_logfile() {
   done
 }
 
+# function to show complete logfile
+end_watch() {
+    echo -n 60 $LOGFILE | sed -e "s/$TEXT_GREEN/$GREEN&$NC/g" -e "s/$TEXT_YELLOW/$YELLOW&$NC/g" -e "s/$TEXT_MAGENTA/$MAGENTA&$NC/g" -e "s/$TEXT_RED/$RED&$NC/g" -e "s/$TEXT_DEBUG/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/" -e "s/$TEXT_CYAN/$CYAN&$NC/g"
+}
+trap end_watch SIGINT
+
 if [ ! $PARAM ]; then
   loop_logfile
-  #watch "head -n 2 $LOGFILE | tail -n 60 $LOGFILE"
-  #watch -n 2 "tail -n 60 $LOGFILE | grep --color=always -E 'ERROR|WARNING' | sed 's/ERROR/\o033[1;31m&\o033[0m/g' | sed 's/WARNING/\o033[1;33m&\o033[0m/g'"
-  cat $LOGFILE
 
 else
   watch "head -n 2 $LOGFILE | tail -n 120 $LOGFILE | grep $PARAM"
