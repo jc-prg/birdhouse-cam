@@ -2460,7 +2460,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 birdhouse_initial_connect_msg[key] += (", error='" + str(system["video_devices_complete"][key]["error"])
                                                        + "'")
             elif not birdhouse_env["test_video_devices"]:
-                self.logging.info(camera_string + " (not test)")
+                self.logging.info(camera_string + " (w/o test)")
             else:
                 self.logging.info(camera_string + " - OK")
 
