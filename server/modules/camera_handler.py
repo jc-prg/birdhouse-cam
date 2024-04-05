@@ -489,12 +489,15 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             #                                                            lores={"size": (300, 150)})
 
             self.configuration["main"]["size"] = (int(width), int(height))
-            self.configuration["lores"]["size"] = (200, 150)
             #self.configuration["raw"]["size"] = (int(width), int(height))
 
             self.stream.align_configuration(self.configuration)
             self.logging.debug("Set resolution: " + str(self.configuration["main"]["size"]))
             self.stream.configure(self.configuration)
+
+            self.configuration["lores"]["size"] = (200, 150)
+            self.stream.configure(self.configuration)
+
             self.stream.start()
             time.sleep(1)
             self.logging.debug("Set resolution: Done.")
