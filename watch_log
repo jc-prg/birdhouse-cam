@@ -31,9 +31,11 @@ monitor_logfile() {
     INFO="... end with <Strg+C>"
     term_width=$(tput cols)
     text_length=${#text}
-    spaces_to_add=$((term_width - text_length))
+    date_length=${#DATE}
+    spaces_to_add=$((term_width - text_length - date_length -   2))
+    spaces=$(printf '%*s' "$spaces_to_add")
 
-    echo "$DATE$spaces_to_add... end with <Strg+C>"
+    echo "$DATE $spaces $INFO"
     echo
     tail -n 60 $LOGFILE | sed -e "s/$TEXT_GREEN/$GREEN&$NC/g" -e "s/$TEXT_YELLOW/$YELLOW&$NC/g" -e "s/$TEXT_MAGENTA/$MAGENTA&$NC/g" -e "s/$TEXT_RED/$RED&$NC/g" -e "s/$TEXT_DEBUG/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/" -e "s/$TEXT_CYAN/$CYAN&$NC/g"
     #tail -n 60 $LOGFILE | sed -e "s/$TEXT_GREEN/$GREEN&$NC/g" -e "s/$TEXT_YELLOW/$YELLOW&$NC/g" -e "s/$TEXT_RED/$RED&$NC/g" -e "s/\(OK\)/$GREEN&$NC/g" -e "s/\(DEBUG\)/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/"
