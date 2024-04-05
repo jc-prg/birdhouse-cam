@@ -402,7 +402,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 if not self.connected:
                     self.stream.start()
                 image_properties = self.stream.capture_metadata()
-                #image_properties = {}
                 if i_key_full in image_properties:
                     self.properties_get[i_key][0] = image_properties[i_key_full]
                 else:
@@ -486,8 +485,11 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         try:
             self.stream.stop()
-            #self.configuration = self.stream.create_still_configuration({"size": (int(width), int(height))})
-            self.configuration["main"]["size"] = (int(width), int(height))
+            self.configuration = self.stream.create_still_configuration(main={"size": (int(width), int(height))},
+                                                                        lores={"size": (200, 300)})
+            self.stream.align_configuration(self.configuration)
+
+            #self.configuration["main"]["size"] = (int(width), int(height))
             #self.configuration["raw"]["size"] = (int(width), int(height))
             self.logging.debug("Set resolution: " + str(self.configuration["main"]["size"]))
             self.stream.configure(self.configuration)
