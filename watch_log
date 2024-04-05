@@ -18,8 +18,8 @@ NC='\x1b[0m' # No Color
 TEXT_GREEN='\(INFO\|OK\)'
 TEXT_YELLOW='\(WARNING\)'
 TEXT_RED='\(ERROR\|CRITICAL\)'
-TEXT_CYAN='\(---\|-->\|GO!\|FORCE SHUTDOWN OF BIRDHOUSE SERVER \.\.\.\|Starting \.\.\.\)'
-TEXT_MAGENTA='\(cam[0-9]\|\/dev\/video[0-9]\|\/dev\/video[0-9][0-9]\)'
+TEXT_MAGENTA='\(---\|-->\|GO!\|FORCE SHUTDOWN OF BIRDHOUSE SERVER \.\.\.\|Starting \.\.\.\)'
+TEXT_CYAN='\(cam[0-9]\|\/dev\/video[0-9]\|\/dev\/video[0-9][0-9]\)'
 TEXT_DEBUG='\(DEBUG\)'
 
 
