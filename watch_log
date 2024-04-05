@@ -44,7 +44,8 @@ loop_logfile() {
 
 # function to show complete logfile
 end_watch() {
-    echo -n 60 $LOGFILE | sed -e "s/$TEXT_GREEN/$GREEN&$NC/g" -e "s/$TEXT_YELLOW/$YELLOW&$NC/g" -e "s/$TEXT_MAGENTA/$MAGENTA&$NC/g" -e "s/$TEXT_RED/$RED&$NC/g" -e "s/$TEXT_DEBUG/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/" -e "s/$TEXT_CYAN/$CYAN&$NC/g"
+    clear
+    cat $LOGFILE | sed -e "s/$TEXT_GREEN/$GREEN&$NC/g" -e "s/$TEXT_YELLOW/$YELLOW&$NC/g" -e "s/$TEXT_MAGENTA/$MAGENTA&$NC/g" -e "s/$TEXT_RED/$RED&$NC/g" -e "s/$TEXT_DEBUG/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/" -e "s/$TEXT_CYAN/$CYAN&$NC/g"
     exit 0
 }
 trap end_watch SIGINT
