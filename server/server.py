@@ -641,7 +641,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = {"backup": "started"}
         elif param["command"] == "force-restart":
             srv_logging.info("-------------------------------------------")
-            srv_logging.info("FORCED SHUT-DOWN OF BIRDHOUSE SERVER .... !")
+            srv_logging.info("FORCE SHUTDOWN OF BIRDHOUSE SERVER ...")
             srv_logging.info("-------------------------------------------")
             config.force_shutdown()
             health_check.set_start()
