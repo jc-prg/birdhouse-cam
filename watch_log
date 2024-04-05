@@ -19,7 +19,7 @@ TEXT_GREEN='\(INFO\|OK\)'
 TEXT_YELLOW='\(WARNING\)'
 TEXT_RED='\(ERROR\|CRITICAL\)'
 TEXT_MAGENTA='\(---\|-->\|GO!\|FORCE SHUTDOWN OF BIRDHOUSE SERVER \.\.\.\|Starting \.\.\.\)'
-TEXT_CYAN='\(cam[0-9]\|\/dev\/video[0-9]\|\/dev\/video[0-9][0-9]\)'
+TEXT_CYAN='\(cam[0-9]\|\/dev\/video[0-9]\|\/dev\/media[0-9]\|\/dev\/video[0-9][0-9]|\/dev\/picam\)'
 TEXT_DEBUG='\(DEBUG\)'
 
 
