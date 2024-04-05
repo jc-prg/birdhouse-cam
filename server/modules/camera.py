@@ -301,7 +301,8 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         Args:
             mode (bool): activate or deactivate maintenance mode
         """
-        self.maintenance_mode = mode
+        pass
+        #self.maintenance_mode = mode
 
     def if_ready(self):
         """
