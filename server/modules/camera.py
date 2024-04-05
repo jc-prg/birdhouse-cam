@@ -64,6 +64,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         self._last_activity = 0
         self._last_activity_count = 0
         self._last_activity_per_stream = {}
+        self._last_image = None
         self._start_time = None
         self._start_delay_stream = 1
         self._connected = False
@@ -83,10 +84,8 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         while self._running:
             self._start_time = time.time()
 
-            #if self.maintenance_mode:
-            #    pass
-
             if self.param["active"] \
+                    and not self.maintenance_mode \
                     and self.camera is not None and self.camera.if_connected() \
                     and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
                 try:
@@ -111,6 +110,9 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
                             except cv2.error as e:
                                 self.raise_warning("Could not mark image as 'from cache due to error'.")
                         self._stream = self._stream_last.copy()
+
+            elif self.maintenance_mode:
+                pass
 
             else:
                 self.active = False
@@ -292,6 +294,15 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         self.duration_max_lowres = 1 / self.fps_max_lowres
         self.duration_slow = 1 / self.fps_slow
 
+    def set_maintenance_mode(self, mode=True):
+        """
+        set raw stream to maintenance mode, in this mode reading is paused
+
+        Args:
+            mode (bool): activate or deactivate maintenance mode
+        """
+        self.maintenance_mode = mode
+
     def if_ready(self):
         """
         check if stream is ready to deliver images, connection to camera exists
@@ -438,7 +449,9 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         Returns:
             bool: status if loaded images correctly
         """
-        if "resolution_current" in self.param["image"]:
+        if "resolution_cropped" in self.param["image"]:
+            resolution = self.param["image"]["resolution_cropped"]
+        elif "resolution_current" in self.param["image"]:
             resolution = self.param["image"]["resolution_current"]
         elif self.param["image"]["resolution"] and "x" in self.param["image"]["resolution"]:
             resolution = self.param["image"]["resolution"].split("x")
@@ -486,7 +499,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             elif self.active and self.stream_raw is not None \
                     and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
                 try:
-                    raw = self.read_raw_and_edit(stream=True, stream_id=self._stream_id_base, return_error_image=True)
+                    raw = self.read_raw_and_edit(stream=True, stream_id=int(self._stream_id_base),
+                                                 return_error_image=True)
                     if raw is None or len(raw) == 0:
                         raise Exception("Error with 'read_raw_and_edit()': empty image.")
 
@@ -2462,8 +2476,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         if active:
             self.logging.info("Starting maintenance mode for CAMERA '" + self.id + " ... ")
+
+        self.camera_stream_raw.set_maintenance_mode(active)
         for stream in self.camera_streams:
             self.camera_streams[stream].set_maintenance_mode(active, line1, line2, True)
+
         if not active:
             self.logging.info("Stopped maintenance mode for CAMERA '" + self.id + ". ")
 
