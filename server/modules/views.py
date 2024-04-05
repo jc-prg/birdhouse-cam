@@ -1785,7 +1785,7 @@ class BirdhouseViewObjects(BirdhouseClass):
             else:
                 entry["lowres"] = ""
                 entry["error"] = "could not create lowres (1)"
-                self.logging.warning("_list_create_label_thumbnail: image DB entry not OK for '" + label + "' - " + str(entry))
+                self.logging.warning("_list_create_label_thumbnail: image DB entry corrupt for '" + label + "' - " + str(entry))
                 return entry
 
         entry["directory"] = self.config.db_handler.directory("images", entry["datestamp"], False)

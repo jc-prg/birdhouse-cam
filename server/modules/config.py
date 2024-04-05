@@ -1060,7 +1060,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                 self.add_to_status_queue(config=category, date=entry_date, key=entry_id, change_status="favorit",
                                          status=0)
         else:
-            self.logging.debug("- NOT OK " + entry_id)
+            self.logging.debug("- NO ENTRY " + entry_id)
             response["error"] = "no entry found with stamp " + entry_id
 
         return response

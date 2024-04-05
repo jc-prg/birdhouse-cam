@@ -485,11 +485,11 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         try:
             self.stream.stop()
-            self.configuration = self.stream.create_still_configuration(main={"size": (int(width), int(height))})
+            #self.configuration = self.stream.create_still_configuration(main={"size": (int(width), int(height))})
             #self.configuration = self.stream.create_still_configuration(main={"size": (int(width), int(height))},
             #                                                            lores={"size": (300, 150)})
 
-            #self.configuration["main"]["size"] = (int(width), int(height))
+            self.configuration["main"]["size"] = (int(width), int(height))
             #self.configuration["raw"]["size"] = (int(width), int(height))
 
             #self.stream.align_configuration(self.configuration)

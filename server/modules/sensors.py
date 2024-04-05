@@ -236,7 +236,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                 self.reset_error()
 
             except Exception as err:
-                self.raise_error(message="Initial load " + self.param["type"] + " not OK: " + str(err),
+                self.raise_error(message="Initial load " + self.param["type"] + " failed: " + str(err),
                                  connect=False)
                 return
 
