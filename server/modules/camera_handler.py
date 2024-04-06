@@ -64,7 +64,7 @@ class CameraInformation:
         for key in devices["initial"]:
             device = devices["initial"][key]
             device_info = {}
-            if device["DEVTYPE"] == "usb_interface":
+            if "DEVTYPE" in device and device["DEVTYPE"] == "usb_interface":
                 device_info["interface"] = "usb"
                 device_info["image"] = True
                 device_info["shape"] = []
@@ -97,7 +97,7 @@ class CameraInformation:
 
         if birdhouse_env["rpi_active"]:
             devices["complete"]["/dev/picam"] = {"dev": "/dev/picam", "info": "PiCamera", "image": True,
-                                                 "shape": [], "bus": ""}
+                                                 "shape": [], "bus": "picam"}
             devices["short"]["/dev/picam"] = "/dev/picam (PiCamera)"
             devices["list"]["PiCamera"] = 1
 
