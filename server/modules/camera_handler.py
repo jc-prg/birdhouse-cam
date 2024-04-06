@@ -131,7 +131,7 @@ class CameraInformation:
                     bus = "(no USB)"
 
                 if all:
-                    self.logging.info(video_device.ljust(45) + " - " + bus)
+                    self.logging.info(video_device.ljust(48) + " - " + bus)
                 elif source in value:
                     self.logging.info("Identified device: " + video_device + ": " + bus)
                     return bus
