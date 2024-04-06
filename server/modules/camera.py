@@ -1643,15 +1643,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                          str(self._stream_errors) + " errors.")
 
                 # if error reload from time to time
-                if self.if_error() and (reload_time + self._interval_reload_if_error) < time.time():
-                    self.logging.warning("....... Reload CAMERA '" + self.id + "' due to errors --> " +
-                                         str(round(reload_time, 1)) + " + " +
-                                         str(round(self._interval_reload_if_error, 1)) + " > " +
-                                         str(round(time.time(), 1)))
-                    self.logging.warning("        " + self.if_error(details=True))
-                    reload_time = time.time()
-                    self.config_update = True
-                    self.reload_camera = True
+                if self.if_reconnect_on_error():
+                    self.reconnect(directly=False)
 
                 # check if camera is paused, wait with all processes ...
                 if not self._paused:
@@ -2606,6 +2599,30 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             return False
         else:
             return True
+
+    def if_reconnect_on_error(self):
+        """
+        check if reconnect is required (error, time since last reconnect, ...)
+
+        Returns:
+            bool: status if to be reconnected
+        """
+        reload = False
+        self.logging.debug("Check if reload on errors is required ...")
+        if time.time() > self.reload_tried + self._interval_reload_if_error:
+            if self.error:
+                reload = True
+            if self.camera_stream_raw.error:
+                reload = True
+
+        if reload:
+            self.logging.info("....... Reload CAMERA '" + self.id + "' due to errors --> " +
+                              str(round(self.reload_tried, 1)) + " + " +
+                              str(round(self._interval_reload_if_error, 1)) + " > " +
+                              str(round(time.time(), 1)))
+            self.logging.info("        " + self.if_error(details=True))
+
+        return reload
 
     def update_main_config(self):
         """
