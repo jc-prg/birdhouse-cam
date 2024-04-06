@@ -3,6 +3,7 @@
 source .env
 
 LOGFILE="$BIRDHOUSE_DIR_LOGGING/server.log"
+LOGFILE_LINES=60
 PARAM=$1
 
 BLACK='\x1b[90m'
@@ -19,7 +20,7 @@ TEXT_GREEN='\(INFO\|OK\)'
 TEXT_YELLOW='\(WARNING\)'
 TEXT_RED='\(ERROR\|CRITICAL\)'
 TEXT_MAGENTA='\(---\|-->\|GO!\|FORCE SHUTDOWN OF BIRDHOUSE SERVER \.\.\.\|Starting \.\.\.\)'
-TEXT_CYAN='\(cam[0-9]\|\/dev\/video[0-9]\|\/dev\/media[0-9]\|\/dev\/video[0-9][0-9]\|\/dev\/picam\)'
+TEXT_CYAN='\(cam[0-9]\|\/dev\/video[0-9]\|\/dev\/media[0-9]\|\/dev\/video[0-9][0-9]\|\/dev\/picam\|mic[0-9]\|sensor[0-9]\)'
 TEXT_DEBUG='\(DEBUG\)'
 
 
@@ -37,7 +38,7 @@ monitor_logfile() {
 
     echo "$INFO $spaces $DATE"
     echo
-    tail -n 60 $LOGFILE | sed -e "s/$TEXT_GREEN/$GREEN&$NC/g" -e "s/$TEXT_YELLOW/$YELLOW&$NC/g" -e "s/$TEXT_MAGENTA/$MAGENTA&$NC/g" -e "s/$TEXT_RED/$RED&$NC/g" -e "s/$TEXT_DEBUG/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/" -e "s/$TEXT_CYAN/$CYAN&$NC/g"
+    tail -n $LOGFILE_LINES $LOGFILE | sed -e "s/$TEXT_GREEN/$GREEN&$NC/g" -e "s/$TEXT_YELLOW/$YELLOW&$NC/g" -e "s/$TEXT_MAGENTA/$MAGENTA&$NC/g" -e "s/$TEXT_RED/$RED&$NC/g" -e "s/$TEXT_DEBUG/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/" -e "s/$TEXT_CYAN/$CYAN&$NC/g"
     #tail -n 60 $LOGFILE | sed -e "s/$TEXT_GREEN/$GREEN&$NC/g" -e "s/$TEXT_YELLOW/$YELLOW&$NC/g" -e "s/$TEXT_RED/$RED&$NC/g" -e "s/\(OK\)/$GREEN&$NC/g" -e "s/\(DEBUG\)/$BLUE&$CYAN/g" -e "s/\(\)/$NC&/"
 }
 
