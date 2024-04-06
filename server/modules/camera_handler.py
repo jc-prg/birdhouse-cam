@@ -38,7 +38,7 @@ class CameraInformation:
             output = output.decode()
             output = output.split("\n")
         except Exception as e:
-            ch_logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
+            self.logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
             return system
 
         try:
@@ -47,7 +47,7 @@ class CameraInformation:
             ls_usb = ls_usb.decode()
             ls_usb = ls_usb.split("\n")
         except Exception as e:
-            ch_logging.warning("Could not video device bus information. Check, if lsusb is installed. " + str(e))
+            self.logging.warning("Could not video device bus information. Check, if lsusb is installed. " + str(e))
             return system
 
         last_key = "none"
@@ -80,6 +80,61 @@ class CameraInformation:
         self.logging.debug(str(devices))
 
         return devices.copy()
+
+    def get_bus_information(self, source, all=False):
+        """
+        get bus information for given device
+
+        Args:
+            source (str): device identifier, e.g., /dev/video0
+            all (bool): list bus information for all devices
+        Return:
+            str|dict: bus information, e.g,, 001/002
+        """
+        self.logging.debug("Identify bus information for device " + source)
+        try:
+            process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
+            output = process.communicate()[0]
+            output = output.decode()
+            output = output.split("\n")
+        except Exception as e:
+            self.logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
+            return "N/A"
+
+        try:
+            process = subprocess.Popen(["lsusb"], stdout=subprocess.PIPE, shell=True)
+            ls_usb = process.communicate()[0]
+            ls_usb = ls_usb.decode()
+            ls_usb = ls_usb.split("\n")
+        except Exception as e:
+            self.logging.warning("Could not video device bus information. Check, if lsusb is installed. " + str(e))
+            return "N/A"
+
+        for value in output:
+            if ":" in value:
+                last_key = value
+
+            elif value != "":
+                value = value.replace("\t", "")
+                info = last_key.split(":")
+
+                video_device = value.ljust(12) + info[0]
+                bus = ""
+                for line in ls_usb:
+                    if info[0] in line:
+                        usb_values = line.split(":")
+                        usb_values = usb_values[0].split(" ")
+                        bus = usb_values[1] + "/" + usb_values[3]
+                        break
+
+                if bus == "":
+                    bus = "(no USB)"
+
+                if all:
+                    self.logging.info(video_device.ljust(30) + " - " + bus)
+                elif source in value:
+                    self.logging.info("Identified device: " + video_device + ": " + bus)
+                    return bus
 
     def get_available_camera_resolutions(self, source):
         """
@@ -581,7 +636,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.logging.debug("Check if PiCamera is connected and works ...")
                 from picamera2 import Picamera2
                 picam2_test = Picamera2()
-                config = picam2_test.create_still_configuration()
+                config = picam2_test.create_still_configuration(lowres=None, raw=None)
                 picam2_test.configure(config)
                 picam2_test.start()
 
@@ -591,6 +646,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
                 if image is None or len(image) == 0:
                     camera_info["error"] = "Returned empty image."
+                    picam2_test.stop()
+                    picam2_test.close()
                     self.logging.debug("PiCamera returned empty image!")
                 else:
                     img_path = os.path.join(self.config.db_handler.directory(config="images"),
