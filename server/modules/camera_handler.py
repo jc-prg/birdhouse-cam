@@ -187,7 +187,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if self.first_connect:
                 from picamera2 import Picamera2
                 self.stream = Picamera2()
-                self.configuration = self.stream.create_still_configuration()
+                self.configuration = self.stream.create_still_configuration(lores=None, raw=None)
                 self.stream.configure(self.configuration)
 
             self.stream.start()
@@ -490,21 +490,12 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             #                                                            lores={"size": (300, 150)})
 
             self.configuration["main"]["size"] = (int(width), int(height))
+            self.stream.still_configuration.main.size = (int(width), int(height))
             #self.configuration["raw"]["size"] = (int(width), int(height))
 
             #self.stream.align_configuration(self.configuration)
             self.logging.debug("Set resolution: " + str(self.configuration["main"]["size"]))
             self.stream.configure(self.configuration)
-
-            lowres = False
-            if lowres:
-                self.stream.start()
-                self.stream.stop()
-
-                self.configuration["lores"]["size"] = (200, 150)
-                self.stream.align_configuration(self.configuration)
-                self.logging.debug("Set resolution: " + str(self.configuration["lores"]["size"]))
-                self.stream.configure(self.configuration)
 
             self.stream.start()
             time.sleep(1)

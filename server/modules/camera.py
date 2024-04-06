@@ -1746,29 +1746,27 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
     def reconnect(self, directly=False):
         """
-        Reconnect after API call
+        Reconnect from inside the thread or via API call
 
         Args:
-            directly (bool): dont wait for next iteration
+            directly (bool): don't wait for next iteration
+        Return:
+            dict: information for API response
         """
-        if directly and self.camera is not None:
+        if directly:
             if self.active:
                 self.set_streams_active(active=True)
                 time.sleep(1)
                 self._init_camera(init=True)
-            self.object.reconnect()
+                if self.camera is None:
+                    self._init_microphone()
+                self.object.reconnect()
             self.reload_camera = False
-        elif directly:
-            if self.active:
-                self.set_streams_active(active=True)
-                time.sleep(1)
-                self._init_camera(init=True)
-            self._init_microphone()
-            self.object.reconnect()
-            self.reload_camera = False
+
         else:
             self.reload_camera = True
             self.config_update = True
+
         response = {"command": ["reconnect camera"], "camera": self.id}
         return response
 
