@@ -1522,13 +1522,13 @@ if __name__ == "__main__":
                 count_running_threads += 1
                 try:
                     if thread.class_id and thread.id:
-                        srv_logging.error("Could not stop correctly: " + thread.name + " = " +
-                                          thread.class_id + " (" + thread.id + ")")
+                        srv_logging.warning("Could not stop correctly: " + thread.name + " = " +
+                                            thread.class_id + " (" + thread.id + ")")
                     else:
-                        srv_logging.error("Could not stop correctly: " + thread.name)
+                        srv_logging.warning("Could not stop correctly: " + thread.name)
                 except Exception as e:
-                    srv_logging.error("Could not stop thread correctly, no further information (" +
-                                      str(count_running_threads) + ").")
+                    srv_logging.warning("Could not stop thread correctly, no further information (" +
+                                        str(count_running_threads) + "): " + str(e))
 
         if count_running_threads > 0:
             srv_logging.info("-> Killing the " + str(count_running_threads) + " threads that could not be stopped ...")
