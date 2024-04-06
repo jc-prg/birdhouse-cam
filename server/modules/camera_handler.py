@@ -118,7 +118,7 @@ class CameraInformation:
                 value = value.replace("\t", "")
                 info = last_key.split(":")
 
-                video_device = value.ljust(12) + info[0]
+                video_device = value.ljust(15) + info[0]
                 bus = ""
                 for line in ls_usb:
                     if info[0] in line:
@@ -131,7 +131,7 @@ class CameraInformation:
                     bus = "(no USB)"
 
                 if all:
-                    self.logging.info(video_device.ljust(30) + " - " + bus)
+                    self.logging.info(video_device.ljust(45) + " - " + bus)
                 elif source in value:
                     self.logging.info("Identified device: " + video_device + ": " + bus)
                     return bus
