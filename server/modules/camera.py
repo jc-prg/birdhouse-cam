@@ -1400,7 +1400,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.img_support = BirdhouseImageSupport(self.id, self.config)
         if first_cam:
             self.camera_scan = self.get_available_devices()
-            self.camera_info.get_bus_information("", True)
+            #self.camera_info.get_bus_information("", True)
+            #self.camera_info.get_available_cameras_new()
 
         self.connect()
         self.measure_usage(init=True)

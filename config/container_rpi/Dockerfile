@@ -13,6 +13,7 @@ RUN apt-get -y install python3-opencv
 RUN apt-get -y install python3-skimage
 #RUN apt-get -y install --reinstall libraspberrypi0 libraspberrypi-dev libraspberrypi-bin
 RUN apt-get -y install v4l-utils
+RUN apt-get -y install usbutils
 
 COPY ./requirements.txt ./requirements.txt
 RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED

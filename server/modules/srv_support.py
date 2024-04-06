@@ -294,6 +294,22 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         system["video_devices"] = {}
         system["video_devices_short"] = {}
         system["video_devices_complete"] = self.initial_camera_scan["video_devices_complete"]
+
+#       -> use values from self.initial_camera_scan!
+
+        for value in self.initial_camera_scan["video_devices_complete"]:
+
+            check = self.initial_camera_scan["video_devices_complete"][value]
+            check_text = ""
+            if birdhouse_env["test_video_devices"]:
+                if check["image"]:
+                    check_text = "OK: "
+                else:
+                    check_text = "ERROR: "
+
+            system["video_devices_short"][value] = check_text + value + " (" + check["info"] + " | " + check["bus"] + ")"
+
+        """
         for value in output_2:
             if ":" in value:
                 system["video_devices"][value] = []
@@ -310,6 +326,9 @@ class ServerInformation(threading.Thread, BirdhouseClass):
                 system["video_devices"][last_key].append(value)
                 info = last_key.split(":")
                 system["video_devices_short"][value] = check_text + ": " + value + " (" + info[0] + ")"
+
+            system["video_devices_short"][value] = check_text + ": " + value + " (" + info[0] + ")"
+        """
 
         system["audio_devices"] = {}
         if self.microphone != {}:

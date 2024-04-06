@@ -27,11 +27,93 @@ class CameraInformation:
 
     def get_available_cameras(self):
         """
+        new ...
+        """
+        devices = {"initial": {}, "list": {}, "short": {}, "complete": {}}
+
+        try:
+            process = subprocess.Popen(["ls /dev/video*"], stdout=subprocess.PIPE, shell=True)
+            output = process.communicate()[0]
+            output = output.decode()
+            output = output.replace("  ", "\n")
+            output = output.split("\n")
+        except Exception as e:
+            self.logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
+            return devices
+
+        for device in output:
+            if "/dev/" in device:
+                filename = "/sys/class/video4linux/" + device.split("/")[2] + "/device/uevent"
+                devices["initial"][device] = {}
+                if os.path.isfile(filename):
+                    self.logging.debug("... Grab information of " + device)
+                    try:
+                        process = subprocess.Popen(["cat " + filename], stdout=subprocess.PIPE, shell=True)
+                        device_info = process.communicate()[0]
+                        device_info = device_info.decode()
+                        device_info = device_info.split("\n")
+                        for info in device_info:
+                            self.logging.debug("... .. " + info)
+                            if "=" in info:
+                                key, value = info.split("=")
+                                devices["initial"][device][key] = value
+
+                    except Exception as e:
+                        self.logging.error("Could not grab info for video device " + device + ": " + str(e))
+
+        for key in devices["initial"]:
+            device = devices["initial"][key]
+            device_info = {}
+            if device["DEVTYPE"] == "usb_interface":
+                device_info["interface"] = "usb"
+                device_info["image"] = True
+                device_info["shape"] = []
+                device_info["dev"] = key
+                if "DRIVER" in device:
+                    device_info["driver"] = device["DRIVER"]
+                if "MODALIAS" in device:
+                    device_info["alias"] = device["MODALIAS"]
+                if "INTERFACE" in device:
+                    device_info["interface"] = device["INTERFACE"]
+                if "PRODUCT" in device:
+                    device_info["bus"] = device["PRODUCT"].split("/")[0] + ":" + device["PRODUCT"].split("/")[1]
+                    try:
+                        process = subprocess.run(["/usr/bin/lsusb | grep " + device_info["bus"]],
+                                                 capture_output=True, text=True, shell=True)
+                        usb_info = process.stdout
+                        self.logging.debug(usb_info)
+                        usb_info = usb_info.split(device["PRODUCT"].split("/")[1] + " ")[1]
+                        usb_info = usb_info.replace("\n", "")
+                        device_info["info"] = usb_info #[1]
+                    except Exception as e:
+                        self.logging.info(e)
+                        device_info["info"] = key
+
+                devices["complete"][key] = device_info
+                devices["short"][key] = key + " (" + device_info["info"] + " | " + device_info["bus"] + ")"
+                devices["list"][device_info["info"]] = 1
+            else:
+                self.logging.debug(key + " is not a USB device: " + str(devices["initial"][key]))
+
+        if birdhouse_env["rpi_active"]:
+            devices["complete"]["/dev/picam"] = {"dev": "/dev/picam", "info": "PiCamera", "image": True,
+                                                 "shape": [], "bus": ""}
+            devices["short"]["/dev/picam"] = "/dev/picam (PiCamera)"
+            devices["list"]["PiCamera"] = 1
+
+        del devices["initial"]
+        self.logging.debug("... " + str(devices))
+
+        return devices
+
+    def get_available_cameras_org(self):
+        """
         use v4l2_ctl to identify available cameras
 
         Returns:
             dict: different level of device definitions in a dict: 'list', 'short', 'complete'
         """
+        devices = {"list": {}, "short": {}, "complete": {}}
         try:
             process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
             output = process.communicate()[0]
@@ -39,7 +121,7 @@ class CameraInformation:
             output = output.split("\n")
         except Exception as e:
             self.logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
-            return system
+            return devices
 
         try:
             process = subprocess.Popen(["lsusb"], stdout=subprocess.PIPE, shell=True)
@@ -48,7 +130,7 @@ class CameraInformation:
             ls_usb = ls_usb.split("\n")
         except Exception as e:
             self.logging.warning("Could not video device bus information. Check, if lsusb is installed. " + str(e))
-            return system
+            return devices
 
         last_key = "none"
         if birdhouse_env["rpi_active"]:
@@ -81,9 +163,14 @@ class CameraInformation:
 
         return devices.copy()
 
-    def get_bus_information(self, source, all=False):
+    def get_bus_information(self, source, all_devices=False):
         """
         get bus information for given device
+
+        uses:
+        - ls /dev/video*
+        - v4l2-ctl --list-devices
+        - cat /sys/class/video4linux/video2/device/uevent
 
         Args:
             source (str): device identifier, e.g., /dev/video0
@@ -130,7 +217,7 @@ class CameraInformation:
                 if bus == "":
                     bus = "(no USB)"
 
-                if all:
+                if all_devices:
                     self.logging.info(video_device.ljust(48) + " - " + bus)
                 elif source in value:
                     self.logging.info("Identified device: " + video_device + ": " + bus)

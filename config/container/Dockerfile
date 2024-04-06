@@ -12,6 +12,7 @@ RUN apt-get -y install iputils-ping
 RUN apt-get -y install libgpiod2
 RUN apt-get -y install ffmpeg
 RUN apt-get -y install v4l-utils
+RUN apt-get -y install usbutils
 #RUN apt-get -y install rpi.gpio
 #RUN apt-get -y install --reinstall libraspberrypi0 libraspberrypi-dev libraspberrypi-bin
 
