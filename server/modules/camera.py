@@ -1340,7 +1340,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.initialized = False
 
         self._interval = 0.2
-        self._interval_reload_if_error = 60*3
+        self._interval_reload_if_error = 60*5
         self._stream_errors_max_accepted = 25
         self._stream_errors_restart = False
         self._stream_errors = 0
@@ -1376,7 +1376,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.record = self.param["record"]
         self.record_seconds = []
         self.record_image_last = time.time()
-        self.record_image_reload = time.time()
         self.record_image_last_string = ""
         self.record_image_last_compare = ""
         self.record_image_start = ""
@@ -1526,11 +1525,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if self.connected:
             self.logging.debug("Camera '" + self.id + "' connected, initialize settings ...")
             self.camera_stream_raw.set_camera_handler(self.camera)
-            self.reload_success = time.time()
-            self.record_image_reload = time.time()
 
             self._init_camera_settings()
             self.camera_stream_raw.set_camera_handler(self.camera)
+
+            self.reload_success = time.time()
             self.reset_error_all()
         else:
             self.raise_error("Could not connect camera, check error msg of camera handler.")
@@ -1638,10 +1637,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     self.record_temp_threshold = None
                     self.date_last = self.config.local_time().strftime("%Y-%m-%d")
 
-                if self._stream_errors > self._stream_errors_max_accepted and self._stream_errors_restart:
-                    self.logging.warning("....... Reload CAMERA '" + self.id + "' due to stream errors: " +
-                                         str(self._stream_errors) + " errors.")
-
                 # if error reload from time to time
                 if self.if_reconnect_on_error():
                     self.reconnect(directly=False)
@@ -1649,38 +1644,47 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 # check if camera is paused, wait with all processes ...
                 if not self._paused:
                     count_paused = 0
+
                 while self._paused and self._running:
                     if count_paused == 0:
                         self.logging.info("Recording images with " + self.id + " paused ...")
                         count_paused += 1
                     time.sleep(1)
 
-                # Video recording
-                if self.video.recording:
-                    self.video_recording(current_time)
+                # Recording ...
+                if not self.error and not self.config_update and not self.reload_camera:
 
-                # Check and record active streams
-                self.measure_usage()
+                    # Video recording
+                    if self.video.recording:
+                        self.video_recording(current_time)
 
-                # Video Recording
-                if self.if_other_prio_process(self.id) or self.if_only_lowres() or self.video.processing \
-                        or self.error or not self.active:
+                    # Image recording (only while not recording video)
+                    elif self.record:
+                        self.image_recording(current_time, stamp, similarity, sensor_last)
+
+                    # Check and record active streams
+                    self.measure_usage()
+
+                # Slow down if other process with higher priority is running or error
+                if (self.if_other_prio_process(self.id)
+                        or self.if_only_lowres()
+                        or self.video.processing
+                        or self.error or not self.active):
 
                     self.logging.debug("prio=" + str(self.if_other_prio_process(self.id)) + "; " +
                                        "lowres=" + str(self.if_only_lowres()) + "; " +
                                        "processing=" + str(self.video.processing) + "; " +
                                        "error=" + str(self.error) + "; " +
                                        "active=" + str(self.active))
-
                     self.slow_down_streams(True)
                 else:
                     self.slow_down_streams(False)
 
             # start or reload camera connection
             if self.config_update or self.reload_camera:
-                self.logging.info("Updating CAMERA configuration (" + self.id + "/" +
-                                  self.param["name"] + "/" + str(self.param["active"]) + "/" +
-                                  ") ...")
+
+                self.logging.info("Updating configuration and reconnecting CAMERA '" + self.id + "' (" +
+                                  self.param["name"] + "/" + str(self.param["active"]) + ") ...")
                 self.update_main_config()
                 self.set_streams_active(active=True)
                 self.reconnect(directly=True)
@@ -1688,14 +1692,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             # Define thread priority and waiting time depending on running tasks
             if self.active and self.record and not self.video.recording and not self.error:
                 self.thread_set_priority(2)
-                self.image_recording(current_time, stamp, similarity, sensor_last)
+                self.thread_wait()
             elif not self.active or self.error:
                 self.thread_set_priority(7)
-
-            if self.video.recording:
-                self.thread_wait(wait_time=0.04)
-            else:
-                self.thread_wait()
+                if self.video.recording:
+                    self.thread_wait(wait_time=0.04)
 
             self.thread_control()
 
@@ -2290,7 +2291,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             "running": self.if_running(),
             "recording": self.video.recording,
             "processing": self.video.processing,
-            "last_reload": time.time() - self.record_image_reload,
+            "last_reload": time.time() - self.reload_success,
 
             "error_details": {},
             "error_details_msg": {},
