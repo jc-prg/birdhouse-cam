@@ -1569,14 +1569,25 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.logging.debug(str(camera_scans[self.source]))
                 if (self.source in camera_scans and "image" in camera_scans[self.source]
                         and camera_scans[self.source]["image"]):
-                    camera_info = self.source + " (" + camera_scans[self.source]["bus"] + ")"
+
+                    if "source_id" in self.param and self.param["source_id"] is not None:
+                        camera_id = self.param["source_id"]
+                    else:
+                        camera_id = camera_scans[self.source]["bus"]
+
+                    camera_info = self.source + " (" + camera_id + ")"
                     self.logging.info("Camera validation: OK - " + camera_info)
+
                 else:
-                    camera_info = self.source + " (" + camera_scans[self.source]["bus"] + ")"
+                    if "source_id" in self.param and self.param["source_id"] is not None:
+                        camera_id = self.param["source_id"]
+                    else:
+                        camera_id = camera_scans[self.source]["bus"]
+
+                    camera_info = self.source + " (" + camera_id + ")"
                     self.logging.warning("Camera validation: FAILED - " + camera_info)
-                    dev_id = camera_scans[self.source]["bus"]
                     for device in camera_scans:
-                        if camera_scans[device]["bus"] == dev_id and camera_scans[device]["image"]:
+                        if camera_scans[device]["bus"] == camera_id and camera_scans[device]["image"]:
                             self.logging.warning("                 : looks like device assignment changed to " + device)
                             self.logging.warning("                 : use temporarily " + device + " as video device")
                             self.camera_scan_source = device
