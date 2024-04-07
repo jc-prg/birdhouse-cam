@@ -63,14 +63,10 @@ class CameraInformation:
 
         for key in devices["initial"]:
             device = devices["initial"][key]
-            device_info = {}
+            device_info = {"interface": "", "image": False, "shape": [], "dev": key, "bus": "", "vID:pID": ""}
             if "DEVTYPE" in device and device["DEVTYPE"] == "usb_interface":
                 device_info["interface"] = "usb"
                 device_info["image"] = True
-                device_info["shape"] = []
-                device_info["dev"] = key
-                device_info["vID:pID"] = ""
-                device_info["bus"] = ""
                 if "DRIVER" in device:
                     device_info["driver"] = device["DRIVER"]
                 if "MODALIAS" in device:
