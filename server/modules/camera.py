@@ -1557,6 +1557,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         elif "video_devices_complete" in self.camera_scan and self.source in self.camera_scan["video_devices_complete"]:
             camera_scans = self.camera_scan["video_devices_complete"]
+            self.logging.warning(str(camera_scans[self.source]))
             if self.source in camera_scans and "image" in camera_scans[self.source] and camera_scans[self.source]:
                 camera_info = self.source + " (" + camera_scans[self.source]["vID:pID"] + ")"
                 self.logging.info("Camera validation: OK - " + camera_info)
