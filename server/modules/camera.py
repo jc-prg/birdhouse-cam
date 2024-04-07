@@ -2337,6 +2337,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         status = {
             "active": self.param["active"],
             "active_streams": self.get_stream_count(),
+            "active_device": self.camera_scan_source,
             "running": self.if_running(),
             "recording": self.video.recording,
             "processing": self.video.processing,
