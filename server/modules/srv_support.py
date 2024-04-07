@@ -309,27 +309,6 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
             system["video_devices_short"][value] = check_text + value + " (" + check["info"] + " | " + check["bus"] + ")"
 
-        """
-        for value in output_2:
-            if ":" in value:
-                system["video_devices"][value] = []
-                last_key = value
-            elif value != "":
-                value = value.replace("\t", "")
-                check_text = "NEW"
-                if value in system["video_devices_complete"]:
-                    check = system["video_devices_complete"][value]
-                    if check["image"]:
-                        check_text = "OK"
-                    else:
-                        check_text = "ERROR"
-                system["video_devices"][last_key].append(value)
-                info = last_key.split(":")
-                system["video_devices_short"][value] = check_text + ": " + value + " (" + info[0] + ")"
-
-            system["video_devices_short"][value] = check_text + ": " + value + " (" + info[0] + ")"
-        """
-
         system["audio_devices"] = {}
         if self.microphone != {}:
             first_mic = list(self.microphone.keys())[0]

@@ -1396,6 +1396,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.maintenance_mode = False
 
         self.camera_scan = {}
+        self.camera_scan_source = None
         self.camera_info = CameraInformation()
         self.img_support = BirdhouseImageSupport(self.id, self.config)
         if first_cam:
@@ -1519,7 +1520,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             if "/dev/picam" in self.source:
                 self.camera = BirdhousePiCameraHandler(camera_id=self.id, source=self.source, config=self.config)
             else:
-                self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source, config=self.config)
+                if self.camera_scan_source is None:
+                    self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.source, config=self.config)
+                else:
+                    self.camera = BirdhouseCameraHandler(camera_id=self.id, source=self.camera_scan_source,
+                                                         config=self.config)
             self.connected = self.camera.connect()
         else:
             self.connected = self.camera.reconnect()
@@ -1552,29 +1557,31 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         check if camera works or device assignment has changed
         """
-        if "/dev/picam" in self.source:
+        if not birdhouse_env["test_video_devices"]:
+            self.logging.debug("No validation")
+
+        elif "/dev/picam" in self.source:
             self.logging.debug("No validation for /dev/picam")
 
-        elif "video_devices_complete" in self.camera_scan and self.source in self.camera_scan["video_devices_complete"]:
-            camera_scans = self.camera_scan["video_devices_complete"]
-            self.logging.debug(str(camera_scans[self.source]))
-            if (self.source in camera_scans and "image" in camera_scans[self.source]
-                    and camera_scans[self.source]["image"]):
-                camera_info = self.source + " (" + camera_scans[self.source]["bus"] + ")"
-                self.logging.info("Camera validation: OK - " + camera_info)
-            else:
-                camera_info = self.source + " (" + camera_scans[self.source]["bus"] + ")"
-                self.logging.warning("Camera validation: FAILED - " + camera_info)
-                dev_id = camera_scans[self.source]["bus"]
-                for device in camera_scans:
-                    if camera_scans[device]["bus"] == dev_id and camera_scans[device]["image"]:
-                        self.logging.warning("Camera validation: looks like device assignment changed to  " + device)
-
-            self.logging.info("CAMERA status '" + self.id + ":" + self.source + "' - " + str(self.camera_scan["video_devices_complete"][self.source]))
-
         else:
-            self.logging.warning("Camera validation for " + self.source + " not possible. Camera scan:")
-            self.logging.warning(str(self.camera_scan))
+            if "video_devices_complete" in self.camera_scan and self.source in self.camera_scan["video_devices_complete"]:
+                camera_scans = self.camera_scan["video_devices_complete"]
+                self.logging.debug(str(camera_scans[self.source]))
+                if (self.source in camera_scans and "image" in camera_scans[self.source]
+                        and camera_scans[self.source]["image"]):
+                    camera_info = self.source + " (" + camera_scans[self.source]["bus"] + ")"
+                    self.logging.info("Camera validation: OK - " + camera_info)
+                else:
+                    camera_info = self.source + " (" + camera_scans[self.source]["bus"] + ")"
+                    self.logging.warning("Camera validation: FAILED - " + camera_info)
+                    dev_id = camera_scans[self.source]["bus"]
+                    for device in camera_scans:
+                        if camera_scans[device]["bus"] == dev_id and camera_scans[device]["image"]:
+                            self.logging.warning("Camera validation: looks like device assignment changed to " + device)
+                            self.camera_scan_source = device
+            else:
+                self.logging.warning("Camera validation for " + self.source + " not possible. Camera scan:")
+                self.logging.warning(str(self.camera_scan))
 
     def _init_camera_settings(self):
         """
@@ -2672,6 +2679,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.type = self.param["type"]
         self.record = self.param["record"]
         self.detect_settings = self.param["object_detection"]
+        self.camera_scan_source = None
 
         self.image_size = [0, 0]
         self.image_size_lowres = [0, 0]
