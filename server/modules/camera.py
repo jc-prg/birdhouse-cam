@@ -1400,8 +1400,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.img_support = BirdhouseImageSupport(self.id, self.config)
         if first_cam:
             self.camera_scan = self.get_available_devices()
-            #self.camera_info.get_bus_information("", True)
-            #self.camera_info.get_available_cameras_new()
 
         self.connect()
         self.measure_usage(init=True)
@@ -1546,6 +1544,15 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.camera_streams[stream].reload_success = self.reload_success
             self.camera_streams[stream].reload_tried = self.reload_tried
             self.camera_streams[stream].reload_time = self.reload_time
+
+    def _init_camera_validate(self):
+        """
+        check if camera works or device assignment has changed
+        """
+        if self.source in self.camera_info["complete"]:
+            self.logging.info("CAMERA status '" + self.id + ":" + self.source + "' - " + str(self.camera_info["complete"][self.source]))
+        else:
+            self.logging.warning(str(self.camera_info))
 
     def _init_camera_settings(self):
         """
@@ -1739,6 +1746,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if self.active:
             self.set_streams_active(active=True)
             time.sleep(1)
+            self._init_camera_validate()
             self._init_camera(init=True)
         self._init_microphone()
 

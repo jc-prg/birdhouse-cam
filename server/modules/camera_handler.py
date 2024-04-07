@@ -174,7 +174,7 @@ class CameraInformation:
 
         Args:
             source (str): device identifier, e.g., /dev/video0
-            all (bool): list bus information for all devices
+            all_devices (bool): list bus information for all devices
         Return:
             str|dict: bus information, e.g,, 001/002
         """
@@ -197,6 +197,7 @@ class CameraInformation:
             self.logging.warning("Could not video device bus information. Check, if lsusb is installed. " + str(e))
             return "N/A"
 
+        last_key = ""
         for value in output:
             if ":" in value:
                 last_key = value
