@@ -1412,6 +1412,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.user_active = False
         self.user_activity_last = 0
         self.record_audio_info = {}
+        self.camera_scan = {}
+
         self.object_detection_processing = None
         self.object_detection_progress = None
         self.object_detection_waiting = None
