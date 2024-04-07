@@ -1567,7 +1567,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.logging.warning("Camera validation: FAILED - " + camera_info)
                 dev_id = camera_scans[self.source]["bus"]
                 for device in camera_scans:
-                    if camera_scans[device]["bus"] == dev_id:
+                    if camera_scans[device]["bus"] == dev_id and camera_scans[device]["image"]:
                         self.logging.warning("Camera validation: looks like device assignment changed to  " + device)
 
             self.logging.info("CAMERA status '" + self.id + ":" + self.source + "' - " + str(self.camera_scan["video_devices_complete"][self.source]))
