@@ -1557,7 +1557,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         elif "video_devices_complete" in self.camera_scan and self.source in self.camera_scan["video_devices_complete"]:
             camera_scans = self.camera_scan["video_devices_complete"]
-            self.logging.warning(str(camera_scans[self.source]))
+            self.logging.debug(str(camera_scans[self.source]))
             if (self.source in camera_scans and "image" in camera_scans[self.source]
                     and camera_scans[self.source]["image"]):
                 camera_info = self.source + " (" + camera_scans[self.source]["bus"] + ")"
@@ -1565,6 +1565,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             else:
                 camera_info = self.source + " (" + camera_scans[self.source]["bus"] + ")"
                 self.logging.warning("Camera validation: FAILED - " + camera_info)
+                dev_id = camera_scans[self.source]["bus"]
+                for device in camera_scans:
+                    if camera_scans[device]["bus"] == dev_id:
+                        self.logging.warning("Camera validation: looks like device assignment changed to  " + device)
 
             self.logging.info("CAMERA status '" + self.id + ":" + self.source + "' - " + str(self.camera_scan["video_devices_complete"][self.source]))
 
