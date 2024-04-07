@@ -69,6 +69,8 @@ class CameraInformation:
                 device_info["image"] = True
                 device_info["shape"] = []
                 device_info["dev"] = key
+                device_info["vID:pID"] = ""
+                device_info["bus"] = ""
                 if "DRIVER" in device:
                     device_info["driver"] = device["DRIVER"]
                 if "MODALIAS" in device:
