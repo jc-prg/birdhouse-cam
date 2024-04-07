@@ -1577,7 +1577,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     dev_id = camera_scans[self.source]["bus"]
                     for device in camera_scans:
                         if camera_scans[device]["bus"] == dev_id and camera_scans[device]["image"]:
-                            self.logging.warning("Camera validation: looks like device assignment changed to " + device)
+                            self.logging.warning("                 : looks like device assignment changed to " + device)
+                            self.logging.warning("                 : use temporarily " + device + " as video device")
                             self.camera_scan_source = device
             else:
                 self.logging.warning("Camera validation for " + self.source + " not possible. Camera scan:")
@@ -2486,9 +2487,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             camera_string = " - " + str(camera_count).rjust(2) + ": " + str(key).ljust(12) + " ("
             camera_string += system["video_devices_complete"][key]["info"].split(" (")[0].split(":")[0] + ") "
 
-            ljust_value = 47
+            just_value = 52
             if "error" in system["video_devices_complete"][key]:
-                self.logging.info(camera_string.ljust(ljust_value) + " - ERROR: " + str(system["video_devices_complete"][key]["error"]))
+                self.logging.info(camera_string.ljust(just_value) + " - ERROR: " + str(system["video_devices_complete"][key]["error"]))
                 birdhouse_initial_connect_msg[key] += (", error='" + str(system["video_devices_complete"][key]["error"])
                                                        + "'")
             elif not birdhouse_env["test_video_devices"]:
