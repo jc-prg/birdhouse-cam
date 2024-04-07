@@ -505,6 +505,7 @@ birdhouse_default_cam = {
     "type": "default",
     "name": "NAME",
     "source": "/dev/video0",
+    "source_id": None,
     "active": True,
     "detection_mode": "similarity",
     "record": True,

@@ -1633,6 +1633,14 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             for key in self.update:
                 self.update[key] = True
 
+            for camera in self.param["devices"]["cameras"]:
+                source = self.param["devices"]["cameras"][camera]["source"]
+                if "video_devices_complete" in self.camera_scan and source in self.camera_scan["video_devices_complete"]:
+                    source_id = self.camera_scan["video_devices_complete"][source]["bus"]
+                    self.param["devices"]["cameras"][camera]["source_id"] = source_id
+
+            self.db_handler.write("main", "", self.param)
+
             if self.weather is not False and "weather:location" in config_data:
                 self.logging.info(
                     "Update weather config and lookup GPS data: '" + self.param["weather"]["location"] + "'.")
