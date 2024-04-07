@@ -76,9 +76,10 @@ class CameraInformation:
                 if "INTERFACE" in device:
                     device_info["interface"] = device["INTERFACE"]
                 if "PRODUCT" in device:
+                    device_info["vID:pID"] = device["PRODUCT"].split("/")[0] + ":" + device["PRODUCT"].split("/")[1]
                     device_info["bus"] = device["PRODUCT"].split("/")[0] + ":" + device["PRODUCT"].split("/")[1]
                     try:
-                        process = subprocess.run(["/usr/bin/lsusb | grep " + device_info["bus"]],
+                        process = subprocess.run(["/usr/bin/lsusb | grep " + device_info["vID:pID"]],
                                                  capture_output=True, text=True, shell=True)
                         usb_info = process.stdout
                         self.logging.debug(usb_info)
@@ -90,14 +91,14 @@ class CameraInformation:
                         device_info["info"] = key
 
                 devices["complete"][key] = device_info
-                devices["short"][key] = key + " (" + device_info["info"] + " | " + device_info["bus"] + ")"
+                devices["short"][key] = key + " (" + device_info["info"] + " | " + device_info["vID:pID"] + ")"
                 devices["list"][device_info["info"]] = 1
             else:
                 self.logging.debug(key + " is not a USB device: " + str(devices["initial"][key]))
 
         if birdhouse_env["rpi_active"]:
             devices["complete"]["/dev/picam"] = {"dev": "/dev/picam", "info": "PiCamera", "image": True,
-                                                 "shape": [], "bus": "picam"}
+                                                 "shape": [], "bus": "picam", "vID:pID": "picam"}
             devices["short"]["/dev/picam"] = "/dev/picam (PiCamera)"
             devices["list"]["PiCamera"] = 1
 
