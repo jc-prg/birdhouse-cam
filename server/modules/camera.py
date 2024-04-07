@@ -1564,7 +1564,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.logging.info("Camera validation: OK - " + camera_info)
             else:
                 camera_info = self.source + " (" + camera_scans[self.source]["bus"] + ")"
-                self.logging.WARNING("Camera validation: FAILED - " + camera_info)
+                self.logging.warning("Camera validation: FAILED - " + camera_info)
 
             self.logging.info("CAMERA status '" + self.id + ":" + self.source + "' - " + str(self.camera_scan["video_devices_complete"][self.source]))
 
