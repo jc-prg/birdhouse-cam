@@ -2489,13 +2489,14 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
             just_value = 52
             if "error" in system["video_devices_complete"][key]:
-                self.logging.info(camera_string.ljust(just_value) + " - ERROR: " + str(system["video_devices_complete"][key]["error"]))
+                self.logging.info(camera_string.ljust(just_value) + " - ERROR: " +
+                                  str(system["video_devices_complete"][key]["error"]))
                 birdhouse_initial_connect_msg[key] += (", error='" + str(system["video_devices_complete"][key]["error"])
                                                        + "'")
             elif not birdhouse_env["test_video_devices"]:
-                self.logging.info(camera_string.ljust(ljust_value) + " (w/o test)")
+                self.logging.info(camera_string.ljust(just_value) + " (w/o test)")
             else:
-                self.logging.info(camera_string.ljust(ljust_value) + " - OK")
+                self.logging.info(camera_string.ljust(just_value) + " - OK")
 
         self.available_devices = system
         return system
