@@ -1549,9 +1549,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         check if camera works or device assignment has changed
         """
-        if self.source in self.camera_info["complete"]:
+        if "complete" in self.camera_info and self.source in self.camera_info["complete"]:
             self.logging.info("CAMERA status '" + self.id + ":" + self.source + "' - " + str(self.camera_info["complete"][self.source]))
         else:
+            self.logging.warning(str(self.source))
             self.logging.warning(str(self.camera_info))
 
     def _init_camera_settings(self):
