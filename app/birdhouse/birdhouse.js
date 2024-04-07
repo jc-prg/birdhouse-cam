@@ -140,6 +140,7 @@ function birdhousePrint(data) {
 	var data_active   = data["DATA"]["active"];
 
     birdhouseSetMainVars(data);
+    overlayImageList = [];
 
     var initial_setup   = data["STATUS"]["server"]["initial_setup"];
 	var date            = data_active["active_date"];
