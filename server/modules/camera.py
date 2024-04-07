@@ -1549,10 +1549,22 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         check if camera works or device assignment has changed
         """
-        if "video_devices_complete" in self.camera_scan and self.source in self.camera_scan["video_devices_complete"]:
+        if "/dev/picam" in self.source:
+            self.logging.debug("No validation for /dev/picam")
+
+        elif "video_devices_complete" in self.camera_scan and self.source in self.camera_scan["video_devices_complete"]:
+            camera_scans = self.camera_scan["video_devices_complete"]
+            if self.source in camera_scans and "image" in camera_scans[self.source] and camera_scans[self.source]:
+                camera_info = self.source + " (" + camera_scans[self.source]["vID:pID"] + ")"
+                self.logging.info("Camera validation: OK - " + camera_info)
+            else:
+                camera_info = self.source + " (" + camera_scans[self.source]["vID:pID"] + ")"
+                self.logging.WARNING("Camera validation: FAILED - " + camera_info)
+
             self.logging.info("CAMERA status '" + self.id + ":" + self.source + "' - " + str(self.camera_scan["video_devices_complete"][self.source]))
+
         else:
-            self.logging.warning(str(self.source))
+            self.logging.warning("Camera validation for " + self.source + " not possible. Camera scan:")
             self.logging.warning(str(self.camera_scan))
 
     def _init_camera_settings(self):
