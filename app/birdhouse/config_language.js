@@ -9,6 +9,7 @@
 var language_app = {
 	"DE" : {
 	    "ACTIVITY"              : "Aktivit&auml;t",
+	    "ACTIVE"                : "aktiv",
 	    "ALL_IMAGES"            : "Alle Bilder",
 	    "ALL_LABELS"            : "Alle Labels",
 	    "ANALYTICS"             : "Analyse",
@@ -174,6 +175,7 @@ var language_app = {
 
 	"EN" : {
 	    "ACTIVITY"              : "Activity",
+	    "ACTIVE"                : "active",
 	    "ALL_IMAGES"            : "All images",
 	    "ALL_LABELS"            : "All labels",
 	    "ANALYTICS"             : "Analytics",

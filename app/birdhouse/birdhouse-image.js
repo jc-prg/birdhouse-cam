@@ -148,12 +148,14 @@ function birdhouse_ImageGroup( group_id, title, entries, entry_count, entry_cate
                 if (entries[key]["lowres"] != undefined) {
                     img_id2 += entries[key]["directory"] + "/" + entries[key]["lowres"];
                     img_id2 = img_id2.replaceAll( "//", "/");
+                    img_id2 = img_id2.replaceAll( ":/", "://");
                     img_id2 = img_id2.replaceAll( "/", "_");
                     image_ids += " " + img_id2;
                 }
                 if (entries[key]["thumbnail"] != undefined) {
                     img_id2 += entries[key]["directory"] + "/" + entries[key]["thumbnail"];
                     img_id2 = img_id2.replaceAll( "//", "/");
+                    img_id2 = img_id2.replaceAll( ":/", "://");
                     img_id2 = img_id2.replaceAll( "/", "_");
                     image_ids += " " + img_id2;
                 }
