@@ -168,7 +168,8 @@ function birdhouseDevices_cameras(data) {
 		html_temp += tab.start();
         html_temp += tab.row("Active:",     birdhouse_edit_field(id="set_active_"+camera, field="devices:cameras:"+camera+":active", type="select", options="true,false", data_type="boolean"));
 		html_temp += tab.row("Name:",       birdhouse_edit_field(id="set_name_"+camera, field="devices:cameras:"+camera+":name", type="input"));
-        html_temp += tab.row("Source:",     birdhouse_edit_field(id="set_source_"+camera, field="devices:cameras:"+camera+":source", type="select_dict_sort", options=device_options, data_type="string", on_change=on_change_source));
+        html_temp += tab.row("Source:",     birdhouse_edit_field(id="set_source_"+camera, field="devices:cameras:"+camera+":source", type="select_dict_sort", options=device_options, data_type="string", on_change=on_change_source) +
+                                            source_info);
 		html_temp += tab.row("Micro:",      birdhouse_edit_field(id="set_micro_"+camera, field="devices:cameras:"+camera+":record_micro", type="select", options=micros, data_type="boolean"));
         html_temp += tab.row("Detection:",  birdhouse_edit_field(id="set_detection_mode_"+camera, field="devices:cameras:"+camera+":detection_mode", type="select", options="similarity,object", data_type="string"));
 		html_temp += tab.end();
