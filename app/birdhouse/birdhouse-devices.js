@@ -141,6 +141,13 @@ function birdhouseDevices_cameras(data) {
 	    index_info[camera_name]["type"]   = "camera";
 	    index_info[camera_name]["status"] = ["active", "error", "error_record"];
 
+        var source_info = "";
+        var source = app_data["SETTINGS"]["devices"]["cameras"][camera]["source"];
+	    var source_alternative = app_data["STATUS"]["devices"]["cameras"][camera]["active_device"];
+	    if (source_alternative != undefined && source_alternative != null && source != source_alternative) {
+            source_info = "</br>" + lang("DIFFERENT_VIDEO_DEVICE", source_alternative, source);
+	        }
+
         var resolution_max = "N/A";
         var resolution_act = "N/A";
 	    if (cameras[camera]["image"]["resolution_max"])     { resolution_max = "[" + cameras[camera]["image"]["resolution_max"][0]+"x"+cameras[camera]["image"]["resolution_max"][1] +"]"; }
