@@ -52,6 +52,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
 
         self.slow_stream = False
         self.maintenance_mode = False
+        self.connected = False
 
         self._active_streams = 0
         self._recording = False
@@ -434,6 +435,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             "line1": "",
             "line2": ""
         }
+        self.connected = False
         self.maintenance_mode = False
         self.reload_time = 0
         self.reload_tried = 0
@@ -1395,6 +1397,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.initial_connect_msg = {}
         self.maintenance_mode = False
 
+        self.connected = False
         self.camera_scan = {}
         self.camera_scan_source = None
         self.camera_info = CameraInformation()
@@ -1529,6 +1532,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         else:
             self.connected = self.camera.reconnect()
 
+        self.set_connection_status(self.connected)
         self.reload_tried = time.time()
         if self.connected:
             self.logging.debug("Camera '" + self.id + "' connected, initialize settings ...")
@@ -2532,6 +2536,18 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         if not active:
             self.logging.info("Stopped maintenance mode for CAMERA '" + self.id + ". ")
+
+    def set_connection_status(self, status):
+        """
+        spread connection status to all streams
+
+        Args:
+            status (bool): connection status
+        """
+        self.connected = status
+        self.camera_stream_raw.connected = status
+        for stream in self.camera_streams:
+            self.camera_streams[stream].connected = status
 
     def slow_down_streams(self, slow_down=True):
         """
