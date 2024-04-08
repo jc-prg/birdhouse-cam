@@ -145,7 +145,7 @@ function birdhouseDevices_cameras(data) {
         var source = app_data["SETTINGS"]["devices"]["cameras"][camera]["source"];
 	    var source_alternative = app_data["STATUS"]["devices"]["cameras"][camera]["active_device"];
 	    if (source_alternative != undefined && source_alternative != null && source != source_alternative) {
-            source_info = "</br>" + lang("DIFFERENT_VIDEO_DEVICE", source_alternative, source);
+            source_info = "</br>" + lang("DIFFERENT_VIDEO_DEVICE", [source_alternative, source]);
 	        }
 
         var resolution_max = "N/A";
