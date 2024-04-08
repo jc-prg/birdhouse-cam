@@ -438,9 +438,11 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         cmd_filename = self.config.db_handler.directory("videos_temp") + cmd_tempfiles
         cmd_rename = "find " + self.config.db_handler.directory("videos_temp") + \
                      "image_* -type f -size 0 -delete; "
-        cmd_rename += "i=0; for fi in " + self.config.db_handler.directory("videos_temp") + \
-                      "image_*; do mv \"$fi\" $(printf \""
-        cmd_rename += cmd_filename + "%05d.jpg\" $i); i=$((i+1)); done"
+        cmd_rename += "i=0; " + \
+                      "for fi in " + self.config.db_handler.directory("videos_temp") + \
+                      "image_*[0-9][0-9][0-9][0-9][0-9][0-9].jpeg; " + \
+                      "do mv \"$fi\" $(printf \"" + cmd_filename + "%05d.jpg\" $i); " + \
+                      "i=$((i+1)); done"
         self.logging.debug(cmd_rename)
         try:
             message = os.system(cmd_rename)
