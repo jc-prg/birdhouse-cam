@@ -1809,6 +1809,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.set_streams_active(active=True)
                 time.sleep(1)
                 self._init_camera(init=True)
+                self._init_camera_validate()
                 if self.camera is None:
                     self._init_microphone()
                 self.object.reconnect()
