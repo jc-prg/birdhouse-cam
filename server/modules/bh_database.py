@@ -173,9 +173,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         self.locked = {}
         self.changed_data = False
         self.database = None
-
-        #self.basic_directory = base_dir
-        #self.db_url = "http://" + db_usr + ":" + db_pwd + "@" + db_server + ":" + str(db_port) + "/"
+        self.timeout = 10
 
         self.basic_directory = db["db_basedir"]
         self.db_url = "http://" + db["db_usr"] + ":" + db["db_pwd"] + "@" + db["db_server"] + \
@@ -337,12 +335,13 @@ class BirdhouseCouchDB(BirdhouseDbClass):
 
         return [database, date]
 
-    def read(self, filename):
+    def read(self, filename, retry=True):
         """
         read data from DB
 
         Args:
             filename (str): filename to be translated into db_key
+            retry (bool): retry after error
         Returns:
             dict: data from database
         """
@@ -355,16 +354,15 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             return {}
         try:
             if db_key in self.database:
-                #time.sleep(0.01)
                 database = self.database[db_key]
-                #time.sleep(0.01)
                 doc = database.get("main")
                 doc_data = doc["data"]
                 if date != "":
                     if date in doc_data:
                         return doc_data[date]
                     else:
-                        self.raise_error("CouchDB ERROR read (date): " + filename + " - " + db_key + "/" + date)
+                        self.raise_error("CouchDB ERROR read (date): " + filename + " - " +
+                                         db_key + "/" + date)
                         return {}
                 else:
                     return doc_data
@@ -372,10 +370,15 @@ class BirdhouseCouchDB(BirdhouseDbClass):
                 self.raise_error("CouchDB ERROR read (db_key): " + filename + " - " + db_key + "/" + date)
                 return {}
         except Exception as e:
-            self.raise_error("CouchDB ERROR read: " + filename + " - " + db_key + "/" + date + " - " + str(e))
-            return {}
+            if retry:
+                self.logging.warning("CouchDB ERROR read: " + filename + " - " + db_key + "/" + date +
+                                     " - " + str(e) + " -> RETRY")
+                return self.read(filename, retry=False)
+            else:
+                self.raise_error("CouchDB ERROR read: " + filename + " - " + db_key + "/" + date + " - " + str(e))
+                return {}
 
-    def write(self, filename, data, create=False):
+    def write(self, filename, data, create=False, retry=True):
         """
         read data from DB
 
@@ -383,6 +386,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             filename (str): filename to be translated into db_key
             data (dict): data to be saved in the database
             create (bool): create database if not exists
+            retry (bool): retry after error
         """
         [db_key, date] = self.filename2keys(filename)
         self.logging.debug("-----> WRITE: " + filename + " (" + self.basic_directory + ")")
@@ -417,19 +421,30 @@ class BirdhouseCouchDB(BirdhouseDbClass):
                 doc['time'] = time.time()
                 doc['change'] = 'save changes'
         except Exception as e:
-            self.logging.error("CouchDB ERROR save (prepare data): " + db_key + " " + str(e))
-            return
+            if retry:
+                self.logging.warning("CouchDB ERROR save (prepare data): " + db_key + " " + str(e) + " -> RETRY")
+                time.sleep(self.timeout)
+                self.write(filename, data, create, retry=False)
+                return
+            else:
+                self.logging.error("CouchDB ERROR save (prepare data): " + db_key + " " + str(e))
+                return
 
         try:
             database.save(doc)
             database.compact()
 
         except Exception as e:
-            self.logging.error("CouchDB ERROR save: " + db_key + " " + str(e))
-            self.logging.error("  -> dict entries: " + str(len(doc["data"])))
-            self.logging.error("  -> dict size: " + str(sys.getsizeof(doc["data"])))
-            self.logging.debug("  -> dict keys: " + str(doc["data"].keys()))
-            return
+            if retry:
+                self.logging.error("CouchDB ERROR save: " + db_key + " " + str(e) + " -> RETRY")
+                time.sleep(self.timeout)
+                self.write(filename, data, create, retry=False)
+            else:
+                self.logging.error("CouchDB ERROR save: " + db_key + " " + str(e))
+                self.logging.error("  -> dict entries: " + str(len(doc["data"])))
+                self.logging.error("  -> dict size: " + str(sys.getsizeof(doc["data"])))
+                self.logging.debug("  -> dict keys: " + str(doc["data"].keys()))
+                return
 
         self.changed_data = True
         return
