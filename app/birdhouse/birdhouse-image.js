@@ -736,7 +736,9 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
 	else if (entry["detections"] && entry["detections"].length > 0)         { image_data["style"] = "border: 1px solid "+color_code["object"]+";"; }
 	else if (entry["detect"] == 1)                                          { image_data["style"] = "border: 1px solid "+color_code["detect"]+";"; }
 
-    image_data["description"] = image_data["description"].replaceAll("[br/]","<br/>");
+    if (image_data["description"]) {
+        image_data["description"] = image_data["description"].replaceAll("[br/]","<br/>");
+        }
     return image_data;
     }
 
