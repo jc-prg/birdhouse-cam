@@ -383,6 +383,9 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         Args:
             image (numpy.ndarray): image data
         """
+        if self.info["image_count"] == 0:
+            self.logging.info("--> Record fist image: " + str(time.time()))
+
         self.info["image_count"] += 1
         self.info["image_files"] = self.filename("vimages")
         self.info["video_file"] = self.filename("video")
