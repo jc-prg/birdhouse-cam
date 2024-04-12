@@ -305,13 +305,22 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
     def record_start(self, filename):
         """
         empty cache and start recording
+
+        Args:
+            filename (str): filename of audio to be recorded
+        Return:
+            dict: recording information
         """
+        if self.recording:
+            self.logging.debug("Recording already ...")
+            return {"filename": self.recording_filename}
+
         self.logging.info("Start recording '" + filename + "' ...")
         self.record_start_time = time.time()
         self.logging.info(" --- " + self.id + " --> " + str(time.time()))
         self.last_active = time.time()
         self.recording_frames = []
-        self.recording_filename = os.path.join(self.recording_default_path, filename)
+        self.recording_filename = os.path.join(str(self.recording_default_path), filename)
         self.recording = True
         self.config.record_audio_info = {
             "id": self.id,
