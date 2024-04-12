@@ -285,7 +285,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
 
                     classes = {}
                     for timestamp in archive_entries[datestamp][camera]:
-                        if timestamp in entries["files"][timestamp]:
+                        if timestamp in entries["files"]:
                             classes = self.create_YOLOv5_file(entries["files"][timestamp], archive_path_info_model, classes)
 
                     self.create_YOLOv5_classes(classes, labels, archive_path_info_model, datestamp+"-"+camera)
