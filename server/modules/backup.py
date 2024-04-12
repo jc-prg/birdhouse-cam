@@ -285,7 +285,8 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
 
                     classes = {}
                     for timestamp in archive_entries[datestamp][camera]:
-                        classes = self.create_YOLOv5_file(entries["files"][timestamp], archive_path_info_model, classes)
+                        if timestamp in entries["files"][timestamp]:
+                            classes = self.create_YOLOv5_file(entries["files"][timestamp], archive_path_info_model, classes)
 
                     self.create_YOLOv5_classes(classes, labels, archive_path_info_model, datestamp+"-"+camera)
                     if model not in model_saved:
@@ -514,7 +515,6 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             files = self.config.db_handler.read_cache(config="images")
             files_chart = files.copy()
             files_backup = {"files": {}, "chart_data": {}, "info": {}, "weather_data": {}, "detection": {}}
-            files_detections = {}
 
             file_sensor = self.config.db_handler.file_path(config="sensor")
             file_sensor_copy = os.path.join(self.config.db_handler.directory(config="images", date=backup_date),
