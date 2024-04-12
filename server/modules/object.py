@@ -57,13 +57,17 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         self.connect()
         while self._running:
 
-            if len(self.detect_queue_archive) > 0:
-                [date, threshold] = self.detect_queue_archive.pop()
-                self.analyze_archive_day(date, threshold)
+            self.logging.debug("Object detection queues: image=" + str(len(self.detect_queue_image)) +
+                               ", day=" + str(len(self.detect_queue_archive)) +
+                               " (prio=" + str(self.priority_processing()) + ")")
 
-            if len(self.detect_queue_image) > 0:
+            if not self.priority_processing() and len(self.detect_queue_image) > 0:
                 [stamp, path_hires, image_hires, image_info] = self.detect_queue_image.pop()
                 self.analyze_image(stamp, path_hires, image_hires, image_info)
+
+            elif not self.priority_processing() and len(self.detect_queue_archive) > 0:
+                [date, threshold] = self.detect_queue_archive.pop()
+                self.analyze_archive_day(date, threshold)
 
             self.config.object_detection_processing = self._processing
             self.config.object_detection_progress = self._processing_percentage
@@ -494,3 +498,19 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                         }
 
         return detections
+
+    def priority_processing(self):
+        """
+        check if processes with higher priorities are running
+
+        Return:
+            bool: processing status
+        """
+        priority_processes = False
+        check = self.config.get_processing("video-recording", "all")
+        if check is not None:
+            for key in check:
+                if check[key]:
+                    priority_processes = True
+        self.logging.debug("PrioProcess: " + str(priority_processes) + " / " + str(check))
+        return priority_processes

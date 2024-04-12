@@ -43,6 +43,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.max_length = 60
         self.delete_temp_files = True   # usually set to True, can temporarily be used to keep recorded files for analysis
 
+        self.config.set_processing("video-recording", self.id, False)
+
         self.img_support = BirdhouseImageSupport(camera_id, config)
         self.ffmpeg = BirdhouseFfmpegTranscoding(self.id, self.config)
         self.count_length = 8
@@ -159,6 +161,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.thread_register_process("recording", self.id + "_" + self.micro, "start", 0)
             self.thread_prio_process(start=True, pid=self.id)
             self.recording = True
+            self.config.set_processing("video-recording", self.id, True)
 
             self.logging.info(" --- " + self.id + " --> " + str(time.time()))
             self.record_start_time = time.time()
@@ -198,13 +201,13 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.recording = False
             self.processing = False
             self.processing_cancel = True
+            self.config.set_processing("video-recording", self.id, False)
             self.cleanup()
         elif not self.camera.active:
             response["error"] = "camera is not active " + self.camera.id
         elif not self.recording:
             response["error"] = "camera isn't recording " + self.camera.id
 
-        #self.info = {"start": 0, "start_stamp": 0, "status": "ready"}
         return response
 
     def record_stop(self):
@@ -233,6 +236,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.logging.info(" <-- " + self.id + " --- " + str(time.time()) + " ... (" +
                               str(round(time.time() - self.record_start_time, 3)) + ")")
             self.recording = False
+            self.config.set_processing("video-recording", self.id, False)
             success = self.create_video()
             if success:
                 self.info["audio"] = self.config.record_audio_info

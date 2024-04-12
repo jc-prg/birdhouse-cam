@@ -1379,14 +1379,12 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         BirdhouseClass.__init__(self, class_id="config")
         self.thread_set_priority(1)
 
-        self.param = None
-        self.config = None
-        self.config_cache = {}
-        self.device_signal = {}
-        self.views = None
-        self.queue = None
-        self.db_handler = None
         self.birds = None
+        self.config = None
+        self.db_handler = None
+        self.views = None
+        self.weather = None
+        self.queue = None
 
         self.thread_status = {}
         self.thread_ctrl = {
@@ -1397,23 +1395,29 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             }
         }
 
+        self.directories = birdhouse_directories
+        self.files = birdhouse_files
+
+        self.config_cache = {}
+        self.device_signal = {}
+        self.locked = {}
         self.update = {}
         self.update_views = {"favorite": False, "archive": False}
         self.async_answers = []
         self.async_running = False
-        self.locked = {}
+
+        self.param = None
         self.param_init = param_init
         self.param_default = birdhouse_preset
+
         self.timezone = 0
         self.html_replace = {"start_date": datetime.now().strftime("%d.%m.%Y %H:%M:%S")}
-        self.directories = birdhouse_directories
-        self.files = birdhouse_files
-        self.weather = None
         self.user_active = False
         self.user_activity_last = 0
         self.record_audio_info = {}
         self.camera_scan = {}
 
+        self.processing_information = {}
         self.object_detection_processing = None
         self.object_detection_progress = None
         self.object_detection_waiting = None
@@ -1804,3 +1808,43 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             else:
                 return entries["changes"]
         return {}
+
+    def set_processing(self, category, subcategory, value):
+        """
+        set processing info to be centrally available
+
+        Args:
+            category (str): set a category
+            subcategory (str): set a subcategory; use an empty string if there is none
+            value (Any): set a value
+        """
+        if category not in self.processing_information:
+            self.processing_information[category] = {}
+        if subcategory == "":
+            subcategory = "default"
+        self.processing_information[category][subcategory] = value
+
+    def get_processing(self, category, subcategory):
+        """
+        get centrally available processing information
+
+        Args:
+            category (str): use a specific category or "all" to get the bunch of processing information
+            subcategory (str): use a specific subcategory or "all" to get the bunch of processing information
+        Return:
+            Any: values
+        """
+        if category == "all":
+            return self.processing_information
+        elif category in self.processing_information:
+            if subcategory == "all":
+                return self.processing_information[category]
+            elif subcategory in self.processing_information[category]:
+                return self.processing_information[category][subcategory]
+            elif subcategory == "" and "default" in self.processing_information[category]:
+                return self.processing_information[category]["default"]
+            else:
+                return None
+        else:
+            return None
+
