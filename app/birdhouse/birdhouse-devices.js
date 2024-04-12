@@ -495,7 +495,7 @@ function birdhouseDevices_microphones(data) {
 		                                      " (default=" + default_sample_rate +")");
 		html_temp += tab.row("Chunk size:",  "1024 * " + birdhouse_edit_field(id="set_chunk_"+micro, field="devices:microphones:"+micro+":chunk_size", type="input", options="", data_type="integer"));
 		html_temp += tab.row("Channels:",    birdhouse_edit_field(id="set_channels_"+micro, field="devices:microphones:"+micro+":channels", type="select", options="1,2", data_type="integer"));
-		html_temp += tab.row("Audio Delay:",    birdhouse_edit_field(id="set_audio_delay_"+micro, field="devices:microphones:"+micro+":record_audio_delay", type="select", options="1,2", data_type="float") + "s");
+		html_temp += tab.row("Audio Delay:",    birdhouse_edit_field(id="set_audio_delay_"+micro, field="devices:microphones:"+micro+":record_audio_delay", type="input", options="", data_type="float") + "s");
         html_temp += tab.end();
         html_entry += birdhouse_OtherGroup( micro + "_settings", "Device settings", html_temp, false );
 
