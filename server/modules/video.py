@@ -318,7 +318,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                     time.sleep(0.5)
                     last_file_size = os.path.getsize(self.record_audio_filename)
                     time.sleep(0.5)
-            elif not os.path.exists(self.record_audio_filename):
+            elif not os.path.exists(self.record_audio_filename) and not self.processing_cancel:
                 self.record_audio_filename = ""
                 self.logging.error("- audio file '" + str(self.record_audio_filename) + "' not available yet ...")
 
@@ -365,7 +365,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         except Exception as err:
             self.raise_error("Error during video creation (thumbnail/cleanup): " + str(err))
             self.processing = False
-            return success
+            success = False
 
         self.processing = False
         self.thread_register_process("recording", self.id + "_" + self.micro, "remove", 0)
@@ -374,6 +374,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         else:
             self.logging.info("Canceled processing.")
             self.processing_cancel = False
+            self.record_audio_filename = ""
             success = False
         return success
 

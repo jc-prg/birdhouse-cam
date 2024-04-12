@@ -366,6 +366,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.recording = False
         self.recording_processing = False
         self.recording_frames = []
+        self.recording_filename = ""
         self.record_start_time = None
 
     def record_process(self):
