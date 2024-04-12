@@ -330,6 +330,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.logging.info("Start recording '" + filename + "' ...")
         self.logging.info(" --- " + self.id + " --> " + str(time.time()) +
                           " + delay=" + str(self.param["record_audio_delay"]) + "s")
+
         self.last_active = time.time()
         self.record_start_time = time.time()
         self.recording_frames = []
@@ -361,7 +362,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         stop recording and clear cache
         """
-        self.logging.info("Canceled recording of audio stream.")
+        self.logging.info("Canceled recording of audio stream (" + self.id + ").")
         self.recording = False
         self.recording_processing = False
         self.recording_frames = []
@@ -372,7 +373,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         write to file recorded audio data to an audio that can be integrated into the video file creation
         """
         self.recording = False
-        self.recording_processing = False
+        self.recording_processing = True
         self.config.record_audio_info["status"] = "processing"
 
         self.logging.info(" <-- " + self.id + " --- " + str(time.time()) + " ... (" +
@@ -392,3 +393,4 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.config.record_audio_info["status"] = "finished"
         self.recording_frames = []
         self.logging.info("Stopped recording of '" + self.recording_filename + "'.")
+        self.recording_processing = False
