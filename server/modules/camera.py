@@ -1980,7 +1980,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                  scale_percent=self.param["image"]["preview_scale"])
 
                 if self.detect_active and self.detect_settings["active"] and os.path.exists(path_hires):
-                    self.object.analyze_image(stamp, path_hires, image_hires, image_info)
+                    self.object.add2queue_analyze_image(stamp, path_hires, image_hires, image_info)
 
                 # !!! unclear what happens with this analyze image?
 

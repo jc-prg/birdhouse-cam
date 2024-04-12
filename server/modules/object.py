@@ -35,6 +35,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         self.detect_objects = None
         self.detect_visualize = None
         self.detect_queue_archive = []
+        self.detect_queue_image = []
         self.last_model = None
         self.image_size_object_detection = self.detect_settings["detection_size"]
         self._processing_percentage = 0
@@ -43,7 +44,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
     def run(self):
         """
-        Manage queue to analyze pictures of archive days
+        Manage queue to analyze pictures of archive days and single images
 
         Returns:
             None
@@ -59,6 +60,10 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             if len(self.detect_queue_archive) > 0:
                 [date, threshold] = self.detect_queue_archive.pop()
                 self.analyze_archive_day(date, threshold)
+
+            if len(self.detect_queue_image) > 0:
+                [stamp, path_hires, image_hires, image_info] = self.detect_queue_image.pop()
+                self.analyze_image(stamp, path_hires, image_hires, image_info)
 
             self.config.object_detection_processing = self._processing
             self.config.object_detection_progress = self._processing_percentage
@@ -144,6 +149,84 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             self.detect_settings = self.param["object_detection"]
             self.connect(first_load=False)
 
+    def add2queue_analyze_image(self, stamp, path_hires, image_hires, image_info):
+        """
+        Add 2 Queue: Analyze an image for objects.
+
+        Analyze an image for objects. Changes will be saved in metadata incl. image with labels if detected
+        using the config queue.
+
+        Args:
+            stamp (str): entry key which is the recording time in the format HHMMSS
+            path_hires (str): complete path to the hires image file
+            image_hires (numpy.ndarray): hires images, e.g., directly from the camera or read via cv2.imread()
+            image_info (dict): complete entry for the image
+        Returns:
+            None
+        """
+        self.detect_queue_image.append([stamp, path_hires, image_hires, image_info])
+
+    def add2queue_analyze_archive_day(self, date, threshold=-1):
+        """
+        Add object detection request for one date.
+
+        Add object detection analyzing request to the queue for a specific date and camera.
+        The camera is defined when an object for a camera is build based on this class.
+
+        Args:
+            date (str): archived date that shall be analyzed
+            threshold (float): threshold for analyzing
+        Returns:
+            dict: response for API
+        """
+        if not self.detect_active:
+            response = {
+                "command": ["archive object detection"],
+                "camera": self.id,
+                "error": "Object detections is inactive",
+                "status": "Object detections is inactive"
+            }
+        else:
+            response = {
+                "command": ["archive object detection"],
+                "camera": self.id,
+                "status": "Added " + date + " to the queue."
+            }
+            self.detect_queue_archive.append([date, threshold])
+        self.logging.info("Added object detection request for " + date + " to the queue ...")
+        return response
+
+    def add2queue_analyze_archive_several_days(self, dates, threshold=-1):
+        """
+        Add object detection request for a list of dates.
+
+        Add object detection analyzing request to the queue for a list of dates and a specific camera.
+        The camera is defined when an object for a camera is build based on this class.
+
+        Args:
+            dates (list): list of archived dates that shall be analyzed
+            threshold (float): threshold for analyzing
+        Returns:
+            dict: response for API
+        """
+        if not self.detect_active:
+            response = {
+                "command": ["archive object detection - list of dates"],
+                "camera": self.id,
+                "error": "Object detections is inactive",
+                "status": "Object detections is inactive"
+            }
+        else:
+            response = {
+                "command": ["archive object detection"],
+                "camera": self.id,
+                "status": "Added " + str(dates) + " to the queue."
+            }
+            self.logging.info("Got a bundle of " + str(len(dates)) + " object detection requests ...")
+            for date in dates:
+                self.add2queue_analyze_archive_day(date, threshold)
+        return response
+
     def analyze_image(self, stamp, path_hires, image_hires, image_info):
         """
         Analyze an image for objects.
@@ -207,67 +290,6 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
         else:
             self.logging.debug("Object detection not loaded (" + stamp + ")")
-
-    def analyze_archive_day_start(self, date, threshold=-1):
-        """
-        Add object detection request for one date.
-
-        Add object detection analyzing request to the queue for a specific date and camera.
-        The camera is defined when an object for a camera is build based on this class.
-
-        Args:
-            date (str): archived date that shall be analyzed
-            threshold (float): threshold for analyzing
-        Returns:
-            dict: response for API
-        """
-        if not self.detect_active:
-            response = {
-                "command": ["archive object detection"],
-                "camera": self.id,
-                "error": "Object detections is inactive",
-                "status": "Object detections is inactive"
-            }
-        else:
-            response = {
-                "command": ["archive object detection"],
-                "camera": self.id,
-                "status": "Added " + date + " to the queue."
-            }
-            self.detect_queue_archive.append([date, threshold])
-        self.logging.info("Added object detection request for " + date + " to the queue ...")
-        return response
-
-    def analyze_archive_several_days_start(self, dates, threshold=-1):
-        """
-        Add object detection request for a list of dates.
-
-        Add object detection analyzing request to the queue for a list of dates and a specific camera.
-        The camera is defined when an object for a camera is build based on this class.
-
-        Args:
-            dates (list): list of archived dates that shall be analyzed
-            threshold (float): threshold for analyzing
-        Returns:
-            dict: response for API
-        """
-        if not self.detect_active:
-            response = {
-                "command": ["archive object detection - list of dates"],
-                "camera": self.id,
-                "error": "Object detections is inactive",
-                "status": "Object detections is inactive"
-            }
-        else:
-            response = {
-                "command": ["archive object detection"],
-                "camera": self.id,
-                "status": "Added " + str(dates) + " to the queue."
-            }
-            self.logging.info("Got a bundle of " + str(len(dates)) + " object detection requests ...")
-            for date in dates:
-                self.analyze_archive_day_start(date, threshold)
-        return response
 
     def analyze_archive_day(self, date, threshold):
         """

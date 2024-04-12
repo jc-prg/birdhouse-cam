@@ -550,9 +550,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 threshold = parameters[2]
             if "_" in date:
                 date_list = date.split("_")
-                response = camera[cam_id].object.analyze_archive_several_days_start(date_list, threshold)
+                response = camera[cam_id].object.add2queue_analyze_archive_several_days(date_list, threshold)
             else:
-                response = camera[cam_id].object.analyze_archive_day_start(date, threshold)
+                response = camera[cam_id].object.add2queue_analyze_archive_day(date, threshold)
         elif param["command"] == "archive-remove-day":
             srv_logging.info(param["command"] + ": " + str(param))
             response = backup.delete_archived_day(param)
