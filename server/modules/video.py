@@ -373,6 +373,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.logging.info("OK.")
         else:
             self.logging.info("Canceled processing.")
+            self.processing_cancel = False
             success = False
         return success
 
