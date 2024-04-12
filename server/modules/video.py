@@ -376,16 +376,14 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             success = False
         return success
 
-    def create_video_image(self, image):
+    def create_video_image(self, image, delay=""):
         """
         Save image with predefined filename in temp directory
 
         Args:
             image (numpy.ndarray): image data
+            delay (float): timestamp when image was created
         """
-        if self.info["image_count"] == 0:
-            self.logging.info("--> Record fist image: " + str(time.time()))
-
         self.info["image_count"] += 1
         self.info["image_files"] = self.filename("vimages")
         self.info["video_file"] = self.filename("video")
@@ -396,7 +394,10 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
         try:
             self.logging.debug("Write  image '" + path + "')")
-            return cv2.imwrite(path, image)
+            result = cv2.imwrite(str(path), image)
+            if self.info["image_count"] == 1:
+                self.logging.info("--> Record fist image: saved=" + str(time.time()) + " / delay=" + str(delay))
+            return result
         except Exception as e:
             self.info["image_count"] -= 1
             self.raise_error("Could not save image '" + filename + "': " + str(e))

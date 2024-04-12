@@ -193,6 +193,15 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         """
         return self._stream_image_id
 
+    def read_stream_image_time(self):
+        """
+        return current image creation time
+
+        Returns:
+            float: stream image image create time
+        """
+        return self._stream_last_time
+
     def get_active_streams(self, stream_id=""):
         """
         return amount of active streams
@@ -683,6 +692,15 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             int: current image number
         """
         return self.stream_raw.read_stream_image_id()
+
+    def read_stream_image_time(self):
+        """
+        return current image creation time
+
+        Returns:
+            float: stream image image create time
+        """
+        return self.stream_raw.read_stream_image_time()
 
     def read_error_image(self, error_msg="", error_trigger=""):
         """
@@ -1849,6 +1867,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         else:
             image_id = self.camera_streams["camera_hires"].read_stream_image_id()
+            image_time = self.camera_streams["camera_hires"].read_stream_image_time()
+            image_delay = time.time() - image_time
 
             if self.image_last_id == 0 or self.image_last_id != image_id:
                 image = self.camera_streams["camera_hires"].read_stream("record")
@@ -1857,7 +1877,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 return
 
             self.video.image_size = self.image_size
-            self.video.create_video_image(image=image)
+            self.video.create_video_image(image=image, delay=image_delay)
 
             if self.image_size == [0, 0]:
                 self.image_size = self.image.size_raw(image)

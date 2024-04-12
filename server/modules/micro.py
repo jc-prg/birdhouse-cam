@@ -37,7 +37,9 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.first_micro = first_micro
 
         self.recording = False
+        self.recording_start = False
         self.recording_processing = False
+        self.recording_processing_start = False
         self.recording_filename = ""
         self.recording_default_path = os.path.join(os.path.dirname(__file__), "../../data",
                                                    birdhouse_directories["audio_temp"])
@@ -72,6 +74,16 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                 self._paused = True
             if self.restart_stream:
                 self._paused = False
+
+            if self.recording_start:
+                time.sleep(self.param["record_audio_delay"])
+                self.recording = True
+                self.recording_start = False
+
+            if self.recording_processing_start:
+                time.sleep(self.param["record_audio_delay"])
+                self.recording_processing = True
+                self.recording_processing_start = False
 
             # reconnect if config data were updated
             if self.config.update["micro_" + self.id]:
@@ -311,17 +323,18 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         Return:
             dict: recording information
         """
-        if self.recording:
+        if self.recording or self.recording_start:
             self.logging.debug("Recording already ...")
             return {"filename": self.recording_filename}
 
         self.logging.info("Start recording '" + filename + "' ...")
-        self.record_start_time = time.time()
-        self.logging.info(" --- " + self.id + " --> " + str(time.time()))
+        self.logging.info(" --- " + self.id + " --> " + str(time.time()) +
+                          " + delay=" + str(self.param["record_audio_delay"]) + "s")
         self.last_active = time.time()
+        self.record_start_time = time.time()
         self.recording_frames = []
         self.recording_filename = os.path.join(str(self.recording_default_path), filename)
-        self.recording = True
+        self.recording_start = True
         self.config.record_audio_info = {
             "id": self.id,
             "path": self.recording_default_path,
@@ -340,9 +353,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         stop recording and write to file
         inspired by https://realpython.com/playing-and-recording-sound-python/#pyaudio_1
         """
-        self.recording = False
-        self.recording_processing = True
-        self.config.record_audio_info["status"] = "processing"
+        self.recording_processing_start = True
         self.logging.info("Stopping recording of '" + self.recording_filename + "' with " +
                           str(len(self.recording_frames)) + " chunks ...")
 
@@ -360,12 +371,16 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         write to file recorded audio data to an audio that can be integrated into the video file creation
         """
+        self.recording = False
+        self.recording_processing = False
+        self.config.record_audio_info["status"] = "processing"
+
         self.logging.info(" <-- " + self.id + " --- " + str(time.time()) + " ... (" +
                           str(round(time.time() - self.record_start_time, 3)) + ")")
+
         self.config.record_audio_info["stamp_end"] = time.time()
         self.config.record_audio_info["length_record"] = round(time.time() - self.record_start_time, 3)
 
-        self.recording_processing = False
         wf = wave.open(self.recording_filename, 'wb')
         wf.setnchannels(self.CHANNELS)
         wf.setsampwidth(self.audio.get_sample_size(self.FORMAT))
