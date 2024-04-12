@@ -153,6 +153,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         response = {"command": ["start recording"]}
         self.micro = micro
         self.record_audio_filename = audio_filename
+        self.processing_cancel = False
         self.info["status"] = "recording"
 
         if self.camera.active and not self.camera.error and not self.recording:
