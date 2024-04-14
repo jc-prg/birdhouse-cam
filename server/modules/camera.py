@@ -660,7 +660,6 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         if not wait:
             self._error_wait = False
 
-        duration = time.time() - self._last_activity
         self._last_activity = time.time()
         self._last_activity_count += 1
         self._last_activity_per_stream[stream_id] = time.time()
@@ -2204,6 +2203,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         Returns:
             numpy.ndarray: image for stream
         """
+        image = None
         stream = stream_type
         if stream_resolution != "":
             stream += "_" + stream_resolution
@@ -2214,15 +2214,17 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                                                  stream + "' not in self.camera_streams")
             self.raise_error(error_msg)
             return image
-        else:
+
+        elif self.camera_streams[stream].if_connected() and not self.camera_streams[stream].if_error():
             image = self.camera_streams[stream].read_stream(stream_id, system_info, wait)
 
-        if self.camera_streams[stream].if_error():
+        if self.camera_streams[stream].if_error() or not self.camera_streams[stream].if_connected():
             image = self.camera_streams[stream].read_error_image(error_msg="",
                                                                  error_trigger="get_stream: self.camera_streams['" +
                                                                  stream + "'].if_error()")
         elif self.if_error():
             image = self.camera_streams[stream].read_error_image(error_msg="", error_trigger="get_stream: if_error()")
+
         return image
 
     def get_stream_object_detection(self, stream_id, stream_type, stream_resolution="", system_info=False, wait=True):
