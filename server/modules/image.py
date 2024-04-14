@@ -511,11 +511,11 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         Args:
             raw (numpy.ndarray): input raw image
             text (str): string to be added
-            position (int, int): text position (x, y)
-            font (int): font type (see open-cv documentation)
-            scale (float): size of font (0..1)
-            color (tuple of int): text color in (R, G, B)
-            thickness (float): font thickness in pixel
+            position (int, int|None): text position (x, y)
+            font (int|None): font type (see open-cv documentation)
+            scale (float|None): size of font (0..1)
+            color (tuple of int|None): text color in (R, G, B)
+            thickness (float|None): font thickness in pixel
         Returns:
             numpy.ndarray: image with text
         """
@@ -562,9 +562,9 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         Args:
             raw (numpy.ndarray): input raw image
-            overwrite_color (tuple of int): color as (R, G, B) if not default defined in settings
-            overwrite_position (int): position (1-4) if not default defined in settings
-            offset (int): offset from position in pixel
+            overwrite_color (tuple of int|None): color as (R, G, B) if not default defined in settings
+            overwrite_position (int, int|None): position (1-4) if not default defined in settings
+            offset (int|None): offset from position in pixel
         Returns:
             numpy.ndarray: image with current date and time
         """

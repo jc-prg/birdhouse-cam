@@ -543,7 +543,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
         Args:
             stream (bool): stream image (True) or single image (False)
-            stream_id (int): stream id
+            stream_id (int|str): stream id ("default" if not stream_id is set)
             return_error_image (bool): return error image if error
         Returns:
             numpy.ndarray: edited image
@@ -746,6 +746,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             error_msg (str): error message to be added to the image
             reload_time (int): reload time
             info_type (str): type of infos to be added: empty, setting, camera
+            error_trigger (str): trigger for the error
         Returns:
             numpy.ndarray: raw image with error infos
         """
@@ -1046,7 +1047,8 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         h_end = outer_area[3] - ((outer_area[3] - outer_area[1]) * (1 - inner_area[3]))
 
         inner_area = (w_start, h_start, w_end, h_end)
-        area_image = self.image.draw_area_raw(raw=area_image, area=inner_area, color=color_detect, thickness=frame_thickness)
+        area_image = self.image.draw_area_raw(raw=area_image, area=inner_area, color=color_detect,
+                                              thickness=frame_thickness)
         return area_image.copy()
 
     def edit_check_error(self, image, error_message="", return_error_image=True):
@@ -1131,7 +1133,6 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         image = raw.copy()
 
         if self.system_status["active"] and self.resolution == "hires":
-            #lowres_position = self.config.param["views"]["index"]["lowres_position"]
             lowres_position = self.config.param["views"]["index"]["lowres_pos_"+self.id]
             size = self.config.param["devices"]["cameras"][self.id]["image"]["resolution_cropped"]
             self.logging.debug("...... " + self.name + " " + str(size))
@@ -1585,7 +1586,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.logging.debug("No validation for /dev/picam")
 
         else:
-            if "video_devices_complete" in self.camera_scan and self.source in self.camera_scan["video_devices_complete"]:
+            if ("video_devices_complete" in self.camera_scan and
+                    self.source in self.camera_scan["video_devices_complete"]):
                 camera_scans = self.camera_scan["video_devices_complete"]
                 self.logging.debug(str(camera_scans[self.source]))
                 if (self.source in camera_scans and "image" in camera_scans[self.source]
@@ -1693,7 +1695,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         similarity = 0
         count_paused = 0
-        reload_time = time.time()
         sensor_last = ""
 
         self.logging.info("Starting CAMERA control for '"+self.id+"' ...")
@@ -1969,9 +1970,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 if image_hires is None:
                     self.record_image_error_msg = ["img_error='empty image from camera, but no camera error' (None)"]
                 else:
-                    self.record_image_error_msg = ["img_error=" + str(self.image.error) + "; img_len=" + str(len(image_hires))]
-                sensor_data = {}
-                image_info = {}
+                    self.record_image_error_msg = ["img_error=" + str(self.image.error) +
+                                                   "; img_len=" + str(len(image_hires))]
                 self.previous_stamp = stamp
                 return
 
@@ -1987,7 +1987,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
 
             if int(self.config.local_time().strftime("%M")) % 5 == 0 and sensor_stamp != sensor_last:
-                sensor_last = sensor_stamp
                 self.logging.debug("Write sensor data to file ...")
                 self.config.queue.entry_add(config="sensor", date="", key=sensor_stamp, entry=sensor_data)
 
@@ -2021,7 +2020,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         check if image recording is currently active depending on settings (start and end time incl. sunset or sunrise)
 
         Args:
-            current_time (datetime): current time, if not set get time fresh from the system
+            current_time (datetime|int): current time, if not set get time fresh from the system
             check_in_general (bool): create recording time information for API
         """
         is_active = False
@@ -2066,7 +2065,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 record_to = self.param["image_save"]["record_to"]
                 record_rhythm = self.param["image_save"]["rhythm"]
                 record_rhythm_offset = self.param["image_save"]["rhythm_offset"]
-                record_seconds = []
 
                 self.logging.debug(" -> RECORD TIMES: from=" + record_from + "; to=" + record_to +
                                    "; sunrise=" + str(self.weather_sunrise) + "; sunset=" + str(self.weather_sunset) +
@@ -2120,14 +2118,16 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
                 self.logging.debug(" -> RECORD check " + self.id + "  (" + str(record_from_hour) + ":" +
                                    str(record_from_minute) + "|" + str(record_to_hour_compare) + ":" +
-                                   str(record_to_minute_compare) + ") " + str(int(hour)) + "/" + str(int(minute)) + "/" +
+                                   str(record_to_minute_compare) + ") " + str(int(hour)) + "/" +
+                                   str(int(minute)) + "/" +
                                    str(int(second)) + " ... " + str(self.record_seconds))
 
                 if int(second) in self.record_seconds or check_in_general:
                     if ((int(record_from_hour)*60)+int(record_from_minute)) <= ((int(hour)*60)+int(minute)) <= \
                             ((int(record_to_hour_compare)*60)+int(record_to_minute_compare)):
                         self.logging.debug(
-                            " -> RECORD TRUE "+self.id+"  (" + str(record_from_hour) + ":" + str(record_from_minute) + "-" +
+                            " -> RECORD TRUE "+self.id+"  (" + str(record_from_hour) + ":" +
+                            str(record_from_minute) + "-" +
                             str(record_to_hour_compare) + ":" + str(record_to_minute_compare) + ") " +
                             str(hour) + "/" + str(minute) + "/" + str(second) + "  < -----")
                         is_active = True
@@ -2317,7 +2317,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         Returns:
             bool: status if killed stream
         """
-        #self.logging.debug("get_image_stream_kill: " + str(ext_stream_id))
         if ext_stream_id in self.image_streams_to_kill:
             self.logging.debug("get_image_stream_kill - True: " + str(ext_stream_id))
             del self.image_streams_to_kill[ext_stream_id]
@@ -2465,7 +2464,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if setting_key in available_settings:
             self.camera.set_properties(key=setting_key, value=setting_value)
         else:
-            self.raise_error("Error during change of camera settings: given key '" + setting_key + "' is not supported.")
+            self.raise_error("Error during change of camera settings: given key '"+setting_key+"' is not supported.")
 
         self.logging.info("Camera settings: " + str(parameters))
         self.logging.info("   -> available: " + str(available_settings))
@@ -2524,9 +2523,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             else:
                 system["video_devices_complete"][key] = camera_cv.camera_status(source=key, name=device_info)
 
-            birdhouse_initial_connect_msg[key] = "initial_connect=" + str(system["video_devices_complete"][key]["image"]) + \
-                                                 ", info=" + system["video_devices_complete"][key]["info"] + \
-                                                 ", shape=" + str(system["video_devices_complete"][key]["shape"])
+            birdhouse_initial_connect_msg[key] = ("initial_connect=" +
+                                                  str(system["video_devices_complete"][key]["image"]) +
+                                                  ", info=" + system["video_devices_complete"][key]["info"] +
+                                                  ", shape=" + str(system["video_devices_complete"][key]["shape"]))
 
             camera_string = " - " + str(camera_count).rjust(2) + ": " + str(key).ljust(12) + " ("
             camera_string += system["video_devices_complete"][key]["info"].split(" (")[0].split(":")[0] + ") "
