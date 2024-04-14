@@ -2192,7 +2192,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
     def get_stream(self, stream_id, stream_type, stream_resolution="", system_info=False, wait=True):
         """
-        get image for video stream
+        get image for video stream, if camera is not connected or an error occurred, return an error image
 
         Args:
             stream_id (str): unique stream ID give from app
