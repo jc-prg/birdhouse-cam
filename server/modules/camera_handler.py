@@ -897,7 +897,8 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             except Exception as e:
                 self.logging.error("Reset of USB camera failed: " + str(e))
         else:
-            self.logging.warning("Reset of USB camera not possible, no bus information for " + self.source)
+            self.logging.warning("Reset of USB camera not possible, no bus information for " + self.source +
+                                 ". Use 'lsusb' to check, if it's still connected. If not a reboot might help.")
 
     def read(self, stream="not set"):
         """
