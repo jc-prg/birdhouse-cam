@@ -1989,7 +1989,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.config.queue.entry_add(config="sensor", date="", key=sensor_stamp, entry=sensor_data)
 
             # if no error save image files
-            if not self.error and not self.image.error:
+            if not self.error and not self.image.error and image_hires is not None:
                 path_lowres = os.path.join(self.config.db_handler.directory("images"),
                                            self.img_support.filename("lowres", stamp, self.id))
                 path_hires = os.path.join(self.config.db_handler.directory("images"),
@@ -1999,7 +1999,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.image.write(filename=path_lowres, image=image_hires,
                                  scale_percent=self.param["image"]["preview_scale"])
 
-                if self.detect_active and self.detect_settings["active"] and os.path.exists(path_hires):
+                if (self.detect_active and self.detect_settings["active"]
+                        and image_hires is not None and os.path.exists(path_hires)):
                     self.object.add2queue_analyze_image(stamp, path_hires, image_hires, image_info)
 
                 # !!! unclear what happens with this analyze image?
