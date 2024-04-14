@@ -168,6 +168,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         Returns:
             None
         """
+        self.logging.info("Add entry to detection queue: " + str(stamp) + " / " + str(path_hires))
         self.detect_queue_image.append([stamp, path_hires, image_hires, image_info])
 
     def add2queue_analyze_archive_day(self, date, threshold=-1):
