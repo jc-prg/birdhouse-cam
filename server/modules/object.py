@@ -143,7 +143,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         """
         if self.detect_active:
             if self.last_model == self.detect_settings["model"] and self.detect_loaded and not force_reload:
-                self.logging.info("Object detection models has not change, don't reload the detection model yet.")
+                self.logging.info("Object detection model has not changed, don't reload the detection model yet.")
                 return
 
             self.logging.info("Start reconnect of object detection model ...")
