@@ -520,8 +520,14 @@ class BirdhouseViewFavorite(BirdhouseClass):
         if not self.views:
             return {}
 
+        if self.config.db_handler.exists("favorites"):
+            content = self.config.db_handler.read_cache("favorites")
+            if "entries" not in content or "groups" not in content:
+                content = self.views
+        else:
+            content = self.views
+
         camera = param["which_cam"]
-        content = self.views
         content["active_cam"] = camera
         content["label"] = ""
         if len(param["parameter"]) >= 3:
