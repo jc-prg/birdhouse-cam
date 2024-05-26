@@ -20,7 +20,7 @@ class BirdhouseViewTools(BirdhouseClass):
 
         self.logging.info("Connected view tools.")
 
-    def calculate_progress(self, view, number, cam, count, length):
+    def calculate_progress(self, view, number, cam, count, length, factor=1, initial=0):
         """
         show progress information in logging
 
@@ -30,11 +30,13 @@ class BirdhouseViewTools(BirdhouseClass):
             cam (str): camera identifier
             count (int): number of sub step already processed
             length (int): total amount of sub steps to be processed
+            factor (float): factor
+            initial (float): initial value
         """
         if view not in self.progress:
             self.progress[view] = ""
 
-        percentage = round((count / length) * 100, 1)
+        percentage = round((count / length) * 100, 1) * factor + initial
         self.progress[view] = "#" + str(number) + ": " + str(percentage) + "%"
 
         if self.timeout_living_last + self.timeout_living_signal < time.time():
@@ -918,6 +920,11 @@ class BirdhouseViewArchive(BirdhouseClass):
             "max_image_size": {"lowres": [0, 0], "hires": [0, 0]}
         }
 
+        count_camera = len(self.camera)
+        count_progress = count_camera + 3
+        count_parts = 1 / count_progress
+        count_current = 1
+
         self.loading = "in progress"
         main_directory = self.config.db_handler.directory(config="backup")
         db_type = self.config.db_handler.db_type
@@ -964,11 +971,13 @@ class BirdhouseViewArchive(BirdhouseClass):
                         backup_entries[date]["changed"] = False
                     if "exists" not in backup_entries[date]:
                         backup_entries[date]["exists"] = False
-                    self.tools.calculate_progress("archive", str(cam_count) + "/5", cam, count,
-                                                  len(archive_info[cam]["entries"]))
+                    self.tools.calculate_progress("archive", str(cam_count) + "/" + str(count_progress),
+                                                  cam, count, len(archive_info[cam]["entries"]),
+                                                  count_parts, count_parts * (cam_count-1))
 
                 # check if new directories are available
                 count = 0
+                count_current = count_camera + 1
                 for archive_directory in dir_list:
                     if archive_directory in presets.birdhouse_directories["today"] or "today" in archive_directory:
                         continue
@@ -981,7 +990,9 @@ class BirdhouseViewArchive(BirdhouseClass):
                         if cam not in backup_entries[archive_directory]:
                             backup_entries[archive_directory][cam] = {}
                         backup_entries[archive_directory] = {"changed": True, "exists": False}
-                        self.tools.calculate_progress("archive", "3/5", cam, count, len(dir_list))
+                        self.tools.calculate_progress("archive", str(count_current) + "/" + str(count_progress),
+                                                      cam, count, len(dir_list),
+                                                      count_parts, count_parts * (count_progress-3))
 
                 # stop if shutdown signal was send
                 if self.if_shutdown():
@@ -990,6 +1001,7 @@ class BirdhouseViewArchive(BirdhouseClass):
 
             # update data for those dates where necessary + measure total size
             count_entries = 0
+            count_current += 1
             deleted_dates = []
             for date in backup_entries:
 
@@ -997,7 +1009,9 @@ class BirdhouseViewArchive(BirdhouseClass):
                 archive_directory = self.config.db_handler.directory(config="backup", date=date)
 
                 count_entries += 1
-                self.tools.calculate_progress("archive", "4/5", "", count_entries, len(backup_entries))
+                self.tools.calculate_progress("archive", str(count_current) + "/" + str(count_progress),
+                                              "", count_entries, len(backup_entries),
+                                              count_parts, count_parts * (count_progress-2))
 
                 # if archive directory doesn't exist anymore, remove
                 if not os.path.isdir(archive_directory) or "today" in date:
@@ -1100,12 +1114,15 @@ class BirdhouseViewArchive(BirdhouseClass):
                 archive_changed[cam]["entries"] = {}
 
             # process data to be saved
+            count_current += 1
             count_entries = 0
             for date in backup_entries:
                 dir_size_date = 0
 
                 count_entries += 1
-                self.tools.calculate_progress("archive", "5/5", "", count_entries, len(backup_entries))
+                self.tools.calculate_progress("archive", str(count_current) + "/" + str(count_progress),
+                                              "", count_entries, len(backup_entries),
+                                              count_parts, count_parts * (count_progress-1))
 
                 for cam in self.camera:
                     if cam in backup_entries[date]:
