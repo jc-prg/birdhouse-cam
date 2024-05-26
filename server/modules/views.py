@@ -36,7 +36,11 @@ class BirdhouseViewTools(BirdhouseClass):
         if view not in self.progress:
             self.progress[view] = ""
 
-        percentage = round(((count / length) * 100 * factor) + initial, 1)
+        percentage = (count / length) * 100
+        percentage = percentage * factor
+        percentage = percentage + initial
+        percentage = round(percentage, 2)
+
         self.progress[view] = "#" + str(number) + ": " + str(percentage) + "%"
 
         if self.timeout_living_last + self.timeout_living_signal < time.time():
@@ -922,7 +926,7 @@ class BirdhouseViewArchive(BirdhouseClass):
 
         count_camera = len(self.camera)
         count_progress = count_camera + 3
-        count_parts = 100 / count_progress
+        count_parts = 1 / count_progress
         count_current = 1
 
         self.loading = "in progress"
