@@ -922,7 +922,7 @@ class BirdhouseViewArchive(BirdhouseClass):
 
         count_camera = len(self.camera)
         count_progress = count_camera + 3
-        count_parts = 1 / count_progress
+        count_parts = 100 / count_progress
         count_current = 1
 
         self.loading = "in progress"
