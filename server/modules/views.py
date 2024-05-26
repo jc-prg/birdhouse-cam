@@ -36,7 +36,7 @@ class BirdhouseViewTools(BirdhouseClass):
         if view not in self.progress:
             self.progress[view] = ""
 
-        percentage = round((count / length) * 100, 1) * factor + initial
+        percentage = round(((count / length) * 100 * factor) + initial, 1)
         self.progress[view] = "#" + str(number) + ": " + str(percentage) + "%"
 
         if self.timeout_living_last + self.timeout_living_signal < time.time():

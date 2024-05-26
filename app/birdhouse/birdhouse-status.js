@@ -535,8 +535,8 @@ function birdhouseStatus_loadingViews(data, view="") {
             var status = data["STATUS"]["server"]["view_"+views[i]+"_loading"];
             var progress = data["STATUS"]["server"]["view_"+views[i]+"_progress"];
             if (status == "in progress") {
-                setTextById("loading_status_"+views[i], Math.round(progress * 100)/100);
-                setTextById("processing_"+views[i]+"_view", Math.round(progress * 100)/100);
+                setTextById("loading_status_"+views[i], progress);
+                setTextById("processing_"+views[i]+"_view", progress);
                 app_processing_active = true;
             }
             else if (status == "started") {
