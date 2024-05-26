@@ -964,7 +964,7 @@ class BirdhouseViewArchive(BirdhouseClass):
                         backup_entries[date]["changed"] = False
                     if "exists" not in backup_entries[date]:
                         backup_entries[date]["exists"] = False
-                    self.tools.calculate_progress("archive", str(cam_count) + "/4", cam, count,
+                    self.tools.calculate_progress("archive", str(cam_count) + "/5", cam, count,
                                                   len(archive_info[cam]["entries"]))
 
                 # check if new directories are available
@@ -981,7 +981,7 @@ class BirdhouseViewArchive(BirdhouseClass):
                         if cam not in backup_entries[archive_directory]:
                             backup_entries[archive_directory][cam] = {}
                         backup_entries[archive_directory] = {"changed": True, "exists": False}
-                        self.tools.calculate_progress("archive", "2/4", cam, count, len(dir_list))
+                        self.tools.calculate_progress("archive", "3/5", cam, count, len(dir_list))
 
                 # stop if shutdown signal was send
                 if self.if_shutdown():
@@ -997,7 +997,7 @@ class BirdhouseViewArchive(BirdhouseClass):
                 archive_directory = self.config.db_handler.directory(config="backup", date=date)
 
                 count_entries += 1
-                self.tools.calculate_progress("archive", "4/4", "", count_entries, len(backup_entries))
+                self.tools.calculate_progress("archive", "4/5", "", count_entries, len(backup_entries))
 
                 # if archive directory doesn't exist anymore, remove
                 if not os.path.isdir(archive_directory) or "today" in date:
@@ -1100,8 +1100,13 @@ class BirdhouseViewArchive(BirdhouseClass):
                 archive_changed[cam]["entries"] = {}
 
             # process data to be saved
+            count_entries = 0
             for date in backup_entries:
                 dir_size_date = 0
+
+                count_entries += 1
+                self.tools.calculate_progress("archive", "5/5", "", count_entries, len(backup_entries))
+
                 for cam in self.camera:
                     if cam in backup_entries[date]:
 
