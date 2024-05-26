@@ -53,7 +53,7 @@ services:
       - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}
       - ./:/usr/src/app/
       - /tmp/:/tmp/
-      - /dev/serial/:/dev/serial/
+      - /dev/v4l/:/dev/v4l/
     ports:
       - "${BIRDHOUSE_API_PORT}:${BIRDHOUSE_API_PORT}"
     depends_on:

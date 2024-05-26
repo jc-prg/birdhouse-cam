@@ -45,9 +45,9 @@ class CameraInformation:
             self.logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
             return devices
 
-        if os.path.exists("/dev/serial/by-id/"):
+        if os.path.exists("/dev/v4l/by-id/"):
             try:
-                process = subprocess.Popen(["ls /dev/serial/by-id/*"], stdout=subprocess.PIPE, shell=True)
+                process = subprocess.Popen(["ls /dev/v4l/by-id/*"], stdout=subprocess.PIPE, shell=True)
                 output2 = process.communicate()[0]
                 output2 = output2.decode()
                 output2 = output2.replace("  ", "\n")
@@ -58,7 +58,7 @@ class CameraInformation:
             except Exception as e:
                 self.logging.error("Could not grab usb devices: " + str(e))
         else:
-            self.logging.error("Could not grab usb devices: /dev/serial/by-id/ doesn't exist.")
+            self.logging.error("Could not grab usb devices: /dev/v4l/by-id/ doesn't exist.")
 
         for device in output:
             if "/dev/" in device:
@@ -1219,8 +1219,6 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         if birdhouse_env["test_video_devices"] is not None and not birdhouse_env["test_video_devices"]:
             camera_info["image"] = True
             return camera_info
-
-        self.logging.error("!!!!!!!!!!!!!" + source)
 
         if source != "/dev/picam":
             try:
