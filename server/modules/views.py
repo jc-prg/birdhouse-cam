@@ -38,7 +38,7 @@ class BirdhouseViewTools(BirdhouseClass):
 
         percentage = (count / length) * 100
         percentage = percentage * factor
-        percentage = percentage + initial
+        percentage = percentage + (initial * 100)
         percentage = round(percentage, 2)
 
         self.progress[view] = "#" + str(number) + ": " + str(percentage) + "%"
