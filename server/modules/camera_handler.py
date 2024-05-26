@@ -64,8 +64,8 @@ class CameraInformation:
             if "/dev/" in device:
                 dev_title = device.split("/")[2]
 
-                if "/dev/serial" in device:
-                    process = subprocess.Popen(["ls /dev/serial/by-id/* -l"], stdout=subprocess.PIPE, shell=True)
+                if "/dev/v4l" in device:
+                    process = subprocess.Popen(["ls /dev/v4l/by-id/* -l"], stdout=subprocess.PIPE, shell=True)
                     output2 = process.communicate()[0]
                     output2 = output2.decode()
                     output2 = output2.split("\n")
