@@ -42,7 +42,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
             }
 
         var exists = false;
-        html += "<select id='"+id+"' onchange='"+on_change+"'>";
+        html += "<select id='"+id+"' onchange='"+on_change+"' style='max-width:220px;'>";
         html += "<option value=''>(empty)</option>";
         if (data == true || data == false) { data_str = data.toString(); }
         else { data_str = data; }

@@ -30,21 +30,53 @@ class CameraInformation:
         new ...
         """
         devices = {"initial": {}, "list": {}, "short": {}, "complete": {}}
+        output = []
 
         try:
             process = subprocess.Popen(["ls /dev/video*"], stdout=subprocess.PIPE, shell=True)
-            output = process.communicate()[0]
-            output = output.decode()
-            output = output.replace("  ", "\n")
-            output = output.split("\n")
+            output2 = process.communicate()[0]
+            output2 = output2.decode()
+            output2 = output2.replace("  ", "\n")
+            output2 = output2.split("\n")
+            for device in output2:
+                if device != "":
+                    output.append(device)
         except Exception as e:
             self.logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
             return devices
 
+        if os.path.exists("/dev/serial/by-id/"):
+            try:
+                process = subprocess.Popen(["ls /dev/serial/by-id/*"], stdout=subprocess.PIPE, shell=True)
+                output2 = process.communicate()[0]
+                output2 = output2.decode()
+                output2 = output2.replace("  ", "\n")
+                output2 = output2.split("\n")
+                for device in output2:
+                    if device != "":
+                        output.append(device)
+            except Exception as e:
+                self.logging.error("Could not grab usb devices: " + str(e))
+        else:
+            self.logging.error("Could not grab usb devices: /dev/serial/by-id/ doesn't exist.")
+
         for device in output:
             if "/dev/" in device:
-                filename = "/sys/class/video4linux/" + device.split("/")[2] + "/device/uevent"
+                dev_title = device.split("/")[2]
+
+                if "/dev/serial" in device:
+                    process = subprocess.Popen(["ls /dev/serial/by-id/* -l"], stdout=subprocess.PIPE, shell=True)
+                    output2 = process.communicate()[0]
+                    output2 = output2.decode()
+                    output2 = output2.split("\n")
+                    for dev_string in output2:
+                        if device in dev_string:
+                            link1, link2 = dev_string.split("-> ../../")
+                            dev_title = link2
+
+                filename = "/sys/class/video4linux/" + dev_title + "/device/uevent"
                 devices["initial"][device] = {}
+
                 if os.path.isfile(filename):
                     self.logging.debug("... Grab information of " + device)
                     try:
@@ -64,6 +96,7 @@ class CameraInformation:
         for key in devices["initial"]:
             device = devices["initial"][key]
             device_info = {"interface": "", "image": False, "shape": [], "dev": key, "bus": "", "vID:pID": ""}
+
             if "DEVTYPE" in device and device["DEVTYPE"] == "usb_interface":
                 device_info["interface"] = "usb"
                 device_info["image"] = True
@@ -1186,6 +1219,8 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         if birdhouse_env["test_video_devices"] is not None and not birdhouse_env["test_video_devices"]:
             camera_info["image"] = True
             return camera_info
+
+        self.logging.error("!!!!!!!!!!!!!" + source)
 
         if source != "/dev/picam":
             try:
