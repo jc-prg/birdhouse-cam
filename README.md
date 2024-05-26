@@ -292,12 +292,14 @@ default usage. If an error 104 occurs in the CouchDB remove the limit for the re
 
 * Update swap memory (see also [https://bitlaunch.io/](https://bitlaunch.io/blog/how-to-create-and-adjust-swap-space-in-ubuntu-20-04/))
   ```bash
-  $ free -h
   $ sudo fallocate -l 2G /swapfile
   $ sudo chmod 600 /swapfile
   $ sudo mkswap /swapfile
   $ sudo swapon /swapfile
-  $ free -h
+
+  # options to check swap usage
+  $ swapon --show
+  $ free -h 
   ```
 * Add swap memory permanently
     ```bash
@@ -315,6 +317,10 @@ default usage. If an error 104 occurs in the CouchDB remove the limit for the re
   CONF_SWAPFACTOR=2
   
   $ sudo systemctl restart dphys-swapfile
+  
+  # options to check swap usage
+  $ swapon --show
+  $ free -h 
   ```
 
 #### Sample proxy server configuration
