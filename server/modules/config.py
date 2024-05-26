@@ -1679,6 +1679,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                     self.logging.error("Could not load as JSON: " + str(e))
 
             if "-dev-" in str(value):
+                value = value.replace("-dev-v4l-by-id-", "/dev/v4l/by-id/")
                 value = value.replace("-dev-", "/dev/")
 
             if ":" not in key:

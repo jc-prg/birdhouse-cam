@@ -173,6 +173,7 @@ function birdhouse_edit_send(id_list, camera) {
             var field_data = document.getElementById(ids[i]).value;
 
             field_name = field_name[(field_name.length-1)];
+            field_data = field_data.replaceAll("/dev/v4l/by-id/", "-dev-v4l-by-id-")
             field_data = field_data.replaceAll("/dev/", "-dev-")
 
             var field_error = birdhouse_edit_check_values(ids[i], data_type);
