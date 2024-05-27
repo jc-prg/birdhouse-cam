@@ -17,6 +17,7 @@ class BirdhouseViewTools(BirdhouseClass):
         self.timeout_living_last = time.time()
         self.timeout_living_signal = 10
         self.progress = {}
+        self.progress_start = {}
 
         self.logging.info("Connected view tools.")
 
@@ -35,13 +36,15 @@ class BirdhouseViewTools(BirdhouseClass):
         """
         if view not in self.progress:
             self.progress[view] = ""
+            self.progress_start[view] = time.time()
 
         percentage = (count / length) * 100
         percentage = percentage * factor
         percentage = percentage + (initial * 100)
         percentage = round(percentage, 2)
 
-        self.progress[view] = "#" + str(number) + ": " + str(percentage) + "%"
+        self.progress[view] = (str(percentage) + "%  (#" + str(number) + "; " +
+                               str(round(time.time() - self.progress_start[view], 1)) + "s)")
 
         if self.timeout_living_last + self.timeout_living_signal < time.time():
             if cam != "":
@@ -947,6 +950,26 @@ class BirdhouseViewArchive(BirdhouseClass):
             self.logging.info("- Found " + str(len(dir_list)) + " archive directories.")
             self.logging.debug("  -> " + str(dir_list))
 
+            # current procedure ...
+            # ----------------------------------------------
+            # 1.   prepare data per camera
+            # 1.1. check if status changed in archive file is set
+            #      (read each archive file and the overarching archive overview file)
+            # 1.2. check if entry for each directory in the archive dir exists
+            # 2.   check if directories still exists (or entries have to be deleted)
+            # 3.1. recreate changed and new entries
+            # 3.2. reread others from db file (why?!)
+            # 4.   save data in archive overview and change info in all files
+            # ----------------------------------------------
+            # potential optimization
+            # ----------------------------------------------
+            # - reduce rereading / saving of files
+            #   - set / read / unset change signal only centrally
+            #   - date first, camera second
+            #   - a bit preprocessing to analyze the need for change and than process date by data completely
+            # - if there is no need don't reread data from files / db
+            # ----------------------------------------------
+
             # prepare data
             backup_entries = {}
             cam_count = 0
@@ -961,6 +984,7 @@ class BirdhouseViewArchive(BirdhouseClass):
                 archive_changed[cam]["active_cam"] = cam
 
                 # create list per data (from lists per camera) and check if entries in databases have been changed
+                # -> PROGRESS #1+#2/5
                 count = 0
                 cam_count += 1
                 for date in archive_info[cam]["entries"]:
@@ -979,7 +1003,7 @@ class BirdhouseViewArchive(BirdhouseClass):
                                                   cam, count, len(archive_info[cam]["entries"]),
                                                   count_parts, count_parts * (cam_count-1))
 
-                # check if new directories are available
+                # check if new directories are available  -> PROGRESS #3/5
                 count = 0
                 count_current = count_camera + 1
                 for archive_directory in dir_list:
@@ -1003,7 +1027,7 @@ class BirdhouseViewArchive(BirdhouseClass):
                     self.logging.info("Interrupt creating the archive list due to shutdown command ...")
                     return
 
-            # update data for those dates where necessary + measure total size
+            # update data for those dates where necessary + measure total size   -> PROGRESS #4/5
             count_entries = 0
             count_current += 1
             deleted_dates = []
@@ -1117,7 +1141,7 @@ class BirdhouseViewArchive(BirdhouseClass):
             for cam in archive_changed:
                 archive_changed[cam]["entries"] = {}
 
-            # process data to be saved
+            # process data to be saved -> PROGRESS #5/5
             count_current += 1
             count_entries = 0
             for date in backup_entries:
