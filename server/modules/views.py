@@ -2027,6 +2027,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         files_images = {}
         files_weather = None
         files_sensor = None
+        files_video = {}
         content = {
             "active_cam": which_cam,
             "active_date": date_backup,
@@ -2061,6 +2062,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             backup = True
             path = self.config.db_handler.directory(config="backup", date=date_backup)
             files_data = self.config.db_handler.read_cache(config="backup", date=date_backup)
+            files_video = self.config.db_handler.read_cache(config="videos")
             if "files" in files_data:
                 files_all = files_data["files"].copy()
                 self.logging.info("BACKUP/" + date_backup + ": found " + str(len(files_all)) + " entries")
@@ -2090,6 +2092,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             files_all = self.config.db_handler.read_cache(config="images")
             files_weather = self.config.db_handler.read_cache(config="weather")
             files_sensor = self.config.db_handler.read_cache(config="sensor")
+            files_video = self.config.db_handler.read_cache(config="videos")
             self.logging.info("TODAY: found " + str(len(files_all)) + " entries; " +
                               str(len(files_weather)) + " weather entries; " +
                               str(len(files_sensor)) + " sensor entries")
@@ -2180,6 +2183,19 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 }
 
             content["entries"] = files_images
+
+            # favorites and videos ...
+            content["entries_favorites"] = {}
+            for entry_id in content["entries"]:
+                entry = content["entries"][entry_id]
+                if "favorit" in entry and int(entry["favorit"]) == 1:
+                    content["entries_favorites"][date_backup + "_" + entry_id] = content["entries"][entry_id]
+
+            if date_backup != "" and files_video != {}:
+                for entry_id in files_video:
+                    if date_backup in entry_id and ("to_be_deleted" not in files_video[entry_id] or int(files_video[entry_id]["to_be_deleted"]) != 1):
+                        entry = files_video[entry_id]
+                        content["entries_favorites"][entry_id] = entry
 
             # Yesterday
             files_yesterday = {}
