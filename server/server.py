@@ -5,6 +5,7 @@ import json
 import signal
 import sys
 import time
+import traceback
 
 import psutil
 import subprocess
@@ -94,13 +95,12 @@ def on_kill(signum, handler):
     sys.exit()
 
 
-def on_exception(exc_type, value, tb):
+def on_exception(exc_type, value, trace_back):
     """
     grab all exceptions and write them to the logfile (if active)
     """
-    srv_logging.exception("Uncaught exception: " + str(value))
-    srv_logging.exception("                    " + str(exc_type))
-    srv_logging.exception("                    " + str(tb))
+    tb_str = ''.join(traceback.format_exception(exc_type, value, trace_back))
+    srv_logging.error("Exception:\n\n" + tb_str + "\n")
 
 
 def on_exception_setting():
@@ -983,8 +983,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
         if command in cmd_views:
-            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "groups", "archive_exists", "info",
-                                "chart_data", "weather_data", "days_available", "day_back", "day_forward", "birds"]
+            param_to_publish = ["entries", "entries_delete", "entries_yesterday", "entries_favorites", "groups",
+                                "archive_exists", "info", "chart_data", "weather_data", "days_available",
+                                "day_back", "day_forward", "birds"]
             for key in param_to_publish:
                 if key in content:
                     api_data["data"][key] = content[key]
