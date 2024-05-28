@@ -1357,14 +1357,15 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         return_value = False
         backup_info = self.db_handler.read_cache("backup_info", "")
-        backup_file = self.db_handler.read("backup", date)
         if "changes" in backup_info:
             if (change in backup_info["changes"] and date in backup_info["changes"][change]
                     and backup_info["changes"][change]):
                 return_value = True
-        if both and ("info" in backup_file and "changed_"+change in backup_file["info"]
-                     and backup_file["info"]["changed_"+change]):
-            return_value = True
+        if both:
+            backup_file = self.db_handler.read("backup", date)
+            if ("info" in backup_file and "changed_"+change in backup_file["info"]
+                    and backup_file["info"]["changed_"+change]):
+                return_value = True
         self.logging.debug("get_status_changed: " + change + "/" + date + "/" + str(return_value))
         return return_value
 
