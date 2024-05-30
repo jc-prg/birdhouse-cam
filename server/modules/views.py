@@ -867,17 +867,17 @@ class BirdhouseViewArchive(BirdhouseClass):
             "info": {"total_archives": 0, "total_files": 0, "total_size": 0},
             "changes": {"archive": {}, "favorite": {}, "object": {}}
         }
-        self.archive_cam_template = {
-            "active_cam": "",
-            "view": "backup",
-            "chart_data": {},
-            "entries": {},
-            "groups": {},
-            "view_count": [],
-            "max_image_size": {"lowres": [0, 0], "hires": [0, 0]}
-        }
         for cam in self.camera:
-            self.archive_template[cam] = self.archive_cam_template.copy()
+            self.archive_template[cam] = {
+                "active_cam": cam,
+                "view": "backup",
+                "chart_data": {},
+                "entries": {},
+                "groups": {},
+                "view_count": [],
+                "max_image_size": {"lowres": [0, 0], "hires": [0, 0]}
+            }
+            self.archive_template[cam]["active_cam"] = cam
 
         self.logging.info("Connected archive creation handler.")
 
@@ -922,18 +922,16 @@ class BirdhouseViewArchive(BirdhouseClass):
         if force:
             self.force_reload = True
 
-    def list_create_v2(self, complete=False, recreate=True):
+    def list_create(self, complete=False, recreate=True):
         """
         Create list data for backup/archive directory
-
-        OPTIMIZED Version, not tested yet
 
         Args:
             complete (bool): read complete information from files or cached information from database
             recreate (bool): recreate data from archive directories
         """
         start_time = time.time()
-        archive_changed = self.archive_template
+        archive_changed = self.archive_template.copy()
         self.loading = "in progress"
         self.create_complete = complete
 
@@ -941,7 +939,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         archive_dirs = self.tools.get_directories(archive_main_dir)
         archive_info = self.config.db_handler.read("backup_info", "")
         archive_days = []
-        archive_entries = archive_dirs
+        archive_entries = archive_dirs.copy()
 
         for cam in self.camera:
             for date in archive_info[cam]["entries"]:
@@ -956,11 +954,14 @@ class BirdhouseViewArchive(BirdhouseClass):
                               str(self.create_complete) + "; recreate=" + str(recreate) + "; db_type=" +
                               str(self.config.db_handler.db_type) + ") ...")
             self.logging.info("- Found " + str(len(archive_dirs)) + " archive directories.")
-            self.logging.debug("  -> " + str(archive_dirs))
+            self.logging.info("  -> " + str(archive_dirs))
 
             # collect, update or delete entries
             count = 0
             for date in archive_entries:
+
+                if "00_today" in date:
+                    continue
 
                 count += 1
                 day_new = (date not in archive_days or complete or archive_info == {})
@@ -1014,26 +1015,27 @@ class BirdhouseViewArchive(BirdhouseClass):
                         if "detection" in config_images and len(config_images["detection"]):
                             day_entry["detection"] = True
 
-                        archive_changed[cam]["entries"][date] = day_entry
+                        archive_changed[cam]["entries"][date] = day_entry.copy()
 
                     elif day_changed:
                         self.logging.info("  -> " + date + " / " + cam + ": update data from day database" +
                                           "(db_exists=" + str(day_db_exists) + ")")
-                        del archive_info["info"]["archive"][date]
+                        if "archive" in archive_info["changes"] and date in archive_info["changes"]["archive"]:
+                            del archive_info["changes"]["archive"][date]
 
                         file_data = self._list_create_file_data(date, day_db_exists)
                         day_entry = self._list_create_from_database(cam, archive_info[cam], date, file_data)
-                        archive_changed[cam]["entries"][date] = day_entry
+                        archive_changed[cam]["entries"][date] = day_entry.copy()
 
                     else:
                         self.logging.info("  -> " + date + " / " + cam + ": keep data")
-                        day_entry = archive_info[cam]["entries"][date]
+                        day_entry = archive_info[cam]["entries"][date].copy()
                         archive_changed[cam]["entries"][date] = day_entry
 
                 if self.if_shutdown():
                     self.logging.info("Interrupt creating the archive list due to shutdown command ...")
                     return
-                self.tools.calculate_progress("archive", "#1/2", "", count, len(archive_entries))
+                self.tools.calculate_progress("archive", "1/2", "", count, len(archive_entries))
 
             # calculate entries, dir sizes, etc.
             count = 0
@@ -1042,6 +1044,10 @@ class BirdhouseViewArchive(BirdhouseClass):
             archive_total_amount = 0
             archive_groups = {}
             for date in archive_entries:
+
+                if "00_today" in date:
+                    continue
+
                 archive_date_size = 0
                 archive_date_count = 0
 
@@ -1064,6 +1070,8 @@ class BirdhouseViewArchive(BirdhouseClass):
                         archive_groups[cam][group].append(date)
 
                 for cam in self.camera:
+                    if date not in archive_changed[cam]["entries"]:
+                        continue
                     day_entry = archive_changed[cam]["entries"][date]
                     day_entry["count"] = archive_date_count
                     day_entry["dir_size"] = archive_date_size
@@ -1076,9 +1084,15 @@ class BirdhouseViewArchive(BirdhouseClass):
                     archive_changed[cam]["chart_data"] = {"data": {}, "titles": ["Activity"], "info": "not implemented"}
 
                 count += 1
-                self.tools.calculate_progress("archive", "#2/2", "", count, len(archive_entries))
+                self.tools.calculate_progress("archive", "2/2", "", count, len(archive_entries))
 
             # set overarching information
+            for key in archive_info["changes"]:
+                if key != "archive":
+                    archive_changed["changes"][key] = archive_info["changes"][key]
+                else:
+                    archive_changed["changes"][key] = {}
+
             archive_changed["info"] = {
                 "total_archives": archive_total_amount / len(self.camera),
                 "total_files": archive_total_count,
@@ -1104,7 +1118,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         self.loading = "done"
         self.create_complete = False
 
-    def list_create(self, complete=False, recreate=True):
+    def list_create_v1(self, complete=False, recreate=True):
         """
         Create list data for backup/archive directory
 

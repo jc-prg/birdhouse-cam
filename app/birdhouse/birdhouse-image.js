@@ -528,6 +528,8 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
         html += play_button;
         }
     else {
+        console.error(img_id2);
+        console.error(image_data);
         //if (style == "") { style = "height:140px;"; }
         html += "<div class='thumbnail error' style='"+style+"' id='error_"+img_id2+"'>";
         html += lang("NO_IMAGE_IN_ARCHIVE")+"</div>";
@@ -670,6 +672,8 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
             image_data["description"] += "<b>" + entry["date"] + "</b><br/>";
             image_data["description"] += "<i>"+lang("NO_IMAGE_IN_ARCHIVE_2")+"</i>";
             image_data["img_missing"] = true;
+            console.error(entry["date"]);
+            console.error(entry);
     	    }
         else {
             image_data["lowres"]      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);

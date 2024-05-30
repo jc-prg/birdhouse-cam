@@ -627,14 +627,22 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             config.db_handler.clean_all_data("sensor")
             response = {"cleanup": "done"}
         elif param["command"] == "update-views":
-            views.archive.list_update(force=True)
-            views.favorite.list_update(force=True)
-            views.object.list_update(force=True)
+            srv_logging.warning(str(param["parameter"]))
+            if "all" in param["parameter"] or "archive" in param["parameter"]:
+                views.archive.list_update(force=True)
+            if "all" in param["parameter"] or "favorite" in param["parameter"]:
+                views.favorite.list_update(force=True)
+            if "all" in param["parameter"] or "object" in param["parameter"]:
+                views.object.list_update(force=True)
             response = {"update_views": "started"}
         elif param["command"] == "update-views-complete":
-            views.archive.list_update(force=True, complete=True)
-            views.favorite.list_update(force=True, complete=True)
-            views.object.list_update(force=True, complete=True)
+            srv_logging.warning(str(param["parameter"]))
+            if "all" in param["parameter"] or "archive" in param["parameter"]:
+                views.archive.list_update(force=True, complete=True)
+            if "all" in param["parameter"] or "favorite" in param["parameter"]:
+                views.favorite.list_update(force=True, complete=True)
+            if "all" in param["parameter"] or "object" in param["parameter"]:
+                views.object.list_update(force=True, complete=True)
             response = {"update-views-complete": "started"}
         elif param["command"] == "force-backup":
             backup.start_backup()

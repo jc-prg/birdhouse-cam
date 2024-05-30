@@ -280,9 +280,9 @@ function birdhouse_forceBackup(camera) {
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceBackup');
 	}
 
-function birdhouse_forceUpdateViews(complete=false) {
-    if (complete)   { commands = ["update-views-complete"]; }
-	else            { commands = ["update-views"]; }
+function birdhouse_forceUpdateViews(view="all", complete=false) {
+    if (complete)   { commands = ["update-views-complete", view]; }
+	else            { commands = ["update-views", view]; }
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceUpdateViews');
 	}
 
