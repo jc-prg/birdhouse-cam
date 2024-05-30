@@ -954,7 +954,7 @@ class BirdhouseViewArchive(BirdhouseClass):
                               str(self.create_complete) + "; recreate=" + str(recreate) + "; db_type=" +
                               str(self.config.db_handler.db_type) + ") ...")
             self.logging.info("- Found " + str(len(archive_dirs)) + " archive directories.")
-            self.logging.info("  -> " + str(archive_dirs))
+            self.logging.debug("  -> " + str(archive_dirs))
 
             # collect, update or delete entries
             count = 0
@@ -976,22 +976,6 @@ class BirdhouseViewArchive(BirdhouseClass):
                     elif day_new:
                         self.logging.info("  -> " + date + " / " + cam + ": create data from day database " +
                                           "(db_exists=" + str(day_db_exists) + ")")
-
-                        day_entry = {
-                            "camera": cam,
-                            "count": 0,
-                            "count_delete": 0,
-                            "count_cam": 0,
-                            "count_data": 0,
-                            "datestamp": date,
-                            "date": date[6:8] + "." + date[4:6] + "." + date[0:4],
-                            "detection": False,
-                            "directory": self.config.db_handler.directory("images", date, False),
-                            "dir_size": 0,
-                            "dir_size_cam": 0,
-                            "lowres": "",
-                            "type": "directory"
-                        }
 
                         if not day_db_exists:
                             start_time_recreate = time.time()
