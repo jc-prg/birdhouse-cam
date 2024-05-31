@@ -50,7 +50,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.last_active = time.time()
         self.last_reload = time.time()
         self.restart_stream = True
-        self.timeout = 3
+        self.timeout = 5
 
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
@@ -70,10 +70,11 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
         while self._running:
             self.logging.debug("Micro thread '" + self.id +
-                               "' - last_active=" + str(round(time.time() - self.last_active, 2)) + "s")
+                               "' - last_active=" + str(round(time.time() - self.last_active, 2)) + "s; timeout=" +
+                               str(round(self.timeout, 2)) + "s")
 
             # Pause if not used for a while
-            if self.last_active + self.timeout < time.time():
+            if time.time() - self.last_active > self.timeout:
                 self._paused = True
             if self.restart_stream:
                 self._paused = False
