@@ -58,7 +58,7 @@ class CameraInformation:
             except Exception as e:
                 self.logging.error("Could not grab usb devices: " + str(e))
         else:
-            self.logging.error("Could not grab usb devices: /dev/v4l/by-id/ doesn't exist.")
+            self.logging.info("Could not grab usb devices: /dev/v4l/by-id/ doesn't exist.")
 
         for device in output:
             if "/dev/" in device:
