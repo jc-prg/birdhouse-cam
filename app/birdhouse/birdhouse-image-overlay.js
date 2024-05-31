@@ -33,7 +33,7 @@ let overlayImageEntries = {}
 * @param (string) overlay_replace - alternative image (e.g. with detected objects) to be displayed when moving over the [D]
 * @param (string) overlay_id - id of parent element
 */
-function birdhouse_imageOverlay(filename, description="", overlay_replace="", swipe=false, overlay_id="overlay_image") {
+function birdhouse_imageOverlay(filename, description="", overlay_replace="", swipe=false, overlay_id="overlay_image", favorite=false) {
     if (document.getElementById("overlay_content")) { existing = true; }
     else                                            { existing = false; }
 
@@ -65,7 +65,10 @@ function birdhouse_imageOverlay(filename, description="", overlay_replace="", sw
         html += "  <div id=\"overlay_replace\" style='display:none;'>&nbsp;</div>";
         }
 
-    html += "    <img id='"+overlay_id+"' src='"+filename+"' style='display:block;'  onclick=\"event.stopPropagation();\"/>";
+    var border_style = "";
+    if (favorite == true) { border_style = "border-color:"+color_code["star"]+";"; }
+
+    html += "    <img id='"+overlay_id+"' src='"+filename+"' style='display:block;"+border_style+"'  onclick=\"event.stopPropagation();\"/>";
     //html += "</div>";
     //html += "<div id=\"overlay_image_container2\">";
     html += "</div>";
@@ -236,10 +239,10 @@ function birdhouse_overlayShowByIndex(index) {
         }
     else if (img_data["hires_stream"]) {
         var [hires, stream_uid]     = birdhouse_StreamURL(app_active_cam, img_data["hires_stream"], "stream_list_5", true);
-        birdhouse_imageOverlay(hires, description,  img_data["hires_detect"], img_data["swipe"]);
+        birdhouse_imageOverlay(hires, description,  img_data["hires_detect"], img_data["swipe"], "overlay_image", img_data["favorite"]);
         }
     else {
-        birdhouse_imageOverlay(img_data["hires"], description,  img_data["hires_detect"], img_data["swipe"]);
+        birdhouse_imageOverlay(img_data["hires"], description,  img_data["hires_detect"], img_data["swipe"], "overlay_image", img_data["favorite"]);
         }
     currentIndex = index;
 

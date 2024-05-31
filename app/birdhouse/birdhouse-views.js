@@ -369,7 +369,20 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
     // load images for detail view with swipe feature
     if (entries) {
-        birdhouse_overlayLoadImages(Object.keys(entries).sort().reverse(), entries, app_active_page, admin);
+        var overloadImageKeys    = Object.keys(entries).sort().reverse();
+        var overloadImageEntries = Object.assign({}, entries);
+
+        // include images from favorites group
+        if (entries_favorite && Object.keys(entries_favorite).length > 0) {
+
+            overloadImageKeys = Object.keys(entries_favorite).sort().reverse();
+            var keys = Object.keys(entries).sort().reverse();
+            var keys2 = overloadImageKeys.concat(keys);
+            overloadImageKeys = keys2;
+
+            for (var key in entries_favorite) { overloadImageEntries[key] = entries_favorite[key]; }
+            }
+        birdhouse_overlayLoadImages(overloadImageKeys, overloadImageEntries, app_active_page, admin);
         }
 
 	// list today complete, favorites -> list in monthly or hourly groups
@@ -445,6 +458,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
    	    	if (empty) { html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>"; }
             }
 		if (entries_available == false && active_page == "VIDEOS") {
+
    	    	html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>";
    	    	}
 

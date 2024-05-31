@@ -593,6 +593,12 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
 		image_data["hires"]           = birdhouse_ImageURL(img_url + entry["directory"] + entry["hires"]);
         image_data["hires_detect"]    = "";
         image_data["detect_sign"]     = "";
+        image_data["favorite"]        = false;
+
+        if (entry["favorit"] && (entry["favorit"] == 1 || entry["favorit"] == "1")) {
+            image_data["favorite"]    = true;
+            }
+
         //image_data["onclick"]         = "birdhouse_imageOverlay(\""+image_data["hires"]+"\",\""+image_data["description"]+"\");";
 
         if (active_page == "FAVORITES")     { image_data["description"] = entry["date"]+" ("+hour+":"+minute+")"; }
