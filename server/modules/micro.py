@@ -69,6 +69,9 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.count = 0
 
         while self._running:
+            self.logging.debug("Micro thread '" + self.id +
+                               "' - last_active=" + str(round(time.time() - self.last_active, 2)) + "s")
+
             # Pause if not used for a while
             if self.last_active + self.timeout < time.time():
                 self._paused = True
