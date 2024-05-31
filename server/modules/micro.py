@@ -76,28 +76,28 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                 self._paused = False
 
             if self.recording_start:
-                self.logging.debug("Request recording for '" + self.id + "' ...")
+                #self.logging.debug("Request recording for '" + self.id + "' ...")
                 time.sleep(self.param["record_audio_delay"])
                 self.recording = True
                 self.recording_start = False
 
             if self.recording_processing_start:
-                self.logging.debug("Request to stop recording for '" + self.id + "' ...")
+                #self.logging.debug("Request to stop recording for '" + self.id + "' ...")
                 time.sleep(self.param["record_audio_delay"])
                 self.recording_processing = True
                 self.recording_processing_start = False
 
             # reconnect if config data were updated
             if self.config.update["micro_" + self.id]:
-                self.logging.debug("Request reconnect for '" + self.id + "' ...")
+                #self.logging.debug("Request reconnect for '" + self.id + "' ...")
                 self.connect()
                 self.config.update["micro_" + self.id] = False
 
             # read data from device and store in a var
             if self.connected and not self.error and not self._paused:
                 try:
-                    self.logging.debug("Read chunk of '" + self.id + "' (" + str(len(self.chunk)) + ") ...")
                     self.chunk = self.stream.read(self.CHUNK, exception_on_overflow=False)
+                    #self.logging.debug("Read chunk of '" + self.id + "' (" + str(len(self.chunk)) + ") ...")
                     if len(self.chunk) > 0:
                         self.count += 1
                         if self.recording:
@@ -206,7 +206,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
         self.connected = True
         self.last_reload = time.time()
-        self.logging.info("Microphone connected.")
+        self.logging.info("Microphone connected: " + str(self.DEVICE) + ", " + str(self.info))
 
     def update_config(self):
         """
