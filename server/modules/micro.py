@@ -373,6 +373,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         inspired by https://realpython.com/playing-and-recording-sound-python/#pyaudio_1
         """
         self.recording_processing_start = True
+        self.last_active = time.time()
         self.restart_stream = False
         self.logging.info("Stopping recording of '" + self.recording_filename + "' with " +
                           str(len(self.recording_frames)) + " chunks ...")
@@ -382,6 +383,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         stop recording and clear cache
         """
         self.logging.info("Canceled recording of audio stream (" + self.id + ").")
+        self.last_active = time.time()
         self.restart_stream = False
         self.recording = False
         self.recording_processing = False
