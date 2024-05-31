@@ -49,7 +49,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
         self.last_active = time.time()
         self.last_reload = time.time()
-        self.restart_stream = True
+        self.restart_stream = False
         self.timeout = 5
 
         self.FORMAT = pyaudio.paInt16
