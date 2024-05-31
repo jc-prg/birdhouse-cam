@@ -144,7 +144,11 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             self.CHANNELS = self.param["channels"]
 
         if self.audio is None:
-            self.audio = pyaudio.PyAudio()
+            try:
+                self.audio = pyaudio.PyAudio()
+            except Exception as e:
+                self.raise_error("Could not connect microphone '" + self.id + "': " + str(e))
+
         elif self.stream is not None and not self.stream.is_stopped():
             try:
                 self.stream.stop_stream()
