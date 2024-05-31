@@ -47,7 +47,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         """
         Constructor method for initializing the class.
 
-        Parameters:
+        Args:
             sensor_id (str): id string to identify the sensor
             config (modules.config.BirdhouseConfig): reference to main config object
         """
@@ -236,7 +236,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                 self.reset_error()
 
             except Exception as err:
-                self.raise_error(message="Initial load " + self.param["type"] + " not OK: " + str(err),
+                self.raise_error(message="Initial load " + self.param["type"] + " failed: " + str(err),
                                  connect=False)
                 return
 

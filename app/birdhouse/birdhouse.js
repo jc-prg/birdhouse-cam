@@ -105,7 +105,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 	    else                { app_2nd_load = false; }
 	    var param = window.location.href.split("?");
 	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "OBJECTS", "TODAY", "INFO",
-	                   "WEATHER", "IMAGE_SETTINGS", "SETTINGS", "PROCESSING"];
+	                   "WEATHER", "IMAGE_SETTINGS", "SETTINGS", "PROCESSING", "STATISTICS"];
 	    if (options.includes(param[1])) {
 	        view = param[1];
 	        app_active_page = param[1];
@@ -140,6 +140,7 @@ function birdhousePrint(data) {
 	var data_active   = data["DATA"]["active"];
 
     birdhouseSetMainVars(data);
+    overlayImageList = [];
 
     var initial_setup   = data["STATUS"]["server"]["initial_setup"];
 	var date            = data_active["active_date"];
@@ -173,7 +174,7 @@ function birdhousePrint(data) {
 	birdhouseCameras     = data_settings["devices"]["cameras"];
 	birdhouseMicrophones = data_settings["devices"]["microphones"];
 
-	birdhouseAudioStream_load(server_link, birdhouseMicrophones);
+	birdhouseAudioStream_load(birdhouseMicrophones);
     birdhouse_KillActiveStreams();
 	birdhouseSetMainStatus(data);
 	birdhousePrintTitle(data, app_active_page);
@@ -192,6 +193,7 @@ function birdhousePrint(data) {
 	else if (app_active_page == "PROCESSING")        { birdhouse_settings.create("PROCESSING"); }
 	else if (app_active_page == "OBJECTS")           { birdhouse_OBJECTS(lang("BIRDS_DETECTED"), data); }
 	else if (app_active_page == "SETTINGS")          { birdhouse_settings.create(); }
+	else if (app_active_page == "STATISTICS")        { birdhouse_STATISTICS("STATISTICS", data); }
 	else if (app_active_page == "TODAY")             { birdhouse_LIST(lang("TODAY"), data, camera); }
 	else if (app_active_page == "TODAY_COMPLETE")    { birdhouse_LIST(lang("TODAY_COMPLETE"), data, camera, false); }
 	else if (app_active_page == "VIDEOS")            { birdhouse_LIST(lang("VIDEOS"), data, camera); }
@@ -319,7 +321,8 @@ function birdhouseHeaderFunctions() {
 	else if (app_available_cameras.length > 1) { html = reload_view + audio_stream + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info; }
 	else { html = reload_view + audio_stream + "&nbsp;&nbsp;&nbsp;&nbsp;" + info; }
 */
-	html += "&nbsp;&nbsp;&nbsp;" + info;
+    setTextById("headerRightToolTip", info)
+	html += "&nbsp;&nbsp;&nbsp;";// + info;
 	return html;
 	}
 

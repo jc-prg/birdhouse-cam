@@ -27,19 +27,142 @@ class CameraInformation:
 
     def get_available_cameras(self):
         """
+        new ...
+        """
+        devices = {"initial": {}, "list": {}, "short": {}, "complete": {}}
+        output = []
+
+        try:
+            process = subprocess.Popen(["ls /dev/video*"], stdout=subprocess.PIPE, shell=True)
+            output2 = process.communicate()[0]
+            output2 = output2.decode()
+            output2 = output2.replace("  ", "\n")
+            output2 = output2.split("\n")
+            for device in output2:
+                if device != "":
+                    output.append(device)
+        except Exception as e:
+            self.logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
+            return devices
+
+        if os.path.exists("/dev/v4l/by-id/"):
+            try:
+                process = subprocess.Popen(["ls /dev/v4l/by-id/*"], stdout=subprocess.PIPE, shell=True)
+                output2 = process.communicate()[0]
+                output2 = output2.decode()
+                output2 = output2.replace("  ", "\n")
+                output2 = output2.split("\n")
+                for device in output2:
+                    if device != "":
+                        output.append(device)
+            except Exception as e:
+                self.logging.error("Could not grab usb devices: " + str(e))
+        else:
+            self.logging.error("Could not grab usb devices: /dev/v4l/by-id/ doesn't exist.")
+
+        for device in output:
+            if "/dev/" in device:
+                dev_title = device.split("/")[2]
+
+                if "/dev/v4l" in device:
+                    process = subprocess.Popen(["ls /dev/v4l/by-id/* -l"], stdout=subprocess.PIPE, shell=True)
+                    output2 = process.communicate()[0]
+                    output2 = output2.decode()
+                    output2 = output2.split("\n")
+                    for dev_string in output2:
+                        if device in dev_string:
+                            link1, link2 = dev_string.split("-> ../../")
+                            dev_title = link2
+
+                filename = "/sys/class/video4linux/" + dev_title + "/device/uevent"
+                devices["initial"][device] = {}
+
+                if os.path.isfile(filename):
+                    self.logging.debug("... Grab information of " + device)
+                    try:
+                        process = subprocess.Popen(["cat " + filename], stdout=subprocess.PIPE, shell=True)
+                        device_info = process.communicate()[0]
+                        device_info = device_info.decode()
+                        device_info = device_info.split("\n")
+                        for info in device_info:
+                            self.logging.debug("... .. " + info)
+                            if "=" in info:
+                                key, value = info.split("=")
+                                devices["initial"][device][key] = value
+
+                    except Exception as e:
+                        self.logging.error("Could not grab info for video device " + device + ": " + str(e))
+
+        for key in devices["initial"]:
+            device = devices["initial"][key]
+            device_info = {"interface": "", "image": False, "shape": [], "dev": key, "bus": "", "vID:pID": ""}
+
+            if "DEVTYPE" in device and device["DEVTYPE"] == "usb_interface":
+                device_info["interface"] = "usb"
+                device_info["image"] = True
+                if "DRIVER" in device:
+                    device_info["driver"] = device["DRIVER"]
+                if "MODALIAS" in device:
+                    device_info["alias"] = device["MODALIAS"]
+                if "INTERFACE" in device:
+                    device_info["interface"] = device["INTERFACE"]
+                if "PRODUCT" in device:
+                    device_info["vID:pID"] = device["PRODUCT"].split("/")[0] + ":" + device["PRODUCT"].split("/")[1]
+                    device_info["bus"] = device["PRODUCT"].split("/")[0] + ":" + device["PRODUCT"].split("/")[1]
+                    try:
+                        process = subprocess.run(["/usr/bin/lsusb | grep " + device_info["vID:pID"]],
+                                                 capture_output=True, text=True, shell=True)
+                        usb_info = process.stdout
+                        self.logging.debug(usb_info)
+                        usb_info = usb_info.split(device["PRODUCT"].split("/")[1] + " ")[1]
+                        usb_info = usb_info.replace("\n", "")
+                        device_info["info"] = usb_info #[1]
+                    except Exception as e:
+                        self.logging.info(e)
+                        device_info["info"] = key
+
+                devices["complete"][key] = device_info
+                devices["short"][key] = key + " (" + device_info["info"] + " | " + device_info["vID:pID"] + ")"
+                devices["list"][device_info["info"]] = 1
+            else:
+                self.logging.debug(key + " is not a USB device: " + str(devices["initial"][key]))
+
+        if birdhouse_env["rpi_active"]:
+            devices["complete"]["/dev/picam"] = {"dev": "/dev/picam", "info": "PiCamera", "image": True,
+                                                 "shape": [], "bus": "picam", "vID:pID": "picam"}
+            devices["short"]["/dev/picam"] = "/dev/picam (PiCamera)"
+            devices["list"]["PiCamera"] = 1
+
+        del devices["initial"]
+        self.logging.debug("... " + str(devices))
+
+        return devices
+
+    def get_available_cameras_org(self):
+        """
         use v4l2_ctl to identify available cameras
 
         Returns:
             dict: different level of device definitions in a dict: 'list', 'short', 'complete'
         """
+        devices = {"list": {}, "short": {}, "complete": {}}
         try:
             process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
             output = process.communicate()[0]
             output = output.decode()
             output = output.split("\n")
         except Exception as e:
-            ch_logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
-            return system
+            self.logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
+            return devices
+
+        try:
+            process = subprocess.Popen(["lsusb"], stdout=subprocess.PIPE, shell=True)
+            ls_usb = process.communicate()[0]
+            ls_usb = ls_usb.decode()
+            ls_usb = ls_usb.split("\n")
+        except Exception as e:
+            self.logging.warning("Could not video device bus information. Check, if lsusb is installed. " + str(e))
+            return devices
 
         last_key = "none"
         if birdhouse_env["rpi_active"]:
@@ -59,18 +182,85 @@ class CameraInformation:
                     devices["list"][last_key] = []
                 devices["list"][last_key].append(value)
                 devices["short"][value] = value + " (" + info[0] + ")"
-                devices["complete"][value] = {"dev": value, "info": last_key, "image": False, "shape": []}
+                devices["complete"][value] = {"dev": value, "info": last_key, "image": False, "shape": [], "bus": ""}
+
+                for line in ls_usb:
+                    if info[0] in line:
+                        usb_values = line.split(":")
+                        usb_values = usb_values[0].split(" ")
+                        devices["complete"][value]["bus"] = usb_values[1] + "/" + usb_values[3]
 
         self.logging.debug("Found "+str(len(devices["list"]))+" devices.")
         self.logging.debug(str(devices))
 
         return devices.copy()
 
+    def get_bus_information(self, source, all_devices=False):
+        """
+        get bus information for given device
+
+        uses:
+        - ls /dev/video*
+        - v4l2-ctl --list-devices
+        - cat /sys/class/video4linux/video2/device/uevent
+
+        Args:
+            source (str): device identifier, e.g., /dev/video0
+            all_devices (bool): list bus information for all devices
+        Return:
+            str|dict: bus information, e.g,, 001/002
+        """
+        self.logging.debug("Identify bus information for device " + source)
+        try:
+            process = subprocess.Popen(["v4l2-ctl --list-devices"], stdout=subprocess.PIPE, shell=True)
+            output = process.communicate()[0]
+            output = output.decode()
+            output = output.split("\n")
+        except Exception as e:
+            self.logging.error("Could not grab video devices. Check, if v4l2-ctl is installed. " + str(e))
+            return "N/A"
+
+        try:
+            process = subprocess.Popen(["lsusb"], stdout=subprocess.PIPE, shell=True)
+            ls_usb = process.communicate()[0]
+            ls_usb = ls_usb.decode()
+            ls_usb = ls_usb.split("\n")
+        except Exception as e:
+            self.logging.warning("Could not video device bus information. Check, if lsusb is installed. " + str(e))
+            return "N/A"
+
+        last_key = ""
+        for value in output:
+            if ":" in value:
+                last_key = value
+
+            elif value != "":
+                value = value.replace("\t", "")
+                info = last_key.split(":")
+
+                video_device = value.ljust(15) + info[0]
+                bus = ""
+                for line in ls_usb:
+                    if info[0] in line:
+                        usb_values = line.split(":")
+                        usb_values = usb_values[0].split(" ")
+                        bus = usb_values[1] + "/" + usb_values[3]
+                        break
+
+                if bus == "":
+                    bus = "(no USB)"
+
+                if all_devices:
+                    self.logging.info(video_device.ljust(48) + " - " + bus)
+                elif source in value:
+                    self.logging.info("Identified device: " + video_device + ": " + bus)
+                    return bus
+
     def get_available_camera_resolutions(self, source):
         """
         use v4l2_ctl to identify available camera resolutions
 
-        Parameters:
+        Args:
             source (string): device definition, e.g. /dev/video0
         """
         try:
@@ -95,7 +285,7 @@ class CameraInformation:
 
         except Exception as e:
             self.logging.error("Could not grab video device resolutions for '" + source +
-                          "'. Check, if v4l2-ctl is installed. " + str(e))
+                               "'. Check, if v4l2-ctl is installed. " + str(e))
             return {}
 
 
@@ -109,7 +299,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         create instance for PiCamera2
         documentation: https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf
 
-        Parameters:
+        Args:
             camera_id (str): camera identifier
             source (str): source, e.g., /dev/video0
             config (modules.config.BirdhouseConfig): reference to main config handler
@@ -127,6 +317,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.connected = False
         self.available_devices = {}
         self.first_connect = True
+        self.create_test_images = True
 
         self.picamera_controls = {
             "saturation":       ["Saturation",          "rwm", 0.0, 32.0, "float"],
@@ -153,6 +344,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.picamera_streams = ["raw", "main", "lores"]
         self.picamera_stream = ["size", "format", "stride", "framesize"]
 
+        self.camera_info = CameraInformation()
         self.logging.info("Starting PiCamera2 support for '"+self.id+":"+source+"' ...")
 
     def connect(self):
@@ -170,7 +362,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if self.first_connect:
                 from picamera2 import Picamera2
                 self.stream = Picamera2()
-                self.configuration = self.stream.create_still_configuration()
+                self.configuration = self.stream.create_still_configuration(lores=None, raw=None)
                 self.stream.configure(self.configuration)
 
             self.stream.start()
@@ -198,9 +390,13 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.connected = True
 
         try:
+            self.logging.debug("Switch mode and capture first image")
             image = self.stream.switch_mode_and_capture_array(self.configuration, "main")
             if image is None or len(image) == 0:
                 raise Exception("Returned empty image.")
+            else:
+                self.camera_create_test_image("switch mode and capture first image", image)
+                self.logging.debug("- Done.")
             return True
 
         except Exception as err:
@@ -234,10 +430,13 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         read image from camera
         """
+        self.logging.debug("Read image from PiCamera")
         try:
             raw = self.stream.capture_array("main")
             if raw is None or len(raw) == 0:
                 raise Exception("Returned empty image.")
+            else:
+                self.logging.debug("- Done.")
             return raw
         except Exception as err:
             self.raise_error("- Error reading image from PiCamera2 '" + self.source +
@@ -248,32 +447,37 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         set properties based on configuration file
         """
+        self.logging.debug("Set initial properties for '" + self.id + "' ...")
         self.properties_set = []
         for p_key in self.picamera_controls:
             if "w" in self.picamera_controls[p_key][1]:
                 self.properties_set.append(p_key)
 
         if self.param["image"]["black_white"]:
-            self.param["image"]["saturation"] = 0
+            self.param["image_presets"]["saturation"] = 0
 
         self.stream.stop()
-        for c_key in self.param["image"]:
+        for c_key in self.param["image_presets"]:
             if c_key in self.properties_get and "w" in self.properties_get[c_key][1]:
-                result = self.set_properties(c_key, self.param["image"][c_key], True)
-                self.logging.debug("... set " + c_key + "=" + str(self.param["image"][c_key]) + " - " + str(result))
+                result = self.set_properties(c_key, self.param["image_presets"][c_key], True)
+                self.logging.debug("... set " + c_key + "=" + str(self.param["image_presets"][c_key]) + " - " +
+                                   str(result))
         self.stream.start()
+        self.camera_create_test_image("set properties init")
 
     def set_properties(self, key, value="", init=False):
         """
         set properties / controls for picamera2
 
-        Parameters:
+        Args:
             key (str): internal key
             value (str): value to be set
             init (bool): initialization
         Return:
             bool: status if set property
         """
+        self.logging.debug("Set property for '" + self.id + "': " + key + "=" + str(value) + " (" + str(init) + ")")
+
         if key in self.picamera_controls and "w" in self.picamera_controls[key][1]:
             full_key = self.picamera_controls[key][0]
             try:
@@ -338,13 +542,14 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         uses picamera2.camera_controls[<full_key>], picamera2.still_configuration.<full_key>, picamera2.capture_metadata(), and picamera2.camera_properties[..]
 
-        Parameters:
+        Args:
             key (str): available keys: saturation, brightness, contrast, gain, sharpness, temperature, exposure,
                        auto_wb; if not set return complete list of properties
         Returns:
             dict | float: complete list of properties in format [current_value, "rwm", min_value, max_value]
                           or current value if key is set
         """
+        self.logging.debug("(1) Get camera and stream properties for '" + self.id + "' (PiCamera2)")
         for c_key in self.picamera_controls:
             self.properties_get[c_key] = self.picamera_controls[c_key].copy()
             c_key_full = self.picamera_controls[c_key][0]
@@ -362,21 +567,31 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if c_key_full in self.configuration["controls"]:
                 self.properties_get[c_key][0] = self.configuration["controls"][c_key_full]
 
+        self.logging.debug("(2) Get camera and stream properties for '" + self.id + "' (PiCamera2)")
         for i_key in self.picamera_image:
             self.properties_get[i_key] = self.picamera_image[i_key].copy()
             i_key_full = self.picamera_image[i_key][0]
-            image_properties = self.stream.capture_metadata()
-            if i_key_full in image_properties:
-                self.properties_get[i_key][0] = image_properties[i_key_full]
-            else:
-                self.properties_get[i_key][0] = -1
+            self.logging.debug("- " + str(i_key))
+            try:
+                # the following command breaks complete server after an update / upgrade of the OS in 04-2024
+                if not self.connected:
+                    self.stream.start()
+                image_properties = self.stream.capture_metadata()
+                if i_key_full in image_properties:
+                    self.properties_get[i_key][0] = image_properties[i_key_full]
+                else:
+                    self.properties_get[i_key][0] = -1
+            except Exception as e:
+                self.logging.error("Could not capture metadata from stream: " + str(e))
 
+        self.logging.debug("(3) Get camera and stream properties for '" + self.id + "' (PiCamera2)")
         for p_key in self.picamera_cam:
             self.properties_get[p_key] = self.picamera_cam[p_key].copy()
             p_key_full = self.picamera_cam[p_key][0]
             if p_key_full in self.stream.camera_properties:
                 self.properties_get[p_key][0] = self.stream.camera_properties[p_key_full]
 
+        self.logging.debug("(4) Get camera and stream properties for '" + self.id + "' (PiCamera2)")
         if key in self.properties_get:
             return self.properties_get[key][0]
         else:
@@ -437,17 +652,29 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         set camera resolution
 
-        Parameters:
+        Args:
             width (int): new image width
             height (int): new image height
         Returns:
             bool: status setting camera resolution
         """
         try:
-            config = self.stream.create_still_configuration({"size": (int(width), int(height))})
             self.stream.stop()
-            self.stream.configure(config)
+            #self.configuration = self.stream.create_still_configuration(main={"size": (int(width), int(height))})
+            #self.configuration = self.stream.create_still_configuration(main={"size": (int(width), int(height))},
+            #                                                            lores={"size": (300, 150)})
+
+            self.configuration["main"]["size"] = (int(width), int(height))
+            self.stream.still_configuration.main.size = (int(width), int(height))
+            #self.configuration["raw"]["size"] = (int(width), int(height))
+
+            #self.stream.align_configuration(self.configuration)
+            self.logging.debug("Set resolution: " + str(self.configuration["main"]["size"]))
+            self.stream.configure(self.configuration)
+
             self.stream.start()
+            time.sleep(1)
+            self.logging.debug("Set resolution: Done.")
             return True
         except Exception as err:
             self.raise_error("Could not set resolution: " + str(err))
@@ -457,7 +684,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         """
         get resolution of the device
 
-        Parameters:
+        Args:
             maximum (bool): get maximum resolution (True) or current resolution (False)
         Returns:
             [int, int]: width, height
@@ -466,36 +693,87 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             (width, height) = self.stream.camera_properties['PixelArraySize']
         else:
             (width, height) = self.stream.still_configuration.main.size
+
         return [width, height]
+
+    def camera_create_test_image(self, context="", image=None):
+        """
+        create test image incl. date and context information
+
+        Args:
+            image (numpy.ndarray): image to be saved
+            context (str): name the context here
+        """
+        if not self.create_test_images:
+            return
+
+        image_path = os.path.join(birdhouse_main_directories["data"], "test_connect_" + self.id + ".jpg")
+        try:
+            if image is None:
+                image = self.stream.capture_array("main")
+
+            text = str(self.config.local_time()) + " - " + context
+            image = cv2.putText(image, str(text), (30, 40), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (0, 0, 0),
+                                2, cv2.LINE_AA)
+            image = cv2.putText(image, str(text), (30, 80), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (255, 255, 255),
+                                2, cv2.LINE_AA)
+
+            cv2.imwrite(image_path, image)
+
+            self.logging.debug("Save test image: " + context)
+            self.logging.debug("               : " + image_path)
+
+        except Exception as e:
+            self.logging.warning("Could not save test image: " + image_path + " / " + str(e))
 
     def camera_status(self, source, name):
         """
         check if given source can be connected as PiCamera and returns an image
 
-        Parameters:
+        Args:
             source (str): device string, should be "/dev/picam"
             name (str): description for the camera
         Returns:
             dict: camera information: 'dev', 'info', 'image', 'shape'
         """
+        self.logging.debug("Camera status: " + str(source) + " / " + str(name))
+
         camera_info = {"dev": source, "info": name, "image": False, "shape": []}
+        devices = self.camera_info.get_available_cameras()["complete"]
+        for key in devices:
+            if devices[key]["dev"] == source:
+                camera_info["bus"] = devices[key]["bus"]
+
         if birdhouse_env["test_video_devices"] is not None and not birdhouse_env["test_video_devices"]:
             camera_info["image"] = True
             return camera_info
 
         if source == "/dev/picam" and birdhouse_env["rpi_64bit"]:
+            if self.connected:
+                self.stream.stop()
+
             try:
+                self.logging.debug("Check if PiCamera is connected and works ...")
                 from picamera2 import Picamera2
                 picam2_test = Picamera2()
+                config = picam2_test.create_still_configuration(lores=None, raw=None)
+                picam2_test.configure(config)
                 picam2_test.start()
+
+                self.logging.debug("PiCamera started ...")
                 time.sleep(0.5)
                 image = picam2_test.capture_array()
 
                 if image is None or len(image) == 0:
                     camera_info["error"] = "Returned empty image."
+                    picam2_test.stop()
+                    picam2_test.close()
+                    self.logging.debug("PiCamera returned empty image!")
                 else:
-                    path_raw = str(os.path.join(self.config.db_handler.directory(config="images"),
-                                                "..", "test_connect_" + source.replace("/", "_") + ".jpeg"))
+                    img_path = os.path.join(self.config.db_handler.directory(config="images"),
+                                            "..", "test_connect_" + source.replace("/", "_") + ".jpeg")
+                    self.logging.debug("PiCamera returned image, try to save image as " + img_path)
+                    path_raw = str(img_path)
                     cv2.imwrite(path_raw, image)
                     if "error" in camera_info:
                         del camera_info["error"]
@@ -503,9 +781,16 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                     camera_info["shape"] = image.shape
                     picam2_test.stop()
                     picam2_test.close()
+                    self.logging.debug("Closed connection to PiCamera.")
 
             except Exception as e:
-                camera_info["error"] = "Error connecting camera:" + str(e)
+                error_msg = "Error connecting PiCamera:" + str(e)
+                camera_info["error"] = error_msg
+                self.logging.debug(error_msg)
+
+            if self.connected:
+                self.stream.start()
+
         elif not birdhouse_env["rpi_64bit"]:
             camera_info["error"] = "PiCamera2 is only supported on 64bit OS, check configuration in .env-file."
         else:
@@ -531,7 +816,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         """
         create instance of USB camera or PiCamera
 
-        Parameters:
+        Args:
             camera_id (str): camera identifier
             source (str): source, e.g., /dev/video0
             config (modules.config.BirdhouseConfig): reference to main config handler
@@ -547,6 +832,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         self.connected = False
         self.available_devices = {}
         self.camera_info = CameraInformation()
+        self.create_test_images = True
 
         self.logging.info("Starting CAMERA support for '"+self.id+":"+source+"' ...")
 
@@ -560,6 +846,10 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         self.reset_error()
         self.connected = False
 
+        time.sleep(1)
+        self.reset_usb()
+        time.sleep(3)
+
         self.logging.info("Try to connect camera '" + self.id + "/" + self.source + "' ...")
         try:
             if self.stream is not None and self.stream.isOpened():
@@ -572,6 +862,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
                 self.raise_error("- Can't connect to camera '" + self.source + "': not isOpen()")
                 return False
             time.sleep(0.5)
+            self.camera_create_test_image("Camera is opened.")
         except Exception as err:
             self.raise_error("- Can't connect to camera '" + self.source + "': " + str(err))
             return False
@@ -622,15 +913,36 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         else:
             self.logging.debug("- Camera not yet connected.")
 
+    def reset_usb(self):
+        """
+        Reset USB camera if bus information available
+        """
+        camera_info = self.camera_status(self.source, self.id)
+        if "bus" in camera_info and camera_info["bus"] != "":
+            try:
+                process = subprocess.Popen(["usbreset "+camera_info["bus"]], stdout=subprocess.PIPE, shell=True)
+                output = process.communicate()[0]
+                output = output.decode()
+                if " ok" not in output:
+                    raise ("Could not reset USB device " + self.source + " bus " + camera_info["bus"])
+                else:
+                    self.logging.info("Reset of USB camera " + self.source + " done (Bus " + camera_info["bus"] + ").")
+            except Exception as e:
+                self.logging.error("Reset of USB camera failed: " + str(e))
+        else:
+            self.logging.warning("Reset of USB camera not possible, no bus information for " + self.source +
+                                 ". Use 'lsusb' to check, if it's still connected. If not a reboot might help.")
+
     def read(self, stream="not set"):
         """
         read image from camera
 
-        Parameters:
+        Args:
             stream (str): stream name
         Returns:
             numpy.ndarray: raw image
         """
+        self.logging.debug("Read image from '" + self.id + "' ...")
         try:
             ref, raw = self.stream.read()
             check = str(type(raw))
@@ -638,6 +950,8 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
                 raise Exception("Error reading image.")
             if "NoneType" in check or len(raw) == 0:
                 raise Exception("Returned empty image.")
+            else:
+                self.logging.debug("- Done.")
             return raw
         except Exception as err:
             self.raise_error("- Error reading image from camera '" + self.source +
@@ -667,7 +981,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         16. CV_CAP_PROP_CONVERT_RGB Boolean flags indicating whether images should be converted to RGB.
         17. CV_CAP_PROP_WHITE_BALANCE Currently unsupported [4000..7000]
 
-        Parameters:
+        Args:
             key (str): key
             value (float): value
         """
@@ -704,7 +1018,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         """
         return keys for all properties that are implemented at the moment
 
-        Parameters:
+        Args:
             keys (str): get keys: 'get' or 'set'
         Returns:
             list: list of keys
@@ -822,7 +1136,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         """
         set camera resolution
 
-        Parameters:
+        Args:
             width (int): image width
             height (int): image height
         Returns:
@@ -840,7 +1154,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         """
         get camera resolution
 
-        Parameters:
+        Args:
             maximum (bool): return maximum or current size
         Returns:
             (int, int): (width, height)
@@ -852,17 +1166,56 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         height = self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)
         return [width, height]
 
+    def camera_create_test_image(self, context="", image=None):
+        """
+        create test image incl. date and context information
+
+        Args:
+            image (numpy.ndarray): image to be saved
+            context (str): name the context here
+        """
+        if not self.create_test_images:
+            return
+
+        image_path = os.path.join(birdhouse_main_directories["data"], "test_connect_" + self.id + ".jpg")
+        try:
+            if image is None:
+                ref, image = self.stream.read()
+                if not ref:
+                    return
+
+            text = str(self.config.local_time()) + " - " + context
+            image = cv2.putText(image, str(text), (30, 40), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (0, 0, 0),
+                                2, cv2.LINE_AA)
+            image = cv2.putText(image, str(text), (30, 80), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (255, 255, 255),
+                                2, cv2.LINE_AA)
+
+            cv2.imwrite(image_path, image)
+
+            self.logging.debug("Save test image: " + context)
+            self.logging.debug("               : " + image_path)
+
+        except Exception as e:
+            self.logging.warning("Could not save test image: " + image_path + " / " + str(e))
+
     def camera_status(self, source, name):
         """
         check if given source can be connected as PiCamera and returns an image
 
-        Parameters:
+        Args:
             source (str): device string, should be "/dev/picam"
             name (str): description for the camera
         Returns:
             dict: camera status
         """
+        self.logging.debug("Camera status: " + str(source) + " / " + str(name))
+
         camera_info = {"dev": source, "info": name, "image": False, "shape": []}
+        devices = self.camera_info.get_available_cameras()["complete"]
+        for key in devices:
+            if devices[key]["dev"] == source:
+                camera_info["bus"] = devices[key]["bus"]
+
         if birdhouse_env["test_video_devices"] is not None and not birdhouse_env["test_video_devices"]:
             camera_info["image"] = True
             return camera_info

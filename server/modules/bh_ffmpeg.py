@@ -18,7 +18,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         """
         Constructor method for initializing the class.
 
-        Parameters:
+        Args:
             camera_id (str): id string to identify the camera from which this class is embedded
             config (modules.config.BirdhouseConfig): reference to main config object
         """
@@ -35,6 +35,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
             "crf": 18
         }
         self.process_id = ""
+        self.process = None
 
         self.ffmpeg_handler_available = ["cmd-line", "python-ffmpeg", "ffmpeg-python", "ffmpeg-progress"]
         self.ffmpeg_handler = "ffmpeg-progress"
@@ -66,12 +67,13 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
                            "-crf " + str(self.output_codec["crf"]) + " " + \
                            "-ss {START_TIME} -to {END_TIME} " + \
                            "{OUTPUT_FILENAME}"
+        self.current_output_file = ""
 
     def ffmpeg_callback(self, infile, outfile, vstats_path):
         """
         callback function to get transcoding progress information - to be validated / experimental and not in use
 
-        Parameters:
+        Args:
             infile (str): filename of input file
             outfile (str): filename for output file
             vstats_path (str): filename for progress information
@@ -92,13 +94,14 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         cmd_ffmpeg = cmd_ffmpeg.replace("  ", " ")
         cmd_parts = cmd_ffmpeg.split(" ")
         self.logging.info('ffmpeg-progress: START ' + str(cmd_parts))
-        return sp.Popen(cmd_parts).pid
+        self.process = sp.Popen(cmd_parts)
+        return self.process.pid
 
     def on_message_handler(self, percent: float, fr_cnt: int, total_frames: int, elapsed: float):
         """
         get progress information and safe in a central dict - to be validated / experimental not in use
 
-        Parameters:
+        Args:
             percent (float): progress in percent
             fr_cnt (int): frame count
             total_frames (int): total frames of the video
@@ -124,7 +127,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         """
         create video file from images files
 
-        Parameters:
+        Args:
             process_id (str): process identifier
             input_filenames (str): input filename
             framerate (str): framerate in frames per second
@@ -134,6 +137,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
             booL: success state
         """
         self.process_id = process_id
+        self.current_output_file = output_filename
         try:
             if self.ffmpeg_handler == "ffmpeg-python":
                 (
@@ -204,7 +208,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         """
         trim a video using ffmpeg
 
-        Parameters:
+        Args:
             input_filename (str): input filename
             output_filename (str): output filename for trimmed video
             start_timecode (float): start timecode for trimmed video
@@ -247,3 +251,18 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
             self.raise_error(
                 "Error during ffmpeg video trimming (" + self.id + " / " + self.ffmpeg_handler + "): " + str(err))
             return False
+
+    def cancel_process(self):
+        """
+        cancel running process
+
+        Returns:
+            str: output filename
+        """
+        if self.process:
+            self.process.terminate()
+            self.logging.info("Terminate running ffmpeg process.")
+            return self.current_output_file
+        else:
+            self.logging.warning("No ffmpeg process running to terminate.")
+            return ""

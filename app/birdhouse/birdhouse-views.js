@@ -292,6 +292,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	var entries           = data_list["data"]["entries"];
 	var entries_yesterday = data_list["data"]["entries_yesterday"];
 	var entries_delete    = data_list["data"]["entries_delete"];
+	var entries_favorite  = data_list["data"]["entries_favorites"];
 	var groups            = data_list["data"]["groups"];
 	var entry_count       = data_list["view"]["view_count"];
 	var selected_label    = data_list["view"]["label"];
@@ -368,7 +369,20 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
     // load images for detail view with swipe feature
     if (entries) {
-        birdhouse_overlayLoadImages(Object.keys(entries).sort().reverse(), entries, app_active_page, admin);
+        var overloadImageKeys    = Object.keys(entries).sort().reverse();
+        var overloadImageEntries = Object.assign({}, entries);
+
+        // include images from favorites group
+        if (entries_favorite && Object.keys(entries_favorite).length > 0) {
+
+            overloadImageKeys = Object.keys(entries_favorite).sort().reverse();
+            var keys = Object.keys(entries).sort().reverse();
+            var keys2 = overloadImageKeys.concat(keys);
+            overloadImageKeys = keys2;
+
+            for (var key in entries_favorite) { overloadImageEntries[key] = entries_favorite[key]; }
+            }
+        birdhouse_overlayLoadImages(overloadImageKeys, overloadImageEntries, app_active_page, admin);
         }
 
 	// list today complete, favorites -> list in monthly or hourly groups
@@ -410,6 +424,13 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	else {
 		entries_available = false;
 
+        // include favorites and videos if exist
+        if (entries_favorite && Object.keys(entries_favorite).length > 0) {
+            html += birdhouse_ImageGroup(active_page+"_FAVORITE", lang("FAVORITES_VIDEOS"), entries_favorite, ["all"], entry_category, true,
+                                         admin, video_short, same_img_size, max_image_size_LR);
+            entries_available = true;
+            }
+
 		// set title
 		if (active_date != undefined && active_date != "")  { title = active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4); }
         else if (title.length == 8)                         { title = title.substring(6,8) + "." + title.substring(4,6) + "." + title.substring(0,4); }
@@ -419,6 +440,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 			group_list.push(title);
             entries_available = true;
             }
+
         // check if no entries or still loading
 		if (entries_available == false && (active_page == "TODAY" || active_page == "ARCHIVE" || active_page == "FAVORITES")) {
 		    var empty = false;
@@ -436,6 +458,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
    	    	if (empty) { html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>"; }
             }
 		if (entries_available == false && active_page == "VIDEOS") {
+
    	    	html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>";
    	    	}
 
@@ -484,6 +507,62 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
 
 /*
+* create view with server and usage statistics
+*
+* @param (string) title: title to be displayed
+* @param (dict) data: API response for list specific request
+*/
+function birdhouse_STATISTICS(title, data) {
+	var html          = "";
+	var admin         = data["STATUS"]["admin_allowed"];
+	var statistics    = data["DATA"]["data"]["entries"];
+	var camera_status = data["STATUS"]["devices"]["cameras"];
+	var open_category = ["cpu", "streams", "framerate"];
+	var system_data   = app_data["STATUS"]["system"];
+
+    // resource usage
+    pie_data = { "titles": [], "data": []}
+    pie_data["titles"].push("Data");
+    pie_data["data"].push(system_data["hdd_data"] - system_data["hdd_archive"]);
+    pie_data["titles"].push("Archive");
+    pie_data["data"].push(system_data["hdd_archive"]);
+    pie_data["titles"].push("System");
+    pie_data["data"].push(system_data["hdd_used"] - system_data["hdd_data"]);
+    pie_data["titles"].push("Available");
+    pie_data["data"].push(system_data["hdd_total"] - system_data["hdd_used"]);
+
+    chart = birdhouseChart_create(label="HDD Usage", titles=pie_data["titles"], data=pie_data["data"], type="pie", sort_keys=false,
+                                  id="hdd_pie", size={"height": "270px", "width":"270px"});
+
+    // !!! Rework Format
+    chart += "<br/>&nbsp;<br/>";
+    chart += "Max parallel streams: " + statistics["streams"]["info"]["max"] + "<br/>";
+    chart += "Total viewing time: " + statistics["streams"]["info"]["views"] + "min<br/>&nbsp;";
+
+    html  += birdhouse_OtherGroup( "chart_hdd_pie", lang("TODAY") + " HDD Usage", chart, true );
+
+    // statistics of the current day
+    Object.keys(statistics).sort().forEach((key) => {
+        //html += "<center><h2>" + lang("TODAY") + ": " + key + "<center></h2><br/>";
+        if (open_category.indexOf(key) > -1) { var open = true; }
+        else                                 { var open = false; }
+        var info = "";
+        var status = camera_status[key];
+        if (status != undefined && status["active"] == false) { open = false; info = "<i>(" + lang("INACTIVE") + ")</i>"; }
+
+        var chart = "&nbsp;<br/>";
+        chart += birdhouseChart_create(label="", titles=statistics[key]["titles"], data=statistics[key]["data"],
+                                      type="line", sort_keys=true, id="statisticsChart_"+key, size={"height": "250px", "width": "100%"});
+        chart += "<br/>&nbsp;<br/>";
+        html  += birdhouse_OtherGroup( "chart_"+key, lang("TODAY") + " " + key.toUpperCase() + " " + info, chart, open );
+    });
+
+
+	birdhouse_frameHeader(lang("STATISTICS"));
+	setTextById(app_frame_content, html);
+}
+
+/*
 * create admin functionalities for the archive view of a specific day
 *
 * @param (dict) data: API response for list specific request
@@ -508,6 +587,7 @@ function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_d
     object_onclick             += "setTimeout(function(){ birdhouseReloadView(); }, 1000);"
 
     var button_object_detection = "<button onclick='birdhouse_archiveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \""+detection_date+"\", \"\", \"selection_threshold\");' class='bh-slider-button'  style='width:80px;'>Start</button>";
+    var button_object_detection_rm = "<button onclick='birdhouse_archiveRemoveObjectDetection(\""+app_active_cam+"\",\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button'  style='width:80px;'>Remove</button>";
     var button_archive_deletion = "<button onclick='birdhouse_archiveDayDelete(\""+active_date+"\", \""+detection_date+"\");' class='bh-slider-button' style='width:80px;'>Delete</button>";
     var button_archive_download = "<button onclick='archivDownload_requestDay(\""+active_date+"\", \""+app_active_cam+"\");' class='bh-slider-button' style='width:80px;'>"+lang("DOWNLOAD")+"</button>";
     var button_object_recycle   = "<button onclick='"+object_onclick+"' class='bh-slider-button'  style='width:80px;'>Recycle</button>";
@@ -549,6 +629,7 @@ function birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_d
         info_text += tab.row(lang("OBJECT_DETECTION_FOR_ARCHIVE", [detection_model, detection_threshold]) + ":",
                              select_thresholds + button_object_detection + detection_info );
         }
+    info_text += tab.row(lang("OBJECT_DETECTION_REMOVE") + ":", button_object_detection_rm);
     info_text += tab.row(lang("OBJECT_DETECTION_RECYCLE") + ":", button_object_recycle);
     info_text += tab.row(lang("DELETE_ARCHIVE") + ":", button_archive_deletion );
     info_text += tab.row(lang("DOWNLOAD_ARCHIVE") + ":", button_archive_download );
@@ -632,8 +713,8 @@ function birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page,
         }
 
     info_text += tab.row(lang("UPDATE_VIEWS")+":",
-                         "<button onclick='birdhouse_forceUpdateViews();' class='bh-slider-button' style='width:80px;'>Update</button>&nbsp;" +
-                         "<button onclick='birdhouse_forceUpdateViews(true);' class='bh-slider-button' style='width:80px;'>Complete</button>");
+                         "<button onclick='birdhouse_forceUpdateViews(\"archive\");' class='bh-slider-button' style='width:80px;'>Update</button>&nbsp;" +
+                         "<button onclick='birdhouse_forceUpdateViews(\"archive\", true);' class='bh-slider-button' style='width:80px;'>Complete</button>");
     info_text += tab.end();
     info_text += "&nbsp;<br/>&nbsp;";
 
@@ -677,6 +758,8 @@ function birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page,
     info_text += tab.row("&nbsp;&nbsp;" + lang("RECORDING_TIMES") + ":", lang("FROM_TO_EVERY", [record_from, record_to, rhythm]));
     info_text += tab.row("&nbsp;&nbsp;" + lang("VIDEO") + ":", create );
     info_text += tab.row("&nbsp;&nbsp;" + lang("THRESHOLD") + ":", threshold_slider );
+    info_text += tab.row("&nbsp;&nbsp;" + lang("RECREATE_IMG_CONFIG") + ":",
+                         "<button onclick='birdhouse_recreateImageConfig();' class='bh-slider-button' style='width:100px'>"+lang("START")+"</button>" );
     info_text += tab.end();
     info_text += "&nbsp;<br/>&nbsp;";
 
@@ -778,7 +861,7 @@ function birdhouse_LIST_calendar(groups) {
     html += tab.end();
     html += "<br/>&nbsp;<br/>";
     html = html.replaceAll("<!--CLOSE_ALL-->", close_all);
-    group_html = birdhouse_OtherGroup("archive_calendar", lang("CALENDAR"), html, true );
+    group_html = birdhouse_OtherGroup("archive_calendar", lang("CALENDAR"), html, header_open);
 
     return group_html;
 }
@@ -837,7 +920,7 @@ function birdhouse_LIST_chart_weather(data, active_page, camera) {
         title_s = title_s.replace("&ouml;", "ö");
         chart_titles.push(title_s);
     }
-    var chart = birdhouseChart_create(title=chart_titles,data=chart_data["data"]);
+    var chart = birdhouseChart_create(label="", titles=chart_titles,data=chart_data["data"]);
     chart    += birdhouseWeather_OverviewChart(weather_data); // + "<br/>";
 
     if (chartJS_loaded) {

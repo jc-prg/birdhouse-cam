@@ -1,4 +1,4 @@
-# Birdhouse Camera v1.0.9
+# Birdhouse Camera v1.1.0
 
 Raspberry Pi project to observe our birdhouse with two webcams: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, 
@@ -23,28 +23,19 @@ app in English and German, ...
 
 ## Impressions
 
-<img src="info/images/birdcam_05.PNG" width="30%"><img src="info/images/birdcam_21.PNG" width="30%"><img src="info/images/birdcam_10.PNG" width="30%">
+<img src="info/images/birdcam_002.PNG" width="19%"> <img src="info/images/birdcam_003.PNG" width="19%"> <img 
+     src="info/images/birdcam_004.PNG" width="19%"> <img src="info/images/birdcam_014.PNG" width="19%"> <img 
+     src="info/images/birdcam_022.PNG" width="19%">
+<img src="info/images/birdcam_023.PNG" width="19%"> <img src="info/images/birdcam_025.PNG" width="19%"> <img 
+     src="info/images/birdcam_032.PNG" width="19%"> <img src="info/images/birdcam_033.PNG" width="19%"> <img 
+     src="info/images/birdcam_100.PNG" width="19%">
 
-<img src="info/images/birdcam_17.PNG" width="30%"><img src="info/images/birdcam_18.PNG" width="30%"><img src="info/images/birdcam_19.PNG" width="30%">
- 
-<img src="info/images/birdcam_08.PNG" width="30%"><img src="info/images/birdcam_06.PNG" width="30%"><img src="info/images/birdcam_11.PNG" width="30%">
+Find further impressions [here](info/impressions.md).
 
-<img src="info/images/birdcam_12.PNG" width="30%"><img src="info/images/birdcam_13.PNG" width="30%"><img src="info/images/birdcam_22.PNG" width="30%">
-
-<img src="info/images/birdcam_41.PNG" width="30%"><img src="info/images/birdcam_42.PNG" width="30%"><img src="info/images/birdcam_43.PNG" width="30%">
-
-<img src="info/images/birdcam_23.PNG" width="30%"><img src="info/images/birdcam_15.PNG" width="30%"><img src="info/images/birdcam_16.PNG" width="30%">
-
-<img src="info/images/birdcam_01.PNG" width="30%"><img src="info/images/birdcam_02.PNG" width="30%"><img src="info/images/birdcam_24.PNG" width="30%">
-
-<img src="info/images/birdcam_25.PNG" width="30%"><img src="info/images/birdcam_32.PNG" width="30%"><img src="info/images/birdcam_31.PNG" width="30%">
-
-<br/><br/>
-<img src="info/images/birdcam_14.PNG" width="90%">
 
 ## Main Features
 
-* **WebApp for Browser and SmartPhone** (English and German, optimized for iPhone)
+* **Birdhouse web-app for Browser and SmartPhone** (English and German, optimized for iPhone)
 * **Watching live stream** with 1 or 2 cameras (RPi4 recommend for fluent stream) 
   * via Raspberry Pi camera
   * USB web cam (e.g. RPi cam inside and USB web cam outside)
@@ -66,9 +57,10 @@ app in English and German, ...
   * via internet for a defined location (python_weather OR [Open Meteo](https://open-meteo.com/))
   * from sensors connected to the Raspberry Pi (DHT11/DHT22)
   * GPS lookup for cities or addresses via GeoPy to set weather location
-* **Listening audio stream** from microphone
-  * under construction, currently browser only (no iPhone)
-* **Detecting birds** (objects) via PyTorch
+* **Listening and recording audio stream** from microphone
+  * listening currently browser only (no iPhone)
+  * recording audio with video stream
+* **Detecting birds** (objects) via YOLOv8
   * Bird detection model in an early stage trained with [a few European singing birds](data/birds.json)
   * View with all detected birds and objects -> jump to other views filtered by bird
   * Filter by detected birds in archive and favorite view as well as for admins in complete view of current day
@@ -81,7 +73,8 @@ app in English and German, ...
   * Edit device settings, reconnect devices (devices must be added via config file)
   * Edit camera and image settings (contrast, saturation, hue, brightness ...)
   * See amount of currently active streams
-  * Download archived data (hires, config-files, object detection as YOLOv5)
+  * Download archived data (hires, config-files, object detection as YOLOv8)
+* **Forwarding web-app** as entry point for one or more birdhouses using IPv6 addresses
 
 ## Birdhouse
 
@@ -100,7 +93,7 @@ Here are some options. Calculate with a little bit more space in the height for 
   * _optional:_ Small USB Microphone
   * _optional:_ DHT11 / DHT22 Sensor
 * Software
-  * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, PyTorch/YOLOv5
+  * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, YOLOv8
   * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
   * HTML, CSS, JavaScript, [ChartJS](https://www.chartjs.org/)
   * [jc://modules/](https://github.com/jc-prg/modules/), [jc://app-framework/](https://github.com/jc-prg/app-framework/)
@@ -112,7 +105,7 @@ Here are some options. Calculate with a little bit more space in the height for 
   * Install a fresh image on an SDCard (https://www.raspberrypi.com/software/)
   * Recommended OS (due to restrictions: PyTorch require 64bit, picamera doesn't support 64bit any more, 
     and picamera2 + libcamera doesn't work in docker container yet (requires Raspbian OS 64bit > bullseye)) 
-    * Raspbian OS Lite 64bit for **object detection** using PyTorch
+    * Raspbian OS Lite 64bit for **object detection** using YOLOv8
     * Raspbian OS Lite 32bit if you want to use a **PiCamera** and the Docker version 
       
   * Install git: ```sudo apt-get install git```
@@ -128,9 +121,9 @@ Then change the new default configuration to your needs ..._
 ### Getting sources
 
 ```bash 
-$ git clone http://github.com/jc-prg/birdhouse-cam.git
-$ cd birdhouse-cam
-$ git submodule update --init --recursive
+git clone http://github.com/jc-prg/birdhouse-cam.git
+cd birdhouse-cam
+git submodule update --init --recursive
 ```
 
 ### Software installation
@@ -148,17 +141,17 @@ Depending on the needs there are three options available how to install and run 
 
 1. Install docker and docker-compose
     ```bash
-    $ sudo ./config/install/install_docker
+    sudo ./config/install/install_docker
     ```
 2. Create and adapt main configuration file, see [sample.env](sample.env) for details and ensure 
    the right settings especially regarding the directories, the container images and the rpi_* settings
     ```bash
-    $ sudo cp sample.env .env
-    $ sudo nano .env
+    sudo cp sample.env .env
+    sudo nano .env
     ```
 3. Build docker container and run the first time
     ```bash
-    $ docker-compose up --build
+    docker-compose up --build
     ```
 4. Initial start to create a config file, see [First run and device configuration](#First-run-and-device-configuration)
 5. Add the following lines to crontab (start on boot):
@@ -168,42 +161,23 @@ Depending on the needs there are three options available how to install and run 
 6. Examine logging messages if there are any problems
    ```bash
    # show complete log file
-   $ cat log/server.log
+   cat log/server.log
    
    # show latest log messages with an update every 2s
-   $ ./watch_log
+   ./watch_log
    ```
 
-#### (2) Direct installation
-
-_Note:_ This installation is not fully tested yet. Recommend are (1) and (3).
-
-1. Install birdhouse-cam prerequisites
-    ```bash 
-    # Install required Python modules and ffmpeg (this may take a while)
-    $ sudo ./config/install/install       # for installation on x86
-    $ sudo ./config/install/install_rpi   # for installation on Raspberry Pi
-                                          # $ sudo ./config/install/install_ffmpeg
-    ```
-2. _Optional:_ Install CouchDB (no installation script available) or use JSON files as database
-3. Create and adapt main configuration file, see (1.2)
-4. Initial start to create a config file, see [First run and device configuration](#First-run-and-device-configuration)
-    ```bash 
-    # Initial start, will create a config file
-    $ ./server/server.py
-    ```
-5. Add the following lines to crontab (start on boot)
-    ```bash 
-    @reboot /usr/bin/python3 /<path_to_script>/server/server.py --logfile
-    @reboot /usr/bin/python3 /<path_to_script>/server/stream_video.py
-    ```
-6. Examine logging messages if there are any problems, see (1.6)
-
-#### (3) Hybrid installation
+#### (2) Hybrid installation
 
 1. Install docker and docker-compose, see (1.1)
 
-2. Install birdhouse-cam prerequisites, see (2.1)
+2. Install birdhouse-cam prerequisites
+    ```bash 
+    # Install required Python modules and ffmpeg (this may take a while)
+    sudo ./config/install/install       # for installation on x86
+    sudo ./config/install/install_rpi   # for installation on Raspberry Pi
+                                          # $ sudo ./config/install/install_ffmpeg
+    ```
 
 3. Create and adapt main configuration file, see (1.2). 
 
@@ -211,44 +185,62 @@ _Note:_ This installation is not fully tested yet. Recommend are (1) and (3).
 
 4. Build docker container and run the first time
     ```bash
-    $ docker-compose -f docker-compose-hybrid.yml up --build
+    docker-compose -f docker-compose-hybrid.yml up --build
     ```
-5. Initial start to create a config file, see (2.4) and  [First run and device configuration](#First-run-and-device-configuration)
-6. Add the following lines to crontab (start on boot):
+5. Initial start to create a config file, see  [First run and device configuration](#First-run-and-device-configuration)
     ```bash 
+    # Initial start, will create a config file
+    ./server/server.py
+    ```
+6. Add the following lines to crontab (start on boot):
+    ```
     @reboot /usr/sbin/docker-compose -f /<path_to_script>/docker-compose-hybrid.yml up -d
     ```
 7. Enable starting when the server starts:
 
    1. Install via ```sudo crontab -e```. Add the following lines:
-       ```bash
-      # birdhouse-cam: start database, web-server, and videoserver
-      @reboot     /usr/local/bin/docker-compose -f /projects/prod/birdhouse-cam/docker-compose-hybrid.yml up -docker
-      # birdhouse-cam: start birdhouse server
-      @reboot     /usr/bin/python3 /projects/prod/birdhouse-cam/server/server.py
-      # birdhouse-cam: start if restart has been requested 
-      * * * * *   /usr/bin/python3 /projects/prod/birdhouse-cam/server/server.py --check-if-start > /tmp/birdhouse-cam-cron 2>&1
        ```
+      # birdhouse-cam: start database, web-server, and videoserver
+      @reboot     /usr/local/bin/docker-compose -f /<path_to_script>/docker-compose-hybrid.yml up -docker
+      
+      # birdhouse-cam: start birdhouse server
+      @reboot     /usr/bin/python3 /<path_to_script>/server/server.py
+      
+      # birdhouse-cam: start if restart has been requested 
+      * * * * *   /usr/bin/python3 /<path_to_script>/server/server.py --check-if-start > /tmp/birdhouse-cam-cron 2>&1
+       ```
+   
    2. Alternatively create a system service to automatically start and restart the server (experimental)
        ```bash 
        # create and configure services
-       $ sudo cp ./sample.birdhouse-cam.service /etc/systemd/system/birdhouse-cam.service
-       $ sudo nano /etc/systemd/system/birdhouse-cam.service
+       sudo cp ./sample.birdhouse-cam.service /etc/systemd/system/birdhouse-cam.service
+       sudo nano /etc/systemd/system/birdhouse-cam.service
 
-       $ sudo cp ./sample.birdhouse-cam.service /etc/systemd/system/birdhouse-cam-docker.service
-       $ sudo nano /etc/systemd/system/birdhouse-cam-docker.service
+       sudo cp ./sample.birdhouse-cam.service /etc/systemd/system/birdhouse-cam-docker.service
+       sudo nano /etc/systemd/system/birdhouse-cam-docker.service
 
        # reload services
-       $ sudo systemctl daemon-reload
+       sudo systemctl daemon-reload
    
        # register and install services
-       $ sudo systemctl enable birdhouse-cam.service
-       $ sudo systemctl start birdhouse-cam.service
-       $ sudo systemctl enable birdhouse-cam-docker.service
-       $ sudo systemctl start birdhouse-cam-docker.service
+       sudo systemctl enable birdhouse-cam.service
+       sudo systemctl start birdhouse-cam.service
+       sudo systemctl enable birdhouse-cam-docker.service
+       sudo systemctl start birdhouse-cam-docker.service
        ```
 
 8. Examine logging messages if there are any problems, see (1.6)
+
+#### (3) Direct installation
+
+_Note:_ This installation is not fully tested yet. Recommend are (1) and (2).
+
+1. Install birdhouse-cam prerequisites (see 2.2)
+2. _Optional:_ Install CouchDB (no installation script available) or use JSON files as database
+3. Create and adapt main configuration file, see (1.2)
+4. Initial start to create a config file, see (2.5) and [First run and device configuration](#First-run-and-device-configuration)
+5. Add lines to crontab to start on boot, see (2.7.i)
+6. Examine logging messages if there are any problems, see (1.6)
 
 ### First run and device configuration
 
@@ -282,41 +274,52 @@ At least for a Raspberry Pi 3B+ the following configuration should be done to en
 * first analyze the usage of the docker containers to decide if there is need for action
     ```bash
     # overview memory and swap usage
-    $ watch -n 2 free -h
+    watch -n 2 free -h
     
     # overview memory usage per docker container (full and reduced)
-    $ sudo docker stats
-    $ sudo docker stats --format "table {{.Container}}\t{{.Name}}\t{{.MemUsage}}\t{{.MemPerc}}"
+    sudo docker stats
+    sudo docker stats --format "table {{.Container}}\t{{.Name}}\t{{.MemUsage}}\t{{.MemPerc}}"
     ```
 * NOTE: the file [sample.env](sample.env) defines memory limits that should fit for Raspberry Pi 3B+.
+
+#### Set memory usage
+
+In the file [.env](sample.env) there are memory limit defined for several components. This limits should work for
+default usage. If an error 104 occurs in the CouchDB remove the limit for the respective container.
 
 #### Configure swap file on Ubuntu
 
 * Update swap memory (see also [https://bitlaunch.io/](https://bitlaunch.io/blog/how-to-create-and-adjust-swap-space-in-ubuntu-20-04/))
   ```bash
-  $ free -h
-  $ sudo fallocate -l 2G /swapfile
-  $ sudo chmod 600 /swapfile
-  $ sudo mkswap /swapfile
-  $ sudo swapon /swapfile
-  $ free -h
+  sudo fallocate -l 2G /swapfile
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile
+  sudo swapon /swapfile
+
+  # options to check swap usage
+  swapon --show
+  free -h 
   ```
 * Add swap memory permanently
     ```bash
-    $ sudo echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+    sudo echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
     ```
 
 #### Configure swap file on Raspbian OS
 
 * Update swap memory (usually 100MiB is set as default)
   ```bash
-  $ sudo nano /etc/dphys-swapfile
+  sudo nano /etc/dphys-swapfile
   
   # change the following values to:
   CONF_SWAPSIZE=2048
   CONF_SWAPFACTOR=2
   
-  $ sudo systemctl restart dphys-swapfile
+  sudo systemctl restart dphys-swapfile
+  
+  # options to check swap usage
+  swapon --show
+  free -h 
   ```
 
 #### Sample proxy server configuration
@@ -335,26 +338,29 @@ here: [sample.nginx.conf](sample.nginx.conf). Ensure, that all used ports are pu
 #### External access via IPv6 if your internet provider doesn't offer NAT
 
 If your provider doesn't offer Network Address Translation (NAT) another option is to get access via the IPv6 address
-of your birdhouse server. Install the PHP script in the folder [/app_forward](/app_forward) on an external webserver
-and add the following command to your crontab:
+of your birdhouse server:
 
-```
-@reboot    /usr/bin/python3 /projects/local/birdhouse-cam/app_forward/request.py https://<your-external-server>/birdhouse/index.php
-```
-
-Open ```https://<your-external-server>/birdhouse/index.php``` in your browser to get an easy link to your birdhouse
-using its IPv6 address.
+* Configure your router in a way that your birdhouse server is accessible from the internet by its IPv6 address.
+* Install the PHP script in the folder [/app_forward](/app_forward) on an external webserver.
+* Change the BIRDHOUSE_ID in the [.env](sample.env)-file if you want to use this entry point for more than one birdhouse.
+* Change the BIRDHOUSE_APP_FORWARD in the [.env](sample.env)-file to the URL of your external webserver.
+* Add the following command to the crontab on the birdhouse server using ```sudo crontab -e```.
+    ```
+    @reboot    /usr/bin/python3 /<path_to_script>/app_forward/request.py
+    ```
+* Open ```https://<your-external-server>/birdhouse/``` in your browser to get an easy link to your birdhouses
+  using its IPv6 addresses.
 
 ## Train bird detection
 
 The bird detection is based on a relatively simple training with a few singing birds. If you want to use and 
 continuously improve your own detection model you can use the module [jc://bird-detection/](https://github.com/jc-prg/bird-detection/). 
-Alternatively create a YOLOv5 model with different tools. Copy the *.pt file into the folder [data/custom_models/](data/custom_models/).
+Alternatively create a YOLOv8 model with different tools. Copy the *.pt file into the folder [data/custom_models/](data/custom_models/).
 
 To use images from your own birdhouse, login as admin and go to the settings of an archived day. There you can download
 the data of a full day or activate the collection of images for download. When you activated the second option you can
 jump from day to day and mark all images you want to download. Use the icon in the header to start the download. In the
-download file you'll find all images incl. the config files as well as in a separate folder a YOLOv5 file per image
+download file you'll find all images incl. the config files as well as in a separate folder a YOLOv8 file per image
 and a file classes.txt with all labels of the model that has been used. Rename the labels_<model-name> folder to labels
 and use the module [jc://bird-detection/](https://github.com/jc-prg/bird-detection/) to prepare the data and train your model.
 
@@ -363,36 +369,39 @@ and use the module [jc://bird-detection/](https://github.com/jc-prg/bird-detecti
 * Check attached cameras and microphones
   ```bash
   # list video devices (install: apt-get install v4l2-ctl) 
-  $ v4l2-ctl --list-devices
+  v4l2-ctl --list-devices
   
   # get available resolutions of a specific video device, e.g., /dev/video0
-  $ v4l2-ctl -d /dev/video0 --list-formats-ext
+  v4l2-ctl -d /dev/video0 --list-formats-ext
   
   # check available cameras - Raspbian 32bit OS
-  $ vcgencmd get_camera
+  vcgencmd get_camera
   
   # check available cameras / capture and save an image - Raspbian OS 64bit
-  $ libcamera-hello --list-camera
-  $ libcamera-jpeg -o test.jpg
+  libcamera-hello --list-camera
+  libcamera-jpeg -o test.jpg
     
   # check available audio devices
-  $ arecord -l
+  arecord -l
   
   # set audio level
-  $ amixer -c 2 -q set 'Mic',0 100%
+  amixer -c 2 -q set 'Mic',0 100%
   ```
 
 * administrate docker
   ```bash
   # show running containers
-  $ sudo docker ps
+  sudo docker ps
   
   # check storage used by docker stuff
-  $ sudo docker system df
-  $ sudo docker system df -v
+  sudo docker system df
+  sudo docker system df -v
+  
+  # show statistics such as memory and cpu usage
+  sudo docker stats
   
   # clean up unused container, images, build cache, networks
-  $ sudo docker system prune
+  sudo docker system prune
   ```
 
 ## Other sources
@@ -401,8 +410,7 @@ Thanks for your inspiration, code snippets, images:
 
 * [HTML5 Video Player](https://github.com/Freshman-tech/custom-html5-video)
 * [Flying Bird Image](https://gifer.com/en/ZHug)
-* [DHT11 Python](https://github.com/szazo/DHT11_Python)
-* [DHT22 Python](https://github.com/bullet64/DHT22_Python)
+* [DHT11 Python](https://github.com/szazo/DHT11_Python), [DHT22 Python](https://github.com/bullet64/DHT22_Python)
 * [Python Audio Stream](https://www.tunbury.org/audio-stream/)
 * [YOLO-Drowsiness-Detection](https://github.com/nicknochnack/YOLO-Drowsiness-Detection/blob/main/Drowsiness%20Detection%20Tutorial.ipynb)
 * [ChartJS](https://www.chartjs.org/)

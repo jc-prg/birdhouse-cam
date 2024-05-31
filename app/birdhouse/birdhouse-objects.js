@@ -93,7 +93,9 @@ function birdhouse_OBJECTS(title, data) {
 
         var bird_key = bird_lang(key);
         if (bird_key != key) { bird_key = "<b>" + bird_key + "</b>"; }
-        html += birdhouse_OtherGroup( "label_"+key, bird_key, html_entry, true);
+        var open = true;
+        if (key == "bird") { open = false; }
+        html += birdhouse_OtherGroup( "label_"+key, bird_key, html_entry, open);
         }
 
 	birdhouse_frameHeader(title);

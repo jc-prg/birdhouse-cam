@@ -30,13 +30,21 @@ body      { touch-action: none; }
   top		           : 8px;
   right		           : 40px;
   height		       : 25px;
-  width		           : 150px;
+  width		           : 60vh;
   color		           : gray;
   z-index		       : 93;
   text-align           : right;
   font-family          : sans-serif;
   font-size            : 10px;
   vertical-align       : middle;
+}
+
+.headerToolTip {
+    position    : fixed;
+    top         :  10px;
+    right       : 200px;
+    z-index     : 100;
+    font-family : sans-serif;
 }
 
 .header_icon {
@@ -416,13 +424,22 @@ img .play_button  {
 }
 
 .button-video-record {
-    width            : 100px;
+    vertical-align   : middle;
+    width            : 30px;
     height           : 28px;
     background       : gray;
     border-radius    : 5px;
     margin           : 2px;
-    color            : black;
+    color            : white;
     border           : 1px solid white;
+    cursor           : pointer;
+}
+
+
+.button-video-record:disabled {
+    background       : #333333;
+    color            : #aaaaaa;
+    cursor           : default;
 }
 
 .button-settings-api {
@@ -504,6 +521,10 @@ img .play_button  {
 .loading-dots {
   display: inline-block;
 }
+
+.admin_status_client_full { display: none; }
+.admin_status_client_small { display: block; }
+
 
 .dot {
   display:  inline-block;

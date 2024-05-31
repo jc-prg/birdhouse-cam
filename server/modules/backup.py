@@ -12,12 +12,15 @@ from modules.image import BirdhouseImageSupport
 
 
 class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
+    """
+    create tar gz archives incl. YOLOv5 files to be downloaded
+    """
 
     def __init__(self, config):
         """
         thread to create tar archives from archived data and return download link
 
-        Parameters:
+        Args:
             config (modules.config.BirdhouseConfig): reference to main config handler
         """
         threading.Thread.__init__(self)
@@ -60,7 +63,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         add download to queue
 
-        Parameters:
+        Args:
             param (dict): parameters from API request
             file_list (list): optional, list of files - entry format YYYYMMDD_HHMMSS
         """
@@ -86,7 +89,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         return downloads waiting for a specific session id
 
-        Parameters:
+        Args:
             param (dict): parameters from API request (not used yet)
         """
         downloads = {}
@@ -100,7 +103,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         start download preparation: create a zip package to be downloaded
 
-        Parameters:
+        Args:
             download_id (str): download id to identify download
         """
         camera = self.downloads[download_id]["camera"]
@@ -177,7 +180,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         Create tar archive or add files ...
 
-        Parameters:
+        Args:
             archive_path (str): path to archive files
             archive_date (str): date (sub-path) to archive files
             archive_files (str): filenames to be archived
@@ -200,10 +203,13 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         create YOLOv5 files
 
-        Parameters:
+        Args:
             download_id (str): download id to identify download
             archive_entries (dict): prepared list of files to be downloaded
         """
+        self.logging.debug("Start YOLOv5 creation for download ID " + str(download_id) +
+                           " (" + str(archive_entries) + ") ...")
+
         camera = self.downloads[download_id]["camera"]
         date = self.downloads[download_id]["date"]
         entry_list = self.downloads[download_id]["entry_list"]
@@ -211,6 +217,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
 
         # if requested for a single date only
         if len(entry_list) == 0:
+            self.logging.debug("* for single date: " + str(date) + "/" + camera)
             archive_path = str(os.path.join(birdhouse_main_directories["data"], birdhouse_directories["backup"], date))
             archive_path_info = str(os.path.join(archive_path, "yolov5"))
             entries = self.config.db_handler.read("backup", date)
@@ -222,10 +229,13 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
                     labels = entries["info"]["detection_"+camera]["labels"]
                     model = entries["info"]["detection_" + camera]["model"]
                     model = model.replace(".pt", "")
+                    self.logging.debug("* model: " + str(model) + " / labels: " + str(labels))
                 else:
                     labels = {}
                     model = "no-model"
+                    self.logging.debug("* no model defined")
             else:
+                self.logging.debug("* no detection found")
                 return
 
             if os.path.exists(archive_path_info):
@@ -243,6 +253,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         # if requested for a list of files
         else:
             model_saved = []
+            self.logging.debug("* for " + str(len(archive_entries)) + " dates ...")
             for datestamp in archive_entries:
                 archive_path = str(os.path.join(birdhouse_main_directories["data"],
                                                 birdhouse_directories["backup"], datestamp))
@@ -257,10 +268,13 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
                             labels = entries["info"]["detection_"+camera]["labels"]
                             model = entries["info"]["detection_"+camera]["model"]
                             model = model.replace(".pt", "")
+                            self.logging.debug("* model: " + str(model) + " / labels: " + str(labels))
                         else:
                             labels = {}
                             model = "no-model"
+                            self.logging.debug("* no model defined")
                     else:
+                        self.logging.debug("* no detection found")
                         continue
 
                     if os.path.exists(archive_path_info):
@@ -271,7 +285,8 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
 
                     classes = {}
                     for timestamp in archive_entries[datestamp][camera]:
-                        classes = self.create_YOLOv5_file(entries["files"][timestamp], archive_path_info_model, classes)
+                        if timestamp in entries["files"]:
+                            classes = self.create_YOLOv5_file(entries["files"][timestamp], archive_path_info_model, classes)
 
                     self.create_YOLOv5_classes(classes, labels, archive_path_info_model, datestamp+"-"+camera)
                     if model not in model_saved:
@@ -282,7 +297,7 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
         """
         create YOLOv5 file for an entry
 
-        Parameters:
+        Args:
             entry (dict): db entry for file
             archive_path_info (str): destination path for the YOLOv5 file to be stored
             classes (dict): growing list of used classes as input
@@ -305,13 +320,14 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
                 file_string += str(round(width, 6)) + " " + str(round(height, 6)) + "\n"
             file_path = str(os.path.join(archive_path_info, filename))
             self.text.write(file_path, file_string)
+            self.logging.debug(" * write file " + file_path)
         return classes
 
     def create_YOLOv5_classes(self, classes, labels, archive_path_info, extension=""):
         """
         Create file with used classes as classes.txt
 
-        Parameters:
+        Args:
             classes (dict): class definition from detections
             labels (dict): label definition from detection model
             archive_path_info (str): destination path for the YOLOv5 file to be stored
@@ -328,12 +344,13 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
             for label in labels:
                 file_string += labels[label] + "\n"
         self.text.write(file_path, file_string)
+        self.logging.debug(" * write file " + file_path)
 
     def delete(self, download_id):
         """
         delete download files that are older than ...
 
-        Parameters:
+        Args:
             download_id (str): download id to identify download
         """
         self.logging.info("Delete file from download folder: " + self.downloads[download_id]["file_path"])
@@ -357,10 +374,18 @@ class BirdhouseArchiveDownloads(threading.Thread, BirdhouseClass):
 
 
 class BirdhouseArchive(threading.Thread, BirdhouseClass):
+    """
+    class to archive and download images files
+    """
 
     def __init__(self, config, camera, views):
         """
         Initialize new thread and set initial parameters
+
+        Args:
+            config (modules.config.BirdhouseConfig): reference to config handler
+            camera (dict[str, modules.config.BirdhouseCamera]): reference to camera handler
+            views (dict[str, modules.views.BirdhouseViews]): reference to view handler
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="backup", config=config)
@@ -371,6 +396,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         self.archive_data = False
         self.backup_start = False
         self.backup_running = False
+        self.recreate_config = False
 
         self.img_support = BirdhouseImageSupport("", config)
         self.download = BirdhouseArchiveDownloads(config)
@@ -378,7 +404,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
     def run(self):
         """
-        start backup in the background
+        start backup handler
         """
         backup_started = False
         self.logging.info("Starting backup handler ...")
@@ -389,7 +415,6 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             if (int(check_stamp) == int(self.config.param["backup"]["time"])
                     or self.backup_start) and not backup_started:
                 backup_started = True
-                self.backup_start = False
                 if self.backup_start:
                     self.logging.info("Starting forced backup ...")
                 else:
@@ -402,6 +427,9 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                 while self._running and count < 60:
                     time.sleep(1)
                     count += 1
+                if self.backup_start:
+                    self.config.async_answers.append(["BACKUP_DONE"])
+                    self.backup_start = False
                 self.logging.info("Backup DONE.")
             else:
                 backup_started = False
@@ -411,6 +439,13 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                 date = self.views.archive.config_recreate.pop()
                 self._create_image_config_save(date)
                 self.views.archive.config_recreate_progress = False
+
+            if self.recreate_config:
+                files = self.create_image_config(date="", recreate=True)
+                if files is not None:
+                    self.config.db_handler.write(config="images", date="", data=files, create=True, save_json=True)
+                self.config.async_answers.append(["CREATE_IMG_CONFIG_DONE"])
+                self.recreate_config = False
 
             self.thread_control()
             self.thread_wait()
@@ -426,6 +461,9 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
     def backup_files(self, other_date=""):
         """
         Backup files with threshold to folder with date ./images/YYMMDD/
+
+        Args:
+            other_date (str): other date if not today
         """
         self.backup_running = True
         if other_date == "":
@@ -463,9 +501,6 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                 for cam in self.camera:
                     files_backup["info"]["threshold"][cam] = self.camera[cam].param["similarity"]["threshold"]
                 files_backup["info"]["date"] = backup_date[6:8] + "." + backup_date[4:6] + "." + backup_date[0:4]
-                #                files_backup["info"]["size"] = sum(
-                #                    os.path.getsize(os.path.join(directory, f)) for f in os.listdir(directory) if
-                #                    os.path.isfile(os.path.join(directory, f)))
                 files_backup["info"]["size"] = sum(
                     os.path.getsize(os.path.join(backup_directory, f)) for f in os.listdir(backup_directory) if
                     f.endswith(".jpeg") or f.endswith(".jpg") or f.endswith(".json"))
@@ -480,16 +515,15 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
             files = self.config.db_handler.read_cache(config="images")
             files_chart = files.copy()
             files_backup = {"files": {}, "chart_data": {}, "info": {}, "weather_data": {}, "detection": {}}
-            files_detections = {}
 
             file_sensor = self.config.db_handler.file_path(config="sensor")
             file_sensor_copy = os.path.join(self.config.db_handler.directory(config="images", date=backup_date),
                                             self.config.files["sensor"])
             file_weather = self.config.db_handler.file_path(config="weather")
-            file_weather_copy = os.path.join(self.config.db_handler.directory(config="weather", date=backup_date),
+            file_weather_copy = os.path.join(self.config.db_handler.directory(config="images", date=backup_date),
                                              self.config.files["weather"])
             file_stats = self.config.db_handler.file_path(config="statistics")
-            file_stats_copy = os.path.join(self.config.db_handler.directory(config="statistics", date=backup_date),
+            file_stats_copy = os.path.join(self.config.db_handler.directory(config="images", date=backup_date),
                                            self.config.files["statistics"])
 
             stamps = list(reversed(sorted(files.keys())))
@@ -548,7 +582,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                             if "detections" in update_new and len(update_new["detections"]) > 0:
                                 files_backup["info"]["detection_" + cam] = True
 
-                            update_new["directory"] = os.path.join(self.config.directories["images"], backup_date)
+                            update_new["directory"] = "/" + self.config.db_handler.directory("images", backup_date)+"/"
 
                             if os.path.isfile(os.path.join(dir_source, file_lowres)) and \
                                     os.path.isfile(os.path.join(dir_source, file_hires)):
@@ -611,8 +645,14 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                     files_backup["info"]["detection_" + cam] = {
                         "date": self.config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
                         "threshold": camera_settings["object_detection"]["threshold"],
-                        "model": camera_settings["object_detection"]["model"]
+                        "model": camera_settings["object_detection"]["model"],
+                        "detected": False
                     }
+                detections = self.camera[cam].object.summarize_detections(files_backup["files"])
+                if len(detections) > 0:
+                    labels = self.camera[cam].object.detect_objects.get_labels()
+                    files_backup["info"]["detection_" + cam]["detected"] = True
+                    files_backup["info"]["detection_" + cam]["labels"] = labels
 
             # create chart data from sensor and weather data vor archive
             files_backup["chart_data"] = self.views.create.chart_data_new(data_image=files_chart,
@@ -642,7 +682,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         """
         add download requests to queue
 
-        Parameters:
+        Args:
             param (dict): parameter from API request
             file_list (list): optional, list of files - entry format YYYYMMDD_HHMMSS
         Returns:
@@ -656,7 +696,10 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
     def download_files_waiting(self, param):
         """
-        return downloads waiting for a specific session id
+        check if downloads waiting for a specific session id
+
+        Returns:
+            status if downloads are waiting
         """
         return self.download.waiting(param)
 
@@ -731,6 +774,10 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
     def create_image_config(self, date="", recreate=False):
         """
         Initial compare files to create new config file
+
+        Args:
+            date (str): create config file for this date
+            recreate (bool): recreate config file completely
         """
         time.sleep(1)
         if date == "":
@@ -745,7 +792,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
         # file_list = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and "_big" not in f]
         # file_list = [f for f in os.listdir(path) if "_big" not in f and os.path.isfile(os.path.join(path, f))]
-        file_list = [f for f in os.listdir(path) if "_big" not in f and (f.endswith(".jpg") or f.endswith("jpeg"))]
+        file_list = [f for f in os.listdir(path) if "_big" and "_diff" not in f and (f.endswith(".jpg") or f.endswith("jpeg"))]
 
         file_list.sort(reverse=True)
         files = self._create_image_config_analyze(file_list=file_list, init=True, subdir=date)
@@ -755,14 +802,22 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
     def create_image_config_api(self, param):
         """
         Call (re)creation via API and return JSON answer
+
+        Args:
+            param (dict): parameters from API request
+        Returns:
+            dict: information for API response
         """
         response = {"command": ["recreate main image config file", param["parameter"]]}
-        self.create_image_config(date="", recreate=True)
+        self.recreate_config = True
         return response
 
     def _create_image_config_save(self, date=""):
         """
         create and save image config
+
+        Args:
+            date (str): date of config file to be saved
         """
         camera_list = []
         for cam in self.camera:
@@ -807,19 +862,30 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
     def _create_image_config_analyze(self, file_list, init=False, subdir=""):
         """
         Compare image files and write to config file (incl. sensor data if exist)
+
+        Args:
+            file_list (list): list of files to be analyzed
+            init (bool): initialize
+            subdir (str): subdirectory
         """
         if self._processing:
             # this part potentially can be removed again
             self.logging.warning("Compare Files already processing ...")
             return
-        self._processing = True
 
-        if os.path.isfile(self.config.db_handler.file_path("images")) and subdir == "":
+        self._processing = True
+        self.logging.info("Start recreation for " + str(len(file_list)) + " image files ...")
+
+        if os.path.isfile(self.config.db_handler.file_path("images")) and subdir == "" and not init:
             files = self.config.db_handler.read_cache(config='images')
+            self.logging.debug("Use existing config file.")
+
         else:
             files = {}
+            self.logging.debug("Start with a fresh config file.")
             files = self._create_image_config_get_filelist(file_list=file_list, files=files, subdir=subdir)
 
+            self.logging.debug("Integrate sensor data ...")
             if os.path.isfile(self.config.db_handler.file_path("sensor")):
                 sensor_data = self.config.db_handler.read_cache(config="sensor")
                 for key in files:
@@ -832,6 +898,8 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                                 del files[key]["sensor"]["activity"]
                             if "date" in files[key]["sensor"]:
                                 del files[key]["sensor"]["date"]
+
+            self.logging.debug("Integration of sensor data done.")
 
         count = 0
         files_new = files.copy()
@@ -847,6 +915,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
 
         for cam in self.config.param["devices"]["cameras"]:
             filename_last = ""
+            key_last = ""
             image_current = ""
             image_hires = ""
             image_last = ""
@@ -865,6 +934,21 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                     filename = ""
                     filename_hires = files_new[key]["hires"]
                     filename_lowres = files_new[key]["lowres"]
+
+                    if subdir != "":
+                        files_new[key]["datestamp"] = subdir
+                        files_new[key]["date"] = subdir[6:8] + "." + subdir[4:6] + "." + subdir[0:4]
+                        files_new[key]["time"] = key[0:2] + ":" + key[2:4] + ":" + key[4:6]
+                        files_new[key]["directory"] = self.config.db_handler.directory("images", subdir, False)
+
+                    files_new[key]["to_be_deleted"] = 0
+                    files_new[key]["favorit"] = 0
+                    files_new[key]["type"] = "image"
+                    files_new[key]["compare"] = [key]
+                    files_new[key]["similarity"] = 0
+
+                    self.logging.debug("- Identify image data: " + key + "/" + cam + "/" + filename_lowres + "/" +
+                                       filename_hires)
                     try:
                         filename = os.path.join(self.config.db_handler.directory(config="images"),
                                                 subdir, filename_lowres)
@@ -876,29 +960,24 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                                                 subdir, filename_hires)
                         image_hires = cv2.imread(str(filename))
                         height_h, width_h = image_hires.shape[:2]
+                        self.logging.debug("  OK.")
 
                     except Exception as e:
+                        self.config.queue.entry_add(config="images", date=subdir, key=key, entry=files_new[key])
                         self.raise_error("Could not load image: " + str(filename) + " ... " + str(e))
+                        continue
 
-                    files_new[key]["to_be_deleted"] = 0
-                    files_new[key]["favorit"] = 0
                     files_new[key]["size"] = len(image_hires)
                     files_new[key]["hires_size"] = [width_h, height_h]
                     files_new[key]["lowres_size"] = [width_l, height_l]
-                    files_new[key]["datestamp"] = subdir
-                    files_new[key]["date"] = subdir[6:8] + "." + subdir[4:6] + "." + subdir[0:4]
-                    files_new[key]["directory"] = "images/" + subdir
-                    files_new[key]["type"] = "image"
 
+                    self.logging.debug("- compare image " + filename_lowres + " with last image " + filename_last)
                     if len(filename_last) > 0:
                         detection_area = self.camera[cam].param["similarity"]["detection_area"]
                         score = self.camera[cam].image.compare_raw(image_current, image_last, detection_area)
-                        files_new[key]["compare"] = (filename_lowres, filename_last)
+                        files_new[key]["compare"] = (key, key_last)
                         files_new[key]["similarity"] = score
                         count += 1
-                    else:
-                        files_new[key]["compare"] = filename_lowres
-                        files_new[key]["similarity"] = 0
 
                     if init:
                         sensor_str = ""
@@ -909,6 +988,7 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                             " - " + str(files_new[key]["similarity"]) + "%  " + sensor_str)
 
                     filename_last = filename_lowres
+                    key_last = key
                     image_last = image_current
 
                     self.config.queue.entry_add(config="images", date=subdir, key=key, entry=files_new[key])
@@ -922,11 +1002,12 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
         """
         Get image date from files and add to database entries
 
-        Parameters:
+        Args:
             file_list (list): list of filenames (without path)
             files (dict): database with file entries
             subdir (str): not used yet ... ?!
         """
+        count = 0
         for file in file_list:
             if ".jpg" in file:
 
@@ -934,10 +1015,12 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                 if "error" in analyze:
                     continue
 
+                count += 1
                 which_cam = analyze["cam"]
                 timestamp = analyze["stamp"]
                 files[timestamp] = {}
                 files[timestamp]["camera"] = which_cam
+                files[timestamp]["recreate"] = 1
 
                 if "cam" in file:
                     files[timestamp]["lowres"] = self.img_support.filename(image_type="lowres", timestamp=timestamp,
@@ -956,14 +1039,25 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
                     files[timestamp]["date"] = timestamp2.strftime("%d.%m.%Y")
                     files[timestamp]["time"] = timestamp2.strftime("%H:%M:%S")
 
+                else:
+                    files[timestamp]["datestamp"] = subdir
+                    files[timestamp]["date"] = subdir[6:8] + "." + subdir[4:6] + "." + subdir[0:4]
+                    files[timestamp]["time"] = timestamp[0:2] + ":" + timestamp[2:4] + "." + timestamp[4:6]
+
                 if "sensor" not in files[timestamp]:
                     files[timestamp]["sensor"] = {}
 
+        self.logging.debug("Extracted infos for " + str(count) + " out of " + str(len(file_list)) + " files ...")
         return files
 
     def delete_marked_files_api(self, param):
         """
         set / unset recycling
+
+        Args:
+            param (dict): parameters from API request
+        Returns:
+            dict: information for API response
         """
         date = ""
         config = ""
@@ -1000,6 +1094,13 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
     def _delete_marked_files_exec(self, config="images", date="", delete_not_used=False):
         """
         delete files which are marked to be recycled for a specific date + database entry
+
+        Args:
+            config (str): type of configuration (images, backup, videos)
+            date (str): date of archive where files shall be deleted
+            delete_not_used (bool): delete unused files
+        Returns:
+            dict: information for API response
         """
         response = {}
         del_file_types = ["lowres", "hires", "video_file", "thumbnail"]
@@ -1108,6 +1209,11 @@ class BirdhouseArchive(threading.Thread, BirdhouseClass):
     def delete_archived_day(self, param):
         """
         delete complete directory incl. files in it and trigger recreation of archive and favorite view
+
+        Args:
+            param (dict): parameters from API request
+        Returns:
+            dict: information for API response
         """
         date = param["parameter"][0]
         response = {"command": ["delete archived date '" + date + "'"]}

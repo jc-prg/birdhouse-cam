@@ -11,8 +11,17 @@ from modules.bh_class import BirdhouseClass, BirdhouseDbClass
 
 
 class BirdhouseTEXT(BirdhouseDbClass):
+    """
+    class to read and write text files
+    """
 
     def __init__(self, config=""):
+        """
+        Constructor to initialize class
+
+        Args:
+            config (str|modules.config.BirdhouseConfig): reference to config handler or empty string
+        """
         if config != "":
             BirdhouseDbClass.__init__(self, "TEXT", "DB-text", config)
         else:
@@ -24,6 +33,11 @@ class BirdhouseTEXT(BirdhouseDbClass):
     def read(self, filename):
         """
         read json file including check if locked
+
+        Args:
+            filename (str): file incl. path to read
+        Returns:
+            str: file content
         """
         try:
             self.wait_if_locked(filename)
@@ -39,6 +53,10 @@ class BirdhouseTEXT(BirdhouseDbClass):
     def write(self, filename, data):
         """
         write json file including locking mechanism
+
+        Args:
+            filename (str): file incl. path to write
+            data (str): text data to write into the file
         """
         self.wait_if_locked(filename)
         try:
@@ -55,8 +73,17 @@ class BirdhouseTEXT(BirdhouseDbClass):
 
 
 class BirdhouseJSON(BirdhouseDbClass):
+    """
+    class to read and write json data in text files
+    """
 
     def __init__(self, config) -> None:
+        """
+        Constructor to initialize class
+
+        Args:
+            config (modules.config.BirdhouseConfig): reference to config handler
+        """
         BirdhouseDbClass.__init__(self, "JSON", "DB-json", config)
         self.locked = {}
         self.connected = True
@@ -66,6 +93,11 @@ class BirdhouseJSON(BirdhouseDbClass):
     def read(self, filename) -> dict:
         """
         read json file including check if locked
+
+        Args:
+            filename (str): file incl. path to read
+        Returns:
+            dict: file content
         """
         try:
             self.wait_if_locked(filename)
@@ -79,12 +111,25 @@ class BirdhouseJSON(BirdhouseDbClass):
             self.raise_error("Could not read JSON file: " + filename + " - " + str(e))
             return {}
 
-    def write(self, filename, data) -> None:
+    def write(self, filename, data, create=False):
         """
         write json file including locking mechanism
+
+        Args:
+            filename (str): file incl. path to write
+            data (dict): json data to write into the file
+            create (bool): create directory from path if not exists
         """
         self.wait_if_locked(filename)
         try:
+            file_path = filename.split("/")
+            file = file_path[-1]
+            path = filename.replace(file, "")
+            if not os.path.exists(path) and not create:
+                raise "Path '" + path + "' doesn't exist."
+            elif not os.path.exists(path):
+                os.makedirs(path)
+
             self.locked[filename] = True
             with open(filename, 'wb') as json_file:
                 json.dump(data, codecs.getwriter('utf-8')(json_file), ensure_ascii=False, sort_keys=True, indent=4)
@@ -100,6 +145,11 @@ class BirdhouseJSON(BirdhouseDbClass):
     def exists(self, filename) -> bool:
         """
         check if file exists
+
+        Args:
+            filename (str): file incl. path to check
+        Returns:
+            bool: status if file exists
         """
         result = os.path.exists(filename)
         self.logging.debug("File exists=" + str(result) + "; File=" + filename)
@@ -107,18 +157,23 @@ class BirdhouseJSON(BirdhouseDbClass):
 
 
 class BirdhouseCouchDB(BirdhouseDbClass):
+    """
+    class to read and write date from CouchDB
+    """
 
     def __init__(self, config, db):
         """
-        initialize
+        Constructor to initialize class
+
+        Args:
+            config (modules.config.BirdhouseConfig): reference to config handler
+            db (dict): database configuration (db_usr, db_pwd, db_server, db_port)
         """
         BirdhouseDbClass.__init__(self, "COUCH", "DB-couch", config)
         self.locked = {}
         self.changed_data = False
         self.database = None
-
-        #self.basic_directory = base_dir
-        #self.db_url = "http://" + db_usr + ":" + db_pwd + "@" + db_server + ":" + str(db_port) + "/"
+        self.timeout = 10
 
         self.basic_directory = db["db_basedir"]
         self.db_url = "http://" + db["db_usr"] + ":" + db["db_pwd"] + "@" + db["db_server"] + \
@@ -132,12 +187,16 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         self.connected = self.connect()
         self.logging.info("Connected CouchDB handler (" + self.db_url + ").")
 
-    def connect(self) -> bool:
+    def connect(self):
         """
         connect to database incl. retry
+
+        Returns:
+            bool: connection status
         """
         connects2db = 0
         max_connects = 5
+        self.reset_error()
         while connects2db < max_connects + 1:
 
             if connects2db == 8 or connects2db == 15 or connects2db == 25:
@@ -170,11 +229,15 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             self.logging.info("Connected.")
             return True
         else:
+            self.logging.warning("Error CouchDB database check.")
             return False
 
-    def check_db(self) -> bool:
+    def check_db(self):
         """
         check if required DB exists or create (under construction)
+
+        Returns:
+            bool: status if db exists
         """
         self.logging.info(" - Check if DB exist ... ")
         self.logging.debug(str(self.database_definition))
@@ -187,12 +250,18 @@ class BirdhouseCouchDB(BirdhouseDbClass):
                     self.create(db_key)
                 except Exception as e:
                     self.raise_error("  -> Could not create DB " + db_key + "! " + str(e))
+                    if "104" in str(e):
+                        self.raise_error("  -> Increase or remove memory limits in .env to avoid this error.\n" +
+                                         "     And ensure that a swap file is available and used (see README.md).")
                     return False
         return True
 
     def create(self, db_key):
         """
         create a database in couch_db
+
+        Args:
+            db_key (str): database name
         """
         self.logging.debug("   -> create DB " + db_key)
         try:
@@ -235,6 +304,11 @@ class BirdhouseCouchDB(BirdhouseDbClass):
     def filename2keys(self, filename):
         """
         translate filename to keys
+
+        Args:
+            filename (str): filename to be translated into database key
+        Returns:
+            str: db_key
         """
         date = ""
         database = ""
@@ -261,9 +335,15 @@ class BirdhouseCouchDB(BirdhouseDbClass):
 
         return [database, date]
 
-    def read(self, filename) -> dict:
+    def read(self, filename, retry=True):
         """
         read data from DB
+
+        Args:
+            filename (str): filename to be translated into db_key
+            retry (bool): retry after error
+        Returns:
+            dict: data from database
         """
         data = {}
         [db_key, date] = self.filename2keys(filename)
@@ -281,7 +361,8 @@ class BirdhouseCouchDB(BirdhouseDbClass):
                     if date in doc_data:
                         return doc_data[date]
                     else:
-                        self.raise_error("CouchDB ERROR read (date): " + filename + " - " + db_key + "/" + date)
+                        self.raise_error("CouchDB ERROR read (date): " + filename + " - " +
+                                         db_key + "/" + date)
                         return {}
                 else:
                     return doc_data
@@ -289,12 +370,23 @@ class BirdhouseCouchDB(BirdhouseDbClass):
                 self.raise_error("CouchDB ERROR read (db_key): " + filename + " - " + db_key + "/" + date)
                 return {}
         except Exception as e:
-            self.raise_error("CouchDB ERROR read: " + filename + " - " + db_key + "/" + date + " - " + str(e))
-            return {}
+            if retry:
+                self.logging.warning("CouchDB ERROR read: " + filename + " - " + db_key + "/" + date +
+                                     " - " + str(e) + " -> RETRY")
+                return self.read(filename, retry=False)
+            else:
+                self.raise_error("CouchDB ERROR read: " + filename + " - " + db_key + "/" + date + " - " + str(e))
+                return {}
 
-    def write(self, filename, data, create=False) -> None:
+    def write(self, filename, data, create=False, retry=True):
         """
         read data from DB
+
+        Args:
+            filename (str): filename to be translated into db_key
+            data (dict): data to be saved in the database
+            create (bool): create database if not exists
+            retry (bool): retry after error
         """
         [db_key, date] = self.filename2keys(filename)
         self.logging.debug("-----> WRITE: " + filename + " (" + self.basic_directory + ")")
@@ -329,26 +421,42 @@ class BirdhouseCouchDB(BirdhouseDbClass):
                 doc['time'] = time.time()
                 doc['change'] = 'save changes'
         except Exception as e:
-            self.logging.error("CouchDB ERROR save (prepare data): " + db_key + " " + str(e))
-            return
+            if retry:
+                self.logging.warning("CouchDB ERROR save (prepare data): " + db_key + " " + str(e) + " -> RETRY")
+                time.sleep(self.timeout)
+                self.write(filename, data, create, retry=False)
+                return
+            else:
+                self.logging.error("CouchDB ERROR save (prepare data): " + db_key + " " + str(e))
+                return
 
         try:
             database.save(doc)
             database.compact()
 
         except Exception as e:
-            self.logging.error("CouchDB ERROR save: " + db_key + " " + str(e))
-            self.logging.error("  -> dict entries: " + str(len(doc["data"])))
-            self.logging.error("  -> dict size: " + str(sys.getsizeof(doc["data"])))
-            self.logging.debug("  -> dict keys: " + str(doc["data"].keys()))
-            return
+            if retry:
+                self.logging.error("CouchDB ERROR save: " + db_key + " " + str(e) + " -> RETRY")
+                time.sleep(self.timeout)
+                self.write(filename, data, create, retry=False)
+            else:
+                self.logging.error("CouchDB ERROR save: " + db_key + " " + str(e))
+                self.logging.error("  -> dict entries: " + str(len(doc["data"])))
+                self.logging.error("  -> dict size: " + str(sys.getsizeof(doc["data"])))
+                self.logging.debug("  -> dict keys: " + str(doc["data"].keys()))
+                return
 
         self.changed_data = True
         return
 
-    def exists(self, filename) -> bool:
+    def exists(self, filename):
         """
         check if db exists
+
+        Args:
+            filename (str): filename to be translated into db_key
+        Returns:
+            bool: status if database exists
         """
         [db_key, date] = self.filename2keys(filename)
         self.logging.debug("-----> CHECK DB: " + db_key + "/" + date)
@@ -357,8 +465,11 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             return False
         try:
             if db_key in self.database:
+                #time.sleep(0.01)
                 database = self.database[db_key]
+                #time.sleep(0.01)
                 doc = database.get("main")
+                #time.sleep(0.01)
                 doc_data = doc["data"]
                 if date != "":
                     if date in doc_data:

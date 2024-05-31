@@ -16,7 +16,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         Constructor method for initializing the class.
 
-        Parameters:
+        Args:
             camera_id (str): id string to identify the camera from which this class is embedded
             camera (modules.camera.BirdhouseCamera): reference to camera object
             config (modules.config.BirdhouseConfig): reference to main config object
@@ -39,8 +39,11 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.image_size = [0, 0]
         self.recording = False
         self.processing = False
+        self.processing_cancel = False
         self.max_length = 60
         self.delete_temp_files = True   # usually set to True, can temporarily be used to keep recorded files for analysis
+
+        self.config.set_processing("video-recording", self.id, False)
 
         self.img_support = BirdhouseImageSupport(camera_id, config)
         self.ffmpeg = BirdhouseFfmpegTranscoding(self.id, self.config)
@@ -125,7 +128,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         generate filename for images
 
-        Parameters:
+        Args:
             file_type (str): file type to create filename (video, thumb, vimages)
         Returns:
             str: filename
@@ -143,13 +146,14 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         start video recoding
 
-        Parameters:
+        Args:
             micro (str): id of microphone to get audio from
             audio_filename (str): filename for audio to be recorded
         """
         response = {"command": ["start recording"]}
         self.micro = micro
         self.record_audio_filename = audio_filename
+        self.processing_cancel = False
         self.info["status"] = "recording"
 
         if self.camera.active and not self.camera.error and not self.recording:
@@ -158,6 +162,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.thread_register_process("recording", self.id + "_" + self.micro, "start", 0)
             self.thread_prio_process(start=True, pid=self.id)
             self.recording = True
+            self.config.set_processing("video-recording", self.id, True)
 
             self.logging.info(" --- " + self.id + " --> " + str(time.time()))
             self.record_start_time = time.time()
@@ -176,6 +181,34 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             response["error"] = "camera is not active " + self.camera.id
         elif self.recording:
             response["error"] = "camera is already recording " + self.camera.id
+        return response
+
+    def record_cancel(self):
+        """
+        cancel video recording process
+
+        Returns:
+            dict: information for API response
+        """
+        self.thread_prio_process(start=False, pid=self.id)
+        response = {"command": ["cancel recording"]}
+        if self.camera.active and not self.camera.error and self.processing:
+            self.logging.info("Cancel video processing (" + self.id + ") ...")
+            filename = self.ffmpeg.cancel_process()
+            self.processing = False
+            self.cleanup(filename)
+        if self.camera.active and not self.camera.error and self.recording:
+            self.logging.info("Cancel video recording (" + self.id + ") ...")
+            self.recording = False
+            self.processing = False
+            self.processing_cancel = True
+            self.config.set_processing("video-recording", self.id, False)
+            self.cleanup()
+        elif not self.camera.active:
+            response["error"] = "camera is not active " + self.camera.id
+        elif not self.recording:
+            response["error"] = "camera isn't recording " + self.camera.id
+
         return response
 
     def record_stop(self):
@@ -204,15 +237,15 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.logging.info(" <-- " + self.id + " --- " + str(time.time()) + " ... (" +
                               str(round(time.time() - self.record_start_time, 3)) + ")")
             self.recording = False
-            self.create_video()
-            self.info["audio"] = self.config.record_audio_info
-            if "stamp_start" in self.info["audio"]:
-                self.info["audio"]["delay"] = self.info["stamp_start"] - self.info["audio"]["stamp_start"]
-            #if "length" in self.info["audio"]:
-            #    self.info["audio"]["length_difference"] = float(self.info["length"]) - self.info["audio"]["length"]
-            self.info["status"] = "finished"
-            self.config.queue.entry_add(config="videos", date="", key=self.info["date_start"], entry=self.info.copy())
-            self.config.record_audio_info = {}
+            self.config.set_processing("video-recording", self.id, False)
+            success = self.create_video()
+            if success:
+                self.info["audio"] = self.config.record_audio_info
+                if "stamp_start" in self.info["audio"]:
+                    self.info["audio"]["delay"] = self.info["stamp_start"] - self.info["audio"]["stamp_start"]
+                self.info["status"] = "finished"
+                self.config.queue.entry_add(config="videos", date="", key=self.info["date_start"], entry=self.info.copy())
+                self.config.record_audio_info = {}
             self.thread_register_process("recording", self.id + "_" + self.micro, "stop", 0)
         elif not self.camera.active:
             response["error"] = "camera is not active " + self.camera.id
@@ -263,45 +296,53 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     def create_video(self):
         """
         Create video from images using ffmpeg
+
+        Returns:
+            bool: success status
         """
         if self.processing:
             return
 
+        success = False
         self.processing = True
         self.logging.info("Start video creation with ffmpeg ...")
         self.thread_register_process("recording", self.id + "_" + self.micro, "encoding", 0)
-        if self.record_audio_filename != "":
+        if self.record_audio_filename != "" and not self.processing_cancel:
             self.logging.info("- including audio '" + str(self.record_audio_filename) + "' ...")
             count = 0
-            while not os.path.exists(self.record_audio_filename) and count < 20:
+            while not os.path.exists(self.record_audio_filename) and count < 20 and not self.processing_cancel:
                 time.sleep(1)
                 count += 1
-            if os.path.exists(self.record_audio_filename):
+            if os.path.exists(self.record_audio_filename) and not self.processing_cancel:
                 last_file_size = 0
                 while last_file_size != os.path.getsize(self.record_audio_filename):
                     time.sleep(0.5)
                     last_file_size = os.path.getsize(self.record_audio_filename)
                     time.sleep(0.5)
-            elif not os.path.exists(self.record_audio_filename):
+            elif not os.path.exists(self.record_audio_filename) and not self.processing_cancel:
                 self.record_audio_filename = ""
                 self.logging.error("- audio file '" + str(self.record_audio_filename) + "' not available yet ...")
 
-        input_filenames = os.path.join(self.config.db_handler.directory("videos_temp"), self.filename("vimages") + "%" +
-                                       str(self.count_length).zfill(2) + "d.jpg")
-        output_filename = os.path.join(self.config.db_handler.directory("videos"), self.filename("video"))
+        if not self.processing_cancel:
+            input_filenames = os.path.join(self.config.db_handler.directory("videos_temp"), self.filename("vimages") + "%" +
+                                           str(self.count_length).zfill(2) + "d.jpg")
+            output_filename = os.path.join(self.config.db_handler.directory("videos"), self.filename("video"))
 
-        success = self.ffmpeg.create_video(self.id + "_" + self.micro, input_filenames, self.info["framerate"],
-                                           output_filename, self.record_audio_filename)
-        self.thread_register_process("recording", self.id + "_" + self.micro, "clean-up", 100)
+            success = self.ffmpeg.create_video(self.id + "_" + self.micro, input_filenames, self.info["framerate"],
+                                               output_filename, self.record_audio_filename)
+            self.thread_register_process("recording", self.id + "_" + self.micro, "clean-up", 100)
 
-        if not success:
+        if not success or self.processing_cancel:
             self.processing = False
+            success = False
 
-        self.info["thumbnail"] = self.filename("thumb")
-        cmd_thumb = "cp " + os.path.join(self.config.db_handler.directory("videos_temp"),
-                                         self.filename("vimages") + str(1).zfill(self.count_length) + ".jpg "
-                                         ) + os.path.join(self.config.db_handler.directory("videos"),
-                                                          self.filename("thumb"))
+        else:
+            self.info["thumbnail"] = self.filename("thumb")
+            cmd_thumb = "cp " + os.path.join(self.config.db_handler.directory("videos_temp"),
+                                             self.filename("vimages") + str(1).zfill(self.count_length) + ".jpg "
+                                             ) + os.path.join(self.config.db_handler.directory("videos"),
+                                                              self.filename("thumb"))
+
         cmd_delete = "rm " + os.path.join(self.config.db_handler.directory("videos_temp"),
                                           self.filename("vimages") + "*.jpg")
         cmd_delete_audio = "rm " + self.record_audio_filename
@@ -309,9 +350,10 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         try:
             if self.delete_temp_files:
 
-                self.logging.info(cmd_thumb)
-                message = os.system(cmd_thumb)
-                self.logging.debug(message)
+                if success:
+                    self.logging.info(cmd_thumb)
+                    message = os.system(cmd_thumb)
+                    self.logging.debug(message)
 
                 self.logging.info(cmd_delete)
                 message = os.system(cmd_delete)
@@ -324,19 +366,26 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         except Exception as err:
             self.raise_error("Error during video creation (thumbnail/cleanup): " + str(err))
             self.processing = False
-            return
+            success = False
 
         self.processing = False
         self.thread_register_process("recording", self.id + "_" + self.micro, "remove", 0)
-        self.logging.info("OK.")
-        return
+        if not self.processing_cancel:
+            self.logging.info("OK.")
+        else:
+            self.logging.info("Canceled processing.")
+            self.processing_cancel = False
+            self.record_audio_filename = ""
+            success = False
+        return success
 
-    def create_video_image(self, image):
+    def create_video_image(self, image, delay=""):
         """
         Save image with predefined filename in temp directory
 
-        Parameters:
+        Args:
             image (numpy.ndarray): image data
+            delay (float): timestamp when image was created
         """
         self.info["image_count"] += 1
         self.info["image_files"] = self.filename("vimages")
@@ -348,7 +397,10 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
         try:
             self.logging.debug("Write  image '" + path + "')")
-            return cv2.imwrite(path, image)
+            result = cv2.imwrite(str(path), image)
+            if self.info["image_count"] == 1:
+                self.logging.info("--> Record fist image: saved=" + str(time.time()) + " / delay=" + str(delay))
+            return result
         except Exception as e:
             self.info["image_count"] -= 1
             self.raise_error("Could not save image '" + filename + "': " + str(e))
@@ -357,7 +409,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         Create daily video from all single images (of the current day) that are available
 
-        Parameters:
+        Args:
             filename (str): input filename(s)
             stamp (str): date and time stamp as part of the output files
             date (str): date for the video to be created
@@ -395,9 +447,13 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
         self.logging.info("Rename files to prepare the video creation ...")
         cmd_filename = self.config.db_handler.directory("videos_temp") + cmd_tempfiles
-        cmd_rename = "i=0; for fi in " + self.config.db_handler.directory("videos_temp") + \
-                     "image_*; do mv \"$fi\" $(printf \""
-        cmd_rename += cmd_filename + "%05d.jpg\" $i); i=$((i+1)); done"
+        cmd_rename = "find " + self.config.db_handler.directory("videos_temp") + \
+                     "image_* -type f -size 0 -delete; "
+        cmd_rename += "i=0; " + \
+                      "for fi in " + self.config.db_handler.directory("videos_temp") + \
+                      "image_*[0-9][0-9][0-9][0-9][0-9][0-9].jpeg; " + \
+                      "do mv \"$fi\" $(printf \"" + cmd_filename + "%05d.jpg\" $i); " + \
+                      "i=$((i+1)); done"
         self.logging.debug(cmd_rename)
         try:
             message = os.system(cmd_rename)
@@ -476,7 +532,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         create a video of all existing images of the day
 
-        Parameters:
+        Args:
             param (dict): parameters from the API request (not used at the moment)
         Returns:
             dict: information for the API response
@@ -498,7 +554,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         create a shorter video based on date and time
 
-        Parameters:
+        Args:
             video_id (str): id of the video to be trimmed
             start (float): start timecode
             end (float): end timecode
@@ -532,7 +588,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         creates a shortened version of the video
 
-        Parameters:
+        Args:
             input_file (str): filename of input file
             output_file (str): filename for output file
             start_timecode (float): start timecode
@@ -555,7 +611,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         create a short video and save in DB (not deleting the old video at the moment)
 
-        Parameters:
+        Args:
             param (dict): input from API request
         Returns:
             dict: information for API response
@@ -576,3 +632,26 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
         return response
 
+    def cleanup(self, output_file=""):
+        """
+        remove all files from last recording
+
+        Args:
+            output_file (str): in case the video creation has started the started file can be deleted also
+        """
+        cmd_delete = "rm " + os.path.join(self.config.db_handler.directory("videos_temp"),
+                                          self.filename("vimages") + "*.jpg")
+        self.logging.info(cmd_delete)
+        message = os.system(cmd_delete)
+        self.logging.debug(message)
+
+        cmd_delete = "rm " + os.path.join(self.config.db_handler.directory("videos_temp"), "*.wav")
+        self.logging.info(cmd_delete)
+        message = os.system(cmd_delete)
+        self.logging.debug(message)
+
+        if output_file != "":
+            cmd_delete = "rm " + output_file
+            self.logging.info(cmd_delete)
+            message = os.system(cmd_delete)
+            self.logging.debug(message)

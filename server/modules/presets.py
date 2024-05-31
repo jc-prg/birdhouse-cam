@@ -11,7 +11,7 @@ def get_env(var_name):
     """
     get value from .env-file if exists
 
-    Parameters:
+    Args:
         var_name (str): key in .env file
     Returns:
         Any: value from .env file
@@ -115,10 +115,13 @@ def set_global_configuration():
                     if module in birdhouse_loglevel_modules_all:
                         eval("birdhouse_loglevel_modules_" + level + ".append('" + module + "')")
                 if level != "":
-                    print(str(eval("birdhouse_loglevel_modules_" + level)))
+                    print("Loglevel: " + birdhouse_env_keys["log_level"])
+                    print(level.upper() + ": " + str(eval("birdhouse_loglevel_modules_" + level)))
 
         except Exception as e:
-            print("Error reading list of log levels ("+key+"|"+level+"|"+str(birdhouse_env[key])+"): " + str(e))
+            print(
+                "Error reading list of log levels (" + key + "|" + level + "|" + str(birdhouse_env[key]) + "): " + str(
+                    e))
 
 
 def set_error_images():
@@ -205,12 +208,13 @@ def set_loglevel():
         birdhouse_loglevel_module[module] = logging.ERROR
 
 
-def set_logging(name):
+def set_logging(name, device=""):
     """
     set logger and ensure it exists only once
 
-    Parameters:
+    Args:
         name (str): logger name
+        device (str): device information
     """
     global logger_exists, logger_list, loggers, birdhouse_loglevel_module
 
@@ -238,12 +242,17 @@ def set_logging(name):
             log_level = birdhouse_loglevel_module[name]
             logger.setLevel(log_level)
 
-        if log_as_file:
+        if log_as_file and os.access(birdhouse_log_filename, os.W_OK):
             # log_format = logging.Formatter(fmt='%(asctime)s |' + str(len(logger_list)).zfill(
             #    3) + '| %(levelname)-8s '+name.ljust(10)+' | %(message)s', # + "\n" + str(logger_list),
             #                               datefmt='%m/%d %H:%M:%S')
 
-            log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s ' + name.ljust(10) + ' | %(message)s',
+            log_format_string = '%(asctime)s | %(levelname)-8s ' + name.ljust(10) + ' | %(message)s'
+            #if device != "":
+            #    log_format_string = ('%(asctime)s | %(levelname)-8s ' + name.ljust(10) + ' | '
+            #                         + device + ' | %(message)s')
+
+            log_format = logging.Formatter(fmt=log_format_string,
                                            datefmt='%m/%d %H:%M:%S')
             handler = RotatingFileHandler(filename=birdhouse_log_filename, mode='a',
                                           maxBytes=int(2.5 * 1024 * 1024),
@@ -252,11 +261,19 @@ def set_logging(name):
             logger.addHandler(handler)
 
         else:
-            logging.basicConfig(format='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
+            log_format_string = '%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s'
+            #if device != "":
+            #    log_format_string = ('%(asctime)s | %(levelname)-8s ' + name.ljust(10) + ' | '
+            #                         + device + ' | %(message)s')
+            logging.basicConfig(format=log_format_string,
                                 datefmt='%m/%d %H:%M:%S',
                                 level=log_level)
 
         logger.debug("___ Init logger '" + name + "', into_file=" + str(log_as_file))
+
+        if log_as_file and not os.access(birdhouse_log_filename, os.W_OK):
+            logger.warning("Could not write to log file " + birdhouse_log_filename)
+
         loggers[name] = logger
         return logger
 
@@ -265,7 +282,7 @@ def set_server_logging(system_arguments):
     """
     set function for global logging
 
-    Parameters:
+    Args:
         system_arguments (str): depending on system arguments and settings in .env file set if logging into file
     """
     global srv_logging, ch_logging, birdhouse_log_as_file, birdhouse_env, view_logging
@@ -315,7 +332,6 @@ birdhouse_git_submodules = {
     "jc-prg/app-framework": "app/framework"
 }
 
-
 # ------------------------------------
 # logging default settings
 # ------------------------------------
@@ -324,7 +340,7 @@ birdhouse_loglevel_module = {}
 birdhouse_loglevel_modules_all = [
     'root', 'backup', 'bu-dwnld', 'server', 'srv-info', 'srv-health',
     'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object', 'cam-stream',
-    'cam-handl', 'cam-info',
+    'cam-handl', 'cam-info', 'statistics',
     'config', 'config-Q',
     'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
     'video', 'video-srv', "img-eval",
@@ -336,7 +352,6 @@ birdhouse_loglevel_modules_info = ["server"]
 birdhouse_loglevel_modules_debug = []
 birdhouse_loglevel_modules_warning = []
 birdhouse_loglevel_modules_error = []
-
 
 # ------------------------------------
 # global configuration
@@ -377,6 +392,7 @@ birdhouse_pages = {
     "video_info": ("Video Info", "/video-info.html", ""),
     "videos": ("Videos", "/videos.html", "VIDEOS"),
     "object": ("Birds", "/birds.html", "BIRDS"),
+    "statistics": ("Statistics", "/statistic.html", "STATISTICS"),
     "save": ("Speichern", "/image.jpg", "")
 }
 birdhouse_databases = {
@@ -391,6 +407,7 @@ birdhouse_databases = {
     "archive_weather": {},
     "archive_videos": {}
 }
+birdhouse_db_daily_refresh = ["today_images", "today_weather", "today_sensor", "today_statistics"]
 birdhouse_directories = {
     "backup": "images/",
     "backup_info": "images/",
@@ -400,7 +417,8 @@ birdhouse_directories = {
     "images": "images/",
     "favorites": "images/",
     "sensor": "images/",
-    "statistics": "images/",
+    "statistics": "other/",
+    "today": "00_today/",
     "objects": "images/",
     "custom_models": "custom_models/",
     "videos": "videos/",
@@ -422,20 +440,20 @@ birdhouse_files = {
     "weather": "config_weather.json"
 }
 birdhouse_dir_to_database = {
-    "config": "config",
-    "birds": "birds",
-    "images/config_images": "today_images",
-    "images/config_sensor": "today_sensors",
-    "images/config_weather": "today_weather",
-    "images/config_statistics": "today_statistics",
-    "images/config_backup": "archive_images",
-    "images/config_favorites": "favorites",
-    "images/config_objects": "objects",
-    "videos/config_videos": "archive_videos",
-    "images/<DATE>/config_statistics": "archive_statistics",
-    "images/<DATE>/config_images": "archive_images",
-    "images/<DATE>/config_sensors": "archive_sensors",
-    "images/<DATE>/config_weather": "archive_weather"
+    birdhouse_directories["main"] + "config": "config",
+    birdhouse_directories["main"] + "birds": "birds",
+    birdhouse_directories["backup"] + "config_backup": "archive_images",
+    birdhouse_directories["favorites"] + "config_favorites": "favorites",
+    birdhouse_directories["objects"] + "config_objects": "objects",
+    birdhouse_directories["sensor"] + "config_sensor": "today_sensors",
+    birdhouse_directories["statistics"] + "config_statistics": "today_statistics",
+    birdhouse_directories["videos"] + "config_videos": "archive_videos",
+    birdhouse_directories["weather"] + "config_weather": "today_weather",
+    birdhouse_directories["images"] + "<DATE>/config_images": "archive_images",
+    birdhouse_directories["images"] + "<DATE>/config_statistics": "archive_statistics",
+    birdhouse_directories["images"] + "<DATE>/config_sensors": "archive_sensors",
+    birdhouse_directories["images"] + "<DATE>/config_weather": "archive_weather",
+    birdhouse_directories["images"] + birdhouse_directories["today"] + "config_images": "today_images"
 }
 
 # ------------------------------------
@@ -487,6 +505,7 @@ birdhouse_default_cam = {
     "type": "default",
     "name": "NAME",
     "source": "/dev/video0",
+    "source_id": None,
     "active": True,
     "detection_mode": "similarity",
     "record": True,
@@ -495,7 +514,7 @@ birdhouse_default_cam = {
         "crop": (0.1, 0.0, 0.85, 1.0),
         "resolution": "800x600",
         "show_framerate": True,
-        "framerate": 12,
+        "framerate": 8,
         "saturation": 50,
         "brightness": -1,
         "contrast": -1,
@@ -507,6 +526,7 @@ birdhouse_default_cam = {
         "date_time_color": (255, 255, 255),
         "date_time_size": 0.4
     },
+    "image_presets": {},
     "image_save": {
         "path": "images",
         "color": "ORIGINAL",
@@ -555,6 +575,7 @@ birdhouse_default_micro = {
     "device_name": "none",
     "sample_rate": 16000,
     "chunk_size": 1,
+    "record_audio_delay": 1.5,
     "channels": 1,
     "type": "usb",
     "port": 5002
@@ -644,8 +665,7 @@ file_types = {
     '.jpeg': 'image/jpg',
 }
 
-detection_default_models = ["yolov5n", "yolov5s", "yolov5m", "yolov5l", "yolov5x",
-                            "yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6", "yolov5x6"]
+detection_default_models = ["yolov8n", "yolov8s", "yolov8m", "yolov8l", "yolov8x"]
 detection_custom_model_path = os.path.join(birdhouse_main_directories["data"],
                                            birdhouse_directories["custom_models"])
 detection_custom_models = glob.glob(os.path.join(detection_custom_model_path, "*.pt"))

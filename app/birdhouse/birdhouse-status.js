@@ -98,6 +98,7 @@ function birdhouseStatus_print(data) {
     birdhouseStatus_detection(data);
     birdhouseStatus_downloads(data);
     birdhouseStatus_processing(data);
+    birdhouseStatus_recordButtons(data);
 
     document.getElementById(app_frame_info).style.display = "block";
 
@@ -124,6 +125,7 @@ function birdhouseStatus_cameras(data) {
             if (camera_status[camera]["active_streams"] == 1) { stream = lang("STREAM"); } else { stream = lang("STREAMS"); }
             setTextById("show_stream_count_"+camera, camera_status[camera]["active_streams"] + " " + stream);
             setTextById("show_stream_fps_"+camera,   "("+camera_status[camera]["stream_raw_fps"]+" fps)");
+            setTextById("show_stream_info_"+camera,   "("+camera_status[camera]["active_streams"] + ": " + camera_status[camera]["stream_raw_fps"]+"fps)");
             setTextById("show_stream_object_fps_"+camera,   "("+camera_status[camera]["stream_object_fps"]+" fps)");
             camera_streams += cameras[camera]["image"]["current_streams"];
 
@@ -178,16 +180,19 @@ function birdhouseStatus_cameras(data) {
                 setHeaderColor(header_id=camera+"_error", header_color=header_color_error);
                 setHeaderColor(header_id=camera, header_color=header_color_error);
                 setStatusColor(status_id="status_error_"+camera, "red");
+                setStatusColor(status_id="status_error2_"+camera, "red");
             }
             else if (camera_status[camera]["active"] && error_count > 0) {
                 setHeaderColor(header_id=camera+"_error", header_color=header_color_warning);
                 setHeaderColor(header_id=camera, header_color=header_color_warning);
                 setStatusColor(status_id="status_error_"+camera, "yellow");
+                setStatusColor(status_id="status_error2_"+camera, "yellow");
             }
             else {
                 setHeaderColor(header_id=camera+"_error", header_color="");
                 setHeaderColor(header_id=camera, header_color="");
                 setStatusColor(status_id="status_error_"+camera, "green");
+                setStatusColor(status_id="status_error2_"+camera, "green");
             }
 
             // image recording working correctly
@@ -196,9 +201,11 @@ function birdhouseStatus_cameras(data) {
             }
             else if (camera_status[camera]["record_image_active"]) {
                 setStatusColor(status_id="status_error_record_"+camera, "green");
+                setStatusColor(status_id="status_error2_record_"+camera, "green");
             }
             else {
                 setStatusColor(status_id="status_error_record_"+camera, "black");
+                setStatusColor(status_id="status_error2_record_"+camera, "black");
             }
 
             // camera activated
@@ -208,7 +215,9 @@ function birdhouseStatus_cameras(data) {
             else {
                 setStatusColor(status_id="status_active_"+camera, "black");
                 setStatusColor(status_id="status_error_"+camera, "black");
+                setStatusColor(status_id="status_error2_"+camera, "black");
                 setStatusColor(status_id="status_error_record_"+camera, "black");
+                setStatusColor(status_id="status_error2_record_"+camera, "black");
                 }
 
             if (cameras[camera]["image"]["crop_area"]) {
@@ -466,9 +475,12 @@ function birdhouseStatus_system(data) {
         }
 
     // health check
-    if (status_srv["health_check"] != "OK") {
+    if (status_srv["health_check"] != "OK" && status_srv["health_check"] != undefined) {
         setTextById("system_health_check", "<font color='red'>" + status_srv["health_check"] + "</font>");
         show_error = true;
+        }
+    else if (status_srv["health_check"] == undefined) {
+        setTextById("system_health_check", "starting");
         }
     else {
         setTextById("system_health_check", status_srv["health_check"]);
@@ -585,6 +597,53 @@ function birdhouseStatus_detection(data) {
         });
 
     }
+
+/*
+* check recording status and set recording buttons on index view
+*
+* @param (dict) data: response from API status request
+*/
+function birdhouseStatus_recordButtons(data) {
+    status_data  = data["STATUS"]["video_recording"];
+    p_video      = document.getElementById("processing_video");
+    p_video_info = "";
+
+    Object.entries(status_data).forEach(([key,value]) => {
+        b_start  = document.getElementById("rec_start_"+key);
+        b_stop   = document.getElementById("rec_stop_"+key);
+        b_cancel = document.getElementById("rec_cancel_"+key);
+
+        if (p_video != undefined) {
+            p_video_info += key.toUpperCase() + ": ";
+            if (value["error"])                                   { p_video_info += "error "; }
+            else if (!value["processing"] && !value["recording"]) { p_video_info += "inactive"; }
+            else if (value["active"])                             { p_video_info += "OK "; }
+
+            if (value["recording"])       { p_video_info += "; recording (" + value["info"]["length"] + "s)<br/>"; }
+            else if (value["processing"]) { p_video_info += "; processing (" + value["info"]["percent"] + "%)<br/>"; }
+            else                          { p_video_info += "<br/>"}
+            }
+
+        if (b_start != undefined) {
+            if (!value["active"])           { b_start.disabled = "disabled"; b_start.style.color = "white";}
+            else if (value["recording"])    { b_start.disabled = "disabled"; b_start.style.color = "red"; }
+            else if (value["processing"])   { b_start.disabled = "disabled"; b_start.style.color = "yellow"; }
+            else                            { b_start.disabled = ""; b_start.style.color = "lightgray"; }
+            }
+        if (b_stop != undefined) {
+            if (value["recording"])         { b_stop.disabled = ""; }
+            else                            { b_stop.disabled = "disabled"; }
+            }
+        if (b_cancel != undefined) {
+            if (value["recording"] || value["processing"])        { b_cancel.disabled = ""; }
+            else if (!value["recording"] && !value["processing"]) { b_cancel.disabled = "disabled"; }
+            else                                                  { b_cancel.disabled = "disabled"; }
+            }
+    });
+
+    if (p_video_info == "") { p_video_info = "inactive"; }
+    setTextById("processing_video", p_video_info);
+}
 
 /*
 * check running download preparation processes and fill respective placeholders with status information

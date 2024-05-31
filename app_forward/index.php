@@ -20,20 +20,31 @@ function getStoredIPv6Addresses($file) {
 }
 
 // Function to save the IPv6 address and birdhouse identifier to file
-function saveIPv6Address($file, $ipv6, $birdhouse_identifier) {
+function saveIPv6Address($file, $ipv6, $birdhouse_identifier, $port_http, $port_api) {
+    $birdhouse_info = array(
+        "id" =>   $birdhouse_identifier,
+        "ipv6" => $ipv6,
+        "http" => $port_http,
+        "api" =>  $port_api
+        );
     $stored_addresses = getStoredIPv6Addresses($file);
-    $stored_addresses[$birdhouse_identifier] = $ipv6;
+    $stored_addresses[$birdhouse_identifier] = $birdhouse_info;
     file_put_contents($file, json_encode($stored_addresses));
-}
 
+    echo json_encode($birdhouse_info);
+}
 // Check if script is called with parameter to identify and save IPv6 address
 if (isset($_GET['identify_ipv6']) && isset($_GET['identify_birdhouse'])) {
     // Get the IPv6 address and birdhouse identifier from the HTTP request
+    echo json_encode($_GET);
+
     $client_ipv6 = $_GET['identify_ipv6'];
     $birdhouse_identifier = $_GET['identify_birdhouse'];
+    $port_api  = $_GET['api'];
+    $port_http = $_GET['http'];
 
     // Save the IPv6 address and birdhouse identifier to file
-    saveIPv6Address($ipv6_file, $client_ipv6, $birdhouse_identifier);
+    saveIPv6Address($ipv6_file, $client_ipv6, $birdhouse_identifier, $port_http, $port_api);
     exit; // Stop script execution after saving IPv6 address
 }
 
@@ -45,12 +56,15 @@ if (empty($stored_addresses)) {
     echo '<!DOCTYPE html>
     <html>
     <head>
+        <meta name="theme-color" content="#000000"></meta>
         <meta name="apple-mobile-web-app-capable" content="yes"></meta>
         <meta name="apple-mobile-web-app-status-bar-style" content="black"></meta>
         <META name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.3, maximum-scale=1.0"></META>
 
-        <LINK rel=apple-touch-icon             href="favicon.png"></LINK>
-        <LINK rel=apple-touch-icon-precomposed href="favicon.png"></LINK>
+        <link rel="apple-touch-icon"             href="favicon.png"></link>
+        <link rel="apple-touch-icon-precomposed" href="favicon.png"></link>
+        <link rel="stylesheet" type="text/css"   href="index.css"></link>
+
         <title>jc://birdhouse/</title>
     </head>
     <body style="background:#111111">
@@ -68,34 +82,32 @@ if (empty($stored_addresses)) {
     echo '<!DOCTYPE html>
     <html>
     <head>
+        <meta name="theme-color" content="#000000"></meta>
         <meta name="apple-mobile-web-app-capable" content="yes"></meta>
         <meta name="apple-mobile-web-app-status-bar-style" content="black"></meta>
-        <META name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.3, maximum-scale=1.0"></META>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.3, maximum-scale=1.0"></meta>
 
-        <LINK rel=apple-touch-icon             href="favicon.png"></LINK>
-        <LINK rel=apple-touch-icon-precomposed href="favicon.png"></LINK>
+        <link rel="apple-touch-icon"             href="favicon.png"></link>
+        <link rel="apple-touch-icon-precomposed" href="favicon.png"></link>
+        <link rel="stylesheet" type="text/css"   href="index.css"></link>
+
         <title>jc://birdhouse/</title>
+
+        <script>
+            var birdhouses = ' . json_encode($stored_addresses) . ';
+            var timestamp = ' . $timestamp . ';
+        </script>
     </head>
-    <body style="background:#111111">
+    <body>
         <center>
+            &nbsp;
+            <br/>
             <h1 style="color:#EEEEEE">jc://birdhouse/</h1>
-            <br/>&nbsp;';
-
-    // Loop through each entry in the data and display links
-    echo '<p style="color:#EEEEEE">
-        <img src="bird.gif" style="width:250px;" /><br/>
-        <br/>&nbsp;<div>';
-    foreach ($stored_addresses as $birdhouse_identifier => $ipv6_address) {
-        echo '<div style="float:left;color:#EEEEEE;text-align:center;width:50%;"><center>
-            <a href="http://[' . $ipv6_address . ']:8000" style="color:yellow">Birdhouse ' . $birdhouse_identifier . '<br/>
-            <img src="http://[' . $ipv6_address . ']:8007/lowres/stream.mjpg?cam1?' . $birdhouse_identifier . '?bh-' . $birdhouse_identifier . '-' . $timestamp . '"  style="border:1px solid white;margin:8px;width:40vw;max-width:200px;"/>
-            </a>
-            <br/>&nbsp;<br/>&nbsp;
-        </center></div>';
-    }
-    echo "</div></p>";
-
-    echo '</center>
+            <p style="color:#EEEEEE">
+            <img src="bird.gif" style="width:200px;" /><br/>
+            <br/>&nbsp;<div id="birdhouses"></div></p>
+        </center>
+    <script src="index.js"></script>
     </body>
     </html>';
 }

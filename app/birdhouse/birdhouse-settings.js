@@ -221,8 +221,8 @@ function birdhouse_app_settings (name="Settings") {
 
         api_call    = "<button onclick='birdhouse_forceBackup();' class='button-settings-api'>Force Backup</button>";
         api_call   += "<button onclick='birdhouse_forceRestart();' class='button-settings-api'>Force Restart</button>";
-        api_call   += "<button onclick='birdhouse_forceUpdateViews();' class='button-settings-api'>Update Views</button>";
-        api_call   += "<button onclick='birdhouse_forceUpdateViews(true);' class='button-settings-api'>Update Views Complete</button>";
+        api_call   += "<button onclick='birdhouse_forceUpdateViews(\"all\");' class='button-settings-api'>Update Views</button>";
+        api_call   += "<button onclick='birdhouse_forceUpdateViews(\"all\",true);' class='button-settings-api'>Update Views Complete</button>";
         api_call   += "<button onclick='birdhouse_recreateImageConfig();' class='button-settings-api'>NewImgCfg</button>";
         api_call   += "<button onclick='birdhouse_removeDataToday();' class='button-settings-api'>CleanAllToday</button>";
         api_call   += "<button onclick='birdhouse_checkTimeout();' class='button-settings-api'>Timeout</button>";
@@ -241,7 +241,8 @@ function birdhouse_app_settings (name="Settings") {
             html_entry += this.tab.row("API "+micro, api_call);
         }
 
-        api_call  = "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECTS/\",\"_blank\");' class='button-settings-api'>Objects</button>";
+        api_call   = "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECTS/\",\"_blank\");' class='button-settings-api'>Objects</button>";
+        api_call  += "<button onclick='window.open(\"" + RESTurl + "api/no-id/STATISTICS/\",\"_blank\");' class='button-settings-api'>Statistics</button>";
         api_call  += "<button onclick='window.open(\"" + RESTurl + "api/no-id/FAVORITES/\",\"_blank\");' class='button-settings-api'>Favorites</button>";
         html_entry += this.tab.row("API Other", api_call);
 
@@ -323,7 +324,7 @@ function birdhouse_app_settings (name="Settings") {
 	    var status   = app_data["STATUS"]["object_detection"];
         var tab      = new birdhouse_table();
         tab.style_rows["height"] = "27px";
-        tab.style_cells["width"] = "50%";
+        tab.style_cells["min-width"] = "150px";
 
 	    var html = birdhouseDevices("", app_data, false);
 

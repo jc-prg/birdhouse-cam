@@ -14,7 +14,7 @@ def get_env(var_name):
     """
     get value from .env-file if exists
 
-    Parameters:
+    Args:
         var_name (str): key in .env file
     Returns:
         Any: value from .env file
@@ -49,11 +49,13 @@ def identify_ipv6(server_url, ipv6):
     """
     create URL with IPv6 and send request to external server
 
-    Parameters:
+    Args:
         server_url (str): server url
         ipv6 (str): IPv6 address
     """
     url = f"{server_url}?identify_ipv6={ipv6}&identify_birdhouse=" + str(get_env("BIRDHOUSE_ID"))
+    url += "&http=" + get_env("BIRDHOUSE_HTTP_PORT")
+    url += "&api=" + get_env("BIRDHOUSE_API_PORT")
     print(url)
     response = requests.get(url)
     return response.text

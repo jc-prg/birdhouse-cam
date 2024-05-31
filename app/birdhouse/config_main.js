@@ -8,7 +8,7 @@ var app_setting_count     = 4;
 var app_setting_style     = "frame_column wide";
 var app_last_load         = 0;
 var app_title             = "jc://birdhouse/";
-var app_version           = "v1.0.9";
+var app_version           = "v1.1.0";
 var app_api_version       = "N/A";
 var app_api_dir           = "api/";
 var app_api_status        = "status";
@@ -54,6 +54,7 @@ function app_menu_entries(data) {
 		app_menu = app_menu.concat([
 		["LINE"],
 		[lang("TODAY_COMPLETE"),"script", hideSettings+"birdhousePrint_load('TODAY_COMPLETE','"+app_active_cam+"');"],
+		[lang("STATISTICS"),"script", hideSettings+"birdhousePrint_load('STATISTICS','"+app_active_cam+"');"],
 		["LINE"],
 		[lang("DEVICE_MENU"),   "script", hideSettings+"birdhousePrint_load('DEVICES','"+app_active_cam+"');"],
 		[lang("IMAGE_MENU"), "script", hideSettings+"birdhousePrint_load('IMAGE_SETTINGS','"+app_active_cam+"');"],

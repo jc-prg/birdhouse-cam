@@ -15,7 +15,7 @@ class BirdhouseImageSupport(BirdhouseCameraClass):
         """
         Constructor to initialize class
 
-        Parameters:
+        Args:
             camera_id (str): camera id
             config (modules.config.BirdhouseConfig): settings for a camera
         """
@@ -28,7 +28,7 @@ class BirdhouseImageSupport(BirdhouseCameraClass):
         """
         check if similarity is under threshold
 
-        Parameters:
+        Args:
             file_info (dict): DB entry of an image
         Returns:
             int: 1 if image difference is higher than threshold else 0
@@ -45,7 +45,7 @@ class BirdhouseImageSupport(BirdhouseCameraClass):
         """
         check image properties to decide if image is a selected one (for backup and view with selected images)
 
-        Parameters:
+        Args:
             timestamp (str): timestamp of image (image-id) in format HHMMSS
             file_info (dict): db entry for the image
             check_detection (bool): check if detection (depending on mode, similarity or object)
@@ -62,8 +62,10 @@ class BirdhouseImageSupport(BirdhouseCameraClass):
             threshold = float(overwrite_threshold)
         elif self.param:
             threshold = float(self.param["similarity"]["threshold"])
+
         if overwrite_camera != "":
             camera_id = overwrite_camera
+
         if overwrite_detection_mode != "":
             detection_mode = overwrite_detection_mode
         else:
@@ -92,10 +94,6 @@ class BirdhouseImageSupport(BirdhouseCameraClass):
             elif "favorit" in file_info and float(file_info["favorit"]) == 1:
                 select = True
 
-            # if objects detected
-            elif "detections" in file_info and len(file_info["detections"]) > 0:
-                select = True
-
             # else decide dependent if object or similarity mode
             elif check_detection:
                 if detection_mode == "similarity":
@@ -108,10 +106,6 @@ class BirdhouseImageSupport(BirdhouseCameraClass):
                         file_info["detect_object"] = len(file_info["detections"])
                     else:
                         file_info["detect_object"] = -1
-
-            # ???
-            #elif not check_detection:
-            #    select = True
 
         info = file_info.copy()
         for value in ["camera", "to_be_deleted", "favorit", "similarity", "detect_object"]:
@@ -133,7 +127,7 @@ class BirdhouseImageSupport(BirdhouseCameraClass):
         """
         Create image filename from different parameters
 
-        Parameters:
+        Args:
             image_type (str): available options: 'lowres', 'hires', 'thumb', 'detect', 'video', 'vimages'
             timestamp (str): timestamp in the format 'HHMMSS'
             camera (str): camera id
@@ -165,7 +159,7 @@ class BirdhouseImageSupport(BirdhouseCameraClass):
         """
         Get parameters from image filename
 
-        Parameters:
+        Args:
             filename (str): image filename (without path)
         Returns:
             dict: available info keys: 'stamp', 'type', 'cam'
@@ -205,7 +199,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         Constructor to initialize class.
 
-        Parameters:
+        Args:
             camera_id (str): camera id
             config (modules.config.BirdhouseConfig): reference to main config handler
         """
@@ -234,7 +228,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         Calculate structural similarity index (SSIM) of two images
 
-        Parameters:
+        Args:
             image_1st (bytearray): first image to be compared
             image_2nd (bytearray): second image to be compared
             detection_area (list): area of image to be compared (start_x, start_y, end_x, end_y)
@@ -253,7 +247,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         Calculate structural similarity index (SSIM) of two images
 
-        Parameters:
+        Args:
             image_1st (numpy.ndarray): first image to be compared (raw format)
             image_2nd (numpy.ndarray): second image to be compared (raw format)
             detection_area (list): area of image to be compared (start_x, start_y, end_x, end_y)
@@ -293,7 +287,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         Show in an image where the differences are (colors: black, red; the images have to have the same size)
 
-        Parameters:
+        Args:
             image_1st (numpy.ndarray): first image to be compared (raw format)
             image_2nd (numpy.ndarray): second image to be compared (raw format)
         Returns:
@@ -315,7 +309,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         convert from raw image to image
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): input raw image
         Returns:
             bytearray: encoded image
@@ -334,7 +328,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         convert from device to raw image -> to be modified with CV2
 
-        Parameters:
+        Args:
             image (bytearray): encoded input image
         Returns:
             numpy.ndarray: raw image (or None if error)
@@ -354,7 +348,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         convert image from RGB to gray scale image (e.g. for analyzing similarity)
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): input raw image
         Returns:
             numpy.ndarray: to gray scale converted raw image
@@ -381,7 +375,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         convert image from RGB to gray scale image (e.g. for analyzing similarity)
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): gray scale input raw image
         Returns:
             numpy.ndarray: raw image in BGR
@@ -404,7 +398,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         crop encoded image
 
-        Parameters:
+        Args:
             image (bytearray): encoded input image
             crop_area (list): crop area (start_x, start_y, end_x, end_y), if relative float values from 0.0..1.0
             crop_type (str): type of crop area definition; options: 'relative' (default), 'absolute'
@@ -421,7 +415,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         crop image using relative dimensions; ensure dimension is dividable by 2,
         which is required to create a video based on this images
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): input raw image
             crop_area (list): crop area (start_x, start_y, end_x, end_y), if relative float values from 0.0..1.0
             crop_type (str): type of crop area definition; options: 'relative' (default), 'absolute'
@@ -463,7 +457,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         calculate start & end pixel for relative area
 
-        Parameters:
+        Args:
             resolution (Any): defined resolution in format '800x600' or in format [width, height]
             area (list): relative definition of crop area (0, 0, 1, 1) with float values from 0.0..1.0
             dimension (bool): add width and height or not
@@ -494,7 +488,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         Add text on image
 
-        Parameters:
+        Args:
             image (bytearray): encoded input image
             text (str): string to be added
             position (int, int): text position (x, y)
@@ -514,14 +508,14 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         Add text on raw image with a wide range of possible settings
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): input raw image
             text (str): string to be added
-            position (int, int): text position (x, y)
-            font (int): font type (see open-cv documentation)
-            scale (float): size of font (0..1)
-            color (tuple of int): text color in (R, G, B)
-            thickness (float): font thickness in pixel
+            position (int, int|None): text position (x, y)
+            font (int|None): font type (see open-cv documentation)
+            scale (float|None): size of font (0..1)
+            color (tuple of int|None): text color in (R, G, B)
+            thickness (float|None): font thickness in pixel
         Returns:
             numpy.ndarray: image with text
         """
@@ -566,11 +560,11 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         write date into image
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): input raw image
-            overwrite_color (tuple of int): color as (R, G, B) if not default defined in settings
-            overwrite_position (int): position (1-4) if not default defined in settings
-            offset (int): offset from position in pixel
+            overwrite_color (tuple of int|None): color as (R, G, B) if not default defined in settings
+            overwrite_position (int, int|None): position (1-4) if not default defined in settings
+            offset (int|None): offset from position in pixel
         Returns:
             numpy.ndarray: image with current date and time
         """
@@ -606,7 +600,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         draw as colored rectangle
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): raw image
             area (list of float): area the rectangle shall cover, default is the complete image
             color (tuple of int): color of the rectangle in (R, G, B); default is red (0, 0, 255)
@@ -632,7 +626,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         add read circle in raw image (not cropped, depending on lowres position)
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): raw image
             color (list of int): color of the bullet to be drawn (R, G, B); default is (0, 0, 255)
         Returns:
@@ -660,7 +654,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         add a smaller image in a larger image
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): input raw image, main image
             raw2 (numpy.ndarray): input raw image, small image as picture in picture (use lowres)
             position (int): position in image (1: top left, 2: top right, 3: bottom right, 4: bottom left)
@@ -689,7 +683,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         rotate image
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): raw image to be rotated
             degree (int): angle to rotate; options: 90, 180, 270
         Returns:
@@ -715,7 +709,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         Return size of raw image
 
-        Parameters:
+        Args:
             image (bytearray): image to get the size of
         Returns:
             (int, int): sizes of resized image (width, height)
@@ -733,7 +727,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         Return size of raw image
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): raw image to get the size of
             scale_percent (int): calculate size when scaled
         Returns:
@@ -755,7 +749,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         Resize raw image
 
-        Parameters:
+        Args:
             raw (numpy.ndarray): raw image to be resized
             scale_percent (int): percentage the image shall be resized to
             scale_size (list): concrete size (width, height) the image shall be resized to (priority before percentage)
@@ -781,7 +775,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         Scale image and write to file
 
-        Parameters:
+        Args:
             filename (str): relative path and filename starting from server directory
             image (numpy.ndarray): raw image data as list of lists
             scale_percent (int): target size of image in percent
@@ -807,7 +801,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         """
         Read image with given filename
 
-        Parameters:
+        Args:
             filename (str): relative path and filename starting from server directory
         Returns:
             list/str: raw image data as list of lists

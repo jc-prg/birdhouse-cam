@@ -12,11 +12,11 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
     class to control microphones for streaming and recording
     """
 
-    def __init__(self, device_id, config):
+    def __init__(self, device_id, config, first_micro=False):
         """
         Constructor method for initializing the class.
 
-        Parameters:
+        Args:
             device_id (str): id string to identify the microphone from which this class is embedded
             config (modules.config.BirdhouseConfig): reference to main config object
         """
@@ -34,9 +34,12 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.stream = None
         self.connected = False
         self.chunk = None
+        self.first_micro = first_micro
 
         self.recording = False
+        self.recording_start = False
         self.recording_processing = False
+        self.recording_processing_start = False
         self.recording_filename = ""
         self.recording_default_path = os.path.join(os.path.dirname(__file__), "../../data",
                                                    birdhouse_directories["audio_temp"])
@@ -46,8 +49,8 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
         self.last_active = time.time()
         self.last_reload = time.time()
-        self.restart_stream = True
-        self.timeout = 3
+        self.restart_stream = False
+        self.timeout = 5
 
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
@@ -66,14 +69,32 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.count = 0
 
         while self._running:
+            self.logging.debug("Micro thread '" + self.id +
+                               "' - last_active=" + str(round(time.time() - self.last_active, 2)) + "s; timeout=" +
+                               str(round(self.timeout, 2)) + "s - pause=" + str(self._paused))
+
             # Pause if not used for a while
-            if self.last_active + self.timeout < time.time():
+            if time.time() - self.last_active > self.timeout:
                 self._paused = True
+
             if self.restart_stream:
                 self._paused = False
 
+            if self.recording_start:
+                self.logging.debug("Request recording for '" + self.id + "' ...")
+                time.sleep(self.param["record_audio_delay"])
+                self.recording = True
+                self.recording_start = False
+
+            if self.recording_processing_start:
+                self.logging.debug("Request to stop recording for '" + self.id + "' ...")
+                time.sleep(self.param["record_audio_delay"])
+                self.recording_processing = True
+                self.recording_processing_start = False
+
             # reconnect if config data were updated
             if self.config.update["micro_" + self.id]:
+                self.logging.debug("Request reconnect for '" + self.id + "' ...")
                 self.connect()
                 self.config.update["micro_" + self.id] = False
 
@@ -81,6 +102,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             if self.connected and not self.error and not self._paused:
                 try:
                     self.chunk = self.stream.read(self.CHUNK, exception_on_overflow=False)
+                    self.logging.debug("Read chunk of '" + self.id + "' (" + str(len(self.chunk)) + ") ...")
                     if len(self.chunk) > 0:
                         self.count += 1
                         if self.recording:
@@ -127,21 +149,33 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             self.CHANNELS = self.param["channels"]
 
         if self.audio is None:
-            self.audio = pyaudio.PyAudio()
+            try:
+                self.audio = pyaudio.PyAudio()
+            except Exception as e:
+                self.raise_error("Could not connect microphone '" + self.id + "': " + str(e))
+
         elif self.stream is not None and not self.stream.is_stopped():
-            self.stream.stop_stream()
-            self.stream.close()
-            self.audio.terminate()
-            time.sleep(1)
-            self.audio = pyaudio.PyAudio()
-            #self.audio = pyaudio.PyAudio()
+            try:
+                self.stream.stop_stream()
+                self.stream.close()
+                self.audio.terminate()
+                time.sleep(1)
+                self.audio = pyaudio.PyAudio()
+            except Exception as e:
+                self.raise_error("Could not reconnect microphone '" + self.id + "': " + str(e))
 
         self.info = self.audio.get_host_api_info_by_index(0)
         num_devices = self.info.get('deviceCount')
-        self.logging.info("Identified " + str(num_devices) + " audio devices:")
-        for i in range(0, num_devices):
-            self.logging.info(" - " + str(i).rjust(2) + ": " +
-                              str(self.audio.get_device_info_by_host_api_device_index(0, i).get('name')))
+
+        if self.first_micro:
+            self.logging.info("Identified " + str(num_devices) + " audio devices:")
+            for i in range(0, num_devices):
+                check = self.audio.get_device_info_by_host_api_device_index(0, i)
+                is_micro = ((check.get("input") is not None and check.get("input") > 0) or
+                            (check.get("maxInputChannels") is not None and check.get("maxInputChannels") > 0))
+                self.logging.info(" - " + str(i).rjust(2) + ": " + check.get("name").ljust(40) + " : micro=" +
+                                  str(is_micro))
+                self.logging.debug(" - " + str(check))
 
         if not self.param["active"]:
             self.logging.info("Device '" + self.id + "' is inactive, did not connect.")
@@ -153,7 +187,9 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             return
 
         self.device = self.audio.get_device_info_by_host_api_device_index(0, self.DEVICE)
-        if self.device.get('input') == 0:
+        is_micro = ((self.device.get("input") is not None and self.device.get("input") > 0) or
+                    (self.device.get("maxInputChannels") is not None and self.device.get("maxInputChannels") > 0))
+        if not is_micro:
             self.raise_error("... AUDIO device '" + str(self.DEVICE) + "' is not a microphone / has no input (" +
                              self.device.get('name') + ")")
             return
@@ -175,7 +211,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
         self.connected = True
         self.last_reload = time.time()
-        self.logging.info("Microphone connected.")
+        self.logging.info("Microphone connected: " + str(self.DEVICE) + ", " + str(self.info))
 
     def update_config(self):
         """
@@ -189,7 +225,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         create file header for streaming file (duration in seconds, default = 1800s / 30min)
         info: https://docs.fileformat.com/audio/wav/
 
-        Parameters:
+        Args:
             size (bool): get data size incl. header (True) or complete header (default / False)
             duration (int): duration of audio data in seconds
         Returns:
@@ -222,7 +258,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         return device list or single device information
 
-        Parameters:
+        Args:
             i (int): index for API device info
         Returns:
             dict: device information (id, name, maxInputChannels, maxOutputChannels, defaultSampleRate)
@@ -257,6 +293,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         data = None
         self.last_active = time.time()
+        self.restart_stream = False
         if self.connected and not self.error and len(self.chunk) > 0:
             data = self.chunk
         return data
@@ -297,14 +334,26 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
     def record_start(self, filename):
         """
         empty cache and start recording
+
+        Args:
+            filename (str): filename of audio to be recorded
+        Return:
+            dict: recording information
         """
+        if self.recording or self.recording_start:
+            self.logging.debug("Recording already ...")
+            return {"filename": self.recording_filename}
+
         self.logging.info("Start recording '" + filename + "' ...")
-        self.record_start_time = time.time()
-        self.logging.info(" --- " + self.id + " --> " + str(time.time()))
+        self.logging.info(" --- " + self.id + " --> " + str(time.time()) +
+                          " + delay=" + str(self.param["record_audio_delay"]) + "s")
+
+        self.restart_stream = True
         self.last_active = time.time()
+        self.record_start_time = time.time()
         self.recording_frames = []
-        self.recording_filename = os.path.join(self.recording_default_path, filename)
-        self.recording = True
+        self.recording_filename = os.path.join(str(self.recording_default_path), filename)
+        self.recording_start = True
         self.config.record_audio_info = {
             "id": self.id,
             "path": self.recording_default_path,
@@ -323,22 +372,39 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         stop recording and write to file
         inspired by https://realpython.com/playing-and-recording-sound-python/#pyaudio_1
         """
-        self.recording = False
-        self.recording_processing = True
-        self.config.record_audio_info["status"] = "processing"
+        self.recording_processing_start = True
+        self.last_active = time.time()
+        self.restart_stream = False
         self.logging.info("Stopping recording of '" + self.recording_filename + "' with " +
                           str(len(self.recording_frames)) + " chunks ...")
+
+    def record_cancel(self):
+        """
+        stop recording and clear cache
+        """
+        self.logging.info("Canceled recording of audio stream (" + self.id + ").")
+        self.last_active = time.time()
+        self.restart_stream = False
+        self.recording = False
+        self.recording_processing = False
+        self.recording_frames = []
+        self.recording_filename = ""
+        self.record_start_time = None
 
     def record_process(self):
         """
         write to file recorded audio data to an audio that can be integrated into the video file creation
         """
+        self.recording = False
+        self.recording_processing = True
+        self.config.record_audio_info["status"] = "processing"
+
         self.logging.info(" <-- " + self.id + " --- " + str(time.time()) + " ... (" +
                           str(round(time.time() - self.record_start_time, 3)) + ")")
+
         self.config.record_audio_info["stamp_end"] = time.time()
         self.config.record_audio_info["length_record"] = round(time.time() - self.record_start_time, 3)
 
-        self.recording_processing = False
         wf = wave.open(self.recording_filename, 'wb')
         wf.setnchannels(self.CHANNELS)
         wf.setsampwidth(self.audio.get_sample_size(self.FORMAT))
@@ -350,3 +416,4 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.config.record_audio_info["status"] = "finished"
         self.recording_frames = []
         self.logging.info("Stopped recording of '" + self.recording_filename + "'.")
+        self.recording_processing = False
