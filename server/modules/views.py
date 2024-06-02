@@ -2415,6 +2415,11 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 for entry_id in files_video:
                     if date_backup in entry_id and ("to_be_deleted" not in files_video[entry_id] or int(files_video[entry_id]["to_be_deleted"]) != 1):
                         entry = files_video[entry_id]
+                        entry["directory"] = "http://" + birdhouse_env["server_audio"]  ### need for action
+                        entry["directory"] += ":" + str(birdhouse_env["port_video"]) + "/"
+                        entry["type"] = "video"
+                        entry["path"] = self.config.directories["videos"]
+                        entry["category"] = "/videos/" + entry_id
                         content["entries_favorites"][entry_id] = entry
 
             # Yesterday

@@ -15,7 +15,7 @@
     <LINK rel=apple-touch-icon             href="favicon.png"></LINK>
     <LINK rel=apple-touch-icon-precomposed href="favicon.png"></LINK>
 
-    <script src="/modules/modules_1.1.js"></script>
+    <script src="/modules/modules_1.2.js"></script>
     <script src="/framework/app-fw.js"></script>
     <script src="/birdhouse/birdhouse.js"></script>
     <link rel="stylesheet" type="text/css" href="birdhouse/style-index.css" />
@@ -87,22 +87,27 @@
 
 <script>
 
-    loadScripts("/modules/",   modules_js);
-    loadCss("/modules/",       modules_css);
+    loadScripts("/modules/",   modules_js,    true);
+    loadCss("/modules/",       modules_css,   true);
 
-    loadScripts("/framework/", app_js);
-    loadCss("/framework/",     app_css);
+    loadScripts("/framework/", app_js,        true);
+    loadCss("/framework/",     app_css,       true);
 
-    loadScripts("/birdhouse/", birdhouse_js);
-    loadCss("/birdhouse/",     birdhouse_css);
+    loadScripts("/birdhouse/", birdhouse_js,  true);
+    loadCss("/birdhouse/",     birdhouse_css, true);
 
     function wait_until_loaded() {
         console.log("Scripts loaded: " + app_scripts_loaded + "/" + birdhouse_js.length);
+
         if (birdhouse_modules_loaded() && modules_loaded() && framework_modules_loaded()) {
             elementHidden("loading_overlay");
             startApp();
             }
         else {
+            if (birdhouse_modules_loaded() == false)    { console.error("Birdhouse not yet loaded: " + birdhouse_modules_loaded()); }
+            if (modules_loaded() == false)              { console.error("Modules not yet loaded: " + modules_loaded()); }
+            if (framework_modules_loaded() == false)    { console.error("Framework not yet loaded: " + framework_modules_loaded()); }
+
             setTimeout( function() {
                 wait_until_loaded();
                 }, 500 );

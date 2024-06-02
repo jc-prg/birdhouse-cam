@@ -486,10 +486,10 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    archive_title    += "</span>";
 	    page_title        = archive_title + " " + active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4);
 	    }
-	else                                                { page_title = lang(active_page); }
-	if (active_page == "TODAY" && active_date == "")    { page_status = "status_error_record_" + app_active_cam; }
-	if (active_page == "TODAY_COMPLETE")                { page_status = "status_error_record_" + app_active_cam; }
-	if (active_page != "FAVORITES")                     { page_title += "  (" + camera_settings[app_active_cam]["name"] + ")"; }
+	else                                                        { page_title = lang(active_page); }
+	if (active_page == "TODAY" && active_date == "")            { page_status = "status_error_record_" + app_active_cam; }
+	if (active_page == "TODAY_COMPLETE")                        { page_status = "status_error_record_" + app_active_cam; }
+	if (active_page != "FAVORITES" && active_page != "VIDEOS")  { page_title += "  (" + camera_settings[app_active_cam]["name"] + ")"; }
 
 	birdhouse_frameHeader(page_title, page_status);
 	setTextById(app_frame_content, html);

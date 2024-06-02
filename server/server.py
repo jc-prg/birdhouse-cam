@@ -448,7 +448,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         else:
             if "." in self.path:
-                param["file_ending"] = self.path.split(".")
+
+                path = self.path
+                if "?" in self.path:
+                    path = self.path.split("?")[0]
+
+                param["file_ending"] = path.split(".")
                 param["file_ending"] = "." + param["file_ending"][len(param["file_ending"]) - 1].lower()
 
             if "?" in self.path:
@@ -753,9 +758,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif '/audio.wav' in self.path:
             self.do_GET_stream_audio(self.path)
         elif self.path.endswith('favicon.ico'):
-            self.stream_file(filetype='image/ico', content=read_image(file_directory=birdhouse_directories["html"], filename=self.path))
+            self.stream_file(filetype='image/ico',
+                             content=read_image(file_directory=birdhouse_directories["html"], filename=self.path))
         elif self.path.startswith("/app/index.html"):
-            self.stream_file(filetype=file_types[".html"], content=read_html(file_directory=birdhouse_directories["html"], filename="index.html"))
+            self.stream_file(filetype=file_types[".html"],
+                             content=read_html(file_directory=birdhouse_directories["html"], filename="index.html"))
         elif file_ending in file_types:
             if "/images/" in self.path or "/videos/" in self.path or "/archive/" in self.path:
                 file_path = birdhouse_directories["data"]

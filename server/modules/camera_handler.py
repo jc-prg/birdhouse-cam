@@ -58,7 +58,7 @@ class CameraInformation:
             except Exception as e:
                 self.logging.error("Could not grab usb devices: " + str(e))
         else:
-            self.logging.error("Could not grab usb devices: /dev/v4l/by-id/ doesn't exist.")
+            self.logging.info("Could not grab usb devices: /dev/v4l/by-id/ doesn't exist.")
 
         for device in output:
             if "/dev/" in device:
@@ -128,9 +128,9 @@ class CameraInformation:
                 self.logging.debug(key + " is not a USB device: " + str(devices["initial"][key]))
 
         if birdhouse_env["rpi_active"]:
-            devices["complete"]["/dev/picam"] = {"dev": "/dev/picam", "info": "PiCamera", "image": True,
+            devices["complete"]["/dev/picam"] = {"dev": "/dev/picam", "info": "PiCamera2", "image": True,
                                                  "shape": [], "bus": "picam", "vID:pID": "picam"}
-            devices["short"]["/dev/picam"] = "/dev/picam (PiCamera)"
+            devices["short"]["/dev/picam"] = "/dev/picam (PiCamera2)"
             devices["list"]["PiCamera"] = 1
 
         del devices["initial"]
