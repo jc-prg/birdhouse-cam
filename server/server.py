@@ -1369,7 +1369,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                 if frames != "":
                     try:
-                        mp3_data = microphones[which_cam].encode_mp3(frames, 2)
+                        mp3_data = microphones[which_cam].encode_mp3(frames, 7)
                         self.wfile.write(mp3_data)
 
                     except Exception as err:
