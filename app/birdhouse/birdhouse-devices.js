@@ -453,13 +453,12 @@ function birdhouseDevices_microphones(data) {
 		if (micros[micro]["active"] == false) {
 		    micro_name += " &nbsp; <i>(inactive)</i>";
         }
-        url = "http://"+micros[micro]["stream_server"]+"/"+micro+".mp3";
-        url_new = birdhouseAudioStream_URL(micro, "device_settings");
+        url_new = birdhouseAudioStream_URL(micro, "device_settings", micros[micro]["codec"]);
 
         html_entry = "<div class='camera_info'>";
         html_entry += "<div class='camera_info_image'>&nbsp;<br/>";
         html_entry += "<div id='mic_img_"+micro+"'>"
-        html_entry += birdhouseAudioStream_toggle_image(micro);
+        html_entry += birdhouseAudioStream_toggle_image(micro, micros[micro]["codec"]);
         html_entry += "</div></div>";
         html_entry += "<div class='camera_info_text'>";
 
@@ -502,7 +501,7 @@ function birdhouseDevices_microphones(data) {
         html_temp = tab.start();
 		html_temp += tab.row("Audio-Stream:",   "<a href='"+url_new+"' target='_blank'>"+url_new+"</a>");
 		//html_temp += tab.row("Audio-Control [try-out]",   "<audio controls><source src='"+url_new+"' type='audio/x-wav;codec=PCM'></audio>");
-		html_temp += tab.row("Audio-Control:",  "<a onclick='birdhouseAudioStream_play(\""+micro+"\");' style='cursor:pointer;'><u>PLAY</u></a> / <a onclick='birdhouseAudioStream_stop(\""+micro+"\");' style='cursor:pointer;'><u>STOP</u></a>");
+		html_temp += tab.row("Audio-Control:",  "<a onclick='birdhouseAudioStream_play(\""+micro+"\", \""+micros[micro]["codec"]+"\");' style='cursor:pointer;'><u>PLAY</u></a> / <a onclick='birdhouseAudioStream_stop(\""+micro+"\");' style='cursor:pointer;'><u>STOP</u></a>");
 		html_temp += tab.row("Playback:",       "<div id='playback_info_"+micro+"'>N/A</div>");
         html_temp += tab.end();
         html_entry += birdhouse_OtherGroup( micro + "_playback", "Playback controls", html_temp, false );
