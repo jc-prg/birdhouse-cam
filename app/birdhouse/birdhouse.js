@@ -309,9 +309,9 @@ function birdhouseHeaderFunctions() {
 	var mic_config      = app_data["SETTINGS"]["devices"]["microphones"][app_active_mic];
 
     if (app_active_mic && mic_config && mic_config["codec"] && mic_config["codec"] == "mp3")
-                                    { var active_mic  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_mic.toUpperCase()+"</text>"  + audio_stream; }
-	if (app_active_mic && !iOS())   { var active_mic  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_mic.toUpperCase()+"</text>"  + audio_stream; }
-	else                            { var active_mic = ""; }
+                                         { var active_mic  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_mic.toUpperCase()+"</text>"  + audio_stream; }
+	else if (app_active_mic && !iOS())   { var active_mic  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_mic.toUpperCase()+"</text>"  + audio_stream; }
+	else                                 { var active_mic = ""; }
 
 	console.error(app_active_mic);
 	console.error(app_data["SETTINGS"]["devices"]["microphones"][app_active_mic]);
