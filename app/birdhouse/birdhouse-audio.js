@@ -29,17 +29,19 @@ function birdhouseAudioStream_load(microphones) {
         console.log("Reload audio stream not implemented yet.")
     }
     for (let mic in microphones) {
-        var stream_url = birdhouseAudioStream_URL(mic, "player")
+        var configuration = microphones[mic];
+        var codec         = configuration["codec"];
+        var stream_url    = birdhouseAudioStream_URL(mic, "player", codec)
         if (!birdhouse_stream[mic]) {
             console.log("Load Audio Streams: "+stream_url);
             birdhouse_stream[mic] = document.createElement("audio");
             birdhouse_stream[mic].setAttribute("controls", true);
             birdhouse_stream[mic].setAttribute("id", "stream_"+mic);
             birdhouse_stream[mic].setAttribute("src", stream_url);
-            //birdhouse_stream[mic].setAttribute("type","audio/mp3");
+            if (codec == "mp3") { birdhouse_stream[mic].setAttribute("type","audio/mp3"); }
+            else                { birdhouse_stream[mic].setAttribute("type","audio/wav"); }
             //birdhouse_stream[mic].setAttribute("type","audio/x-wav;codec=PCM");
-            birdhouse_stream[mic].setAttribute("type","audio/wav");
-            //document.body.appendChild(birdhouse_stream[mic]);
+
             container.appendChild(birdhouse_stream[mic]);
             birdhouse_stream_play[mic] = false;
         }
@@ -51,12 +53,13 @@ function birdhouseAudioStream_load(microphones) {
 *
 * @returns (str): stream url for microphone
 */
-function birdhouseAudioStream_URL(micro, player) {
+function birdhouseAudioStream_URL(micro, player, codec="wav") {
         //url = "http://"+micros[micro]["stream_server"]+"/"+micro+".mp3";
         var timestamp = new Date().getTime();
         var call_id =  micro + "&" + player + "&" + timestamp;
-        var url = RESTurl + call_id + "/audio.wav";
-        var url = RESTurl + call_id + "/audio.mp3";
+
+        if (codec == "mp3") { var url = RESTurl + call_id + "/audio.mp3"; }
+        else                { var url = RESTurl + call_id + "/audio.wav"; }
 
         birdhouse_active_audio_streams[call_id] == true;
         return url;
