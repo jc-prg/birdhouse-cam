@@ -434,7 +434,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         encoder = lameenc.Encoder()
         encoder.set_channels(self.CHANNELS)
         #encoder.set_bit_rate(128)  # Adjust the bit rate as needed
-        encoder.set_bit_rate(64)  # Adjust the bit rate as needed
+        encoder.set_bit_rate(32)  # Adjust the bit rate as needed
         encoder.set_in_sample_rate(self.RATE)
         encoder.set_quality(quality)  # Adjust quality (0-9, default is 5)
         mp3_data = bytes()
