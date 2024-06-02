@@ -56,6 +56,8 @@ function birdhouseAudioStream_URL(micro, player) {
         var timestamp = new Date().getTime();
         var call_id =  micro + "&" + player + "&" + timestamp;
         var url = RESTurl + call_id + "/audio.wav";
+        var url = RESTurl + call_id + "/audio.mp3";
+
         birdhouse_active_audio_streams[call_id] == true;
         return url;
 }

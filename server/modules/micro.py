@@ -3,6 +3,7 @@ import threading
 import time
 import wave
 import os
+import lameenc
 from modules.presets import *
 from modules.bh_class import BirdhouseClass
 
@@ -417,3 +418,27 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.recording_frames = []
         self.logging.info("Stopped recording of '" + self.recording_filename + "'.")
         self.recording_processing = False
+
+    def encode_mp3(self, frames, quality=7):
+        """
+        encode a series of frames to MP3 - should be round(RATE / CHUNK) chunks
+
+        Args:
+            frames (list): list of chunks - should be round(RATE / CHUNK)
+            quality (int): quality (0..9), the higher, the lower the quality
+        Returns:
+            byte: encoded data
+        """
+        self.logging.debug("encode_mp3: " + str(len(frames)) + " ... channels=" + str(self.CHANNELS) + "; rate=" + str(self.RATE))
+
+        encoder = lameenc.Encoder()
+        encoder.set_channels(self.CHANNELS)
+        #encoder.set_bit_rate(128)  # Adjust the bit rate as needed
+        encoder.set_bit_rate(64)  # Adjust the bit rate as needed
+        encoder.set_in_sample_rate(self.RATE)
+        encoder.set_quality(quality)  # Adjust quality (0-9, default is 5)
+        mp3_data = bytes()
+        for frame in frames:
+            mp3_data += encoder.encode(frame)
+        mp3_data += encoder.flush()
+        return mp3_data

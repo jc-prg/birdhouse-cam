@@ -16,3 +16,4 @@ suntime
 geopy
 python-dotenv
 torch
+lameenc
