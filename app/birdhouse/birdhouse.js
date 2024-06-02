@@ -306,8 +306,16 @@ function birdhouseHeaderFunctions() {
 	var reload_view     = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
 	var audio_stream    = "<img id='stream_toggle_header' class='header_icon_wide' src='birdhouse/img/icon_bird_mute.png' onclick='birdhouseAudioStream_toggle();'>";
 	var active_cam      = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_cam.toUpperCase()+"</text>";
+	var mic_config      = app_data["SETTINGS"]["devices"]["microphones"][app_active_mic];
+
+    if (app_active_mic && mic_config && mic_config["codec"] && mic_config["codec"] == "mp3")
+                                    { var active_mic  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_mic.toUpperCase()+"</text>"  + audio_stream; }
 	if (app_active_mic && !iOS())   { var active_mic  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_mic.toUpperCase()+"</text>"  + audio_stream; }
 	else                            { var active_mic = ""; }
+
+	console.error(app_active_mic);
+	console.error(app_data["SETTINGS"]["devices"]["microphones"][app_active_mic]);
+
 	var info_parent     = "&nbsp;";
 	var info            = birdhouse_tooltip( info_parent, "<div id='command_dropdown' style='width:90%;margin:auto;'>empty</div>", "info", "" );
 	
