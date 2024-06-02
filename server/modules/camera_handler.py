@@ -128,9 +128,9 @@ class CameraInformation:
                 self.logging.debug(key + " is not a USB device: " + str(devices["initial"][key]))
 
         if birdhouse_env["rpi_active"]:
-            devices["complete"]["/dev/picam"] = {"dev": "/dev/picam", "info": "PiCamera", "image": True,
+            devices["complete"]["/dev/picam"] = {"dev": "/dev/picam", "info": "PiCamera2", "image": True,
                                                  "shape": [], "bus": "picam", "vID:pID": "picam"}
-            devices["short"]["/dev/picam"] = "/dev/picam (PiCamera)"
+            devices["short"]["/dev/picam"] = "/dev/picam (PiCamera2)"
             devices["list"]["PiCamera"] = 1
 
         del devices["initial"]
