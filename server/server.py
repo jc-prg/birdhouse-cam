@@ -130,7 +130,7 @@ def on_exception_setting():
 
 def read_html(file_directory, filename, content=""):
     """
-    read html file, replace placeholders and return for stream via webserver
+    read html or text file, replace placeholders and return for stream via webserver
     """
     if filename.startswith("/"):
         filename = filename[1:len(filename)]
@@ -138,8 +138,11 @@ def read_html(file_directory, filename, content=""):
         file_directory = file_directory[1:len(file_directory)]
     file = os.path.join(birdhouse_main_directories["server"], file_directory, filename)
 
+    if "?" in file:
+        file = file.split("?")[0]
+
     if not os.path.isfile(file):
-        srv_logging.warning("File '" + str(file) + "' does not exist!")
+        srv_logging.warning("HTML/text file '" + str(file) + "' does not exist!")
         return ""
 
     with open(file, "r") as page:
@@ -1356,7 +1359,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             elif ".mp3" in self.path:
                 frames = []
-                srv_logging.debug("Collect frames: " + str(microphones[which_cam].RATE) + "/" + str(microphones[which_cam].CHUNK) + "=" + str(int(microphones[which_cam].RATE/microphones[which_cam].CHUNK)))
+                srv_logging.debug("Collect frames: " + str(microphones[which_cam].RATE) + "/" +
+                                  str(microphones[which_cam].CHUNK) + "=" +
+                                  str(int(microphones[which_cam].RATE/microphones[which_cam].CHUNK)))
 
                 i = 0
                 while i < int(microphones[which_cam].RATE / microphones[which_cam].CHUNK):
