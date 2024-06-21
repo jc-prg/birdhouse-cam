@@ -1419,9 +1419,11 @@ if __name__ == "__main__":
         restart_thread = ServerHealthCheck("", maintain=True)
         if not restart_thread.check_start():
             exit()
+
     elif len(sys.argv) > 0 and "--restart" in sys.argv:
         restart_thread = ServerHealthCheck("", maintain=True)
         restart_thread.set_restart()
+        exit()
 
     set_server_logging(sys.argv)
 
