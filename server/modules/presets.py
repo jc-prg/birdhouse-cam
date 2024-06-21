@@ -577,6 +577,7 @@ birdhouse_default_micro = {
     "chunk_size": 1,
     "record_audio_delay": 1.5,
     "channels": 1,
+    "codec": "wav",
     "type": "usb",
     "port": 5002
 }

@@ -29,17 +29,19 @@ function birdhouseAudioStream_load(microphones) {
         console.log("Reload audio stream not implemented yet.")
     }
     for (let mic in microphones) {
-        var stream_url = birdhouseAudioStream_URL(mic, "player")
+        var configuration = microphones[mic];
+        var codec         = configuration["codec"];
+        var stream_url    = birdhouseAudioStream_URL(mic, "player", codec)
         if (!birdhouse_stream[mic]) {
             console.log("Load Audio Streams: "+stream_url);
             birdhouse_stream[mic] = document.createElement("audio");
             birdhouse_stream[mic].setAttribute("controls", true);
             birdhouse_stream[mic].setAttribute("id", "stream_"+mic);
             birdhouse_stream[mic].setAttribute("src", stream_url);
-            //birdhouse_stream[mic].setAttribute("type","audio/mp3");
+            if (codec == "mp3") { birdhouse_stream[mic].setAttribute("type","audio/mp3"); }
+            else                { birdhouse_stream[mic].setAttribute("type","audio/wav"); }
             //birdhouse_stream[mic].setAttribute("type","audio/x-wav;codec=PCM");
-            birdhouse_stream[mic].setAttribute("type","audio/wav");
-            //document.body.appendChild(birdhouse_stream[mic]);
+
             container.appendChild(birdhouse_stream[mic]);
             birdhouse_stream_play[mic] = false;
         }
@@ -51,11 +53,14 @@ function birdhouseAudioStream_load(microphones) {
 *
 * @returns (str): stream url for microphone
 */
-function birdhouseAudioStream_URL(micro, player) {
+function birdhouseAudioStream_URL(micro, player, codec="wav") {
         //url = "http://"+micros[micro]["stream_server"]+"/"+micro+".mp3";
         var timestamp = new Date().getTime();
         var call_id =  micro + "&" + player + "&" + timestamp;
-        var url = RESTurl + call_id + "/audio.wav";
+
+        if (codec == "mp3") { var url = RESTurl + call_id + "/audio.mp3"; }
+        else                { var url = RESTurl + call_id + "/audio.wav"; }
+
         birdhouse_active_audio_streams[call_id] == true;
         return url;
 }
@@ -65,11 +70,11 @@ function birdhouseAudioStream_URL(micro, player) {
 *
 * @param (str) mic: microphone id
 */
-function birdhouseAudioStream_play(mic) {
+function birdhouseAudioStream_play(mic, codec) {
     var id = "stream_"+mic;
     var player = document.getElementById(id);
 
-    var stream_url = birdhouseAudioStream_URL(mic, "player");
+    var stream_url = birdhouseAudioStream_URL(mic, "player", codec);
     player.setAttribute("src", stream_url);
     var src = player.getAttribute("src");
 
@@ -155,7 +160,7 @@ function birdhouseAudioStream_stop(mic) {
 * @param (str) mic: microphone id
 * @param (str) add_id: string to add to id of image element
 */
-function birdhouseAudioStream_toggle(mic="", add_id="") {
+function birdhouseAudioStream_toggle(mic="", add_id="", codec) {
     for (let micro in birdhouseMicrophones) { if (mic == "" && birdhouseMicrophones[micro]["active"]) { mic = micro; }}
     var id = "stream_"+mic;
     var player = document.getElementById(id);
@@ -168,7 +173,7 @@ function birdhouseAudioStream_toggle(mic="", add_id="") {
         }
     }
     else {
-        birdhouseAudioStream_play(mic);
+        birdhouseAudioStream_play(mic, codec);
         birdhouseAudioStream_image_header(true);
         if (document.getElementById("toggle_stream_"+mic+"_"+add_id)) {
             document.getElementById("toggle_stream_"+mic+"_"+add_id).innerHTML = birdhouseAudioStream_image(true);
@@ -199,11 +204,11 @@ function birdhouseAudioStream_toggle(mic="", add_id="") {
 * @param (str) mic: microphone id
 * @param (str) add_id: string to add to id of image element
 */
-function birdhouseAudioStream_toggle_image(mic, add_id="") {
+function birdhouseAudioStream_toggle_image(mic, add_id="", codec="wav") {
     var html = "";
     html += "<div id='toggle_stream_"+mic+"_"+add_id+"_container' class='audiostream_bird_container'>";
-    html += "<div id='toggle_stream_"+mic+"_"+add_id+"' class='audiostream_bird_image' onclick='birdhouseAudioStream_toggle(\""+mic+"\",\""+add_id+"\");'>"+birdhouseAudioStream_image(false)+"</div>";
-    html += "<div class='audiostream_bird_info' onclick='birdhouseAudioStream_toggle(\""+mic+"\",\""+add_id+"\");' >"+mic+"</div>";
+    html += "<div id='toggle_stream_"+mic+"_"+add_id+"' class='audiostream_bird_image' onclick='birdhouseAudioStream_toggle(\""+mic+"\",\""+add_id+"\",\""+codec+"\");'>"+birdhouseAudioStream_image(false)+"</div>";
+    html += "<div class='audiostream_bird_info' onclick='birdhouseAudioStream_toggle(\""+mic+"\",\""+add_id+"\",\""+codec+"\");' >"+mic+"</div>";
     html += "</div>";
     return html;
 }

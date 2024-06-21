@@ -102,6 +102,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
         """
         if restart:
             self._text_files.write(self._shutdown_signal_file, "REBOOT")
+            print("Restart requested ...")
         else:
             self._text_files.write(self._shutdown_signal_file, "")
 

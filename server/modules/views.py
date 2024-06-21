@@ -2334,6 +2334,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             self.logging.warning("LIST: Could not read data ... " + str(param) + " date=" + date_backup +
                                  "; path=" + path + "; cam=" + which_cam + "; further_param=" + further_param)
 
+        # create list from sources
         if files_all != {}:
 
             # Today or backup
@@ -2413,7 +2414,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
             if date_backup != "" and files_video != {}:
                 for entry_id in files_video:
-                    if date_backup in entry_id and ("to_be_deleted" not in files_video[entry_id] or int(files_video[entry_id]["to_be_deleted"]) != 1):
+                    if (date_backup in entry_id and (files_video[entry_id]["camera"] == which_cam)
+                            and ("to_be_deleted" not in files_video[entry_id]
+                                 or int(files_video[entry_id]["to_be_deleted"]) != 1)):
                         entry = files_video[entry_id]
                         entry["directory"] = "http://" + birdhouse_env["server_audio"]  ### need for action
                         entry["directory"] += ":" + str(birdhouse_env["port_video"]) + "/"

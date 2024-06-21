@@ -130,7 +130,7 @@ def on_exception_setting():
 
 def read_html(file_directory, filename, content=""):
     """
-    read html file, replace placeholders and return for stream via webserver
+    read html or text file, replace placeholders and return for stream via webserver
     """
     if filename.startswith("/"):
         filename = filename[1:len(filename)]
@@ -138,8 +138,11 @@ def read_html(file_directory, filename, content=""):
         file_directory = file_directory[1:len(file_directory)]
     file = os.path.join(birdhouse_main_directories["server"], file_directory, filename)
 
+    if "?" in file:
+        file = file.split("?")[0]
+
     if not os.path.isfile(file):
-        srv_logging.warning("File '" + str(file) + "' does not exist!")
+        srv_logging.warning("HTML/text file '" + str(file) + "' does not exist!")
         return ""
 
     with open(file, "r") as page:
@@ -264,7 +267,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "*")
         self.end_headers()
 
-    def stream_audio_header(self, size):
+    def stream_audio_header(self, size, content_type='audio/x-wav'):
         """
         send header for video stream
         see https://stackoverflow.com/questions/13275409/playing-a-wav-file-on-ios-safari
@@ -282,11 +285,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # self.send_header('Cache-Control', 'no-cache, private')
         # self.send_header('Pragma', 'no-cache')
 
-        self.send_header('Content-Range', 'bytes 0-'+str(size)+'/'+str(size))
+        ###self.send_header('Content-Range', 'bytes 0-'+str(size)+'/'+str(size))
         # self.send_header('Content-Disposition', 'attachment;filename="audio.WAV"')
-        self.send_header('Content-Type', 'audio/x-wav')
+        self.send_header('Content-Type', content_type)
         # self.send_header('Content-Type', 'audio/x-wav;codec=PCM')
-        self.send_header('Content-Length', str(size))
+        ###self.send_header('Content-Length', str(size))
         self.send_header('Content-Transfer-Encoding', 'binary')
         # self.send_header('Transfer-Encoding', 'binary')
         self.send_header('Accept-Ranges', 'bytes')
@@ -755,7 +758,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.do_GET_image(which_cam)
         elif '/stream.mjpg' in self.path:
             self.do_GET_stream_video(which_cam, which_cam2, param)
-        elif '/audio.wav' in self.path:
+        elif '/audio.wav' in self.path or '/audio.mp3' in self.path:
             self.do_GET_stream_audio(self.path)
         elif self.path.endswith('favicon.ico'):
             self.stream_file(filetype='image/ico',
@@ -1325,26 +1328,62 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         srv_logging.info("Start streaming from '"+which_cam+"' ...")
         size = microphones[which_cam].file_header(size=True)
-        self.stream_audio_header(size)
-        data = microphones[which_cam].get_first_chunk()
-        self.wfile.write(data)
         streaming = True
 
+        if ".wav" in self.path:
+            self.stream_audio_header(size)
+            data = microphones[which_cam].get_first_chunk()
+            self.wfile.write(data)
+
+        elif ".mp3" in self.path:
+            self.stream_audio_header(size, "audio/mp3")
+            data = microphones[which_cam].get_first_chunk()
+
         last_count = 0
+        count = 0
         while streaming:
-            while microphones[which_cam].count == last_count and streaming:
-                pass
-            last_count = microphones[which_cam].count
-            data = microphones[which_cam].get_chunk()
-            if data != "":
-                try:
-                    self.wfile.write(data)
-                except Exception as err:
-                    srv_logging.error("Error during streaming of '"+which_cam+"/"+session_id+"': " + str(err))
-                    streaming = False
+            count += 1
+            srv_logging.debug("...A... " + str(count))
+            if ".wav" in self.path:
+                while microphones[which_cam].count == last_count and streaming:
+                    pass
+                last_count = microphones[which_cam].count
+                data = microphones[which_cam].get_chunk()
+                if data != "":
+                    try:
+                        self.wfile.write(data)
+
+                    except Exception as err:
+                        srv_logging.error("Error during streaming of '"+which_cam+"/"+session_id+"': " + str(err))
+                        streaming = False
+
+            elif ".mp3" in self.path:
+                frames = []
+                srv_logging.debug("Collect frames: " + str(microphones[which_cam].RATE) + "/" +
+                                  str(microphones[which_cam].CHUNK) + "=" +
+                                  str(int(microphones[which_cam].RATE/microphones[which_cam].CHUNK)))
+
+                i = 0
+                while i < int(microphones[which_cam].RATE / microphones[which_cam].CHUNK):
+                    while microphones[which_cam].count == last_count and streaming:
+                        pass
+                    last_count = microphones[which_cam].count
+                    data = microphones[which_cam].get_chunk()
+                    frames.append(data)
+                    i += 1
+
+                if frames != "":
+                    try:
+                        mp3_data = microphones[which_cam].encode_mp3(frames, 7)
+                        self.wfile.write(mp3_data)
+
+                    except Exception as err:
+                        srv_logging.error("Error during streaming of '"+which_cam+"/"+session_id+"': " + str(err))
+                        streaming = False
 
             if microphones[which_cam].if_error():
                 streaming = False
+
         srv_logging.info("Stopped streaming from '"+which_cam+"'.")
 
     def do_GET_files(self):
@@ -1380,10 +1419,11 @@ if __name__ == "__main__":
         restart_thread = ServerHealthCheck("", maintain=True)
         if not restart_thread.check_start():
             exit()
-        restart_thread = ServerHealthCheck("", maintain=True)
 
     elif len(sys.argv) > 0 and "--restart" in sys.argv:
+        restart_thread = ServerHealthCheck("", maintain=True)
         restart_thread.set_restart()
+        exit()
 
     set_server_logging(sys.argv)
 
@@ -1512,6 +1552,8 @@ if __name__ == "__main__":
 
     except Exception as e:
         srv_logging.error("Could not start WebServer: " + str(e))
+        srv_logging.error("Stopping!")
+        os._exit()
 
     # Stop all processes to stop
     finally:
