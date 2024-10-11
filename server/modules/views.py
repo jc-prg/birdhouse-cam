@@ -600,7 +600,10 @@ class BirdhouseViewFavorite(BirdhouseClass):
             dir_list = self.tools.get_directories(main_directory)
             self.logging.debug(str(dir_list))
             delete_entries = []
-            if not complete and "entries" in content:
+            if not "entries" in content:
+                content["entries"] = {}
+
+            if not complete:
                 for stamp in content["entries"]:
                     entry: dict = content["entries"][stamp]
 
