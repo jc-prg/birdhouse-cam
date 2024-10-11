@@ -942,11 +942,12 @@ class BirdhouseViewArchive(BirdhouseClass):
         archive_entries = archive_dirs.copy()
 
         for cam in self.camera:
-            for date in archive_info[cam]["entries"]:
-                if date not in archive_days:
-                    archive_days.append(date)
-                if date not in archive_entries:
-                    archive_entries.append(date)
+            if cam in archive_info:
+                for date in archive_info[cam]["entries"]:
+                    if date not in archive_days:
+                        archive_days.append(date)
+                    if date not in archive_entries:
+                        archive_entries.append(date)
 
         if recreate or complete or archive_info == {} or "info" not in archive_info:
 
