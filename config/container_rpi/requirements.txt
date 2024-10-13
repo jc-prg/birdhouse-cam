@@ -20,4 +20,4 @@ python-dotenv
 #picamera2
 #psutil
 #tqdm
-lameenc
+#lameenc

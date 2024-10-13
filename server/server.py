@@ -1322,6 +1322,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_logging.error("AUDIO device '" + which_cam + "' does not exist.")
             return
 
+        if not microphones[which_cam].encode_mp3_available:
+            srv_logging.error("MP3 Encoding '" + which_cam + "' not activated.")
+            return
+
         if not microphones[which_cam].connected or microphones[which_cam].error:
             srv_logging.error("AUDIO device '" + which_cam + "' not connected or with error.")
             return

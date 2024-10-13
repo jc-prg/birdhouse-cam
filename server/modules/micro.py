@@ -3,9 +3,9 @@ import threading
 import time
 import wave
 import os
-import lameenc
 from modules.presets import *
 from modules.bh_class import BirdhouseClass
+
 
 
 class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
@@ -60,6 +60,13 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.CHUNK_default = 1024
         self.DEVICE = 2
         self.BITS_PER_SAMPLE = 16
+
+        try:
+            import lameenc
+            self.encode_mp3_available = True
+        except Exception as e:
+            self.logging.warning("Could not import 'lameenc': encoding audio as MP3 not possible.")
+            self.encode_mp3_available = False
 
     def run(self):
         """
