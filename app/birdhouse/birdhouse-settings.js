@@ -10,6 +10,17 @@ var birdhouse_settings  = new birdhouse_app_settings();
 
 function birdhouse_app_settings (name="Settings") {
 
+    this.init = function () {
+        this.set             = appSettings;
+        this.tab             = new birdhouse_table();
+        this.tab.style_rows["height"] = "27px";
+        this.tab.style_cells["width"] = "40%";
+        this.frames_settings = this.set.frames_settings;
+        this.frames_content  = this.set.frames_content;
+        this.loading         = "<center>&nbsp;<br/>" + lang("PLEASE_WAIT") + " ...<br/>&nbsp;</center>";
+        this.not_implemented = "<center>&nbsp;<br/>" + lang("NOT_IMPLEMENTED") + "<br/>&nbsp;</center>";
+        }
+
     this.create = function (type="SETTINGS") {
         this.setting_type = type;
         birdhouse_genericApiRequest("GET", ["status"], birdhouseStatus_print);
@@ -109,14 +120,79 @@ function birdhouse_app_settings (name="Settings") {
             }
 		}
 
+    this.create_new = function (type="") {
+        this.set.show(true);
+        if (type == "info") {
+            this.setting_type = "PROCESSING";
+            this.set.write(1, lang("INFORMATION"), this.information());
+            //this.set.show_entry(2);
+            }
+        else if (type == "settings") {
+            this.setting_type = "SETTINGS";
+            this.set.write(1, lang("SETTINGS"), this.settings());
+            this.set.show_entry(-1);
+            }
+        else if (type == "image") {
+            this.setting_type = "IMAGE_SETTINGS";
+            this.set.clear_frames();
+            this.set.write(1, "", this.loading);
+            birdhousePrint_load('IMAGE_SETTINGS',app_active_cam);
+            }
+        else if (type == "statistics") {
+            this.setting_type = "IMAGE_SETTINGS";
+            this.set.clear_frames();
+            this.set.write(1, "", this.loading);
+            birdhousePrint_load('STATISTICS',app_active_cam);
+            }
+        else if (type == "devices") {
+            this.setting_type = "IMAGE_SETTINGS";
+            this.set.clear_frames();
+            this.set.write(1, "", this.not_implemented);
+            birdhousePrint_load('DEVICES',app_active_cam);
+            }
+
+        }
+
+    this.information = function () {
+
+        var open_settings = {
+            "app_info_01" : true,
+            "device_info" : false,
+            "process_info": false,
+            "server_info" : false,
+            "api_calls"   : false,
+            "app_info_02" : false,
+            "display_info": false,
+            "app_under_construction": false
+            }
+
+        var html = "";
+        var html_entry = "";
+
+        html_entry = this.app_information();
+        html += birdhouse_OtherGroup( "app_info_01", "App Information (Versions)", html_entry, open_settings["app_info_01"] );
+
+        html_entry = this.device_information();
+        html += birdhouse_OtherGroup( "device_info", "Device Information", html_entry, open_settings["device_info"] );
+
+        html_entry = this.process_information();
+        html += birdhouse_OtherGroup( "process_info", "Process Information &nbsp;<div id='processing_info_header'></div>", html_entry, open_settings["process_info"] );
+
+        html_entry = this.server_information();
+        html += birdhouse_OtherGroup( "server_info", "Server Information &nbsp;<div id='server_info_header'></div>", html_entry, open_settings["server_info"] );
+
+        return html;
+        }
+
     this.settings = function () {
         var tab = new birdhouse_table();
         var settings = app_data["SETTINGS"];
 
         var timezones = "UTC-12,UTC-11,UTC-10,UTC-9,UTC-8,UTC-7,UTC-6,UTC-5,UTC-4,UTC-3,UTC-2,UTC-1,UTC+0,UTC+1,UTC+2,UTC+3,UTC+4,UTC+5,UTC+6,UTC+7,UTC+8,UTC+9,UTC+10,UTC+11,UTC+12"
 
-        var html = "&nbsp;<br/><h2>&nbsp;<br/>"+lang("SETTINGS")+"</h2>";
-        html += "<hr style='border:1px solid gray;'>"
+        var html = "";
+        //var html = "&nbsp;<br/><h2>&nbsp;<br/>"+lang("SETTINGS")+"</h2>";
+        //html += "<hr style='border:1px solid gray;'>"
         html += "<div style='display:none'>Edit initial setup: <select id='set_initial_setup'><option selected>false</option></select>";
         html += "<input id='set_initial_setup_data' value='server:initial_setup'>";
         html += "<input id='set_initial_setup_data_type' value='boolean'></div>";

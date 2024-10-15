@@ -100,12 +100,13 @@ function birdhouseStatus_print(data) {
     birdhouseStatus_processing(data);
     birdhouseStatus_recordButtons(data);
 
-    document.getElementById(app_frame_info).style.display = "block";
-
-    html = "<center><i><font color='gray'>";
-    html += weather_footer.join(" / ");
-    html += "</font></i></center>";
-    setTextById(app_frame_info, html);
+    if (!appSettings.active) {
+        document.getElementById(app_frame_info).style.display = "block";
+        html = "<center><i><font color='gray'>";
+        html += weather_footer.join(" / ");
+        html += "</font></i></center>";
+        setTextById(app_frame_info, html);
+        }
 }
 
 /*

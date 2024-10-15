@@ -2,10 +2,12 @@
 // config menu and main functions
 //--------------------------------
 
-var app_frame_count       = 5;
-var app_frame_style       = "frame_column wide";
-var app_setting_count     = 4;
-var app_setting_style     = "frame_column wide";
+var app_frame_count          = 5;
+var app_frame_style          = "frame_column wide";
+var app_setting_count        = 4;
+var app_setting_style        = "frame_column wide";
+var app_setting_style_header = "setting_bg header";
+
 var app_last_load         = 0;
 var app_title             = "jc://birdhouse/";
 var app_version           = "v1.1.0";
@@ -28,7 +30,7 @@ var app_status_commands   = ["last-answer"];
 * @returns (array) - returns an array of array that contains the menu definition
 */
 function app_menu_entries(data) {
-	var hideSettings     = "birdhouse_settings.toggle(true);";
+	var hideSettings     = "birdhouse_settings.toggle(true);appSettings.hide();";
 	var weather_active   = data["SETTINGS"]["localization"]["weather_active"];
 	var detection_active = data["STATUS"]["object_detection"]["active"];
 	var admin_type       = data["SETTINGS"]["server"]["admin_login"];
@@ -52,12 +54,13 @@ function app_menu_entries(data) {
 	if (app_admin_allowed) {
 		app_menu = app_menu.concat([
 		["LINE"],
-		[lang("TODAY_COMPLETE"),"script", hideSettings+"birdhousePrint_load('TODAY_COMPLETE','"+app_active_cam+"');"],
-		[lang("STATISTICS"),"script", hideSettings+"birdhousePrint_load('STATISTICS','"+app_active_cam+"');"],
+		[lang("TODAY_COMPLETE"),    "script", hideSettings+"birdhousePrint_load('TODAY_COMPLETE','"+app_active_cam+"');"],
+		//[lang("STATISTICS"),        "script", hideSettings+"birdhousePrint_load('STATISTICS','"+app_active_cam+"');"],
 		["LINE"],
-		[lang("DEVICE_MENU"),   "script", hideSettings+"birdhousePrint_load('DEVICES','"+app_active_cam+"');"],
-		[lang("IMAGE_MENU"), "script", hideSettings+"birdhousePrint_load('IMAGE_SETTINGS','"+app_active_cam+"');"],
-		[lang("SETTINGS"),       "script", hideSettings+"birdhousePrint_load('SETTINGS','"+app_active_cam+"');"],
+		[lang("DEVICE_MENU"),       "script", hideSettings+"birdhousePrint_load('DEVICES','"+app_active_cam+"');"],
+		//[lang("IMAGE_MENU"),        "script", hideSettings+"birdhousePrint_load('IMAGE_SETTINGS','"+app_active_cam+"');"],
+		//[lang("SETTINGS"),          "script", hideSettings+"birdhousePrint_load('SETTINGS','"+app_active_cam+"');"],
+		[lang("SETTINGS")    ,      "script", hideSettings+"appSettings.create();"],
 		]);
 		if (admin_type == "LOGIN") {
     	    app_menu = app_menu.concat([
@@ -74,8 +77,33 @@ function app_menu_entries(data) {
     }
 	return app_menu;
 }
-	
-/**
+
+/*
+* function to configure setting entries
+*/
+
+function app_setting_entries() {
+    // add your setting entries here
+    // appSettings.add_entry(id, title, icon, call_function, show_header=true);
+
+    birdhouse_settings.init();
+    var hideSettings     = "birdhouse_settings.toggle(true);";
+    var init             = "appSettings.clear_frames();appSettings.show();"
+
+    appSettings.icon_dir = "framework/";
+    //appSettings.add_entry("INFO",   lang("INFO"),       "info",         "appSettings.default_entry_info();");
+    //appSettings.add_entry("DEMO",   lang("DEMO"),       "demo",         "appSettings.default_entry_demo();");
+    //appSettings.add_entry("HELP",   lang("QUESTION"),   "question",     "appMsg.alert('Not implemented.');",    false);
+
+    appSettings.add_entry("START1", "jc://birdhouse-cam/", "birdhouse/img/bird.gif",   "birdhouse_settings.create_new('devices');");
+    appSettings.add_entry("DEVICE", lang("DEVICE_SETTINGS"),"birdhouse/img/device",     "birdhouse_settings.create_new('devices');");
+    appSettings.add_entry("IMAGE",  lang("IMAGE_SETTINGS"), "birdhouse/img/image",      "birdhouse_settings.create_new('image');");
+    appSettings.add_entry("INFO",   lang("INFORMATION"),    "info",                     "birdhouse_settings.create_new('info');");
+    appSettings.add_entry("STATS",  lang("STATISTICS"),     "birdhouse/img/statistics", "birdhouse_settings.create_new('statistics');");
+    appSettings.add_entry("SERVER", lang("SETTINGS"),       "settings",                 "birdhouse_settings.create_new('settings');");
+    }
+
+/*
 * function to request status, update menu etc. (including initial load)
 *
 * @param (dict) object - data returned form server API
@@ -89,7 +117,7 @@ function app_initialize(data) {
     if (settings["localization"]["language"]) { LANG = settings["localization"]["language"]; }
 	}
 
-/**
+/*
 * function to request status, update menu etc. (including initial load)
 *
 * @param (dict) object - data returned form server API

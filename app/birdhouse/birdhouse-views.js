@@ -558,8 +558,10 @@ function birdhouse_STATISTICS(title, data) {
     });
 
 
-	birdhouse_frameHeader(lang("STATISTICS"));
-	setTextById(app_frame_content, html);
+	//birdhouse_frameHeader(lang("STATISTICS"));
+	//setTextById(app_frame_content, html);
+
+	appSettings.write(1, lang("STATISTICS"), html);
 }
 
 /*

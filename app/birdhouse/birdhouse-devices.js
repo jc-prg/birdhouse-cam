@@ -641,12 +641,16 @@ function birdhouseDevices_cameraSettings (data) {
         html += "<hr/>";
 	}
     html += "&nbsp;<br/>";
-    setTextById(app_frame_content, html);
-    setTextById(app_frame_header, "<center><h2>" + lang("IMAGE_SETTINGS") + "</h2></center>");
+
+    appSettings.show();
+    this.appSettings.write(1, lang("IMAGE_SETTINGS"), html);
+
+    //setTextById(app_frame_content, html);
+    //setTextById(app_frame_header, "<center><h2>" + lang("IMAGE_SETTINGS") + "</h2></center>");
 
 	for (let camera in camera_settings) {
         birdhouseDevices_cameraSettingsLoad(camera);
-    }
+        }
 }
 
 /*
