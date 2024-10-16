@@ -27,6 +27,8 @@
 @media only screen and (device-width : 568px) and (device-height : 320px) and (orientation : landscape) {
 
     .frame_column.wide              { width : 530px; }
+    .setting_bg.header              { width : 530px; }
+
     .separator_group                { font-size : 9px; }
     .thumbnail                      { width :  98px;  }
     .thumbnail.error                { width :  88px;  height: 100px; }
@@ -39,6 +41,10 @@
 /* iPhone SE2 & X/XS ------------------------------------- */
 
 @media only screen and (device-width : 375px) and (orientation : portrait) {
+
+    .frame_column.wide              { width : 342px; }
+    .setting_bg.header              { width : 342px; }
+    .settings_button_index.header   { width : 52px; }
 
     .livestream_main                { max-width : 320px; }
     .separator_group                { width  : 328px; font-size : 11px; }
@@ -60,6 +66,9 @@
 @media only screen and (((device-width : 375px) and (device-height : 812px) and (orientation : landscape))
                     or  ((device-height : 375px) and (device-width : 812px))) {
 
+    .frame_column.wide              { width : 695px; }
+    .setting_bg.header              { width : 695px; }
+
     .livestream_main                { max-width : 330px; }
     .separator_group                { font-size : 9px; }
     .image_container.fixed_height   { height  : 230px; }
@@ -75,8 +84,6 @@
     .checkbox                       { width   : 20px;  height   : 20px;  top : 10px; }
     .checkbox_img                   { width   : 20px;  height   : 20px; }
 
-    .frame_column.wide              { width : 695px; }
-
     .weather_hide_if_small          { display: block; }
 }
 
@@ -85,6 +92,8 @@
 @media only screen and (device-width : 402px) and (device-height : 874px) and (orientation : portrait) {
 
     .frame_column.wide              { width : 366px; }
+    .setting_bg.header              { width : 366px; }
+    .settings_button_index.header   { width : 56px; }
 
     .thumbnail                      { width :  98%;  }
     .thumbnail.error                { width :  96%;  height: 180px; }
@@ -104,6 +113,7 @@
                      or ((device-height : 402px) and (device-width : 874px)))  {
 
     .frame_column.wide              { width :   550px; }
+    .setting_bg.header              { width :   550px; }
 
     .thumbnail                      { width :  98%;  }
     .thumbnail.error                { width :  96%;  height: 180px; }

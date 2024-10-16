@@ -1,4 +1,4 @@
-# Birdhouse Camera v1.1.0
+# Birdhouse Camera v1.2.0
 
 Raspberry Pi project to observe our birdhouse with two webcams: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, 
@@ -71,9 +71,10 @@ Find further impressions [here](info/impressions.md).
   * Deny recording and admin functionality for specific IP addresses (e.g. router or proxy, to deny for access from the internet) or use password to login as administrator
   * Edit server settings (partly, other settings define in file .env)
   * Edit device settings, reconnect devices (devices must be added via config file)
-  * Edit camera and image settings (contrast, saturation, hue, brightness ...)
+  * Edit camera and image settings (contrast, saturation, hue, brightness, ...)
   * See amount of currently active streams
   * Download archived data (hires, config-files, object detection as YOLOv8)
+  * Statistics (streams & frame rates, viewing time, CPU usage & temperature, HDD usage, ...)
 * **Forwarding web-app** as entry point for one or more birdhouses using IPv6 addresses
 
 ## Birdhouse
@@ -132,7 +133,7 @@ Depending on the needs there are three options available how to install and run 
 
 *  [(1) Docker based installation](#1-docker-based-installation) - the easiest way to install and run the birdhouse-cam, 
   but with limitations: you have to decide if you want to use a PiCamera on a 32bit OS or 
-  object detection with 64bit OS.
+  object detection with 64bit OS. On 32bit systems the server functionality is limited, e.g., audio streaming (mp3 via lameenc) doesn't work. 
 * [(2) Direct installation](#2-direct-installation) - complete installation of all components with a bigger effort but without the limitations of (1)
 * [(3) Hybrid installation](#3-hybrid-installation) - combination with less effort than (2) and without the limitations
   of (1), recommend if you want to use PiCamera and object detection

@@ -35,8 +35,8 @@ from modules.srv_support import ServerInformation, ServerHealthCheck
 from modules.statistics import BirdhouseStatistics
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_description = {"name": "BirdhouseCAM", "version": "v1.1.0"}
-app_framework = "v1.1.0"
+api_description = {"name": "BirdhouseCAM", "version": "v1.2.0"}
+app_framework = "v1.2.0"
 
 
 def on_exit(signum, handler):

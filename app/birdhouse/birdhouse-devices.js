@@ -15,7 +15,7 @@ var birdhouse_camera_interval = {};
 * @param (dict) data: complete setting and status data from API
 * @param (boolean) show_settings: show complete settings (true) or only devices status (false)
 */
-function birdhouseDevices(title, data, show_settings=true) {
+function birdhouseDevices(title, data, show="settings") {
 	var html = "";
 	var index = [];
 
@@ -35,15 +35,18 @@ function birdhouseDevices(title, data, show_settings=true) {
     html += settings;
     index.push(info);
 
-    if (show_settings) {
-        var html_index = birdhouseDevices_status(index=index, show_button=true);
-        setTextById(app_frame_content, html_index + html);
-        setTextById(app_frame_header, "<center><h2>" + lang("DEVICE_SETTINGS") + "</h2></center>");
-    }
-    else {
-        var html_index = birdhouseDevices_status(index=index, show_button=false);
+    if (show == "settings") {
+        var html_index = birdhouseDevices_status(index=index, show="interactive");
+        appSettings.write(1, lang("DEVICE_SETTINGS"), html_index + html);
+        }
+    else if (show == "information") {
+        var html_index = birdhouseDevices_status(index=index, show="complete");
         return html_index;
-    }
+        }
+    else {
+        var html_index = birdhouseDevices_status(index=index, show="short");
+        return html_index;
+        }
 }
 
 /*
@@ -53,13 +56,33 @@ function birdhouseDevices(title, data, show_settings=true) {
 * @param (boolean) show_button: show link to open respective group with details
 * @returns (string): html with status information
 */
-function birdhouseDevices_status(index, show_button) {
-	var tab     = new birdhouse_table();
-	tab.style_rows["height"] = "27px";
-	tab.style_cells["min-width"] = "150px";
+function birdhouseDevices_status(index, show) {
+
+	var tab         = new birdhouse_table();
+    var show_button = false;
+    var short       = false;
+    var short_data  = {};
+
+    if (show == "interactive")  { show_button = true; }
+    if (show == "short")        { short = true; }
+
+    if (show_button) {
+        tab.style_rows["height"]        = "27px";
+        tab.style_cells["min-width"]    = "150px";
+        }
+    if (!short) {
+        tab.style_rows["height"]        = "27px";
+        tab.style_cells["width"]        = "50%";
+        tab.style_cells["min-width"]    = "";
+        }
+    else  {
+        tab.style_rows["max-height"]    = "20px";
+        tab.style_cells["width"]        = "60px";
+        tab.style_cells["min-width"]    = "";
+        }
 
     var html_index = "";
-    if (show_button) {
+    if (!short && show_button) {
         html_index += "<div class='camera_info'>";
         html_index += "<div class='camera_info_image'>&nbsp;<br/>";
         html_index += "<div id='loading_img'><img src='"+app_loading_image+"' style='width:50%;max-width:100px;'></div>";
@@ -74,34 +97,47 @@ function birdhouseDevices_status(index, show_button) {
             birdhouse_device_list.push(index[i][key]["group"]);
             var onclick = "birdhouseDevices_openOne('"+index[i][key]["group"]+"')";
             var button = "";
-            var action = "<div style='float:left;'>";
-            if (show_button) {
-                var device_key = "<text onclick=\""+onclick+"\" style=\"cursor:pointer;\"><u><b>" + key + "</b></u></text>";
-                action = "<div style='float:left;'>";
+
+            if (show_button) { var device_key = "<text onclick=\""+onclick+"\" style=\"cursor:pointer;\"><u><b>" + key + "</b></u></text>"; }
+            else             { var device_key = key; }
+
+            if (short) {
+                var device_type = index[i][key]["type"];
+                if (typeof short_data[device_type] == 'undefined') { short_data[device_type] = ""; }
+                short_data[device_type] += "<div id='status_" + index[i][key]["status"][1] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>";
                 }
             else {
-                var device_key = key;
+                var action = "<div style='float:left;'>";
+                for (var a=0; a<index[i][key]["status"].length;a++) {
+                    action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>"; //
                 }
-            for (var a=0; a<index[i][key]["status"].length;a++) {
-                action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>"; //
-            }
-            for (var a=index[i][key]["status"].length; a<3; a++) {
-                action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;height:24px;width:24px;'></div>";
-            }
-            if (!show_button && (index[i][key]["type"] == "camera" || index[i][key]["type"] == "microphone")) {
-                action += "<div style='float:left;padding:5px;width:70px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
-            }
-            else if (index[i][key]["type"] == "camera" || index[i][key]["type"] == "microphone") {
-                action += "<div style='padding:5px;float:left;width:70px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
-            }
-            action += "</div>";
-            html_index += tab.row(device_key, action);
+                for (var a=index[i][key]["status"].length; a<3; a++) {
+                    action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;height:24px;width:24px;'></div>";
+                }
+                if (!show_button && (index[i][key]["type"] == "camera" || index[i][key]["type"] == "microphone")) {
+                    action += "<div style='float:left;padding:5px;width:70px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
+                }
+                else if (index[i][key]["type"] == "camera" || index[i][key]["type"] == "microphone") {
+                    action += "<div style='padding:5px;float:left;width:70px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
+                }
+                action += "</div>";
+                html_index += tab.row(device_key, action);
+                }
+
         });
     }
+    if (short) {
+        Object.keys(short_data).forEach(key => {
+            var key_description = "&nbsp;&nbsp;" + key.charAt(0).toUpperCase() + key.slice(1) + ":";
+            html_index += tab.row("<div style='float:left;'>" + key_description + "</div>", short_data[key]);
+            });
+        }
     html_index += tab.end();
-    html_index += "<br/>&nbsp;"
-    if (show_button) {
+    if (!short && show_button) {
         html_index += "</div></div>";
+        }
+    if (!short) {
+        html_index += "<br/>&nbsp;"
         }
     return html_index;
 }

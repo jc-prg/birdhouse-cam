@@ -10,7 +10,7 @@ var app_setting_style_header = "setting_bg header";
 
 var app_last_load         = 0;
 var app_title             = "jc://birdhouse/";
-var app_version           = "v1.1.0";
+var app_version           = "v1.2.0";
 var app_api_version       = "N/A";
 var app_api_dir           = "api/";
 var app_api_status        = "status";
@@ -55,12 +55,8 @@ function app_menu_entries(data) {
 		app_menu = app_menu.concat([
 		["LINE"],
 		[lang("TODAY_COMPLETE"),    "script", hideSettings+"birdhousePrint_load('TODAY_COMPLETE','"+app_active_cam+"');"],
-		//[lang("STATISTICS"),        "script", hideSettings+"birdhousePrint_load('STATISTICS','"+app_active_cam+"');"],
 		["LINE"],
-		[lang("DEVICE_MENU"),       "script", hideSettings+"birdhousePrint_load('DEVICES','"+app_active_cam+"');"],
-		//[lang("IMAGE_MENU"),        "script", hideSettings+"birdhousePrint_load('IMAGE_SETTINGS','"+app_active_cam+"');"],
-		//[lang("SETTINGS"),          "script", hideSettings+"birdhousePrint_load('SETTINGS','"+app_active_cam+"');"],
-		[lang("SETTINGS")    ,      "script", hideSettings+"appSettings.create();"],
+		[lang("SETTINGS")    ,      "script", hideSettings+"appSettings.create();appSettings.clear_content_frames();"],
 		]);
 		if (admin_type == "LOGIN") {
     	    app_menu = app_menu.concat([
@@ -87,15 +83,15 @@ function app_setting_entries() {
     // appSettings.add_entry(id, title, icon, call_function, show_header=true);
 
     birdhouse_settings.init();
+
     var hideSettings     = "birdhouse_settings.toggle(true);";
     var init             = "appSettings.clear_frames();appSettings.show();"
 
     appSettings.icon_dir = "framework/";
-    //appSettings.add_entry("INFO",   lang("INFO"),       "info",         "appSettings.default_entry_info();");
-    //appSettings.add_entry("DEMO",   lang("DEMO"),       "demo",         "appSettings.default_entry_demo();");
-    //appSettings.add_entry("HELP",   lang("QUESTION"),   "question",     "appMsg.alert('Not implemented.');",    false);
 
-    appSettings.add_entry("START1", "jc://birdhouse-cam/", "birdhouse/img/bird.gif",   "birdhouse_settings.create_new('devices');");
+    appSettings.add_entry("START1", "jc://birdhouse-cam/",  "birdhouse/img/bird.gif",   "");
+    appSettings.add_entry("START2", "<div id='device_status_short'><b>"+lang("DEVICE_OVERVIEW")+"</b><br/>"+lang("PLEASE_WAIT")+" ...</div>",  "",   "");
+
     appSettings.add_entry("DEVICE", lang("DEVICE_SETTINGS"),"birdhouse/img/device",     "birdhouse_settings.create_new('devices');");
     appSettings.add_entry("IMAGE",  lang("IMAGE_SETTINGS"), "birdhouse/img/image",      "birdhouse_settings.create_new('image');");
     appSettings.add_entry("INFO",   lang("INFORMATION"),    "info",                     "birdhouse_settings.create_new('info');");

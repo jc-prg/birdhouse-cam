@@ -129,25 +129,30 @@ function birdhouse_app_settings (name="Settings") {
             }
         else if (type == "settings") {
             this.setting_type = "SETTINGS";
+            this.set.clear_frames();
+            this.set.clear_content_frames();
             this.set.write(1, lang("SETTINGS"), this.settings());
             this.set.show_entry(-1);
             }
         else if (type == "image") {
             this.setting_type = "IMAGE_SETTINGS";
             this.set.clear_frames();
+            this.set.clear_content_frames();
             this.set.write(1, "", this.loading);
             birdhousePrint_load('IMAGE_SETTINGS',app_active_cam);
             }
         else if (type == "statistics") {
-            this.setting_type = "IMAGE_SETTINGS";
+            this.setting_type = "STATISTICS";
             this.set.clear_frames();
+            this.set.clear_content_frames();
             this.set.write(1, "", this.loading);
             birdhousePrint_load('STATISTICS',app_active_cam);
             }
         else if (type == "devices") {
-            this.setting_type = "IMAGE_SETTINGS";
+            this.setting_type = "DEVICE_SETTINGS";
             this.set.clear_frames();
-            this.set.write(1, "", this.not_implemented);
+            this.set.clear_content_frames();
+            this.set.write(1, "", this.loading);
             birdhousePrint_load('DEVICES',app_active_cam);
             }
 
@@ -180,6 +185,9 @@ function birdhouse_app_settings (name="Settings") {
 
         html_entry = this.server_information();
         html += birdhouse_OtherGroup( "server_info", "Server Information &nbsp;<div id='server_info_header'></div>", html_entry, open_settings["server_info"] );
+
+        html_entry = this.display_information();
+        html += birdhouse_OtherGroup( "display_info", "Display Information", html_entry, open_settings["display_info"] );
 
         return html;
         }
@@ -361,7 +369,8 @@ function birdhouse_app_settings (name="Settings") {
 	this.display_information = function () {
 	    var html_entry = "";
         html_entry = this.tab.start();
-        html_entry += this.tab.row("Window:", document.body.clientWidth + "x" + document.body.clientHeight );
+        html_entry += this.tab.row("Window Size:", "<text id='windowWidth'>"+window.innerWidth + "x" + window.innerHeight+"</text>" );
+        html_entry += this.tab.row("Screen Size:", "<text id='screenWidth'>"+screen.width + "x" + screen.height+"</text>" );
         html_entry += this.tab.row("Position:", "<div id='scrollPosition'>0 px</div>" );
         html_entry += this.tab.row("Format:", print_display_definition());
         html_entry += this.tab.row("Browser:", navigator.userAgent);
@@ -399,10 +408,11 @@ function birdhouse_app_settings (name="Settings") {
 	this.device_information = function () {
 	    var status   = app_data["STATUS"]["object_detection"];
         var tab      = new birdhouse_table();
-        tab.style_rows["height"] = "27px";
-        tab.style_cells["min-width"] = "150px";
+        tab.style_rows["height"]        = "27px";
+        tab.style_cells["min-width"]    = "150px";
+        tab.style_cells["width"]        = "50%";
 
-	    var html = birdhouseDevices("", app_data, false);
+	    var html = birdhouseDevices("", app_data, show="information");
 
         if (status["active"]) {
             html += tab.start();
