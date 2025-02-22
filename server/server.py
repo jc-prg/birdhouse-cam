@@ -1482,8 +1482,8 @@ if __name__ == "__main__":
         for relay in config.param["devices"]["relays"]:
             relays[relay] = BirdhouseRelay(relay_id=relay, config=config)
             relays[relay].start()
-            time.sleep(2)
-            relays[relay].test()
+            #time.sleep(2)
+            #relays[relay].test()
 
     # start sensors
     sensor = {}
