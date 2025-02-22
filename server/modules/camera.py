@@ -2157,13 +2157,18 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         if "camera_light" in self.param and "switch" in self.param["camera_light"]:
             light_relay = self.param["camera_light"]["switch"]
+
             if light_relay in self.relays:
+                sunrise = self.config.weather.get_sunrise().split(":")
+                sunset = self.config.weather.get_sunset().split(":")
+                local_time = self.config.local_time()
                 threshold = self.param["camera_light"]["threshold"]
+
                 if self.brightness < threshold and not self.relays[light_relay].is_on():
                     self.relays[light_relay].switch_on()
                 self.logging.info("Check brightness: " + str(self.brightness) + " / " + str(threshold))
-                self.logging.info("Check timing:     sunrise=" + str(self.config.weather.get_sunrise()) +
-                                  "; sunset=" + str(self.config.weather.get_sunset()))
+                self.logging.info("Check timing:     sunrise=" + str(sunrise) +
+                                  "; sunset=" + str(sunset) + "; time=" + str(local_time))
         else:
             self.logging.debug("Config file is not up-to-date, value 'camera_light' is missing.")
 
