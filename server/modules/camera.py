@@ -1936,6 +1936,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             # if no error format and analyze image
             if image_hires is not None and not self.image.error and image_hires is not None and len(image_hires) > 0:
                 image_compare = self.image.convert_to_gray_raw(image_hires)
+                image_brightness = self.image.get_brightness_raw(image_hires)
                 height, width, color = image_hires.shape
                 preview_scale = self.param["image"]["preview_scale"]
 
@@ -1953,6 +1954,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     "detections": [],
                     "hires": self.img_support.filename("hires", stamp, self.id),
                     "hires_size": [width, height],
+                    "hires_brightness": image_brightness,
                     "info": {},
                     "lowres": self.img_support.filename("lowres", stamp, self.id),
                     "lowres_size": [round(width * preview_scale / 100), round(height * preview_scale / 100)],

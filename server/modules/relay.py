@@ -77,10 +77,6 @@ class BirdhouseRelay(BirdhouseClass):
             self.switch_on()
             time.sleep(time_wait)
             self.switch_off()
-            time.sleep(time_wait)
-            self.switch_on()
-            time.sleep(time_wait)
-            self.switch_off()
             self.logging.info("Relay test done.")
         else:
             self.logging.warning("GPIO not loaded")

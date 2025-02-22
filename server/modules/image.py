@@ -771,6 +771,26 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
                 self.raise_error("Could not resize raw image: " + str(e))
         return raw
 
+    def get_brightness_raw(self, raw):
+        """
+        calculate normalized brightness of an image
+
+        Args:
+            raw (numpy.ndarray): raw image to be analyzed
+
+        Returns:
+            int: normalized brightness (0..100)
+        """
+        # Convert to grayscale
+        gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
+        # Compute the mean brightness
+        brightness = np.mean(gray)
+        normalized_brightness = (brightness / 255) * 100
+        self.logging.info("Calculated image brightness: " + str(normalized_brightness))
+
+        return normalized_brightness
+
+
     def write(self, filename, image, scale_percent=100):
         """
         Scale image and write to file
