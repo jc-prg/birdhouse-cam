@@ -28,6 +28,7 @@ class BirdhouseRelay(BirdhouseClass):
         self.state = "OFF"
 
         self.param = self.config.param["devices"]["relays"][relay_id]
+        self.active = self.param["active"]
         self.pin = self.param["pin"]
 
     def start(self):
@@ -35,10 +36,12 @@ class BirdhouseRelay(BirdhouseClass):
         setup GPIO (use BCM GPIO numbering)
         """
         self.logging.info("Initializing relay control ...")
-        if self.gpio_loaded:
+        if self.gpio_loaded and self.active:
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(self.pin, GPIO.OUT, initial=GPIO.LOW)
             self.logging.info("... Loaded GPIO")
+        elif not self.active:
+            self.logging.warning("... GPIO module not loaded: relay " + self.id + " is inactive.")
         else:
             self.logging.warning("... GPIO module not loaded: " + error_module_msg)
 
@@ -46,7 +49,7 @@ class BirdhouseRelay(BirdhouseClass):
         """
         cleanup / unload GPIO
         """
-        if self.gpio_loaded:
+        if self.gpio_loaded and self.active:
             GPIO.cleanup()
             self.logging.info("Stopped GPIO for relay control.")
 
@@ -54,7 +57,7 @@ class BirdhouseRelay(BirdhouseClass):
         """
         use relay to switch connected device on
         """
-        if self.gpio_loaded:
+        if self.gpio_loaded and self.active:
             GPIO.output(self.pin, GPIO.HIGH)
             self.state = "ON"
             self.logging.info("Switch ON: " + str(self.pin))
@@ -63,7 +66,7 @@ class BirdhouseRelay(BirdhouseClass):
         """
         use relay to switch connected device of
         """
-        if self.gpio_loaded:
+        if self.gpio_loaded and self.active:
             GPIO.output(self.pin, GPIO.LOW)
             self.state = "OFF"
             self.logging.info("Switch OFF: " + str(self.pin))
@@ -72,7 +75,7 @@ class BirdhouseRelay(BirdhouseClass):
         """
         test by switching on and off
         """
-        if self.gpio_loaded:
+        if self.gpio_loaded and self.active:
             time_wait = 2
             self.switch_on()
             time.sleep(time_wait)

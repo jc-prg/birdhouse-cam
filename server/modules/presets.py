@@ -503,6 +503,11 @@ birdhouse_weather = {
 }
 birdhouse_default_cam = {
     "type": "default",
+    "camera_light": {
+        "switch": "relay1",
+        "auto": False,
+        "threshold": 25
+    },
     "name": "NAME",
     "source": "/dev/video0",
     "source_id": None,
@@ -594,9 +599,10 @@ birdhouse_default_sensor = {
 }
 
 birdhouse_default_relay = {
-    "active": True,
+    "active": False,
     "name": "IR Light cam1",
-    "pin": 17
+    "pin": 17,
+    "type": "JQC3F"
 }
 
 birdhouse_preset = {

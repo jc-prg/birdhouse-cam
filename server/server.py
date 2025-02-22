@@ -1506,7 +1506,7 @@ if __name__ == "__main__":
     camera = {}
     for cam in config.param["devices"]["cameras"]:
         settings = config.param["devices"]["cameras"][cam]
-        camera[cam] = BirdhouseCamera(camera_id=cam, config=config, sensor=sensor,
+        camera[cam] = BirdhouseCamera(camera_id=cam, config=config, sensor=sensor, relays=relays,
                                       microphones=microphones, statistics=statistics, first_cam=camera_first)
         if camera_first:
             camera_scan = camera[cam].camera_scan

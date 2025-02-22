@@ -1307,7 +1307,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
     Camera handler to control camera, record images, coordinate sensor and microphone and save data to database.
     """
 
-    def __init__(self, camera_id, config, sensor, microphones, statistics, first_cam=False):
+    def __init__(self, camera_id, config, sensor, microphones, relays, statistics, first_cam=False):
         """
         Constructor to initialize camera class.
 
@@ -1336,10 +1336,12 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.video = None
         self.camera = None
         self.object = None
+        self.brightness = None
 
         self.cam_param = None
         self.cam_param_image = None
         self.sensor = sensor
+        self.relays = relays
         self.statistics = statistics
         self.microphones = microphones
         self.micro = None
@@ -1738,6 +1740,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     # Image recording (only while not recording video)
                     elif self.record:
                         self.image_recording(current_time, stamp, similarity, sensor_last)
+                        self.image_recording_auto_light()
 
                     # Check and record active streams
                     self.measure_usage()
@@ -1936,7 +1939,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             # if no error format and analyze image
             if image_hires is not None and not self.image.error and image_hires is not None and len(image_hires) > 0:
                 image_compare = self.image.convert_to_gray_raw(image_hires)
-                image_brightness = self.image.get_brightness_raw(image_hires)
+                self.brightness = self.image.get_brightness_raw(image_hires)
                 height, width, color = image_hires.shape
                 preview_scale = self.param["image"]["preview_scale"]
 
@@ -1954,7 +1957,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     "detections": [],
                     "hires": self.img_support.filename("hires", stamp, self.id),
                     "hires_size": [width, height],
-                    "hires_brightness": image_brightness,
+                    "hires_brightness": self.brightness,
                     "info": {},
                     "lowres": self.img_support.filename("lowres", stamp, self.id),
                     "lowres_size": [round(width * preview_scale / 100), round(height * preview_scale / 100)],
@@ -2147,6 +2150,21 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.record_image_end = str(int(record_to_hour)).zfill(2) + ":" + str(int(record_to_minute)).zfill(2)
 
         return is_active
+
+    def image_recording_auto_light(self):
+        """
+        check brightness and switch on the light, if to dark and auto light is defined
+        """
+        if "camera_light" in self.param and "switch" in self.param["camera_light"]:
+            light_relay = self.param["camera_light"]["switch"]
+            if light_relay in self.relays:
+                threshold = self.relays[light_relay]["threshold"]
+                if self.brightness > threshold:
+                    self.relays[light_relay].switch_off()
+                else:
+                    self.relays[light_relay].switch_on()
+        else:
+            self.logging.debug("Config file is not up-to-date, value 'camera_light' is missing.")
 
     def measure_usage(self, init=False):
         """
