@@ -786,7 +786,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         # Compute the mean brightness
         brightness = np.mean(gray)
         normalized_brightness = (brightness / 255) * 100
-        self.logging.info("Calculated image brightness: " + str(normalized_brightness))
+        self.logging.debug("Calculated image brightness: " + str(normalized_brightness))
 
         return normalized_brightness
 
