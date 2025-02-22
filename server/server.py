@@ -862,7 +862,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "cameras": {},
                     "sensors": {},
                     "weather": {},
-                    "microphones": {}
+                    "microphones": {},
+                    "relays": {}
                 },
                 "info": {},
                 "localization": {},
@@ -1075,7 +1076,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "cameras": camera_data,
                 "sensors": sensor_data,
                 "microphones": micro_data,
-                "weather": weather_status
+                "weather": weather_status,
+                "relays": config.param["devices"]["relays"]
             }
 
         api_response["DATA"] = api_data
