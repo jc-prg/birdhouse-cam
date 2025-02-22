@@ -2161,11 +2161,14 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             if light_relay in self.relays:
                 sunrise = self.config.weather.get_sunrise().split(":")
                 sunset = self.config.weather.get_sunset().split(":")
-                local_time = self.config.local_time()
+                local_time = self.config.local_time().split(" ")[1].split(".")[0]
                 threshold = self.param["camera_light"]["threshold"]
 
+                # if to dark and the light isn't on already, switch on the light
                 if self.brightness < threshold and not self.relays[light_relay].is_on():
                     self.relays[light_relay].switch_on()
+
+
                 self.logging.info("Check brightness: " + str(self.brightness) + " / " + str(threshold))
                 self.logging.info("Check timing:     sunrise=" + str(sunrise) +
                                   "; sunset=" + str(sunset) + "; time=" + str(local_time))
