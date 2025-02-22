@@ -1800,7 +1800,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         if self.weather is None:
             return False
 
-        sunrise = self.weather.get_sunrise().split(":")
+        sunrise = str(self.weather.get_sunrise()).split(":")
         sunrise = str(int(sunrise[0]) + hour_offset) + ":" + str(sunrise)
         local_time = str(self.local_time()).split(" ")[1].split(".")[0]
         local_time = local_time.split(":")[0] + ":" + local_time.split(":")[1]
@@ -1821,7 +1821,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         if self.weather is None:
             return False
 
-        sunset = self.weather.get_sunset().split(":")
+        sunset = str(self.weather.get_sunset()).split(":")
         sunset = str(int(sunset[0]) + hour_offset) + ":" + str(sunset)
         local_time = str(self.local_time()).split(" ")[1].split(".")[0]
         local_time = local_time.split(":")[0] + ":" + local_time.split(":")[1]
