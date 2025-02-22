@@ -2153,7 +2153,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
     def image_recording_auto_light(self):
         """
-        check brightness and switch on the light, if to dark and auto light is defined
+        check brightness, sunset, and sunrise to decide whether to switch on or off the light
         """
         if "camera_light" in self.param and "switch" in self.param["camera_light"]:
             light_relay = self.param["camera_light"]["switch"]
@@ -2167,21 +2167,24 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 # if just started check if too dark
                 if self.relays[light_relay].is_started() and self.brightness < threshold:
                     self.relays[light_relay].switch_on()
+                    self.logging.info("Switched on the light - started (" + self.relays[light_relay].id +")")
 
                 # if sunset -1h switch on
                 elif self.config.is_sunset(-1) and not self.relays[light_relay].is_on():
                     self.relays[light_relay].switch_on()
+                    self.logging.info("Switched on the light - sunset-1h (" + self.relays[light_relay].id + ")")
 
                 # if sunrise +1h switch off
                 elif self.config.is_sunrise(+1) and self.relays[light_relay].is_on():
                     self.relays[light_relay].switch_off()
+                    self.logging.info("Switched off the light - sunrise+1h (" + self.relays[light_relay].id + ")")
 
                 # if to dark and the light isn't on already, switch on the light
                 #elif self.brightness < threshold and not self.relays[light_relay].is_on():
                 #    self.relays[light_relay].switch_on()
 
-                self.logging.info("Check brightness: " + str(self.brightness) + " / " + str(threshold))
-                self.logging.info("Check timing:     sunrise=" + str(sunrise) +
+                self.logging.debug("Check brightness: " + str(self.brightness) + " / " + str(threshold))
+                self.logging.debug("Check timing:     sunrise=" + str(sunrise) +
                                   "; sunset=" + str(sunset) + "; time=" + str(local_time))
         else:
             self.logging.debug("Config file is not up-to-date, value 'camera_light' is missing.")
