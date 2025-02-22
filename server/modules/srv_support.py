@@ -153,7 +153,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
 class ServerInformation(threading.Thread, BirdhouseClass):
 
     def __init__(self, initial_camera_scan, config_handler, camera_handler, sensor_handler,
-                 microphone_handler, statistics):
+                 microphone_handler, relay_handler, statistics):
         """
         Constructor of the class
 
@@ -174,6 +174,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             "cameras": {},
             "sensors": {},
             "microphones": {},
+            "relays": {},
             "available": {}
         }
         self._srv_info_time = 0
@@ -183,6 +184,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         self.microphone = microphone_handler
         self.sensor = sensor_handler
         self.statistics = statistics
+        self.relays = relay_handler
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
         self.main_dir = birdhouse_main_directories["project"]
 
@@ -341,6 +343,9 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         # get microphone data and create streaming information
         for key in self.microphone:
             self._device_status["microphones"][key] = self.microphone[key].get_device_status()
+
+        for key in self.relays:
+            self._device_status["relays"][key] = self.relays[key].is_on()
 
         # get camera data and create streaming information
         for key in self.camera:

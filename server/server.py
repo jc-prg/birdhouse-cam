@@ -1521,7 +1521,7 @@ if __name__ == "__main__":
         camera_list.append(cam)
 
     # system information
-    sys_info = ServerInformation(camera_scan, config, camera, sensor, microphones, statistics)
+    sys_info = ServerInformation(camera_scan, config, camera, sensor, microphones, relays, statistics)
     sys_info.start()
 
     # start views and commands
