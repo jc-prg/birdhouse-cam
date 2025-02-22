@@ -1,0 +1,88 @@
+import time
+
+from modules.bh_class import BirdhouseClass
+
+try:
+    import RPi.GPIO as GPIO
+    loaded_gpio = True
+except Exception as e:
+    loaded_gpio = False
+    error_module = True
+    error_module_msg = "Couldn't load module RPi.GPIO: "+str(e)
+
+
+class BirdhouseRelay(BirdhouseClass):
+
+    def __init__(self, relay_id, config):
+        """
+        Constructor method for initializing a relay, e.g. to switch on and off IR light for the camera.
+
+        Args:
+            relay_id (str): id string to identify the relay
+            config (modules.config.BirdhouseConfig): reference to main config object
+        """
+        BirdhouseClass.__init__(self, "RELAY", "relay", relay_id, config)
+
+        self.GPIO = None
+        self.relay = None
+        self.gpio_loaded = loaded_gpio
+        self.state = "OFF"
+
+        self.param = self.config.param["devices"]["relays"][relay_id]
+        self.pin = self.param["pin"]
+
+    def start(self):
+        """
+        setup GPIO (use BCM GPIO numbering)
+        """
+        self.logging.info("Initializing relay control ...")
+        if self.gpio_loaded:
+            self.GPIO = GPIO
+            self.GPIO.setmode(self.GPIO.BCM)
+            self.GPIO.setup(self.pin, self.GPIO.OUT, initial=self.GPIO.LOW)
+            self.logging.info("... Loaded GPIO")
+        else:
+            self.logging.warning("... GPIO module not loaded: " + error_module_msg)
+
+    def stop(self):
+        """
+        cleanup / unload GPIO
+        """
+        if self.gpio_loaded:
+            self.GPIO.cleanup()
+            self.logging.info("Stopped GPIO for relay control.")
+
+    def switch_on(self):
+        """
+        use relay to switch connected device on
+        """
+        if self.gpio_loaded:
+            self.GPIO.output(self.pin, self.GPIO.HIGH)
+            self.state = "ON"
+            self.logging.debug("Switch ON")
+
+    def switch_off(self):
+        """
+        use relay to switch connected device of
+        """
+        if self.gpio_loaded:
+            self.GPIO.output(self.pin, self.GPIO.LOW)
+            self.state = "OFF"
+            self.logging.debug("Switch OFF")
+
+    def test(self):
+        """
+        test by switching on and off
+        """
+        if self.gpio_loaded:
+            time_wait = 2
+            self.switch_on()
+            time.sleep(time_wait)
+            self.switch_off()
+            time.sleep(time_wait)
+            self.switch_on()
+            time.sleep(time_wait)
+            self.switch_off()
+            self.logging.info("Relay test done.")
+        else:
+            self.logging.warning("GPIO not loaded")

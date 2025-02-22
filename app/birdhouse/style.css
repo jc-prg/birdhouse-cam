@@ -9,7 +9,7 @@ h1        { margin : 4px; }
 h2        { margin : 4px; }
 h3        { margin : 4px; }
 
-body      { touch-action: none; }
+/* body   { touch-action: none; } */
 
 .frame_column { color : black; }
 

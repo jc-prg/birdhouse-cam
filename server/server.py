@@ -29,6 +29,7 @@ if len(sys.argv) == 0 or ("--help" not in sys.argv and "--shutdown" not in sys.a
     from modules.bh_class import BirdhouseClass
 
 from modules.presets import *
+from modules.relay import BirdhouseRelay
 from modules.bh_class import BirdhouseClass
 from modules.bh_database import BirdhouseTEXT
 from modules.srv_support import ServerInformation, ServerHealthCheck
@@ -1475,6 +1476,15 @@ if __name__ == "__main__":
     statistics = BirdhouseStatistics(config=config)
     statistics.start()
 
+    # start relays
+    relays = {}
+    if "relays" in config.param["devices"]:
+        for relay in config.param["devices"]["relays"]:
+            relays[relay] = BirdhouseRelay(relay_id=relay, config=config)
+            relays[relay].start()
+            time.sleep(2)
+            relays[relay].test()
+
     # start sensors
     sensor = {}
     for sen in config.param["devices"]["sensors"]:
@@ -1570,6 +1580,8 @@ if __name__ == "__main__":
             camera[cam].stop()
         for sen in sensor:
             sensor[sen].stop()
+        for relay in relays:
+            relays[relay].stop()
         views.stop()
 
         server.server_close()

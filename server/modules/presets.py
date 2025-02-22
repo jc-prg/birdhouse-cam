@@ -342,7 +342,7 @@ birdhouse_loglevel_modules_all = [
     'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object', 'cam-stream',
     'cam-handl', 'cam-info', 'statistics',
     'config', 'config-Q',
-    'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
+    'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors', 'relay',
     'video', 'video-srv', "img-eval",
     'views', 'view-head', 'view-chart', 'view-fav', 'view-arch', 'view-obj',
     'weather', 'weather-py', 'weather-om']
@@ -592,6 +592,13 @@ birdhouse_default_sensor = {
         "humidity": "%"
     }
 }
+
+birdhouse_default_relay = {
+    "active": True,
+    "name": "IR Light cam1",
+    "pin": 17
+}
+
 birdhouse_preset = {
     "backup": {
         "preview": "0700",  # HHMM
@@ -608,6 +615,9 @@ birdhouse_preset = {
         },
         "sensors": {
             "sensor1": birdhouse_default_sensor
+        },
+        "relays": {
+            "relay1": birdhouse_default_relay
         }
     },
     "info": {},
