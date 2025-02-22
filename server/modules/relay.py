@@ -23,7 +23,6 @@ class BirdhouseRelay(BirdhouseClass):
         """
         BirdhouseClass.__init__(self, "RELAY", "relay", relay_id, config)
 
-        self.GPIO = None
         self.relay = None
         self.gpio_loaded = loaded_gpio
         self.state = "OFF"
@@ -37,9 +36,8 @@ class BirdhouseRelay(BirdhouseClass):
         """
         self.logging.info("Initializing relay control ...")
         if self.gpio_loaded:
-            self.GPIO = GPIO
-            self.GPIO.setmode(self.GPIO.BCM)
-            self.GPIO.setup(self.pin, self.GPIO.OUT, initial=self.GPIO.LOW)
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setup(self.pin, GPIO.OUT, initial=GPIO.LOW)
             self.logging.info("... Loaded GPIO")
         else:
             self.logging.warning("... GPIO module not loaded: " + error_module_msg)
@@ -49,7 +47,7 @@ class BirdhouseRelay(BirdhouseClass):
         cleanup / unload GPIO
         """
         if self.gpio_loaded:
-            self.GPIO.cleanup()
+            GPIO.cleanup()
             self.logging.info("Stopped GPIO for relay control.")
 
     def switch_on(self):
@@ -57,7 +55,7 @@ class BirdhouseRelay(BirdhouseClass):
         use relay to switch connected device on
         """
         if self.gpio_loaded:
-            self.GPIO.output(self.pin, self.GPIO.HIGH)
+            GPIO.output(self.pin, GPIO.HIGH)
             self.state = "ON"
             self.logging.debug("Switch ON")
 
@@ -66,7 +64,7 @@ class BirdhouseRelay(BirdhouseClass):
         use relay to switch connected device of
         """
         if self.gpio_loaded:
-            self.GPIO.output(self.pin, self.GPIO.LOW)
+            GPIO.output(self.pin, GPIO.LOW)
             self.state = "OFF"
             self.logging.debug("Switch OFF")
 
