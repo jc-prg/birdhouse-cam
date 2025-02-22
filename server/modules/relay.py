@@ -8,7 +8,7 @@ try:
 except Exception as e:
     loaded_gpio = False
     error_module = True
-    error_module_msg = "Couldn't load module RPi.GPIO: "+str(e)
+    error_module_msg = "Couldn't load module RPi.GPIO: " + str(e)
 
 
 class BirdhouseRelay(BirdhouseClass):
@@ -57,7 +57,7 @@ class BirdhouseRelay(BirdhouseClass):
         if self.gpio_loaded:
             GPIO.output(self.pin, GPIO.HIGH)
             self.state = "ON"
-            self.logging.debug("Switch ON")
+            self.logging.info("Switch ON: " + str(self.pin))
 
     def switch_off(self):
         """
@@ -66,7 +66,7 @@ class BirdhouseRelay(BirdhouseClass):
         if self.gpio_loaded:
             GPIO.output(self.pin, GPIO.LOW)
             self.state = "OFF"
-            self.logging.debug("Switch OFF")
+            self.logging.info("Switch OFF: " + str(self.pin))
 
     def test(self):
         """
