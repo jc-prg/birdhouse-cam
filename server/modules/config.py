@@ -1771,7 +1771,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             self.thread_ctrl["shutdown"] = True
             self.stop()
 
-    def if_new_day(self):
+    def is_new_day(self):
         """
         check if it's a new day
 
@@ -1784,6 +1784,48 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             self.logging.info(" NEW DAY STARTED: " + self.current_day + " -> " + check_day)
             self.logging.info("-----------------------------------------------------------")
             self.current_day = self.local_time().strftime("%Y%m%d")
+            return True
+        else:
+            return False
+
+    def is_sunrise(self, hour_offset):
+        """
+        check if current time is sunrise; if weather is not available return False
+
+        Args:
+            hour_offset (int): hour offset for sunrise, e.g., +1 or -1
+        Returns:
+            boolean: True if weather data available and current time is sunrise time (incl. hour offset)
+        """
+        if self.weather is None:
+            return False
+
+        sunrise = self.weather.get_sunrise().split(":")
+        sunrise = str(int(sunrise[0]) + hour_offset) + ":" + str(sunrise)
+        local_time = str(self.local_time()).split(" ")[1].split(".")[0]
+        local_time = local_time.split(":")[0] + ":" + local_time.split(":")[1]
+        if sunrise == local_time:
+            return True
+        else:
+            return False
+
+    def is_sunset(self, hour_offset):
+        """
+        check if current time is sunset; if weather is not available return False
+
+        Args:
+            hour_offset (int): hour offset for sunset, e.g., +1 or -1
+        Returns:
+            boolean: True if weather data available and current time is sunset time (incl. hour offset)
+        """
+        if self.weather is None:
+            return False
+
+        sunset = self.weather.get_sunset().split(":")
+        sunset = str(int(sunset[0]) + hour_offset) + ":" + str(sunset)
+        local_time = str(self.local_time()).split(" ")[1].split(".")[0]
+        local_time = local_time.split(":")[0] + ":" + local_time.split(":")[1]
+        if sunset == local_time:
             return True
         else:
             return False

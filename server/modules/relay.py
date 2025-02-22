@@ -25,7 +25,7 @@ class BirdhouseRelay(BirdhouseClass):
 
         self.relay = None
         self.gpio_loaded = loaded_gpio
-        self.state = "OFF"
+        self.state = "STARTED"
 
         self.param = self.config.param["devices"]["relays"][relay_id]
         self.active = self.param["active"]
@@ -71,10 +71,19 @@ class BirdhouseRelay(BirdhouseClass):
             self.state = "OFF"
             self.logging.info("Switch OFF: " + str(self.pin))
 
+    def is_started(self):
+        """
+        check if relay is set to STARTED
+
+        Returns:
+            boolean: relay state
+        """
+        return self.state == "STARTED"
+
     def is_on(self):
         """
         check if relay is set to ON
-        
+
         Returns:
             boolean: relay state
         """
