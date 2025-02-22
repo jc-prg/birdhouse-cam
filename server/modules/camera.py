@@ -2158,7 +2158,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if "camera_light" in self.param and "switch" in self.param["camera_light"]:
             light_relay = self.param["camera_light"]["switch"]
             if light_relay in self.relays:
-                threshold = self.relays[light_relay]["threshold"]
+                threshold = self.param["camera_light"]["threshold"]
                 if self.brightness > threshold:
                     self.relays[light_relay].switch_off()
                 else:
