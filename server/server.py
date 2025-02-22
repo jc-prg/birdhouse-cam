@@ -544,10 +544,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = camera[which_cam].video.create_video_day_queue(param)
         elif param["command"] == "relay-on":
             srv_logging.info(param["command"] + ": " + str(param))
-            response = relays[which_cam].switch_on()
+            response = relays[param["parameter"][0]].switch_on()
         elif param["command"] == "relay-off":
             srv_logging.info(param["command"] + ": " + str(param))
-            response = relays[which_cam].switch_off()
+            response = relays[param["parameter"][0]].switch_off()
         elif param["command"] == "remove":
             srv_logging.info(param["command"] + ": " + str(param))
             response = backup.delete_marked_files_api(param)
