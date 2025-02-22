@@ -1336,7 +1336,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.video = None
         self.camera = None
         self.object = None
-        self.brightness = None
+        self.brightness = 100
 
         self.cam_param = None
         self.cam_param_image = None
