@@ -2163,6 +2163,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     self.relays[light_relay].switch_off()
                 else:
                     self.relays[light_relay].switch_on()
+                self.logging.debug("Check brightness: " + str(self.brightness) + " / " + str(threshold))
         else:
             self.logging.debug("Config file is not up-to-date, value 'camera_light' is missing.")
 
