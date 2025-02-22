@@ -296,6 +296,7 @@ function birdhouse_app_settings (name="Settings") {
 	    var api_call        = "";
         var cameras         = app_data["SETTINGS"]["devices"]["cameras"];
         var microphones     = app_data["SETTINGS"]["devices"]["microphones"];
+        var relays          = app_data["SETTINGS"]["devices"]["relays"];
         delete this.tab.style_cells["width"];
         var html_entry      = this.tab.start();
 
@@ -324,6 +325,12 @@ function birdhouse_app_settings (name="Settings") {
             api_call   += "<button onclick='birdhouse_recordStopAudio(\""+micro+"\");' class='button-settings-api'>Stop "+micro+"</button>";
             html_entry += this.tab.row("API "+micro, api_call);
         }
+
+        for (let relay in relays) {
+            api_call    = "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"on\");' class='button-settings-api'>"+relay+" ON</button>";
+            api_call   += "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"off\");' class='button-settings-api'>"+relay+" OFF</button>";
+            html_entry += this.tab.row("API " + relay, api_call);
+            }
 
         api_call   = "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECTS/\",\"_blank\");' class='button-settings-api'>Objects</button>";
         api_call  += "<button onclick='window.open(\"" + RESTurl + "api/no-id/STATISTICS/\",\"_blank\");' class='button-settings-api'>Statistics</button>";

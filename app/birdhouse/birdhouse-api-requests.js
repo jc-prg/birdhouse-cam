@@ -275,6 +275,11 @@ function birdhouse_recordStopAudio(micro) {
     birdhouse_apiRequest('POST',commands,"","","","birdhouse_recordStopAudio");
 }
 
+function birdhouse_relayOnOff(relay, on_off) {
+	commands = ["relay-"+on_off,relay];
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_relayOnOff');
+}
+
 function birdhouse_forceBackup(camera) {
 	commands = ["force-backup",camera];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceBackup');
