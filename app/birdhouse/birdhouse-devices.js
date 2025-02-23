@@ -31,6 +31,10 @@ function birdhouseDevices(title, data, show="settings") {
     html += settings;
     index.push(info);
 
+    var [settings, info] = birdhouseDevices_relays(data);
+    html += settings;
+    index.push(info);
+
     var [settings, info] = birdhouseDevices_microphones(data);
     html += settings;
     index.push(info);
@@ -152,6 +156,7 @@ function birdhouseDevices_cameras(data) {
 	var cameras	= data["SETTINGS"]["devices"]["cameras"];
 	var settings = app_data["SETTINGS"]
 	var micros  = "," + Object.keys(data["SETTINGS"]["devices"]["microphones"]).join(",");
+	var relay_list  = "," + Object.keys(data["SETTINGS"]["devices"]["relays"]).join(",");
 	var admin 	= data["STATUS"]["admin_allowed"];
 	var html	= "";
 	var index_info = {};
@@ -231,7 +236,7 @@ function birdhouseDevices_cameras(data) {
         html_temp += birdhouse_OtherGroup( camera+"_image", "Image Settings", html_entry, false );
 
         html_entry = tab.start();
-		html_entry += tab.row("- Area:",      birdhouse_edit_field(id="set_area_"+camera, field="devices:cameras:"+camera+":similarity:detection_area", type="input", options="", data_type="json"));
+		html_entry += tab.row("- Detection Area:",      birdhouse_edit_field(id="set_area_"+camera, field="devices:cameras:"+camera+":similarity:detection_area", type="input", options="", data_type="json"));
 		html_entry += tab.row("- Threshold:", birdhouse_edit_field(id="set_threshold_"+camera, field="devices:cameras:"+camera+":similarity:threshold", type="input", options="", data_type="float") + " %");
         html_entry += tab.end();
 
@@ -273,8 +278,21 @@ function birdhouseDevices_cameras(data) {
 		html_entry += tab.row("- Max length:",          birdhouse_edit_field(id="set_video_max_"+camera, field="devices:cameras:"+camera+":video:max_length", type="select", options="60,120,180,240,300", data_type="integer") + " seconds");
         html_entry += tab.end();
 
-		id_list += "set_video_active__"+camera+":set_video_max_"+camera+":set_max_fps_"+camera+":";
+		id_list += "set_video_active_"+camera+":set_video_max_"+camera+":set_max_fps_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_record_video", "Video Recording", html_entry, false );
+
+        if (cameras[camera]["camera_light"]) {
+            var relay_names = relay_list;
+            var relay_modes = "auto,manual,off,on";
+            html_entry = tab.start();
+            html_entry += tab.row("- Light switch:",  birdhouse_edit_field(id="set_light_switch_"+camera, field="devices:cameras:"+camera+":camera_light:switch", type="select", options=relay_names, data_type="string"));
+            html_entry += tab.row("- Mode:",          birdhouse_edit_field(id="set_light_mode_"+camera, field="devices:cameras:"+camera+":camera_light:mode", type="select", options=relay_modes, data_type="string"));
+            html_entry += tab.row("- Brightness threshold:",  birdhouse_edit_field(id="set_light_threshold_"+camera, field="devices:cameras:"+camera+":camera_light:threshold", type="input", options="", data_type="integer") + " %");
+            html_entry += tab.end();
+
+            id_list += "set_light_switch_"+camera+":set_light_mode_"+camera+":set_light_threshold_"+camera+":";
+            html_temp += birdhouse_OtherGroup( camera+"_camera_light", "Camera Light", html_entry, false );
+            }
 
         html_entry = tab.start();
 		html_entry += tab.row("- Show Time:",           birdhouse_edit_field(id="set_time_"+camera, field="devices:cameras:"+camera+":image:date_time", type="select", options="true,false", data_type="boolean"));
@@ -388,6 +406,56 @@ function birdhouseDevices_sensors(data) {
         html_entry += "</div>";
         html_entry += "</div>";
 		html += birdhouse_OtherGroup( sensor, sensor_name, html_entry, false, "settings" );
+	}
+	return [html, index_info];
+}
+
+/*
+* Create edit form for relay settings
+*
+* @param (dict) data: complete setting and status data from API
+* @returns (string, dict): html and index information
+*/
+function birdhouseDevices_relays(data) {
+	var relays = app_data["SETTINGS"]["devices"]["relays"];
+	var admin 	= data["STATUS"]["admin_allowed"];
+	var html    = "";
+	var index_info = {};
+	var tab     = new birdhouse_table();
+	tab.style_rows["height"] = "27px";
+
+	for (let relay in relays) {
+	    relay_name   = relay.toUpperCase() + ": " + relays[relay]["name"];
+	    index_info[relay_name] = {};
+	    index_info[relay_name]["active"] = relays[relay]["active"];
+	    index_info[relay_name]["group"] = relays;
+	    index_info[relay_name]["id"] = relay;
+	    index_info[relay_name]["type"] = "relay";
+	    index_info[relay_name]["status"] = ["active", "error"];
+
+		if (relays[relay]["active"] == false) {
+		    relay_name += " &nbsp; <i>(inactive)</i>";
+        }
+        html_entry = "<div class='camera_info'>";
+        html_entry += "<div class='camera_info_image'>";
+        html_entry +=  "<div class='sensor_info' id='relay_info_"+relay+"'></div>";
+        html_entry += "</div>";
+        html_entry += "<div class='camera_info_text'>";
+        html_entry += tab.start();
+		html_entry += tab.row("Active:", birdhouse_edit_field(id="set_active_"+relay, field="devices:relays:"+relay+":active", type="select", options="true,false", data_type="boolean"));
+		html_entry += tab.row("Name:", birdhouse_edit_field(id="set_name_"+relay, field="devices:relays:"+relay+":name", type="input"));
+	    html_entry += tab.row("Source:", birdhouse_edit_field(id="set_source_"+relay, field="devices:relays:"+relay+":pin", type="input", options="", data_type="integer") + " (data pin on RPi)");
+		html_entry += tab.row("Type:", birdhouse_edit_field(id="set_type_"+relay, field="devices:relays:"+relay+":type", type="select", options="JQC3F"));
+        html_entry += tab.end();
+
+        var id_list = "set_name_"+relay+":set_type_"+relay+":set_active_"+relay+":set_source_"+relay;
+        html_entry += "<hr/>";
+        html_entry += tab.start();
+		html_entry += tab.row("<center>"+birdhouse_edit_save(id="edit_"+relay, id_list)+"</center>");
+		html_entry += tab.end();
+        html_entry += "</div>";
+        html_entry += "</div>";
+		html += birdhouse_OtherGroup( relay, relay_name, html_entry, false, "settings" );
 	}
 	return [html, index_info];
 }

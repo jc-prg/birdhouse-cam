@@ -38,7 +38,7 @@ Find further impressions [here](info/impressions.md).
 
 * **Birdhouse web-app for Browser and SmartPhone** (English and German, optimized for iPhone)
 * **Watching live stream** with 1 or 2 cameras (RPi4 recommend for fluent stream) 
-  * via Raspberry Pi camera
+  * via Raspberry Pi camera (in progress: control camera light using a JQC3F relay)
   * USB web cam (e.g. RPi cam inside and USB web cam outside)
 * **Continuously recording photos**
   * e.g. every 20 seconds from sunrise to 20:00 local time (configurable in the device settings)
@@ -94,6 +94,7 @@ Here are some options. Calculate with a little bit more space in the height for 
   * _optional:_ PiCamera with IR for the inside view (wide-angle, e.g., 110°)
   * _optional:_ Small USB Microphone
   * _optional:_ DHT11 / DHT22 Sensor
+  * _optional:_ JQC3F relay to switch on/off a camera light (e.g. IR light of the RPi camera)
 * Software
   * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, YOLOv8
   * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy

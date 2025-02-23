@@ -505,7 +505,8 @@ birdhouse_default_cam = {
     "type": "default",
     "camera_light": {
         "switch": "relay1",
-        "auto": False,
+        "mode": "auto",
+        "mode_values": ["on", "off", "auto", "manual"],
         "threshold": 25
     },
     "name": "NAME",

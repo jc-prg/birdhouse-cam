@@ -1788,7 +1788,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         else:
             return False
 
-    def is_sunrise(self, hour_offset):
+    def is_sunrise(self, hour_offset=0):
         """
         check if current time is sunrise; if weather is not available return False
 
@@ -1798,18 +1798,21 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             boolean: True if weather data available and current time is sunrise time (incl. hour offset)
         """
         if self.weather is None:
+            self.logging.debug("No weather data available to check sunrise time.")
             return False
 
         sunrise = str(self.weather.get_sunrise()).split(":")
-        sunrise = str(int(sunrise[0]) + hour_offset) + ":" + str(sunrise)
+        sunrise = str(int(sunrise[0]) + int(hour_offset)).zfill(2) + ":" + str(sunrise[1])
         local_time = str(self.local_time()).split(" ")[1].split(".")[0]
         local_time = local_time.split(":")[0] + ":" + local_time.split(":")[1]
         if sunrise == local_time:
+            self.logging.debug("It's time for sunrise: " + str(local_time) + " / " + str(sunrise))
             return True
         else:
+            self.logging.debug("No sunrise at the moment: " + str(local_time) + " / " + str(sunrise))
             return False
 
-    def is_sunset(self, hour_offset):
+    def is_sunset(self, hour_offset=0):
         """
         check if current time is sunset; if weather is not available return False
 
@@ -1819,15 +1822,18 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             boolean: True if weather data available and current time is sunset time (incl. hour offset)
         """
         if self.weather is None:
+            self.logging.debug("No weather data available to check sunset time.")
             return False
 
         sunset = str(self.weather.get_sunset()).split(":")
-        sunset = str(int(sunset[0]) + hour_offset) + ":" + str(sunset)
+        sunset = str(int(sunset[0]) + int(hour_offset)).zfill(2) + ":" + str(sunset[1])
         local_time = str(self.local_time()).split(" ")[1].split(".")[0]
         local_time = local_time.split(":")[0] + ":" + local_time.split(":")[1]
         if sunset == local_time:
+            self.logging.debug("It's time for sunset:  " + str(local_time) + " / " + str(sunset))
             return True
         else:
+            self.logging.debug("No sunset at the moment:  " + str(local_time) + " / " + str(sunset))
             return False
 
     def user_activity(self, cmd="get", param=""):
