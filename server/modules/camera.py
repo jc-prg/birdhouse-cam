@@ -141,6 +141,10 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
 
         if raw is not None and self.param["image"]["rotation"] != 0:
             raw = self.image.rotate_raw(raw, self.param["image"]["rotation"])
+
+        if raw is not None and self.param["image"]["color_schema"] == "RGB":
+            raw = cv2.cvtColor(raw, cv2.COLOR_RGB2BGR)
+
         if raw is not None and len(raw) > 0:
             return raw.copy()
         else:
@@ -1436,7 +1440,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         connect and start image processing
         """
         self.image = BirdhouseImageProcessing(camera_id=self.id, config=self.config)
-        self.image.resolution = self.param["image"]["resolution"]
+
+        if "resolution" in self.param["image"]:
+            self.image.resolution = self.param["image"]["resolution"]
+        if "color_schema" in self.param["image"]:
+            self.image.set_color_schema(self.param["image"]["color_schema"])
 
     def _init_video_processing(self):
         """
@@ -2160,7 +2168,17 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if "camera_light" in self.param and "switch" in self.param["camera_light"]:
             light_relay = self.param["camera_light"]["switch"]
 
-            if "mode" in self.param["camera_light"] and self.param["camera_light"]["mode"] != "auto":
+            if "mode" in self.param["camera_light"] and self.param["camera_light"]["mode"] == "on":
+                if not self.relays[light_relay].is_on():
+                    self.relays[light_relay].switch_on()
+                    self.logging.info("Switched on the light - always on (" + self.relays[light_relay].id + ")")
+                return
+            elif "mode" in self.param["camera_light"] and self.param["camera_light"]["mode"] == "off":
+                if self.relays[light_relay].is_on():
+                    self.relays[light_relay].switch_of()
+                    self.logging.info("Switched off the light - always off (" + self.relays[light_relay].id + ")")
+                return
+            elif "mode" in self.param["camera_light"] and self.param["camera_light"]["mode"] != "auto":
                 self.logging.debug("Light control is set to '" + self.param["camera_light"]["mode"] + "'.")
                 return
 

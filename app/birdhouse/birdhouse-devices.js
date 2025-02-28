@@ -218,11 +218,13 @@ function birdhouseDevices_cameras(data) {
 		id_list += "set_name_"+camera+":set_active_"+camera+":set_source_"+camera+":"+":set_micro_"+camera+":set_detection_mode_"+camera+":";
 
         var current_available_resolutions = birdhouseDevices_cameras_resolutions(camera, cameras[camera]["source"] );
+        var available_colors = ",RGB,BGR"
         html_entry = tab.start();
 		html_entry += tab.row("- Resolution:",              birdhouse_edit_field(id="set_resolution_"+camera, field="devices:cameras:"+camera+":image:resolution", type="input", options="", data_type="string"));
 		html_entry += tab.row("&nbsp;",                     "<b>current</b>=<label id='current_resolution_"+camera+"'>" + resolution_act + "</label>, <b>max</b>=<label id='max_resolution_"+camera+"'>" + resolution_max + "</label>,<br/>" +
                                                             "<b>available</b>=<label id='resolution_per_device_"+camera+"'>" + current_available_resolutions + "</label>");
 		html_entry += tab.row("- Black &amp; White:",       birdhouse_edit_field(id="set_black_white_"+camera, field="devices:cameras:"+camera+":image:black_white", type="select", options="false,true", data_type="boolean"));
+		html_entry += tab.row("- Color Schema:",            birdhouse_edit_field(id="set_color_schema_"+camera, field="devices:cameras:"+camera+":image:color_schema", type="select", options=available_colors, data_type="boolean"));
 		html_entry += tab.row("- Rotation:",                birdhouse_edit_field(id="set_rotation_"+camera, field="devices:cameras:"+camera+":image:rotation", type="select", options="0,90,180,270", data_type="integer"));
 		html_entry += tab.row("- Crop (relative):",         birdhouse_edit_field(id="set_crop_"+camera, field="devices:cameras:"+camera+":image:crop", type="input", options="", data_type="json"));
 		html_entry += tab.row("- Crop (absolute):",         "<div id='get_crop_area_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
@@ -231,7 +233,7 @@ function birdhouseDevices_cameras(data) {
 		html_entry += tab.row("- Image Manipulation:",      "<a href='index.html?IMAGE_SETTINGS'>"+lang("IMAGE_SETTINGS")+"</a>");
         html_entry += tab.end();
 
-		id_list += "set_resolution_"+camera+":set_black_white_"+camera+":";
+		id_list += "set_resolution_"+camera+":set_black_white_"+camera+":set_color_schema_"+camera+":";
 		id_list += "set_rotation_"+camera+":set_show_framerate_"+camera+":set_crop_"+camera+":set_scale_"+camera+":";
         html_temp += birdhouse_OtherGroup( camera+"_image", "Image Settings", html_entry, false );
 
@@ -287,6 +289,7 @@ function birdhouseDevices_cameras(data) {
             html_entry = tab.start();
             html_entry += tab.row("- Light switch:",  birdhouse_edit_field(id="set_light_switch_"+camera, field="devices:cameras:"+camera+":camera_light:switch", type="select", options=relay_names, data_type="string"));
             html_entry += tab.row("- Mode:",          birdhouse_edit_field(id="set_light_mode_"+camera, field="devices:cameras:"+camera+":camera_light:mode", type="select", options=relay_modes, data_type="string"));
+            html_entry += tab.row("",                 "(auto: on from sunset till sunrise / on: always on / off: always off / manual: start off and control manually)");
             html_entry += tab.row("- Brightness threshold:",  birdhouse_edit_field(id="set_light_threshold_"+camera, field="devices:cameras:"+camera+":camera_light:threshold", type="input", options="", data_type="integer") + " %");
             html_entry += tab.end();
 

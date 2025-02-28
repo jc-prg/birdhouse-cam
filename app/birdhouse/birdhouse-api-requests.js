@@ -460,8 +460,8 @@ function birdhouse_birdNamesRequest() {
 }
 
 function birdhouse_birdNamesSet(data) {
+    //console.log(app_bird_names);
     app_bird_names = data["DATA"]["data"]["birds"];
-    console.log(app_bird_names);
 }
 
 function birdhouse_AnswerDelete(data) {

@@ -519,6 +519,7 @@ birdhouse_default_cam = {
     "image": {
         "crop": (0.1, 0.0, 0.85, 1.0),
         "resolution": "800x600",
+        "color_schema": "BGR",
         "show_framerate": True,
         "framerate": 8,
         "saturation": 50,

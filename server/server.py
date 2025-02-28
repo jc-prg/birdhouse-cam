@@ -1213,12 +1213,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     or camera[which_cam].if_error() or camera[which_cam].camera_stream_raw.if_error():
 
                 if stream_object:
-                    frame_raw = camera[which_cam].get_stream_object_detection(stream_id=stream_id_int,
+                    frame_raw = camera[which_cam].get_stream_object_detection(stream_id=str(stream_id_int),
                                                                               stream_type=stream_type,
                                                                               stream_resolution=stream_resolution,
                                                                               system_info=True)
                 else:
-                    frame_raw = camera[which_cam].get_stream(stream_id=stream_id_int,
+                    frame_raw = camera[which_cam].get_stream(stream_id=str(stream_id_int),
                                                              stream_type=stream_type,
                                                              stream_resolution=stream_resolution,
                                                              system_info=True)
@@ -1226,7 +1226,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                 if frame_raw is not None and len(frame_raw) > 0:
                     if stream_pip and which_cam2 != "" and which_cam2 in camera:
-                        frame_raw_pip = camera[which_cam2].get_stream(stream_id=stream_id_int,
+                        frame_raw_pip = camera[which_cam2].get_stream(stream_id=str(stream_id_int),
                                                                       stream_type=stream_type,
                                                                       stream_resolution="hires",  # lowres
                                                                       system_info=False,

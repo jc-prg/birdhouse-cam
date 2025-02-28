@@ -221,8 +221,22 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         self.error_camera = False
         self.error_image = {}
+        self.color_schema = "BGR"
 
         self.logging.info("Connected IMAGE processing (" + self.id + ") ...")
+
+    def set_color_schema(self, schema):
+        """
+        set schema of the camera for color operations, RGB / BGR / HSV / GRAY
+        Args:
+            schema (str): schema of the camera: RGB / BGR / HSV / GRAY
+        """
+        available = ["BGR", "RGB", "HSV", "GRAY"]
+        if schema in available:
+            self.color_schema = schema
+            self.logging.debug("Set color schema to " + schema)
+        else:
+            self.logging.warning("Schema '" + schema + "' not defined! (available: " + str(available) + ")")
 
     def compare(self, image_1st, image_2nd, detection_area=None):
         """

@@ -455,6 +455,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         if self.param["image"]["black_white"]:
             self.param["image_presets"]["saturation"] = 0
+        else:
+            del self.param["image_presets"]["saturation"]
 
         self.stream.stop()
         for c_key in self.param["image_presets"]:
