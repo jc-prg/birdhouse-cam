@@ -15,29 +15,35 @@ var birdhouse_camera_interval = {};
 * @param (dict) data: complete setting and status data from API
 * @param (boolean) show_settings: show complete settings (true) or only devices status (false)
 */
-function birdhouseDevices(title, data, show="settings") {
+function birdhouseDevices(title, data, show="settings", subset="all") {
 	var html = "";
 	var index = [];
 
-    var [settings, info] = birdhouseDevices_cameras(data);
-    html += settings;
-    index.push(info);
+    if (subset != "devices") {
+        var [settings, info] = birdhouseDevices_cameras(data);
+        html += settings;
+        index.push(info);
+        }
 
-    var [settings, info] = birdhouseDevices_weather(data);
-    html += settings;
-    index.push(info);
+    if (subset != "cameras") {
+        var [settings, info] = birdhouseDevices_weather(data);
+        html += settings;
+        index.push(info);
 
-    var [settings, info] = birdhouseDevices_sensors(data);
-    html += settings;
-    index.push(info);
+        var [settings, info] = birdhouseDevices_sensors(data);
+        html += settings;
+        index.push(info);
 
-    var [settings, info] = birdhouseDevices_relays(data);
-    html += settings;
-    index.push(info);
+        var [settings, info] = birdhouseDevices_relays(data);
+        html += settings;
+        index.push(info);
+        }
 
-    var [settings, info] = birdhouseDevices_microphones(data);
-    html += settings;
-    index.push(info);
+    if (subset != "devices") {
+        var [settings, info] = birdhouseDevices_microphones(data);
+        html += settings;
+        index.push(info);
+        }
 
     if (show == "settings") {
         var html_index = birdhouseDevices_status(index=index, show="interactive");

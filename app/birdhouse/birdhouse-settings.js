@@ -155,6 +155,13 @@ function birdhouse_app_settings (name="Settings") {
             this.set.write(1, "", this.loading);
             birdhousePrint_load('DEVICES',app_active_cam);
             }
+        else if (type == "cameras") {
+            this.setting_type = "CAMERA_SETTINGS";
+            this.set.clear_frames();
+            this.set.clear_content_frames();
+            this.set.write(1, "", this.loading);
+            birdhousePrint_load('CAMERA_SETTINGS',app_active_cam);
+            }
 
         }
 
