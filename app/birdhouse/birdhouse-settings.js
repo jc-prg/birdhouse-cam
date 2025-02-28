@@ -122,10 +122,12 @@ function birdhouse_app_settings (name="Settings") {
 
     this.create_new = function (type="") {
         this.set.show(true);
+        window.scrollTo(0, 0);
         if (type == "info") {
             this.setting_type = "PROCESSING";
             this.set.write(1, lang("INFORMATION"), this.information());
-            //this.set.show_entry(2);
+            this.set.write(2, "", "");
+            this.set.show_entry(2);
             }
         else if (type == "settings") {
             this.setting_type = "SETTINGS";
@@ -139,6 +141,8 @@ function birdhouse_app_settings (name="Settings") {
             this.set.clear_frames();
             this.set.clear_content_frames();
             this.set.write(1, "", this.loading);
+            this.set.write(2, "", "");
+            this.set.show_entry(2);
             birdhousePrint_load('IMAGE_SETTINGS',app_active_cam);
             }
         else if (type == "statistics") {
@@ -146,6 +150,8 @@ function birdhouse_app_settings (name="Settings") {
             this.set.clear_frames();
             this.set.clear_content_frames();
             this.set.write(1, "", this.loading);
+            this.set.write(2, "", "");
+            this.set.show_entry(2);
             birdhousePrint_load('STATISTICS',app_active_cam);
             }
         else if (type == "devices") {
@@ -153,6 +159,8 @@ function birdhouse_app_settings (name="Settings") {
             this.set.clear_frames();
             this.set.clear_content_frames();
             this.set.write(1, "", this.loading);
+            this.set.write(2, "", "");
+            this.set.show_entry(2);
             birdhousePrint_load('DEVICES',app_active_cam);
             }
         else if (type == "cameras") {
@@ -160,6 +168,8 @@ function birdhouse_app_settings (name="Settings") {
             this.set.clear_frames();
             this.set.clear_content_frames();
             this.set.write(1, "", this.loading);
+            this.set.write(2, "", "");
+            this.set.show_entry(2);
             birdhousePrint_load('CAMERA_SETTINGS',app_active_cam);
             }
 
@@ -502,7 +512,7 @@ function birdhouse_app_settings (name="Settings") {
 
 	this.toggle	= function (active=false) {
 	
-		if (active)	{ view_frame = "block"; view_settings = "none";  app_settings_active = false; }
+		if (active)	{ view_frame = "block"; view_settings = "none";  app_settings_active = false; window.scrollTo(0,0); }
 		else		{ view_frame = "none";  view_settings = "block"; app_settings_active = true;  }
 
 		for (var i=1;i<=app_frame_count;i++) {

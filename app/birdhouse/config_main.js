@@ -95,9 +95,9 @@ function app_setting_entries() {
     appSettings.add_entry("CAMERA",  lang("CAMERA_SETTINGS"),"birdhouse/img/device",      "birdhouse_settings.create_new('cameras');");
     appSettings.add_entry("IMAGE",   lang("IMAGE_SETTINGS"), "birdhouse/img/image",       "birdhouse_settings.create_new('image');");
     appSettings.add_entry("DEVICE",  lang("DEVICE_SETTINGS"),"birdhouse/img/temperature", "birdhouse_settings.create_new('devices');");
+    appSettings.add_entry("SERVER",  lang("GENERAL_SETTINGS"), "settings",                "birdhouse_settings.create_new('settings');");
     appSettings.add_entry("INFO",    lang("INFORMATION"),    "info",                      "birdhouse_settings.create_new('info');");
     appSettings.add_entry("STATS",   lang("STATISTICS"),     "birdhouse/img/statistics",  "birdhouse_settings.create_new('statistics');");
-    appSettings.add_entry("SERVER",  lang("SETTINGS"),       "settings",                  "birdhouse_settings.create_new('settings');");
     }
 
 /*

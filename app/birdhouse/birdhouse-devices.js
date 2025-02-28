@@ -755,7 +755,7 @@ function birdhouseDevices_cameraSettings (data) {
 	}
     html += "&nbsp;<br/>";
 
-    appSettings.show();
+    //appSettings.show();
     this.appSettings.write(1, lang("IMAGE_SETTINGS"), html);
 
     //setTextById(app_frame_content, html);
