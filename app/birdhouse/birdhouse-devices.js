@@ -293,8 +293,8 @@ function birdhouseDevices_cameras(data) {
             var relay_names = relay_list;
             var relay_modes = "auto,manual,off,on";
             var relay       = cameras[camera]["camera_light"]["switch"];
-            var api_call    = "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"on\");' class='button-video-edit'  style='background:green;color:white;'>ON</button>";
-            api_call       += "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"off\");' class='button-video-edit' style='background:red;color:white;'>OFF</button>";
+            var api_call    = "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"on\");' class='button-video-edit'  style='background:green;color:white;width:50px;'>ON</button>";
+            api_call       += "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"off\");' class='button-video-edit' style='background:red;color:white;width:50px;'>OFF</button>";
 
             html_entry = tab.start();
             html_entry += tab.row("- Light switch:",  birdhouse_edit_field(id="set_light_switch_"+camera, field="devices:cameras:"+camera+":camera_light:switch", type="select", options=relay_names, data_type="string"));
