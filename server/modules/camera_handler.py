@@ -373,13 +373,13 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.raise_error("Can't connect to PiCamera2 '" + self.source + "': " + str(err))
             return False
 
-        try:
-            current_awb_mode = self.stream.camera_config['awb_mode']
-            self.logging.warning("AWB Mode: " + str(current_awb_mode))
-            self.stream.camera_config['awb_mode'] = 'auto'
+        #try:
+            #current_awb_mode = self.stream.camera_config['awb_mode']
+            #self.logging.warning("AWB Mode: " + str(current_awb_mode))
+            #self.stream.camera_config['awb_mode'] = 'auto'
 
-        except Exception as err:
-            self.raise_warning("Can't set AWB Mode for PiCamera2 '" + self.source + "': " + str(err))
+        #except Exception as err:
+            #self.raise_warning("Can't set AWB Mode for PiCamera2 '" + self.source + "': " + str(err))
 
         if self.stream is None:
             self.raise_error("Can't connect to PiCamera2 '" + self.source + "': Unknown error.")
