@@ -343,7 +343,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         }
         self.picamera_streams = ["raw", "main", "lores"]
         self.picamera_stream = ["size", "format", "stride", "framesize"]
-        self.picamera_awb_modes = ["auto", "sunlight", "cloudy", "incandescent", "fluorescent"]
+        self.picamera_awb_modes = ["off", "auto", "sunlight", "cloudy", "incandescent", "fluorescent", "flash", "horizon"]
 
         self.camera_info = CameraInformation()
         self.logging.info("Starting PiCamera2 support for '"+self.id+":"+source+"' ...")
@@ -866,6 +866,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
             self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
             self.stream.set(cv2.CAP_PROP_AUTO_WB, 1) # active auto white balance
+            self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1) # active auto exposure
 
             if not self.stream.isOpened():
                 self.raise_error("- Can't connect to camera '" + self.source + "': not isOpen()")

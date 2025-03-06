@@ -671,8 +671,8 @@ function birdhouseDevices_cameraSettings (data) {
 	tab.style_rows["height"] = "27px";
 
 	var camera_settings_write   = ["Brightness", "Contrast", "Gain", "Gamma", "Hue",
-	                               "Saturation", "Exposure", "FPS", "Auto_WB"];
-	var camera_settings_read    = ["Auto_Exposure", "WB_Temperature"];
+	                               "Saturation", "Exposure", "FPS"];
+	var camera_settings_read    = ["Auto_Exposure", "WB_Temperature", "Auto_WB"];
 	var camera_settings_measure = ["Brightness", "Contrast", "Saturation"];
 
 	for (let camera in camera_settings) {
