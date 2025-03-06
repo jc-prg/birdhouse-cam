@@ -92,7 +92,7 @@ function app_setting_entries() {
     appSettings.add_entry("START1", "jc://birdhouse-cam/",  "birdhouse/img/bird.gif",   "");
     appSettings.add_entry("START2", "<div id='device_status_short'><b>"+lang("DEVICE_OVERVIEW")+"</b><br/>"+lang("PLEASE_WAIT")+" ...</div>",  "",   "");
 
-    appSettings.add_entry("CAMERA",  lang("CAMERA_SETTINGS"),"birdhouse/img/device",      "birdhouse_settings.create_new('cameras');");
+    appSettings.add_entry("CAMERA",  lang("CAMERA_SETTINGS"),"birdhouse/img/av_device",   "birdhouse_settings.create_new('cameras');");
     appSettings.add_entry("IMAGE",   lang("IMAGE_SETTINGS"), "birdhouse/img/image",       "birdhouse_settings.create_new('image');");
     appSettings.add_entry("DEVICE",  lang("DEVICE_SETTINGS"),"birdhouse/img/temperature", "birdhouse_settings.create_new('devices');");
     appSettings.add_entry("SERVER",  lang("GENERAL_SETTINGS"), "settings",                "birdhouse_settings.create_new('settings');");
