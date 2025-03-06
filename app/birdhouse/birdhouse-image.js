@@ -787,7 +787,7 @@ function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false, sourc
         stream_id_ext += "&" + stream_uid;
         }
     birdhouse_active_video_streams[stream_id_ext] = true;
-    console.error("NEW Stream ID: " + stream_id_ext + " (" + source + ")");
+    console.debug("NEW Stream ID: " + stream_id_ext + " (" + source + ")");
 
 	stream_link = stream_link.replaceAll("//", '/');
 	stream_link = stream_link.replace(":/","://");
