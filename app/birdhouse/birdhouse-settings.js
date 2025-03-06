@@ -253,12 +253,16 @@ function birdhouse_app_settings (name="Settings") {
 
         var main_settings_open = false;
         if (app_data["STATUS"]["server"]["initial_setup"]) {main_settings_open = true; }
-        html += birdhouse_OtherGroup( "APP_SETTINGS", "Main APP Settings", html_entry, main_settings_open, "settings" );
+        html += birdhouse_OtherGroup( "APP_SETTINGS", "APP Settings", html_entry, main_settings_open, "settings" );
 
         html_entry = this.server_side_settings();
-        html += birdhouse_OtherGroup( "SRV_SETTINGS", "Main SERVER settings <i>(edit in &quot;.env&quot;)</i>", html_entry, false, "settings" );
+        html += birdhouse_OtherGroup( "SRV_SETTINGS", "SERVER settings <i>(edit in &quot;.env&quot;)</i>", html_entry, false, "settings" );
 
-        html_entry = this.api_calls();
+        html_entry = this.api_calls(show="maintenance");
+        html_entry += "&nbsp;<br/>";
+        html += birdhouse_OtherGroup( "SRV_MAINTENANCE", "SERVER maintenance", html_entry, false, "settings" );
+
+        html_entry = this.api_calls(show="api");
         html_entry += "&nbsp;<br/>";
         html += birdhouse_OtherGroup( "api_calls", "Development: API Calls", html_entry, false, "settings" );
 
@@ -309,7 +313,7 @@ function birdhouse_app_settings (name="Settings") {
         return html_internal;
     }
 
-	this.api_calls = function () {
+	this.api_calls = function (show="all") {
 	    var api_call        = "";
         var cameras         = app_data["SETTINGS"]["devices"]["cameras"];
         var microphones     = app_data["SETTINGS"]["devices"]["microphones"];
@@ -317,39 +321,45 @@ function birdhouse_app_settings (name="Settings") {
         delete this.tab.style_cells["width"];
         var html_entry      = this.tab.start();
 
-        api_call    = "<button onclick='window.open(\"" + RESTurl + "api/no-id/list/\",\"_blank\");' class='button-settings-api';>LIST</button>";
-        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/INDEX/\",\"_blank\");' class='button-settings-api';>INDEX</button>";
-        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECTS/\",\"_blank\");' class='button-settings-api'>OBJECTS</button>";
-        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/STATISTICS/\",\"_blank\");' class='button-settings-api'>STATISTICS</button>";
-        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/FAVORITES/\",\"_blank\");' class='button-settings-api'>FAVORITES</button>";
-        html_entry += this.tab.row("API Calls", api_call);
+        if (show == "all" || show="api") {
+            api_call    = "<button onclick='window.open(\"" + RESTurl + "api/no-id/list/\",\"_blank\");' class='button-settings-api';>LIST</button>";
+            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/INDEX/\",\"_blank\");' class='button-settings-api';>INDEX</button>";
+            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECTS/\",\"_blank\");' class='button-settings-api'>OBJECTS</button>";
+            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/STATISTICS/\",\"_blank\");' class='button-settings-api'>STATISTICS</button>";
+            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/FAVORITES/\",\"_blank\");' class='button-settings-api'>FAVORITES</button>";
+            html_entry += this.tab.row("API Calls", api_call);
+            }
 
-        api_call    = "<button onclick='birdhouse_forceBackup();' class='button-settings-api'>Force Backup</button>";
-        api_call   += "<button onclick='birdhouse_forceRestart();' class='button-settings-api'>Force Restart</button>";
-        api_call   += "<button onclick='birdhouse_forceUpdateViews(\"all\");' class='button-settings-api'>Update Views</button>";
-        api_call   += "<button onclick='birdhouse_forceUpdateViews(\"all\",true);' class='button-settings-api'>Update Views Complete</button>";
-        api_call   += "<button onclick='birdhouse_recreateImageConfig();' class='button-settings-api'>NewImgCfg</button>";
-        api_call   += "<button onclick='birdhouse_removeDataToday();' class='button-settings-api'>CleanAllToday</button>";
-        api_call   += "<button onclick='birdhouse_checkTimeout();' class='button-settings-api'>Timeout</button>";
-        html_entry += this.tab.row("API Commands", api_call);
+        if (show == "all" || show="maintenance") {
+            api_call    = "<button onclick='birdhouse_forceBackup();' class='button-settings-api'>Force Backup</button>";
+            api_call   += "<button onclick='birdhouse_forceRestart();' class='button-settings-api'>Force Restart</button>";
+            api_call   += "<button onclick='birdhouse_forceUpdateViews(\"all\");' class='button-settings-api'>Update Views</button>";
+            api_call   += "<button onclick='birdhouse_forceUpdateViews(\"all\",true);' class='button-settings-api'>Update Views Complete</button>";
+            api_call   += "<button onclick='birdhouse_recreateImageConfig();' class='button-settings-api'>NewImgCfg</button>";
+            api_call   += "<button onclick='birdhouse_removeDataToday();' class='button-settings-api'>CleanAllToday</button>";
+            api_call   += "<button onclick='birdhouse_checkTimeout();' class='button-settings-api'>Timeout</button>";
+            html_entry += this.tab.row("API Commands", api_call);
+            }
 
-	    for (let camera in cameras) {
-	        api_call  = "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY/"+camera+"/\",\"_blank\");' class='button-settings-api'>Today "+camera.toUpperCase()+"</button>";
-	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' class='button-settings-api'>Compl. "+camera.toUpperCase()+"</button>";
-	        api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/ARCHIVE/"+camera+"/\",\"_blank\");' class='button-settings-api'>Archive "+camera.toUpperCase()+"</button>";
-            html_entry += this.tab.row("API "+camera, api_call);
-        }
+	    if (show == "all" || show="api" || show="devices") {
+            for (let camera in cameras) {
+                api_call  = "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY/"+camera+"/\",\"_blank\");' class='button-settings-api'>Today "+camera.toUpperCase()+"</button>";
+                api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' class='button-settings-api'>Compl. "+camera.toUpperCase()+"</button>";
+                api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/ARCHIVE/"+camera+"/\",\"_blank\");' class='button-settings-api'>Archive "+camera.toUpperCase()+"</button>";
+                html_entry += this.tab.row("API "+camera, api_call);
+            }
 
-        for (let micro in microphones) {
-            api_call    = "<button onclick='birdhouse_recordStartAudio(\""+micro+"\");' class='button-settings-api'>Record "+micro+"</button>";
-            api_call   += "<button onclick='birdhouse_recordStopAudio(\""+micro+"\");' class='button-settings-api'>Stop "+micro+"</button>";
-            html_entry += this.tab.row("API "+micro, api_call);
-        }
+            for (let micro in microphones) {
+                api_call    = "<button onclick='birdhouse_recordStartAudio(\""+micro+"\");' class='button-settings-api'>Record "+micro+"</button>";
+                api_call   += "<button onclick='birdhouse_recordStopAudio(\""+micro+"\");' class='button-settings-api'>Stop "+micro+"</button>";
+                html_entry += this.tab.row("API "+micro, api_call);
+            }
 
-        for (let relay in relays) {
-            api_call    = "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"on\");' class='button-settings-api'>"+relay+" ON</button>";
-            api_call   += "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"off\");' class='button-settings-api'>"+relay+" OFF</button>";
-            html_entry += this.tab.row("API " + relay, api_call);
+            for (let relay in relays) {
+                api_call    = "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"on\");' class='button-settings-api'>"+relay+" ON</button>";
+                api_call   += "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"off\");' class='button-settings-api'>"+relay+" OFF</button>";
+                html_entry += this.tab.row("API " + relay, api_call);
+                }
             }
 
         html_entry += this.tab.end();
