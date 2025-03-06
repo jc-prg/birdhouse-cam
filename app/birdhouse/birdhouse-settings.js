@@ -319,6 +319,9 @@ function birdhouse_app_settings (name="Settings") {
 
         api_call    = "<button onclick='window.open(\"" + RESTurl + "api/no-id/list/\",\"_blank\");' class='button-settings-api';>REST API</button>";
         api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/INDEX/\",\"_blank\");' class='button-settings-api';>INDEX</button>";
+        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECTS/\",\"_blank\");' class='button-settings-api'>Objects</button>";
+        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/STATISTICS/\",\"_blank\");' class='button-settings-api'>Statistics</button>";
+        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/FAVORITES/\",\"_blank\");' class='button-settings-api'>Favorites</button>";
         html_entry += this.tab.row("API Calls", api_call);
 
         api_call    = "<button onclick='birdhouse_forceBackup();' class='button-settings-api'>Force Backup</button>";
@@ -348,11 +351,6 @@ function birdhouse_app_settings (name="Settings") {
             api_call   += "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"off\");' class='button-settings-api'>"+relay+" OFF</button>";
             html_entry += this.tab.row("API " + relay, api_call);
             }
-
-        api_call   = "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECTS/\",\"_blank\");' class='button-settings-api'>Objects</button>";
-        api_call  += "<button onclick='window.open(\"" + RESTurl + "api/no-id/STATISTICS/\",\"_blank\");' class='button-settings-api'>Statistics</button>";
-        api_call  += "<button onclick='window.open(\"" + RESTurl + "api/no-id/FAVORITES/\",\"_blank\");' class='button-settings-api'>Favorites</button>";
-        html_entry += this.tab.row("API Other", api_call);
 
         html_entry += this.tab.end();
         this.tab.style_cells["width"] = "40%";
