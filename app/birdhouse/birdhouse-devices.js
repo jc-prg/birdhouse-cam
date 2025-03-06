@@ -171,7 +171,7 @@ function birdhouseDevices_cameras(data, subset="") {
 	tab.style_rows["height"] = "27px";
 	tab.style_cells["vertical-align"] = "top";
 
-    if (subset == "") {
+    if (subset != "short") {
 	    for (let camera in cameras) {
     	var onclick  = "birdhouse_createDayVideo('"+camera+"');";
     	var onclick2 = "birdhouse_reconnectCamera('"+camera+"');";
