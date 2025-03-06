@@ -363,9 +363,12 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if self.first_connect:
                 from picamera2 import Picamera2
                 self.stream = Picamera2()
-                self.stream.camera_config['awb_mode'] = 'auto'
                 self.configuration = self.stream.create_still_configuration(lores=None, raw=None)
                 self.stream.configure(self.configuration)
+
+                current_awb_mode = self.stream.camera_config['awb_mode']
+                self.logging.warning("AWB Mode: " + str(current_awb_mode))
+                self.stream.camera_config['awb_mode'] = 'auto'
 
             self.stream.start()
             time.sleep(0.5)
