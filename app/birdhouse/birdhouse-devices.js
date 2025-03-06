@@ -20,7 +20,7 @@ function birdhouseDevices(title, data, show="settings", subset="all") {
 	var index = [];
 
     if (subset != "devices") {
-        var [settings, info] = birdhouseDevices_cameras(data);
+        var [settings, info] = birdhouseDevices_cameras(data, subset);
         html += settings;
         index.push(info);
         }
@@ -159,19 +159,20 @@ function birdhouseDevices_status(index, show) {
 * @param (dict) data: complete setting and status data from API
 * @returns (string, dict): html and index information
 */
-function birdhouseDevices_cameras(data) {
-	var cameras	= data["SETTINGS"]["devices"]["cameras"];
-	var settings = app_data["SETTINGS"]
-	var micros  = "," + Object.keys(data["SETTINGS"]["devices"]["microphones"]).join(",");
+function birdhouseDevices_cameras(data, subset="") {
+	var cameras	    = data["SETTINGS"]["devices"]["cameras"];
+	var settings    = app_data["SETTINGS"]
+	var micros      = "," + Object.keys(data["SETTINGS"]["devices"]["microphones"]).join(",");
 	var relay_list  = "," + Object.keys(data["SETTINGS"]["devices"]["relays"]).join(",");
-	var admin 	= data["STATUS"]["admin_allowed"];
-	var html	= "";
-	var index_info = {};
-	var tab     = new birdhouse_table();
+	var admin 	    = data["STATUS"]["admin_allowed"];
+	var html	    = "";
+	var index_info  = {};
+	var tab         = new birdhouse_table();
 	tab.style_rows["height"] = "27px";
 	tab.style_cells["vertical-align"] = "top";
 
-	for (let camera in cameras) {
+    if (subset == "") {
+	    for (let camera in cameras) {
     	var onclick  = "birdhouse_createDayVideo('"+camera+"');";
     	var onclick2 = "birdhouse_reconnectCamera('"+camera+"');";
     	var info    = {};
@@ -337,6 +338,8 @@ function birdhouseDevices_cameras(data) {
 
 		html += birdhouse_OtherGroup( camera, camera_name, html_temp, false, "settings" );
 	}
+	    }
+
 	return [html, index_info];
 }
 
