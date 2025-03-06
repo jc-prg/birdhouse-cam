@@ -302,7 +302,9 @@ function birdhouseDevices_cameras(data) {
             html_entry += tab.row("- Mode:",          birdhouse_edit_field(id="set_light_mode_"+camera, field="devices:cameras:"+camera+":camera_light:mode", type="select", options=relay_modes, data_type="string"));
             html_entry += tab.row("",                 "(auto: on from sunset till sunrise / on: always on / off: always off / manual: start off and control manually)");
             html_entry += tab.row("- Brightness threshold:",  birdhouse_edit_field(id="set_light_threshold_"+camera, field="devices:cameras:"+camera+":camera_light:threshold", type="input", options="", data_type="integer") + " %");
-            html_entry += tab.row("- Test switch:",   api_call);
+            if (relay != "") {
+                html_entry += tab.row("- Test switch:",   api_call);
+                }
             html_entry += tab.end();
 
             id_list += "set_light_switch_"+camera+":set_light_mode_"+camera+":set_light_threshold_"+camera+":";

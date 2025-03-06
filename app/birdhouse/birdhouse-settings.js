@@ -330,7 +330,7 @@ function birdhouse_app_settings (name="Settings") {
             html_entry += this.tab.row("API Calls", api_call);
             }
 
-        if (show == "all" || show == "maintenance") {
+        if (show == "all") {
             api_call    = "<button onclick='birdhouse_forceBackup();' class='button-settings-api'>Force Backup</button>";
             api_call   += "<button onclick='birdhouse_forceRestart();' class='button-settings-api'>Force Restart</button>";
             api_call   += "<button onclick='birdhouse_forceUpdateViews(\"all\");' class='button-settings-api'>Update Views</button>";
@@ -339,6 +339,20 @@ function birdhouse_app_settings (name="Settings") {
             api_call   += "<button onclick='birdhouse_removeDataToday();' class='button-settings-api'>CleanAllToday</button>";
             api_call   += "<button onclick='birdhouse_checkTimeout();' class='button-settings-api'>Timeout</button>";
             html_entry += this.tab.row("API Commands", api_call);
+            }
+
+        if (show == "maintenance") {
+            api_call    = "<button onclick='birdhouse_forceRestart();' class='button-settings-api'>Force Restart</button>";
+            html_entry += this.tab.row("Restart", api_call);
+            api_call    = "<button onclick='birdhouse_forceUpdateViews(\"all\");' class='button-settings-api'>Update Views</button>";
+            api_call   += "<button onclick='birdhouse_forceUpdateViews(\"all\",true);' class='button-settings-api'>Update Views Complete</button>";
+            html_entry += this.tab.row("Update Views", api_call);
+            api_call    = "<button onclick='birdhouse_recreateImageConfig();' class='button-settings-api'>NewImgCfg</button>";
+            api_call   += "<button onclick='birdhouse_removeDataToday();' class='button-settings-api'>CleanAllToday</button>";
+            api_call   += "<button onclick='birdhouse_forceBackup();' class='button-settings-api'>Force Backup</button>";
+            html_entry += this.tab.row("Data", api_call);
+            api_call    = "<button onclick='birdhouse_checkTimeout();' class='button-settings-api'>Timeout</button>";
+            html_entry += this.tab.row("Test app timeout", api_call);
             }
 
 	    if (show == "all" || show == "api" || show == "devices") {
