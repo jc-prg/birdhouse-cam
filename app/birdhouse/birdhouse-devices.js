@@ -95,7 +95,7 @@ function birdhouseDevices_status(index, show) {
     if (!short && show_button) {
         html_index += "<div class='camera_info'>";
         html_index += "<div class='camera_info_image'>&nbsp;<br/>";
-        html_index += "<div id='loading_img'><img src='"+app_loading_image+"' style='width:50%;max-width:100px;'></div>";
+        html_index += "<div id='loading_img' style='height:120px;'><img src='"+app_loading_image+"' style='width:50%;max-width:100px;'></div>";
         html_index += "</div>";
         html_index += "<div class='camera_info_text'>";
     }
