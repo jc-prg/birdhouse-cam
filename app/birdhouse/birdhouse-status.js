@@ -87,7 +87,7 @@ function birdhouseStatus_print(data) {
     var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
     if (height > 1.5 * document.body.clientHeight) { elementVisible("move_up"); }
     else { elementHidden("move_up"); }
-    if (appSettings.active) { setTextById("device_status_short", birdhouseDevices("", data, "short")); } // !!!! Quelle des Problems? Zu oft aufgerufen?
+    //if (appSettings.active) { setTextById("device_status_short", birdhouseDevices("", data, "short")); } // !!!! Quelle des Problems? Zu oft aufgerufen?
                                                                                                          // bezieht sich auf die Settings
     birdhouseStatus_system(data);
     birdhouseStatus_cameras(data);
