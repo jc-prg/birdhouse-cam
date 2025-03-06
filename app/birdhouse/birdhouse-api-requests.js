@@ -314,6 +314,9 @@ function birdhouse_killStreamAnswer(data) {
         birdhouse_active_video_streams[data["kill-stream-id"]] = false;
         console.log("birdhouse_killStreamAnswer: killed stream " + data["kill-stream"] + "; id=" + data["kill-stream-id"]);
         }
+    else if (data["kill-stream-id"] && birdhouse_active_video_streams[data["kill-stream-id"]] == undefined) {
+        console.warn("birdhouse_killStreamAnswer: requested ID wasn't available any more.");
+        }
     else {
         console.error("birdhouse_killStreamAnswer: unexpected data returned.");
         console.error(data);
