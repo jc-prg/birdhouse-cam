@@ -108,34 +108,33 @@ function birdhouseDevices_status(index, show) {
             var onclick = "birdhouseDevices_openOne('"+index[i][key]["group"]+"')";
             var button = "";
 
-            if (show_button) { var device_key = "<text onclick=\""+onclick+"\" style=\"cursor:pointer;\"><u><b>" + key + "</b></u></text>"; }
-            else             { var device_key = key; }
+            if (device_type != "relay") {
+                if (show_button) { var device_key = "<text onclick=\""+onclick+"\" style=\"cursor:pointer;\"><u><b>" + key + "</b></u></text>"; }
+                else             { var device_key = key; }
 
-            if (short) {
-                var device_type = index[i][key]["type"];
-                if (typeof short_data[device_type] == 'undefined') { short_data[device_type] = ""; }
-                if (device_type != "relay") {
+                if (short) {
+                    var device_type = index[i][key]["type"];
+                    if (typeof short_data[device_type] == 'undefined') { short_data[device_type] = ""; }
                     short_data[device_type] += "<div id='status_" + index[i][key]["status"][1] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>";
                     }
+                else {
+                    var action = "<div style='float:left;'>";
+                    for (var a=0; a<index[i][key]["status"].length;a++) {
+                        action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>"; //
+                    }
+                    for (var a=index[i][key]["status"].length; a<3; a++) {
+                        action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;height:24px;width:24px;'></div>";
+                    }
+                    if (!show_button && (index[i][key]["type"] == "camera" || index[i][key]["type"] == "microphone")) {
+                        action += "<div style='float:left;padding:5px;width:70px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
+                    }
+                    else if (index[i][key]["type"] == "camera" || index[i][key]["type"] == "microphone") {
+                        action += "<div style='padding:5px;float:left;width:70px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
+                    }
+                    action += "</div>";
+                    html_index += tab.row(device_key, action);
+                    }
                 }
-            else {
-                var action = "<div style='float:left;'>";
-                for (var a=0; a<index[i][key]["status"].length;a++) {
-                    action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>"; //
-                }
-                for (var a=index[i][key]["status"].length; a<3; a++) {
-                    action += "<div id='status_" + index[i][key]["status"][a] + "_" + index[i][key]["id"] + "' style='float:left;height:24px;width:24px;'></div>";
-                }
-                if (!show_button && (index[i][key]["type"] == "camera" || index[i][key]["type"] == "microphone")) {
-                    action += "<div style='float:left;padding:5px;width:70px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
-                }
-                else if (index[i][key]["type"] == "camera" || index[i][key]["type"] == "microphone") {
-                    action += "<div style='padding:5px;float:left;width:70px;'><font id='show_stream_count_" + index[i][key]["id"] + "'>0 Streams</font></div>";
-                }
-                action += "</div>";
-                html_index += tab.row(device_key, action);
-                }
-
         });
     }
     if (short) {
