@@ -1058,7 +1058,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             "exposure":       [-1, "rw",  -1, -1],
             "auto_exposure":  [-1, "r",   -1, -1],
             "wb_temperature": [-1, "r",   -1, -1],
-            "auto_wb":        [-1, "r",   -1, -1]
+            "auto_wb":        [-1, "rw",  -1, -1]
         }
 
         if key == "init":
