@@ -324,7 +324,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             "brightness":       ["Brightness",          "rwm", -1.0, 1.0, "float"],
             "contrast":         ["Contrast",            "rwm", 0.0, 32.0, "float"],
             "sharpness":        ["Sharpness",           "rw",  0.0, 16.0, "float"],
-            "auto_wb":          ["AwbEnable",           "r",   -1, -1],
+            "auto_wb":          ["AwbEnable",           "rw",   -1, 1],
         }
         self.picamera_image = {
             "temperature":      ["ColourTemperature",   "r",   -1, -1],
