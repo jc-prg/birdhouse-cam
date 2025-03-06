@@ -292,11 +292,16 @@ function birdhouseDevices_cameras(data) {
         if (cameras[camera]["camera_light"]) {
             var relay_names = relay_list;
             var relay_modes = "auto,manual,off,on";
+            var relay       = cameras[camera]["camera_light"]["switch"];
+            var api_call    = "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"on\");' class='button-video-edit'  style='background:green;color:white;'>ON</button>";
+            api_call       += "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"off\");' class='button-video-edit' style='background:red;color:white;'>OFF</button>";
+
             html_entry = tab.start();
             html_entry += tab.row("- Light switch:",  birdhouse_edit_field(id="set_light_switch_"+camera, field="devices:cameras:"+camera+":camera_light:switch", type="select", options=relay_names, data_type="string"));
             html_entry += tab.row("- Mode:",          birdhouse_edit_field(id="set_light_mode_"+camera, field="devices:cameras:"+camera+":camera_light:mode", type="select", options=relay_modes, data_type="string"));
             html_entry += tab.row("",                 "(auto: on from sunset till sunrise / on: always on / off: always off / manual: start off and control manually)");
             html_entry += tab.row("- Brightness threshold:",  birdhouse_edit_field(id="set_light_threshold_"+camera, field="devices:cameras:"+camera+":camera_light:threshold", type="input", options="", data_type="integer") + " %");
+            html_entry += tab.row("- Test switch:",   api_call);
             html_entry += tab.end();
 
             id_list += "set_light_switch_"+camera+":set_light_mode_"+camera+":set_light_threshold_"+camera+":";
