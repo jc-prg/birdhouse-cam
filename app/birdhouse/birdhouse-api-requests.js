@@ -302,6 +302,9 @@ function birdhouse_forceRestart_exec() {
 	}
 
 function birdhouse_killStream(camera_id, stream_id) {
+
+// !!!! Still kills things that are produced somehow even if not necessary?!
+
     console.log("birdhouse_killStream: "+camera_id+" - "+stream_id);
     camera_id = camera_id.replace("_img", "");
     stream_id = stream_id.replace("_img", "");
