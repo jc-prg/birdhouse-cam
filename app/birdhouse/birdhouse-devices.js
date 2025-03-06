@@ -105,15 +105,15 @@ function birdhouseDevices_status(index, show) {
     for (var i=0;i<index.length;i++) {
         Object.keys(index[i]).forEach(key => {
             birdhouse_device_list.push(index[i][key]["group"]);
-            var onclick = "birdhouseDevices_openOne('"+index[i][key]["group"]+"')";
-            var button = "";
+            var onclick     = "birdhouseDevices_openOne('"+index[i][key]["group"]+"')";
+            var device_type = index[i][key]["type"];
+            var button      = "";
 
             if (device_type != "relay") {
                 if (show_button) { var device_key = "<text onclick=\""+onclick+"\" style=\"cursor:pointer;\"><u><b>" + key + "</b></u></text>"; }
                 else             { var device_key = key; }
 
                 if (short) {
-                    var device_type = index[i][key]["type"];
                     if (typeof short_data[device_type] == 'undefined') { short_data[device_type] = ""; }
                     short_data[device_type] += "<div id='status_" + index[i][key]["status"][1] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>";
                     }
