@@ -369,8 +369,7 @@ function birdhouseReloadView() {
 	if (app_active_page == "INDEX" || app_active_page == "IMAGE_SETTINGS" || app_active_page == "DEVICES") {
 		for (let key in app_camera_source) {
 
-		    console.log("--->"+app_active_cam+"/"+key);
-		    console.log(app_camera_source[key]);
+		    console.log("---> active:"+app_active_cam + " / key:" + key +" --- " + app_camera_source[key]);
 
 			var image = document.getElementById("stream_"+key);
 			if (image) {
