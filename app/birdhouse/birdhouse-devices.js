@@ -114,7 +114,9 @@ function birdhouseDevices_status(index, show) {
             if (short) {
                 var device_type = index[i][key]["type"];
                 if (typeof short_data[device_type] == 'undefined') { short_data[device_type] = ""; }
-                short_data[device_type] += "<div id='status_" + index[i][key]["status"][1] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>";
+                if (device_type != "relay") {
+                    short_data[device_type] += "<div id='status_" + index[i][key]["status"][1] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>";
+                    }
                 }
             else {
                 var action = "<div style='float:left;'>";
