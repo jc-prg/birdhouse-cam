@@ -18,6 +18,7 @@ function birdhouse_KillActiveStreams() {
         if (birdhouse_active_video_streams[key] == true) {
             var param = key.split("&");
             birdhouse_killStream(param[0], key);
+            birdhouse_active_video_streams[key] = false;
             }
         }
     window.stop();

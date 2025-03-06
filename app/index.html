@@ -121,9 +121,9 @@
             startApp();
             }
         else {
-            if (birdhouse_modules_loaded() == false)    { console.error("Birdhouse not yet loaded: " + birdhouse_modules_loaded()); }
-            if (modules_loaded() == false)              { console.error("Modules not yet loaded: " + modules_loaded()); }
-            if (framework_modules_loaded() == false)    { console.error("Framework not yet loaded: " + framework_modules_loaded()); }
+            if (birdhouse_modules_loaded() == false)    { console.warn("Birdhouse not yet loaded: " + birdhouse_modules_loaded()); }
+            if (modules_loaded() == false)              { console.warn("Modules not yet loaded: " + modules_loaded()); }
+            if (framework_modules_loaded() == false)    { console.warn("Framework not yet loaded: " + framework_modules_loaded()); }
 
             setTimeout( function() {
                 wait_until_loaded();
