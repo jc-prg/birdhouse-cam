@@ -343,6 +343,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         }
         self.picamera_streams = ["raw", "main", "lores"]
         self.picamera_stream = ["size", "format", "stride", "framesize"]
+        self.picamera_awb_modes = ["auto", "sunlight", "cloudy", "incandescent", "fluorescent"]
 
         self.camera_info = CameraInformation()
         self.logging.info("Starting PiCamera2 support for '"+self.id+":"+source+"' ...")
@@ -362,6 +363,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if self.first_connect:
                 from picamera2 import Picamera2
                 self.stream = Picamera2()
+                self.stream.camera_config['awb_mode'] = 'auto'
                 self.configuration = self.stream.create_still_configuration(lores=None, raw=None)
                 self.stream.configure(self.configuration)
 
