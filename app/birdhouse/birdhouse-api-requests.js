@@ -306,11 +306,11 @@ function birdhouse_killStream(camera_id, stream_id) {
 // !!!! Still kills things that are produced somehow even if not necessary?!
 
     console.log("birdhouse_killStream: "+camera_id+" - "+stream_id);
+	birdhouse_active_video_streams[stream_id] = false;
     camera_id = camera_id.replace("_img", "");
     stream_id = stream_id.replace("_img", "");
 	commands = ["kill-stream", stream_id, camera_id];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_killStreamAnswer, '', 'birdhouse_killStream');
-	birdhouse_active_video_streams[data["kill-stream-id"]] = false;
     }
 
 function birdhouse_killStreamAnswer(data) {
