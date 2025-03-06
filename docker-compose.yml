@@ -62,7 +62,7 @@ services:
       resources:
         limits:
           memory: ${MEMORY_MAX_SERVER:-600M}
-    #restart: always
+    restart: always
     networks:
       my-net:
         ipv4_address: 192.168.202.4
