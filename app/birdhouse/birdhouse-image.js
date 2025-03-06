@@ -416,7 +416,7 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
 	if (header_open == false) { dont_load = "data-"; }
 	if (entry["directory"] && entry["directory"].charAt(entry["directory"].length - 1) != "/") { entry["directory"] += "/"; }
 
-	console.log(app_active_page);
+	console.debug("Active Page: " + app_active_page);
 
 	var image_data        = birdhouse_ImageDisplayData(title, entry_id, entry, app_active_page, admin, video_short);
     var lowres            = image_data["lowres"];
