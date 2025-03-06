@@ -865,6 +865,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
                 self.stream.release()
             self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
             self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+            self.stream.set(cv2.CAP_PROP_AUTO_WB, 1) # active auto white balance
 
             if not self.stream.isOpened():
                 self.raise_error("- Can't connect to camera '" + self.source + "': not isOpen()")
