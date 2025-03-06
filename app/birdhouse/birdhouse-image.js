@@ -18,7 +18,7 @@ function birdhouse_KillActiveStreams() {
         if (birdhouse_active_video_streams[key] == true) {
             var param = key.split("&");
             birdhouse_killStream(param[0], key);
-            birdhouse_active_video_streams[key] = false;
+            delete birdhouse_active_video_streams[key];
             }
         }
     window.stop();
@@ -786,6 +786,7 @@ function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false) {
         stream_id_ext += "&" + stream_uid;
         }
     birdhouse_active_video_streams[stream_id_ext] = true;
+    console.error("NEW Stream ID: " + stream_id_ext)
 
 	stream_link = stream_link.replaceAll("//", '/');
 	stream_link = stream_link.replace(":/","://");
