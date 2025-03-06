@@ -238,7 +238,7 @@ function birdhouse_overlayShowByIndex(index) {
         birdhouse_videoOverlay(img_data["hires"], img_data["description"], img_data["swipe"]);
         }
     else if (img_data["hires_stream"]) {
-        var [hires, stream_uid]     = birdhouse_StreamURL(app_active_cam, img_data["hires_stream"], "stream_list_5", true);
+        var [hires, stream_uid]     = birdhouse_StreamURL(app_active_cam, img_data["hires_stream"], "stream_list_5", true, "OVERLAY");
         birdhouse_imageOverlay(hires, description,  img_data["hires_detect"], img_data["swipe"], "overlay_image", img_data["favorite"]);
         }
     else {

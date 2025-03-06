@@ -651,7 +651,7 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
         image_data["same_img_size"] = true;
         }
     else if (entry["type"] == "addon") {
-		var [lowres, stream_uid]    = birdhouse_StreamURL(app_active_cam, entry["stream"], "stream_list_5", true);
+		var [lowres, stream_uid]    = birdhouse_StreamURL(app_active_cam, entry["stream"], "stream_list_5", true, "THUMBNAIL #1");
 		image_data["lowres"]        = lowres;
 		image_data["hires_stream"]  = entry["stream_hires"];
 		image_data["onclick"]       = "birdhousePrint_load(view=\"INDEX\", camera = \""+entry["camera"]+"\");";
@@ -659,14 +659,14 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
         }
     else if (entry["type"] == "camera") {
         image_data["description"] = title;
-		var [lowres, stream_uid] = birdhouse_StreamURL(entry["id"], entry["video"]["stream"], "image_stream", true);
+		var [lowres, stream_uid] = birdhouse_StreamURL(entry["id"], entry["video"]["stream"], "image_stream", true, "THUMBNAIL #2");
 		image_data["lowres"]      = lowres;
 		image_data["hires"]       = lowres;
 		image_data["onclick"]     = "birdhouse_imageOverlay(\""+image_data["hires"]+"\",\""+image_data["description"]+"\");";
         }
     else if (entry["type"] == "detection") {
 		image_data["description"] = title;
-		var [lowres, stream_uid] = birdhouse_StreamURL(entry["id"], entry["video"]["stream_detect"], "image_stream_detect", true);
+		var [lowres, stream_uid] = birdhouse_StreamURL(entry["id"], entry["video"]["stream_detect"], "image_stream_detect", true, "THUMBNAIL #3");
 		image_data["lowres"]      = lowres;
 		image_data["hires"]       = lowres;
 		image_data["onclick"]     = "birdhouse_imageOverlay(\""+image_data["hires"]+"\",\""+image_data["description"]+"\", \"\", false, \"stream_overlay_"+entry["id"]+"\");";
@@ -764,7 +764,7 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
 * @param (boolean) new_uid: create a new stream id
 * @returns (string, integer): returns the streaming link and the unique stream id
 */
-function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false) {
+function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false, source="") {
     var stream_server = RESTurl;
     var stream_link   = stream_url;
     var stream_id_ext = camera;
@@ -786,7 +786,7 @@ function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false) {
         stream_id_ext += "&" + stream_uid;
         }
     birdhouse_active_video_streams[stream_id_ext] = true;
-    console.error("NEW Stream ID: " + stream_id_ext)
+    console.error("NEW Stream ID: " + stream_id_ext + " (" + source + ")");
 
 	stream_link = stream_link.replaceAll("//", '/');
 	stream_link = stream_link.replace(":/","://");
