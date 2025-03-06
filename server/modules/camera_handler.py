@@ -324,7 +324,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             "brightness":       ["Brightness",          "rwm", -1.0, 1.0, "float"],
             "contrast":         ["Contrast",            "rwm", 0.0, 32.0, "float"],
             "sharpness":        ["Sharpness",           "rw",  0.0, 16.0, "float"],
-            "auto_wb":          ["AwbEnable",           "rw",   -1, 1],
+            "auto_wb":          ["AwbEnable",           "rw",   0, 1],
         }
         self.picamera_image = {
             "temperature":      ["ColourTemperature",   "r",   -1, -1],
@@ -989,13 +989,14 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         15. CV_CAP_PROP_EXPOSURE Exposure (only for cameras). [-7..-1] ... tbc.
         16. CV_CAP_PROP_CONVERT_RGB Boolean flags indicating whether images should be converted to RGB.
         17. CV_CAP_PROP_WHITE_BALANCE Currently unsupported [4000..7000]
+        18. CV_CAP_PROP_AUTO_WB auto white balance [0..1]
 
         Args:
             key (str): key
             value (float): value
         """
         self.properties_set = ["saturation", "brightness", "contrast", "framerate", "exposure",
-                               "hue", "auto_white_balance", "auto_exposure", "gamma", "gain"]
+                               "hue", "auto_white_balance", "auto_exposure", "gamma", "gain", "auto_wb"]
         if key == "init":
             return
 
@@ -1003,6 +1004,8 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             if key == "auto_exposure":
                 self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, float(value))
             elif key == "auto_white_balance":
+                self.stream.set(cv2.CAP_PROP_AUTO_WB, float(value))
+            elif key == "auto_wb":
                 self.stream.set(cv2.CAP_PROP_AUTO_WB, float(value))
             elif key == "brightness":
                 self.stream.set(cv2.CAP_PROP_BRIGHTNESS, float(value))
