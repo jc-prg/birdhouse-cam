@@ -317,11 +317,11 @@ function birdhouse_app_settings (name="Settings") {
         delete this.tab.style_cells["width"];
         var html_entry      = this.tab.start();
 
-        api_call    = "<button onclick='window.open(\"" + RESTurl + "api/no-id/list/\",\"_blank\");' class='button-settings-api';>REST API</button>";
+        api_call    = "<button onclick='window.open(\"" + RESTurl + "api/no-id/list/\",\"_blank\");' class='button-settings-api';>LIST</button>";
         api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/INDEX/\",\"_blank\");' class='button-settings-api';>INDEX</button>";
-        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECTS/\",\"_blank\");' class='button-settings-api'>Objects</button>";
-        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/STATISTICS/\",\"_blank\");' class='button-settings-api'>Statistics</button>";
-        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/FAVORITES/\",\"_blank\");' class='button-settings-api'>Favorites</button>";
+        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECTS/\",\"_blank\");' class='button-settings-api'>OBJECTS</button>";
+        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/STATISTICS/\",\"_blank\");' class='button-settings-api'>STATISTICS</button>";
+        api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/FAVORITES/\",\"_blank\");' class='button-settings-api'>FAVORITES</button>";
         html_entry += this.tab.row("API Calls", api_call);
 
         api_call    = "<button onclick='birdhouse_forceBackup();' class='button-settings-api'>Force Backup</button>";
