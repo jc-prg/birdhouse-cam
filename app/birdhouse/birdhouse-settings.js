@@ -321,7 +321,7 @@ function birdhouse_app_settings (name="Settings") {
         delete this.tab.style_cells["width"];
         var html_entry      = this.tab.start();
 
-        if (show == "all" || show="api") {
+        if (show == "all" || show == "api") {
             api_call    = "<button onclick='window.open(\"" + RESTurl + "api/no-id/list/\",\"_blank\");' class='button-settings-api';>LIST</button>";
             api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/INDEX/\",\"_blank\");' class='button-settings-api';>INDEX</button>";
             api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECTS/\",\"_blank\");' class='button-settings-api'>OBJECTS</button>";
@@ -330,7 +330,7 @@ function birdhouse_app_settings (name="Settings") {
             html_entry += this.tab.row("API Calls", api_call);
             }
 
-        if (show == "all" || show="maintenance") {
+        if (show == "all" || show == "maintenance") {
             api_call    = "<button onclick='birdhouse_forceBackup();' class='button-settings-api'>Force Backup</button>";
             api_call   += "<button onclick='birdhouse_forceRestart();' class='button-settings-api'>Force Restart</button>";
             api_call   += "<button onclick='birdhouse_forceUpdateViews(\"all\");' class='button-settings-api'>Update Views</button>";
@@ -341,7 +341,7 @@ function birdhouse_app_settings (name="Settings") {
             html_entry += this.tab.row("API Commands", api_call);
             }
 
-	    if (show == "all" || show="api" || show="devices") {
+	    if (show == "all" || show == "api" || show == "devices") {
             for (let camera in cameras) {
                 api_call  = "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY/"+camera+"/\",\"_blank\");' class='button-settings-api'>Today "+camera.toUpperCase()+"</button>";
                 api_call += "<button onclick='window.open(\"" + RESTurl + "api/no-id/TODAY_COMPLETE/"+camera+"/\",\"_blank\");' class='button-settings-api'>Compl. "+camera.toUpperCase()+"</button>";
