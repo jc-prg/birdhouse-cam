@@ -666,7 +666,7 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
         }
     else if (entry["type"] == "detection") {
 		image_data["description"] = title;
-		var [lowres, stream_uid] = birdhouse_StreamURL(entry["id"], entry["video"]["stream_detect"], "image_stream_detect", true, "THUMBNAIL #3");
+		var [lowres, stream_uid] = birdhouse_StreamURL(entry["id"], entry["video"]["stream_detect"], "image_stream_detect", false, "THUMBNAIL #3");
 		image_data["lowres"]      = lowres;
 		image_data["hires"]       = lowres;
 		image_data["onclick"]     = "birdhouse_imageOverlay(\""+image_data["hires"]+"\",\""+image_data["description"]+"\", \"\", false, \"stream_overlay_"+entry["id"]+"\");";
