@@ -87,8 +87,12 @@ function birdhouseStatus_print(data) {
     var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
     if (height > 1.5 * document.body.clientHeight) { elementVisible("move_up"); }
     else { elementHidden("move_up"); }
-    //if (appSettings.active) { setTextById("device_status_short", birdhouseDevices("", data, "short")); } // !!!! Quelle des Problems? Zu oft aufgerufen?
-                                                                                                         // bezieht sich auf die Settings
+    if (appSettings.loaded_index) { setTextById("device_status_short", birdhouseDevices("", data, "short")); appSettings.loaded_index = false; }
+    //if (appSettings.active) { setTextById("device_status_short", birdhouseDevices("", data, "short")); }
+    // !!!! Quelle des Problems? Zu oft aufgerufen?
+    // bezieht sich auf die Settings, Ziel: Tile mit Status Infos füllen, was nur einmal passieren muss ... dann nicht wieder?!
+    // Idee: eigene Variable, die beim Laden der Übersichtsseite gesetzt wird und dann hier deaktiviert wird
+
     birdhouseStatus_system(data);
     birdhouseStatus_cameras(data);
     birdhouseStatus_weather(data);
