@@ -16,7 +16,8 @@ services:
     volumes:
     - ./config/apache/apache2.conf:/usr/local/apache2/conf/apache2.conf
     - ./config/apache/httpd.conf:/usr/local/apache2/conf/httpd.conf
-    - ./config/apache/ssl:/usr/local/apache2/conf
+    - ./config/apache/ssl/server.crt:/usr/local/apache2/conf/server.crt
+    - ./config/apache/ssl/server.key:/usr/local/apache2/conf/server.key
     - ./app:/usr/local/apache2/htdocs
     - ./data/images:/usr/local/apache2/htdocs/images
     - ./data/videos:/usr/local/apache2/htdocs/videos
