@@ -324,7 +324,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             "brightness":       ["Brightness",          "rwm", -1.0, 1.0, "float"],
             "contrast":         ["Contrast",            "rwm", 0.0, 32.0, "float"],
             "sharpness":        ["Sharpness",           "rw",  0.0, 16.0, "float"],
-            "auto_wb":          ["AwbEnable",           "rw",   0, 1],
+            "auto_wb":          ["AwbEnable",           "r",   0, 1],
         }
         self.picamera_image = {
             "temperature":      ["ColourTemperature",   "r",   -1, -1],
@@ -870,7 +870,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             self.stream = cv2.VideoCapture(self.source, cv2.CAP_V4L)
             self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
             #self.stream.set(cv2.CAP_PROP_AUTO_WB, 1) # active auto white balance
-            self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0) # active auto exposure
+            #self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0) # active auto exposure
 
             if not self.stream.isOpened():
                 self.raise_error("- Can't connect to camera '" + self.source + "': not isOpen()")
