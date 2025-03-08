@@ -501,7 +501,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             try:
                 if not init:
                     self.stream.stop()
-                self.configuration["controls"][full_key] = value
+                self.configuration["controls"][full_key] = float(value)
                 self.stream.configure(self.configuration)
                 if not init:
                     self.stream.start()
