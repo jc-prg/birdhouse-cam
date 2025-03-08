@@ -365,9 +365,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.stream = Picamera2()
                 self.configuration = self.stream.create_still_configuration(lores=None, raw=None)
                 self.stream.configure(self.configuration)
-                self.logging.info(".......")
-                self.logging.info(str(self.configuration))
-                self.logging.info(".......")
+                self.logging.debug("PiCamera2 Config: "+ str(self.configuration))
 
             self.stream.start()
             time.sleep(0.5)
@@ -1055,14 +1053,13 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         """
         properties_not_used = ["pos_msec", "pos_frames", "pos_avi_ratio", "convert_rgb", "fourcc", "format", "mode",
                                "frame_count", "frame_width", "frame_height"]
-        properties_get_array = ["brightness", "saturation", "contrast", "color_filter", "hue", "gain", "gamma",
+        properties_get_array = ["brightness", "saturation", "contrast", "hue", "gain", "gamma",
                                 "exposure", "auto_exposure", "auto_wb", "wb_temperature", "temperature",
                                 "fps", "focus", "autofocus", "zoom"]
         camera_properties = {
             "saturation":     [-1, "rwm", -1, -1],
             "brightness":     [-1, "rwm", -1, -1],
             "contrast":       [-1, "rwm", -1, -1],
-            "color_filter":   [-1, "rw", -1, -1],
             "gain":           [-1, "rw",  -1, -1],
             "gamma":          [-1, "rw",  -1, -1],
             "hue":            [-1, "rw",  -1, -1],
