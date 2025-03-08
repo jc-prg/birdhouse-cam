@@ -375,14 +375,15 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             return False
 
         try:
-            self.stream.controls.ColorFilterArrangement = 0
+            #self.stream.controls.ColorFilterArrangement = 0
+            self.stream.camera_properties["ColorFilterArrangement"] = 0
         except Exception as e:
-            self.logging.warning("ColorFilterArrangement = 0 doesn't work. ")
+            self.logging.warning("ColorFilterArrangement = 0 doesn't work: " + str(e))
 
         try:
-            current_awb_mode = self.stream.camera_config['awb_mode']
+            current_awb_mode = self.stream.controls.awb_mode
             self.logging.warning("AWB Mode: " + str(current_awb_mode))
-            self.stream.camera_config['awb_mode'] = 'auto'
+            self.stream.controls.awb_mode = 'auto'
 
         except Exception as err:
             self.raise_warning("Can't set AWB Mode for PiCamera2 '" + self.source + "': " + str(err))
