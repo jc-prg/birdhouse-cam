@@ -1074,8 +1074,14 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             self.properties_get = camera_properties.copy()
 
         for prop_key in self.properties_get:
-            value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
-            self.properties_get[prop_key][0] = value
+            try_value = False
+            try:
+                value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
+                self.properties_get[prop_key][0] = value
+                try_value = True
+            except Exception as e:
+                self.logging.warning("Could not read value 'cv2.CAP_PROP_" + prop_key.upper() + "': " + str(e))
+                value = -1
 
             if key == "init":
                 try:
