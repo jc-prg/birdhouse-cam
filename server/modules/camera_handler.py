@@ -320,11 +320,11 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.create_test_images = True
 
         self.picamera_controls = {
-            "saturation":       ["Saturation",          "rwm", 0.0, 32.0, "float"],
+            "saturation":       ["Saturation",          "rwm", 0.0, 1.0, "float"],
             "brightness":       ["Brightness",          "rwm", -1.0, 1.0, "float"],
-            "contrast":         ["Contrast",            "rwm", 0.0, 32.0, "float"],
+            "contrast":         ["Contrast",            "rwm", 0.0, 1.0, "float"],
             "sharpness":        ["Sharpness",           "rw",  0.0, 16.0, "float"],
-            "auto_wb":          ["AwbEnable",           "r",   0, 1],
+            "auto_wb":          ["AwbEnable",           "rw",   0, 1],
         }
         self.picamera_image = {
             "temperature":      ["ColourTemperature",   "r",   -1, -1],
@@ -379,13 +379,13 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         except Exception as e:
             self.logging.warning("ColorFilterArrangement = 0 doesn't work. ")
 
-        #try:
-            #current_awb_mode = self.stream.camera_config['awb_mode']
-            #self.logging.warning("AWB Mode: " + str(current_awb_mode))
-            #self.stream.camera_config['awb_mode'] = 'auto'
+        try:
+            current_awb_mode = self.stream.camera_config['awb_mode']
+            self.logging.warning("AWB Mode: " + str(current_awb_mode))
+            self.stream.camera_config['awb_mode'] = 'auto'
 
-        #except Exception as err:
-            #self.raise_warning("Can't set AWB Mode for PiCamera2 '" + self.source + "': " + str(err))
+        except Exception as err:
+            self.raise_warning("Can't set AWB Mode for PiCamera2 '" + self.source + "': " + str(err))
 
         if self.stream is None:
             self.raise_error("Can't connect to PiCamera2 '" + self.source + "': Unknown error.")
