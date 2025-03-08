@@ -381,7 +381,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.logging.warning("ColorFilterArrangement = 0 doesn't work: " + str(e))
 
         try:
-            current_awb_mode = self.stream.controls.awb_mode
+            current_awb_mode = self.stream.controls.AwbEnable
             self.logging.warning("AWB Mode: " + str(current_awb_mode))
             self.stream.controls.AwbEnable = 1
 
