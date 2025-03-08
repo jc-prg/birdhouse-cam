@@ -1059,7 +1059,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             "saturation":     [-1, "rwm", -1, -1],
             "brightness":     [-1, "rwm", -1, -1],
             "contrast":       [-1, "rwm", -1, -1],
-            "color_filter":   [-1, "rwm", -1, -1],
+            "color_filter":   [-1, "rw", -1, -1],
             "gain":           [-1, "rw",  -1, -1],
             "gamma":          [-1, "rw",  -1, -1],
             "hue":            [-1, "rw",  -1, -1],
@@ -1083,7 +1083,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
                 self.logging.warning("Could not read value 'cv2.CAP_PROP_" + prop_key.upper() + "': " + str(e))
                 value = -1
 
-            if key == "init":
+            if key == "init" and try_value:
                 try:
                     self.stream.set(eval("cv2.CAP_PROP_" + prop_key.upper()), -100000.0)
                     value = self.stream.get(eval("cv2.CAP_PROP_" + prop_key.upper()))
