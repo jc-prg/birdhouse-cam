@@ -365,6 +365,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.stream = Picamera2()
                 self.configuration = self.stream.create_still_configuration(lores=None, raw=None)
                 self.stream.configure(self.configuration)
+                self.stream.controls.color_filter = None
 
             self.stream.start()
             time.sleep(0.5)
