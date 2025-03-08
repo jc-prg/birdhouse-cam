@@ -383,7 +383,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         try:
             current_awb_mode = self.stream.controls.awb_mode
             self.logging.warning("AWB Mode: " + str(current_awb_mode))
-            self.stream.controls.awb_mode = 'auto'
+            self.stream.controls.AwbEnable = 1
 
         except Exception as err:
             self.raise_warning("Can't set AWB Mode for PiCamera2 '" + self.source + "': " + str(err))
