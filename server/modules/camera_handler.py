@@ -370,14 +370,14 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.stream.start()
             time.sleep(0.5)
 
+        except Exception as err:
+            self.raise_error("Can't connect to PiCamera2 '" + self.source + "': " + str(err))
+            return False
+
         try:
             self.stream.controls.ColorFilterArrangement = 0
         except Exception as e:
             self.logging.warning("ColorFilterArrangement = 0 doesn't work. ")
-
-        except Exception as err:
-            self.raise_error("Can't connect to PiCamera2 '" + self.source + "': " + str(err))
-            return False
 
         #try:
             #current_awb_mode = self.stream.camera_config['awb_mode']
