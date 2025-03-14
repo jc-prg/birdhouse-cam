@@ -30,6 +30,7 @@ function birdhouse_app_settings (name="Settings") {
             }
       	setTimeout(function(){
       	    birdhouse_settings.create_exec(type);
+      	    alert(type);
 		}, 500);
 		//birdhouse_KillActiveStreams();
     	window.scrollTo(0,0);
