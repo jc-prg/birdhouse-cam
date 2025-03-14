@@ -1420,6 +1420,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.usage_interval = 60
         self.initial_connect_msg = {}
         self.maintenance_mode = False
+        self.relay_warning = True
 
         self.connected = False
         self.camera_scan = {}
@@ -1832,6 +1833,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.object = BirdhouseObjectDetection(self.id, self.config)
         self.object.start()
         self.initialized = True
+        self.relay_warning = True
 
     def reconnect(self, directly=False):
         """
@@ -2211,8 +2213,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.logging.debug("Check timing:     sunrise=" + str(sunrise) +
                                   "; sunset=" + str(sunset) + "; time=" + str(local_time))
 
-            else:
+            elif self.relay_warning:
                 self.logging.warning("The relay connected to camera is not defined in the settings: " + light_relay)
+                self.relay_warning = False
 
         else:
             self.logging.warning("Config file is not up-to-date, value 'camera_light' is missing.")
