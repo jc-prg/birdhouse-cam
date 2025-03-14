@@ -191,9 +191,9 @@ function birdhousePrint(data) {
 	    birdhouse_settings.toggle(true);
 	    appSettings.hide();
 	    appSettings.create();
-	    appSettings.clear_content_frames();
-        //appSettings.clear_frames();
-        //birdhouse_settings.create_new('devices');
+	    //appSettings.clear_content_frames();
+        appSettings.clear_frames();
+        birdhouse_settings.create_new('devices');
         appSettings.show();
         }
 	else if (app_active_page == "CAMERA_SETTINGS")   { birdhouseDevices(lang("CAMERAS"), data, "settings", "cameras"); }
