@@ -701,7 +701,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.raise_error("Key '" + str(key) + "' is unknown!")
             return False
 
-    def get_properties_available(self, keys="get"):
+    def get_properties_available_old(self, keys="get"):
         """
         get available properties from Picamera2 using different methods; for more details see the full
         documentation: https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf; not all available properties
@@ -725,7 +725,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             return self.properties_set
         return self.property_keys
 
-    def get_properties_available_new(self, keys="get"):
+    def get_properties_available(self, keys="get"):
         """
         get available properties from Picamera2 using different methods; for more details see the full
         documentation: https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf;
