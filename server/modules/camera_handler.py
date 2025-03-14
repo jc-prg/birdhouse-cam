@@ -717,6 +717,33 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if image is None:
                 image = self.stream.capture_array("main")
 
+            testing_wb = true
+            if testing_wb:
+                time.sleep(1)
+
+                self.stream.set_controls({"AwbMode": "off"})
+                self.stream.set_controls({"AwbGainR": 1.0, "AwbGainB": 1.5})
+
+                # Capture another image after the adjustment
+                image_adjusted = self.stream.capture_array()
+
+                # Optionally, further process the image to correct any red dominance
+                # Using OpenCV to adjust the image's color balance
+                image_hsv = cv2.cvtColor(image_adjusted, cv2.COLOR_BGR2HSV)
+
+                # Apply a simple method to decrease redness if needed
+                # You can adjust the Hue or Saturation to balance out the red bias
+                lower_red = np.array([0, 50, 50])
+                upper_red = np.array([10, 255, 255])
+                mask = cv2.inRange(image_hsv, lower_red, upper_red)
+
+                # Now mask the areas that are too red and adjust
+                image_hsv[mask == 255] = [0, 0, 0]  # Example of reducing red areas (you can tune this further)
+
+                # Convert back to BGR for viewing or saving
+                image = cv2.cvtColor(image_hsv, cv2.COLOR_HSV2BGR)
+
+
             text = str(self.config.local_time()) + " - " + context
             image = cv2.putText(image, str(text), (30, 40), int(cv2.FONT_HERSHEY_SIMPLEX), 1, (0, 0, 0),
                                 2, cv2.LINE_AA)
