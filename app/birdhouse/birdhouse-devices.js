@@ -684,7 +684,7 @@ function birdhouseDevices_cameraSettings (data) {
         var camera_settings_write   = [];
         var camera_settings_read    = [];
         var camera_settings_measure = [];
-    	var camera_settings_main    = ["brightness", "saturation", "contrast", "exposure", "sharpness"];
+    	var camera_settings_main    = ["brightness", "saturation", "contrast", "exposure", "sharpness", "black &amp; white"];
         var picamera_info           = "";
         var api_call                = "";
 
@@ -722,21 +722,13 @@ function birdhouseDevices_cameraSettings (data) {
         if (camera_properties[camera]["properties_new"] && Object.keys(camera_properties[camera]["properties_new"]).length > 0) {
             this_camera_properties = camera_properties[camera]["properties_new"];
             this_camera_type = "new";
-            this_camera_properties["Black &amp; White"] = [camera_settings[camera]["image"]["black_white"], "rw", "boolean", [False, True, None]];
+            this_camera_properties["Black &amp; White"] = [camera_settings[camera]["image"]["black_white"], "rw", "boolean", [false, true, null]];
             if (this_camera_properties["CameraType"] && this_camera_properties["CameraType"][0].indexOf("PiCamera") >= 0) { picamera_info = "(PiCamera)"; }
             }
         else {
             this_camera_properties = camera_properties[camera]["properties"];
             this_camera_type = "old";
             }
-
-        /*
-        Object.entries(this_camera_properties)
-  .sort(([keyA, valueA], [keyB, valueB]) => keyA.localeCompare(keyB))  // Sorting by keys
-  .forEach(([key, value]) => {
-    console.log(key, value);
-  });
-        */
 
         Object.entries(this_camera_properties)
                 .sort(([keyA, valueA], [keyB, valueB]) => keyA.localeCompare(keyB))
