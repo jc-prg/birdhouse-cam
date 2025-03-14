@@ -751,6 +751,7 @@ function birdhouseDevices_cameraSettings (data) {
         for (var i=0;i<camera_settings_write.length;i++) {
             var value = camera_settings_write[i].toLowerCase();
             var text  = camera_settings_write[i].replaceAll("_", " ");
+            text      = text.replace(/([a-z])([A-Z])/g, '$1 $2').split(' ');
             var key   = camera_settings_write[i];
 
             if (this_camera_type == "new") {
