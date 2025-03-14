@@ -812,7 +812,7 @@ function birdhouseDevices_cameraSettings (data) {
                 else {
                     //text            = text.replace(/([a-z])([A-Z])/g, '$1 $2');
                     text            = addSpaceBeforeCamelCase(text);
-                    html_entry_sub += tab.row("<b>" + text + ":</b><br/>" + range_text, data_edit)s;
+                    html_entry_sub += tab.row("<b>" + text + ":</b><br/>" + range_text, data_edit);
                     //html_entry_sub += tab.row("",   prop);
                     count_sub      += 1;
                     }
