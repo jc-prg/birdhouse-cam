@@ -94,6 +94,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         range = options.split(":");
         if (options.indexOf(".") > 0)                       { step = "0.1"; }
         else if (range.length > 2 && range[2] == "float")   { step = "0.1"; }
+        if (data_type == "float")                           { step = "0.1"; }
 
         style = "width:100px";
         if (range[0] == 0 && range[1] == 1) { style = "width:40px;"; }
