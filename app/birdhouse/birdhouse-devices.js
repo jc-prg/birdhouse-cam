@@ -722,7 +722,7 @@ function birdhouseDevices_cameraSettings (data) {
         if (camera_properties[camera]["properties_new"] && Object.keys(camera_properties[camera]["properties_new"]).length > 0) {
             this_camera_properties = camera_properties[camera]["properties_new"];
             this_camera_type = "new";
-            this_camera_properties["Black_White"] = [camera_settings[camera]["image"]["black_white"], "rw", "boolean", [false, true, null]];
+            //this_camera_properties["Black_White"] = [camera_settings[camera]["image"]["black_white"], "rw", "boolean", [false, true, null]];
             if (this_camera_properties["CameraType"] && this_camera_properties["CameraType"][0].indexOf("PiCamera") >= 0) { picamera_info = "(PiCamera)"; }
             }
         else {
