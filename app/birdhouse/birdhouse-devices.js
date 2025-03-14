@@ -678,6 +678,7 @@ function birdhouseDevices_cameraSettings (data) {
 	                               "Saturation", "Exposure", "FPS"];
 	var camera_settings_read    = ["Auto_Exposure", "WB_Temperature", "Auto_WB"];
 	var camera_settings_measure = ["Brightness", "Contrast", "Saturation"];
+	var camera_settings_main    = ["brightness", "saturation", "contrast", "exposure", "sharpness"];
 
 	for (let camera in camera_settings) {
 	    id_list = "";
@@ -729,8 +730,10 @@ function birdhouseDevices_cameraSettings (data) {
 
 
         var count = 0;
-        html_entry = "&nbsp;<br/>";
-        html_entry += tab.start();
+        html_entry     = "&nbsp;<br/>";
+        html_entry    += tab.start();
+        html_entry_sub = html_entry;
+
         for (var i=0;i<camera_settings_write.length;i++) {
             var value = camera_settings_write[i].toLowerCase();
             var key   = camera_settings_write[i].replaceAll("_", " ");
@@ -752,10 +755,17 @@ function birdhouseDevices_cameraSettings (data) {
                     data_edit += " " + birdhouseDevices_cameraSettingsButton(camera, value, "set_"+value+"_"+camera, "change");
                     }
 
+                if (camera_settings_main.indexOf(key.toLowerCase()) >= 0) {
 
-                html_entry += tab.row("<b>" + key + ":</b><br/>" + range_text, data_edit);
-                html_entry += tab.row("",   prop);
-                count      += 1;
+                    html_entry += tab.row("<b>" + key + ":</b><br/>" + range_text, data_edit);
+                    html_entry += tab.row("",   prop);
+                    count      += 1;
+                    }
+                else {
+                    html_entry_sub += tab.row("<b>" + key + ":</b><br/>" + range_text, data_edit);
+                    html_entry_sub += tab.row("",   prop);
+                    count          += 1;
+                    }
                 }
             else {
 
