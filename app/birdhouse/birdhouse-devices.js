@@ -729,7 +729,17 @@ function birdhouseDevices_cameraSettings (data) {
             this_camera_type = "old";
             }
 
-        Object.entries(this_camera_properties).forEach(([key,value]) => {
+        /*
+        Object.entries(this_camera_properties)
+  .sort(([keyA, valueA], [keyB, valueB]) => keyA.localeCompare(keyB))  // Sorting by keys
+  .forEach(([key, value]) => {
+    console.log(key, value);
+  });
+        */
+
+        Object.entries(this_camera_properties)
+                .sort(([keyA, valueA], [keyB, valueB]) => keyA.localeCompare(keyB))
+                .forEach(([key,value]) => {
             if (value[1].indexOf("w") >= 0)      { camera_settings_write.push(key); }
             else if (value[1].indexOf("r") >= 0) { camera_settings_read.push(key); }
             if (value[1].indexOf("m") >= 0)      { camera_settings_measure.push(key); }
