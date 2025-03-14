@@ -751,7 +751,6 @@ function birdhouseDevices_cameraSettings (data) {
         for (var i=0;i<camera_settings_write.length;i++) {
             var value = camera_settings_write[i].toLowerCase();
             var text  = camera_settings_write[i].replaceAll("_", " ");
-            text      = text.replace(/([a-z])([A-Z])/g, '$1 $2');
             var key   = camera_settings_write[i];
 
             if (this_camera_type == "new") {
@@ -787,11 +786,13 @@ function birdhouseDevices_cameraSettings (data) {
                     }
 
                 if (camera_settings_main.indexOf(key.toLowerCase()) >= 0) {
+                    text        = text.replace(/([a-z])([A-Z])/g, '$1 $2');
                     html_entry += tab.row("<b>" + text + ":</b><br/>" + range_text, data_edit);
                     html_entry += tab.row("",   prop);
                     count      += 1;
                     }
                 else {
+                    text            = text.replace(/([a-z])([A-Z])/g, '$1 $2');
                     html_entry_sub += tab.row("<b>" + text + ":</b><br/>" + range_text, data_edit);
                     html_entry_sub += tab.row("",   prop);
                     count_sub      += 1;
