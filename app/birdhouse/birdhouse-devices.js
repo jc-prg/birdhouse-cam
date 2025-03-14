@@ -686,6 +686,13 @@ function birdhouseDevices_cameraSettings (data) {
         var camera_settings_measure = [];
     	var camera_settings_main    = ["brightness", "saturation", "contrast", "exposure", "sharpness"];
         var picamera_info           = "";
+        var api_call                = "";
+
+        if (camera_settings[camera]["camera_light"] && camera_settings[camera]["camera_light"]["switch"]) {
+            var relay = camera_settings[camera]["camera_light"]["switch"];
+            api_call    = "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"on\");' class='button-video-edit'  style='background:green;color:white;width:50px;'>ON</button>";
+            api_call    += "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"off\");' class='button-video-edit' style='background:red;color:white;width:50px;'>OFF</button>";
+            }
 
         // basic settings
         Object.assign(info, camera_settings[camera]);
@@ -707,6 +714,7 @@ function birdhouseDevices_cameraSettings (data) {
         html += "<div class='camera_info'><div class='camera_info_image'>";
         if (camera_settings[camera]["active"])   { html  += camera_stream; }
         else                                     { html  += lang("CAMERA_INACTIVE"); }
+        html += "<br/><br/>" + api_call;
         html += "</div>";
         html += "<div class='camera_info_text'>";
 
