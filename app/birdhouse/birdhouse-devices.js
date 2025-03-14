@@ -774,7 +774,7 @@ function birdhouseDevices_cameraSettings (data) {
                 if (value == "black &amp; white") {
                     data_edit = "TEST";
                     }
-                elseif (data_type == "float" || data_type == "integer") {
+                else if (data_type == "float" || data_type == "integer") {
                     data_edit  = birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image_presets:"+value, type="range", options=range, data_type=data_type);
                     data_edit += " " + birdhouseDevices_cameraSettingsButton(camera, value, "set_"+value+"_"+camera, "change");
                     }
