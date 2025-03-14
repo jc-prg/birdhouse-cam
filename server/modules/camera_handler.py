@@ -645,6 +645,51 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.raise_error("Key '" + str(key) + "' is unknown!")
             return False
 
+    def set_properties_new(self, key, value="", init=False):
+        """
+        set properties / controls for picamera2
+
+        Args:
+            key (str): internal key
+            value (str): value to be set
+            init (bool): initialization
+        Return:
+            bool: status if set property
+        """
+        self.logging.debug("Set property for '" + self.id + "': " + key + "=" + str(value) + " (" + str(init) + ")")
+
+        if key in self.camera_controls and "w" in self.camera_controls[key][1]:
+            try:
+                if not init:
+                    self.stream.stop()
+                ctype = self.camera_controls[key][2]
+                if ctype == "float":
+                    self.configuration["controls"][key] = float(value)
+                elif ctype == "integer":
+                    self.configuration["controls"][key] = int(value)
+                elif ctype == "boolean":
+                    self.configuration["controls"][key] = bool(value)
+                elif ctype == "string":
+                    self.configuration["controls"][key] = str(value)
+                else:
+                    self.configuration["controls"][key] = value
+                self.stream.configure(self.configuration)
+                if not init:
+                    self.stream.start()
+                return True
+            except Exception as err:
+                self.raise_error("Could not set value '" + str(key) + "="+str(value)+"': " + str(err))
+                return False
+
+        elif key in self.camera_controls:
+            value = self.camera_controls[key][0]
+            self.raise_error("Could not set value '" + str(key) + "="+str(value)+"': key is classified as read only.")
+            return False
+
+        else:
+            self.raise_error("Key '" + str(key) + "' is unknown!")
+            return False
+
     def get_properties_available(self, keys="get"):
         """
         get available properties from Picamera2 using different methods; for more details see the full
