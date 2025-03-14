@@ -188,10 +188,12 @@ function birdhousePrint(data) {
 	//else if (app_active_page == "DEVICES")           { birdhouseDevices(lang("DEVICES"), data, "settings"); }
 	//else if (app_active_page == "DEVICES")           { birdhouseDevices(lang("DEVICES"), data, "settings", "devices"); }
 	else if (app_active_page == "DEVICES")           {
+	    birdhouse_settings.toggle(true);
+	    appSettings.hide();
 	    appSettings.create();
 	    appSettings.clear_content_frames();
-        appSettings.clear_frames();
-        birdhouse_settings.create_new('devices');
+        //appSettings.clear_frames();
+        //birdhouse_settings.create_new('devices');
         appSettings.show();
         }
 	else if (app_active_page == "CAMERA_SETTINGS")   { birdhouseDevices(lang("CAMERAS"), data, "settings", "cameras"); }
