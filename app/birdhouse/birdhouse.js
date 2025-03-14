@@ -105,7 +105,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 	    else                { app_2nd_load = false; }
 	    var param = window.location.href.split("?");
 	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "OBJECTS", "TODAY", "INFO", "INFORMATION", "IMAGE",
-	                   "WEATHER", "IMAGE_SETTINGS", "SETTINGS", "PROCESSING", "STATISTICS", "SERVER", "CAMERAS"];
+	                   "WEATHER", "IMAGE_SETTINGS", "SETTINGS", "PROCESSING", "STATS", "SERVER", "CAMERAS"];
 	    if (options.includes(param[1])) {
 	        view = param[1];
 	        app_active_page = param[1];
@@ -192,13 +192,14 @@ function birdhousePrint(data) {
 	else if (app_active_page == "DEVICES")           { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("DEVICE"); }
 	else if (app_active_page == "SERVER")            { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("SERVER"); }
 	else if (app_active_page == "IMAGE")             { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("IMAGE"); }
-	else if (app_active_page == "STATISTICS")        { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("STATS"); }
+	else if (app_active_page == "STATS")             { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("STATS"); }
 	else if (app_active_page == "INFORMATION")       { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("INFO"); }
 
 	else if (app_active_page == "INFO") 	         { birdhouse_settings.create("INFO_ONLY"); }
 	else if (app_active_page == "CAMERA_SETTINGS")   { birdhouseDevices(lang("CAMERAS"), data, "settings", "cameras"); }
 	else if (app_active_page == "DEVICE_SETTINGS")   { birdhouseDevices(lang("DEVICES"), data, "settings", "devices"); }
 	else if (app_active_page == "IMAGE_SETTINGS")    { birdhouseDevices_cameraSettings(data); }
+	else if (app_active_page == "STATISTICS")        { birdhouse_STATISTICS("STATISTICS", data); }
 
 	else if (app_active_page == "FAVORITES")         { success = birdhouse_LIST(lang("FAVORITES"), data, camera); }
 	else if (app_active_page == "INDEX")             { birdhouse_INDEX(data, camera); }
