@@ -682,7 +682,7 @@ function birdhouseDevices_cameraSettings (data) {
 
 	for (let camera in camera_settings) {
 	    id_list = "";
-        info = {};
+        info    = {};
 
         var camera_settings_write   = [];
         var camera_settings_read    = [];
@@ -729,7 +729,8 @@ function birdhouseDevices_cameraSettings (data) {
             });
 
 
-        var count = 0;
+        var count      = 0;
+        var count_sub  = 0;
         html_entry     = "&nbsp;<br/>";
         html_entry    += tab.start();
         html_entry_sub = html_entry;
@@ -764,7 +765,7 @@ function birdhouseDevices_cameraSettings (data) {
                 else {
                     html_entry_sub += tab.row("<b>" + key + ":</b><br/>" + range_text, data_edit);
                     html_entry_sub += tab.row("",   prop);
-                    count          += 1;
+                    count_sub      += 1;
                     }
                 }
             else {
@@ -791,10 +792,16 @@ function birdhouseDevices_cameraSettings (data) {
                     }
                 }
             }
-        html_entry += tab.end();
+        html_entry     += tab.end();
         if (count == 0) {html_entry += "<center>No entries to edit.</center>"; }
         html_entry += "&nbsp;<br/>";
         html += birdhouse_OtherGroup( camera+"_camera_1", camera.toUpperCase() + " - Camera Settings " + picamera_info, html_entry, true, "settings" );
+
+        if (count_sub > 0) {
+            html_entry_sub += tab.end();
+            html_entry_sub += "&nbsp;<br/>";
+            html += birdhouse_OtherGroup( camera+"_camera_1b", camera.toUpperCase() + " - Further Camera Settings", html_entry_sub, false, "settings" );
+            }
 
         html_entry = tab.start();
         for (var i=0;i<camera_settings_read.length;i++) {
