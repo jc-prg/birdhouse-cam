@@ -609,7 +609,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         return self.camera_controls
 
-    def set_properties(self, key, value="", init=False):
+    def set_properties_old(self, key, value="", init=False):
         """
         set properties / controls for picamera2
 
@@ -656,7 +656,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.raise_error("Key '" + str(key) + "' is unknown!")
             return False
 
-    def set_properties_new(self, key, value="", init=False):
+    def set_properties(self, key, value="", init=False):
         """
         set properties / controls for picamera2
 
@@ -744,7 +744,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         else:
             return []
 
-    def get_properties_new(self, key=""):
+    def get_properties(self, key=""):
         """
         get current value for property mentioned by key
 
@@ -766,7 +766,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             c_value = -1
         return c_value
 
-    def get_properties(self, key=""):
+    def get_properties_old(self, key=""):
         """
         get properties from camera (camera_controls, image_properties, and camera properties);
 
