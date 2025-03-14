@@ -805,15 +805,15 @@ function birdhouseDevices_cameraSettings (data) {
                 if (camera_settings_main.indexOf(key.toLowerCase()) >= 0) {
                     //text        = text.replace(/([a-z])([A-Z])/g, '$1 $2');
                     text        = addSpaceBeforeCamelCase(text);
-                    html_entry += tab.row("<b><i>" + text + ":</b><br/>" + range_text, data_edit);
-                    html_entry += tab.row("",   prop);
+                    html_entry += tab.row("<b>." + text + ":</b><br/>" + range_text, data_edit);
+                    //html_entry += tab.row("",   prop);
                     count      += 1;
                     }
                 else {
                     //text            = text.replace(/([a-z])([A-Z])/g, '$1 $2');
                     text            = addSpaceBeforeCamelCase(text);
-                    html_entry_sub += tab.row("<b><i>" + text + ":</b><br/>" + range_text, data_edit);
-                    html_entry_sub += tab.row("",   prop);
+                    html_entry_sub += tab.row("<b>." + text + ":</b><br/>" + range_text, data_edit);
+                    //html_entry_sub += tab.row("",   prop);
                     count_sub      += 1;
                     }
                 id_list += "set_"+value+"_"+camera+":";
@@ -831,7 +831,7 @@ function birdhouseDevices_cameraSettings (data) {
                     var prop        = "";
 
                     if (camera_settings_measure.indexOf(camera_settings_write[i]) > -1) { prop += "<i>(image=<span id='img_"+value+"_"+camera+"'></span>)</i>"; }
-                    html_entry += tab.row("<b>." + key + ":</b><br/>" + range_text,
+                    html_entry += tab.row("<b>" + key + ":</b><br/>" + range_text,
                                           birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image_presets:"+value, type="range", options=range, data_type="float") +
                                           " " + birdhouseDevices_cameraSettingsButton (camera, value, "set_"+value+"_"+camera, "change"));
                     html_entry += tab.row("",   prop);
