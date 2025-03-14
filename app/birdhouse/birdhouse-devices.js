@@ -795,6 +795,8 @@ function birdhouseDevices_cameraSettings (data) {
                     html_entry_sub += tab.row("",   prop);
                     count_sub      += 1;
                     }
+                id_list += "set_"+value+"_"+camera+":";
+
                 }
 
             else {
