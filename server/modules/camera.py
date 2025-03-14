@@ -1641,7 +1641,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.camera.camera_create_test_image("set initial properties")
         available_settings = self.camera.get_properties_available()
         for key in available_settings:
-            if key in self.param["image_presets"] and float(self.param["image_presets"][key]) != -1:
+            if (key in self.param["image_presets"]
+                    and self.param["image_presets"][key] != ""
+                    and float(self.param["image_presets"][key]) != -1):
                 self.logging.debug("Set properties: " + key + "=" + str(self.param["image_presets"][key]))
                 self.camera.set_properties(key, float(self.param["image_presets"][key]))
 
