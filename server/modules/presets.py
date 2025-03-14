@@ -572,7 +572,7 @@ birdhouse_default_cam1["record_micro"] = "mic1"
 birdhouse_default_cam2 = birdhouse_default_cam.copy()
 birdhouse_default_cam2["name"] = "Outside"
 birdhouse_default_cam2["source"] = "/dev/video1"
-birdhouse_default_cam2["image_save"]["offset"] = "5"
+birdhouse_default_cam2["image_save"]["rhythm_offset"] = "5"
 birdhouse_default_cam2["image_save"]["record_from"] = "sunrise+0"
 birdhouse_default_cam2["image_save"]["record_to"] = "sunset+0"
 
