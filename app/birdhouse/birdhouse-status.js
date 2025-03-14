@@ -262,6 +262,17 @@ function birdhouseStatus_cameraParam(data, camera) {
             //console.error(key + ":" + camera_status[camera]["properties"][key].toString());
         }
     }
+    if (camera_status["properties_new"]) {
+        for (let key in camera_status["properties_new"]) {
+            var prop_text = camera_status["properties_new"][key][0];
+            setTextById("prop_" + key.toLowerCase() + "_" + camera, prop_text);
+            if (document.activeElement != document.getElementById("set_" + key + "_" + camera) && document.activeElement != document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_range")) {
+                setValueById("set_" + key.toLowerCase() + "_" + camera, camera_status["properties_new"][key][0]);
+                setValueById("set_" + key.toLowerCase() + "_" + camera + "_range", camera_status["properties_new"][key][0]);
+                }
+            //console.error(key + ":" + camera_status[camera]["properties"][key].toString());
+        }
+    }
 }
 
 /*

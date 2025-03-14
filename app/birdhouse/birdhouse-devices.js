@@ -757,7 +757,6 @@ function birdhouseDevices_cameraSettings (data) {
                     }
 
                 if (camera_settings_main.indexOf(key.toLowerCase()) >= 0) {
-
                     html_entry += tab.row("<b>" + key + ":</b><br/>" + range_text, data_edit);
                     html_entry += tab.row("",   prop);
                     count      += 1;
@@ -811,7 +810,7 @@ function birdhouseDevices_cameraSettings (data) {
         }
         html_entry += tab.end();
         html_entry += "&nbsp;<br/>";
-        html += birdhouse_OtherGroup( camera+"_camera_2", camera.toUpperCase() + " - Camera Values", html_entry, false, "settings" );
+        html += birdhouse_OtherGroup( camera+"_camera_2", camera.toUpperCase() + " - Further Camera Metadata", html_entry, false, "settings" );
 
         html += "<center>&nbsp;<br/>";
         html += birdhouse_edit_save(id="edit_"+camera, id_list, camera);
