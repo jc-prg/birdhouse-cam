@@ -722,6 +722,7 @@ function birdhouseDevices_cameraSettings (data) {
         if (camera_properties[camera]["properties_new"] && Object.keys(camera_properties[camera]["properties_new"]).length > 0) {
             this_camera_properties = camera_properties[camera]["properties_new"];
             this_camera_type = "new";
+            this_camera_properties["Black &amp; White"] = [camera_settings[camera]["image"]["black_white"], "rw", "boolean", [False, True, None]];
             if (this_camera_properties["CameraType"] && this_camera_properties["CameraType"][0].indexOf("PiCamera") >= 0) { picamera_info = "(PiCamera)"; }
             }
         else {
@@ -770,7 +771,10 @@ function birdhouseDevices_cameraSettings (data) {
                     range      = this_camera_properties[key][3][0] + ":" + this_camera_properties[key][3][1];
                     range_text = "[" + this_camera_properties[key][3][0] + ":" + this_camera_properties[key][3][1] + " - " + data_type + "]";
                     }
-                if (data_type == "float" || data_type == "integer") {
+                if (value == "black &amp; white") {
+                    data_edit = "TEST";
+                    }
+                elseif (data_type == "float" || data_type == "integer") {
                     data_edit  = birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image_presets:"+value, type="range", options=range, data_type=data_type);
                     data_edit += " " + birdhouseDevices_cameraSettingsButton(camera, value, "set_"+value+"_"+camera, "change");
                     }
