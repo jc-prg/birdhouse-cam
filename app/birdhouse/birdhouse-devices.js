@@ -769,7 +769,9 @@ function birdhouseDevices_cameraSettings (data) {
                     data_edit  = "<div style='float:left'>";
                     data_edit += birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image:"+value, type="select", options=",false,true", data_type=data_type);
                     data_edit += "&nbsp; </div>";
-                    data_edit += birdhouse_edit_save(id="edit_bw_"+camera, "devices:cameras:"+camera+":image:"+value, camera);
+                    data_edit += birdhouse_edit_save(id="edit_bw_"+camera, "set_black_white_"+camera, camera);
+                    // set_black_white_cam1
+
                     //data_edit += " " + birdhouseDevices_cameraSettingsButton(camera, value, "set_"+value+"_"+camera, "change");
                     }
                 else if (data_type == "float" || data_type == "integer") {
