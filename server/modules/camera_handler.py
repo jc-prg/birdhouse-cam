@@ -550,14 +550,12 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         for c_key in temp_camera_controls:
             c_value = temp_camera_controls[c_key][2]
             c_check = c_value
-            if c_check is None:
-                c_check = temp_camera_controls[c_key][1]
             if isinstance(c_check, str):
                 c_type = "string"
+            elif isinstance(c_check, bool) or c_check is False or c_check is True:
+                c_type = "boolean"
             elif isinstance(c_check, int):
                 c_type = "integer"
-            elif isinstance(c_check, bool):
-                c_type = "boolean"
             elif isinstance(c_check, float):
                 c_type = "float"
             else:
