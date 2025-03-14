@@ -706,8 +706,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         create test image incl. date and context information
 
         Args:
-            image (numpy.ndarray): image to be saved
             context (str): name the context here
+            image (numpy.ndarray): image to be saved
         """
         if not self.create_test_images:
             return
