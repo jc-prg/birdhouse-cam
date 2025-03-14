@@ -750,15 +750,20 @@ function birdhouseDevices_cameraSettings (data) {
 
         for (var i=0;i<camera_settings_write.length;i++) {
             var value = camera_settings_write[i].toLowerCase();
-            var key   = camera_settings_write[i].replaceAll("_", " ");
+            var text  = camera_settings_write[i].replaceAll("_", " ");
+            var key   = camera_settings_write[i];
 
             if (this_camera_type == "new") {
                 var range      = "";
                 var range      = "";
                 var range_text = "";
                 var prop       = "";
-                var data_type  = this_camera_properties[key][2];
+                var data_type  = "";
                 var data_edit  = "";
+
+                if (this_camera_properties[key]) {
+                    data_type  = this_camera_properties[key][2];
+                    }
 
                 if (this_camera_properties[key][3] != []) {
                     range      = this_camera_properties[key][3][0] + ":" + this_camera_properties[key][3][1];
@@ -782,12 +787,12 @@ function birdhouseDevices_cameraSettings (data) {
                     }
 
                 if (camera_settings_main.indexOf(key.toLowerCase()) >= 0) {
-                    html_entry += tab.row("<b>" + key + ":</b><br/>" + range_text, data_edit);
+                    html_entry += tab.row("<b>" + text + ":</b><br/>" + range_text, data_edit);
                     html_entry += tab.row("",   prop);
                     count      += 1;
                     }
                 else {
-                    html_entry_sub += tab.row("<b>" + key + ":</b><br/>" + range_text, data_edit);
+                    html_entry_sub += tab.row("<b>" + text + ":</b><br/>" + range_text, data_edit);
                     html_entry_sub += tab.row("",   prop);
                     count_sub      += 1;
                     }
