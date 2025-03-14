@@ -2514,6 +2514,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.cam_param_image = status["properties_image"]
         elif self.cam_param is not None:
             status["properties"] = self.cam_param
+            status["properties_new"] = self.camera.camera_controls
             status["properties_image"] = self.cam_param_image
 
         return status
