@@ -716,7 +716,6 @@ function birdhouseDevices_cameraSettings (data) {
         if (camera_settings[camera]["active"])   { html  += camera_stream; }
         else                                     { html  += lang("CAMERA_INACTIVE"); }
         html += "</div>";
-        html += "<center>" + api_call + "</center>";
         html += "<div class='camera_info_text'>";
 
         // check which kind of camera presets
@@ -813,10 +812,15 @@ function birdhouseDevices_cameraSettings (data) {
         html_entry += "&nbsp;<br/>";
         html += birdhouse_OtherGroup( camera+"_camera_1", camera.toUpperCase() + " - Camera Settings " + picamera_info, html_entry, true, "settings" );
 
+        if (api_call != "") {
+            var call =  "<center>" + api_call + "</center>";
+            html += birdhouse_OtherGroup( camera+"_camera_1b", camera.toUpperCase() + " - Camera Light", call, true, "settings" );
+            }
+
         if (count_sub > 0) {
             html_entry_sub += tab.end();
             html_entry_sub += "&nbsp;<br/>";
-            html += birdhouse_OtherGroup( camera+"_camera_1b", camera.toUpperCase() + " - Further Camera Settings", html_entry_sub, false, "settings" );
+            html += birdhouse_OtherGroup( camera+"_camera_1c", camera.toUpperCase() + " - Further Camera Settings", html_entry_sub, false, "settings" );
             }
 
         html_entry = tab.start();
