@@ -374,7 +374,7 @@ function birdhouseReloadView() {
 		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
 		}
 	// if (app_active_page == "INDEX" || app_active_page == "TODAY" || app_active_page == "DEVICES") {
-	if (app_active_page == "INDEX" || app_active_page == "IMAGE" || app_active_page == "DEVICES" || app_active_page == "CAMERAS") {
+	//if (app_active_page == "INDEX" || app_active_page == "IMAGE" || app_active_page == "DEVICES" || app_active_page == "CAMERAS") {
 
 	if (no_reload_views.includes(app_active_page)) {
 		for (let key in app_camera_source) {
