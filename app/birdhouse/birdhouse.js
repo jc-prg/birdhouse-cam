@@ -190,7 +190,7 @@ function birdhousePrint(data) {
 	else if (app_active_page == "DEVICES")           {
 	    birdhouse_settings.toggle(true);
 	    appSettings.hide();
-	    appSettings.create();
+	    appSettings.create("CAMERA");
 	    //appSettings.clear_content_frames();
         //appSettings.clear_frames();
         //birdhouse_settings.create_new('devices');
