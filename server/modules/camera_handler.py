@@ -319,6 +319,10 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.first_connect = True
         self.create_test_images = True
 
+        self.camera_controls = {
+            "key": ["current_value", "edit_mode", "data_type", ["min_value", "max_value"]]
+        }
+
         self.picamera_controls = {
             "saturation":       ["Saturation",          "rwm", 0.0, 1.0, "float"],
             "brightness":       ["Brightness",          "rwm", -1.0, 1.0, "float"],
@@ -469,6 +473,126 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                                    str(result))
         self.stream.start()
         self.camera_create_test_image("set properties init")
+
+        self.logging.info(str(self.set_properties_init_new()))
+
+    def set_properties_init_new (self):
+        """
+        get and return a complete control and value definition; example values:
+            self.stream.camera_controls = {
+                'ExposureValue': (-8.0, 8.0, 0.0),
+                'AeConstraintMode': (0, 3, 0),
+                'ScalerCrop': ((16, 0, 256, 256), (16, 0, 2560, 1920), (80, 0, 10240, 7680)),
+                'AnalogueGain': (1.0, 63.9375, None),
+                'NoiseReductionMode': (0, 4, 0),
+                'AeMeteringMode': (0, 3, 0),
+                'ExposureTime': (134, 1103219, None),
+                'AeEnable': (False, True, None),
+                'ScalerCrops': ((16, 0, 256, 256), (16, 0, 2560, 1920), (80, 0, 10240, 7680)),
+                'HdrMode': (0, 4, 0),
+                'AwbEnable': (False, True, None),
+                'Saturation': (0.0, 32.0, 1.0),
+                'Contrast': (0.0, 32.0, 1.0),
+                'ColourGains': (0.0, 32.0, None),
+                'Brightness': (-1.0, 1.0, 0.0),
+                'FrameDurationLimits': (16971, 1103354, None),
+                'AeFlickerPeriod': (100, 1000000, None),
+                'AwbMode': (0, 7, 0),
+                'AeFlickerMode': (0, 1, 0),
+                'AeExposureMode': (0, 3, 0),
+                'Sharpness': (0.0, 16.0, 1.0),
+                'StatsOutputEnable': (False, True, False)
+                }
+            self.stream.capture_metadata() = {
+                'SensorTimestamp': 5394229289000,
+                'ExposureTime': 14108,
+                'FocusFoM': 174,
+                'AnalogueGain': 2.0,
+                'AeLocked': False,
+                'ColourCorrectionMatrix': (2.1115739345550537, -0.5618800520896912, -0.5496973991394043, -0.49196499586105347, 2.053236961364746, -0.5612685084342957, -0.13735553622245789, -0.5860171318054199, 1.723362684249878),
+                'SensorBlackLevels': (1024, 1024, 1024, 1024),
+                'FrameDuration': 16971,
+                'Lux': 1509.813720703125,
+                'ColourTemperature': 6492,
+                'DigitalGain': 1.0,
+                'ColourGains': (1.6836881637573242, 1.1847764253616333),
+                'ScalerCrops': [(80, 0, 10240, 7680)],
+                'ScalerCrop': (80, 0, 10240, 7680)
+                }
+            self.stream.camera_properties = {
+                'Model': 'ov5647',
+                'UnitCellSize': (1400, 1400),
+                'ColorFilterArrangement': 2,
+                'Location': 2,
+                'Rotation': 0,
+                'PixelArraySize': (2592, 1944),
+                'PixelArrayActiveAreas': [(16, 6, 2592, 1944)],
+                'ScalerCropMaximum': (16, 0, 2560, 1920),
+                'SystemDevices': (20749, 20740, 20742, 20743),
+                'SensorSensitivity': 1.0
+                }
+
+        Returns:
+            dict: complete control and value definition
+        """
+        self.camera_controls = {}
+
+        # extract controls
+        temp_camera_controls = self.stream.camera_controls
+        for c_key in temp_camera_controls:
+            c_value = temp_camera_controls[c_key][2]
+            if isinstance(temp_camera_controls[c_key], str):
+                c_type = "string"
+            elif isinstance(temp_camera_controls[c_key], int):
+                c_type = "integer"
+            elif isinstance(temp_camera_controls[c_key], bool):
+                c_type = "boolean"
+            elif isinstance(temp_camera_controls[c_key], float):
+                c_type = "float"
+            else:
+                c_type = "complex"
+            c_range = temp_camera_controls[c_key]
+            c_mode = "rw"
+            self.camera_controls[c_key] = [c_value, c_mode, c_type, c_range]
+
+        # extract properties
+        temp_camera_properties = self.stream.camera_properties
+        for c_key in temp_camera_properties:
+            if c_key in self.camera_controls:
+                self.camera_controls[c_key][0] = temp_camera_properties[c_key]
+            else:
+                c_value = temp_camera_properties[c_key]
+                c_mode = "r"
+                if isinstance(temp_camera_properties[c_key], str):
+                    c_type = "string"
+                elif isinstance(temp_camera_properties[c_key], int):
+                    c_type = "integer"
+                elif isinstance(temp_camera_properties[c_key], bool):
+                    c_type = "boolean"
+                elif isinstance(temp_camera_properties[c_key], float):
+                    c_type = "float"
+                else:
+                    c_type = "complex"
+                self.camera_controls[c_key] = [c_value, c_mode, c_type, []]
+
+        # extract metadata
+        temp_camera_properties = self.stream.capture_metadata()
+        for c_key in temp_camera_properties:
+            c_mode = "r"
+            c_value = temp_camera_properties[c_key]
+            if isinstance(temp_camera_properties[c_key], str):
+                c_type = "string"
+            elif isinstance(temp_camera_properties[c_key], int):
+                c_type = "integer"
+            elif isinstance(temp_camera_properties[c_key], bool):
+                c_type = "boolean"
+            elif isinstance(temp_camera_properties[c_key], float):
+                c_type = "float"
+            else:
+                c_type = "complex"
+            self.camera_controls[c_key] = [c_value, c_mode, c_type, []]
+
+        return self.camera_controls
 
     def set_properties(self, key, value="", init=False):
         """
