@@ -319,6 +319,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.first_connect = True
         self.create_test_images = True
         self.camera_controls = {}
+        self.camera_controls_keys = {}
 
         self.picamera_controls = {
             "saturation":       ["Saturation",          "rwm", 0.0, 1.0, "float"],
@@ -537,6 +538,11 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.camera_controls = {
             "CameraType" : ["PiCamera2", "r", "integer", []]
         }
+        self.camera_controls_keys = {
+            "controls" : [],
+            "properties": [],
+            "metadata": []
+        }
 
         # extract controls
         self.logging.debug("(1) Get camera controls for '" + self.id + "' (PiCamera2)")
@@ -556,6 +562,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             c_range = temp_camera_controls[c_key]
             c_mode = "rw"
             self.camera_controls[c_key] = [c_value, c_mode, c_type, c_range]
+            self.camera_controls_keys["controls"].append(c_key)
 
         # extract properties
         self.logging.debug("(2) Get camera properties for '" + self.id + "' (PiCamera2)")
@@ -563,6 +570,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         for c_key in temp_camera_properties:
             if c_key in self.camera_controls:
                 self.camera_controls[c_key][0] = temp_camera_properties[c_key]
+                self.camera_controls_keys["properties"].append(c_key)
             else:
                 c_value = temp_camera_properties[c_key]
                 c_mode = "r"
@@ -577,6 +585,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 else:
                     c_type = "complex"
                 self.camera_controls[c_key] = [c_value, c_mode, c_type, []]
+                self.camera_controls_keys["properties"].append(c_key)
 
         # extract metadata
         self.logging.debug("(3) Get camera metadata for '" + self.id + "' (PiCamera2)")
@@ -595,6 +604,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             else:
                 c_type = "complex"
             self.camera_controls[c_key] = [c_value, c_mode, c_type, []]
+            self.camera_controls_keys["metadata"].append(c_key)
 
         return self.camera_controls
 
@@ -713,6 +723,47 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         elif keys == "set":
             return self.properties_set
         return self.property_keys
+
+    def get_properties_available_new(self, keys="get"):
+        """
+        get available properties from Picamera2 using different methods; for more details see the full
+        documentation: https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf;
+
+        Returns:
+            list: keys for all properties that are implemented at the moment
+        """
+        if keys == "get":
+            return list(self.camera_controls.keys())
+        elif keys == "set":
+            return_keys = []
+            for key in self.camera_controls:
+                if "w" in self.camera_controls[key][1]:
+                    return_keys.append(key)
+            return return_keys
+        else:
+            return []
+
+    def get_properties_new(self, key=""):
+        """
+        get current value for property mentioned by key
+
+        Args:
+            key (str): key to get properties for -> check get_properties_available()
+
+        Returns:
+            dict | float | int | bool | str: get value
+        """
+        c_value = -1
+        if key in self.camera_controls_keys["properties"]:
+            c_value = self.stream.camera_properties[key]
+        elif key in self.camera_controls_keys["metadata"]:
+            c_metadata = self.stream.capture_metadata()
+            c_value = c_metadata[key]
+        elif key in self.configuration:
+            c_value = self.configuration[key]
+        elif key in self.camera_controls["controls"]:
+            c_value = -1
+        return c_value
 
     def get_properties(self, key=""):
         """
@@ -1011,6 +1062,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         self.available_devices = {}
         self.camera_info = CameraInformation()
         self.create_test_images = True
+        self.camera_controls = {}
 
         self.logging.info("Starting CAMERA support for '"+self.id+":"+source+"' ...")
 
