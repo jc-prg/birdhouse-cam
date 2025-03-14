@@ -764,6 +764,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             c_value = self.configuration[key]
         elif key in self.camera_controls_keys["controls"]:
             c_value = -1
+
         return c_value
 
     def get_properties_old(self, key=""):
