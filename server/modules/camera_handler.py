@@ -762,7 +762,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             c_value = c_metadata[key]
         elif key in self.configuration:
             c_value = self.configuration[key]
-        elif key in self.camera_controls["controls"]:
+        elif key in self.camera_controls_keys["controls"]:
             c_value = -1
         return c_value
 
