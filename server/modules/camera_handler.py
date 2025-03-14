@@ -318,10 +318,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.available_devices = {}
         self.first_connect = True
         self.create_test_images = True
-
-        self.camera_controls = {
-            "key": ["current_value", "edit_mode", "data_type", ["min_value", "max_value"]]
-        }
+        self.camera_controls = {}
+        self.init_properties()
 
         self.picamera_controls = {
             "saturation":       ["Saturation",          "rwm", 0.0, 1.0, "float"],
@@ -474,9 +472,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.stream.start()
         self.camera_create_test_image("set properties init")
 
-        self.logging.info(str(self.set_properties_init_new()))
+        self.logging.info(str(self.init_properties()))
 
-    def set_properties_init_new (self):
+    def init_properties(self):
         """
         get and return a complete control and value definition; example values:
             self.stream.camera_controls = {
@@ -533,13 +531,15 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 }
 
         Returns:
-            dict: complete control and value definition
+            dict: complete control and value definition; format:
+                  self.camera_controls = {"key": ["current_value", "edit_mode", "data_type", ["min_value", "max_value"]]}
         """
         self.camera_controls = {
             "CameraType" : ["PiCamera2", "r", "integer", []]
         }
 
         # extract controls
+        self.logging.debug("(1) Get camera controls for '" + self.id + "' (PiCamera2)")
         temp_camera_controls = self.stream.camera_controls
         for c_key in temp_camera_controls:
             c_value = temp_camera_controls[c_key][2]
@@ -558,6 +558,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             self.camera_controls[c_key] = [c_value, c_mode, c_type, c_range]
 
         # extract properties
+        self.logging.debug("(2) Get camera properties for '" + self.id + "' (PiCamera2)")
         temp_camera_properties = self.stream.camera_properties
         for c_key in temp_camera_properties:
             if c_key in self.camera_controls:
@@ -578,6 +579,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.camera_controls[c_key] = [c_value, c_mode, c_type, []]
 
         # extract metadata
+        self.logging.debug("(3) Get camera metadata for '" + self.id + "' (PiCamera2)")
         temp_camera_properties = self.stream.capture_metadata()
         for c_key in temp_camera_properties:
             c_mode = "r"
