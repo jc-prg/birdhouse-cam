@@ -549,7 +549,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         temp_camera_controls = self.stream.camera_controls
         for c_key in temp_camera_controls:
             c_value = temp_camera_controls[c_key][2]
-            c_check = c_value
+            c_check = temp_camera_controls[c_key][0]
             if isinstance(c_check, str):
                 c_type = "string"
             elif isinstance(c_check, bool) or c_check is False or c_check is True:
