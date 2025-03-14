@@ -324,7 +324,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             "brightness":       ["Brightness",          "rwm", -1.0, 1.0, "float"],
             "contrast":         ["Contrast",            "rwm", 0.0, 1.0, "float"],
             "sharpness":        ["Sharpness",           "rw",  0.0, 16.0, "float"],
-            "auto_wb":          ["AwbEnable",           "rw",   0, 1],
+            "auto_wb":          ["AwbEnable",           "r",   0, 1],
         }
         self.picamera_image = {
             "temperature":      ["ColourTemperature",   "r",   -1, -1],
@@ -373,20 +373,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         except Exception as err:
             self.raise_error("Can't connect to PiCamera2 '" + self.source + "': " + str(err))
             return False
-
-        try:
-            #self.stream.controls.ColorFilterArrangement = 0
-            self.stream.camera_properties["ColorFilterArrangement"] = 0
-        except Exception as e:
-            self.logging.warning("ColorFilterArrangement = 0 doesn't work: " + str(e))
-
-        try:
-            current_awb_mode = self.stream.controls.AwbEnable
-            self.logging.warning("AWB Mode: " + str(current_awb_mode))
-            self.stream.controls.AwbEnable = 1
-
-        except Exception as err:
-            self.raise_warning("Can't set AWB Mode for PiCamera2 '" + self.source + "': " + str(err))
 
         if self.stream is None:
             self.raise_error("Can't connect to PiCamera2 '" + self.source + "': Unknown error.")
@@ -726,7 +712,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         if not self.create_test_images:
             return
 
-        image_path = os.path.join(birdhouse_main_directories["data"], "test_connect_" + self.id + ".jpg")
+        image_path = os.path.join(birdhouse_main_directories["images"], "test_connect_" + self.id + ".jpg")
         try:
             if image is None:
                 image = self.stream.capture_array("main")
@@ -1008,7 +994,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             value (float): value
         """
         self.properties_set = ["saturation", "brightness", "contrast", "framerate", "exposure",
-                               "hue", "auto_white_balance", "auto_exposure", "gamma", "gain", "auto_wb"]
+                               "hue", "auto_white_balance", "auto_exposure", "gamma", "gain"]
         if key == "init":
             return
 
@@ -1072,8 +1058,8 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             "fps":            [-1, "rw",  -1, -1],
             "exposure":       [-1, "rw",  -1, -1],
             "auto_exposure":  [-1, "r",   -1, -1],
-            "wb_temperature": [-1, "r",   -1, -1]
-            #"auto_wb":        [-1, "rw",  -1, -1]
+            "wb_temperature": [-1, "r",   -1, -1],
+            "auto_wb":        [-1, "r",  -1, -1]
         }
 
         if key == "init":
@@ -1207,7 +1193,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
         if not self.create_test_images:
             return
 
-        image_path = os.path.join(birdhouse_main_directories["data"], "test_connect_" + self.id + ".jpg")
+        image_path = os.path.join(birdhouse_main_directories["images"], "test_connect_" + self.id + ".jpg")
         try:
             if image is None:
                 ref, image = self.stream.read()

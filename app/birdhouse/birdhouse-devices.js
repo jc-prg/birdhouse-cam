@@ -324,6 +324,7 @@ function birdhouseDevices_cameras(data, subset="") {
 
         html_entry = tab.start();
         html_entry += tab.row("Last Recorded:",         "<div id='last_image_recorded_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
+        html_entry += tab.row("Image first connect:",  "<a href='/images/test_connect_"+camera+".jpg'>Download test image for "+camera+"</a>");
         html_entry += tab.row("Error Streams:",         "<div id='error_streams_"+camera+"'></div>");
         html_entry += tab.end();
 

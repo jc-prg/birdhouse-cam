@@ -308,6 +308,7 @@ birdhouse_main_directories = {
     "app": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "app"),
     "log": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "log"),
     "data": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data"),
+    "images": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data/images"),
     "download": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data/downloads")
 }
 
