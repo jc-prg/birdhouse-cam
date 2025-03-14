@@ -369,6 +369,8 @@ function birdhouseReloadView() {
 
 	var no_reload_views = ["INDEX", "IMAGE", "DEVICES", "CAMERAS", "SETTINGS", "SERVER", "INFORMATION"];
 
+    console.warn("RELOAD -> " + app_active_page);
+
 	//if (app_active_page != "INDEX" && app_active_page != "IMAGE" && app_active_page != "DEVICES" && app_active_page != "CAMERAS") {
 	if (!no_reload_views.includes(app_active_page)) {
 		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
