@@ -535,7 +535,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         Returns:
             dict: complete control and value definition
         """
-        self.camera_controls = {}
+        self.camera_controls = {
+            "CameraType" : ["PiCamera2", "r", "integer", []]
+        }
 
         # extract controls
         temp_camera_controls = self.stream.camera_controls
