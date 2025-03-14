@@ -715,7 +715,7 @@ function birdhouseDevices_cameraSettings (data) {
         html += "<div class='camera_info_text'>";
 
         // check which kind of camera presets
-        if (camera_properties[camera]["properties_new"] && camera_properties[camera]["properties_new"].length > 1) {
+        if (camera_properties[camera]["properties_new"] && Object.keys(camera_properties[camera]["properties_new"]).length > 0) {
             this_camera_properties = camera_properties[camera]["properties_new"];
             this_camera_type = "new";
             if (this_camera_properties["CameraType"] && this_camera_properties["CameraType"][0].indexOf("PiCamera") >= 0) { picamera_info = "(PiCamera)"; }
