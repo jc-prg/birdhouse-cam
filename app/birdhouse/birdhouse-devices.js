@@ -757,7 +757,7 @@ function birdhouseDevices_cameraSettings (data) {
                     }
                 else if (data_type == "boolean") {
                     data_edit  = "<div style='float:left'>";
-                    data_edit #= birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image_presets:"+value, type="select", options=",false,true", data_type=data_type);
+                    data_edit += birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image_presets:"+value, type="select", options=",false,true", data_type=data_type);
                     data_edit += " " + birdhouseDevices_cameraSettingsButton(camera, value, "set_"+value+"_"+camera, "change");
                     data_edit  = "&nbsp; </div>";
                     }
