@@ -770,11 +770,11 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.camera_controls[c_key][0] = self.stream.camera_properties[c_key]
             for c_key in self.camera_controls_keys["metadata"]:
                 self.camera_controls[c_key][0] = c_metadata[c_key]
-            for c_key in self.configuration["controls"]:
-                if c_key in self.camera_controls:
-                    self.camera_controls[c_key][0] = self.configuration["controls"][c_key]
+            #for c_key in self.configuration["controls"]:
+            #    if c_key in self.camera_controls:
+            #        self.camera_controls[c_key][0] = self.configuration["controls"][c_key]
 
-            #self.logging.info(" --- " + str(self.configuration))
+            self.logging.info(" --- " + str(self.configuration["controls"]))
             #self.logging.info(" --- " + str(self.camera_controls))
             return self.camera_controls
 
