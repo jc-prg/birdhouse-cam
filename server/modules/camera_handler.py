@@ -473,7 +473,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.stream.start()
         self.camera_create_test_image("set properties init")
 
-        self.logging.info(str(self.init_properties()))
+        self.logging.debug(str(self.init_properties()))
 
     def init_properties(self):
         """
