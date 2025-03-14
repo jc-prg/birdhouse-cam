@@ -767,9 +767,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         elif key == "":
             c_metadata = self.stream.capture_metadata()
             for c_key in self.camera_controls_keys["properties"]:
-                self.camera_controls[c_key][0] = self.stream.camera_properties[key]
+                self.camera_controls[c_key][0] = self.stream.camera_properties[c_key]
             for c_key in self.camera_controls_keys["metadata"]:
-                self.camera_controls[c_key][0] = c_value = c_metadata[key]
+                self.camera_controls[c_key][0] = c_metadata[c_key]
             return self.camera_controls
 
         return c_value
