@@ -197,6 +197,9 @@ function birdhousePrint(data) {
 
 	else if (app_active_page == "INFO") 	         { birdhouse_settings.create("INFO_ONLY"); }
 	else if (app_active_page == "CAMERA_SETTINGS")   { birdhouseDevices(lang("CAMERAS"), data, "settings", "cameras"); }
+	else if (app_active_page == "DEVICE_SETTINGS")   { birdhouseDevices(lang("DEVICES"), data, "settings", "devices"); }
+	else if (app_active_page == "IMAGE_SETTINGS")    { birdhouseDevices_cameraSettings(data); }
+
 	else if (app_active_page == "FAVORITES")         { success = birdhouse_LIST(lang("FAVORITES"), data, camera); }
 	else if (app_active_page == "INDEX")             { birdhouse_INDEX(data, camera); }
 	else if (app_active_page == "PROCESSING")        { birdhouse_settings.create("PROCESSING"); }
