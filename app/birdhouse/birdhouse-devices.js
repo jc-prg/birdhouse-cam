@@ -47,7 +47,7 @@ function birdhouseDevices(title, data, show="settings", subset="all") {
 
     if (show == "settings") {
         var html_index = birdhouseDevices_status(index=index, show="interactive");
-        if (subset == "cameras1")   { appSettings.write(1, lang("CAMERA_SETTINGS"), html_index + html); }
+        if (subset == "cameras")   { appSettings.write(1, lang("CAMERA_SETTINGS"), html_index + html); }
         else                       { appSettings.write(1, lang("DEVICE_SETTINGS"), html_index + html); }
         }
     else if (show == "information") {

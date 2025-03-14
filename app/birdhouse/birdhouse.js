@@ -367,13 +367,17 @@ function birdhouseReloadView() {
 	birdhouse_overlayHide();
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 
-	if (app_active_page != "INDEX" && app_active_page != "IMAGE" && app_active_page != "DEVICES" && app_active_page != "CAMERAS") {
+	var no_reload_views = ["INDEX", "IMAGE", "DEVICES", "CAMERAS", "SETTINGS", "SERVER", "INFORMATION"];
+
+	//if (app_active_page != "INDEX" && app_active_page != "IMAGE" && app_active_page != "DEVICES" && app_active_page != "CAMERAS") {
+	if (!no_reload_views.includes(app_active_page)) {
 		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
 		}
 	// if (app_active_page == "INDEX" || app_active_page == "TODAY" || app_active_page == "DEVICES") {
 	if (app_active_page == "INDEX" || app_active_page == "IMAGE" || app_active_page == "DEVICES" || app_active_page == "CAMERAS") {
-		for (let key in app_camera_source) {
 
+	if (no_reload_views.includes(app_active_page)) {
+		for (let key in app_camera_source) {
 		    console.log("---> active:"+app_active_cam + " / key:" + key +" --- " + app_camera_source[key]);
 
 			var image = document.getElementById("stream_"+key);
