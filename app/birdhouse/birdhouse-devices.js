@@ -661,6 +661,23 @@ function birdhouseDevices_openOne(group_id) {
     }
 }
 
+ /*
+support function for the following
+*/
+function addSpaceBeforeCamelCase(str) {
+  let result = '';
+
+  for (let i = 0; i < str.length; i++) {
+    // Check if the current character is uppercase and not the first character
+    if (i > 0 && str[i] === str[i].toUpperCase()) {
+      result += ' '; // Add a space before the uppercase letter
+    }
+    result += str[i]; // Append the current character
+  }
+
+  return result;
+}
+
 /*
 * Create view with images settings of all available cameras
 *
@@ -786,13 +803,15 @@ function birdhouseDevices_cameraSettings (data) {
                     }
 
                 if (camera_settings_main.indexOf(key.toLowerCase()) >= 0) {
-                    text        = text.replace(/([a-z])([A-Z])/g, '$1 $2');
+                    //text        = text.replace(/([a-z])([A-Z])/g, '$1 $2');
+                    text        = addSpaceBeforeCamelCase(text);
                     html_entry += tab.row("<b>" + text + ":</b><br/>" + range_text, data_edit);
                     html_entry += tab.row("",   prop);
                     count      += 1;
                     }
                 else {
-                    text            = text.replace(/([a-z])([A-Z])/g, '$1 $2');
+                    //text            = text.replace(/([a-z])([A-Z])/g, '$1 $2');
+                    text            = addSpaceBeforeCamelCase(text);
                     html_entry_sub += tab.row("<b>" + text + ":</b><br/>" + range_text, data_edit);
                     html_entry_sub += tab.row("",   prop);
                     count_sub      += 1;
