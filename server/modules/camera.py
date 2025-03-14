@@ -2512,7 +2512,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if info == "properties" or self.cam_param is None:
             if self.camera is not None and self.camera.if_connected():
                 status["properties"] = self.camera.get_properties()
-                status["properties_new"] = self.camera.camera_controls
+                status["properties_new"] = self.camera.get_properties()
                 status["properties_image"] = self.camera.get_properties_image()
                 self.cam_param = status["properties"]
                 self.cam_param_image = status["properties_image"]
