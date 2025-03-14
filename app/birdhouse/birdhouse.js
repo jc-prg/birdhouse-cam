@@ -188,12 +188,12 @@ function birdhousePrint(data) {
 	//else if (app_active_page == "DEVICES")           { birdhouseDevices(lang("DEVICES"), data, "settings"); }
 	//else if (app_active_page == "DEVICES")           { birdhouseDevices(lang("DEVICES"), data, "settings", "devices"); }
 	else if (app_active_page == "SETTINGS")          { birdhouse_settings.toggle(true); appSettings.create(); }
-	else if (app_active_page == "CAMERAS")           { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("CAMERA"); }
-	else if (app_active_page == "DEVICES")           { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("DEVICE"); }
-	else if (app_active_page == "SERVER")            { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("SERVER"); }
-	else if (app_active_page == "IMAGE")             { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("IMAGE"); }
-	else if (app_active_page == "STATISTICS")        { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("STATS"); }
-	else if (app_active_page == "INFORMATION")       { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("INFO"); }
+	else if (app_active_page == "CAMERAS")           { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create_new("CAMERA"); }
+	else if (app_active_page == "DEVICES")           { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create_new("DEVICE"); }
+	else if (app_active_page == "SERVER")            { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create_new("SERVER"); }
+	else if (app_active_page == "IMAGE")             { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create_new("IMAGE"); }
+	else if (app_active_page == "STATISTICS")        { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create_new("STATS"); }
+	else if (app_active_page == "INFORMATION")       { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create_new("INFO"); }
 
 	else if (app_active_page == "INFO") 	         { birdhouse_settings.create("INFO_ONLY"); }
 	else if (app_active_page == "CAMERA_SETTINGS")   { birdhouseDevices(lang("CAMERAS"), data, "settings", "cameras"); }
