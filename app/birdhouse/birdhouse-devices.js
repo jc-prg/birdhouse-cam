@@ -803,15 +803,15 @@ function birdhouseDevices_cameraSettings (data) {
                     }
 
                 if (camera_settings_main.indexOf(key.toLowerCase()) >= 0) {
-                    //text        = text.replace(/([a-z])([A-Z])/g, '$1 $2');
-                    text        = addSpaceBeforeCamelCase(text);
+                    text        = text.replace(/([a-z])([A-Z])/g, '$1 $2');
+                    //text        = addSpaceBeforeCamelCase(text);
                     html_entry += tab.row("<b>" + text + ":</b><br/>" + range_text, data_edit);
                     //html_entry += tab.row("",   prop);
                     count      += 1;
                     }
                 else {
-                    //text            = text.replace(/([a-z])([A-Z])/g, '$1 $2');
-                    text            = addSpaceBeforeCamelCase(text);
+                    text            = text.replace(/([a-z])([A-Z])/g, '$1 $2');
+                    //text            = addSpaceBeforeCamelCase(text);
                     html_entry_sub += tab.row("<b>" + text + ":</b><br/>" + range_text, data_edit);
                     //html_entry_sub += tab.row("",   prop);
                     count_sub      += 1;
@@ -864,6 +864,7 @@ function birdhouseDevices_cameraSettings (data) {
         for (var i=0;i<camera_settings_read.length;i++) {
             var value = camera_settings_read[i].toLowerCase();
             var key   = camera_settings_read[i].replaceAll("_", " ");
+            key        = key.replace(/([a-z])([A-Z])/g, '$1 $2');
             html_entry += tab.row(key + ":", "<span id='prop_"+value+"_"+camera+"'></span>");
         }
         html_entry += tab.end();
