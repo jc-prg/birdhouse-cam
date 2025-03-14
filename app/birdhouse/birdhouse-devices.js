@@ -739,7 +739,7 @@ function birdhouseDevices_cameraSettings (data) {
                 var range_text = "";
                 var prop       = "";
                 if (this_camera_properties[key][3] != []) {
-                    range_text = "[" + this_camera_properties[key][3][0] + ":" + this_camera_properties[key][3][1] + "]";
+                    range_text = "[" + this_camera_properties[key][3][0] + ":" + this_camera_properties[key][3][1] + " - " + this_camera_properties[key][2] + "]";
                     }
                 html_entry += tab.row("<b>" + key + ":</b><br/>" + range_text,
                                     "");
