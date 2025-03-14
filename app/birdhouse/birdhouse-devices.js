@@ -736,12 +736,15 @@ function birdhouseDevices_cameraSettings (data) {
             var key   = camera_settings_write[i].replaceAll("_", " ");
 
             if (this_camera_type == "new") {
+                var range      = "";
+                var range      = "";
                 var range_text = "";
                 var prop       = "";
                 var data_type  = this_camera_properties[key][2];
                 var data_edit  = "";
 
                 if (this_camera_properties[key][3] != []) {
+                    range      = this_camera_properties[key][3][0] + ":" + this_camera_properties[key][3][1];
                     range_text = "[" + this_camera_properties[key][3][0] + ":" + this_camera_properties[key][3][1] + " - " + data_type + "]";
                     }
                 if (data_type == "float" || data_type == "integer") {
