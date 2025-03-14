@@ -319,7 +319,6 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.first_connect = True
         self.create_test_images = True
         self.camera_controls = {}
-        self.init_properties()
 
         self.picamera_controls = {
             "saturation":       ["Saturation",          "rwm", 0.0, 1.0, "float"],
@@ -370,6 +369,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 self.logging.debug("PiCamera2 Config: "+ str(self.configuration))
 
             self.stream.start()
+            self.init_properties()
             time.sleep(0.5)
 
         except Exception as err:
