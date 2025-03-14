@@ -774,8 +774,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 if c_key in self.camera_controls:
                     self.camera_controls[c_key][0] = self.configuration["controls"][c_key]
 
-            self.logging.info(" --- " + str(self.configuration))
-            self.logging.info(" --- " + str(self.camera_controls))
+            #self.logging.info(" --- " + str(self.configuration))
+            #self.logging.info(" --- " + str(self.camera_controls))
             return self.camera_controls
 
         return c_value
