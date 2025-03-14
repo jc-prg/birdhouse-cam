@@ -717,7 +717,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if image is None:
                 image = self.stream.capture_array("main")
 
-            testing_wb = true
+            testing_wb = True
             if testing_wb:
                 time.sleep(1)
 
