@@ -541,13 +541,13 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         temp_camera_controls = self.stream.camera_controls
         for c_key in temp_camera_controls:
             c_value = temp_camera_controls[c_key][2]
-            if isinstance(temp_camera_controls[c_key], str):
+            if isinstance(temp_camera_controls[c_key][0], str):
                 c_type = "string"
-            elif isinstance(temp_camera_controls[c_key], int):
+            elif isinstance(temp_camera_controls[c_key][0], int):
                 c_type = "integer"
-            elif isinstance(temp_camera_controls[c_key], bool):
+            elif isinstance(temp_camera_controls[c_key][0], bool):
                 c_type = "boolean"
-            elif isinstance(temp_camera_controls[c_key], float):
+            elif isinstance(temp_camera_controls[c_key][0], float):
                 c_type = "float"
             else:
                 c_type = "complex"
