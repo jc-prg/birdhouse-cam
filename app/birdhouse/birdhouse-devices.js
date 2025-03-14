@@ -666,11 +666,13 @@ function birdhouseDevices_openOne(group_id) {
 * @param (dict) data: complete setting and status data from API
 */
 function birdhouseDevices_cameraSettings (data) {
-	var camera_settings	  = app_data["SETTINGS"]["devices"]["cameras"];
-	var camera_properties = data["STATUS"]["devices"]["cameras"];
 
-	var admin             = data["STATUS"]["admin_allowed"];
-	var html = "";
+    var this_camera_properties  = {};
+	var camera_properties       = data["STATUS"]["devices"]["cameras"];
+	var camera_settings	        = app_data["SETTINGS"]["devices"]["cameras"];
+
+	var admin   = data["STATUS"]["admin_allowed"];
+	var html    = "";
 	var tab     = new birdhouse_table();
 	tab.style_rows["height"] = "27px";
 
@@ -689,7 +691,7 @@ function birdhouseDevices_cameraSettings (data) {
         var camera_settings_measure = [];
         var picamera_info           = "";
 
-        // basic assignment
+        // basic settings
         Object.assign(info, camera_settings[camera]);
 	    info["type"]  = "detection";
 	    info["id"]    = camera + "_img";
@@ -705,6 +707,7 @@ function birdhouseDevices_cameraSettings (data) {
 	        continue;
 	        }
 
+        // start settings section
         html += "<div class='camera_info'><div class='camera_info_image'>";
         if (camera_settings[camera]["active"])   { html  += camera_stream; }
         else                                     { html  += lang("CAMERA_INACTIVE"); }
@@ -728,7 +731,7 @@ function birdhouseDevices_cameraSettings (data) {
             if (value[1].indexOf("m") >= 0)      { camera_settings_measure.push(key); }
             });
 
-        console.error(camera);
+        console.error(camera + "/" + this_camera_type);
         console.error(this_camera_properties);
 
         var count      = 0;
