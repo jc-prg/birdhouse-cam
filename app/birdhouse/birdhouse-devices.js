@@ -676,12 +676,6 @@ function birdhouseDevices_cameraSettings (data) {
 	var tab     = new birdhouse_table();
 	tab.style_rows["height"] = "27px";
 
-	var camera_settings_write   = ["Brightness", "Contrast", "Gain", "Gamma", "Hue",
-	                               "Saturation", "Exposure", "FPS"];
-	var camera_settings_read    = ["Auto_Exposure", "WB_Temperature", "Auto_WB"];
-	var camera_settings_measure = ["Brightness", "Contrast", "Saturation"];
-	var camera_settings_main    = ["brightness", "saturation", "contrast", "exposure", "sharpness"];
-
 	for (let camera in camera_settings) {
 	    id_list = "";
         info    = {};
@@ -689,6 +683,7 @@ function birdhouseDevices_cameraSettings (data) {
         var camera_settings_write   = [];
         var camera_settings_read    = [];
         var camera_settings_measure = [];
+    	var camera_settings_main    = ["brightness", "saturation", "contrast", "exposure", "sharpness"];
         var picamera_info           = "";
 
         // basic settings
