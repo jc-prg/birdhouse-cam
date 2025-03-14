@@ -688,7 +688,9 @@ function birdhouseDevices_cameraSettings (data) {
         var camera_settings_measure = [];
         var picamera_info           = "";
 
-        if (camera_properties["properties_new"] != {} && camera_properties["properties_new"]["CameraType"].indexOf("PiCamera") >= 0) { picamera_info = "(PiCamera)"}
+        if (camera_properties["properties_new"] && camera_properties["properties_new"] != {} && camera_properties["properties_new"]["CameraType"].indexOf("PiCamera") >= 0) {
+            picamera_info = "(PiCamera)"
+            }
 
         Object.entries(camera_properties[camera]["properties"]).forEach(([key,value]) => {
             if (value[1].indexOf("w") >= 0)      { camera_settings_write.push(key); }
