@@ -805,7 +805,7 @@ function birdhouseDevices_cameraSettings (data) {
                 if (camera_settings_main.indexOf(key.toLowerCase()) >= 0) {
                     //text        = text.replace(/([a-z])([A-Z])/g, '$1 $2');
                     text        = addSpaceBeforeCamelCase(text);
-                    html_entry += tab.row("<b>" + text + ":</b><br/>" + range_text, data_edit);
+                    html_entry += tab.row("<b><i>" + text + ":</b><br/>" + range_text, data_edit);
                     html_entry += tab.row("",   prop);
                     count      += 1;
                     }
