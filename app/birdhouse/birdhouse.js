@@ -104,8 +104,8 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 	    if (app_first_load) { app_first_load = false; }
 	    else                { app_2nd_load = false; }
 	    var param = window.location.href.split("?");
-	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "OBJECTS", "TODAY", "INFO",
-	                   "WEATHER", "IMAGE_SETTINGS", "SETTINGS", "PROCESSING", "STATISTICS"];
+	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "OBJECTS", "TODAY", "INFO", "INFORMATION", "IMAGE",
+	                   "WEATHER", "IMAGE_SETTINGS", "SETTINGS", "PROCESSING", "STATISTICS", "SERVER", "CAMERAS"];
 	    if (options.includes(param[1])) {
 	        view = param[1];
 	        app_active_page = param[1];
@@ -187,20 +187,20 @@ function birdhousePrint(data) {
 	else if (app_active_page == "ARCHIVE")           { success = birdhouse_LIST(lang("ARCHIVE"), data, camera); }
 	//else if (app_active_page == "DEVICES")           { birdhouseDevices(lang("DEVICES"), data, "settings"); }
 	//else if (app_active_page == "DEVICES")           { birdhouseDevices(lang("DEVICES"), data, "settings", "devices"); }
-	else if (app_active_page == "DEVICES")           {
-	    birdhouse_settings.toggle(true);
-	    appSettings.create("CAMERA");
-        // appSettings.show();
-        }
+	else if (app_active_page == "SETTINGS")          { birdhouse_settings.toggle(true); appSettings.create(); }
+	else if (app_active_page == "CAMERAS")           { birdhouse_settings.toggle(true); appSettings.create("CAMERA"); }
+	else if (app_active_page == "DEVICES")           { birdhouse_settings.toggle(true); appSettings.create("DEVICE"); }
+	else if (app_active_page == "SERVER")            { birdhouse_settings.toggle(true); appSettings.create("SERVER"); }
+	else if (app_active_page == "IMAGE")             { birdhouse_settings.toggle(true); appSettings.create("IMAGE"); }
+	else if (app_active_page == "STATISTICS")        { birdhouse_settings.toggle(true); appSettings.create("STATS"); }
+	else if (app_active_page == "INFORMATION")       { birdhouse_settings.toggle(true); appSettings.create("INFO"); }
+
+	else if (app_active_page == "INFO") 	         { birdhouse_settings.create("INFO_ONLY"); }
 	else if (app_active_page == "CAMERA_SETTINGS")   { birdhouseDevices(lang("CAMERAS"), data, "settings", "cameras"); }
 	else if (app_active_page == "FAVORITES")         { success = birdhouse_LIST(lang("FAVORITES"), data, camera); }
-	else if (app_active_page == "IMAGE_SETTINGS")    { birdhouseDevices_cameraSettings(data); }
 	else if (app_active_page == "INDEX")             { birdhouse_INDEX(data, camera); }
-	else if (app_active_page == "INFO") 	         { birdhouse_settings.create("INFO_ONLY"); }
 	else if (app_active_page == "PROCESSING")        { birdhouse_settings.create("PROCESSING"); }
 	else if (app_active_page == "OBJECTS")           { birdhouse_OBJECTS(lang("BIRDS_DETECTED"), data); }
-	else if (app_active_page == "SETTINGS")          { birdhouse_settings.create(); }
-	else if (app_active_page == "STATISTICS")        { birdhouse_STATISTICS("STATISTICS", data); }
 	else if (app_active_page == "TODAY")             { birdhouse_LIST(lang("TODAY"), data, camera); }
 	else if (app_active_page == "TODAY_COMPLETE")    { birdhouse_LIST(lang("TODAY_COMPLETE"), data, camera, false); }
 	else if (app_active_page == "VIDEOS")            { birdhouse_LIST(lang("VIDEOS"), data, camera); }
@@ -367,11 +367,11 @@ function birdhouseReloadView() {
 	birdhouse_overlayHide();
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 
-	if (app_active_page != "INDEX" && app_active_page != "IMAGE_SETTINGS" && app_active_page != "DEVICES") {
+	if (app_active_page != "INDEX" && app_active_page != "IMAGE" && app_active_page != "DEVICES" && app_active_page != "CAMERAS") {
 		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
 		}
 	// if (app_active_page == "INDEX" || app_active_page == "TODAY" || app_active_page == "DEVICES") {
-	if (app_active_page == "INDEX" || app_active_page == "IMAGE_SETTINGS" || app_active_page == "DEVICES") {
+	if (app_active_page == "INDEX" || app_active_page == "IMAGE" || app_active_page == "DEVICES" || app_active_page == "CAMERAS") {
 		for (let key in app_camera_source) {
 
 		    console.log("---> active:"+app_active_cam + " / key:" + key +" --- " + app_camera_source[key]);

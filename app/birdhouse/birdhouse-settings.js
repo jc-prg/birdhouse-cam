@@ -242,7 +242,8 @@ function birdhouse_app_settings (name="Settings") {
 
         var button2 = "";
         if (app_data["STATUS"]["server"]["initial_setup"]) {
-            button2 = "<button onclick='window.open(window.location.href.split(\"?\")[0]+\"?DEVICES\", \"_self\");' style='background:gray;width:100px;overflow:hidden;float:left;'>"+lang("DEVICE_SETTINGS_PROCEED")+"</button>";
+            button2 = "<button onclick='window.open(window.location.href.split(\"?\")[0]+\"?CAMERAS\", \"_self\");' style='background:gray;width:100px;overflow:hidden;float:left;'>"+lang("DEVICE_SETTINGS_PROCEED_1")+"</button>";
+            button2 = "<button onclick='window.open(window.location.href.split(\"?\")[0]+\"?DEVICES\", \"_self\");' style='background:gray;width:100px;overflow:hidden;float:left;'>"+lang("DEVICE_SETTINGS_PROCEED_2")+"</button>";
             }
 
         html_entry += this.tab.row("&nbsp;");
