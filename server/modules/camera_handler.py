@@ -566,6 +566,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
                 c_mode = "rw"
             else:
                 c_mode = "r"
+
             self.camera_controls[c_key] = [c_value, c_mode, c_type, c_range]
             self.camera_controls_keys["controls"].append(c_key)
 
