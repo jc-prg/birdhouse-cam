@@ -813,7 +813,7 @@ function birdhouseDevices_cameraSettings (data) {
         html += birdhouse_OtherGroup( camera+"_camera_1", camera.toUpperCase() + " - Camera Settings " + picamera_info, html_entry, true, "settings" );
 
         if (api_call != "") {
-            var call =  "<div style='width:100%;height:60px;'>&nbsp;<br/><center>" + api_call + "</center><br/>&nbsp;<br/></div>";
+            var call =  "<div style='width:100%;height:100px;'>&nbsp;<br/><center>&nbsp;&nbsp;" + api_call + "&nbsp;&nbsp;</center><br/>&nbsp;<br/></div>";
             html += birdhouse_OtherGroup( camera+"_camera_1b", camera.toUpperCase() + " - Camera Light", call, true, "settings" );
             }
 
