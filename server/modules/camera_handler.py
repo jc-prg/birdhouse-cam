@@ -533,7 +533,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         Returns:
             dict: complete control and value definition; format:
-                  self.camera_controls = {"key": ["current_value", "edit_mode", "data_type", ["min_value", "max_value"]]}
+                  self.camera_controls = {"key": ["current_value", "edit_mode", "data_type", ["min_value", "max_value", "default_value"]]}
         """
         self.camera_controls = {
             "CameraType" : ["PiCamera2", "r", "integer", []]
@@ -549,9 +549,9 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         temp_camera_controls = self.stream.camera_controls
         for c_key in temp_camera_controls:
             c_value = temp_camera_controls[c_key][2]
-            c_check = temp_camera_controls[c_key][0]
-            if c_check is None and len(temp_camera_controls[c_key]) > 3 and len(temp_camera_controls[c_key][3]) > 1:
-                c_check = temp_camera_controls[c_key][3][0]
+            c_check = c_value
+            if c_check is None:
+                c_check = temp_camera_controls[c_key][1]
             if isinstance(c_check, str):
                 c_type = "string"
             elif isinstance(c_check, int):
