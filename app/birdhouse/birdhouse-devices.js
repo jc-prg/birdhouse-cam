@@ -731,8 +731,8 @@ function birdhouseDevices_cameraSettings (data) {
             if (value[1].indexOf("m") >= 0)      { camera_settings_measure.push(key); }
             });
 
-        console.error(camera + "/" + this_camera_type);
-        console.error(this_camera_properties);
+        console.debug(camera + "/" + this_camera_type);
+        console.debug(this_camera_properties);
 
         var count      = 0;
         var count_sub  = 0;
