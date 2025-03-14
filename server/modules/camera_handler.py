@@ -320,6 +320,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
         self.create_test_images = True
         self.camera_controls = {}
         self.camera_controls_keys = {}
+        self.camera_controls_exclude = ["FrameDurationLimits","AeFlickerPeriod","NoiseReductionMode"]
 
         self.picamera_controls = {
             "saturation":       ["Saturation",          "rwm", 0.0, 1.0, "float"],
@@ -561,7 +562,10 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             else:
                 c_type = "complex"
             c_range = temp_camera_controls[c_key]
-            c_mode = "rw"
+            if c_key not in self.camera_controls_exclude:
+                c_mode = "rw"
+            else:
+                c_mode = "r"
             self.camera_controls[c_key] = [c_value, c_mode, c_type, c_range]
             self.camera_controls_keys["controls"].append(c_key)
 
