@@ -721,7 +721,8 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
             if testing_wb:
                 time.sleep(1)
 
-                self.stream.set_controls({"AwbMode": "off"})
+                self.stream.set_controls({"AwbMode": False})
+                self.stream.set_controls({"AeEnable": False})
                 self.stream.set_controls({"AwbGainR": 1.0, "AwbGainB": 1.5})
 
                 # Capture another image after the adjustment
