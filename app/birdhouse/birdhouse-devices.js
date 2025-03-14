@@ -761,10 +761,6 @@ function birdhouseDevices_cameraSettings (data) {
                 var data_type  = "";
                 var data_edit  = "";
 
-                if (this_camera_properties[key]) {
-                    data_type  = this_camera_properties[key][2];
-                    }
-
                 if (this_camera_properties[key][3] != []) {
                     range      = this_camera_properties[key][3][0] + ":" + this_camera_properties[key][3][1];
                     range_text = "[" + this_camera_properties[key][3][0] + ":" + this_camera_properties[key][3][1] + " - " + data_type + "]";
