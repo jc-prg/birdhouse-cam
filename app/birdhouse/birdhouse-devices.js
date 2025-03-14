@@ -715,7 +715,7 @@ function birdhouseDevices_cameraSettings (data) {
         html += "<div class='camera_info'><div class='camera_info_image'>";
         if (camera_settings[camera]["active"])   { html  += camera_stream; }
         else                                     { html  += lang("CAMERA_INACTIVE"); }
-        html += "<br/><br/>" + api_call;
+        html += "<center>" + api_call + "</center>";
         html += "</div>";
         html += "<div class='camera_info_text'>";
 
