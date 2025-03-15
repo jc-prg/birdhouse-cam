@@ -268,7 +268,9 @@ function birdhouse_view_images_objects(object) {
         image_ids_in_group = document.getElementById("group_ids_"+prefix+group_list[i]).innerHTML.split(" ");
         image_list = image_list.concat(image_ids_in_group);
         }
-    console.log(image_list);
+
+    console.debug("birdhouse_view_images_objects() -> image_list");
+    console.debug(image_list);
 
     for (a=0;a<image_list.length;a++) {
         if (image_list[a] != "") {
