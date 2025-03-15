@@ -287,8 +287,8 @@ function birdhouseStatus_cameraParam(data, camera) {
                     && document.activeElement != document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_range")) {
 
                 var data_type  = "";
-                if (document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_type")) {
-                    data_type = document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_type").value;
+                if (document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_data_type")) {
+                    data_type = document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_data_type").value;
                     }
 
                 var data_value = camera_status["properties_new"][key][0];
