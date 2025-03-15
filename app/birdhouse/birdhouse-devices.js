@@ -694,7 +694,7 @@ function birdhouseDevices_cameraSettings (data) {
             if (relay != "" && relay_settings[relay] && relay_settings[relay]["active"] == true) {
                 api_call    = "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"on\");' class='button-video-edit'  style='background:green;color:white;width:50px;'>ON</button>";
                 api_call    += "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"off\");' class='button-video-edit' style='background:red;color:white;width:50px;'>OFF</button>";
-                api_call    += "<button id='relay_status_"+relay+"' class='button-video-edit' style='background:black;color:white;width:50px;'>xx</button>";
+                api_call    += "<button id='relay_status_"+relay+"' class='button-video-edit' style='background:black;color:white;width:50px;border: 1px gray solid;'>xx</button>";
                 }   }
 
         // basic settings
