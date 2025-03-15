@@ -256,12 +256,14 @@ function birdhouseDevices_cameras(data, subset="") {
 
         if (settings["server"]["detection_active"]) {
             var model_options = app_data["STATUS"]["object_detection"]["models_available"].join(",");
+            var loading_info  = app_data["STATUS"]["object_detection"]["status_details"];
             html_entry = tab.start();
             html_entry += tab.row("- Image Detection:",     birdhouse_edit_field(id="set_detect_active_"+camera, field="devices:cameras:"+camera+":object_detection:active", type="select", options="true,false", data_type="boolean"));
             html_entry += tab.row("- Detection Size:",      birdhouse_edit_field(id="set_detect_size_"+camera, field="devices:cameras:"+camera+":object_detection:detection_size", type="input", options="", data_type="integer") + " %");
             html_entry += tab.row("- Threshold:",           birdhouse_edit_field(id="set_detect_threshold_"+camera, field="devices:cameras:"+camera+":object_detection:threshold", type="input", options="", data_type="float") + " %");
             html_entry += tab.row("- Classes:",             birdhouse_edit_field(id="set_detect_classes_"+camera, field="devices:cameras:"+camera+":object_detection:classes", type="input", options="", data_type="json"));
             html_entry += tab.row("- Model:",               birdhouse_edit_field(id="set_detect_models_"+camera, field="devices:cameras:"+camera+":object_detection:model", type="select", options=model_options, data_type="string"));
+            html_entry += tab.row("- Detection Status:",    loading_info);
             html_entry += tab.end();
 
             id_list += "set_detect_active_"+camera+":set_detect_size_"+camera+":set_detect_threshold_"+camera+":set_detect_classes_"+camera+":set_detect_models_"+camera+":";
