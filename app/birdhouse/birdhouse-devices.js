@@ -779,11 +779,7 @@ function birdhouseDevices_cameraSettings (data) {
                 if (value == "black_white") {
                     data_edit  = "<div style='float:left'>";
                     data_edit += birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image:"+value, type="select", options=",false,true", data_type=data_type);
-                    data_edit += "&nbsp; </div>";
                     data_edit += birdhouse_edit_save(id="edit_bw_"+camera, "set_black_white_"+camera, camera);
-                    // set_black_white_cam1
-
-                    //data_edit += " " + birdhouseDevices_cameraSettingsButton(camera, value, "set_"+value+"_"+camera, "change");
                     }
                 else if (data_type == "float" || data_type == "integer") {
                     data_edit  = birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image_presets:"+key, type="range", options=range, data_type=data_type);
@@ -792,7 +788,6 @@ function birdhouseDevices_cameraSettings (data) {
                 else if (data_type == "boolean") {
                     data_edit  = "<div style='float:left'>";
                     data_edit += birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image_presets:"+key, type="boolean", options="", data_type=data_type);
-                    //data_edit += "&nbsp; </div>";
                     data_edit += " " + birdhouseDevices_cameraSettingsButton(camera, key, "set_"+value+"_"+camera, "change");
                     }
 
