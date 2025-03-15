@@ -992,6 +992,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 api_response["STATUS"]["object_detection"]["models_loaded_status"][key] = camera[key].object.detect_loaded
                 api_response["STATUS"]["object_detection"]["models_loaded"][key] = camera[key].object.detect_settings["model"]
 
+            api_response["STATUS"]["object_detection"]["status"] = birdhouse_status["object_detection"]
+            api_response["STATUS"]["object_detection"]["status_details"] = birdhouse_status["object_detection_details"]
+
             # collect data for new DATA section
             param_to_publish = ["backup", "localization", "title", "views", "info", "weather"]
             for key in param_to_publish:

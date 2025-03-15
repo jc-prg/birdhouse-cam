@@ -359,7 +359,7 @@ birdhouse_loglevel_modules_error = []
 # ------------------------------------
 camera_list = []
 birdhouse_env = {}
-birdhouse_status = {"object_detection": False}
+birdhouse_status = {"object_detection": False, "object_detection_details": ""}
 birdhouse_picamera = False
 birdhouse_cache = True
 birdhouse_cache_for_archive = False

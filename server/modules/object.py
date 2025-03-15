@@ -114,6 +114,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                                 self.detect_loaded = True
                                 self.last_model = self.detect_settings["model"]
                                 birdhouse_status["object_detection"] = True
+                                birdhouse_status["object_detection_details"] = "OK"
                                 self.logging.info(" -> '" + model_to_load + "': OK")
                             else:
                                 self.detect_loaded = False
@@ -128,7 +129,10 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                 self.logging.error(" -> Could not load 'modules.detection': " + str(e))
                 self.detect_loaded = False
                 birdhouse_status["object_detection"] = False
+                birdhouse_status["object_detection_details"] = "Could not load 'modules.detection': " + str(e)
         else:
+            birdhouse_status["object_detection"] = False
+            birdhouse_status["object_detection_details"] = "Object detection is set to inactive"
             self.detect_loaded = False
             self.logging.info(" -> Object detection inactive (" + self.name + "), see .env-file.")
 
