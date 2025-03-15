@@ -445,10 +445,15 @@ function birdhouseDevices_relays(data) {
 	var admin 	= data["STATUS"]["admin_allowed"];
 	var html    = "";
 	var index_info = {};
+
 	var tab     = new birdhouse_table();
 	tab.style_rows["height"] = "27px";
 
 	for (let relay in relays) {
+		var api_call    = "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"on\");' class='button-video-edit'  style='background:green;color:white;width:50px;'>ON</button>";
+        api_call       += "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"off\");' class='button-video-edit' style='background:red;color:white;width:50px;'>OFF</button>";
+        api_call       += "<button id='relay_status_long_"+relay+"' class='button-video-edit' style='background:black;color:white;width:90px;border: 1px gray solid;cursor:default;'>"+lang("PLEASE_WAIT")+"</button>";
+
 	    relay_name   = relay.toUpperCase() + ": " + relays[relay]["name"];
 	    index_info[relay_name] = {};
 	    index_info[relay_name]["active"] = relays[relay]["active"];
@@ -470,6 +475,8 @@ function birdhouseDevices_relays(data) {
 		html_entry += tab.row("Name:", birdhouse_edit_field(id="set_name_"+relay, field="devices:relays:"+relay+":name", type="input"));
 	    html_entry += tab.row("Source:", birdhouse_edit_field(id="set_source_"+relay, field="devices:relays:"+relay+":pin", type="input", options="", data_type="integer") + " (data pin on RPi)");
 		html_entry += tab.row("Type:", birdhouse_edit_field(id="set_type_"+relay, field="devices:relays:"+relay+":type", type="select", options="JQC3F"));
+        html_entry += tab.row("Test switch:",   api_call);
+        html_entry += tab.row("&nbsp;");
         html_entry += tab.end();
 
         var id_list = "set_name_"+relay+":set_type_"+relay+":set_active_"+relay+":set_source_"+relay;
