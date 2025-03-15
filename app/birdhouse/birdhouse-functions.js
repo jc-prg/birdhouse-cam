@@ -254,6 +254,8 @@ function birdhouse_view_images_threshold(threshold) {
 * "block" if yes and to "none" if not.
 */
 function birdhouse_view_images_objects(object) {
+
+    if (!document.getElementById("group_list")) { return; }
     group_list = document.getElementById("group_list").innerHTML.split(" ");
     image_list = [];
     image_list_active = [];
