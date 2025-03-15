@@ -90,6 +90,7 @@
 /* iPhone 16pro ------------------------------------------ */
 
 @media only screen and (device-width : 402px) {
+
     .setting_bg.header              { width : 366px; }
     .frame_column.wide              { width : 366px; }
     }
