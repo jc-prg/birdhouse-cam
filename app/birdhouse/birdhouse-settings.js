@@ -307,10 +307,12 @@ function birdhouse_app_settings (name="Settings") {
         html_internal += this.tab.row("RPi Active:&nbsp;",         rpi_active);
         html_internal += this.tab.row("Object detection:&nbsp;",   detection_active);
 
-        var loading_info = status["object_detection"]["status"] + " - " + status["object_detection"]["status_details"];
-        if (status["object_detection"]["status"] == true)   { loading_info += " - " + JSON.stringify(status["object_detection"]["models_loaded"]).replaceAll(",", ", ").replaceAll(":", " : "); }
-        else                                                { loading_info = "<font color=" + header_color_error + ">" + loading_info + "</font>"; }
-        html_internal += this.tab.row("Object detection loaded:&nbsp;", loading_info);
+        if (detection_active == true || detection_active == "true") {
+            var loading_info = status["object_detection"]["status"] + " - " + status["object_detection"]["status_details"];
+            if (status["object_detection"]["status"] == true)   { loading_info += " - " + JSON.stringify(status["object_detection"]["models_loaded"]).replaceAll(",", ", ").replaceAll(":", " : "); }
+            else                                                { loading_info = "<font color=" + header_color_error + ">" + loading_info + "</font>"; }
+            html_internal += this.tab.row("Object detection loaded:&nbsp;", loading_info);
+            }
 
         html_internal += this.tab.row("<hr>");
         html_internal += this.tab.row("Admin access via:&nbsp;",   settings["server"]["admin_login"]);
