@@ -93,6 +93,7 @@
 
     .setting_bg.header              { width : 366px; }
     .frame_column.wide              { width : 366px; }
+    .setting_button_index.header    { width : 56px; }
     }
 
 @media only screen and (device-width : 402px) and (device-height : 874px) and (orientation : portrait) {
