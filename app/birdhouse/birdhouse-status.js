@@ -292,7 +292,8 @@ function birdhouseStatus_cameraParam(data, camera) {
                     }
 
                 var data_value = camera_status["properties_new"][key][0];
-                var data_class = "off";
+                var data_class = "start";
+                if (data_type == "boolean") { alert("data_value"); }
                 if (data_type == "boolean" && data_value == 1) { data_value = 1; data_class = "on"; }
                 if (data_type == "boolean" && data_value == 0) { data_value = 0; data_class = "off"; }
 
