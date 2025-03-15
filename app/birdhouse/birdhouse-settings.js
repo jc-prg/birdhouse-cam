@@ -23,6 +23,7 @@ function birdhouse_app_settings (name="Settings") {
 
     this.create = function (type="SETTINGS") {
         this.setting_type = type;
+        app_active_page = type;
         birdhouse_genericApiRequest("GET", ["status"], birdhouseStatus_print);
         if (app_data["STATUS"]["server"]["initial_setup"]) {
             html = "<center><br/>&nbsp;&nbsp;<br/><img src='"+app_loading_image+"' width='250'><br/>&nbsp;<br/>"+lang("PLEASE_WAIT")+"<br/>&nbsp;&nbsp;<br/>&nbsp;&nbsp;<br/></center>";
@@ -128,6 +129,7 @@ function birdhouse_app_settings (name="Settings") {
             this.set.write(1, lang("INFORMATION"), this.information());
             this.set.write(2, "", "");
             this.set.show_entry(2);
+            app_active_page = "INFORMATION";
             }
         else if (type == "settings") {
             this.setting_type = "SETTINGS";
@@ -135,6 +137,7 @@ function birdhouse_app_settings (name="Settings") {
             this.set.clear_content_frames();
             this.set.write(1, lang("SETTINGS"), this.settings());
             this.set.show_entry(-1);
+            app_active_page = "SETTINGS";
             }
         else if (type == "image") {
             this.setting_type = "IMAGE_SETTINGS";

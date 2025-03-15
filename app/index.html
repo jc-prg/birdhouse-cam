@@ -49,13 +49,14 @@
 <!-- APP specific  html elements // END -->
 
 <nav id="nav">
-<nav-logo id="rest_status"></nav-logo>
-<nav-title id="navTitle">...</nav-title>
-<ul>
-  <li id="navi"><div onClick="javascript:appClickMenu();"  id="navi-click"><img src="framework/img/button.png" /></div>
-    <ul id='menuItems' style="visibility:hidden;"><!-- drop down menu - filled by script --></ul>
-  </li>
-</ul>
+    <nav-logo id="rest_status"></nav-logo>
+    <nav-title id="navTitle" style="display:block;z-index:101;">...</nav-title>
+    <nav-active id="navActive" style="display:none;z-index:100;">+++</nav-active>
+    <ul>
+      <li id="navi"><div onClick="javascript:appClickMenu();"  id="navi-click"><img src="framework/img/button.png" /></div>
+        <ul id='menuItems' style="visibility:hidden;"><!-- drop down menu - filled by script --></ul>
+      </li>
+    </ul>
 </nav>
 
 <div id="statusLED"><div id="red"></div></div>

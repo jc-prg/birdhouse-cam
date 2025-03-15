@@ -75,6 +75,10 @@ function birdhouseStatus_connectionError() {
 function birdhouseStatus_print(data) {
     //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
     console.debug("Update Status ...");
+    setTextById("navActive", app_active_page);
+
+    var pages_content   = ["INDEX", "OBJECTS", "FAVORITES", "ARCHIVE", "TODAY", "TODAY_COMPLETE", "WEATHER"];
+    var pages_settings  = ["SETTINGS", "CAMERA_SETTINGS", "DEVICE_SETTINGS", "IMAGE_SETTNGS", "STATISTICS", "INFORMATION"];
 
     // set latest status data to var app_data
     app_data       = data;
@@ -85,21 +89,25 @@ function birdhouseStatus_print(data) {
     // check page length vs. screen height
     var body = document.body, html = document.documentElement;
     var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
-    if (height > 1.5 * document.body.clientHeight) { elementVisible("move_up"); }
-    else { elementHidden("move_up"); }
-    if (appSettings.loaded_index) { setTextById("device_status_short", birdhouseDevices("", data, "short")); appSettings.loaded_index = false; }
 
-    birdhouseStatus_system(data);
-    birdhouseStatus_cameras(data);
-    birdhouseStatus_weather(data);
-    birdhouseStatus_sensors(data);
-    birdhouseStatus_microphones(data);
+    if (height > 1.5 * document.body.clientHeight)          { elementVisible("move_up"); }
+    else                                                    { elementHidden("move_up"); }
 
-    birdhouseStatus_loadingViews(data);
-    birdhouseStatus_detection(data);
-    birdhouseStatus_downloads(data);
-    birdhouseStatus_processing(data);
-    birdhouseStatus_recordButtons(data);
+    if (appSettings.loaded_index)                           { setTextById("device_status_short", birdhouseDevices("", data, "short")); appSettings.loaded_index = false; }
+
+    if (pages_settings.includes(app_active_page))           { birdhouseStatus_system(data); }
+    if (pages_settings.includes(app_active_page))           { birdhouseStatus_processing(data); }
+    if (app_active_page == "DEVICE_SETTINGS")               { birdhouseStatus_sensors(data); }
+
+    if (app_active_page == "INDEX" || "CAMERA_SETTINGS")    { birdhouseStatus_cameras(data); }
+    if (app_active_page == "INDEX" || "CAMERA_SETTINGS")    { birdhouseStatus_microphones(data); }
+
+    if (app_active_page == "INDEX")                         { birdhouseStatus_recordButtons(data); }
+    if (pages_content.includes(app_active_page))            { birdhouseStatus_loadingViews(data); }
+    if (app_active_page == "ARCHIVE" || "TODAY")            { birdhouseStatus_downloads(data); }
+    if (app_active_page == "ARCHIVE" || "TODAY")            { birdhouseStatus_detection(data); }
+    if (app_active_page == "WEATHER")                       { birdhouseStatus_weather(data); }
+    if (pages_content.includes(app_active_page))            { birdhouseStatus_weather(data); }
 
     if (!appSettings.active) {
         document.getElementById(app_frame_info).style.display = "block";

@@ -23,6 +23,10 @@ h3        { margin : 4px; }
 
 */
 
+nav-active {
+  color                : yellow;
+}
+
 /* header functions */
 
 .headerRight {
