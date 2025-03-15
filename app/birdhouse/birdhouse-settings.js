@@ -306,7 +306,10 @@ function birdhouse_app_settings (name="Settings") {
         html_internal += this.tab.row("Audio stream port:&nbsp;",  settings["server"]["port_audio"]);
         html_internal += this.tab.row("RPi Active:&nbsp;",         rpi_active);
         html_internal += this.tab.row("Object detection:&nbsp;",   detection_active);
-        html_internal += this.tab.row("Object detection loaded:&nbsp;", status["object_detection"]["status"] + " - " + status["object_detection"]["status_details"]);
+
+        var loading_info = status["object_detection"]["status"] + " - " + status["object_detection"]["status_details"];
+        if (status["object_detection"]["status"] == true) {loading_info += " - " + JSON.stringify(status["object_detection"]["models_loaded"]).replaceAll(",", ", ").replaceAll(":", " : "); }
+        html_internal += this.tab.row("Object detection loaded:&nbsp;", loading_info);
 
         html_internal += this.tab.row("<hr>");
         html_internal += this.tab.row("Admin access via:&nbsp;",   settings["server"]["admin_login"]);
