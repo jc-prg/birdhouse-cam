@@ -92,8 +92,9 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         }
     else if (type == "boolean") {
         style     = "width:50px";
-        on_set    = "if (this.value == 0) { document.getElementById(\""+id+"\").value = false; } else { document.getElementById(\""+id+"\").value = true; }";
         on_value  = "if (this.value == 0) { document.getElementById(\""+id+"_range\").value = false; } else { document.getElementById(\""+id+"_range\").value = true; }";
+        on_set    = "if (this.value == 0) { document.getElementById(\""+id+"\").value = false; } else { document.getElementById(\""+id+"\").value = true; }";
+        on_set   += "this.className=\"bh-slider set\";";
 
         html += "<div class='bh-slidecontainer' style='float:left;width:100px;height:auto;'>";
         html += "<div style='float:left;width:25px'></div>";
@@ -103,6 +104,10 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         html += "</div>";
         }
     else if (type == "range") {
+        on_value  = "document.getElementById(\""+id+"_range\").value = this.value;";
+        on_set    = "document.getElementById(\""+id+"\").value = this.value;";
+        on_set   += "this.className=\"bh-slider set\";";
+
         range = options.split(":");
         if (options.indexOf(".") > 0)                       { step = "0.1"; }
         else if (range.length > 2 && range[2] == "float")   { step = "0.1"; }
@@ -110,8 +115,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
 
         style = "width:100px";
         if (range[0] == 0 && range[1] == 1) { style = "width:50px;"; }
-        on_set    = "document.getElementById(\""+id+"\").value = this.value;";
-        on_value  = "document.getElementById(\""+id+"_range\").value = this.value;";
+
         html += "<div class='bh-slidecontainer' style='float:left;width:100px;height:auto;'>";
         html += "<input id='"+id+"_range' class='bh-slider undef' type='range' name='' min='"+range[0]+"' max='"+range[1]+"' step='"+step+"' style='"+style+"' onchange='"+on_set+on_change+"'>";
         html += "</div><div style='float:left;margin-left:12px;'>";
