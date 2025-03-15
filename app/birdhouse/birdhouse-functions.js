@@ -92,7 +92,11 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         }
     else if (type == "boolean") {
         style     = "width:50px";
-        on_value  = "if (this.value == 0) { document.getElementById(\""+id+"_range\").value = false; } else { document.getElementById(\""+id+"_range\").value = true; }";
+        on_value  = "if (this.value == 0)      { document.getElementById(\""+id+"_range\").value = 0; } ";
+        on_value += "else if (this.value == 1) { document.getElementById(\""+id+"_range\").value = 1; }";
+        on_value += "if (this.value.toLowerCase == \"false\")     { document.getElementById(\""+id+"_range\").value = 0; } ";
+        on_value += "else if (this.value.toLowerCase == \"true\") { document.getElementById(\""+id+"_range\").value = 1; }";
+
         on_set    = "if (this.value == 0) { document.getElementById(\""+id+"\").value = false; } else { document.getElementById(\""+id+"\").value = true; }";
         on_set   += "this.className=\"bh-slider set\";";
 
