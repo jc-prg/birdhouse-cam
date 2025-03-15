@@ -97,6 +97,7 @@ function birdhouseStatus_print(data) {
 
     if (pages_settings.includes(app_active_page))           { birdhouseStatus_system(data); }
     if (pages_settings.includes(app_active_page))           { birdhouseStatus_processing(data); }
+    if (pages_settings.includes(app_active_page))           { birdhouseFunction_relays(data); }
     if (app_active_page == "DEVICE_SETTINGS")               { birdhouseStatus_sensors(data); }
 
     if (app_active_page == "INDEX" || "CAMERA_SETTINGS")    { birdhouseStatus_cameras(data); }
@@ -349,6 +350,23 @@ function birdhouseStatus_weather(data) {
     coordinates = "(" + settings["gps_coordinates"].toString().replaceAll(",", ", ") + ")";
     setTextById("gps_coordinates", coordinates);
 }
+
+/*
+* check relay status and fill respective placeholder with this information if exists
+*
+* @param (dict) data: response from API status request
+*/
+function birdhouseFunction_relays(data) {
+    var relay_status  = data["STATUS"]["devices"]["relays"];
+
+    for (let relay in relay_status) {
+        var raw_status = relay_status[relay];
+        var status     = "";
+        if (raw_status == false) { status = "OFF"; } else { status = "ON"; }
+        setTextById("relay_status_" + relay, status);
+        setTextById("relay_raw_status_" + relay, raw_status);
+        }
+    }
 
 /*
 * read latest sensor status information and fill respective placeholders with information if exist
