@@ -87,7 +87,10 @@ class BirdhouseRelay(BirdhouseClass):
         Returns:
             boolean: relay state
         """
-        return self.state == "ON"
+        if self.state == "ON":
+            return True
+        else:
+            return False
 
     def test(self):
         """
