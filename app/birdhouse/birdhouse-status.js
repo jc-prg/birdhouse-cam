@@ -361,7 +361,7 @@ function birdhouseFunction_relays(data) {
 
     for (let relay in relay_status) {
         var raw_status = relay_status[relay];
-        var status     = "";
+        var status     = ".";
         if (raw_status == false) { status = "OFF"; } else { status = "ON"; }
         setTextById("relay_status_" + relay, status);
         setTextById("relay_raw_status_" + relay, raw_status);
