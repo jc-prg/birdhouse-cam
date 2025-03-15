@@ -680,8 +680,9 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
             image_data["description"] += "<b>" + entry["date"] + "</b><br/>";
             image_data["description"] += "<i>"+lang("NO_IMAGE_IN_ARCHIVE_2")+"</i>";
             image_data["img_missing"] = true;
-            console.error(entry["date"]);
-            console.error(entry);
+
+            console.debug(entry["date"]);
+            console.debug(entry);
     	    }
         else {
             image_data["lowres"]      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
