@@ -1,19 +1,24 @@
-numpy
 imutils
-flask
 tqdm
-psutil
-setuptools
 wheel
 ffmpeg-python
 #python-ffmpeg
 #better-ffmpeg-progress
 ffmpeg-progress
-couchdb
-requests
 python_weather
 suntime
 geopy
 python-dotenv
 torch
 lameenc
+couchdb
+ultralytics
+
+# available as apt package
+#numpy
+#flask
+#psutil
+#setuptools
+#requests
+
+#python3-numpy python3-flask python3-psutil python3-setuptools python3-requests python3-couchdb
