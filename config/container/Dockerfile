@@ -1,6 +1,5 @@
 #FROM ubuntu:24.04
 FROM debian:12.9
-#FROM debian
 
 ENV DEBIAN_FRONTEND=noninteractive
 
