@@ -90,6 +90,17 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
             }
         html += "</select>";
         }
+    else if (type == "boolean" && options.indexOf("false") >= 0) {
+        style     = "width:60px";
+        on_set    = "if (this.value == 0) { document.getElementById(\""+id+"\").value = false; } else { document.getElementById(\""+id+"\").value = true; }";
+        on_value  = "if (this.value == 0) { document.getElementById(\""+id+"_range\").value = false; } else { document.getElementById(\""+id+"_range\").value = true; }";
+
+        html += "<div class='bh-slidecontainer' style='float:left;width:100px;height:auto;'>";
+        html += "<input id='"+id+"_range' class='bh-slider' type='range' name='' min='0' max='1' step='1' style='"+style+"' onchange='"+on_set+on_change+"'>";
+        html += "</div><div style='float:left;margin-left:12px;'>";
+        html += "<input id='"+id+"' class='bh-slider-value' style='width:30px;' onchange='"+on_value+"'>";
+        html += "</div>";
+        }
     else if (type == "range") {
         range = options.split(":");
         if (options.indexOf(".") > 0)                       { step = "0.1"; }
@@ -97,7 +108,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         if (data_type == "float")                           { step = "0.1"; }
 
         style = "width:100px";
-        if (range[0] == 0 && range[1] == 1) { style = "width:40px;"; }
+        if (range[0] == 0 && range[1] == 1) { style = "width:60px;"; }
         on_set    = "document.getElementById(\""+id+"\").value = this.value;";
         on_value  = "document.getElementById(\""+id+"_range\").value = this.value;";
         html += "<div class='bh-slidecontainer' style='float:left;width:100px;height:auto;'>";
