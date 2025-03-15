@@ -278,6 +278,7 @@ function birdhouse_app_settings (name="Settings") {
 
     this.server_side_settings = function() {
         var settings = app_data["SETTINGS"];
+        var status   = app_data["STATUS"];
         if (settings["server"]["rpi_active"])           { rpi_active = "true"; } else { rpi_active = "false"; }
         if (settings["server"]["detection_active"])     { detection_active = "true"; } else { detection_active = "false"; }
         if (settings["server"]["daily_clean_up"])       { daily_clean_up = "true"; } else { daily_clean_up = "false"; }
@@ -305,6 +306,7 @@ function birdhouse_app_settings (name="Settings") {
         html_internal += this.tab.row("Audio stream port:&nbsp;",  settings["server"]["port_audio"]);
         html_internal += this.tab.row("RPi Active:&nbsp;",         rpi_active);
         html_internal += this.tab.row("Object detection:&nbsp;",   detection_active);
+        html_internal += this.tab.row("Object detection loaded:&nbsp;", status["object_detection"]["status"] + " - " + status["object_detection"]["status_details"]);
 
         html_internal += this.tab.row("<hr>");
         html_internal += this.tab.row("Admin access via:&nbsp;",   settings["server"]["admin_login"]);
