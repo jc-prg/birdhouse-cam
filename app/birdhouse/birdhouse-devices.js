@@ -774,7 +774,7 @@ function birdhouseDevices_cameraSettings (data) {
 
                 if (this_camera_properties[key][3] != []) {
                     range      = this_camera_properties[key][3][0] + ":" + this_camera_properties[key][3][1];
-                    range_text = "[" + this_camera_properties[key][3][0] + ":" + this_camera_properties[key][3][1] + " - " + data_type + "]";
+                    range_text = "[" + range + " - " + data_type + "]";
                     }
                 if (value == "black_white") {
                     data_edit  = "<div style='float:left'>";
@@ -815,11 +815,11 @@ function birdhouseDevices_cameraSettings (data) {
             else {
 
                 if (this_camera_properties[value][2] != this_camera_properties[value][3]) {
-                    var range  = this_camera_properties[2] + ":" + this_camera_properties[value][3];
+                    var range  = this_camera_properties[value][2] + ":" + this_camera_properties[value][3];
                     if (this_camera_properties[value].length > 4) {
                         range += ":" + this_camera_properties[value][4];
                         }
-                    var range_text  = "[" + this_camera_properties[value][2] + ".." + this_camera_properties[value][3] + "]";
+                    var range_text  = "[" + range + "]";
                     var prop        = "";
 
                     if (camera_settings_measure.indexOf(camera_settings_write[i]) > -1) { prop += "<i>(image=<span id='img_"+value+"_"+camera+"'></span>)</i>"; }
