@@ -36,7 +36,7 @@ function birdhouse_INDEX(data, camera, object=false) {
 
     // create streams from active cameras
 	for (let key in cameras) {
-	    console.log("--> " + key + ": " + cameras[key]["active"])
+	    console.log("--> birdhouse_INDEX: " + key + " / " + cameras[key]["active"])
 	    if (cameras[key]["active"]) { //&& cameras[key]["status"]["error"] == false) {
     	    if (active_camera == undefined) { active_camera = key; }
             if (key == active_camera) {
