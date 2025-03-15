@@ -307,8 +307,8 @@ function birdhouseDevices_cameras(data, subset="") {
             html_entry += tab.row("- Brightness threshold:",  birdhouse_edit_field(id="set_light_threshold_"+camera, field="devices:cameras:"+camera+":camera_light:threshold", type="input", options="", data_type="integer") + " %");
             if (relay != "") {
                 html_entry += tab.row("- Test switch:",   api_call);
+                html_entry += tab.row("&nbsp;");
                 }
-            html_entry += tab.row("&nbsp;");
             html_entry += tab.end();
 
             id_list += "set_light_switch_"+camera+":set_light_mode_"+camera+":set_light_threshold_"+camera+":";
