@@ -365,6 +365,7 @@ function birdhouseFunction_relays(data) {
         var status     = ".";
         if (raw_status == false) { status = "OFF"; } else { status = "ON"; }
         setTextById("relay_status_" + relay, status);
+        setTextById("relay_status_long_" + relay, lang("STATUS") + ": " + status);
         setTextById("relay_raw_status_" + relay, raw_status);
         }
     }
