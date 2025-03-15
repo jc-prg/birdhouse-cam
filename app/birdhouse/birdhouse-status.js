@@ -264,6 +264,7 @@ function birdhouseStatus_cameraParam(data, camera) {
             if (document.activeElement != document.getElementById("set_" + key + "_" + camera) && document.activeElement != document.getElementById("set_" + key + "_" + camera + "_range")) {
                 setValueById("set_" + key + "_" + camera, camera_status["properties"][key][0]);
                 setValueById("set_" + key + "_" + camera + "_range", camera_status["properties"][key][0]);
+                document.getElementById("set_" + key + "_" + camera + "_range").className = "bh-slider start";
                 }
             //console.error(key + ":" + camera_status[camera]["properties"][key].toString());
         }
@@ -278,10 +279,18 @@ function birdhouseStatus_cameraParam(data, camera) {
             setTextById("prop_" + key.toLowerCase() + "_" + camera, prop_text.replaceAll(",", ",  "));
             setTextById("prop_" + key + "_" + camera, prop_text.replaceAll(",", ",  "));
             if (document.activeElement != document.getElementById("set_" + key + "_" + camera) && document.activeElement != document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_range")) {
-                setValueById("set_" + key.toLowerCase() + "_" + camera, camera_status["properties_new"][key][0]);
-                setValueById("set_" + key.toLowerCase() + "_" + camera + "_range", camera_status["properties_new"][key][0]);
-                setValueById("set_" + key + "_" + camera, camera_status["properties_new"][key][0]);
-                setValueById("set_" + key + "_" + camera + "_range", camera_status["properties_new"][key][0]);
+                var data_type  = document.getElementById("set_" + key + "_" + camera + "_type").value;
+                var data_value = camera_status["properties_new"][key][0];
+                var data_class = "start";
+                if (data_type == "boolean" && data_value == true)  { data_value = 1; data_class = "on"; }
+                if (data_type == "boolean" && data_value == false) { data_value = 0; data_class = "off"; }
+
+                setValueById("set_" + key.toLowerCase() + "_" + camera, data_value);
+                setValueById("set_" + key.toLowerCase() + "_" + camera + "_range", data_value);
+                setValueById("set_" + key + "_" + camera, data_value);
+                setValueById("set_" + key + "_" + camera + "_range", data_value);
+
+                document.getElementById("set_" + key + "_" + camera + "_range").className = "bh-slider " + data_class;
                 }
             //console.error(key + ":" + camera_status[camera]["properties"][key].toString());
         }
