@@ -78,7 +78,7 @@ function birdhouseStatus_print(data) {
     setTextById("navActive", app_active_page);
 
     var pages_content   = ["INDEX", "OBJECTS", "FAVORITES", "ARCHIVE", "TODAY", "TODAY_COMPLETE", "WEATHER"];
-    var pages_settings  = ["SETTINGS", "CAMERA_SETTINGS", "DEVICE_SETTINGS", "IMAGE_SETTNGS", "STATISTICS", "INFORMATION"];
+    var pages_settings  = ["SETTINGS", "CAMERA_SETTINGS", "DEVICE_SETTINGS", "IMAGE_SETTINGS", "STATISTICS", "INFORMATION"];
 
     // set latest status data to var app_data
     app_data       = data;
@@ -357,6 +357,7 @@ function birdhouseStatus_weather(data) {
 * @param (dict) data: response from API status request
 */
 function birdhouseFunction_relays(data) {
+
     var relay_status  = data["STATUS"]["devices"]["relays"];
 
     for (let relay in relay_status) {
