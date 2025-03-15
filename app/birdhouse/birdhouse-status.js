@@ -265,8 +265,8 @@ function birdhouseStatus_cameraParam(data, camera) {
                 setValueById("set_" + key + "_" + camera, camera_status["properties"][key][0]);
                 setValueById("set_" + key + "_" + camera + "_range", camera_status["properties"][key][0]);
 
-                if (document.getElementById("set_" + key + "_" + camera + "_range")) {
-                    document.getElementById("set_" + key + "_" + camera + "_range").className = "bh-slider start";
+                if (document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_range")) {
+                    document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_range").className = "bh-slider start";
                     }
                 }
             //console.error(key + ":" + camera_status[camera]["properties"][key].toString());
