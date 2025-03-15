@@ -308,6 +308,7 @@ function birdhouseDevices_cameras(data, subset="") {
             if (relay != "") {
                 html_entry += tab.row("- Test switch:",   api_call);
                 }
+            html_entry += tab.row("&nbsp;");
             html_entry += tab.end();
 
             id_list += "set_light_switch_"+camera+":set_light_mode_"+camera+":set_light_threshold_"+camera+":";
