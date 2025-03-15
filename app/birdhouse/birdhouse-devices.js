@@ -671,6 +671,7 @@ function birdhouseDevices_cameraSettings (data) {
     var this_camera_properties  = {};
 	var camera_properties       = data["STATUS"]["devices"]["cameras"];
 	var camera_settings	        = app_data["SETTINGS"]["devices"]["cameras"];
+	var relay_settings	        = app_data["SETTINGS"]["devices"]["relays"];
 
 	var admin   = data["STATUS"]["admin_allowed"];
 	var html    = "";
@@ -689,8 +690,8 @@ function birdhouseDevices_cameraSettings (data) {
         var api_call                = "";
 
         if (camera_settings[camera]["camera_light"] && camera_settings[camera]["camera_light"]["switch"]) {
-            var relay = camera_settings[camera]["camera_light"]["switch"];
-            if (relay != "") {
+            var relay        = camera_settings[camera]["camera_light"]["switch"];
+            if (relay != "" && relay_settings[relay] && relay_settings[relay]["active"]) {
                 api_call    = "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"on\");' class='button-video-edit'  style='background:green;color:white;width:50px;'>ON</button>";
                 api_call    += "<button onclick='birdhouse_relayOnOff(\""+relay+"\",\"off\");' class='button-video-edit' style='background:red;color:white;width:50px;'>OFF</button>";
             }   }
