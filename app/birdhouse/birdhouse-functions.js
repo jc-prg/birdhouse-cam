@@ -96,6 +96,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         on_value  = "if (this.value == 0) { document.getElementById(\""+id+"_range\").value = false; } else { document.getElementById(\""+id+"_range\").value = true; }";
 
         html += "<div class='bh-slidecontainer' style='float:left;width:100px;height:auto;'>";
+        html += "<div style='float:left;width:25px'></div>";
         html += "<input id='"+id+"_range' class='bh-slider' type='range' name='' min='0' max='1' step='1' style='"+style+"' onchange='"+on_set+on_change+"'>";
         html += "</div><div style='float:left;margin-left:12px;'>";
         html += "<input id='"+id+"' class='bh-slider-value' style='width:30px;' onchange='"+on_value+"'>";
