@@ -153,6 +153,8 @@ function birdhouseWeather( data ) {
         chart   += "<b>" + date + "</b><br/>";
         chart   += "<center>" + birdhouseWeather_OverviewChart(weather_data[date], "key", false) + "</center>" ;
         });
+
+    chart        += "<br/>&nbsp;<br/>";
     html_weather += birdhouse_OtherGroup( "chart", lang("WEATHER") + " (3 " + lang("DAYS") + ")", chart, true );
     if (admin_allowed) {
         html_weather += html;

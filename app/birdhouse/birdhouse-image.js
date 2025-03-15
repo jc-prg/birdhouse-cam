@@ -112,7 +112,7 @@ function birdhouse_ImageGroup( group_id, title, entries, entry_count, entry_cate
 	var image_ids = "";
 	var display   = "";
 
-	if (admin) {
+	if (admin && entry_count) {
 		for (i=0;i<entry_count.length;i++) 	{ count[entry_count[i]] = 0; }
 		if (count["all"] != undefined) 	    { count["all"] = Object.keys(entries).length; }
 
