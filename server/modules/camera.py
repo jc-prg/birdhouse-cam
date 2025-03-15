@@ -1105,6 +1105,13 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         Returns:
             numpy.ndarray: raw image with framerate information
         """
+        offset = None
+        if self.type == "setting":
+            offset = self.param["image"]["crop_area"]
+        if offset is None:
+            offset = [0, 0]
+        position = (int(10 + offset[0]), int(-20 + offset[1]))
+
         if raw is None or len(raw) <= 0:
             self.logging.error("edit_add_framerate: empty image")
             return raw
@@ -1117,7 +1124,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             if framerate:
                 raw = self.image.draw_text_raw(raw=raw, text=str(round(framerate, 1)) + "fps",
                                                font=cv2.QT_FONT_NORMAL,
-                                               position=(10, -20), scale=0.4, thickness=1)
+                                               position=position, scale=0.4, thickness=1)
         return raw.copy()
 
     def edit_add_system_info(self, raw):
@@ -2198,12 +2205,12 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     self.logging.info("Switched on the light - started (" + self.relays[light_relay].id +")")
 
                 # if sunset -1h switch on
-                elif self.config.is_sunset(-1) and not self.relays[light_relay].is_on():
+                elif (self.config.is_sunset(-1) or self.config.is_sunset(-1, "after")) and not self.relays[light_relay].is_on():
                     self.relays[light_relay].switch_on()
                     self.logging.info("Switched on the light - sunset-1h (" + self.relays[light_relay].id + ")")
 
                 # if sunrise +1h switch off
-                elif self.config.is_sunrise(+1) and self.relays[light_relay].is_on():
+                elif (self.config.is_sunrise(+1) or self.config.is_sunrise(+1, "before")) and self.relays[light_relay].is_on():
                     self.relays[light_relay].switch_off()
                     self.logging.info("Switched off the light - sunrise+1h (" + self.relays[light_relay].id + ")")
 

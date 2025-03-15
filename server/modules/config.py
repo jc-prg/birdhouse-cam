@@ -1788,12 +1788,13 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         else:
             return False
 
-    def is_sunrise(self, hour_offset=0):
+    def is_sunrise(self, hour_offset=0, mode="exact"):
         """
         check if current time is sunrise; if weather is not available return False
 
         Args:
             hour_offset (int): hour offset for sunrise, e.g., +1 or -1
+            mode (str): mode how to check - available modes: "exact", "before", "after"
         Returns:
             boolean: True if weather data available and current time is sunrise time (incl. hour offset)
         """
@@ -1805,19 +1806,39 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         sunrise = str(int(sunrise[0]) + int(hour_offset)).zfill(2) + ":" + str(sunrise[1])
         local_time = str(self.local_time()).split(" ")[1].split(".")[0]
         local_time = local_time.split(":")[0] + ":" + local_time.split(":")[1]
-        if sunrise == local_time:
-            self.logging.debug("It's time for sunrise: " + str(local_time) + " / " + str(sunrise))
+
+        sunrise = int(sunrise.replace(":", ""))
+        local_time = int(local_time.replace(":", ""))
+
+        if sunrise == local_time and mode == "exact":
+            self.logging.debug("It's time for sunrise (True): " + str(local_time) + " / " + str(sunrise))
             return True
+        elif mode == "exact":
+            self.logging.debug("No sunrise at the moment (False): " + str(local_time) + " / " + str(sunrise))
+            return False
+        elif sunrise > local_time and mode == "before":
+            self.logging.debug("It's before sunrise (True): " + str(local_time) + " / " + str(sunrise))
+            return True
+        elif mode == "before":
+            self.logging.debug("It's after sunrise (False): " + str(local_time) + " / " + str(sunrise))
+            return False
+        elif sunrise < local_time and mode == "after":
+            self.logging.debug("It's after sunrise (True): " + str(local_time) + " / " + str(sunrise))
+            return True
+        elif mode == "after":
+            self.logging.debug("It's before sunrise (False): " + str(local_time) + " / " + str(sunrise))
+            return False
         else:
-            self.logging.debug("No sunrise at the moment: " + str(local_time) + " / " + str(sunrise))
+            self.logging.warning("Error:  " + str(mode) + " / " + str(local_time) + " / " + str(sunrise))
             return False
 
-    def is_sunset(self, hour_offset=0):
+    def is_sunset(self, hour_offset=0, mode="exact"):
         """
         check if current time is sunset; if weather is not available return False
 
         Args:
             hour_offset (int): hour offset for sunset, e.g., +1 or -1
+            mode (str): mode how to check - available modes: "exact", "before", "after"
         Returns:
             boolean: True if weather data available and current time is sunset time (incl. hour offset)
         """
@@ -1829,11 +1850,30 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         sunset = str(int(sunset[0]) + int(hour_offset)).zfill(2) + ":" + str(sunset[1])
         local_time = str(self.local_time()).split(" ")[1].split(".")[0]
         local_time = local_time.split(":")[0] + ":" + local_time.split(":")[1]
-        if sunset == local_time:
-            self.logging.debug("It's time for sunset:  " + str(local_time) + " / " + str(sunset))
+
+        sunset = int(sunset.replace(":", ""))
+        local_time = int(local_time.replace(":", ""))
+
+        if mode == "exact" and sunset == local_time:
+            self.logging.debug("It's time for sunset (True):  " + str(local_time) + " / " + str(sunset))
             return True
+        elif mode == "exact":
+            self.logging.debug("No sunset at the moment (False):  " + str(local_time) + " / " + str(sunset))
+            return False
+        elif mode == "after" and local_time > sunset:
+            self.logging.debug("It's after sunset (True):  " + str(local_time) + " / " + str(sunset))
+            return True
+        elif mode == "after":
+            self.logging.debug("It's before sunset (False):  " + str(local_time) + " / " + str(sunset))
+            return False
+        elif mode == "before" and local_time > sunset:
+            self.logging.debug("It's before sunset (True):  " + str(local_time) + " / " + str(sunset))
+            return True
+        elif mode == "before":
+            self.logging.debug("It's after sunset (False):  " + str(local_time) + " / " + str(sunset))
+            return False
         else:
-            self.logging.debug("No sunset at the moment:  " + str(local_time) + " / " + str(sunset))
+            self.logging.warning("Error:  " + str(mode) + " / " + str(local_time) + " / " + str(sunset))
             return False
 
     def user_activity(self, cmd="get", param=""):
