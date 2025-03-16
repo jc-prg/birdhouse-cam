@@ -389,7 +389,7 @@ birdhouse_pages = {
     "today": ("Heute", "/list_short.html", "TODAY"),
     "today_complete": ("Alle heute", "/list_new.html", "TODAY_COMPLETE"),
     "favorit": ("Favoriten", "/list_star.html", "FAVORITES"),
-    "cam_info": ("Ger&auml;te", "/cameras.html", "DEVICES"),
+    "cam_info": ("Einstellungen", "/cameras.html", "SETTINGS"),
     "video_info": ("Video Info", "/video-info.html", ""),
     "videos": ("Videos", "/videos.html", "VIDEOS"),
     "object": ("Birds", "/birds.html", "BIRDS"),

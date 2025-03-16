@@ -1418,6 +1418,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.record_temp_threshold = None
         self.recording = False
 
+        self.camera_light_missing = True
         self.camera_stream_raw = None
         self.camera_streams = {}
         self.available_devices = {}
@@ -2226,8 +2227,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.logging.warning("The relay connected to camera is not defined in the settings: " + light_relay)
                 self.relay_warning = False
 
-        else:
+        elif self.camera_light_missing:
             self.logging.warning("Config file is not up-to-date, value 'camera_light' is missing.")
+            self.camera_light_missing = False
 
     def measure_usage(self, init=False):
         """
