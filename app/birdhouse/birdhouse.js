@@ -103,13 +103,20 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 	if (app_first_load || app_2nd_load) {
 	    if (app_first_load) { app_first_load = false; }
 	    else                { app_2nd_load = false; }
-	    var param = window.location.href.split("?");
+
+	    var param_session_id = window.location.href.split("&");
+	    var param            = param_session_id[0].split("?");
+
 	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "OBJECTS", "TODAY", "INFO", "INFORMATION", "IMAGE",
 	                   "WEATHER", "IMAGE_SETTINGS", "SETTINGS", "PROCESSING", "STATS", "SERVER", "CAMERAS"];
 	    if (options.includes(param[1])) {
 	        view = param[1];
 	        app_active_page = param[1];
 	        app_last_active_page = param[1];
+	        }
+	    if (param_session_id.length > 1) {
+	        app_session_id = param_session_id[1];
+	        console.log("Login session ID given with URL: " + app_session_id);
 	        }
 
         birdhouse_loadChartJS();

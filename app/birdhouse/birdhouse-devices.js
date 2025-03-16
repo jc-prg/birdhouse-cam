@@ -239,7 +239,7 @@ function birdhouseDevices_cameras(data, subset="") {
 		html_entry += tab.row("- Crop (absolute):",         "<div id='get_crop_area_"+camera+"'>"+lang("PLEASE_WAIT")+"..</div>");
 		html_entry += tab.row("- Preview Scale:",           birdhouse_edit_field(id="set_scale_"+camera, field="devices:cameras:"+camera+":image:preview_scale", type="input", options="", data_type="integer") + " %");
 		html_entry += tab.row("- Show Framerate:",          birdhouse_edit_field(id="set_show_framerate_"+camera, field="devices:cameras:"+camera+":image:show_framerate", type="select", options="true,false", data_type="boolean"));
-		html_entry += tab.row("- Image Manipulation:",      "<a href='index.html?IMAGE'>"+lang("IMAGE_SETTINGS")+"</a>");
+		html_entry += tab.row("- Image Manipulation:",      "<a href='index.html?IMAGE&"+app_session_id+"'>"+lang("IMAGE_SETTINGS")+"</a>");
         html_entry += tab.end();
 
 		id_list += "set_resolution_"+camera+":set_black_white_"+camera+":set_color_schema_"+camera+":";
@@ -307,7 +307,7 @@ function birdhouseDevices_cameras(data, subset="") {
             html_entry += tab.row("- Mode:",          birdhouse_edit_field(id="set_light_mode_"+camera, field="devices:cameras:"+camera+":camera_light:mode", type="select", options=relay_modes, data_type="string"));
             html_entry += tab.row("",                 "(auto: on from sunset till sunrise / on: always on / off: always off / manual: start off and control manually)");
             html_entry += tab.row("- Brightness threshold:",  birdhouse_edit_field(id="set_light_threshold_"+camera, field="devices:cameras:"+camera+":camera_light:threshold", type="input", options="", data_type="integer") + " %");
-    		html_entry += tab.row("- Settings:",      "<a href='index.html?DEVICE'>"+lang("DEVICE_SETTINGS")+"</a>");
+    		html_entry += tab.row("- Settings:",      "<a href='index.html?DEVICES&"+app_session_id+"'>"+lang("DEVICE_SETTINGS")+"</a>");
             if (relay != "") {
                 html_entry += tab.row("- Test switch:",   api_call);
                 html_entry += tab.row("&nbsp;");
@@ -720,7 +720,7 @@ function birdhouseDevices_cameraSettings (data) {
 	    if (!camera_properties[camera] || (camera_properties[camera]["error"] || camera_settings[camera]["active"] == false)) {
 	        html += "&nbsp;<br/><center>";
 	        html += "Camera " + camera.toUpperCase() + " is not available at the moment.<br/>";
-	        html += "<a href='index.html?CAMERAS'>See camera settings for details.</a>";
+	        html += "<a href='index.html?CAMERAS&"+app_session_id+"'>See camera settings for details.</a>";
 	        html += "<br/>&nbsp;</center><hr/>";
 	        continue;
 	        }

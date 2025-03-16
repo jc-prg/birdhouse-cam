@@ -397,7 +397,7 @@ function birdhouse_app_settings (name="Settings") {
 	    var instance = " (prod)";
 	    if (test) { instance = " (test)"; }
 		var html_entry = this.tab.start();
-		html_entry += this.tab.row("App:",	"<a href='/app/index.html?INFO' target='_blank'>"+ app_title + "</a>" + instance);
+		html_entry += this.tab.row("App:",	"<a href='/app/index.html?INFORMATION&" + app_session_id + "' target='_blank'>"+ app_title + "</a>" + instance);
 		html_entry += this.tab.row("Versions:",
 						"App: " 		+ app_version + "<br/>" +
 						"Server: "      + app_data["API"]["version"] + "<br/>" +
