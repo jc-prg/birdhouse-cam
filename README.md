@@ -30,7 +30,7 @@ app in English and German, ...
 <img src="info/images/birdcam_023.PNG" width="19%"> <img src="info/images/birdcam_025.PNG" width="19%"> <img 
      src="info/images/birdcam_032.PNG" width="19%"> <img src="info/images/birdcam_033.PNG" width="19%"> <img 
      src="info/images/birdcam_100.PNG" width="19%">
-
+[notes.md](notes.md)
 Find further impressions [here](info/impressions.md).
 
 
@@ -38,8 +38,9 @@ Find further impressions [here](info/impressions.md).
 
 * **Birdhouse web-app for Browser and SmartPhone** (English and German, optimized for iPhone)
 * **Watching live stream** with 1 or 2 cameras (RPi4 recommend for fluent stream) 
-  * via Raspberry Pi camera (in progress: control camera light using a JQC3F relay)
-  * USB web cam (e.g. RPi cam inside and USB web cam outside)
+  * _INSIDE_: Raspberry Pi camera with IR light  or USB camera that supports IR light 
+  * _OUTSIDE_: USB webcam (optimal viewing angle dependens on distance between birdhouse and camera)
+  * Light switch support, using the JQC3F relay, e.g., for an IR light inside the birdhouse
 * **Continuously recording photos**
   * e.g. every 20 seconds from sunrise to 20:00 local time (configurable in the device settings)
   * Similarity detection, filter photos with movement in a defined area (visualize differences)
@@ -88,12 +89,12 @@ Here are some options. Calculate with a little bit more space in the height for 
 ## Technology
 
 * IT Hardware
-  * Raspberry Pi 3B+, Raspberry Pi 4 (recommended for two cameras and/or object detection)
+  * Raspberry Pi 4 (recommended for two cameras and/or object detection) or Raspberry Pi 3B+ (if only inside view)
   * Micro SD with 64 GByte
-  * USB camera for outside view (and maybe inside view)
-  * _optional:_ PiCamera with IR for the inside view (wide-angle, e.g., 110°)
+  * USB camera for outside view and/or inside view (recommendation for inside view: HBVCAM-F20216HD 92° viewing angle)
+  * _optional:_ PiCamera with IR for the inside view (wide-angle min. 100°)
   * _optional:_ Small USB Microphone
-  * _optional:_ DHT11 / DHT22 Sensor
+  * _optional:_ DHT11 / DHT22 Sensor (DHT22 if used for temperatures below 0 °C)
   * _optional:_ JQC3F relay to switch on/off a camera light (e.g. IR light of the RPi camera)
 * Software
   * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, YOLOv8
