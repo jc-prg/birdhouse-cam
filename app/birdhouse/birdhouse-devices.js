@@ -720,7 +720,7 @@ function birdhouseDevices_cameraSettings (data) {
 	    if (!camera_properties[camera] || (camera_properties[camera]["error"] || camera_settings[camera]["active"] == false)) {
 	        html += "&nbsp;<br/><center>";
 	        html += "Camera " + camera.toUpperCase() + " is not available at the moment.<br/>";
-	        html += "<a href='index.html?CAMERA'>See camera settings for details.</a>";
+	        html += "<a href='index.html?CAMERAS'>See camera settings for details.</a>";
 	        html += "<br/>&nbsp;</center><hr/>";
 	        continue;
 	        }
