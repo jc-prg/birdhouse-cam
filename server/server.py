@@ -402,7 +402,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup",
                             "last-answer", "favorit", "recycle", "update-views", "update-views-complete",
                             "archive-object-detection", "archive-remove-day", "archive-remove-list",
-                            "OBJECTS", "FAVORITES", "bird-names", "recycle-range"]
+                            "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "weather"]
 
             param["session_id"] = elements[2]
             param["command"] = elements[3]
@@ -958,6 +958,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         else:
             content = {}
             status = "Error: command not found."
+            srv_logging.warning("API CALL: " + status)
 
         request_times["1_api-commands"] = round(time.time() - request_start, 3)
 
@@ -1092,24 +1093,21 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             }
             api_response["SETTINGS"]["server"] = server_config
 
-        if command not in cmd_status and command not in cmd_info:
+        if command == "last-answer":
+            del api_response["DATA"]
+            del api_response["STATUS"]["devices"]
+            del api_response["SETTINGS"]
+        elif command == "weather":
+            del api_response["DATA"]
+            del api_response["STATUS"]
+            del api_response["SETTINGS"]
+        elif command not in cmd_status and command not in cmd_info:
             del api_response["STATUS"]["system"]
             del api_response["STATUS"]["database"]
             del api_response["STATUS"]["check-version"]
 
-        if command not in cmd_weather:
+        if command not in cmd_weather and "WEATHER" in api_response:
             del api_response["WEATHER"]
-
-        if command == "last-answer":
-            del api_response["STATUS"]["devices"]
-            del api_response["DATA"]
-            del api_response["SETTINGS"]
-            del api_response["WEATHER"]
-
-        if command == "weather":
-            del api_response["DATA"]
-            del api_response["STATUS"]
-            del api_response["SETTINGS"]
 
         api_response["API"]["request_details"] = request_times
         api_response["API"]["request_time"] = round(time.time() - request_start, 3)
