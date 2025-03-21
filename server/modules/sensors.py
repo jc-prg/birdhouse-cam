@@ -9,7 +9,8 @@ error_module_msg = ""
 loaded_gpio = False
 loaded_dht11 = False
 loaded_dht22 = False
-loaded_dht22_pins = ['D0', 'D1', 'D10', 'D12', 'D13', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9']
+loaded_dht22_pins = ['D0', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9',
+                     'D10', 'D12', 'D13', 'D15', 'D16', 'D18', 'D19', 'D21', 'D22', 'D23', 'D24']
 loaded_dht22_ada_pins = {}
 
 try:
