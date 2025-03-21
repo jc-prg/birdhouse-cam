@@ -402,7 +402,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup",
                             "last-answer", "favorit", "recycle", "update-views", "update-views-complete",
                             "archive-object-detection", "archive-remove-day", "archive-remove-list",
-                            "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "weather"]
+                            "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "weather", "relay-on", "relay-off"]
 
             param["session_id"] = elements[2]
             param["command"] = elements[3]
@@ -958,7 +958,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         else:
             content = {}
             status = "Error: command not found."
-            srv_logging.warning("API CALL: " + status)
+            srv_logging.warning("API CALL: " + status + " (" + self.path + ")")
 
         request_times["1_api-commands"] = round(time.time() - request_start, 3)
 
