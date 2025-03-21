@@ -497,7 +497,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         which_cam = param["which_cam"]
 
         srv_logging.debug("POST API request with '" + self.path + "'.")
-        srv_logging.debug(str(param))
+        srv_logging.debug("POST//" + param["command"] + ": " + str(param))
 
         api_response = {
             "API": api_description,
@@ -515,8 +515,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'),
                              no_cache=True)
             return
-
-        srv_logging.debug("POST//" + param["command"] + ": " + str(param))
 
         if param["command"] == "favorit":
             response = config.queue.set_status_favorite(param)
