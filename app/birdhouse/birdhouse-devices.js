@@ -346,11 +346,11 @@ function birdhouseDevices_cameras(data, subset="") {
 }
 
 /*
-* Identify available resolutions for the camera
+* Identify available resolutions for the camera, create drop down to select one of the available resolutions
 *
 * @param (string) camera: camera ID
 * @param (string) source: source identifier of the camera
-* @returns (string): list of available resolutions
+* @returns (string): drop down list of available resolutions - or current / max information if not available
 */
 function birdhouseDevices_cameras_resolutions(camera, source="") {
 
@@ -399,8 +399,7 @@ function birdhouseDevices_cameras_resolutions(camera, source="") {
         }
     else {
         html += "<b>current</b>=<label id='current_resolution_"+camera+"'>[" + resolution_act + "]</label>, ";
-        html += "<b>max</b>=<label id='max_resolution_"+camera+"'>[" + resolution_max + "]</label>,<br/>" +
-                "<b>available</b>=<label id='resolution_per_device_"+camera+"'>" + current_available_resolutions + "</label>";
+        html += "<b>max</b>=<label id='max_resolution_"+camera+"'>[" + resolution_max + "]</label><br/>";
         }
     html += "</div>";
 
