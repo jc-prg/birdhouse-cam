@@ -8,7 +8,7 @@
 * The following 4 functions are used to create a dialog to edit parameters of different types,
 * to validate the input and to hand it over to the API functions.
 */
-function birdhouse_edit_field(id, field, type="input", options="", data_type="string", on_change="") {
+function birdhouse_edit_field(id, field="", type="input", options="", data_type="string", on_change="") {
     var fields = field.split(":");
     var settings = app_data["SETTINGS"];
     var data   = "";
@@ -16,20 +16,21 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
     var style  = "";
     var step   = "1";
 
-    if (fields.length == 1) { data = settings[fields[0]]; }
-    else if (fields.length == 2) { data = settings[fields[0]][fields[1]]; }
-    else if (fields.length == 3) { data = settings[fields[0]][fields[1]][fields[2]]; }
-    else if (fields.length == 4) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]]; }
-    else if (fields.length == 5) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]][fields[4]]; }
-    else if (fields.length == 6) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]][fields[4]][fields[5]]; }
+    if (field != "") {
+        if (fields.length == 1)      { data = settings[fields[0]]; }
+        else if (fields.length == 2) { data = settings[fields[0]][fields[1]]; }
+        else if (fields.length == 3) { data = settings[fields[0]][fields[1]][fields[2]]; }
+        else if (fields.length == 4) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]]; }
+        else if (fields.length == 5) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]][fields[4]]; }
+        else if (fields.length == 6) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]][fields[4]][fields[5]]; }
+        }
 
     if (data_type == "json")                            { data = JSON.stringify(data); }
     if (data_type == "integer" || data_type == "float") { style += "width:60px;" }
 
     if (type == "input") {
-
         html += "<input id='"+id+"' value='"+data+"' style='"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");' onchange='"+on_change+"'>";
-    }
+        }
     else if (type == "select_dict" || type == "select_dict_sort") {
 
         if (type == "select_dict_sort") {
@@ -44,8 +45,8 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         var exists = false;
         html += "<select id='"+id+"' onchange='"+on_change+"' style='max-width:220px;'>";
         html += "<option value=''>(empty)</option>";
-        if (data == true || data == false) { data_str = data.toString(); }
-        else { data_str = data; }
+        if (data == true || data == false)  { data_str = data.toString(); }
+        else                                { data_str = data; }
 
         if (Object.prototype.toString.call(options) === '[object Array]') {
             for (var i=0;i<options.length;i++) {
@@ -65,7 +66,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
                 }
                 //});
             }
-        if (!exists) {
+        if (!exists && data_str != "") {
             html += "<option selected='selected'>"+data_str+"</option>";
             }
         html += "</select>";

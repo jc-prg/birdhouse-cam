@@ -182,8 +182,13 @@ function birdhouseDevices_cameras(data, subset="") {
 	    Object.assign(info, cameras[camera]);
 	    info["type"]  = "detection";
 	    info["id"]    = camera;
+
 	    camera_name   = camera.toUpperCase() + ": " + cameras[camera]["name"];
+		if (cameras[camera]["active"] == false || cameras[camera]["active"] == "false") {
+		    camera_name += " &nbsp; <i>(inactive)</i>";
+            }
 	    camera_stream = birdhouse_Image(camera_name, "info", info);
+
 	    index_info[camera_name] = {};
 	    index_info[camera_name]["active"] = cameras[camera]["active"];
 	    index_info[camera_name]["group"]  = camera;
@@ -198,14 +203,6 @@ function birdhouseDevices_cameras(data, subset="") {
             source_info = "</br>" + lang("DIFFERENT_VIDEO_DEVICE", [source_alternative, source]);
 	        }
 
-        var resolution_max = "N/A";
-        var resolution_act = "N/A";
-	    if (cameras[camera]["image"]["resolution_max"])     { resolution_max = "[" + cameras[camera]["image"]["resolution_max"][0]+"x"+cameras[camera]["image"]["resolution_max"][1] +"]"; }
-	    if (cameras[camera]["image"]["resolution_current"]) { resolution_act = "[" + cameras[camera]["image"]["resolution_current"][0]+"x"+cameras[camera]["image"]["resolution_current"][1] + "]"; }
-
-		if (cameras[camera]["active"] == false || cameras[camera]["active"] == "false") {
-		    camera_name += " &nbsp; <i>(inactive)</i>";
-            }
 	    html_temp = "<div class='camera_info'><div class='camera_info_image'>";
 	    if (cameras[camera]["active"])
 	         { html_temp  += camera_stream; }
@@ -226,12 +223,10 @@ function birdhouseDevices_cameras(data, subset="") {
 		html_temp += "&nbsp;<br/>";
 		id_list += "set_name_"+camera+":set_active_"+camera+":set_source_"+camera+":"+":set_micro_"+camera+":set_detection_mode_"+camera+":";
 
-        var current_available_resolutions = birdhouseDevices_cameras_resolutions(camera, cameras[camera]["source"] );
         var available_colors = ",RGB,BGR"
         html_entry = tab.start();
 		html_entry += tab.row("- Resolution:",              birdhouse_edit_field(id="set_resolution_"+camera, field="devices:cameras:"+camera+":image:resolution", type="input", options="", data_type="string"));
-		html_entry += tab.row("&nbsp;",                     "<b>current</b>=<label id='current_resolution_"+camera+"'>" + resolution_act + "</label>, <b>max</b>=<label id='max_resolution_"+camera+"'>" + resolution_max + "</label>,<br/>" +
-                                                            "<b>available</b>=<label id='resolution_per_device_"+camera+"'>" + current_available_resolutions + "</label>");
+		html_entry += tab.row("&nbsp;",                     birdhouseDevices_cameras_resolutions(camera, cameras[camera]["source"] ));
 		html_entry += tab.row("- Black &amp; White:",       birdhouse_edit_field(id="set_black_white_"+camera, field="devices:cameras:"+camera+":image:black_white", type="select", options="false,true", data_type="boolean"));
 		html_entry += tab.row("- Color Schema:",            birdhouse_edit_field(id="set_color_schema_"+camera, field="devices:cameras:"+camera+":image:color_schema", type="select", options=available_colors, data_type="boolean"));
 		html_entry += tab.row("- Rotation:",                birdhouse_edit_field(id="set_rotation_"+camera, field="devices:cameras:"+camera+":image:rotation", type="select", options="0,90,180,270", data_type="integer"));
@@ -359,23 +354,58 @@ function birdhouseDevices_cameras(data, subset="") {
 */
 function birdhouseDevices_cameras_resolutions(camera, source="") {
 
-    	var cameras	= app_data["SETTINGS"]["devices"]["cameras"];
-    	if (source == "") {
-    	    source = getValueById("set_source_"+camera);
-    	    }
+    var html                  = "";
+    var resolution_max        = "N/A";
+    var resolution_act        = "N/A";
+    var resolutions_available = "";
 
-        var current_available_resolutions = "<u>" + source + "</u>";
-        if (app_data["STATUS"]["devices"]["available"]["video_devices_complete"][source]) {
-            current_available_resolutions += ": " + JSON.stringify(app_data["STATUS"]["devices"]["available"]["video_devices_complete"][source]["resolutions"]);
-            current_available_resolutions = current_available_resolutions.replaceAll(",", ", ");
-            // setTextById("set_resolution_"+camera, value);
-            }
-        else {
-            current_available_resolutions += ": N/A";
-            }
+    if (app_data["STATUS"]["devices"]["available"]["video_devices_complete"][source] && app_data["STATUS"]["devices"]["available"]["video_devices_complete"][source]["resolutions"] != undefined) {
+        resolutions_available = app_data["STATUS"]["devices"]["available"]["video_devices_complete"][source]["resolutions"];
+        }
 
-    setTextById("resolution_per_device_"+camera, current_available_resolutions);
-    return current_available_resolutions;
+    var cameras	= app_data["SETTINGS"]["devices"]["cameras"];
+    if (cameras[camera]["image"]["resolution_max"])     { resolution_max = cameras[camera]["image"]["resolution_max"][0]+"x"+cameras[camera]["image"]["resolution_max"][1]; }
+    if (cameras[camera]["image"]["resolution_current"]) { resolution_act = cameras[camera]["image"]["resolution_current"][0]+"x"+cameras[camera]["image"]["resolution_current"][1]; }
+    if (source == "")                                   { source = getValueById("set_source_"+camera); }
+
+    var resolution_on_change = "setValueById(\"set_resolution_"+camera+"\", this.value);";
+    var resolution_options = {};
+    resolution_options[resolution_act] = resolution_act + "   [current]";
+    resolution_options[resolution_max] = resolution_max + "   [max]";
+
+    Object.keys(resolutions_available).forEach(key => {
+        var res_array = resolutions_available[key];
+        for (var i=0;i<res_array.length;i++) {
+            if (res_array[i] != resolution_max && res_array[i] != resolution_act && !resolution_options[res_array[i]]) {
+                resolution_options[res_array[i]] = res_array[i];
+                }
+            }
+        });
+
+    var current_available_resolutions = "<u>" + source + "</u>";
+    if (resolutions_available != "") {
+        current_available_resolutions += ": " + JSON.stringify(resolutions_available);
+        current_available_resolutions = current_available_resolutions.replaceAll(",", ", ");
+        }
+    else {
+        current_available_resolutions += ": N/A";
+        }
+
+    html  = "<div id='resolution_per_device_"+camera+"'>";
+    if (current_available_resolutions.indexOf("N/A") < 0) {
+        var select = birdhouse_edit_field(id="select_source_"+camera, field="", type="select_dict_sort", options=resolution_options, data_type="string", on_change=resolution_on_change);
+        html += "<i>available: </i>";
+        html += select;
+        }
+    else {
+        html += "<b>current</b>=<label id='current_resolution_"+camera+"'>[" + resolution_act + "]</label>, ";
+        html += "<b>max</b>=<label id='max_resolution_"+camera+"'>[" + resolution_max + "]</label>,<br/>" +
+                "<b>available</b>=<label id='resolution_per_device_"+camera+"'>" + current_available_resolutions + "</label>";
+        }
+    html += "</div>";
+
+    setTextById("resolution_per_device_"+camera, html);
+    return html;
     }
 
 /*
