@@ -200,7 +200,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                 elif self.param["type"] == "dht22":
                     ada_pin = loaded_dht22_ada_pins["D"+str(self.pin)]
                     #self.sensor = dht22.DHT22(ada_pin, use_pulseio=False)
-                    self.sensor = dht22.DHT22(self.pin, use_pulseio=False)
+                    self.sensor = dht22.DHT22(int(self.pin), use_pulseio=False)
                 else:
                     raise "Sensor type not supported"
 
