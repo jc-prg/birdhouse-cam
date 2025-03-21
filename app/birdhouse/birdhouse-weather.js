@@ -11,9 +11,9 @@
 * @param (dict) data: data returned form server API for this view
 */
 function birdhouseWeather( data ) {
-    var settings        = data["SETTINGS"];
-    var admin_allowed   = data["STATUS"]["admin_allowed"];
-    var status          = data["STATUS"];
+    var settings        = app_data["SETTINGS"];
+    var admin_allowed   = app_data["STATUS"]["admin_allowed"];
+    var status          = app_data["STATUS"];
 	var weather	        = data["WEATHER"];
 
     if (settings["localization"]["weather_active"] == false) {

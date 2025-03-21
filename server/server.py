@@ -902,6 +902,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                      "DEVICES", "OBJECTS", "STATISTICS", "bird-names"]
         cmd_status = ["status", "list", "last-answer"]
         cmd_info = ["camera-param", "version", "reload"]
+        cmd_weather = ["weather"]
 
         # execute API commands
         if command == "INDEX":
@@ -931,6 +932,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             api_response["STATUS"]["database"] = config.get_db_status()
             api_response["STATUS"]["system"] = sys_info.get()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive.dir_size / 1024
+        elif command == "weather":
+            content = {}
         elif command == "last-answer":
             content = {"last_answer": ""}
             if len(config.async_answers) > 0:
@@ -958,12 +961,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         request_times["1_api-commands"] = round(time.time() - request_start, 3)
 
-        # collect data for STATUS section
+        # collect data for WEATHER section
         weather_status = {}
-        if command in cmd_status:
+        if command in cmd_weather:
             if config.weather is not None:
                 api_response["WEATHER"] = config.weather.get_weather_info("all")
-                weather_status = config.weather.get_weather_info("status")
+
+        # collect data for STATUS section
+        if command in cmd_status:
+            weather_status = config.weather.get_weather_info("status")
+            weather_current = config.weather.get_weather_info("current_extended")
 
             param_to_publish = ["last_answer", "background_process"]
             for key in param_to_publish:
@@ -976,6 +983,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             api_response["STATUS"]["object_detection"]["status"] = birdhouse_status["object_detection"]
             api_response["STATUS"]["object_detection"]["status_details"] = birdhouse_status["object_detection_details"]
+            api_response["STATUS"]["weather"] = weather_current
 
             # collect data for new DATA section
             param_to_publish = ["backup", "localization", "title", "views", "info", "weather"]
@@ -1085,16 +1093,23 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             api_response["SETTINGS"]["server"] = server_config
 
         if command not in cmd_status and command not in cmd_info:
-            del api_response["WEATHER"]
             del api_response["STATUS"]["system"]
             del api_response["STATUS"]["database"]
             del api_response["STATUS"]["check-version"]
+
+        if command not in cmd_weather:
+            del api_response["WEATHER"]
 
         if command == "last-answer":
             del api_response["STATUS"]["devices"]
             del api_response["DATA"]
             del api_response["SETTINGS"]
             del api_response["WEATHER"]
+
+        if command == "weather":
+            del api_response["DATA"]
+            del api_response["STATUS"]
+            del api_response["SETTINGS"]
 
         api_response["API"]["request_details"] = request_times
         api_response["API"]["request_time"] = round(time.time() - request_start, 3)

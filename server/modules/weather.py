@@ -678,6 +678,11 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
         elif info_type == "current":
             return self.weather_info["current"]
 
+        elif info_type == "current_extended":
+            info = self.weather_info.copy()
+            del info["forecast"]
+            return info
+
         return self.weather_info
 
     def get_sunrise(self):

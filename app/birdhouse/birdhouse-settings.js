@@ -339,6 +339,7 @@ function birdhouse_app_settings (name="Settings") {
             api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECTS/\",\"_blank\");' class='button-settings-api'>OBJECTS</button>";
             api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/STATISTICS/\",\"_blank\");' class='button-settings-api'>STATISTICS</button>";
             api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/FAVORITES/\",\"_blank\");' class='button-settings-api'>FAVORITES</button>";
+            api_call    = "<button onclick='window.open(\"" + RESTurl + "api/no-id/weather/\",\"_blank\");' class='button-settings-api';>WEATHER</button>";
             html_entry += this.tab.row("API Calls", api_call);
             }
 

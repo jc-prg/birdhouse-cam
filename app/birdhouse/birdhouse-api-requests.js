@@ -457,7 +457,7 @@ function birdhouse_showCameraParam(data) {
 }
 
 function birdhouse_showWeather() {
-	commands = ["status"];
+	commands = ["weather"];
 	birdhouse_apiRequest('GET', commands, '', birdhouseWeather,'','birdhouseWeather');
 }
 
