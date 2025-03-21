@@ -319,7 +319,6 @@ function birdhouseStatus_cameraParam(data, camera) {
 */
 function birdhouseStatus_weather(data) {
     // weather information
-    //var weather         = data["WEATHER"];
     var weather         = data["STATUS"]["weather"];
     var settings        = data["SETTINGS"]["devices"]["weather"];
 
