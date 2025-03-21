@@ -791,6 +791,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         config.user_activity("set", command)
 
         srv_logging.debug("GET API request with '" + self.path + "'.")
+        srv_logging.debug("GET//" + command + ": " + str(param))
         api_response = {
             "API": api_description,
             "STATUS": {
@@ -859,7 +860,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             "WEATHER": {},
             "DATA": {}
         }
-        srv_logging.debug(str(param))
 
         for cam_id in camera:
             api_response["STATUS"]["video_recording"][cam_id] = {}
