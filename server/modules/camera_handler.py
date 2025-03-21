@@ -865,7 +865,7 @@ class BirdhousePiCameraHandler(BirdhouseCameraClass):
 
         try:
             cols, rows = gray.shape
-            image_properties["brightness"] = np.sum(gray) / (255 * cols * rows)
+            image_properties["brightness"] = np.sum(gray) / (255 * cols * rows) * 100
         except cv2.error as err:
             self.raise_error("Could not measure brightness: " + str(err))
 
@@ -1361,7 +1361,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
 
         try:
             cols, rows = gray.shape
-            image_properties["brightness"] = np.sum(gray) / (255 * cols * rows)
+            image_properties["brightness"] = np.sum(gray) / (255 * cols * rows) * 100
         except cv2.error as err:
             self.raise_error("Could not measure brightness: " + str(err))
 

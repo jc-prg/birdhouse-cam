@@ -710,7 +710,7 @@ function birdhouseDevices_openOne(group_id) {
 function birdhouseDevices_cameraSettings (data) {
 
     var this_camera_properties  = {};
-	var camera_properties       = data["STATUS"]["devices"]["cameras"];
+	var camera_properties       = app_data["STATUS"]["devices"]["cameras"];
 	var camera_settings	        = app_data["SETTINGS"]["devices"]["cameras"];
 	var relay_settings	        = app_data["SETTINGS"]["devices"]["relays"];
 
@@ -727,6 +727,7 @@ function birdhouseDevices_cameraSettings (data) {
         var camera_settings_read    = [];
         var camera_settings_measure = [];
     	var camera_settings_main    = ["brightness", "saturation", "contrast", "exposure", "sharpness", "black_white"];
+    	var camera_settings_image   = Object.keys(camera_properties[camera]["properties_image"]);
         var picamera_info           = "";
         var api_call                = "";
 
@@ -842,6 +843,9 @@ function birdhouseDevices_cameraSettings (data) {
             else {
 
                 if (this_camera_properties[value][2] != this_camera_properties[value][3]) {
+                    var key_name = key.split(' ')  // Split the string into an array of words
+                                      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())  // Capitalize the first letter and make the rest lowercase
+                                      .join(' ');
                     var range  = this_camera_properties[value][2] + ":" + this_camera_properties[value][3];
                     if (this_camera_properties[value].length > 4) {
                         range += ":" + this_camera_properties[value][4];
@@ -850,10 +854,11 @@ function birdhouseDevices_cameraSettings (data) {
                     var prop        = "";
 
                     if (camera_settings_measure.indexOf(camera_settings_write[i]) > -1) { prop += "<i>(image=<span id='img_"+value+"_"+camera+"'></span>)</i>"; }
-                    html_entry += tab.row("<b>" + key + ":</b><br/>" + range_text,
+
+                    html_entry += tab.row("<b>" + key_name + ":</b><br/>" + range_text,
                                           birdhouse_edit_field(id="set_"+value+"_"+camera, field="devices:cameras:"+camera+":image_presets:"+value, type="range", options=range, data_type="float") +
                                           " " + birdhouseDevices_cameraSettingsButton (camera, value, "set_"+value+"_"+camera, "change"));
-                    html_entry += tab.row("",   prop);
+                    //html_entry += tab.row("",   prop);
 
                     id_list += "set_"+value+"_"+camera+":";
                     count += 1;
@@ -877,6 +882,20 @@ function birdhouseDevices_cameraSettings (data) {
             html_entry_sub += tab.end();
             html_entry_sub += "&nbsp;<br/>";
             html += birdhouse_OtherGroup( camera+"_camera_1c", camera.toUpperCase() + " - Further Camera Settings", html_entry_sub, false, "settings" );
+            }
+
+        if (camera_settings_image.length > 0) {
+            html_entry     = "&nbsp;<br/>";
+            html_entry    += tab.start();
+            for (var i=0;i<camera_settings_image.length;i++) {
+                var key_name = camera_settings_image[i].split(' ')  // Split the string into an array of words
+                      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())  // Capitalize the first letter and make the rest lowercase
+                      .join(' ');
+                html_entry += tab.row("<b>" + key_name + ":</b>", "<span id='img_"+camera_settings_image[i]+"_"+camera+"'></span>%");
+                }
+            html_entry    += tab.end();
+            html_entry    += "&nbsp;<br/>";
+            html += birdhouse_OtherGroup( camera+"_camera_1c", camera.toUpperCase() + " - Image Analysis", html_entry, false, "settings" );
             }
 
         html_entry = tab.start();
