@@ -1090,7 +1090,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         Returns:
             dict: API response
         """
-        self.logging.info("Status recycle: " + str(param))
+        self.logging.debug("Status recycle: " + str(param))
 
         response = {}
         config_data = {}
@@ -1237,8 +1237,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         Returns:
             dict: API response
         """
-        self.logging.info("Start to identify RECYCLE range ...")
-        self.logging.info("Status recycle range: " + str(param))
+        self.logging.debug("Start to identify RECYCLE range ...")
+        self.logging.debug("Status recycle range: " + str(param))
 
         response = {}
         config_data = {}

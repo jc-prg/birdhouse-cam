@@ -402,7 +402,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup",
                             "last-answer", "favorit", "recycle", "update-views", "update-views-complete",
                             "archive-object-detection", "archive-remove-day", "archive-remove-list",
-                            "OBJECTS", "FAVORITES", "bird-names"]
+                            "OBJECTS", "FAVORITES", "bird-names", "recycle-range"]
 
             param["session_id"] = elements[2]
             param["command"] = elements[3]
@@ -518,7 +518,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # admin commands
         if param["command"] == "favorit":
-            srv_logging.info(param["command"] + ": " + str(param))
+            srv_logging.debug("Set favorite: " + str(param))
             response = config.queue.set_status_favorite(param)
         elif param["command"] == "recycle":
             srv_logging.info(param["command"] + ": " + str(param))
