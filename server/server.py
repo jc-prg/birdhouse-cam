@@ -516,40 +516,29 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                              no_cache=True)
             return
 
-        # admin commands
+        srv_logging.debug("POST//" + param["command"] + ": " + str(param))
+
         if param["command"] == "favorit":
-            srv_logging.debug("Set favorite: " + str(param))
             response = config.queue.set_status_favorite(param)
         elif param["command"] == "recycle":
-            srv_logging.info(param["command"] + ": " + str(param))
             response = config.queue.set_status_recycle(param)
         elif param["command"] == "recycle-threshold":
-            # http://localhost:8007/api/1682709071876/recycle-threshold/backup/20230421/95/cam1/
-            srv_logging.info("RECYCLE THRESHOLD")
             response = config.queue.set_status_recycle_threshold(param, which_cam)
         elif param["command"] == "recycle-object-detection":
-            srv_logging.info("RECYCLE OBJECT")
             response = config.queue.set_status_recycle_object(param, which_cam)
         elif param["command"] == "recycle-range":
-            srv_logging.info(param["command"] + ": " + str(param))
             response = config.queue.set_status_recycle_range(param)
         elif param["command"] == "create-short-video":
-            srv_logging.info(param["command"] + ": " + str(param))
             response = camera[which_cam].video.create_video_trimmed_queue(param)
         elif param["command"] == "recreate-image-config":
-            srv_logging.info(param["command"] + ": " + str(param))
             response = backup.create_image_config_api(param)
         elif param["command"] == "create-day-video":
-            srv_logging.info(param["command"] + ": " + str(param))
             response = camera[which_cam].video.create_video_day_queue(param)
         elif param["command"] == "relay-on":
-            srv_logging.info(param["command"] + ": " + str(param))
             response = relays[param["parameter"][0]].switch_on()
         elif param["command"] == "relay-off":
-            srv_logging.info(param["command"] + ": " + str(param))
             response = relays[param["parameter"][0]].switch_off()
         elif param["command"] == "remove":
-            srv_logging.info(param["command"] + ": " + str(param))
             response = backup.delete_marked_files_api(param)
         elif param["command"] == "remove-archive-object-detection":
             parameters = param["parameter"]
@@ -569,19 +558,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                 response = camera[cam_id].object.add2queue_analyze_archive_day(date, threshold)
         elif param["command"] == "archive-remove-day":
-            srv_logging.info(param["command"] + ": " + str(param))
             response = backup.delete_archived_day(param)
         elif param["command"] == "archive-download-day":
-            srv_logging.info(param["command"] + ": " + str(param))
             response = backup.download_files(param)
         elif param["command"] == "archive-download-list":
-            srv_logging.info(param["command"] + ": " + str(param))
             response = backup.download_files(param, body_data)
         elif param["command"] == "reconnect-camera":
-            srv_logging.info(param["command"] + ": " + str(param))
             response = camera[which_cam].reconnect()
         elif param["command"] == "camera-settings":
-            srv_logging.info(param["command"] + ": " + str(param))
             response = camera[which_cam].get_camera_settings(param)
         elif param["command"] == "start-recording":
             audio_filename = ""
@@ -642,7 +626,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             config.db_handler.clean_all_data("sensor")
             response = {"cleanup": "done"}
         elif param["command"] == "update-views":
-            srv_logging.warning(str(param["parameter"]))
+            srv_logging.info(str(param["parameter"]))
             if "all" in param["parameter"] or "archive" in param["parameter"]:
                 views.archive.list_update(force=True)
             if "all" in param["parameter"] or "favorite" in param["parameter"]:
@@ -651,7 +635,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 views.object.list_update(force=True)
             response = {"update_views": "started"}
         elif param["command"] == "update-views-complete":
-            srv_logging.warning(str(param["parameter"]))
+            srv_logging.info(str(param["parameter"]))
             if "all" in param["parameter"] or "archive" in param["parameter"]:
                 views.archive.list_update(force=True, complete=True)
             if "all" in param["parameter"] or "favorite" in param["parameter"]:
@@ -685,7 +669,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             for key in camera_list:
                 camera[key].config_update = True
         elif param["command"] == "set-temp-threshold":
-            srv_logging.info("Set temporary threshold to camera '"+which_cam+"': " + str(param["parameter"]))
+            srv_logging.debug("Set temporary threshold to camera '"+which_cam+"': " + str(param["parameter"]))
             if which_cam in camera:
                 camera[which_cam].record_temp_threshold = param["parameter"]
         elif param["command"] == "kill-stream":
