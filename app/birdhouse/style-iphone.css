@@ -14,6 +14,7 @@
 @media only screen and (device-width : 320px) and (device-height : 568px) and (orientation : portrait)  {
 
     .separator_group                { width  : 280px; font-size : 9px; }
+    .separator_group_body           { width  : 280px; font-size : 9px; }
     .thumbnail                      { width :  88px;  }
     .thumbnail.error                { width :  78px;  height: 90px; }
     .thumbnail_container            { width : 90px; }
@@ -48,6 +49,7 @@
 
     .livestream_main                { max-width : 320px; }
     .separator_group                { width  : 328px; font-size : 11px; }
+    .separator_group_body           { width  : 328px; }
     .thumbnail                      { width :  78px;  }
     .thumbnail.error                { width :  68px;  height: 90px; }
     .thumbnail_container            { width :  80px;  }
