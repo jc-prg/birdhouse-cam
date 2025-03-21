@@ -130,10 +130,15 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
             self.thread_control()
 
-        if self.stream is not None:
-            if not self.stream.is_stopped():
-                self.stream.stop_stream()
-            self.stream.close()
+        try:
+            if self.stream is not None:
+                if not self.stream.is_stopped():
+                    self.stream.stop_stream()
+                self.stream.close()
+
+        except Exception as e:
+            self.logging.error("Could not stop stream: " + str(e))
+
         self.logging.info("Stopped microphone '" + self.id + "'.")
 
     def connect(self):
