@@ -1110,7 +1110,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
             offset = self.param["image"]["crop_area"]
         if offset is None:
             offset = [0, 0]
-        position = (int(10 + offset[0]), int(-20 + offset[1]))
+        position = (int(10 + offset[0]), int(-20 + offset[3]))
 
         if raw is None or len(raw) <= 0:
             self.logging.error("edit_add_framerate: empty image")
