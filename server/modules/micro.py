@@ -29,6 +29,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.count = None
         self.param = config.param["devices"]["microphones"][device_id]
         self.config.update["micro_" + self.id] = False
+        self.config.update_config["micro_" + self.id] = False
         self.audio = None
         self.device = None
         self.info = None

@@ -663,10 +663,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     key, value = entry.split("==")
                     data[key] = unquote(value)
                     data[key] = decode_url_string(data[key])
+
+            srv_logging.info("edit-presets: " + str(which_cam))
             srv_logging.info(str(data))
-            config.main_config_edit("main", data)
-            for key in camera_list:
-                camera[key].config_update = True
+
+            config.main_config_edit("main", data, "", which_cam)
+
         elif param["command"] == "set-temp-threshold":
             srv_logging.debug("Set temporary threshold to camera '"+which_cam+"': " + str(param["parameter"]))
             if which_cam in camera:
@@ -1263,6 +1265,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             if config.update["camera_" + which_cam]:
                 camera[which_cam].reconnect()
+
+            if config.update_config["camera_" + which_cam]:
+                camera[which_cam].update_main_config(reload=False)
 
             if frame_id != camera[which_cam].get_stream_image_id() \
                     or camera[which_cam].if_error() or camera[which_cam].camera_stream_raw.if_error():

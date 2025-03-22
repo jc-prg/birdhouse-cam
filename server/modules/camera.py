@@ -1336,7 +1336,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.config_cache = {}
         self.config_cache_size = 5
         self.config_update = None
+        self.config_update_small = False
         self.config.update["camera_" + self.id] = False
+        self.config.update_config["camera_" + self.id] = False
 
         self.name = self.param["name"]
         self.active = self.param["active"]
@@ -1729,7 +1731,17 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         while self._running:
             current_time = self.config.local_time()
             stamp = current_time.strftime('%H%M%S')
-            self.config_update = self.config.update["camera_" + self.id]
+
+            if self.config.update["camera_" + self.id]:
+                self.logging.info("Camera '" + self.id + "' updated (1): " + str(self.config.update["camera_" + self.id]))
+                self.config_update = self.config.update["camera_" + self.id]
+                self.config.update["camera_" + self.id] = False
+
+            if self.config.update_config["camera_" + self.id]:
+                self.logging.info("Camera '" + self.id + "' updated (2): " + str(self.config.update_config["camera_" + self.id]))
+                self.config_update_small = self.config.update_config["camera_" + self.id]
+                self.config.update_config["camera_" + self.id] = False
+                self.logging.info("update " + str(self.config_update) + " | small " + str(self.config_update_small) + " | reload " + str(self.reload_camera))
 
             if self.active:
 
@@ -1783,8 +1795,12 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     self.slow_down_streams(False)
 
             # start or reload camera connection
-            if self.config_update or self.reload_camera:
+            if self.config_update_small:
+                self.logging.info("Updating configuration for CAMERA '" + self.id + "' (" +
+                                  self.param["name"] + "/" + str(self.param["active"]) + ") ...")
+                self.update_main_config(reload=False)
 
+            if self.config_update or self.reload_camera:
                 self.logging.info("Updating configuration and reconnecting CAMERA '" + self.id + "' (" +
                                   self.param["name"] + "/" + str(self.param["active"]) + ") ...")
                 self.update_main_config()
@@ -2816,15 +2832,16 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         return reload
 
-    def update_main_config(self):
+    def update_main_config(self, reload=True):
         """
         reread all relevant settings after update of the main configuration
         """
         self.logging.info("- Update data from main configuration file for camera " + self.id)
         temp_data = self.config.db_handler.read("main")
 
-        self.config_update = False
         self.reload_camera = False
+        self.config_update = False
+        self.config_update_small = False
 
         self.param = temp_data["devices"]["cameras"][self.id]
         self.name = self.param["name"]
@@ -2874,5 +2891,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.video.param = self.param
         self.object.param = self.param
 
-        self.config.update["camera_" + self.id] = False
-        self.reload_camera = True
+        if "camera_" + self.id in self.config.update:
+            self.config.update["camera_" + self.id] = False
+        if "camera_" + self.id in self.config.update_config:
+            self.config.update_config["camera_" + self.id] = False
+        if reload:
+            self.reload_camera = True

@@ -57,6 +57,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         self.thread_set_priority(5)
 
         self.config.update["sensor_"+self.id] = False
+        self.config.update_config["sensor_"+self.id] = False
         self.param = self.config.param["devices"]["sensors"][sensor_id]
         self.active = self.param["active"]
 
@@ -109,6 +110,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                 self.logging.info("....... Reload SENSOR '"+self.id+"' after update: Reread configuration.")
                 self.param = self.config.param["devices"]["sensors"][self.id]
                 self.config.update["sensor_"+self.id] = False
+                self.config.update_config["sensor_"+self.id] = False
                 self.active = self.param["active"]
                 self.reset_error()
 

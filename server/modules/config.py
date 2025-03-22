@@ -5,6 +5,8 @@ import json
 import threading
 
 from datetime import datetime, timezone, timedelta
+from shutil import which
+
 from modules.presets import *
 from modules.presets import birdhouse_cache_for_archive, birdhouse_cache
 from modules.weather import BirdhouseWeather
@@ -1469,6 +1471,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.device_signal = {}
         self.locked = {}
         self.update = {}
+        self.update_config = {}
         self.update_views = {"favorite": False, "archive": False}
         self.async_answers = []
         self.async_running = False
@@ -1642,18 +1645,22 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 self.logging.info("Create data directory: " + path)
                 os.makedirs(path)
 
-    def main_config_edit(self, config, config_data, date=""):
+    def main_config_decompose(self, config_data, param=None):
         """
-        change configuration base on dict in form
+        decompose config data into a list of dictionaries
 
         Args:
-            config (str): database name
             config_data (dict): selected vars to be changed in the format dict["key1:key2:key3"] = "value"
-            date (str): date of database if required (format: YYYYMMDD)
+            param (dict): parameter to be changed
+
+        Returns:
+            dict: config data transformed to dict["key1"]["key2"]["key3"] = "value"
         """
-        self.logging.info("Change configuration ... " + config + "/" + date + " ... " + str(config_data))
-        param = self.db_handler.read(config, date)
+        if param is None:
+            param = {}
+
         data_type = ""
+        difference = []
         for key in config_data:
             keys = key.split(":")
             if "||" in config_data[key]:
@@ -1684,26 +1691,75 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 value = value.replace("-dev-", "/dev/")
 
             if ":" not in key:
-                param[key] = value
+                if param[key] != value:
+                    param[key] = value
+                    difference.append(key)
             elif len(keys) == 2:
-                param[keys[0]][keys[1]] = value
+                if param[keys[0]][keys[1]] != value:
+                    param[keys[0]][keys[1]] = value
+                    difference.append(keys[0]+":"+keys[1])
             elif len(keys) == 3:
-                param[keys[0]][keys[1]][keys[2]] = value
+                if param[keys[0]][keys[1]][keys[2]] != value:
+                    param[keys[0]][keys[1]][keys[2]] = value
+                    difference.append(keys[0]+":"+keys[1]+":"+keys[2])
             elif len(keys) == 4:
-                param[keys[0]][keys[1]][keys[2]][keys[3]] = value
+                if param[keys[0]][keys[1]][keys[2]][keys[3]] != value:
+                    param[keys[0]][keys[1]][keys[2]][keys[3]] = value
+                    difference.append(keys[0] + ":" + keys[1] + ":" + keys[2] + ":" + keys[3])
             elif len(keys) == 5:
-                param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]] = value
+                if param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]] != value:
+                    param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]] = value
+                    difference.append(keys[0] + ":" + keys[1] + ":" + keys[2] + ":" + keys[3] + ":" + keys[4])
             elif len(keys) == 6:
-                param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]][keys[5]] = value
+                if param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]][keys[5]] != value:
+                    param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]][keys[5]] = value
+                    difference.append(keys[0] + ":" + keys[1] + ":" + keys[2] + ":" + keys[3] + ":" + keys[4] + ":" + keys[5])
+
+        return param, difference
+
+    def main_config_edit(self, config, config_data, date="", camera=""):
+        """
+        change configuration base on dict in form
+
+        Args:
+            config (str): database name
+            config_data (dict): selected vars to be changed in the format dict["key1:key2:key3"] = "value"
+            date (str): date of database if required (format: YYYYMMDD)
+        """
+        self.logging.info("Change configuration ... " + config + "/" + date + " ... " + str(config_data))
+
+        param = self.db_handler.read(config, date)
+        param, difference = self.main_config_decompose(config_data, param.copy())
+
+        difference_update = False
+        difference_update_fields = ["devices:cameras:" + camera + ":source",
+                                    "devices:cameras:" + camera + ":active",
+                                    "devices:microphones:mic1:device_id",
+                                    "devices:microphones:mic2:device_id"]
+
         self.db_handler.write(config, date, param)
+
+        if not difference:
+            self.logging.info("main-config-edit: No changes detected.")
+        else:
+            self.logging.info("main-config-edit: Detected changes: " + str(difference))
+            for value in difference:
+                if value in difference_update_fields:
+                    difference_update = True
+                    self.logging.info("main-config-edit: Force device reconnect (" + value + ")")
+            if not difference_update:
+                self.logging.info("main-config-edit: No device reconnect required (" + camera + ").")
+
 
         if config == "main":
             self.param = self.db_handler.read(config, date)
-            # self.db_handler.set_db_type(db_type=self.param["server"]["database_type"])
             self.db_handler.set_db_type(db_type=birdhouse_env["database_type"])
 
-            for key in self.update:
-                self.update[key] = True
+            if difference_update:
+                for key in self.update:
+                    self.update[key] = True
+            if camera != "" and difference:
+                self.update_config["camera_" + camera] = True
 
             for camera in self.param["devices"]["cameras"]:
                 source = self.param["devices"]["cameras"][camera]["source"]
