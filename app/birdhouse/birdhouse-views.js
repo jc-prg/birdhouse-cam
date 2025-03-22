@@ -884,7 +884,6 @@ function birdhouse_LIST_chart_weather(data, active_page, camera) {
 	var weather_data      = data_list["data"]["weather_data"];
 	var chart_data        = data_list["data"]["chart_data"];
 	var sensors           = app_data["SETTINGS"]["devices"]["sensors"];
-	var current_weather   = app_data["WEATHER"]["forecast"]["today"];
 
 	var link_day_back      = "";
 	var link_day_forward   = "";
