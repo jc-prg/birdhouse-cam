@@ -791,9 +791,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         srv_logging.debug("GET//" + command + ": " + str(param))
 
         cmd_data = ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL",
-                     "DEVICES", "OBJECTS", "STATISTICS", "bird-names", "status", "list", "WEATHER"]
+                    "DEVICES", "OBJECTS", "STATISTICS", "bird-names", "status", "list",
+                    "WEATHER", "CAMERA_SETTINGS","IMAGE_SETTINGS","DEVICE_SETTINGS"]
         cmd_info = ["camera-param", "version", "reload"]
-        cmd_status = ["status", "list", "WEATHER", "CAMERA_SETTINGS","IMAGE_SETTINGS","DEVICE_SETTINGS"]
+        cmd_status = ["status", "list", "WEATHER"]
         cmd_status_small = ["last-answer"]
         cmd_settings = ["status", "list"]
         cmd_weather = ["WEATHER"]
