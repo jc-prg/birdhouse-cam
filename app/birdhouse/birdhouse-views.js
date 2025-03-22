@@ -741,13 +741,14 @@ function birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page,
 
 	var status_data       = app_data["STATUS"]["devices"]["cameras"][camera];
 	var camera_settings   = app_data["SETTINGS"]["devices"]["cameras"];
+	var current_date      = app_data["STATUS"]["weather"]["current"]["date"];
 
     var cam_settings      = camera_settings[camera];
     var record_from       = status_data["record_image_start"];
     var record_to         = status_data["record_image_end"];
     var rhythm            = cam_settings["image_save"]["rhythm"] + "s";
     var onclick           = "birdhouse_createDayVideo('"+camera+"');";
-    var create            =  "<div onclick=\""+onclick+"\" style=\"cursor:pointer\"><u>" + lang("CREATE_DAY") + ": " + app_data["WEATHER"]["current"]["date"] + "</u></div>";
+    var create            =  "<div onclick=\""+onclick+"\" style=\"cursor:pointer\"><u>" + lang("CREATE_DAY") + ": " + current_date + "</u></div>";
 
 	var tab = new birdhouse_table();
 	tab.style_cells["vertical-align"] = "top";
