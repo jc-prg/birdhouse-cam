@@ -1402,6 +1402,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.image_streams = {}
         self.image_streams_to_kill = {}
         self.image_size_object_detection = self.detect_settings["detection_size"]
+        self.image_compare_lowres = True
         self.max_resolution = None
 
         self.previous_image = None
@@ -1751,7 +1752,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                         count_paused += 1
                     time.sleep(1)
 
-                # Recording ...
+                # Image and / or video recording ...
                 if not self.error and not self.config_update and not self.reload_camera:
 
                     # Video recording
@@ -1960,7 +1961,12 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
             # if no error format and analyze image
             if image_hires is not None and not self.image.error and image_hires is not None and len(image_hires) > 0:
-                image_compare = self.image.convert_to_gray_raw(image_hires)
+
+                image_lowres = self.image.resize_raw(raw=image_hires, scale_percent=self.param["image"]["preview_scale"])
+                if self.image_compare_lowres:
+                    image_compare = self.image.convert_to_gray_raw(image_lowres)
+                else:
+                    image_compare = self.image.convert_to_gray_raw(image_hires)
                 self.brightness = self.image.get_brightness_raw(image_hires)
                 height, width, color = image_hires.shape
                 preview_scale = self.param["image"]["preview_scale"]
@@ -1970,6 +1976,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                                         image_2nd=self.previous_image,
                                                         detection_area=self.param["similarity"]["detection_area"])
                     similarity = str(similarity)
+                else:
+                    similarity = "100"
 
                 image_info = {
                     "camera": self.id,
@@ -2008,7 +2016,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 if self.sensor[key].if_running():
                     sensor_data[key] = self.sensor[key].get_values()
                     sensor_data[key]["date"] = current_time.strftime("%d.%m.%Y")
-                    # image_info["sensor"][key] = sensor_data[key]
 
             sensor_stamp = current_time.strftime("%H%M") + "00"
             image_info["info"]["duration_1"] = round(time.time() - start_time, 3)
@@ -2024,10 +2031,9 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                                            self.img_support.filename("lowres", stamp, self.id))
                 path_hires = os.path.join(self.config.db_handler.directory("images"),
                                           self.img_support.filename("hires", stamp, self.id))
-                self.logging.debug("WRITE:" + path_lowres)
+                self.logging.debug("WRITE: " + str(path_lowres))
                 self.image.write(filename=path_hires, image=image_hires)
-                self.image.write(filename=path_lowres, image=image_hires,
-                                 scale_percent=self.param["image"]["preview_scale"])
+                self.image.write(filename=path_lowres, image=image_lowres)
 
                 if (self.detect_active and self.detect_settings["active"]
                         and image_hires is not None and os.path.exists(path_hires)):

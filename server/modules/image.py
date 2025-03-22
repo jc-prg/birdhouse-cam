@@ -264,7 +264,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         Args:
             image_1st (numpy.ndarray): first image to be compared (raw format)
             image_2nd (numpy.ndarray): second image to be compared (raw format)
-            detection_area (list): area of image to be compared (start_x, start_y, end_x, end_y)
+            detection_area (list): relative area of image to be compared (start_x, start_y, end_x, end_y) -> [0.0-1.0]
         Returns:
             float: structural similarity index (SSIM)
         """
