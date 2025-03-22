@@ -91,7 +91,7 @@ function birdhouse_modules_loaded() {
 }
 
 /*
-* request loading of a specific view -> calls birdhousePrint() with retuned data
+* request loading of a specific view -> calls birdhousePrint() with returned data
 *
 * @param (string) view: view to be requested; available: INDEX, TODAY, TODAY_COMPLETE, ARCHIVE, OBJECT, SETTINGS, FAVORITES, VIDEOS, VIDEO_DETAIL, PROCESSING, INFO, ...
 * @param (string) camera: camera id of active camera
@@ -146,10 +146,12 @@ function birdhousePrint(data) {
 	var data_settings = app_data["SETTINGS"];
 	var data_active   = data["DATA"]["active"];
 
+    if (data["STATUS"]["server"])       { initial_setup = data["STATUS"]["server"]["initial_setup"]; }
+    else                                { initial_setup = false; }
+
     birdhouseSetMainVars(data);
     overlayImageList = [];
 
-    var initial_setup   = data["STATUS"]["server"]["initial_setup"];
 	var date            = data_active["active_date"];
 	var camera          = data_active["active_cam"];
 	if (camera == "") 	{ camera = app_active_cam; }
@@ -185,7 +187,8 @@ function birdhousePrint(data) {
     birdhouse_KillActiveStreams();
 	birdhouseSetMainStatus(data);
 	birdhousePrintTitle(data, app_active_page);
-    setTextById("headerRight", birdhouseHeaderFunctions() );
+
+	if (app_active_page != "WEATHER") { setTextById("headerRight", birdhouseHeaderFunctions() ); }
 
 	console.log("---> birdhousePrint: "+app_active_page+" / "+camera+" / "+date);
 
@@ -216,7 +219,7 @@ function birdhousePrint(data) {
 	else if (app_active_page == "TODAY_COMPLETE")    { birdhouse_LIST(lang("TODAY_COMPLETE"), data, camera, false); }
 	else if (app_active_page == "VIDEOS")            { birdhouse_LIST(lang("VIDEOS"), data, camera); }
 	else if (app_active_page == "VIDEO_DETAIL")	     { birdhouse_VIDEO_DETAIL(lang("VIDEOS"), data, camera); }
-	else if (app_active_page == "WEATHER")           { birdhouse_showWeather(); }
+	else if (app_active_page == "WEATHER")           { birdhouseWeather(data); }
 	else { setTextById(app_frame_content,lang("ERROR") + ": "+app_active_page); }
 
 	if (success == false) {
@@ -234,6 +237,8 @@ function birdhousePrint(data) {
 * @param (string) active_page: active page
 */
 function birdhousePrintTitle(data, active_page="") {
+
+    if (!data["DATA"]["view"]) { return; }
 
 	var title         = document.getElementById("navTitle");
 	var data_view     = data["DATA"]["view"];
@@ -267,9 +272,9 @@ function birdhouseLoadSettings(data) {
 * @param (dict) data: data returned from API
 */
 function birdhouseSetMainVars(data) {
-    //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
+
     var data_settings = data["SETTINGS"];
-    var initial_setup = data["STATUS"]["server"]["initial_setup"];
+    if (!data["SETTINGS"]) { data_settings = app_data["SETTINGS"]; }
 
 	if (data_settings["devices"]["cameras"] != undefined) {
 	    for (let key in data_settings["devices"]["cameras"]) {
@@ -295,7 +300,11 @@ function birdhouseSetMainVars(data) {
 * @param (dict) data: data returned from API
 */
 function birdhouseSetMainStatus(data) {
-    var status_view  = data["STATUS"]["view"];
+
+    if (data["STATUS"]["view"])        { var status_view  = data["STATUS"]["view"]; }
+    else if (data["DATA"]["active"])   { var status_view  = data["DATA"]["active"]; }
+    else                               { return; }
+
     var status_admin = data["STATUS"]["admin_allowed"];
 
 	app_active_mic = app_available_micros[0];
@@ -317,13 +326,21 @@ function birdhouseSetMainStatus(data) {
 * @returns (string): html header content
 */
 function birdhouseHeaderFunctions() {
+
+    if (app_active_mic != "") {
+        var mic_config      = app_data["SETTINGS"]["devices"]["microphones"][app_active_mic];
+	    var audio_stream    = "<img id='stream_toggle_header' class='header_icon_wide' src='birdhouse/img/icon_bird_mute.png' onclick='birdhouseAudioStream_toggle(\"\",\"\",\""+mic_config["codec"]+"\");'>";
+	    }
+	else {
+	    var audio_stream    = "";
+	    var mic_config      = {};
+	    }
+
 	var html = "";
-	var mic_config      = app_data["SETTINGS"]["devices"]["microphones"][app_active_mic];
 	var download_info   = "<img class='header_icon' src='birdhouse/img/download-white.png' onclick='archivDownload_requestList();' style='position:relative;right:22px;top:-2px;'>";
 	download_info       = "<text class='download_label' id='collect4download_amount2' onclick='archivDownload_requestList();'>0</text>" + download_info;
 	var switch_cam      = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();' style='position:relative;top:-4px;'>";
 	var reload_view     = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
-	var audio_stream    = "<img id='stream_toggle_header' class='header_icon_wide' src='birdhouse/img/icon_bird_mute.png' onclick='birdhouseAudioStream_toggle(\"\",\"\",\""+mic_config["codec"]+"\");'>";
 	var active_cam      = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_cam.toUpperCase()+"</text>";
 
     if (app_active_mic && mic_config && mic_config["codec"] && mic_config["codec"] == "mp3")
@@ -331,13 +348,9 @@ function birdhouseHeaderFunctions() {
 	else if (app_active_mic && !iOS())   { var active_mic  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_mic.toUpperCase()+"</text>"  + audio_stream; }
 	else                                 { var active_mic = ""; }
 
-	//console.error(app_active_mic);
-	//console.error(app_data["SETTINGS"]["devices"]["microphones"][app_active_mic]);
-
 	var info_parent     = "&nbsp;";
 	var info            = birdhouse_tooltip( info_parent, "<div id='command_dropdown' style='width:90%;margin:auto;'>empty</div>", "info", "" );
 	
-	//html = reload_view + audio_stream + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info;
 	html = reload_view;
 	if (app_available_cameras != undefined && app_available_cameras.length > 1) { html += active_cam + switch_cam; }
 	if (app_available_cameras != undefined && app_available_micros.length > 1)  { html += active_mic; }

@@ -81,7 +81,7 @@ function birdhouseStatus_print(data) {
     var pages_settings  = ["SETTINGS", "CAMERA_SETTINGS", "DEVICE_SETTINGS", "IMAGE_SETTINGS", "STATISTICS", "INFORMATION"];
 
     // set latest status data to var app_data
-    app_data       = data;
+    //app_data       = data;
     weather_footer = [];
     app_processing_active = false;
     app_server_error = false;

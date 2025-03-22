@@ -785,14 +785,32 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         param = self.path_split()
         which_cam = param["which_cam"]
         command = param["command"]
-
         config.user_activity("set", command)
 
         srv_logging.debug("GET API request with '" + self.path + "'.")
         srv_logging.debug("GET//" + command + ": " + str(param))
+
+        cmd_data = ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL",
+                     "DEVICES", "OBJECTS", "STATISTICS", "bird-names", "status", "list", "WEATHER"]
+        cmd_info = ["camera-param", "version", "reload"]
+        cmd_status = ["status", "list", "WEATHER"]
+        cmd_status_small = ["last-answer"]
+        cmd_settings = ["status", "list"]
+        cmd_weather = ["WEATHER"]
+
+        api_data = {}
         api_response = {
             "API": api_description,
-            "STATUS": {
+            "DATA": {},
+            "SETTINGS": {},
+            "STATUS": {},
+            "WEATHER": {}
+            }
+        weather_status = {}
+
+        # prepare data structure and set some initial values
+        if command in cmd_status or command in cmd_data:
+            api_response["STATUS"] = {
                 "admin_allowed": self.admin_allowed(),
                 "api-call": status,
                 "check-version": version,
@@ -838,8 +856,60 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "active_date": "",
                     "active_page": command
                 }
-            },
-            "SETTINGS": {
+            }
+            # grab recording infos for defined cameras
+            for cam_id in camera:
+                api_response["STATUS"]["video_recording"][cam_id] = {}
+                active = camera[cam_id].active
+                if camera[cam_id].if_error():
+                    active = False
+                if camera[cam_id].video.recording or camera[cam_id].video.processing:
+                    api_response["STATUS"]["video_recording"][cam_id] = {
+                        "active":     active,
+                        "processing": camera[cam_id].video.processing,
+                        "recording":  camera[cam_id].video.recording,
+                        "error":      camera[cam_id].if_error(),
+                        "info":       camera[cam_id].video.record_info()
+                    }
+                else:
+                    api_response["STATUS"]["video_recording"][cam_id] = {
+                        "active":     active,
+                        "processing": camera[cam_id].video.processing,
+                        "recording":  camera[cam_id].video.recording,
+                        "error":      camera[cam_id].if_error(),
+                        "info":       {}
+                    }
+        if command in cmd_status_small:
+            api_response["STATUS"] = {
+                "admin_allowed": self.admin_allowed(),
+                "api-call": status,
+                "check-version": version,
+                "current_time": config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
+                "start_time": api_start,
+                "server": {
+                    "view_archive_loading": views.archive.loading,
+                    "view_favorite_loading": views.favorite.loading,
+                    "view_object_loading": views.object.loading,
+                    "view_archive_progress": views.tools.get_progress("archive"),
+                    "view_favorite_progress": views.tools.get_progress("favorite"),
+                    "view_object_progress": views.tools.get_progress("object"),
+                    "last_answer": ""
+                },
+                "object_detection": {
+                    "active": birdhouse_status["object_detection"],
+                    "processing": config.object_detection_processing,
+                    "progress": config.object_detection_progress,
+                    "waiting": config.object_detection_waiting,
+                },
+                "view": {
+                    "selected": which_cam,
+                    "active_cam": which_cam,
+                    "active_date": "",
+                    "active_page": command
+                }
+            }
+        if command in cmd_settings:
+            api_response["SETTINGS"] = {
                 "backup": {},
                 "devices": {
                     "cameras": {},
@@ -854,57 +924,28 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "title": "",
                 "views": {},
                 "weather": {}
-            },
-            "WEATHER": {},
-            "DATA": {}
-        }
-
-        for cam_id in camera:
-            api_response["STATUS"]["video_recording"][cam_id] = {}
-            active = camera[cam_id].active
-            if camera[cam_id].if_error():
-                active = False
-            if camera[cam_id].video.recording or camera[cam_id].video.processing:
-                api_response["STATUS"]["video_recording"][cam_id] = {
-                    "active":     active,
-                    "processing": camera[cam_id].video.processing,
-                    "recording":  camera[cam_id].video.recording,
-                    "error":      camera[cam_id].if_error(),
-                    "info":       camera[cam_id].video.record_info()
                 }
-            else:
-                api_response["STATUS"]["video_recording"][cam_id] = {
-                    "active":     active,
-                    "processing": camera[cam_id].video.processing,
-                    "recording":  camera[cam_id].video.recording,
-                    "error":      camera[cam_id].if_error(),
-                    "info":       {}
-                }
-
-        # prepare DATA section
-        api_data = {
-            "active": {
-                "active_cam": which_cam,
-                "active_path": self.path,
-                "active_page": command,
-                "active_date": ""
-            },
-            "data": {},
-            "view": {}
-        }
-        if command == "TODAY" and len(param["parameter"]) > 0:
-            api_data["active"]["active_date"] = param["parameter"][0]
-            api_response["STATUS"]["view"]["active_date"] = param["parameter"][0]
+        if command in cmd_weather:
+            api_response["WEATHER"] = {}
+        if command in cmd_data:
+            api_response["DATA"] = {}
+            # prepare DATA section
+            api_data = {
+                "active": {
+                    "active_cam": which_cam,
+                    "active_path": self.path,
+                    "active_page": command,
+                    "active_date": ""
+                },
+                "data": {},
+                "view": {}
+            }
+            if command == "TODAY" and len(param["parameter"]) > 0:
+                api_data["active"]["active_date"] = param["parameter"][0]
+                api_response["STATUS"]["view"]["active_date"] = param["parameter"][0]
 
         request_times["0_initial"] = round(time.time() - request_start, 3)
 
-        cmd_views = ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL",
-                     "DEVICES", "OBJECTS", "STATISTICS", "bird-names"]
-        cmd_status = ["status", "list", "last-answer"]
-        cmd_info = ["camera-param", "version", "reload"]
-        cmd_weather = ["weather"]
-
-        # execute API commands
         if command == "INDEX":
             content = views.index_view(param=param)
         elif command == "FAVORITES":
@@ -927,13 +968,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content = views.camera_list(param=param)
             api_response["STATUS"]["system"] = sys_info.get()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive.dir_size / 1024
+        elif command == "WEATHER":
+            content = {}
         elif command == "status" or command == "list":
             content = {"last_answer": ""}
             api_response["STATUS"]["database"] = config.get_db_status()
             api_response["STATUS"]["system"] = sys_info.get()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive.dir_size / 1024
-        elif command == "weather":
-            content = {}
         elif command == "last-answer":
             content = {"last_answer": ""}
             if len(config.async_answers) > 0:
@@ -959,17 +1000,17 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content = {}
             status = "Error: command not found."
             srv_logging.warning("API CALL: " + status + " (" + self.path + ")")
+        # execute API commands
 
         request_times["1_api-commands"] = round(time.time() - request_start, 3)
 
         # collect data for WEATHER section
-        weather_status = {}
         if command in cmd_weather:
             if config.weather is not None:
                 api_response["WEATHER"] = config.weather.get_weather_info("all")
 
         # collect data for STATUS section
-        if command in cmd_status:
+        if command in cmd_status or command in cmd_data:
             weather_status = config.weather.get_weather_info("status")
             weather_current = config.weather.get_weather_info("current_extended")
 
@@ -1001,8 +1042,24 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
             request_times["1_status-commands"] = round(time.time() - request_start, 3)
 
+            server_config = {
+                "port": birdhouse_env["port_http"],
+                "port_video": birdhouse_env["port_video"],
+                "port_audio": birdhouse_env["port_audio"],
+                "server_audio": birdhouse_env["port_audio"],
+                "database_type": birdhouse_env["database_type"],
+                "database_port": birdhouse_env["couchdb_port"],
+                "database_server": birdhouse_env["couchdb_server"],
+                "ip4_admin_deny": birdhouse_env["admin_ip4_deny"],
+                "ip4_admin_allow": birdhouse_env["admin_ip4_allow"],
+                "admin_login": birdhouse_env["admin_login"],
+                "rpi_active": birdhouse_env["rpi_active"],
+                "detection_active": birdhouse_env["detection_active"]
+            }
+            api_response["SETTINGS"]["server"] = server_config
+
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
-        if command in cmd_views:
+        if command in cmd_data:
             param_to_publish = ["entries", "entries_delete", "entries_yesterday", "entries_favorites", "groups",
                                 "archive_exists", "info", "chart_data", "weather_data", "days_available",
                                 "day_back", "day_forward", "birds"]
@@ -1015,6 +1072,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if key in content:
                     api_data["view"][key] = content[key]
 
+            api_response["DATA"] = api_data
             request_times["2_view-commands"] = round(time.time() - request_start, 3)
 
         # collect data for STATUS and SETTINGS sections (to be clarified -> goal: only for status request)
@@ -1074,41 +1132,24 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "relays": config.param["devices"]["relays"]
             }
 
-        api_response["DATA"] = api_data
-
-        if command in cmd_status and command != "last-answer":
-            server_config = {
-                "port": birdhouse_env["port_http"],
-                "port_video": birdhouse_env["port_video"],
-                "port_audio": birdhouse_env["port_audio"],
-                "server_audio": birdhouse_env["port_audio"],
-                "database_type": birdhouse_env["database_type"],
-                "database_port": birdhouse_env["couchdb_port"],
-                "database_server": birdhouse_env["couchdb_server"],
-                "ip4_admin_deny": birdhouse_env["admin_ip4_deny"],
-                "ip4_admin_allow": birdhouse_env["admin_ip4_allow"],
-                "admin_login": birdhouse_env["admin_login"],
-                "rpi_active": birdhouse_env["rpi_active"],
-                "detection_active": birdhouse_env["detection_active"]
-            }
-            api_response["SETTINGS"]["server"] = server_config
-
+        # cleanup data structure, remove unused elements
         if command == "last-answer":
             del api_response["DATA"]
-            del api_response["STATUS"]["devices"]
             del api_response["SETTINGS"]
-        elif command == "weather":
-            del api_response["DATA"]
-            del api_response["STATUS"]
+        elif command == "WEATHER":
             del api_response["SETTINGS"]
         elif command not in cmd_status and command not in cmd_info:
-            del api_response["STATUS"]["system"]
-            del api_response["STATUS"]["database"]
-            del api_response["STATUS"]["check-version"]
-
+            if "STATUS" in api_response:
+                if "system" in api_response["STATUS"]:
+                    del api_response["STATUS"]["system"]
+                if "database" in api_response["STATUS"]:
+                    del api_response["STATUS"]["database"]
+                if "check-version" in api_response["STATUS"]:
+                    del api_response["STATUS"]["check-version"]
         if command not in cmd_weather and "WEATHER" in api_response:
             del api_response["WEATHER"]
 
+        # add API request information
         api_response["API"]["request_details"] = request_times
         api_response["API"]["request_time"] = round(time.time() - request_start, 3)
 
