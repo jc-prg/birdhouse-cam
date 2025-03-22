@@ -452,7 +452,7 @@ function birdhouse_getCameraParam(camera) {
 }
 
 function birdhouse_showCameraParam(data) {
-    camera = data["DATA"]["active"]["active_cam"];
+    camera = data["DATA"]["active_cam"];
     birdhouseStatus_cameraParam(data, camera);
 }
 

@@ -1342,6 +1342,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.active = self.param["active"]
         self.source = self.param["source"]
         self.type = self.param["type"]
+        self.param_camera = {}
 
         self.image = None
         self.video = None
@@ -1689,7 +1690,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         # return properties as values
         self.camera.camera_create_test_image("get properties")
-        self.param["camera"] = self.camera.get_properties()
+        self.param_camera = self.camera.get_properties()
+        self.param["camera"] = self.param_camera
         self.logging.debug("Initialized camera settings for '" + self.id + "'.")
 
     def _init_microphone(self):

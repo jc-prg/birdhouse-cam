@@ -151,7 +151,7 @@ function birdhousePrint(data) {
 
     birdhouseSetMainVars(data);
     overlayImageList = [];
-
+// ---> PROBLEM BEIM AUFRUFEN DER BILDBEARBEITUNG UND DEN DEVICE EINSTELLUNGEN
 	var date            = data_active["active_date"];
 	var camera          = data_active["active_cam"];
 	if (camera == "") 	{ camera = app_active_cam; }

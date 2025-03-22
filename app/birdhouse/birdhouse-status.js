@@ -254,9 +254,8 @@ function birdhouseStatus_cameras(data) {
 * @param (dict) data: response from API status request
 */
 function birdhouseStatus_cameraParam(data, camera) {
-    // camera parameter (image settings)
-    //var camera_status   = data["STATUS"]["devices"]["cameras"];
-    var camera_status   = data["DATA"]["data"];
+
+    var camera_status   = data["DATA"]["camera_properties"];
     if (camera_status["properties"]) {
         for (let key in camera_status["properties"]) {
             var prop_text = camera_status["properties"][key][0];

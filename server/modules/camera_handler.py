@@ -1306,7 +1306,7 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             "auto_wb":        [-1, "r",  -1, -1]
         }
 
-        if key == "init":
+        if key == "init" or self.properties_get is None:
             self.properties_get = camera_properties.copy()
 
         for prop_key in self.properties_get:

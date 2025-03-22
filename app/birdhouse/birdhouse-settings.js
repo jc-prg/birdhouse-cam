@@ -347,7 +347,9 @@ function birdhouse_app_settings (name="Settings") {
             api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECTS/\",\"_blank\");' class='button-settings-api'>OBJECTS</button>";
             api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/STATISTICS/\",\"_blank\");' class='button-settings-api'>STATISTICS</button>";
             api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/FAVORITES/\",\"_blank\");' class='button-settings-api'>FAVORITES</button>";
-            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/weather/\",\"_blank\");' class='button-settings-api';>WEATHER</button>";
+            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/WEATHER/\",\"_blank\");' class='button-settings-api';>WEATHER</button>";
+            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/IMAGE_SETTINGS/\",\"_blank\");' class='button-settings-api';>IMAGE SETTINGS</button>";
+            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/DEVICE_SETTINGS/\",\"_blank\");' class='button-settings-api';>DEVICE SETTINGS</button>";
             api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/last-answer/\",\"_blank\");' class='button-settings-api';>LAST ANSWER</button>";
             html_entry += this.tab.row("API Calls", api_call);
             }

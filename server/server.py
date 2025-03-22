@@ -402,7 +402,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup",
                             "last-answer", "favorit", "recycle", "update-views", "update-views-complete",
                             "archive-object-detection", "archive-remove-day", "archive-remove-list",
-                            "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "weather", "relay-on", "relay-off"]
+                            "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "WEATHER", "relay-on", "relay-off",
+                            "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS"]
 
             param["session_id"] = elements[2]
             param["command"] = elements[3]
@@ -777,6 +778,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         create API response
         """
+        global camera, sensor, config
+
         request_start = time.time()
         request_times = {}
         status = "Success"
@@ -790,15 +793,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         srv_logging.debug("GET API request with '" + self.path + "'.")
         srv_logging.debug("GET//" + command + ": " + str(param))
 
-        cmd_data = ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL",
-                    "DEVICES", "OBJECTS", "STATISTICS", "bird-names", "status", "list",
-                    "WEATHER", "CAMERA_SETTINGS","IMAGE_SETTINGS","DEVICE_SETTINGS"]
-        cmd_info = ["camera-param", "version", "reload"]
-        cmd_status = ["status", "list", "WEATHER"]
-        cmd_status_small = ["last-answer"]
-        cmd_settings = ["status", "list"]
-        cmd_weather = ["WEATHER"]
-
         api_data = {}
         api_response = {
             "API": api_description,
@@ -806,11 +800,26 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             "SETTINGS": {},
             "STATUS": {},
             "WEATHER": {}
-            }
+        }
+        api_response["API"]["request_url"] = self.path
+        api_response["API"]["request_param"] = param
+        api_response["API"]["request_command"] = command
+        api_commands = {
+            "data"     : ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL",
+                          "DEVICES", "OBJECTS", "STATISTICS", "bird-names", "WEATHER",
+                          "SETTINGS", "CAMERA_SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS",
+                          "status", "list"],
+            "info"     : ["camera-param", "version", "reload"],
+            "status"   : ["status", "list", "WEATHER"],
+            "status_small" : ["last-answer"],
+            "settings" : ["status", "list"],
+            "weather"  : ["WEATHER"]
+        }
+        no_extra_command = ["WEATHER", "SETTINGS", "CAMERA_SETTINGS","IMAGE_SETTINGS","DEVICE_SETTINGS"]
         weather_status = {}
 
         # prepare data structure and set some initial values
-        if command in cmd_status or command in cmd_data:
+        if command in api_commands["status"] or command in api_commands["data"]:
             api_response["STATUS"] = {
                 "admin_allowed": self.admin_allowed(),
                 "api-call": status,
@@ -880,7 +889,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         "error":      camera[cam_id].if_error(),
                         "info":       {}
                     }
-        if command in cmd_status_small:
+        if command in api_commands["status_small"]:
             api_response["STATUS"] = {
                 "admin_allowed": self.admin_allowed(),
                 "api-call": status,
@@ -909,7 +918,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "active_page": command
                 }
             }
-        if command in cmd_settings:
+        if command in api_commands["settings"]:
             api_response["SETTINGS"] = {
                 "backup": {},
                 "devices": {
@@ -926,10 +935,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "views": {},
                 "weather": {}
                 }
-        if command in cmd_weather:
-            api_response["WEATHER"] = {}
-        if command in cmd_data:
-            api_response["DATA"] = {}
+        if command in api_commands["data"]:
             # prepare DATA section
             api_data = {
                 "active": {
@@ -969,14 +975,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content = views.camera_list(param=param)
             api_response["STATUS"]["system"] = sys_info.get()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive.dir_size / 1024
-        elif command == "WEATHER":
-            content = {}
-        elif command == "CAMERA_SETTINGS":
-            content = {}
-        elif command == "IMAGE_SETTINGS":
-            content = {}
-        elif command == "DEVICE_SETTINGS":
-            content = {}
         elif command == "status" or command == "list":
             content = {"last_answer": ""}
             api_response["STATUS"]["database"] = config.get_db_status()
@@ -1001,8 +999,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 version["Msg"] = "Update required."
             api_response["STATUS"]["check-version"] = version
         elif command == "camera-param":
+            content = {
+                "active_cam" : which_cam,
+                "camera_properties" : camera[which_cam].get_camera_status("properties")
+            }
+        elif command in no_extra_command:
             content = {}
-            api_data["data"] = camera[which_cam].get_camera_status("properties")
         else:
             content = {}
             status = "Error: command not found."
@@ -1012,12 +1014,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         request_times["1_api-commands"] = round(time.time() - request_start, 3)
 
         # collect data for WEATHER section
-        if command in cmd_weather:
+        if command in api_commands["weather"]:
             if config.weather is not None:
                 api_response["WEATHER"] = config.weather.get_weather_info("all")
 
         # collect data for STATUS section
-        if command in cmd_status or command in cmd_data:
+        if command in api_commands["status"] or command in api_commands["data"]:
             weather_status = config.weather.get_weather_info("status")
             weather_current = config.weather.get_weather_info("current_extended")
 
@@ -1066,7 +1068,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             api_response["SETTINGS"]["server"] = server_config
 
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
-        if command in cmd_data or command in cmd_status:
+        if command in api_commands["data"] or command in api_commands["status"]:
             param_to_publish = ["entries", "entries_delete", "entries_yesterday", "entries_favorites", "groups",
                                 "archive_exists", "info", "chart_data", "weather_data", "days_available",
                                 "day_back", "day_forward", "birds"]
@@ -1083,7 +1085,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             request_times["2_view-commands"] = round(time.time() - request_start, 3)
 
         # collect data for STATUS and SETTINGS sections (to be clarified -> goal: only for status request)
-        if command not in cmd_info and command not in cmd_status_small:
+        if command not in api_commands["info"] and command not in api_commands["status_small"]:
             # collect data for "DATA" section  ??????????????????????ßß
             param_to_publish = ["title", "backup", "weather", "views", "info"]
             for key in param_to_publish:
@@ -1139,13 +1141,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "relays": config.param["devices"]["relays"]
             }
 
+        # info
+        if command in api_commands["info"]:
+            for key in content:
+                api_response["DATA"][key] = content[key]
+
         # cleanup data structure, remove unused elements
         if command == "last-answer":
             del api_response["DATA"]
             del api_response["SETTINGS"]
-        elif command == "WEATHER":
+            for key in content:
+                api_response["STATUS"]["server"][key] = content[key]
+        if command == "WEATHER":
             del api_response["SETTINGS"]
-        elif command not in cmd_status and command not in cmd_info:
+        if command not in api_commands["status"] and command not in api_commands["info"]:
             if "STATUS" in api_response:
                 if "system" in api_response["STATUS"]:
                     del api_response["STATUS"]["system"]
@@ -1153,7 +1162,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     del api_response["STATUS"]["database"]
                 if "check-version" in api_response["STATUS"]:
                     del api_response["STATUS"]["check-version"]
-        if command not in cmd_weather and "WEATHER" in api_response:
+        if command not in api_commands["weather"] and "WEATHER" in api_response:
             del api_response["WEATHER"]
 
         # add API request information
