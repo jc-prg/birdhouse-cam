@@ -793,7 +793,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         cmd_data = ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL",
                      "DEVICES", "OBJECTS", "STATISTICS", "bird-names", "status", "list", "WEATHER"]
         cmd_info = ["camera-param", "version", "reload"]
-        cmd_status = ["status", "list", "WEATHER"]
+        cmd_status = ["status", "list", "WEATHER", "CAMERA_SETTINGS","IMAGE_SETTINGS","DEVICE_SETTINGS"]
         cmd_status_small = ["last-answer"]
         cmd_settings = ["status", "list"]
         cmd_weather = ["WEATHER"]
@@ -969,6 +969,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             api_response["STATUS"]["system"] = sys_info.get()
             api_response["STATUS"]["system"]["hdd_archive"] = views.archive.dir_size / 1024
         elif command == "WEATHER":
+            content = {}
+        elif command == "CAMERA_SETTINGS":
+            content = {}
+        elif command == "IMAGE_SETTINGS":
+            content = {}
+        elif command == "DEVICE_SETTINGS":
             content = {}
         elif command == "status" or command == "list":
             content = {"last_answer": ""}
