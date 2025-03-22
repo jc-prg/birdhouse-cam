@@ -1059,7 +1059,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             api_response["SETTINGS"]["server"] = server_config
 
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
-        if command in cmd_data:
+        if command in cmd_data or command in cmd_status:
             param_to_publish = ["entries", "entries_delete", "entries_yesterday", "entries_favorites", "groups",
                                 "archive_exists", "info", "chart_data", "weather_data", "days_available",
                                 "day_back", "day_forward", "birds"]
