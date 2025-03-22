@@ -583,3 +583,7 @@ img .play_button  {
     background-color: white;
   }
 }
+
+#error_log a {
+    color: darkred;
+}
