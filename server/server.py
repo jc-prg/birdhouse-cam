@@ -1076,7 +1076,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             request_times["2_view-commands"] = round(time.time() - request_start, 3)
 
         # collect data for STATUS and SETTINGS sections (to be clarified -> goal: only for status request)
-        if command not in cmd_info:
+        if command not in cmd_info and command not in cmd_status_small:
             # collect data for "DATA" section  ??????????????????????ßß
             param_to_publish = ["title", "backup", "weather", "views", "info"]
             for key in param_to_publish:
