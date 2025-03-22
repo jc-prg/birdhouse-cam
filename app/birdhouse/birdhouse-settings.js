@@ -57,6 +57,7 @@ function birdhouse_app_settings (name="Settings") {
             "process_info": false,
             "server_info" : false,
             "api_calls"   : false,
+            "api_info"    : false,
             "app_info_02" : false,
             "display_info": false,
             "app_under_construction": false
@@ -95,6 +96,9 @@ function birdhouse_app_settings (name="Settings") {
 
         html_entry = this.process_information();
         html += birdhouse_OtherGroup( "process_info", "Process Information &nbsp;<div id='processing_info_header'></div>", html_entry, open_settings["process_info"] );
+
+        html_entry = this.api_information();
+        html += birdhouse_OtherGroup( "api_info", "API Information &nbsp;<div id='api_info_header'></div>", html_entry, open_settings["api_info"] );
 
         html_entry = this.server_information();
         html += birdhouse_OtherGroup( "server_info", "Server Information &nbsp;<div id='server_info_header'></div>", html_entry, open_settings["server_info"] );
@@ -186,6 +190,7 @@ function birdhouse_app_settings (name="Settings") {
             "process_info": false,
             "server_info" : false,
             "api_calls"   : false,
+            "api_info"    : false,
             "app_info_02" : false,
             "display_info": false,
             "app_under_construction": false
@@ -202,6 +207,9 @@ function birdhouse_app_settings (name="Settings") {
 
         html_entry = this.process_information();
         html += birdhouse_OtherGroup( "process_info", "Process Information &nbsp;<div id='processing_info_header'></div>", html_entry, open_settings["process_info"] );
+
+        html_entry = this.api_information();
+        html += birdhouse_OtherGroup( "api_info", "API Information &nbsp;<div id='api_info_header'></div>", html_entry, open_settings["api_info"] );
 
         html_entry = this.server_information();
         html += birdhouse_OtherGroup( "server_info", "Server Information &nbsp;<div id='server_info_header'></div>", html_entry, open_settings["server_info"] );
@@ -394,6 +402,27 @@ function birdhouse_app_settings (name="Settings") {
         this.tab.style_cells["width"] = "40%";
         return html_entry;
 	}
+
+	this.api_information = function () {
+        var html = "&nbsp;<br/>";
+        var tab  = new birdhouse_table();
+	    var answer = appFW.getAverageRequestDurations();
+
+        html += "<i><b>Average API response times per API request:</i></b><br/>&nbsp;<br/>";
+	    html += this.tab.start();
+	    Object.keys(answer).sort().forEach(key => {
+	        var key_print = key.replace(app_session_id, "");
+	        var key_parts = key.split("/");
+	        if (/^\d+$/.test(key_parts[1])) { key_print = key_print.replace("/" + key_parts[1],""); }
+	        if (key_print.indexOf("kill-stream") < 0) {
+	            html += this.tab.row(key_print, answer[key].toFixed(3)+"s");
+	            }
+	        });
+	    html += this.tab.end();
+	    html += "&nbsp;";
+
+	    return html;
+	    }
 
 	this.app_information = function () {
 	    var instance = " (prod)";
