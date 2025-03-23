@@ -2200,8 +2200,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         check brightness, sunset, and sunrise to decide whether to switch on or off the light;
         requires a weather connection and the connected relay set to mode 'auto'
         """
+        if self.config.weather.get_sunrise() is None:
+            self.logging.warning("image_recording_auto_light: sunrise and sunset not available (yet).")
 
-        if "camera_light" in self.param and "switch" in self.param["camera_light"]:
+        elif "camera_light" in self.param and "switch" in self.param["camera_light"]:
             light_relay = self.param["camera_light"]["switch"]
 
             if "mode" in self.param["camera_light"] and self.param["camera_light"]["mode"] == "on":
@@ -2252,7 +2254,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.relay_warning = False
 
         elif self.camera_light_missing:
-            self.logging.warning("Config file is not up-to-date, value 'camera_light' is missing.")
+            self.logging.warning("image_recording_auto_light: Config file is not up-to-date, value 'camera_light' is missing.")
             self.camera_light_missing = False
 
     def measure_usage(self, init=False):

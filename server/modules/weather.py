@@ -492,6 +492,7 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
         self.sunset_today = None
         self.sunrise_today = None
 
+        self.error = False
         self.update = False
         self.update_time = 60 * 5
         self.update_wait = 0
