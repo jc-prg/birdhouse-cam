@@ -28,6 +28,10 @@
     border              : solid 1px red;
 }
 
+@media (max-width: 706px) {
+    .setting_bg.header  { width : 342px; }
+}
+
 /* --------------------------------- */
 
 #settings { 
@@ -99,5 +103,42 @@
 /*        overflow   : auto; */
 }
 
+.button-settings-api {
+    background-color    : lightgray;
+    color               : black;
+    width               : 90px;
+    height              : 40px;
+    max-height          : 40px;
+    margin              :  3px;
+    padding             :  2px;
+    overflow            : hidden;
+    float               : left;
+}
 
+.button-settings-system {
+    width           :   24%;
+    height          :  90px;
+    margin          :  0.5%;
+    padding         :   5px;
+    float           :  left;
+    background      : #117711;
+    border          : solid 2px #55AA55;
+    }
 
+.button-settings-system.attention {
+    background      : #771111;
+    border          : solid 2px #AA5555;
+    }
+
+.button-settings-system.other {
+    background      : #111177;
+    border          : solid 2px #5555AA;
+    }
+
+@media (max-width: 706px) {
+    .button-settings-system { width : 32%; }
+}
+
+@media (min-width: 1250px) {
+    .button-settings-system { width : 19%; }
+}

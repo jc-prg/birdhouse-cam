@@ -221,14 +221,16 @@ function birdhouse_app_settings (name="Settings") {
         }
 
     this.settings = function () {
-        var tab = new birdhouse_table();
-        var settings = app_data["SETTINGS"];
 
-        var timezones = "UTC-12,UTC-11,UTC-10,UTC-9,UTC-8,UTC-7,UTC-6,UTC-5,UTC-4,UTC-3,UTC-2,UTC-1,UTC+0,UTC+1,UTC+2,UTC+3,UTC+4,UTC+5,UTC+6,UTC+7,UTC+8,UTC+9,UTC+10,UTC+11,UTC+12"
+        var html        = "";
+        var tab         = new birdhouse_table();
+        var settings    = app_data["SETTINGS"];
+        var timezones   = "UTC-12,UTC-11,UTC-10,UTC-9,UTC-8,UTC-7,UTC-6,UTC-5,UTC-4,UTC-3,UTC-2,UTC-1,UTC+0,UTC+1,UTC+2,UTC+3,UTC+4,UTC+5,UTC+6,UTC+7,UTC+8,UTC+9,UTC+10,UTC+11,UTC+12"
 
-        var html = "";
-        //var html = "&nbsp;<br/><h2>&nbsp;<br/>"+lang("SETTINGS")+"</h2>";
-        //html += "<hr style='border:1px solid gray;'>"
+        html_entry = this.api_calls(show="maintenance");
+        html_entry += "&nbsp;<br/>";
+        html += birdhouse_OtherGroup( "SRV_MAINTENANCE", "Maintenance", html_entry, true, "settings" );
+
         html += "<div style='display:none'>Edit initial setup: <select id='set_initial_setup'><option selected>false</option></select>";
         html += "<input id='set_initial_setup_data' value='server:initial_setup'>";
         html += "<input id='set_initial_setup_data_type' value='boolean'></div>";
@@ -269,10 +271,6 @@ function birdhouse_app_settings (name="Settings") {
 
         html_entry = this.server_side_settings();
         html += birdhouse_OtherGroup( "SRV_SETTINGS", "SERVER settings <i>(edit in &quot;.env&quot;)</i>", html_entry, false, "settings" );
-
-        html_entry = this.api_calls(show="maintenance");
-        html_entry += "&nbsp;<br/>";
-        html += birdhouse_OtherGroup( "SRV_MAINTENANCE", "SERVER maintenance", html_entry, false, "settings" );
 
         html_entry = this.api_calls(show="api");
         html_entry += "&nbsp;<br/>";
@@ -334,6 +332,14 @@ function birdhouse_app_settings (name="Settings") {
     }
 
 	this.api_calls = function (show="all") {
+
+	    this.button_api = function (command, description) {
+	        return "<button onclick='window.open(\"" + RESTurl + command + "\",\"_blank\");' class='button-settings-api';>" + description + "</button>";
+	        }
+	    this.button_system = function (command, description, style="") {
+	        return "<button onclick='" + command + "' class='button-settings-system " + style + "';>" + description + "</button>";
+	        }
+
 	    var api_call        = "";
         var cameras         = app_data["SETTINGS"]["devices"]["cameras"];
         var microphones     = app_data["SETTINGS"]["devices"]["microphones"];
@@ -341,42 +347,30 @@ function birdhouse_app_settings (name="Settings") {
         delete this.tab.style_cells["width"];
         var html_entry      = this.tab.start();
 
+        if (show == "maintenance" || show == "all") {
+            if (show == "all") { html_entry = this.tab.row("Maintenance commands ..."); }
+            api_call    = this.button_system("birdhouse_forceRestart();",                   "<b>Restart</b><br/> birdhouse server", "attention");
+            api_call   += this.button_system("birdhouse_forceUpdateViews(\"all\");",        "<b>Update views</b>");
+            api_call   += this.button_system("birdhouse_forceUpdateViews(\"all\",true);",   "<b>Update views</b>,<br/> complete reload from archive data");
+            api_call   += this.button_system("birdhouse_recreateImageConfig();",            "<b>Recreate data</b><br/> for TODAY based on recorded images");
+            api_call   += this.button_system("birdhouse_removeDataToday();",                "<b>Delete data</b><br/> for TODAY (images and configs)");
+            api_call   += this.button_system("birdhouse_forceBackup();",                    "<b>Backup data</b><br/> of TODAY now");
+            api_call   += this.button_system("birdhouse_checkTimeout();",                   "Test / demonstrate <b>Timeout</b>", "other");
+            html_entry += this.tab.row(api_call);
+            }
+
         if (show == "all" || show == "api") {
-            api_call    = "<button onclick='window.open(\"" + RESTurl + "api/no-id/list/\",\"_blank\");' class='button-settings-api';>LIST</button>";
-            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/INDEX/\",\"_blank\");' class='button-settings-api';>INDEX</button>";
-            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/OBJECTS/\",\"_blank\");' class='button-settings-api'>OBJECTS</button>";
-            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/STATISTICS/\",\"_blank\");' class='button-settings-api'>STATISTICS</button>";
-            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/FAVORITES/\",\"_blank\");' class='button-settings-api'>FAVORITES</button>";
-            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/WEATHER/\",\"_blank\");' class='button-settings-api';>WEATHER</button>";
-            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/IMAGE_SETTINGS/\",\"_blank\");' class='button-settings-api';>IMAGE SETTINGS</button>";
-            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/DEVICE_SETTINGS/\",\"_blank\");' class='button-settings-api';>DEVICE SETTINGS</button>";
-            api_call   += "<button onclick='window.open(\"" + RESTurl + "api/no-id/last-answer/\",\"_blank\");' class='button-settings-api';>LAST ANSWER</button>";
+            api_call    = this.button_api("api/no-id/status/",          lang("STATUS"));
+            api_call   += this.button_api("api/no-id/list/",            lang("LIST"));
+            api_call   += this.button_api("api/no-id/INDEX/",           lang("INDEX"));
+            api_call   += this.button_api("api/no-id/OBJECTS/",         lang("OBJECTS"));
+            api_call   += this.button_api("api/no-id/STATISTICS/",      lang("STATISTICS"));
+            api_call   += this.button_api("api/no-id/FAVORITES/",       lang("FAVORITES"));
+            api_call   += this.button_api("api/no-id/WEATHER/",         lang("WEATHER"));
+            api_call   += this.button_api("api/no-id/IMAGE_SETTINGS/",  lang("IMAGE_SETTINGS"));
+            api_call   += this.button_api("api/no-id/DEVICE_SETTINGS/", lang("DEVICE_SETTINGS"));
+            api_call   += this.button_api("api/no-id/last-answer/",     "LAST ANSWER");
             html_entry += this.tab.row("API Calls", api_call);
-            }
-
-        if (show == "all") {
-            api_call    = "<button onclick='birdhouse_forceBackup();' class='button-settings-api'>Force Backup</button>";
-            api_call   += "<button onclick='birdhouse_forceRestart();' class='button-settings-api'>Force Restart</button>";
-            api_call   += "<button onclick='birdhouse_forceUpdateViews(\"all\");' class='button-settings-api'>Update Views</button>";
-            api_call   += "<button onclick='birdhouse_forceUpdateViews(\"all\",true);' class='button-settings-api'>Update Views Complete</button>";
-            api_call   += "<button onclick='birdhouse_recreateImageConfig();' class='button-settings-api'>NewImgCfg</button>";
-            api_call   += "<button onclick='birdhouse_removeDataToday();' class='button-settings-api'>CleanAllToday</button>";
-            api_call   += "<button onclick='birdhouse_checkTimeout();' class='button-settings-api'>Timeout</button>";
-            html_entry += this.tab.row("API Commands", api_call);
-            }
-
-        if (show == "maintenance") {
-            api_call    = "<button onclick='birdhouse_forceRestart();' class='button-settings-api'>Force Restart</button>";
-            html_entry += this.tab.row("Restart", api_call);
-            api_call    = "<button onclick='birdhouse_forceUpdateViews(\"all\");' class='button-settings-api'>Update Views</button>";
-            api_call   += "<button onclick='birdhouse_forceUpdateViews(\"all\",true);' class='button-settings-api'>Update Views Complete</button>";
-            html_entry += this.tab.row("Update Views", api_call);
-            api_call    = "<button onclick='birdhouse_recreateImageConfig();' class='button-settings-api'>NewImgCfg</button>";
-            api_call   += "<button onclick='birdhouse_removeDataToday();' class='button-settings-api'>CleanAllToday</button>";
-            api_call   += "<button onclick='birdhouse_forceBackup();' class='button-settings-api'>Force Backup</button>";
-            html_entry += this.tab.row("Data", api_call);
-            api_call    = "<button onclick='birdhouse_checkTimeout();' class='button-settings-api'>Timeout</button>";
-            html_entry += this.tab.row("Test app timeout", api_call);
             }
 
 	    if (show == "all" || show == "api" || show == "devices") {
