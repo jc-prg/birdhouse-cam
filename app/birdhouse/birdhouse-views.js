@@ -532,7 +532,7 @@ function birdhouse_STATISTICS(title, data) {
     pie_data["data"].push(system_data["hdd_total"] - system_data["hdd_used"]);
 
     chart = birdhouseChart_create(label="HDD Usage", titles=pie_data["titles"], data=pie_data["data"], type="pie", sort_keys=false,
-                                  id="hdd_pie", size={"height": "270px", "width":"270px"});
+                                  id="hdd_pie", size={"height": "270px", "width":"270px"}, set_colors=["red", "orange", "darkblue", "green"]);
 
     // !!! Rework Format
     chart += "<br/>&nbsp;<br/>";

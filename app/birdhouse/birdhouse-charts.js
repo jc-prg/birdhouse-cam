@@ -52,10 +52,10 @@ function birdhouse_loadChartJS() {
 * @param (string) id: id of div element
 * @param (dict) size: possibility to overwrite size of chart, e.g., {"height": "100px", "width": "90%"}
 */
-function birdhouseChart_create(label, titles, data, type="line", sort_keys=true, id="birdhouseChart", size="") {
+function birdhouseChart_create(label, titles, data, type="line", sort_keys=true, id="birdhouseChart", size="", set_colors=[]) {
 
-      	// https://www.chartjs.org/docs/latest/samples/line/line.html
-      	// data = { "label1" : [1, 2, 3], "label2" : [1, 2, 3] };
+    // https://www.chartjs.org/docs/latest/samples/line/line.html
+    // data = { "label1" : [1, 2, 3], "label2" : [1, 2, 3] };
 
 	var html 	= "";
 	var canvas_size = {"height": "unset", "width": "unset"};
@@ -72,8 +72,9 @@ function birdhouseChart_create(label, titles, data, type="line", sort_keys=true,
     var data_sets   = [];
 	var colors  = [];
 
-	if (appTheme == "dark") { colors = chartJS_darkColors;    border_pie = "white"; }
-	else                    { colors = chartJS_defaultColors; border_pie = "white"; }
+    if (set_colors != [])        { colors = set_colors;            border_pie = "white"; }
+	else if (appTheme == "dark") { colors = chartJS_darkColors;    border_pie = "white"; }
+	else                         { colors = chartJS_defaultColors; border_pie = "white"; }
 
     if (type == "line") {
         for (var x=0;x<data_rows;x++) {
