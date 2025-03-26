@@ -360,10 +360,10 @@ function birdhouse_app_settings (name="Settings") {
             }
 
         if (show == "all" || show == "api") {
-            api_call    = this.button_api("api/no-id/status/",          lang("STATUS"));
-            api_call   += this.button_api("api/no-id/list/",            lang("LIST"));
+            api_call    = this.button_api("api/no-id/status/",          lang("STATUS") + " #1");
+            api_call   += this.button_api("api/no-id/list/",            lang("STATUS") + " #2");
             api_call   += this.button_api("api/no-id/INDEX/",           lang("INDEX"));
-            api_call   += this.button_api("api/no-id/OBJECTS/",         lang("OBJECTS"));
+            api_call   += this.button_api("api/no-id/OBJECTS/",         lang("OBJECT_DETECTION"));
             api_call   += this.button_api("api/no-id/STATISTICS/",      lang("STATISTICS"));
             api_call   += this.button_api("api/no-id/FAVORITES/",       lang("FAVORITES"));
             api_call   += this.button_api("api/no-id/WEATHER/",         lang("WEATHER"));
