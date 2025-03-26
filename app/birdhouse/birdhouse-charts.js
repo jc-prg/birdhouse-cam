@@ -57,13 +57,14 @@ function birdhouseChart_create(label, titles, data, type="line", sort_keys=true,
     // https://www.chartjs.org/docs/latest/samples/line/line.html
     // data = { "label1" : [1, 2, 3], "label2" : [1, 2, 3] };
 
-	var html 	= "";
-	var canvas_size = {"height": "unset", "width": "unset"};
-    var data_keys	= Object.keys(data);
-    if (sort_keys)	{ data_keys = data_keys.sort(); }
+	var html 	        = "";
+    var html_no_entries = "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>";
+	var canvas_size     = {"height": "unset", "width": "unset"};
+    var data_keys	    = Object.keys(data);
+    if (sort_keys)	    { data_keys = data_keys.sort(); }
 
 	if (data == undefined || data == {} || data_keys.length == 0) {
-	    html += lang("NO_ENTRIES");
+	    html += html_no_entries;
 	    return html;
 	}
     var data_rows	= data[data_keys[0]].length;		// startet with only 1 line per chart!

@@ -13,7 +13,8 @@
 */
 function birdhouse_INDEX(data, camera, object=false) {
 
-	var html          = "";
+	var html            = "";
+    var html_no_entries = "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>";
 	var active_camera = camera;
 	var cameras       = app_data["SETTINGS"]["devices"]["cameras"];
 	var title         = app_data["SETTINGS"]["title"];
@@ -70,7 +71,7 @@ function birdhouse_INDEX(data, camera, object=false) {
 		}
 
 	if (active_cam == {} && other_cams != [])                   { active_cam = other_cams[0]; other_cams.shift(); }
-	if (Object.keys(cameras).length == 0 || active_cam == {})   { html += lang("NO_ENTRIES"); }
+	if (Object.keys(cameras).length == 0 || active_cam == {})   { html += html_no_entries; }
 	if (other_cams.length == 1 && admin_allowed == false) {
 	    if (other_cams[0]["error"])     { other_cams = []; }
 	    else if (active_cam["error"])   { active_cam = other_cams[0]; other_cams = []; }
@@ -283,6 +284,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
     if (title == "OBJECTS"   && birdhouseStatus_loadingViews(app_data, "object") != "done")   { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
 
 	var html              = "";
+	var html_no_entries   = "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>";
 	var entry_category    = [];
 	var same_img_size     = false;
 	var data_list         = data["DATA"];
@@ -408,7 +410,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 			count_groups += 1;
         });
         if (html == "" && server_status["view_favorite_loading"] == "done") {
-            html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;</center>";
+            html += html_no_entries;
         }
         else if (html == "") {
             html += "<center>&nbsp;<br/>"+lang("DATA_LOADING_TRY_AGAIN")+"<br/>&nbsp;</center>";
@@ -445,21 +447,21 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 		if (entries_available == false && (active_page == "TODAY" || active_page == "ARCHIVE" || active_page == "FAVORITES")) {
 		    var empty = false;
 		    if (active_page == "FAVORITES" && server_status["view_favorite_loading"] == "done")                         { empty = true; }
-		    else if (active_page == "TODAY" && active_date != "" && server_status["view_archive_loading"] == "done")    { empty = true; }
+		    else if (active_page == "TODAY" && server_status["view_archive_loading"] == "done")                         { empty = true; }
 		    else if (active_page == "ARCHIVE" && active_date != "" && server_status["view_archive_loading"] == "done")  { empty = true; }
    			else {
    			    var progress_info = "";
    			    if (active_page == "FAVORITES") { progress_info = "<i><div id='loading_status_favorite'></div></i>"; }
    			    if (active_page == "TODAY")     { progress_info = "<i><div id='loading_status_archive'></div></i>"; }
    			    if (active_page == "ARCHIVE")   { progress_info = "<i><div id='loading_status_archive'></div></i>"; }
-    			appMsg.alert(lang("DATA_LOADING_TRY_AGAIN") + "<br/>" + progress_info);
+    			appMsg.alert(lang("DATA_LOADING_TRY_AGAIN") + "<br/>" + progress_info + ".." + active_date);
     			return false;
    			    }
-   	    	if (empty) { html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>"; }
+   	    	if (empty) { html += html_no_entries; }
             }
 		if (entries_available == false && active_page == "VIDEOS") {
 
-   	    	html += "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>";
+   	    	html += html_no_entries;
    	    	}
 
         html += "<div id='group_list' style='display:none;'>" + group_list.join(" ") + "</div>";
