@@ -1110,19 +1110,19 @@ class BirdhouseCameraHandler(BirdhouseCameraClass):
             #self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0) # active auto exposure
 
             if not self.stream.isOpened():
-                self.raise_error("- Can't connect to camera '" + self.source + "': not isOpen()")
+                self.raise_error("Could not connect to camera '" + self.source + "': not isOpen()")
                 return False
             time.sleep(0.5)
             self.camera_create_test_image("Camera is opened.")
         except Exception as err:
-            self.raise_error("- Can't connect to camera '" + self.source + "': " + str(err))
+            self.raise_error("Could not connect to camera '" + self.source + "': " + str(err))
             return False
 
         if self.stream is None:
-            self.raise_error("- Can't connect to camera '" + self.source + "': Unknown error.")
+            self.raise_error("Could not connect to camera '" + self.source + "': Unknown error.")
             return False
         elif not self.stream.isOpened():
-            self.raise_error("- Can't connect to camera '" + self.source + "': Could not open.")
+            self.raise_error("Could not connect to camera '" + self.source + "': Could not open.")
             return False
         else:
             self.logging.info("- Connected.")
