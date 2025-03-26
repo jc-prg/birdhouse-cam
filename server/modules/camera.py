@@ -2237,7 +2237,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.logging.info("                            sunrise="+str(sunrise)+" / sunset="+str(sunset)+".")
                 self.camera_light_time_off = sunrise + offset_sunrise
                 self.camera_light_time_on = sunset + offset_sunset
-                self.logging.info("                            time_on="+str(self.camera_light_time_off)+" / time_on="+str(self.camera_light_time_on)+".")
+                self.logging.info("                            time_off="+str(self.camera_light_time_off)+" / time_on="+str(self.camera_light_time_on)+".")
                 self.logging.info("                            current_time="+str(current_time)+".")
 
             elif self.camera_light_mode == "auto" and self.config.weather.get_sunrise() is None:
@@ -2259,10 +2259,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         elif self.camera_light_mode == "auto":
             current_time = str(self.config.local_time()).split(" ")[1].split(".")[0].split(":")
             current_time = int(current_time[0])*60 + int(current_time[1])
-            if current_time <= self.camera_light_time_off and not self.relays[light_relay].is_on():
+            if current_time >= self.camera_light_time_off and not self.relays[light_relay].is_on():
                 self.logging.debug("image_recording_auto_light: Switch " + light_relay + " on  (mode=auto).")
                 self.relays[light_relay].switch_on()
-            elif current_time >= self.camera_light_time_on and not self.relays[light_relay].is_off():
+            elif current_time <= self.camera_light_time_on and not self.relays[light_relay].is_off():
                 self.logging.debug("image_recording_auto_light: Switch " + light_relay + " on  (mode=auto).")
                 self.relays[light_relay].switch_on()
             elif self.relays[light_relay].is_on():
