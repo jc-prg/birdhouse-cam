@@ -95,6 +95,18 @@ class BirdhouseRelay(BirdhouseClass):
         else:
             return False
 
+    def is_off(self):
+        """
+        check if relay is set to ON
+
+        Returns:
+            boolean: relay state
+        """
+        if self.state == "ON":
+            return False
+        else:
+            return True
+
     def test(self):
         """
         test by switching on and off
