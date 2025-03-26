@@ -4,16 +4,14 @@ import threading
 import json
 import signal
 import sys
-import time
 import traceback
 
 import psutil
-import subprocess
-import os
 import socket
 import math
-
+import urllib.parse
 import socketserver
+
 from http import server
 from datetime import datetime
 from urllib.parse import unquote
@@ -183,22 +181,31 @@ def read_image(file_directory, filename):
 
 
 def decode_url_string(string):
-    string = string.replace("%20", " ")
-    string = string.replace("%22", "\"")
-    string = string.replace("%5B", "[")
-    string = string.replace("%5D", "]")
-    string = string.replace("%7B", "{")
-    string = string.replace("%7C", "|")
-    string = string.replace("%7D", "}")
-    return string
+    """
+    decode URL path
+
+    Args:
+        string: encoded URI path
+
+    Returns:
+        str: decoded URI path
+    """
+    decoded_path = urllib.parse.unquote(string)
+    return decoded_path
 
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
+    """
+    configure server.HTTPServer
+    """
     allow_reuse_address = True
     daemon_threads = True
 
 
 class StreamingServerIPv6(socketserver.ThreadingMixIn, server.HTTPServer):
+    """
+    enable IPv6 support
+    """
     allow_reuse_address = True
     daemon_threads = True
     address_family = socket.AF_INET6
@@ -211,6 +218,9 @@ class StreamingServerIPv6(socketserver.ThreadingMixIn, server.HTTPServer):
 
 
 class StreamingHandler(server.BaseHTTPRequestHandler):
+    """
+    stream requested files or create API response
+    """
 
     def redirect(self, file):
         """
@@ -320,6 +330,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
     def admin_allowed(self):
         """
         Check if administration is allowed based on the IP4 the request comes from
+
+        Returns:
+            bool: if authentication has taken place
         """
         admin_type = birdhouse_env["admin_login"]
         admin_deny = birdhouse_env["admin_ip4_deny"]
@@ -358,6 +371,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         -> /app/index.html?<PARAMETER>
         -> /api/<command>/<param1>/<param2>/<param3>/<which_cam+other_cam>
         -> /<other-path>/<filename>.<ending>?parameter1&parameter2
+
+        Args:
+            check_allowed (bool): if True, check if logged in
+        Returns:
+            dict: parameters from URI of API request
         """
         this_path = self.path.replace("///", "###")
         elements = this_path.split("/")
