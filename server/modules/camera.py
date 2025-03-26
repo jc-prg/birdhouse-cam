@@ -2265,7 +2265,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             elif current_time <= self.camera_light_time_on and not self.relays[light_relay].is_off():
                 self.logging.debug("image_recording_auto_light: Switch " + light_relay + " on  (mode=auto).")
                 self.relays[light_relay].switch_on()
-            elif self.relays[light_relay].is_on():
+            elif self.camera_light_time_off >= current_time >= self.camera_light_time_on and self.relays[light_relay].is_on():
                 self.logging.debug("image_recording_auto_light: Switch " + light_relay + " off  (mode=auto).")
                 self.relays[light_relay].switch_off()
         elif self.camera_light_mode == "inactive":
