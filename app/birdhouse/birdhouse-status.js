@@ -131,6 +131,8 @@ function birdhouseStatus_cameras(data) {
     var cameras         = data["SETTINGS"]["devices"]["cameras"];
     var camera_status   = data["STATUS"]["devices"]["cameras"];
     var camera_streams  = 0;
+    var camera_offset   = [];
+    var camera_amount   = cameras.length;
 
     for (let camera in cameras) {
         if (camera_status[camera]) {
@@ -170,7 +172,12 @@ function birdhouseStatus_cameras(data) {
             if (camera_status[camera]["record_image_start"] == "-1:-1") { record_time_info = "<i>N/A (camera not active)</i>"; }
             setTextById("get_record_image_time_"+camera, record_time_info);
 
-            //birdhouseStatus_cameraParam(data, camera);
+            // check offset settings
+            if (document.getElementById("set_record_offset_"+camera)) {
+                camera_offset.push(document.getElementById("set_record_offset_"+camera).value);
+                if (camera_offset.length == 2) { if (camera_offset[0] == camera_offset[1]) { appMsg.alert(lang("ERROR_SAME_OFFSET")); } }
+                if (camera_offset.length == 3) { if (camera_offset[0] == camera_offset[1] || camera_offset[1] == camera_offset[2] || camera_offset[0] == camera_offset[2]) { appMsg.alert(lang("ERROR_SAME_OFFSET")); } }
+                }
 
             // error recording images
             if (camera_status[camera]["error"]) {
