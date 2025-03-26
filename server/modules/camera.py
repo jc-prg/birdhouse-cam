@@ -2234,11 +2234,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 sunset = int(sunset[0])*60 + int(sunset[1])
                 current_time = str(self.config.local_time()).split(" ")[1].split(".")[0].split(":")
                 current_time = int(current_time[0]) * 60 + int(current_time[1])
-                self.logging.info("                            sunrise="+str(sunrise)+" / sunset="+str(sunset)+".")
+                self.logging.debug("                            sunrise="+str(sunrise)+" / sunset="+str(sunset)+".")
                 self.camera_light_time_off = sunrise + offset_sunrise
                 self.camera_light_time_on = sunset + offset_sunset
-                self.logging.info("                            time_off="+str(self.camera_light_time_off)+" / time_on="+str(self.camera_light_time_on)+".")
-                self.logging.info("                            current_time="+str(current_time)+".")
+                self.logging.debug("                            time_off="+str(self.camera_light_time_off)+" / time_on="+str(self.camera_light_time_on)+".")
+                self.logging.debug("                            current_time="+str(current_time)+".")
 
             elif self.camera_light_mode == "auto" and self.config.weather.get_sunrise() is None:
                 self.logging.warning("image_recording_auto_light: sunrise and sunset not available (yet).")
