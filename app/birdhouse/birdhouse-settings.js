@@ -370,6 +370,7 @@ function birdhouse_app_settings (name="Settings") {
             api_call   += this.button_api("api/no-id/IMAGE_SETTINGS/",  lang("IMAGE_SETTINGS"));
             api_call   += this.button_api("api/no-id/DEVICE_SETTINGS/", lang("DEVICE_SETTINGS"));
             api_call   += this.button_api("api/no-id/last-answer/",     "LAST ANSWER");
+            api_call   += this.button_api("api/no-id/python-pkg/",      "PYTHON PACKAGES");
             html_entry += this.tab.row("API Calls", api_call);
             }
 

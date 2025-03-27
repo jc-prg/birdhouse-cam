@@ -293,7 +293,7 @@ function birdhouse_forceUpdateViews(view="all", complete=false) {
 
 function birdhouse_forceRestart() {
 
-    appMsg.confirm("Restart Birdhouse-Server?", "birdhouse_forceRestart_exec();", 250);
+    appMsg.confirm("Restart Birdhouse-Server?", "birdhouse_forceRestart_exec();", 150);
     }
 
 function birdhouse_forceRestart_exec() {
