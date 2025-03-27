@@ -2229,16 +2229,16 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             if self.camera_light_mode == "auto" and self.config.weather.get_sunrise() is not None:
                 sunrise = self.config.weather.get_sunrise().split(":")
                 sunset = self.config.weather.get_sunset().split(":")
-                self.logging.info("image_recording_auto_light: Relay '" + light_relay + "' is set to auto.")
                 sunrise = int(sunrise[0])*60 + int(sunrise[1])
                 sunset = int(sunset[0])*60 + int(sunset[1])
                 current_time = str(self.config.local_time()).split(" ")[1].split(".")[0].split(":")
                 current_time = int(current_time[0]) * 60 + int(current_time[1])
-                self.logging.debug("                            sunrise="+str(sunrise)+" / sunset="+str(sunset)+".")
                 self.camera_light_time_off = sunrise + offset_sunrise
                 self.camera_light_time_on = sunset + offset_sunset
-                self.logging.debug("                            time_off="+str(self.camera_light_time_off)+" / time_on="+str(self.camera_light_time_on)+".")
-                self.logging.debug("                            current_time="+str(current_time)+".")
+                self.logging.info("image_recording_auto_light: Relay '" + light_relay + "' is set to auto. ["+
+                                  "sunrise=" + str(sunrise) + " / sunset="+str(sunset) + " - " +
+                                  "time_off=" + str(self.camera_light_time_off) + " / time_on="+str(self.camera_light_time_on) + " - "
+                                  "current_time=" + str(current_time) + ".")
 
             elif self.camera_light_mode == "auto" and self.config.weather.get_sunrise() is None:
                 self.logging.warning("image_recording_auto_light: sunrise and sunset not available (yet).")
@@ -2248,28 +2248,35 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.logging.info("image_recording_auto_light: Relay '"+light_relay+"' is set to '"+self.camera_light_mode+"'.")
 
         if self.camera_light_mode == "on" and not self.relays[light_relay].is_on():
-            self.logging.debug("image_recording_auto_light: Switch "+light_relay+" on (mode=on).")
+            self.logging.info("image_recording_auto_light: Switch "+light_relay+" on (mode=on).")
             self.relays[light_relay].switch_on()
+
         elif self.camera_light_mode == "off" and not self.relays[light_relay].is_off():
-            self.logging.debug("image_recording_auto_light: Switch "+light_relay+" off  (mode=off).")
+            self.logging.info("image_recording_auto_light: Switch "+light_relay+" off  (mode=off).")
             self.relays[light_relay].switch_off()
+
         elif self.camera_light_mode == "manual":
-            self.logging.debug("image_recording_auto_light: "+light_relay+" is set to manual .")
+            self.logging.info("image_recording_auto_light: "+light_relay+" is set to manual .")
             return
+
         elif self.camera_light_mode == "auto":
             current_time = str(self.config.local_time()).split(" ")[1].split(".")[0].split(":")
             current_time = int(current_time[0])*60 + int(current_time[1])
             if current_time >= self.camera_light_time_off and not self.relays[light_relay].is_on():
-                self.logging.debug("image_recording_auto_light: Switch " + light_relay + " on  (mode=auto).")
+                self.logging.info("image_recording_auto_light: Switch " + light_relay + " on  (mode=auto).")
                 self.relays[light_relay].switch_on()
+
             elif current_time <= self.camera_light_time_on and not self.relays[light_relay].is_off():
-                self.logging.debug("image_recording_auto_light: Switch " + light_relay + " on  (mode=auto).")
+                self.logging.info("image_recording_auto_light: Switch " + light_relay + " on  (mode=auto).")
                 self.relays[light_relay].switch_on()
+
             elif self.camera_light_time_off >= current_time >= self.camera_light_time_on and self.relays[light_relay].is_on():
-                self.logging.debug("image_recording_auto_light: Switch " + light_relay + " off  (mode=auto).")
+                self.logging.info("image_recording_auto_light: Switch " + light_relay + " off  (mode=auto).")
                 self.relays[light_relay].switch_off()
+
         elif self.camera_light_mode == "inactive":
             return
+
         else:
             self.logging.warning("image_recording_auto_light: Camera light mode '"+self.camera_light_mode+"' is not defined.")
 
