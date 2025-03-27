@@ -1,16 +1,24 @@
 /* iPhone X/XS  ---------------------------------------- */
+
 @media only screen and (device-width : 375px) and (device-height : 812px) and (orientation : portrait)  {
     }
 @media only screen and (device-width : 375px) and (device-height : 812px) and (orientation : landscape) {
 }
 
-/* iPhone SE2  ----------------------------------------- */
+/* iPhone SE2 / 6 / 7 / 8 ----------------------------------------- */
+
 @media only screen and (device-width : 375px) and (device-height : 667px) and (orientation : portrait)  {
     }
-@media only screen and (device-width : 375px) and (device-height : 667px) and (orientation : landscape) {
+@media only screen and (((device-width : 375px) and (device-height : 667px) and (orientation : landscape))
+                   or ((device-height : 375px) and (device-width : 667px))) {
+
+    .frame_column.wide              { width : 620px; }
+    .setting_bg.header              { width : 620px; }
+    .settings_button_index          { width : 32%; margin : 0.5%; }
     }
 
 /* iPhone 5/SE1 ----------------------------------------- */
+
 @media only screen and (device-width : 320px) and (device-height : 568px) and (orientation : portrait)  {
 
     .separator_group                { width  : 280px; font-size : 9px; }
@@ -100,10 +108,11 @@
 
 @media only screen and (device-width : 402px) and (device-height : 874px) and (orientation : portrait) {
 
-    .frame_column.wide              { width : 366px; }
-    .setting_bg.header              { width : 366px; }
-    .settings_button_index.header   { width : 48px; }
-    .settings_button_index.header img { max-width : 38px; }
+    .frame_column.wide                  { width : 366px; }
+    .setting_bg.header                  { width : 366px; }
+    .settings_button_index.header       { width : 47px; }
+    .settings_button_index.header.invisible { width : 46px; }
+    .settings_button_index.header img       { max-width : 36px; }
 
     .thumbnail                      { width :  98%;  }
     .thumbnail.error                { width :  96%;  height: 180px; }
@@ -123,7 +132,7 @@
                      or ((device-height : 402px) and (device-width : 874px)))  {
 
     .frame_column.wide              { width :   550px; }
-    .setting_bg.header              { width :   550px; }
+    .setting_bg.header              { width :   550px; left  : 163px; }
 
     .thumbnail                      { width :  98%;  }
     .thumbnail.error                { width :  96%;  height: 180px; }

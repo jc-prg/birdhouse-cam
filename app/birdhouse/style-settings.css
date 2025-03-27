@@ -28,7 +28,7 @@
     border              : solid 1px red;
 }
 
-@media (max-width: 706px) {
+@media (min-width: 320px and max-width: 706px) {
     .setting_bg.header  { width : 342px; }
 }
 
