@@ -668,7 +668,6 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                         time.sleep(1)
 
-
             if start_time_2 + self.queue_wait_max * 6 < time.time():
                 self.logging.info("Queue: wrote " + str(check_count_entries) + " entries since the last " +
                                   str(self.queue_wait_max * 6) + "s.")
