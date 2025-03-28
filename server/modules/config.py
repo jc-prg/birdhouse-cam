@@ -644,7 +644,10 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                     # Check queues and write existing entries to db
                     start_time_exec = time.time()
-                    if self.execute_edit_queue() or self.execute_status_queue():
+                    if self.execute_edit_queue():
+                        update_views = True
+                    self.config.set_processing_performance("config", "write_1", start_time_exec)
+                    if self.execute_status_queue():
                         update_views = True
                     self.config.set_processing_performance("config", "write", start_time_exec)
 

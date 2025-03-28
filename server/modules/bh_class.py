@@ -443,8 +443,8 @@ class BirdhouseDbClass(BirdhouseClass):
 
         if filename in self.locked and self.locked[filename]:
             while self.locked[filename]:
-                time.sleep(wait)
                 self.waiting_time += wait
+                time.sleep(wait)
                 count += 1
                 if count > 100:
                     self.logging.warning("Waiting! File '" + filename + "' is locked (" + str(count) + ")")
@@ -460,6 +460,7 @@ class BirdhouseDbClass(BirdhouseClass):
                         locked += 1
                 self.waiting_time += wait
                 time.sleep(wait)
+
             self.logging.info("OK")
 
         return "OK"
