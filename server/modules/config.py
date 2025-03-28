@@ -708,6 +708,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         self.edit_queue_in_progress = True
         for config_file in config_files:
 
+            start_time = time.time()
             if len(self.edit_queue[config_file]) == 0:
                 continue
             else:
@@ -828,8 +829,10 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                             if "to_be_deleted" in entries[key]:
                                 del entries[key]["to_be_deleted"]
 
+
                 self.db_handler.unlock(config_file)
                 self.db_handler.write(config_file, "", entries)
+                self.config.set_processing_performance("config_queue_write", config_file, start_time)
 
             # EDIT QUEUE: backup (with date)
             elif config_file == "backup":
@@ -904,7 +907,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                     update_views = True
 
-        self.logging.debug("    -> Edit queue: " + config_file + " done.)")
+            self.config.set_processing_performance("config_queue_edit", config_file, start_time)
+            self.logging.debug("    -> Edit queue: " + config_file + " done.")
 
         self.edit_queue_in_progress = False
         return update_views
@@ -923,6 +927,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
         self.status_queue_in_progress = True
         for config_file in config_files:
+
+            start_time = time.time()
 
             # STATUS QUEUE: today, video (without date)
             if config_file != "backup" and len(self.status_queue[config_file]) > 0:
@@ -1005,6 +1011,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                     update_views = True
 
+            self.config.set_processing_performance("config_queue_status", config_file, start_time)
             self.logging.debug("    -> Status queue: " + config_file + " done.)")
 
         self.status_queue_in_progress = False

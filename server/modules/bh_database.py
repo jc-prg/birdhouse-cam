@@ -86,6 +86,7 @@ class BirdhouseJSON(BirdhouseDbClass):
         """
         BirdhouseDbClass.__init__(self, "JSON", "DB-json", config)
         self.locked = {}
+        self.sort_keys = True
         self.connected = True
 
         self.logging.info("Connected JSON handler.")
@@ -131,9 +132,11 @@ class BirdhouseJSON(BirdhouseDbClass):
                 os.makedirs(path)
 
             self.locked[filename] = True
-            with open(filename, 'wb') as json_file:
-                json.dump(data, codecs.getwriter('utf-8')(json_file), ensure_ascii=False, sort_keys=True, indent=4)
+            start_write_time = time.time()
+            with open(filename, 'w', encoding='utf-8') as json_file:
+                json.dump(data, json_file, ensure_ascii=False, sort_keys=self.sort_keys, indent=4)
                 json_file.close()
+            self.config.set_processing_performance("db_write_file", "write_file", start_write_time)
             self.locked[filename] = False
             self.logging.debug("Write JSON file: " + filename)
             self.logging.debug("                 " + str(list(data.keys()))[:80])
