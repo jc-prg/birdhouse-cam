@@ -696,11 +696,11 @@ function birdhouse_app_settings (name="Settings") {
 
         Object.keys(status_cam).forEach(key => {
             if (status_prf["camera_recording_image"][key]) {
-                html += this.set.dashboard_item_fill(id="record_image_"+key, value=Math.round(status_prf["camera_recording_image"][key]*100)/100, unit="s", benchmark=true, warning=0.5, alarm=1.0);
+                html += this.set.dashboard_item_fill(id="record_image_"+key, value=Math.round(status_prf["camera_recording_image"][key]*1000)/1000, unit="s", benchmark=true, warning=0.5, alarm=1.0);
                 }
             });
         if (status_prf["object_detection"]) {
-            html += this.set.dashboard_item_fill(id="object_detection", value=status_prf["object_detection"]["image"], unit="s", benchmark=true, warning=6, alarm=12);
+            html += this.set.dashboard_item_fill(id="object_detection", value=Math.round(status_prf["object_detection"]["image"]*100)/100, unit="s", benchmark=true, warning=6, alarm=12);
             }
 	    }
 
