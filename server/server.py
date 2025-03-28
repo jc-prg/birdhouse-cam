@@ -37,6 +37,7 @@ from modules.srv_support import ServerInformation, ServerHealthCheck
 from modules.statistics import BirdhouseStatistics
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+api_start_tc = time.time()
 api_description = {"name": "BirdhouseCAM", "version": "v1.2.1"}
 app_framework = "v1.2.1"
 
@@ -1673,6 +1674,7 @@ if __name__ == "__main__":
         srv_logging.info("Starting REST API on port " + str(birdhouse_env["port_api"]) + " ...")
         srv_logging.info("WebServer running on port " + str(birdhouse_env["port_http"]) + " ...")
         srv_logging.info(" -----------------------------> GO!\n")
+        config.set_processing_performance("server", "boot", api_start_tc)
 
         server.serve_forever()
         srv_logging.info("STOPPED SERVER.")
