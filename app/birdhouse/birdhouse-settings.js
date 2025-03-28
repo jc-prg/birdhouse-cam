@@ -182,15 +182,18 @@ function birdhouse_app_settings (name="Settings") {
     this.information = function () {
 
         var open_settings = {
-            "app_info_01" : true,
-            "device_info" : false,
-            "process_info": false,
-            "server_info" : false,
-            "api_calls"   : false,
-            "api_info"    : false,
-            "app_info_02" : false,
-            "display_info": false,
-            "app_under_construction": false
+            "app_info_01"           : true,
+            "device_info"           : false,
+            "process_info"          : false,
+            "server_info"           : false,
+            "api_calls"             : false,
+            "api_info"              : false,
+            "app_info_02"           : false,
+            "display_info"          : false,
+            "app_under_construction": false,
+            "api_performance"       : false,
+            "server_performance"    : false,
+            "server_queues"         : false,
             }
 
         var html = "";
@@ -212,10 +215,13 @@ function birdhouse_app_settings (name="Settings") {
         html += birdhouse_OtherGroup( "display_info", "Display", html_entry, open_settings["display_info"] );
 
         html_entry = this.api_performance();
-        html += birdhouse_OtherGroup( "api_performance", "API performance &nbsp;<div id='api_info_header'></div>", html_entry, open_settings["api_info"] );
+        html += birdhouse_OtherGroup( "api_performance", "API performance", html_entry, open_settings["api_performance"] );
 
         html_entry = this.server_performance();
-        html += birdhouse_OtherGroup( "server_performance", "Server performance &nbsp;<div id='api_info_header'></div>", html_entry, open_settings["api_info"] );
+        html += birdhouse_OtherGroup( "server_performance", "Server performance", html_entry, open_settings["server_performance"] );
+
+        html_entry = this.server_queues();
+        html += birdhouse_OtherGroup( "server_queues", "Server queues", html_entry, open_settings["server_queues"] );
 
         return html;
         }
@@ -437,24 +443,49 @@ function birdhouse_app_settings (name="Settings") {
         var answer = app_data["STATUS"]["server_performance"];
         var html   = "&nbsp;<br/>";
         var tab    = new birdhouse_table();
-        tab.style_cells["vertical-align"] = "top";
+        tab.style_cells["vertical-align"]   = "top";
+        tab.style_cells["max-width"]        = "50%";
 
 	    html += "<i><b>Server process durations:</i></b><br/>&nbsp;<br/>";
 	    html += tab.start();
 	    Object.keys(answer).sort().forEach(key => {
-	        var print_key     = key;
-	        var print_entry   = "";
+	        var print_key     = key.replaceAll("_", " ");
+	        var print_entry   = tab.start();
 	        var print_update  = "";
 	        Object.keys(answer[key]).sort().forEach(device => {
-	            if (device == "last_update") { print_update = "<i>update:</i> " + answer[key][device].split(" ")[1] + "<br/>&nbsp;"; }
-	            else                         { print_entry += "<i>" + device + "</i> : " + answer[key][device] + "s<br/>"; }
+	            if (device == "last_update") { print_update = tab.row("<i>update:</i> ", "<i>" + answer[key][device].split(" ")[1]) + "</i>"; }
+	            else                         { print_entry += tab.row("<i>" + device + ":</i>", answer[key][device] + "s"); }
 	            });
-            html += tab.row(print_key + ":", print_entry + print_update);
+	        print_entry      += print_update;
+	        print_entry      += tab.row("&nbsp;");
+	        print_entry      += tab.end();
+            html             += tab.row(print_key + ":", print_entry);
             });
 	    html += tab.end();
 	    html += "&nbsp;";
 	    return html;
 	    }
+
+	this.server_queues = function () {
+        var answer_1 = app_data["STATUS"]["server_config_queues"];
+        var answer_2 = app_data["STATUS"]["server_object_queues"];
+        var html     = "&nbsp;<br/>";
+        var tab      = new birdhouse_table();
+        tab.style_cells["vertical-align"] = "top";
+        tab.style_cells["max-width"] = "50%";
+
+	    html += "<i><b>Server queues size:</i></b><br/>&nbsp;<br/>";
+	    html += tab.start();
+	    Object.keys(answer_1).sort().forEach(key => {
+            html += tab.row("config &gt; " + key + ":", answer_1[key]);
+            });
+	    Object.keys(answer_2).sort().forEach(key => {
+            html += tab.row("object &gt; " + key + ":", answer_2[key]);
+            });
+	    html += tab.end();
+	    html += "&nbsp;";
+	    return html;
+	}
 
 	this.app_information = function () {
 	    var instance = " (prod)";

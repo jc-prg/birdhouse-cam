@@ -507,6 +507,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         global camera
 
+        request_start = time.time()
         content_length = int(self.headers['Content-Length'])
         if content_length >= 2:
             post_data = self.rfile.read(content_length)
@@ -733,6 +734,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             return
 
         api_response["STATUS"] = response
+        config.set_processing_performance("api_POST", param["command"], request_start)
 
         self.stream_file(filetype='application/json', content=json.dumps(response).encode(encoding='utf_8'),
                          no_cache=True)
@@ -872,6 +874,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "last_answer": ""
                 },
                 "server_performance": config.get_processing_performance(),
+                "server_config_queues": config.get_queue_size(),
+                "server_object_queues": {},
                 "system": {},
                 "video_recording": {},
                 "object_detection": {
@@ -913,6 +917,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         "error":      camera[cam_id].if_error(),
                         "info":       {}
                     }
+                api_response["STATUS"]["server_object_queues"]["archive_"+cam_id] = len(camera[cam_id].object.detect_queue_archive)
+                api_response["STATUS"]["server_object_queues"]["image_"+cam_id] = len(camera[cam_id].object.detect_queue_image)
+
         if command in api_commands["status_small"]:
             api_response["STATUS"] = {
                 "admin_allowed": self.admin_allowed(),
@@ -1211,6 +1218,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if param["session_id"] in request_times and param["session_id"] != "":
             api_response["API"]["request_details"] = request_times
             api_response["API"]["request_time"] = round(time.time() - request_start, 3)
+        config.set_processing_performance("api_GET", command, request_start)
 
         self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'),
                          no_cache=True)

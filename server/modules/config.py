@@ -2121,3 +2121,19 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         else:
             return averaged_processing_performance[category]
 
+    def get_queue_size(self):
+        """
+        Calculate the size of the config queues
+
+        Returns:
+            dict: size of the config queues
+        """
+        queue_size = {"status" : 0, "edit" : 0, "range" : 0}
+        for key in self.queue.edit_queue:
+            queue_size["edit"] += len(self.queue.edit_queue[key])
+        for key in self.queue.range_queue:
+            queue_size["range"] += len(self.queue.range_queue[key])
+        for key in self.queue.status_queue:
+            queue_size["status"] += len(self.queue.status_queue[key])
+        return queue_size
+
