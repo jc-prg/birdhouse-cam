@@ -671,13 +671,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_logging.info("FORCE RESTART OF BIRDHOUSE SERVER ...")
             srv_logging.info("---------------------------------------------")
             config.force_shutdown()
-            health_check.set_start()
+            health_check.set_start(True)
             response = {"shutdown": "started", "mode": "restart"}
         elif param["command"] == "force-shutdown":
             srv_logging.info("---------------------------------------------")
             srv_logging.info("FORCE SHUTDOWN OF BIRDHOUSE SERVER ...")
             srv_logging.info("---------------------------------------------")
             config.force_shutdown()
+            health_check.set_start(False)
             response = {"shutdown": "started", "mode": "shutdown"}
         elif param["command"] == "check-timeout":
             time.sleep(30)

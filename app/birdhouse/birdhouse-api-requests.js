@@ -307,7 +307,7 @@ function birdhouse_forceShutdown() {
     }
 
 function birdhouse_forceShutdown_exec() {
-	commands = ["force-restart"];
+	commands = ["force-shutdown"];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceShutdown');
 	}
 
