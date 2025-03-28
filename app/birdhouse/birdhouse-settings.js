@@ -686,7 +686,7 @@ function birdhouse_app_settings (name="Settings") {
         if (status["server_config_queues"]) {
             Object.keys(status["server_config_queues"]).forEach(key => { data_q["config"] += status["server_config_queues"][key]; });
             this.set.dashboard_item_fill(id="config_queue_wait",    value=status_prf["config"]["queue"]*-1, unit="s", benchmark=true, warning=8, alarm=20);
-            this.set.dashboard_item_fill(id="config_queue_write",   value=status_prf["config"]["write"], unit="s", benchmark=true, warning=1, alarm=3);
+            this.set.dashboard_item_fill(id="config_queue_write",   value=Math.round(status_prf["config"]["write"]*1000)/1000, unit="s", benchmark=true, warning=1, alarm=3);
             this.set.dashboard_item_fill(id="config_queue_size",    value=data_q["config"], unit="", benchmark=true, warning=10, alarm=30);
             }
         if (status["server_object_queues"]) {
@@ -696,7 +696,7 @@ function birdhouse_app_settings (name="Settings") {
 
         Object.keys(status_cam).forEach(key => {
             if (status_prf["camera_recording_image"][key]) {
-                html += this.set.dashboard_item_fill(id="record_image_"+key, value=status_prf["camera_recording_image"][key], unit="s", benchmark=true, warning=0.5, alarm=1.0);
+                html += this.set.dashboard_item_fill(id="record_image_"+key, value=Math.round(status_prf["camera_recording_image"][key]*100)/100, unit="s", benchmark=true, warning=0.5, alarm=1.0);
                 }
             });
         if (status_prf["object_detection"]) {
