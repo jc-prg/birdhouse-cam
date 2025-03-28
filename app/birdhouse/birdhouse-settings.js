@@ -665,7 +665,7 @@ function birdhouse_app_settings (name="Settings") {
                 }
             });
         if (data_p["object_detection"]) {
-            html     += this.set.dashboard_item(id="server_boot_time", type="number", title="Object detection", description="detection time per image");
+            html     += this.set.dashboard_item(id="object_detection", type="number", title="Object detection", description="detection time per image");
             }
 
 	    setTimeout(function() {birdhouse_settings.server_dashboard_fill(app_data);}, 1000);
@@ -699,6 +699,9 @@ function birdhouse_app_settings (name="Settings") {
                 html += this.set.dashboard_item_fill(id="record_image_"+key, value=status_prf["camera_recording_image"][key], unit="s", benchmark=true, warning=0.5, alarm=1.0);
                 }
             });
+        if (status_prf["object_detection"]) {
+            html += this.set.dashboard_item_fill(id="object_detection", value=status_prf["object_detection"]["image"], unit="s", benchmark=true, warning=0.5, alarm=1.0);
+            }
 	    }
 
 	this.toggle	= function (active=false) {

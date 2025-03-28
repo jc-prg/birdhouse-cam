@@ -65,13 +65,13 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                 start_time = time.time()
                 [stamp, path_hires, image_hires, image_info] = self.detect_queue_image.pop()
                 self.analyze_image(stamp, path_hires, image_hires, image_info)
-                self.config.set_processing_performance("object detection", "image", start_time)
+                self.config.set_processing_performance("object_detection", "image", start_time)
 
             elif not self.priority_processing() and len(self.detect_queue_archive) > 0:
                 start_time = time.time()
                 [date, threshold] = self.detect_queue_archive.pop()
                 self.analyze_archive_day(date, threshold)
-                self.config.set_processing_performance("object detection", "day", start_time)
+                self.config.set_processing_performance("object_detection", "day", start_time)
 
             self.config.object_detection_processing = self._processing
             self.config.object_detection_progress = self._processing_percentage

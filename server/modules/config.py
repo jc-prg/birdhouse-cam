@@ -2114,7 +2114,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 if object_id != "last_update":
                     averaged_processing_performance[key][object_id] = round(sum(self.processing_performance[key][object_id]) / len(self.processing_performance[key][object_id]), round_digits)
                 else:
-                    averaged_processing_performance[key][object_id] =self.processing_performance[key][object_id]
+                    averaged_processing_performance[key][object_id] = self.processing_performance[key][object_id]
 
         if category == "":
             return averaged_processing_performance
