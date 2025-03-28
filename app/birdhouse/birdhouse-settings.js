@@ -312,7 +312,7 @@ function birdhouse_app_settings (name="Settings") {
         if (show == "maintenance" || show == "all") {
             if (show == "all") { html_entry = this.tab.row("Maintenance commands ..."); }
             api_call    = this.button_system("birdhouse_forceBackup();",                    "<b>Backup data</b><br/> of TODAY now");
-            api_call   += this.button_system("birdhouse_forceUpdateViews(\"all\");",        "<b>Update views</b> (favorite, archive, objects)");
+            api_call   += this.button_system("birdhouse_forceUpdateViews(\"all\");",        "<b>Update views</b><br/> (favorite, archive, objects)");
             api_call   += this.button_system("birdhouse_forceUpdateViews(\"all\",true);",   "<b>Update views</b>,<br/> complete reload from archive data");
             api_call   += this.button_system("birdhouse_recreateImageConfig();",            "<b>Recreate data</b><br/> for TODAY based on recorded images");
             api_call   += this.button_system("birdhouse_removeDataToday();",                "<b>Delete data</b><br/> for TODAY (images and configs)");
