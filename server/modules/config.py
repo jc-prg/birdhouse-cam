@@ -628,7 +628,6 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                 entries_available = True
 
                 if entries_available:
-                    start_time_available = time.time()
                     self.logging.debug("... Entries available in the queue (" +
                                        str(round(time.time() - start_time, 2)) + "s)")
 
@@ -641,10 +640,11 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                             self.db_handler.connect(self.db_handler.db_type)
                         time.sleep(5)
 
-                    if self.execute_edit_queue():
+                    # Check queues and write existing entries to db
+                    start_time_exec = time.time()
+                    if self.execute_edit_queue() or self.execute_status_queue():
                         update_views = True
-                    if self.execute_status_queue():
-                        update_views = True
+                    self.config.set_processing_performance("config", "write", start_time_exec)
 
                     check_count_entries += count_entries
                     self.logging.debug("Queue execution: wrote " + str(count_entries) + " entries to " +
@@ -668,7 +668,6 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                         time.sleep(1)
 
-                    self.config.set_processing_performance("config", "write", start_time_available)
 
             if start_time_2 + self.queue_wait_max * 6 < time.time():
                 self.logging.info("Queue: wrote " + str(check_count_entries) + " entries since the last " +
@@ -677,9 +676,11 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                 start_time_2 = time.time()
 
             if update_views:
+                start_time_update = time.time()
                 self.views.archive.list_update()
                 self.views.favorite.list_update()
                 self.views.object.list_update()
+                self.config.set_processing_performance("views", "update_all", start_time_update)
 
             self.thread_control()
             self.thread_wait()
