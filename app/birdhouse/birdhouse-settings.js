@@ -344,18 +344,29 @@ function birdhouse_app_settings (name="Settings") {
         var cameras         = app_data["SETTINGS"]["devices"]["cameras"];
         var microphones     = app_data["SETTINGS"]["devices"]["microphones"];
         var relays          = app_data["SETTINGS"]["devices"]["relays"];
+        var server_settings = app_data["SETTINGS"]["server"];
         delete this.tab.style_cells["width"];
         var html_entry      = this.tab.start();
 
         if (show == "maintenance" || show == "all") {
             if (show == "all") { html_entry = this.tab.row("Maintenance commands ..."); }
-            api_call    = this.button_system("birdhouse_forceRestart();",                   "<b>Restart</b><br/> birdhouse server", "attention");
-            api_call   += this.button_system("birdhouse_forceBackup();",                    "<b>Backup data</b><br/> of TODAY now");
+            api_call    = this.button_system("birdhouse_forceBackup();",                    "<b>Backup data</b><br/> of TODAY now");
             api_call   += this.button_system("birdhouse_forceUpdateViews(\"all\");",        "<b>Update views</b>");
             api_call   += this.button_system("birdhouse_forceUpdateViews(\"all\",true);",   "<b>Update views</b>,<br/> complete reload from archive data");
             api_call   += this.button_system("birdhouse_recreateImageConfig();",            "<b>Recreate data</b><br/> for TODAY based on recorded images");
             api_call   += this.button_system("birdhouse_removeDataToday();",                "<b>Delete data</b><br/> for TODAY (images and configs)");
             api_call   += this.button_system("birdhouse_checkTimeout();",                   "Test / demonstrate <b>Timeout</b>", "other");
+
+            if (server_settings["server_mode"] == "DOCKER" && server_settings["server_restart"] != "no" && server_settings["server_restart"] != "on-failure") {
+                api_call   += this.button_system("birdhouse_forceRestart();",     "<b>Restart</b><br/> birdhouse server ("+server_settings["server_mode"]+")", "attention");
+                }
+            else if (server_settings["server_mode"] == "DOCKER") {
+                api_call   += this.button_system("birdhouse_forceShutdown();",     "<b>Shutdown</b><br/> birdhouse server ("+server_settings["server_mode"]+")", "attention");
+                }
+            else {
+                api_call   += this.button_system("birdhouse_forceRestart();",      "<b>Restart</b><br/> birdhouse server ("+server_settings["server_mode"]+")", "attention");
+                api_call   += this.button_system("birdhouse_forceShutdown();",     "<b>Shutdown</b><br/> birdhouse server ("+server_settings["server_mode"]+")", "attention");
+                }
             html_entry += this.tab.row(api_call);
             }
 

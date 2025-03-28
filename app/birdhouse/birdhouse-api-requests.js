@@ -301,6 +301,16 @@ function birdhouse_forceRestart_exec() {
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceRestart');
 	}
 
+function birdhouse_forceShutdown() {
+
+    appMsg.confirm("Shutdown Birdhouse-Server?", "birdhouse_forceShutdown_exec();", 150);
+    }
+
+function birdhouse_forceShutdown_exec() {
+	commands = ["force-restart"];
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceShutdown');
+	}
+
 function birdhouse_killStream(camera_id, stream_id) {
 
 // !!!! Still kills things that are produced somehow even if not necessary?!
