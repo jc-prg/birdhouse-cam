@@ -446,9 +446,8 @@ function birdhouse_app_settings (name="Settings") {
 	        var print_entry   = "";
 	        var print_update  = "";
 	        Object.keys(answer[key]).sort().forEach(device => {
-	            if (print_entry != "")       { print_entry += "<br/>"; }
 	            if (device == "last_update") { print_update = "<i>update:</i> " + answer[key][device].split(" ")[1] + "<br/>&nbsp;"; }
-	            else                         { print_entry += "<i>" + device + "</i> : " + answer[key][device] + "s"; }
+	            else                         { print_entry += "<i>" + device + "</i> : " + answer[key][device] + "s<br/>"; }
 	            });
             html += tab.row(print_key + ":", print_entry + print_update);
             });
