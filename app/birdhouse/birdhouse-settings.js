@@ -667,7 +667,9 @@ function birdhouse_app_settings (name="Settings") {
         if (data_p["object_detection"]) {
             html     += this.set.dashboard_item(id="object_detection", type="number", title="Object detection", description="detection time per image");
             }
-
+        if (data["database"]["type"] == "json" || data["database"]["type"] == "both") {
+            html     += this.set.dashboard_item(id="locked_db", type="number", title="Database JSON", description="locked json databases ("+data["database"]["type"]+")");
+            }
 	    setTimeout(function() {birdhouse_settings.server_dashboard_fill(app_data);}, 1000);
 	    return html;
 	    }
@@ -693,7 +695,6 @@ function birdhouse_app_settings (name="Settings") {
             Object.keys(status["server_object_queues"]).forEach(key => { data_q["object"] += status["server_object_queues"][key]; });
             this.set.dashboard_item_fill(id="object_queue_size",    value=data_q["object"], unit="", benchmark=true, warning=10, alarm=30);
             }
-
         Object.keys(status_cam).forEach(key => {
             if (status_prf["camera_recording_image"][key]) {
                 html += this.set.dashboard_item_fill(id="record_image_"+key, value=Math.round(status_prf["camera_recording_image"][key]*1000)/1000, unit="s", benchmark=true, warning=0.5, alarm=1.0);
@@ -701,6 +702,9 @@ function birdhouse_app_settings (name="Settings") {
             });
         if (status_prf["object_detection"]) {
             html += this.set.dashboard_item_fill(id="object_detection", value=Math.round(status_prf["object_detection"]["image"]*100)/100, unit="s", benchmark=true, warning=6, alarm=12);
+            }
+        if (status["database"]["type"] == "json" || status["database"]["type"] == "both") {
+            html += this.set.dashboard_item_fill(id="locked_db", value=status["database"]["db_locked_json"], unit="", benchmark=true, warning=2, alarm=4);
             }
 	    }
 

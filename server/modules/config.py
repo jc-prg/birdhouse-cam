@@ -121,6 +121,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 "db_connected": self.json.connected,
                 "db_error": self.json.error,
                 "db_error_msg": self.json.error_msg,
+                "db_locked_json": self.json.amount_locked(),
                 "handler_error": self.error,
                 "handler_error_msg": self.error_msg
             }
@@ -141,6 +142,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 "db_connected_info": "couch=" + str(self.couch.connected) + " / json=" + str(self.json.connected),
                 "db_connected_couch": self.couch.connected,
                 "db_connected_json": self.json.connected,
+                "db_locked_json": self.json.amount_locked(),
                 "db_error": "couch=" + str(self.couch.error) + " / json=" + str(self.json.error),
                 "db_error_msg": [*self.couch.error_msg, *self.json.error_msg],
                 "handler_error": self.error,

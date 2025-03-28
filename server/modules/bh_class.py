@@ -397,6 +397,7 @@ class BirdhouseDbClass(BirdhouseClass):
         """
         BirdhouseClass.__init__(self, class_id, class_log, "", config)
         self.locked = {}
+        self.waiting_time = 0
 
     def lock(self, filename):
         """
@@ -416,6 +417,19 @@ class BirdhouseDbClass(BirdhouseClass):
         """
         self.locked[filename] = False
 
+    def amount_locked(self):
+        """
+        Return if a files are locked for writing
+
+        Returns:
+            int: amount of locked files
+        """
+        count = 0
+        for key in self.locked:
+            if self.locked[key]:
+                count += 1
+        return count
+
     def wait_if_locked(self, filename):
         """
         Wait, while a file is locked for writing
@@ -423,17 +437,18 @@ class BirdhouseDbClass(BirdhouseClass):
         Args:
             filename (str): filename / db name of database - if locked, wait
         """
-        wait = 0.2
+        wait = 0.05
         count = 0
         self.logging.debug("Start check locked: " + filename + " ...")
 
         if filename in self.locked and self.locked[filename]:
             while self.locked[filename]:
                 time.sleep(wait)
+                self.waiting_time += wait
                 count += 1
-                if count > 10:
+                if count > 100:
                     self.logging.warning("Waiting! File '" + filename + "' is locked (" + str(count) + ")")
-                    time.sleep(1)
+                    count = 0
 
         elif filename == "ALL":
             self.logging.info("Wait until no file is locked ...")
@@ -443,8 +458,8 @@ class BirdhouseDbClass(BirdhouseClass):
                 for key in self.locked:
                     if self.locked[key]:
                         locked += 1
+                self.waiting_time += wait
                 time.sleep(wait)
             self.logging.info("OK")
-        if count > 10:
-            self.logging.warning("File '" + filename + "' is not locked any more (" + str(count) + ")")
+
         return "OK"
