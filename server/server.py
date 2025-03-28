@@ -1533,7 +1533,7 @@ if __name__ == "__main__":
             exit()
 
     elif len(sys.argv) > 0 and "--restart" in sys.argv:
-        restart_thread = ServerHealthCheck("", maintain=True)
+        restart_thread = ServerHealthCheck("", None, maintain=True)
         restart_thread.set_restart()
         exit()
 
