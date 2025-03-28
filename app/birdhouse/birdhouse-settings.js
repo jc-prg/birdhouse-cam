@@ -700,7 +700,7 @@ function birdhouse_app_settings (name="Settings") {
                 }
             });
         if (status_prf["object_detection"]) {
-            html += this.set.dashboard_item_fill(id="object_detection", value=status_prf["object_detection"]["image"], unit="s", benchmark=true, warning=0.5, alarm=1.0);
+            html += this.set.dashboard_item_fill(id="object_detection", value=status_prf["object_detection"]["image"], unit="s", benchmark=true, warning=6, alarm=12);
             }
 	    }
 
