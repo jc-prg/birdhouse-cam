@@ -63,8 +63,11 @@ function birdhouseStatus_connectionError() {
         setStatusColor(status_id="status_active_"+micro, "red");
         setStatusColor(status_id="status_error_"+micro, "black");
     }
+
     setStatusColor(status_id="status_active_WEATHER", "red");
     setStatusColor(status_id="status_error_WEATHER", "black");
+
+    if (pages_settings.includes(app_active_page)) { birdhouse_settings.server_dashboard_fill(app_data); }
 }
 
 /*

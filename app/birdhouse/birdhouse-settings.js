@@ -669,6 +669,7 @@ function birdhouse_app_settings (name="Settings") {
             }
         if (data["database"]["type"] == "json" || data["database"]["type"] == "both") {
             html     += this.set.dashboard_item(id="locked_db", type="number", title="Database JSON", description="locked json databases ("+data["database"]["type"]+")");
+            html     += this.set.dashboard_item(id="locked_db_wait", type="number", title="Database JSON", description="waiting time due to locked DB");
             }
 	    setTimeout(function() {birdhouse_settings.server_dashboard_fill(app_data);}, 1000);
 	    return html;
@@ -705,6 +706,7 @@ function birdhouse_app_settings (name="Settings") {
             }
         if (status["database"]["type"] == "json" || status["database"]["type"] == "both") {
             html += this.set.dashboard_item_fill(id="locked_db", value=status["database"]["db_locked_json"], unit="", benchmark=true, warning=2, alarm=4);
+            html += this.set.dashboard_item_fill(id="locked_db_wait", value=status["database"]["db_waiting_json"], unit="s", benchmark=true, warning=2, alarm=4);
             }
 	    }
 
