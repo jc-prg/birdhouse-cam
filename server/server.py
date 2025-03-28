@@ -1523,12 +1523,12 @@ if __name__ == "__main__":
         exit()
 
     elif len(sys.argv) > 0 and "--shutdown" in sys.argv:
-        shutdown_thread = ServerHealthCheck("", maintain=True)
+        shutdown_thread = ServerHealthCheck("", None, maintain=True)
         shutdown_thread.set_shutdown()
         exit()
 
     elif len(sys.argv) > 0 and "--check-if-start" in sys.argv:
-        restart_thread = ServerHealthCheck("", maintain=True)
+        restart_thread = ServerHealthCheck("", None, maintain=True)
         if not restart_thread.check_start():
             exit()
 
