@@ -122,6 +122,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 "db_error": self.json.error,
                 "db_error_msg": self.json.error_msg,
                 "db_locked_json": self.json.amount_locked(),
+                "db_waiting_json": self.json.waiting_time,
                 "handler_error": self.error,
                 "handler_error_msg": self.error_msg
             }
