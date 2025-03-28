@@ -851,6 +851,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "check-version": version,
                 "current_time": config.local_time().strftime('%d.%m.%Y %H:%M:%S'),
                 "start_time": api_start,
+                "up_time": round(time.time() - api_start_tc),
                 "database": {},
                 "devices": {
                     "cameras": {},
@@ -899,6 +900,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             for cam_id in camera:
                 api_response["STATUS"]["video_recording"][cam_id] = {}
                 active = camera[cam_id].active
+                api_response["STATUS"]["server_object_queues"]["archive_"+cam_id] = len(camera[cam_id].object.detect_queue_archive)
                 if camera[cam_id].if_error():
                     active = False
                 if camera[cam_id].video.recording or camera[cam_id].video.processing:
@@ -917,7 +919,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         "error":      camera[cam_id].if_error(),
                         "info":       {}
                     }
-                api_response["STATUS"]["server_object_queues"]["archive_"+cam_id] = len(camera[cam_id].object.detect_queue_archive)
                 api_response["STATUS"]["server_object_queues"]["image_"+cam_id] = len(camera[cam_id].object.detect_queue_image)
 
         if command in api_commands["status_small"]:

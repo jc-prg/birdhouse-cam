@@ -98,6 +98,7 @@ function birdhouseStatus_print(data) {
     if (pages_settings.includes(app_active_page))           { birdhouseStatus_system(data); }
     if (pages_settings.includes(app_active_page))           { birdhouseStatus_processing(data); }
     if (pages_settings.includes(app_active_page))           { birdhouseFunction_relays(data); }
+    if (pages_settings.includes(app_active_page))           { birdhouse_settings.server_dashboard_fill(data); }
     if (app_active_page == "DEVICE_SETTINGS")               { birdhouseStatus_sensors(data); }
 
     if (app_active_page == "INDEX" || "CAMERA_SETTINGS")    { birdhouseStatus_cameras(data); }

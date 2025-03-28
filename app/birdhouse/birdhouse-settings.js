@@ -183,6 +183,7 @@ function birdhouse_app_settings (name="Settings") {
 
         var open_settings = {
             "app_info_01"           : true,
+            "server_dashboard"      : true,
             "device_info"           : false,
             "process_info"          : false,
             "server_info"           : false,
@@ -201,6 +202,9 @@ function birdhouse_app_settings (name="Settings") {
 
         html_entry = this.app_information();
         html += birdhouse_OtherGroup( "app_info_01", "App (module versions)", html_entry, open_settings["app_info_01"] );
+
+        html_entry = this.server_dashboard();
+        html += birdhouse_OtherGroup( "server_dashboard", "Overview", html_entry, open_settings["server_dashboard"] );
 
         html_entry = this.device_information();
         html += birdhouse_OtherGroup( "device_info", "Devices", html_entry, open_settings["device_info"] );
@@ -286,55 +290,6 @@ function birdhouse_app_settings (name="Settings") {
         html += birdhouse_OtherGroup( "app_under_construction", "Development: Direct Links", html_entry, false, "settings" );
 
         return html;
-    }
-
-    this.server_side_settings = function() {
-        var settings = app_data["SETTINGS"];
-        var status   = app_data["STATUS"];
-        if (settings["server"]["rpi_active"])           { rpi_active = "true"; } else { rpi_active = "false"; }
-        if (settings["server"]["detection_active"])     { detection_active = "true"; } else { detection_active = "false"; }
-        if (settings["server"]["daily_clean_up"])       { daily_clean_up = "true"; } else { daily_clean_up = "false"; }
-
-        if (settings["server"]["database_server"] && settings["server"]["database_server"] != "") {
-            var link = "http://"+settings["server"]["database_server"]+":"+settings["server"]["database_port"]+"/_utils/";
-        }
-        else {
-            var link = "http://"+this.current_server+":"+settings["server"]["database_port"]+"/_utils/";
-        }
-
-        var html_internal = "";
-        html_internal += this.tab.start();
-        html_internal += this.tab.row("DB Server:&nbsp;",          settings["server"]["database_server"]);
-        html_internal += this.tab.row("DB Type:&nbsp;",            settings["server"]["database_type"]);
-        html_internal += this.tab.row("DB Daily Clean Up:&nbsp;",  daily_clean_up);
-        html_internal += this.tab.row("DB Port:&nbsp;",            settings["server"]["database_port"]);
-        html_internal += this.tab.row("DB Admin:",                 "<a href='"+link+"' target='_blank'>"+link+"</a>");
-        html_internal += this.tab.row("<hr/>");
-
-        html_internal += this.tab.row("HTTP Server:&nbsp;",        settings["server"]["ip4_address"]);
-        html_internal += this.tab.row("HTTP Port:&nbsp;",          settings["server"]["port"]);
-        html_internal += this.tab.row("Video stream port:&nbsp;",  settings["server"]["port_video"]);
-        html_internal += this.tab.row("Audio stream server:&nbsp;",settings["server"]["server_audio"]);
-        html_internal += this.tab.row("Audio stream port:&nbsp;",  settings["server"]["port_audio"]);
-        html_internal += this.tab.row("RPi Active:&nbsp;",         rpi_active);
-        html_internal += this.tab.row("Object detection:&nbsp;",   detection_active);
-
-        if (detection_active == true || detection_active == "true") {
-            var loading_info = status["object_detection"]["status"] + " - " + status["object_detection"]["status_details"];
-            if (status["object_detection"]["status"] == true)   { loading_info += " - " + JSON.stringify(status["object_detection"]["models_loaded"]).replaceAll(",", ", ").replaceAll(":", " : "); }
-            else                                                { loading_info = "<font color=" + header_color_error + ">" + loading_info + "</font>"; }
-            html_internal += this.tab.row("Object detection loaded:&nbsp;", loading_info);
-            }
-
-        html_internal += this.tab.row("<hr>");
-        html_internal += this.tab.row("Admin access via:&nbsp;",   settings["server"]["admin_login"]);
-        html_internal += this.tab.row("ADM Deny from IP4:&nbsp;",  settings["server"]["ip4_admin_deny"]);
-        html_internal += this.tab.row("ADM Allow from IP4:&nbsp;", settings["server"]["ip4_admin_allow"]);
-
-        html_internal += this.tab.row("&nbsp;");
-        html_internal += this.tab.end();
-
-        return html_internal;
     }
 
 	this.api_calls = function (show="all") {
@@ -439,54 +394,6 @@ function birdhouse_app_settings (name="Settings") {
 	    return html;
 	    }
 
-	this.server_performance = function () {
-        var answer = app_data["STATUS"]["server_performance"];
-        var html   = "&nbsp;<br/>";
-        var tab    = new birdhouse_table();
-        tab.style_cells["vertical-align"]   = "top";
-        tab.style_cells["max-width"]        = "50%";
-
-	    html += "<i><b>Server process durations:</i></b><br/>&nbsp;<br/>";
-	    html += tab.start();
-	    Object.keys(answer).sort().forEach(key => {
-	        var print_key     = key.replaceAll("_", " ");
-	        var print_entry   = tab.start();
-	        var print_update  = "";
-	        Object.keys(answer[key]).sort().forEach(device => {
-	            if (device == "last_update") { print_update = tab.row("<i>update:</i> ", "<i>" + answer[key][device].split(" ")[1]) + "</i>"; }
-	            else                         { print_entry += tab.row("<i>" + device + ":</i>", answer[key][device] + "s"); }
-	            });
-	        print_entry      += print_update;
-	        print_entry      += tab.row("&nbsp;");
-	        print_entry      += tab.end();
-            html             += tab.row(print_key + ":", print_entry);
-            });
-	    html += tab.end();
-	    html += "&nbsp;";
-	    return html;
-	    }
-
-	this.server_queues = function () {
-        var answer_1 = app_data["STATUS"]["server_config_queues"];
-        var answer_2 = app_data["STATUS"]["server_object_queues"];
-        var html     = "&nbsp;<br/>";
-        var tab      = new birdhouse_table();
-        tab.style_cells["vertical-align"] = "top";
-        tab.style_cells["max-width"] = "50%";
-
-	    html += "<i><b>Server queues size:</i></b><br/>&nbsp;<br/>";
-	    html += tab.start();
-	    Object.keys(answer_1).sort().forEach(key => {
-            html += tab.row("config &gt; " + key + ":", answer_1[key]);
-            });
-	    Object.keys(answer_2).sort().forEach(key => {
-            html += tab.row("object &gt; " + key + ":", answer_2[key]);
-            });
-	    html += tab.end();
-	    html += "&nbsp;";
-	    return html;
-	}
-
 	this.app_information = function () {
 	    var instance = " (prod)";
 	    if (test) { instance = " (test)"; }
@@ -529,33 +436,6 @@ function birdhouse_app_settings (name="Settings") {
         html_entry += this.tab.end();
         return html_entry;
     }
-
-	this.server_information = function () {
-        var html_entry = this.tab.start();
-    	html_entry += this.tab.row("Server Connection:",   "<div id='system_info_connection'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("Server start time:",   "<div id='system_info_start_time'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("Active Streams:",      "<div id='system_active_streams'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("Queue waiting time:",  "<div id='system_queue_wait'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("Health check:",        "<div id='system_health_check'>"+lang("PLEASE_WAIT")+"..</div>");
-        html_entry += this.tab.row("<hr/>");
-    	html_entry += this.tab.row("DB Connection:",       "<div id='system_info_db_connection'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("DB Handler:",          "<div id='system_info_db_handler'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("DB:",                  "<div id='system_info_db_error'>"+lang("PLEASE_WAIT")+"..</div>");
-        html_entry += this.tab.row("<hr/>");
-    	html_entry += this.tab.row("CPU Temperature:",     "<div id='system_info_cpu_temperature'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("CPU Usage:",           "<div id='system_info_cpu_usage'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("CPU Usage (Details):", "<div id='system_info_cpu_usage_detail'>"+lang("PLEASE_WAIT")+"..</div>");
-        html_entry += this.tab.row("<hr/>");
-    	html_entry += this.tab.row("Memory Used:",         "<div id='system_info_mem_used'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("Memory Total:",        "<div id='system_info_mem_total'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("HDD used:",            "<div id='system_info_hdd_used'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("HDD data:",            "<div id='system_info_hdd_data'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("HDD archive:",         "<div id='system_info_hdd_archive'>"+lang("PLEASE_WAIT")+"..</div>");
-    	html_entry += this.tab.row("HDD total:",           "<div id='system_info_hdd_total'>"+lang("PLEASE_WAIT")+"..</div>");
-        html_entry += this.tab.row("&nbsp;");
-        html_entry += this.tab.end();
-        return html_entry;
-	}
 
 	this.device_information = function () {
 	    var status   = app_data["STATUS"]["object_detection"];
@@ -613,6 +493,130 @@ function birdhouse_app_settings (name="Settings") {
  	    return html;
 	    }
 
+	this.server_performance = function () {
+        var answer = app_data["STATUS"]["server_performance"];
+        var html   = "&nbsp;<br/>";
+        var tab    = new birdhouse_table();
+        tab.style_cells["vertical-align"]   = "top";
+        tab.style_cells["max-width"]        = "50%";
+
+	    html += "<i><b>Server process durations:</i></b><br/>&nbsp;<br/>";
+	    html += tab.start();
+	    Object.keys(answer).sort().forEach(key => {
+	        var print_key     = key.replaceAll("_", " ");
+	        var print_entry   = tab.start();
+	        var print_update  = "";
+	        Object.keys(answer[key]).sort().forEach(device => {
+	            if (device == "last_update") { print_update = tab.row("<i>update:</i> ", "<i>" + answer[key][device].split(" ")[1]) + "</i>"; }
+	            else                         { print_entry += tab.row("<i>" + device + ":</i>", answer[key][device] + "s"); }
+	            });
+	        print_entry      += print_update;
+	        print_entry      += tab.row("&nbsp;");
+	        print_entry      += tab.end();
+            html             += tab.row(print_key + ":", print_entry);
+            });
+	    html += tab.end();
+	    html += "&nbsp;";
+	    return html;
+	    }
+
+    this.server_side_settings = function() {
+        var settings = app_data["SETTINGS"];
+        var status   = app_data["STATUS"];
+        if (settings["server"]["rpi_active"])           { rpi_active = "true"; } else { rpi_active = "false"; }
+        if (settings["server"]["detection_active"])     { detection_active = "true"; } else { detection_active = "false"; }
+        if (settings["server"]["daily_clean_up"])       { daily_clean_up = "true"; } else { daily_clean_up = "false"; }
+
+        if (settings["server"]["database_server"] && settings["server"]["database_server"] != "") {
+            var link = "http://"+settings["server"]["database_server"]+":"+settings["server"]["database_port"]+"/_utils/";
+        }
+        else {
+            var link = "http://"+this.current_server+":"+settings["server"]["database_port"]+"/_utils/";
+        }
+
+        var html_internal = "";
+        html_internal += this.tab.start();
+        html_internal += this.tab.row("DB Server:&nbsp;",          settings["server"]["database_server"]);
+        html_internal += this.tab.row("DB Type:&nbsp;",            settings["server"]["database_type"]);
+        html_internal += this.tab.row("DB Daily Clean Up:&nbsp;",  daily_clean_up);
+        html_internal += this.tab.row("DB Port:&nbsp;",            settings["server"]["database_port"]);
+        html_internal += this.tab.row("DB Admin:",                 "<a href='"+link+"' target='_blank'>"+link+"</a>");
+        html_internal += this.tab.row("<hr/>");
+
+        html_internal += this.tab.row("HTTP Server:&nbsp;",        settings["server"]["ip4_address"]);
+        html_internal += this.tab.row("HTTP Port:&nbsp;",          settings["server"]["port"]);
+        html_internal += this.tab.row("Video stream port:&nbsp;",  settings["server"]["port_video"]);
+        html_internal += this.tab.row("Audio stream server:&nbsp;",settings["server"]["server_audio"]);
+        html_internal += this.tab.row("Audio stream port:&nbsp;",  settings["server"]["port_audio"]);
+        html_internal += this.tab.row("RPi Active:&nbsp;",         rpi_active);
+        html_internal += this.tab.row("Object detection:&nbsp;",   detection_active);
+
+        if (detection_active == true || detection_active == "true") {
+            var loading_info = status["object_detection"]["status"] + " - " + status["object_detection"]["status_details"];
+            if (status["object_detection"]["status"] == true)   { loading_info += " - " + JSON.stringify(status["object_detection"]["models_loaded"]).replaceAll(",", ", ").replaceAll(":", " : "); }
+            else                                                { loading_info = "<font color=" + header_color_error + ">" + loading_info + "</font>"; }
+            html_internal += this.tab.row("Object detection loaded:&nbsp;", loading_info);
+            }
+
+        html_internal += this.tab.row("<hr>");
+        html_internal += this.tab.row("Admin access via:&nbsp;",   settings["server"]["admin_login"]);
+        html_internal += this.tab.row("ADM Deny from IP4:&nbsp;",  settings["server"]["ip4_admin_deny"]);
+        html_internal += this.tab.row("ADM Allow from IP4:&nbsp;", settings["server"]["ip4_admin_allow"]);
+
+        html_internal += this.tab.row("&nbsp;");
+        html_internal += this.tab.end();
+
+        return html_internal;
+    }
+
+	this.server_queues = function () {
+        var answer_1 = app_data["STATUS"]["server_config_queues"];
+        var answer_2 = app_data["STATUS"]["server_object_queues"];
+        var html     = "&nbsp;<br/>";
+        var tab      = new birdhouse_table();
+        tab.style_cells["vertical-align"] = "top";
+        tab.style_cells["max-width"] = "50%";
+
+	    html += "<i><b>Server queues size:</i></b><br/>&nbsp;<br/>";
+	    html += tab.start();
+	    Object.keys(answer_1).sort().forEach(key => {
+            html += tab.row("config &gt; " + key + ":", answer_1[key]);
+            });
+	    Object.keys(answer_2).sort().forEach(key => {
+            html += tab.row("object &gt; " + key + ":", answer_2[key]);
+            });
+	    html += tab.end();
+	    html += "&nbsp;";
+	    return html;
+	}
+
+	this.server_information = function () {
+        var html_entry = this.tab.start();
+    	html_entry += this.tab.row("Server Connection:",   "<div id='system_info_connection'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("Server start time:",   "<div id='system_info_start_time'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("Active Streams:",      "<div id='system_active_streams'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("Queue waiting time:",  "<div id='system_queue_wait'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("Health check:",        "<div id='system_health_check'>"+lang("PLEASE_WAIT")+"..</div>");
+        html_entry += this.tab.row("<hr/>");
+    	html_entry += this.tab.row("DB Connection:",       "<div id='system_info_db_connection'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("DB Handler:",          "<div id='system_info_db_handler'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("DB:",                  "<div id='system_info_db_error'>"+lang("PLEASE_WAIT")+"..</div>");
+        html_entry += this.tab.row("<hr/>");
+    	html_entry += this.tab.row("CPU Temperature:",     "<div id='system_info_cpu_temperature'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("CPU Usage:",           "<div id='system_info_cpu_usage'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("CPU Usage (Details):", "<div id='system_info_cpu_usage_detail'>"+lang("PLEASE_WAIT")+"..</div>");
+        html_entry += this.tab.row("<hr/>");
+    	html_entry += this.tab.row("Memory Used:",         "<div id='system_info_mem_used'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("Memory Total:",        "<div id='system_info_mem_total'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("HDD used:",            "<div id='system_info_hdd_used'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("HDD data:",            "<div id='system_info_hdd_data'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("HDD archive:",         "<div id='system_info_hdd_archive'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_entry += this.tab.row("HDD total:",           "<div id='system_info_hdd_total'>"+lang("PLEASE_WAIT")+"..</div>");
+        html_entry += this.tab.row("&nbsp;");
+        html_entry += this.tab.end();
+        return html_entry;
+	}
+
 	this.app_under_construction = function() {
 		var html_entry = this.tab.start();
 		link = RESTurl + "stream.mjpg?cam1";
@@ -638,6 +642,69 @@ function birdhouse_app_settings (name="Settings") {
         return html_entry;
 	}
 
+	this.server_dashboard = function () {
+	    var html = "";
+	    var data    = app_data["STATUS"];
+	    var data_a  = appFW.getAverageRequestDurations();
+	    var data_c  = app_data["SETTINGS"]["devices"]["cameras"];
+	    var data_p  = data["server_performance"];
+	    var data_q  = {"config" : 0, "object" : 0};
+
+        html     += this.set.dashboard_item(id="server_up_time",   type="number", title="Server up time",   description=data["start_time"], color="blue", initial_value="0");
+        html     += this.set.dashboard_item(id="server_boot_time", type="number", title="Server boot time", description=data["start_time"], color="blue", initial_value=Math.round(data_p["server"]["boot"]*10)/10+"s");
+        html     += this.set.dashboard_item(id="api_status_request", type="number", title="API", description="Status request", color="blue", initial_value=Math.round(data_a["/status"]*1000)/1000+"s");
+
+        if (data["server_config_queues"]) {
+            Object.keys(data["server_config_queues"]).forEach(key => { data_q["config"] += data["server_config_queues"][key]; });
+            html     += this.set.dashboard_item(id="config_queue_wait", type="number", title="Config queue", description="current waiting time", color="blue", initial_value=(data_p["config"]["queue"]*-1)+"s");
+            html     += this.set.dashboard_item(id="config_queue_write", type="number", title="Config queue", description="time to write config", color="blue", initial_value=Math.round(data_p["config"]["write"]*100)/100+"s");
+            html     += this.set.dashboard_item(id="config_queue_size", type="number", title="Config queue", description="entries in the queue", color="blue", initial_value=data_q["config"]);
+            }
+        if (data["server_object_queues"]) {
+            Object.keys(data["server_object_queues"]).forEach(key => { data_q["object"] += data["server_object_queues"][key]; });
+            html     += this.set.dashboard_item(id="object_queue_size", type="number", title="Object queue", description="entries in the queue", color="blue", initial_value=data_q["object"]);
+            }
+        Object.keys(data_c).forEach(key => {
+            if (data_p["camera_recording_image"][key]) {
+                html += this.set.dashboard_item(id="record_image_"+key, type="number", title="Image recording", description=key, color="blue", initial_value=data_p["camera_recording_image"][key]+"s");
+                }
+            });
+        if (data_p["object_detection"]) {
+            html     += this.set.dashboard_item(id="server_boot_time", type="number", title="Object detection", description="detection time per image", color="blue", initial_value=data_p["object_detection"]["image"]);
+            }
+
+	    return html;
+	    }
+
+	this.server_dashboard_fill = function (data) {
+	    var status     = data["STATUS"];
+	    var status_cam = data["SETTINGS"]["devices"]["cameras"];
+	    var status_prf = status["server_performance"];
+	    var status_api = appFW.getAverageRequestDurations();
+	    var data_q     = {"config" : 0, "object" : 0};
+	    var up_time    = convert_second2time(status["up_time"]);
+
+        this.set.dashboard_item_fill(id="server_up_time",     value=up_time);
+        this.set.dashboard_item_fill(id="api_status_request", value=Math.round(status_api["/status"]*1000)/1000, unit="s", benchmark=true, warning=0.5, alarm=1.0);
+
+        if (status["server_config_queues"]) {
+            Object.keys(status["server_config_queues"]).forEach(key => { data_q["config"] += status["server_config_queues"][key]; });
+            this.set.dashboard_item_fill(id="config_queue_wait",    value=status_prf["config"]["queue"]*-1, unit="s", benchmark=true, warning=8, alarm=20);
+            this.set.dashboard_item_fill(id="config_queue_write",   value=status_prf["config"]["write"], unit="s", benchmark=true, warning=1, alarm=3);
+            this.set.dashboard_item_fill(id="config_queue_size",    value=data_q["config"], unit="", benchmark=true, warning=10, alarm=30);
+            }
+        if (status["server_object_queues"]) {
+            Object.keys(status["server_object_queues"]).forEach(key => { data_q["object"] += status["server_object_queues"][key]; });
+            this.set.dashboard_item_fill(id="object_queue_size",    value=data_q["object"], unit="", benchmark=true, warning=10, alarm=30);
+            }
+
+        Object.keys(status_cam).forEach(key => {
+            if (status_prf["camera_recording_image"][key]) {
+                html += this.set.dashboard_item_fill(id="record_image_"+key, value=status_prf["camera_recording_image"][key], unit="s", benchmark=true, warning=0.5, alarm=1.0);
+                }
+            });
+	    }
+
 	this.toggle	= function (active=false) {
 	
 		if (active)	{ view_frame = "block"; view_settings = "none";  app_settings_active = false; window.scrollTo(0,0); }
@@ -652,6 +719,7 @@ function birdhouse_app_settings (name="Settings") {
 			element.style.display = view_settings;
 			}
 		}
+
 }
 
 app_scripts_loaded += 1;

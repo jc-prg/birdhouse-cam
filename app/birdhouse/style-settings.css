@@ -16,18 +16,6 @@
    opacity    : 0.9;
 }
 
-.settings_error_msg {
-    font-family : sans-serif;
-    font-size   : 8px;
-    width       : 95%;
-    height      : 100px;
-    margin      : 3px;
-
-    background-color    : #FFFFDD;
-    border-radius       : 3px;
-    border              : solid 1px red;
-}
-
 @media (min-width: 320px and max-width: 706px) {
     .setting_bg.header  { width : 342px; }
 }
@@ -56,52 +44,6 @@
 #settings.h3 {
         font-size:15px;
         }
-
-#error_log {
-        font-size  : 12px;
-        text-align : left;
-        overflow   : auto;
-
-        width      : 97%;
-        height     : 200px;
-        float      : left;
-        margin     : 2px;
-        padding    : 2px;
-
-	font-face	: sanserif;
-	font-size	: 10px;
-	color		: black;
-
-        border          : red;
-        border-radius   : 5px;   
-        border-style    : solid;
-        border-width    : 1px;
-        background-color: khaki;
-        opacity         : 0.9;
-        z-index         : 80;
-
-	position: relative;
-	top: 0px;
-}
-
-
-#error_msg {
-	display    : none; 
-	width      : 250px; 
-	margin     : 0 auto; 
-	padding    : 10px;
-	position   : relative;
-	left       : 0;
-	top        : 10px;
-	z-index    : 10; 
-	background : white; 
-	border     : 2px solid #cccccc; 
-	border-radius:10px; 
-
-        font-family: Helvetica;
-        text-align : center;
-/*        overflow   : auto; */
-}
 
 .button-settings-api {
     background-color    : lightgray;
@@ -135,10 +77,64 @@
     border          : solid 2px #5555AA;
     }
 
-@media (max-width: 706px) {
-    .button-settings-system { width : 32%; }
+@media (max-width: 706px)   { .button-settings-system { width : 32%; } }
+@media (min-width: 1250px)  { .button-settings-system { width : 19%; } }
+
+/* ERROR MSG --------------------------------- */
+
+.settings_error_msg {
+    font-family : sans-serif;
+    font-size   : 8px;
+    width       : 95%;
+    height      : 100px;
+    margin      : 3px;
+
+    background-color    : #FFFFDD;
+    border-radius       : 3px;
+    border              : solid 1px red;
 }
 
-@media (min-width: 1250px) {
-    .button-settings-system { width : 19%; }
+#error_log {
+        font-size  : 12px;
+        text-align : left;
+        overflow   : auto;
+
+        width      : 97%;
+        height     : 200px;
+        float      : left;
+        margin     : 2px;
+        padding    : 2px;
+
+	font-face	: sanserif;
+	font-size	: 10px;
+	color		: black;
+
+        border          : red;
+        border-radius   : 5px;
+        border-style    : solid;
+        border-width    : 1px;
+        background-color: khaki;
+        opacity         : 0.9;
+        z-index         : 80;
+
+	position: relative;
+	top: 0px;
+}
+
+#error_msg {
+	display    : none;
+	width      : 250px;
+	margin     : 0 auto;
+	padding    : 10px;
+	position   : relative;
+	left       : 0;
+	top        : 10px;
+	z-index    : 10;
+	background : white;
+	border     : 2px solid #cccccc;
+	border-radius:10px;
+
+        font-family: Helvetica;
+        text-align : center;
+/*        overflow   : auto; */
 }
