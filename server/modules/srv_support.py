@@ -11,7 +11,8 @@ from modules.presets import *
 
 class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
-    def __init__(self, config, maintain=False):
+    def __init__(self, config, server, maintain=False):
+        self.server = server
         self._shutdown_signal_file = "/tmp/birdhouse-cam-shutdown"
         self._wait_till_start = 60
         if not maintain:
@@ -38,6 +39,14 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
         while self._running:
             self.thread_wait()
             self.thread_control()
+
+            if self.config.thread_ctrl["shutdown"]:
+                time.sleep(5)
+                self.config.shut_down = False
+                self.logging.info("FINALLY KILLING ALL PROCESSES NOW!")
+                self.server.server_close()
+                self.server.shutdown()
+                return
 
             if last_update + self._interval_check < time.time():
                 self.logging.info("Health check ...")

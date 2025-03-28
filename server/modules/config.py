@@ -1458,6 +1458,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.thread_status = {}
         self.thread_ctrl = {
             "shutdown": False,
+            "restart": False,
             "priority": {
                 "process": False,
                 "pid": ""

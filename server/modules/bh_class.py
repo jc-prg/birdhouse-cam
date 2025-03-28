@@ -282,6 +282,7 @@ class BirdhouseClass(object):
         """
         self.health_signal()
         if self.config is not None and self.config.thread_ctrl["shutdown"]:
+            self.thread_set_priority(1)
             self.stop()
 
     def thread_slowdown(self, slowdown=True):

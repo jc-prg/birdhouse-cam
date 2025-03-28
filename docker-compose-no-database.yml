@@ -28,26 +28,6 @@ services:
         limits:
           memory: ${MEMORY_MAX_APP:-50M}
 
-  birdhouse_db:
-    image:  ${IMAGE_DB:-matthiasg/rpi-couchdb:latest}
-    container_name: birdhouse_db
-    ports:
-      - "${COUCHDB_PORT}:5984"
-    volumes:
-      - ./data/couchdb:/opt/couchdb/data
-      - ./config/couchdb/default.ini:/opt/couchdb/etc/default.ini
-    environment:
-      - 'COUCHDB_USER=${COUCHDB_USER}'
-      - 'COUCHDB_PASSWORD=${COUCHDB_PASSWORD}'
-    deploy:
-      resources:
-        limits:
-          memory: ${MEMORY_MAX_COUCHDB:-200M}
-    restart: ${RESTART_DB:-on-failure}
-    networks:
-      my-net:
-        ipv4_address: 192.168.202.3
-
   birdhouse_server:
     build: ${CONTAINER_SERVER:-./config/container_rpi/}
     container_name: birdhouse_server
@@ -60,8 +40,6 @@ services:
       - /dev/v4l/:/dev/v4l/
     ports:
       - "${BIRDHOUSE_API_PORT}:${BIRDHOUSE_API_PORT}"
-    depends_on:
-      - birdhouse_db
     deploy:
       resources:
         limits:

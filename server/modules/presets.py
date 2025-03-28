@@ -48,6 +48,7 @@ def set_global_configuration():
         "dir_logging": "BIRDHOUSE_DIR_LOGGING",
         "http_server": "BIRDHOUSE_HTTP_SERVER",
         "installation_type": "BIRDHOUSE_INSTALLATION_TYPE",
+        "restart_server": "RESTART_SERVER",
         "log_level": "BIRDHOUSE_LOG_LEVEL",
         "log_level_debug": "BIRDHOUSE_LOG_DEBUG",
         "log_level_info": "BIRDHOUSE_LOG_INFO",

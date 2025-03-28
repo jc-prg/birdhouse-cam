@@ -668,11 +668,17 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = {"backup": "started"}
         elif param["command"] == "force-restart":
             srv_logging.info("---------------------------------------------")
-            srv_logging.info("FORCE SHUTDOWN OF BIRDHOUSE SERVER ...")
+            srv_logging.info("FORCE RESTART OF BIRDHOUSE SERVER ...")
             srv_logging.info("---------------------------------------------")
             config.force_shutdown()
             health_check.set_start()
-            response = {"shutdown": "started"}
+            response = {"shutdown": "started", "mode": "restart"}
+        elif param["command"] == "force-shutdown":
+            srv_logging.info("---------------------------------------------")
+            srv_logging.info("FORCE SHUTDOWN OF BIRDHOUSE SERVER ...")
+            srv_logging.info("---------------------------------------------")
+            config.force_shutdown()
+            response = {"shutdown": "started", "mode": "shutdown"}
         elif param["command"] == "check-timeout":
             time.sleep(30)
             response = {"check": "timeout"}
@@ -734,14 +740,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         check path and send requested content
         """
         global camera, sensor, config
-
-        if config.thread_ctrl["shutdown"]:
-            time.sleep(5)
-            config.shut_down = False
-            srv_logging.info("FINALLY KILLING ALL PROCESSES NOW!")
-            server.server_close()
-            server.shutdown()
-            return
 
         config.user_activity("set")
         param = self.path_split()
@@ -1100,6 +1098,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "ip4_admin_allow": birdhouse_env["admin_ip4_allow"],
                 "admin_login": birdhouse_env["admin_login"],
                 "rpi_active": birdhouse_env["rpi_active"],
+                "server_mode": birdhouse_env["installation_type"],
+                "server_restart": birdhouse_env["restart_server"],
                 "detection_active": birdhouse_env["detection_active"]
             }
             api_response["SETTINGS"]["server"] = server_config
@@ -1657,17 +1657,22 @@ if __name__ == "__main__":
         if test_config == {}:
             backup.create_video_config()
 
-    # start health check
-    health_check = ServerHealthCheck(config)
-    health_check.start()
+
 
     # Start Webserver
     try:
+        # start API
         address = ('', int(birdhouse_env["port_api"]))
         server = StreamingServerIPv6(address, StreamingHandler)
+
+        # start health check
+        health_check = ServerHealthCheck(config, server)
+        health_check.start()
+
         srv_logging.info("Starting REST API on port " + str(birdhouse_env["port_api"]) + " ...")
         srv_logging.info("WebServer running on port " + str(birdhouse_env["port_http"]) + " ...")
         srv_logging.info(" -----------------------------> GO!\n")
+
         server.serve_forever()
         srv_logging.info("STOPPED SERVER.")
 
@@ -1678,25 +1683,13 @@ if __name__ == "__main__":
 
     # Stop all processes to stop
     finally:
-        srv_logging.info("Start stopping threads ...")
-        health_check.stop()
-        sys_info.stop()
-        config.stop()
-        backup.stop()
-        for cam in camera:
-            camera[cam].stop()
-        for sen in sensor:
-            sensor[sen].stop()
-        for relay in relays:
-            relays[relay].stop()
-        views.stop()
-
         server.server_close()
         server.shutdown()
-        time.sleep(5)
         srv_logging.info("Stopped WebServer.")
         srv_logging.info("---------------------------------------------")
+        srv_logging.info("Looking for left over threads ...")
 
+        time.sleep(5)
         count_running_threads = 0
         for thread in threading.enumerate():
             if thread.name != "MainThread":
