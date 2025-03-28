@@ -602,15 +602,13 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
             count_files = 0
             active_files = []
 
-            self.config.set_processing_performance("config", "queue", self.queue_wait + time.time())
-
             if start_time + self.queue_wait < time.time():
+                start_time = time.time()
+                self.config.set_processing_performance("config", "queue", self.queue_wait + time.time())
                 self.logging.debug("... Check Queue (" + str(self.queue_wait) + "s)")
                 self.logging.debug("    ... edit:   " + str(len(self.edit_queue)))
                 self.logging.debug("    ... range:  " + str(len(self.range_queue)))
                 self.logging.debug("    ... status: " + str(len(self.status_queue)))
-
-                start_time = time.time()
 
                 # check first if entries are available
                 entries_available = False
@@ -628,6 +626,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                 entries_available = True
 
                 if entries_available:
+                    start_time_available = time.time()
                     self.logging.debug("... Entries available in the queue (" +
                                        str(round(time.time() - start_time, 2)) + "s)")
 
@@ -667,6 +666,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                             self.queue_wait -= 3
 
                         time.sleep(1)
+
+                    self.config.set_processing_performance("config", "available", start_time_available)
 
             if start_time_2 + self.queue_wait_max * 6 < time.time():
                 self.logging.info("Queue: wrote " + str(check_count_entries) + " entries since the last " +
