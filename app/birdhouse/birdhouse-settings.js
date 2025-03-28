@@ -685,7 +685,7 @@ function birdhouse_app_settings (name="Settings") {
 	    var up_time    = convert_second2time(status["up_time"]);
 
 	    this.round = function(value) {
-	        if (value > 1)       { value = Math.round(value*1000)/1000}
+	        if (value < 1)       { value = Math.round(value*1000)/1000}
 	        else if (value < 10) { value = Math.round(value*100)/100}
 	        else                 { value = Math.round(value*10)/10}
 	        return value;
