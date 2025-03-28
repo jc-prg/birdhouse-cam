@@ -601,6 +601,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
             count_entries = 0
             count_files = 0
             active_files = []
+            self.config.processing_performance["config"]["queue"] = [self.queue_wait]
+            self.config.processing_performance["config"]["last_update"] = self.config.local_time().split(".")[0]
 
             if start_time + self.queue_wait < time.time():
                 self.logging.debug("... Check Queue (" + str(self.queue_wait) + "s)")
@@ -1458,7 +1460,6 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.thread_status = {}
         self.thread_ctrl = {
             "shutdown": False,
-            "restart": False,
             "priority": {
                 "process": False,
                 "pid": ""
