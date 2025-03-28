@@ -684,13 +684,20 @@ function birdhouse_app_settings (name="Settings") {
 	    var data_q     = {"config" : 0, "object" : 0};
 	    var up_time    = convert_second2time(status["up_time"]);
 
+	    this.round = function(value) {
+	        if (value > 1)       { value = Math.round(value*1000)/1000}
+	        else if (value < 10) { value = Math.round(value*100)/100}
+	        else                 { value = Math.round(value*10)/10}
+	        return value;
+	        }
+
         this.set.dashboard_item_fill(id="server_up_time",     value=up_time);
-        this.set.dashboard_item_fill(id="api_status_request", value=Math.round(status_api["/status"]*1000)/1000, unit="s", benchmark=true, warning=0.5, alarm=1.0);
+        this.set.dashboard_item_fill(id="api_status_request", value=this.round(status_api["/status"]), unit="s", benchmark=true, warning=0.5, alarm=1.0);
 
         if (status["server_config_queues"]) {
             Object.keys(status["server_config_queues"]).forEach(key => { data_q["config"] += status["server_config_queues"][key]; });
-            this.set.dashboard_item_fill(id="config_queue_wait",    value=status_prf["config"]["queue"]*-1, unit="s", benchmark=true, warning=8, alarm=20);
-            this.set.dashboard_item_fill(id="config_queue_write",   value=Math.round(status_prf["config"]["write"]*1000)/1000, unit="s", benchmark=true, warning=1, alarm=3);
+            this.set.dashboard_item_fill(id="config_queue_wait",    value=this.round(status_prf["config"]["queue"]*-1), unit="s", benchmark=true, warning=8, alarm=20);
+            this.set.dashboard_item_fill(id="config_queue_write",   value=this.round(status_prf["config"]["write"]), unit="s", benchmark=true, warning=1, alarm=3);
             this.set.dashboard_item_fill(id="config_queue_size",    value=data_q["config"], unit="", benchmark=true, warning=10, alarm=30);
             }
         if (status["server_object_queues"]) {
@@ -699,15 +706,15 @@ function birdhouse_app_settings (name="Settings") {
             }
         Object.keys(status_cam).forEach(key => {
             if (status_prf["camera_recording_image"][key]) {
-                html += this.set.dashboard_item_fill(id="record_image_"+key, value=Math.round(status_prf["camera_recording_image"][key]*1000)/1000, unit="s", benchmark=true, warning=0.5, alarm=1.0);
+                html += this.set.dashboard_item_fill(id="record_image_"+key, value=this.round(status_prf["camera_recording_image"][key]), unit="s", benchmark=true, warning=0.5, alarm=1.0);
                 }
             });
         if (status_prf["object_detection"]) {
-            html += this.set.dashboard_item_fill(id="object_detection", value=Math.round(status_prf["object_detection"]["image"]*100)/100, unit="s", benchmark=true, warning=6, alarm=12);
+            html += this.set.dashboard_item_fill(id="object_detection", value=this.round(status_prf["object_detection"]["image"]), unit="s", benchmark=true, warning=6, alarm=12);
             }
         if (status["database"]["type"] == "json" || status["database"]["type"] == "both") {
-            html += this.set.dashboard_item_fill(id="locked_db", value=status["database"]["db_locked_json"], unit="", benchmark=true, warning=2, alarm=4);
-            html += this.set.dashboard_item_fill(id="locked_db_wait", value=status["database"]["db_waiting_json"], unit="s", benchmark=true, warning=2, alarm=4);
+            html += this.set.dashboard_item_fill(id="locked_db",      value=status["database"]["db_locked_json"], unit="", benchmark=true, warning=2, alarm=4);
+            html += this.set.dashboard_item_fill(id="locked_db_wait", value=this.round(status["database"]["db_waiting_json"]), unit="s", benchmark=true, warning=2, alarm=4);
             }
 	    }
 
