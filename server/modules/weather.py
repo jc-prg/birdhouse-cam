@@ -566,7 +566,7 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
             self.thread_control()
             self.thread_wait()
 
-        self.logging.info("Weather module stopped.")
+        self.logging.info("Stopped weather module.")
 
     def stop(self):
         """
