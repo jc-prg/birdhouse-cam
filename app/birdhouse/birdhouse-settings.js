@@ -645,34 +645,30 @@ function birdhouse_app_settings (name="Settings") {
 	this.server_dashboard = function () {
 	    var html = "";
 	    var data    = app_data["STATUS"];
-	    var data_a  = appFW.getAverageRequestDurations();
-	    var data_c  = app_data["SETTINGS"]["devices"]["cameras"];
 	    var data_p  = data["server_performance"];
-	    var data_q  = {"config" : 0, "object" : 0};
 
-        html     += this.set.dashboard_item(id="server_up_time",   type="number", title="Server up time",   description=data["start_time"], color="blue", initial_value="0");
+        html     += this.set.dashboard_item(id="server_up_time",   type="number", title="Server up time",   description=data["start_time"]);
         html     += this.set.dashboard_item(id="server_boot_time", type="number", title="Server boot time", description=data["start_time"], color="blue", initial_value=Math.round(data_p["server"]["boot"]*10)/10+"s");
-        html     += this.set.dashboard_item(id="api_status_request", type="number", title="API", description="Status request", color="blue", initial_value=Math.round(data_a["/status"]*1000)/1000+"s");
+        html     += this.set.dashboard_item(id="api_status_request", type="number", title="API", description="Status request");
 
         if (data["server_config_queues"]) {
-            Object.keys(data["server_config_queues"]).forEach(key => { data_q["config"] += data["server_config_queues"][key]; });
-            html     += this.set.dashboard_item(id="config_queue_wait", type="number", title="Config queue", description="current waiting time", color="blue", initial_value=(data_p["config"]["queue"]*-1)+"s");
-            html     += this.set.dashboard_item(id="config_queue_write", type="number", title="Config queue", description="time to write config", color="blue", initial_value=Math.round(data_p["config"]["write"]*100)/100+"s");
-            html     += this.set.dashboard_item(id="config_queue_size", type="number", title="Config queue", description="entries in the queue", color="blue", initial_value=data_q["config"]);
+            html     += this.set.dashboard_item(id="config_queue_wait", type="number", title="Config queue", description="current waiting time");
+            html     += this.set.dashboard_item(id="config_queue_write", type="number", title="Config queue", description="time to write config");
+            html     += this.set.dashboard_item(id="config_queue_size", type="number", title="Config queue", description="entries in the queue");
             }
         if (data["server_object_queues"]) {
-            Object.keys(data["server_object_queues"]).forEach(key => { data_q["object"] += data["server_object_queues"][key]; });
-            html     += this.set.dashboard_item(id="object_queue_size", type="number", title="Object queue", description="entries in the queue", color="blue", initial_value=data_q["object"]);
+            html     += this.set.dashboard_item(id="object_queue_size", type="number", title="Object queue", description="entries in the queue");
             }
-        Object.keys(data_c).forEach(key => {
-            if (data_p["camera_recording_image"][key]) {
-                html += this.set.dashboard_item(id="record_image_"+key, type="number", title="Image recording", description=key, color="blue", initial_value=data_p["camera_recording_image"][key]+"s");
+        Object.keys(app_data["SETTINGS"]["devices"]["cameras"]).forEach(key => {
+            if (data["server_performance"]["camera_recording_image"][key]) {
+                html += this.set.dashboard_item(id="record_image_"+key, type="number", title="Image recording", description=key);
                 }
             });
         if (data_p["object_detection"]) {
-            html     += this.set.dashboard_item(id="server_boot_time", type="number", title="Object detection", description="detection time per image", color="blue", initial_value=data_p["object_detection"]["image"]);
+            html     += this.set.dashboard_item(id="server_boot_time", type="number", title="Object detection", description="detection time per image");
             }
 
+	    setTimeout(function() {birdhouse_settings.server_dashboard_fill(app_data);}, 1000);
 	    return html;
 	    }
 
