@@ -1732,6 +1732,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         while self._running:
             current_time = self.config.local_time()
+            start_time_control = time.time()
             stamp = current_time.strftime('%H%M%S')
 
             if self.config.update["camera_" + self.id]:
@@ -1746,6 +1747,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.logging.info("update " + str(self.config_update) + " | small " + str(self.config_update_small) + " | reload " + str(self.reload_camera))
 
             if self.active:
+                start_time_processing = time.time()
 
                 # reset some settings end of the day
                 if self.date_last != self.config.local_time().strftime("%Y-%m-%d"):
@@ -1775,8 +1777,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
                     # Image recording (only while not recording video)
                     elif self.record:
+                        start_time_record = time.time()
                         self.image_recording(current_time, stamp, similarity, sensor_last)
                         self.image_recording_auto_light()
+                        self.config.set_processing_performance("camera_recording_image", self.id, start_time_record)
 
                     # Check and record active streams
                     self.measure_usage()
@@ -1796,6 +1800,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 else:
                     self.slow_down_streams(False)
 
+                self.config.set_processing_performance("camera_processing_image", self.id, start_time_processing)
+
             # start or reload camera connection
             if self.config_update_small:
                 self.logging.info("Updating configuration for CAMERA '" + self.id + "' (" +
@@ -1803,11 +1809,15 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.update_main_config(reload=False)
 
             if self.config_update or self.reload_camera:
+                start_time_update = time.time()
                 self.logging.info("Updating configuration and reconnecting CAMERA '" + self.id + "' (" +
                                   self.param["name"] + "/" + str(self.param["active"]) + ") ...")
                 self.update_main_config()
                 self.set_streams_active(active=True)
                 self.reconnect(directly=True)
+                self.config.set_processing_performance("camera_reconnect", self.id, start_time_update)
+
+            self.config.set_processing_performance("camera_control", self.id, start_time_control)
 
             # Define thread priority and waiting time depending on running tasks
             if self.active and self.record and not self.video.recording and not self.error:

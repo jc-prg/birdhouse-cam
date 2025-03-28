@@ -1488,6 +1488,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.camera_scan = {}
 
         self.processing_information = {}
+        self.processing_performance = {}
+
         self.object_detection_processing = None
         self.object_detection_progress = None
         self.object_detection_waiting = None
@@ -2059,4 +2061,57 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 return None
         else:
             return None
+        
+    def set_processing_performance(self, category, object_id, start, end=None):
+        """
+        save performance information in a central place
+
+        Args:
+            category (str): category of performance information
+            id (str): id of the object
+            start (float): start time of the process
+            end (float): end time of the process
+        """
+        if not end:
+            end = time.time()
+        value = end - start
+        if object_id == "":
+            object_id = "default"
+        if category not in self.processing_performance:
+            self.processing_performance[category] = {}
+        if not object_id in self.processing_performance[category]:
+            self.processing_performance[category][object_id] = []
+
+        self.processing_performance[category][object_id].append(value)
+        if len(self.processing_performance[category][object_id]) > 20:
+            self.processing_performance[category][object_id].pop(0)
+        self.processing_performance[category]["last_update"] = str(self.local_time()).split(".")[0]
+
+    def get_processing_performance(self, category=""):
+        """
+        Returns average processing performance information of the last 20 or all existing values
+
+        Args:
+            category (str): category of performance information
+
+        Returns:
+            dict: list of performance information
+        """
+        round_digits = 4
+        averaged_processing_performance = {}
+
+        for key in self.processing_performance:
+            if key not in averaged_processing_performance:
+                averaged_processing_performance[key] = {}
+
+            for object_id in self.processing_performance[key]:
+                if object_id != "last_update":
+                    averaged_processing_performance[key][object_id] = round(sum(self.processing_performance[key][object_id]) / len(self.processing_performance[key][object_id]), round_digits)
+                else:
+                    averaged_processing_performance[key][object_id] =self.processing_performance[key][object_id]
+
+        if category == "":
+            return averaged_processing_performance
+        else:
+            return averaged_processing_performance[category]
 

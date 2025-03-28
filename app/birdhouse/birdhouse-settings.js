@@ -97,9 +97,6 @@ function birdhouse_app_settings (name="Settings") {
         html_entry = this.process_information();
         html += birdhouse_OtherGroup( "process_info", "Process Information &nbsp;<div id='processing_info_header'></div>", html_entry, open_settings["process_info"] );
 
-        html_entry = this.api_information();
-        html += birdhouse_OtherGroup( "api_info", "API Information &nbsp;<div id='api_info_header'></div>", html_entry, open_settings["api_info"] );
-
         html_entry = this.server_information();
         html += birdhouse_OtherGroup( "server_info", "Server Information &nbsp;<div id='server_info_header'></div>", html_entry, open_settings["server_info"] );
 
@@ -200,22 +197,25 @@ function birdhouse_app_settings (name="Settings") {
         var html_entry = "";
 
         html_entry = this.app_information();
-        html += birdhouse_OtherGroup( "app_info_01", "App Information (Versions)", html_entry, open_settings["app_info_01"] );
+        html += birdhouse_OtherGroup( "app_info_01", "App (module versions)", html_entry, open_settings["app_info_01"] );
 
         html_entry = this.device_information();
-        html += birdhouse_OtherGroup( "device_info", "Device Information", html_entry, open_settings["device_info"] );
+        html += birdhouse_OtherGroup( "device_info", "Devices", html_entry, open_settings["device_info"] );
 
         html_entry = this.process_information();
-        html += birdhouse_OtherGroup( "process_info", "Process Information &nbsp;<div id='processing_info_header'></div>", html_entry, open_settings["process_info"] );
-
-        html_entry = this.api_information();
-        html += birdhouse_OtherGroup( "api_info", "API Information &nbsp;<div id='api_info_header'></div>", html_entry, open_settings["api_info"] );
+        html += birdhouse_OtherGroup( "process_info", "Processing &nbsp;<div id='processing_info_header'></div>", html_entry, open_settings["process_info"] );
 
         html_entry = this.server_information();
-        html += birdhouse_OtherGroup( "server_info", "Server Information &nbsp;<div id='server_info_header'></div>", html_entry, open_settings["server_info"] );
+        html += birdhouse_OtherGroup( "server_info", "Server &nbsp;<div id='server_info_header'></div>", html_entry, open_settings["server_info"] );
 
         html_entry = this.display_information();
-        html += birdhouse_OtherGroup( "display_info", "Display Information", html_entry, open_settings["display_info"] );
+        html += birdhouse_OtherGroup( "display_info", "Display", html_entry, open_settings["display_info"] );
+
+        html_entry = this.api_performance();
+        html += birdhouse_OtherGroup( "api_performance", "API performance &nbsp;<div id='api_info_header'></div>", html_entry, open_settings["api_info"] );
+
+        html_entry = this.server_performance();
+        html += birdhouse_OtherGroup( "server_performance", "Server performance &nbsp;<div id='api_info_header'></div>", html_entry, open_settings["api_info"] );
 
         return html;
         }
@@ -400,24 +400,49 @@ function birdhouse_app_settings (name="Settings") {
         return html_entry;
 	}
 
-	this.api_information = function () {
+	this.api_performance = function () {
+	    var answer = appFW.getAverageRequestDurations();
         var html = "&nbsp;<br/>";
         var tab  = new birdhouse_table();
-	    var answer = appFW.getAverageRequestDurations();
+        tab.style_cells["vertical-align"] = "top";
 
-        html += "<i><b>Average API response times per API request:</i></b><br/>&nbsp;<br/>";
-	    html += this.tab.start();
+        html += "<i><b>Response times per API request:</i></b><br/>&nbsp;<br/>";
+	    html += tab.start();
 	    Object.keys(answer).sort().forEach(key => {
 	        var key_print = key.replace(app_session_id, "");
 	        var key_parts = key.split("/");
 	        if (/^\d+$/.test(key_parts[1])) { key_print = key_print.replace("/" + key_parts[1],""); }
 	        if (key_print.indexOf("kill-stream") < 0) {
-	            html += this.tab.row(key_print, answer[key].toFixed(3)+"s");
+	            html += tab.row(key_print, answer[key].toFixed(4)+"s");
 	            }
 	        });
-	    html += this.tab.end();
+	    html += tab.end();
 	    html += "&nbsp;";
 
+	    return html;
+	    }
+
+	this.server_performance = function () {
+        var answer = app_data["STATUS"]["server_performance"];
+        var html   = "&nbsp;<br/>";
+        var tab    = new birdhouse_table();
+        tab.style_cells["vertical-align"] = "top";
+
+	    html += "<i><b>Server process durations:</i></b><br/>&nbsp;<br/>";
+	    html += tab.start();
+	    Object.keys(answer).sort().forEach(key => {
+	        var print_key     = key;
+	        var print_entry   = "";
+	        var print_update  = "";
+	        Object.keys(answer[key]).sort().forEach(device => {
+	            if (print_entry != "")       { print_entry += "<br/>"; }
+	            if (device == "last_update") { print_update = "<i>update:</i> " + answer[key][device].split(" ")[1] + "<br/>&nbsp;"; }
+	            else                         { print_entry += "<i>" + device + "</i> : " + answer[key][device] + "s"; }
+	            });
+            html += tab.row(print_key + ":", print_entry + print_update);
+            });
+	    html += tab.end();
+	    html += "&nbsp;";
 	    return html;
 	    }
 

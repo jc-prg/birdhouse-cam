@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-
+import subprocess
 import threading
 import json
 import signal
@@ -11,10 +11,13 @@ import socket
 import math
 import urllib.parse
 import socketserver
+#import pkg_resources
 
 from http import server
 from datetime import datetime
 from urllib.parse import unquote
+
+from pip._internal.metadata import pkg_resources
 
 if len(sys.argv) == 0 or ("--help" not in sys.argv and "--shutdown" not in sys.argv):
     from modules.backup import BirdhouseArchive
@@ -421,7 +424,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             "last-answer", "favorit", "recycle", "update-views", "update-views-complete",
                             "archive-object-detection", "archive-remove-day", "archive-remove-list",
                             "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "WEATHER", "relay-on", "relay-off",
-                            "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS"]
+                            "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS", "python-pkg"]
 
             param["session_id"] = elements[2]
             param["command"] = elements[3]
@@ -829,7 +832,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                           "DEVICES", "OBJECTS", "STATISTICS", "bird-names", "WEATHER",
                           "SETTINGS", "CAMERA_SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS",
                           "status", "list"],
-            "info"     : ["camera-param", "version", "reload"],
+            "info"     : ["camera-param", "version", "reload","python-pkg"],
             "status"   : ["status", "list", "WEATHER"],
             "status_small" : ["last-answer"],
             "settings" : ["status", "list"],
@@ -868,6 +871,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "initial_setup": config.param["server"]["initial_setup"],
                     "last_answer": ""
                 },
+                "server_performance": config.get_processing_performance(),
                 "system": {},
                 "video_recording": {},
                 "object_detection": {
@@ -971,7 +975,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 api_data["active"]["active_date"] = param["parameter"][0]
                 api_response["STATUS"]["view"]["active_date"] = param["parameter"][0]
 
-        request_times["0_initial"] = round(time.time() - request_start, 3)
+        request_times["0_initial"] = round(time.time() - request_start, 4)
 
         if command == "INDEX":
             content = views.index_view(param=param)
@@ -1023,6 +1027,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "active_cam" : which_cam,
                 "camera_properties" : camera[which_cam].get_camera_status("properties")
             }
+        elif command == "python-pkg":
+            pkg_string = ""
+            content = {"packages": {}}
+            #for dst in pkg_resources.working_set:
+            #    content["packages"][dst.project_name] = dst.version
+            #    pkg_string += dst.project_name + "==" + dst.version + "\n"
+            try:
+                cmd_data = "/usr/local/bin/pip3"
+                cmd_data += " list --format=freeze"
+                pkg_string = str(subprocess.check_output(cmd_data))
+            except Exception as e:
+                pkg_string = "Could not get Python packages list: " + str(e)
+            content["packages"] = pkg_string
         elif command in no_extra_command:
             content = {}
         else:
@@ -1031,7 +1048,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_logging.warning("API CALL: " + status + " (" + self.path + ")")
         # execute API commands
 
-        request_times["1_api-commands"] = round(time.time() - request_start, 3)
+        request_times["1_api-commands"] = round(time.time() - request_start, 4)
 
         # collect data for WEATHER section
         if command in api_commands["weather"]:
@@ -1069,7 +1086,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             else:
                 api_response["SETTINGS"]["localization"] = birdhouse_preset["localization"]
 
-            request_times["1_status-commands"] = round(time.time() - request_start, 3)
+            request_times["1_status-commands"] = round(time.time() - request_start, 4)
 
             server_config = {
                 "port": birdhouse_env["port_http"],
@@ -1106,23 +1123,23 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         # collect data for STATUS and SETTINGS sections (to be clarified -> goal: only for status request)
         if command not in api_commands["info"] and command not in api_commands["status_small"]:
-            # collect data for "DATA" section  ??????????????????????ßß
+            # collect data for "DATA" section
             param_to_publish = ["title", "backup", "weather", "views", "info"]
             for key in param_to_publish:
                 if key in content:
                     content[key] = config.param[key]
-            request_times["5_config"] = round(time.time() - request_start, 3)
+            request_times["5_config"] = round(time.time() - request_start, 4)
 
             # get device data
             api_response["STATUS"]["devices"] = sys_info.get_device_status()
-            request_times["6_devices_status"] = round(time.time() - request_start, 3)
+            request_times["6_devices_status"] = round(time.time() - request_start, 4)
 
             # get microphone data and create streaming information
             micro_data = config.param["devices"]["microphones"].copy()
             for key in micro_data:
                 micro_data[key]["stream_server"] = birdhouse_env["server_audio"]
                 micro_data[key]["stream_server"] += ":" + str(micro_data[key]["port"])
-            request_times["7_status_micro"] = round(time.time() - request_start, 3)
+            request_times["7_status_micro"] = round(time.time() - request_start, 4)
 
             # get camera data and create streaming information
             camera_data = config.param["devices"]["cameras"].copy()
@@ -1143,7 +1160,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     else:
                         camera_data[key]["video"]["stream_server"] = config.param["server"]["ip4_stream_video"]
                     camera_data[key]["video"]["stream_server"] += ":" + str(birdhouse_env["port_video"])
-            request_times["8_status_camera"] = round(time.time() - request_start, 3)
+            request_times["8_status_camera"] = round(time.time() - request_start, 4)
 
             # get sensor data
             sensor_data = config.param["devices"]["sensors"].copy()
@@ -1151,7 +1168,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 sensor_data[key]["values"] = {}
                 if key in sensor and sensor[key].if_running():
                     sensor_data[key]["values"] = sensor[key].get_values()
-            request_times["9_status_sensor"] = round(time.time() - request_start, 3)
+            request_times["9_status_sensor"] = round(time.time() - request_start, 4)
 
             api_response["SETTINGS"]["devices"] = {
                 "cameras": camera_data,
@@ -1172,8 +1189,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             del api_response["SETTINGS"]
             for key in content:
                 api_response["STATUS"]["server"][key] = content[key]
-        if command == "WEATHER":
+        elif command == "WEATHER":
             del api_response["SETTINGS"]
+        elif command == "python-pkg":
+            api_response["DATA"] = content
+
         if command not in api_commands["status"] and command not in api_commands["info"]:
             if "STATUS" in api_response:
                 if "system" in api_response["STATUS"]:
@@ -1186,8 +1206,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             del api_response["WEATHER"]
 
         # add API request information
-        api_response["API"]["request_details"] = request_times
-        api_response["API"]["request_time"] = round(time.time() - request_start, 3)
+        if param["session_id"] in request_times and param["session_id"] != "":
+            api_response["API"]["request_details"] = request_times
+            api_response["API"]["request_time"] = round(time.time() - request_start, 3)
 
         self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'),
                          no_cache=True)
