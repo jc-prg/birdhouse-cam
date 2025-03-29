@@ -224,8 +224,8 @@ function birdhouse_app_settings (name="Settings") {
         html_entry = this.server_performance();
         html += birdhouse_OtherGroup( "server_performance", "Server performance", html_entry, open_settings["server_performance"] );
 
-        html_entry = this.server_queues();
-        html += birdhouse_OtherGroup( "server_queues", "Server queues", html_entry, open_settings["server_queues"] );
+        //html_entry = this.server_queues();
+        //html += birdhouse_OtherGroup( "server_queues", "Server queues", html_entry, open_settings["server_queues"] );
 
         return html;
         }
@@ -648,29 +648,30 @@ function birdhouse_app_settings (name="Settings") {
 	    var data_p  = data["server_performance"];
 
         html     += this.set.dashboard_item(id="server_up_time",   type="number", title="Server up time",   description=data["start_time"]);
-        html     += this.set.dashboard_item(id="server_boot_time", type="number", title="Server boot time", description=data["start_time"], color="blue", initial_value=Math.round(data_p["server"]["boot"]*10)/10+"s");
-        html     += this.set.dashboard_item(id="api_status_request", type="number", title="API", description="Status request");
+        html     += this.set.dashboard_item(id="server_boot_time", type="number", title="Server boot time", description=data["start_time"]);
+        html     += this.set.dashboard_item(id="api_status_request", type="number", title="API", description="status request duration");
 
         if (data["server_config_queues"]) {
             html     += this.set.dashboard_item(id="config_queue_wait", type="number", title="Config queue", description="current waiting time");
-            html     += this.set.dashboard_item(id="config_queue_write", type="number", title="Config queue", description="time to write config");
-            html     += this.set.dashboard_item(id="config_queue_size", type="number", title="Config queue", description="entries in the queue");
+            html     += this.set.dashboard_item(id="config_queue_write", type="number", title="Config queue", description="config writing duration");
+            html     += this.set.dashboard_item(id="config_queue_size", type="number", title="Config queue", description="entries");
             }
         if (data["server_object_queues"]) {
-            html     += this.set.dashboard_item(id="object_queue_size", type="number", title="Object queue", description="entries in the queue");
+            html     += this.set.dashboard_item(id="object_queue_size", type="number", title="Object queue", description="entries");
             }
         Object.keys(app_data["SETTINGS"]["devices"]["cameras"]).forEach(key => {
             if (data["server_performance"]["camera_recording_image"][key]) {
-                html += this.set.dashboard_item(id="record_image_"+key, type="number", title="Image recording", description=key);
+                html += this.set.dashboard_item(id="record_image_"+key, type="number", title=key, description="image recording duration");
                 }
             });
         if (data_p["object_detection"]) {
             html     += this.set.dashboard_item(id="object_detection", type="number", title="Object detection", description="detection time per image");
             }
         if (data["database"]["type"] == "json" || data["database"]["type"] == "both") {
-            html     += this.set.dashboard_item(id="locked_db", type="number", title="Database JSON", description="locked json databases ("+data["database"]["type"]+")");
-            html     += this.set.dashboard_item(id="locked_db_wait", type="number", title="Database JSON", description="waiting time due to locked DB");
+            html     += this.set.dashboard_item(id="locked_db", type="number", title="Database JSON", description="locked json DB ("+data["database"]["type"]+")");
+            html     += this.set.dashboard_item(id="locked_db_wait", type="number", title="Database JSON", description="waiting time locked DB");
             }
+        html     += this.set.dashboard_item(id="cache_size", type="number", title="Database", description="data in cache");
 	    setTimeout(function() {birdhouse_settings.server_dashboard_fill(app_data);}, 1000);
 	    html += "</div>";
 	    return html;
@@ -692,7 +693,8 @@ function birdhouse_app_settings (name="Settings") {
 	        }
 
         this.set.dashboard_item_fill(id="server_up_time",     value=up_time);
-        this.set.dashboard_item_fill(id="api_status_request", value=this.round(status_api["/status"]), unit="s", benchmark=true, warning=0.5, alarm=1.0);
+        this.set.dashboard_item_fill(id="server_boot_time", value=this.round(status_prf["server"]["boot"]), unit="s");
+        this.set.dashboard_item_fill(id="api_status_request", value=this.round(status_api["/status"]), unit="s", benchmark=true, warning=0.5, alarm=2.0);
 
         if (status["server_config_queues"]) {
             Object.keys(status["server_config_queues"]).forEach(key => { data_q["config"] += status["server_config_queues"][key]; });
@@ -716,6 +718,7 @@ function birdhouse_app_settings (name="Settings") {
             html += this.set.dashboard_item_fill(id="locked_db",      value=status["database"]["db_locked_json"], unit="", benchmark=true, warning=2, alarm=4);
             html += this.set.dashboard_item_fill(id="locked_db_wait", value=this.round(status["database"]["db_waiting_json"]), unit="s", benchmark=true, warning=2, alarm=4);
             }
+        html += this.set.dashboard_item_fill(id="cache_size", value=this.round(status["database"]["cache_size"]), unit="kB", benchmark=false);
 	    }
 
 	this.toggle	= function (active=false) {

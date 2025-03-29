@@ -82,6 +82,16 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         self._processing = False
         self.set_db_type(db_type)
 
+    def get_cache_size(self):
+        """
+        get size of cache in MByte
+
+        Returns:
+            float: size of cache in MByte
+        """
+        #return 1
+        return float(sys.getsizeof(self.config_cache) / 1024)
+
     def set_db_type(self, db_type):
         """
         set DB type: JSON, CouchDB, BOTH
@@ -118,6 +128,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         if self.db_type == "json":
             db_info = {
                 "type": self.db_type,
+                "cache_size": self.get_cache_size(),
                 "db_connected": self.json.connected,
                 "db_error": self.json.error,
                 "db_error_msg": self.json.error_msg,
@@ -129,6 +140,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         elif self.db_type == "couch":
             db_info = {
                 "type": self.db_type,
+                "cache_size": self.get_cache_size(),
                 "db_connected": self.couch.connected,
                 "db_error": self.couch.error,
                 "db_error_msg": self.couch.error_msg,
@@ -139,6 +151,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             connected = (self.couch.connected and self.json.connected)
             db_info = {
                 "type": self.db_type,
+                "cache_size": self.get_cache_size(),
                 "db_connected": connected,
                 "db_connected_info": "couch=" + str(self.couch.connected) + " / json=" + str(self.json.connected),
                 "db_connected_couch": self.couch.connected,
@@ -1554,6 +1567,11 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
 
         # set database type if not JSON
         self.db_type = birdhouse_env["database_type"]
+        self.last_db_type = None
+        if "info" in self.param and "last_db_type" in self.param["info"]:
+            self.last_db_type = self.param["info"]["last_db_type"]
+        self.param["info"]["last_db_type"] = self.db_type
+
         if self.db_type != "json" and ("db_type" not in self.param_init or self.param_init["db_type"] != "json"):
             if self.db_handler is not None:
                 self.db_handler.stop()
@@ -1577,6 +1595,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         count = 0
         self.param = self.db_handler.read("main")
         self.param["path"] = self.main_directory
+        self.main_config_db_changed()
 
         if "weather" not in self.param_init or self.param_init["weather"] is not False:
             self.weather = BirdhouseWeather(config=self)
@@ -1827,6 +1846,18 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.txt_handler.write(filename, birdhouse_client_presets["content"])
         self.logging.info("Write App config file: " + filename)
         self.logging.debug(birdhouse_client_presets["content"])
+
+    def main_config_db_changed(self):
+        """
+        check if db_type has changed since last start and ensure that the data
+        are migrated from the old type to the new one
+        """
+        if self.last_db_type != self.db_type and self.last_db_type is not None:
+            self.logging.info("-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.")
+            self.logging.info("DB type has changed: " + str(self.last_db_type) + " -> " + self.db_type)
+            self.logging.info("-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.")
+
+        self.logging.warning("NOT IMPLEMENTED YET: Migration from old DB type to new one.")
 
     def local_time(self):
         """
