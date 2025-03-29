@@ -195,21 +195,21 @@ function app_connection_lost(error=false) {
     if (app_connection_error != error) {
         if (error) {
             // code if lost connection
+            app_connection_error = true;
             elementVisible("video_stream_offline");
             elementHidden("video_stream_online");
             elementVisible("lowres_today_error");
             elementHidden("lowres_today");
             birdhouseStatus_connectionError();
-            app_connection_error = true;
         }
         else {
-            app_unique_stream_id  = new Date().getTime();
+            app_connection_error = false;
+            app_unique_stream_id = new Date().getTime();
             // code if got back connection
             elementVisible("video_stream_online");
             elementHidden("video_stream_offline");
             elementVisible("lowres_today");
             elementHidden("lowres_today_error");
-            app_connection_error = false;
             birdhouseReloadView();
         }
     }
