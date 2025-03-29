@@ -183,7 +183,8 @@ function birdhouse_app_settings (name="Settings") {
 
         var open_settings = {
             "app_info_01"           : true,
-            "server_dashboard"      : true,
+            "server_dashboard_1"    : true,
+            "server_dashboard_2"    : true,
             "device_info"           : false,
             "process_info"          : false,
             "server_info"           : false,
@@ -203,8 +204,11 @@ function birdhouse_app_settings (name="Settings") {
         html_entry = this.app_information();
         html += birdhouse_OtherGroup( "app_info_01", "App (module versions)", html_entry, open_settings["app_info_01"] );
 
-        html_entry = this.server_dashboard();
-        html += birdhouse_OtherGroup( "server_dashboard", "Overview", html_entry, open_settings["server_dashboard"] );
+        html_entry = this.server_dashboard("server");
+        html += birdhouse_OtherGroup( "server_dashboard_1", "Overview Server", html_entry, open_settings["server_dashboard"] );
+
+        html_entry = this.server_dashboard("operation");
+        html += birdhouse_OtherGroup( "server_dashboard_2", "Overview Operation", html_entry, open_settings["server_dashboard"] );
 
         html_entry = this.device_information();
         html += birdhouse_OtherGroup( "device_info", "Devices", html_entry, open_settings["device_info"] );
@@ -642,37 +646,44 @@ function birdhouse_app_settings (name="Settings") {
         return html_entry;
 	}
 
-	this.server_dashboard = function () {
+	this.server_dashboard = function (part="all") {
 	    var html = "<div>";
 	    var data    = app_data["STATUS"];
 	    var data_p  = data["server_performance"];
 
-        html     += this.set.dashboard_item(id="server_up_time",     type="number", title="Server up time",   description=data["start_time"]);
-        html     += this.set.dashboard_item(id="server_boot_time",   type="number", title="Server boot time", description=data["start_time"]);
-        html     += this.set.dashboard_item(id="cpu_usage",          type="number", title="CPU", description="current usage (" + data["system"]["cpu_usage_detail"].length + " CPUs)" );
-        html     += this.set.dashboard_item(id="api_status_request", type="number", title="API", description="status request duration");
+        if (part == "server" || part == "all") {
+            html     += this.set.dashboard_item(id="server_up_time",     type="number", title="Server up time",   description=data["start_time"]);
+            html     += this.set.dashboard_item(id="server_boot_time",   type="number", title="Server boot time", description=data["start_time"]);
+            html     += this.set.dashboard_item(id="cpu_usage",          type="number", title="CPU", description="current usage (" + data["system"]["cpu_usage_detail"].length + " CPUs)" );
+            html     += this.set.dashboard_item(id="cpu_temperature",    type="number", title="CPU", description="temperature" );
+            html     += this.set.dashboard_item(id="hdd_available",      type="number", title="HDD", description="available disk space" );
+            html     += this.set.dashboard_item(id="mem_available",      type="number", title="Memory", description="available memory" );
+            }
 
-        if (data["server_config_queues"]) {
-            html     += this.set.dashboard_item(id="config_queue_wait", type="number", title="Config queue", description="current waiting time");
-            html     += this.set.dashboard_item(id="config_queue_write", type="number", title="Config queue", description="config writing duration");
-            html     += this.set.dashboard_item(id="config_queue_size", type="number", title="Config queue", description="entries");
-            }
-        if (data["server_object_queues"]) {
-            html     += this.set.dashboard_item(id="object_queue_size", type="number", title="Object queue", description="entries");
-            }
-        Object.keys(app_data["SETTINGS"]["devices"]["cameras"]).forEach(key => {
-            if (data["server_performance"]["camera_recording_image"][key]) {
-                html += this.set.dashboard_item(id="record_image_"+key, type="number", title=key, description="image recording duration");
+        if (part == "operation" || part == "all") {
+            html     += this.set.dashboard_item(id="api_status_request", type="number", title="API", description="status request duration");
+            if (data["server_config_queues"]) {
+                html     += this.set.dashboard_item(id="config_queue_wait", type="number", title="Config queue", description="current waiting time");
+                html     += this.set.dashboard_item(id="config_queue_write", type="number", title="Config queue", description="config writing duration");
+                html     += this.set.dashboard_item(id="config_queue_size", type="number", title="Config queue", description="entries");
                 }
-            });
-        if (data_p["object_detection"]) {
-            html     += this.set.dashboard_item(id="object_detection", type="number", title="Object detection", description="detection time per image");
+            if (data["server_object_queues"]) {
+                html     += this.set.dashboard_item(id="object_queue_size", type="number", title="Object queue", description="entries");
+                }
+            Object.keys(app_data["SETTINGS"]["devices"]["cameras"]).forEach(key => {
+                if (data["server_performance"]["camera_recording_image"][key]) {
+                    html += this.set.dashboard_item(id="record_image_"+key, type="number", title=key, description="image recording duration");
+                    }
+                });
+            if (data_p["object_detection"]) {
+                html     += this.set.dashboard_item(id="object_detection", type="number", title="Object detection", description="detection time per image");
+                }
+            if (data["database"]["type"] == "json" || data["database"]["type"] == "both") {
+                html     += this.set.dashboard_item(id="locked_db", type="number", title="Database JSON", description="locked json DB ("+data["database"]["type"]+")");
+                html     += this.set.dashboard_item(id="locked_db_wait", type="number", title="Database JSON", description="waiting time locked DB");
+                }
+            html     += this.set.dashboard_item(id="cache_size", type="number", title="Database", description="data in cache");
             }
-        if (data["database"]["type"] == "json" || data["database"]["type"] == "both") {
-            html     += this.set.dashboard_item(id="locked_db", type="number", title="Database JSON", description="locked json DB ("+data["database"]["type"]+")");
-            html     += this.set.dashboard_item(id="locked_db_wait", type="number", title="Database JSON", description="waiting time locked DB");
-            }
-        html     += this.set.dashboard_item(id="cache_size", type="number", title="Database", description="data in cache");
 
 	    setTimeout(function() {birdhouse_settings.server_dashboard_fill(app_data);}, 1000);
 	    html += "</div>";
@@ -728,9 +739,15 @@ function birdhouse_app_settings (name="Settings") {
             html += this.set.dashboard_item_fill(id="locked_db",      value=status["database"]["db_locked_json"], unit="", benchmark=true, warning=2, alarm=4);
             html += this.set.dashboard_item_fill(id="locked_db_wait", value=this.round(status["database"]["db_waiting_json"]), unit="s", benchmark=true, warning=2, alarm=4);
             }
+
+        var available_hdd = status["system"]["hdd_total"] - status["system"]["hdd_used"];
+        var available_mem = (status["system"]["mem_total"] - status["system"]["mem_used"]) / 1024;
         var [cache_value, cache_unit] = this.data_size(status["database"]["cache_size"]);
         html += this.set.dashboard_item_fill(id="cache_size", value=cache_value, unit=cache_unit, benchmark=false);
         html += this.set.dashboard_item_fill(id="cpu_usage", value=this.round(status["system"]["cpu_usage"]), unit="%", benchmark=true, warning=70, alarm=90);
+        html += this.set.dashboard_item_fill(id="cpu_temperature", value=this.round(status["system"]["cpu_temperature"]), unit="°C", benchmark=true, warning=60, alarm=75);
+        html += this.set.dashboard_item_fill(id="hdd_available", value=this.round(available_hdd), unit="GB", benchmark=true, warning=5, alarm=2);
+        html += this.set.dashboard_item_fill(id="mem_available", value=this.round(available_mem), unit="GB", benchmark=true, warning=1, alarm=0.4);
 	    }
 
 	this.toggle	= function (active=false) {
