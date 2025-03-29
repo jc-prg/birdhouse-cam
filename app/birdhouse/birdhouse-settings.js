@@ -647,8 +647,9 @@ function birdhouse_app_settings (name="Settings") {
 	    var data    = app_data["STATUS"];
 	    var data_p  = data["server_performance"];
 
-        html     += this.set.dashboard_item(id="server_up_time",   type="number", title="Server up time",   description=data["start_time"]);
-        html     += this.set.dashboard_item(id="server_boot_time", type="number", title="Server boot time", description=data["start_time"]);
+        html     += this.set.dashboard_item(id="server_up_time",     type="number", title="Server up time",   description=data["start_time"]);
+        html     += this.set.dashboard_item(id="server_boot_time",   type="number", title="Server boot time", description=data["start_time"]);
+        html     += this.set.dashboard_item(id="cpu_usage",          type="number", title="CPU", description="current usage (" + data["system"]["cpu_usage_detail"].length + " CPUs)" );
         html     += this.set.dashboard_item(id="api_status_request", type="number", title="API", description="status request duration");
 
         if (data["server_config_queues"]) {
@@ -672,6 +673,7 @@ function birdhouse_app_settings (name="Settings") {
             html     += this.set.dashboard_item(id="locked_db_wait", type="number", title="Database JSON", description="waiting time locked DB");
             }
         html     += this.set.dashboard_item(id="cache_size", type="number", title="Database", description="data in cache");
+
 	    setTimeout(function() {birdhouse_settings.server_dashboard_fill(app_data);}, 1000);
 	    html += "</div>";
 	    return html;
@@ -719,6 +721,7 @@ function birdhouse_app_settings (name="Settings") {
             html += this.set.dashboard_item_fill(id="locked_db_wait", value=this.round(status["database"]["db_waiting_json"]), unit="s", benchmark=true, warning=2, alarm=4);
             }
         html += this.set.dashboard_item_fill(id="cache_size", value=this.round(status["database"]["cache_size"]), unit="kB", benchmark=false);
+        html += this.set.dashboard_item_fill(id="cpu_usage", value=this.round(status["system"]["cpu_usage"]), unit="%", benchmark=true, warning=65, alarm=90);
 	    }
 
 	this.toggle	= function (active=false) {
