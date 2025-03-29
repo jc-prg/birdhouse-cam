@@ -721,7 +721,7 @@ function birdhouse_app_settings (name="Settings") {
             html += this.set.dashboard_item_fill(id="locked_db_wait", value=this.round(status["database"]["db_waiting_json"]), unit="s", benchmark=true, warning=2, alarm=4);
             }
         html += this.set.dashboard_item_fill(id="cache_size", value=this.round(status["database"]["cache_size"]), unit="kB", benchmark=false);
-        html += this.set.dashboard_item_fill(id="cpu_usage", value=this.round(status["system"]["cpu_usage"]), unit="%", benchmark=true, warning=65, alarm=90);
+        html += this.set.dashboard_item_fill(id="cpu_usage", value=this.round(status["system"]["cpu_usage"]), unit="%", benchmark=true, warning=70, alarm=90);
 	    }
 
 	this.toggle	= function (active=false) {
