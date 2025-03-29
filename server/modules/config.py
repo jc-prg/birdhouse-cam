@@ -47,6 +47,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         self.config_cache = {}
         self.config_cache_changed = {}
         self.config_cache_size = 0
+        self.config_cache_size_max = 20 * 1024 * 1024
         self.config_cache_size_update = time.time()
 
     def run(self):
@@ -65,6 +66,10 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 self.logging.debug("Wait to write cache to JSON ... " + str(wait) + "s")
                 if wait > 20:
                     time.sleep(10)
+
+            if self.config_cache_size > self.config_cache_size_max:
+                self.logging.info("Clean up cache ...")
+                self.clean_up_cache("all")
 
             self.thread_control()
             self.thread_wait()
@@ -87,7 +92,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
 
     def get_cache_size(self):
         """
-        get size of cache in Byte
+        get size of cache in Byte (updated every 20 seconds)
 
         Returns:
             float: size of cache in Byte
@@ -95,6 +100,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         if self.config_cache_size_update + 20 > time.time():
             self.config_cache_size = asizeof.asizeof(self.config_cache)
             self.config_cache_size_update = time.time()
+
         return self.config_cache_size
 
     def set_db_type(self, db_type):
@@ -534,15 +540,17 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
         """
+        self.logging.debug("Clean up cache for " + config + " " + date)
         if config != "" and config != "all":
             if date != "":
                 del self.config_cache[config][date]
             else:
                 del self.config_cache[config]
         elif config == "all":
-            keys = list(self.config_cache.keys())
-            for conf_key in keys:
-                del self.config_cache[conf_key]
+            self.config_cache_size = 0
+            self.config_cache = {}
+            self.config_cache_changed = {}
+            self.config_cache_size_update = time.time()
             self.logging.info("Removed all data from cache.")
 
     def lock(self, config, date=""):
@@ -1534,8 +1542,6 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.object_detection_build_views = False
 
         self.last_start = ""
-        self.last_activity_cache = time.time()
-        self.last_activity_empty_cache = 15 * 60
 
         # read or create main config file
         self.db_handler = BirdhouseConfigDBHandler(self, "json", main_directory)
@@ -1629,11 +1635,6 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                     self.last_day_running = date_today
                     self.db_handler.write(config="main", date="", data=self.param)
                     time.sleep(2)
-
-            # check when last active access via app has been done -> delete cache from time to time
-            if self.last_activity_cache + self.last_activity_empty_cache < time.time():
-                self.db_handler.clean_up_cache("all")
-                self.last_activity_cache = time.time()
 
             # check if DB reconnect ist required
             connected = self.db_handler.get_db_status()["db_connected"]
