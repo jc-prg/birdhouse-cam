@@ -2236,7 +2236,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                     self.statistics.set("config_queue_write", self.get_processing_performance("config_queue_write")["image"])
                 self.statistics.set("config_queue_wait", self.queue.queue_wait)
                 self.statistics.set("config_cache_size", self.db_handler.get_cache_size() / 1024 / 1024)
-                if self.get_processing_performance("api_GET") != -1 and "image" in self.get_processing_performance("api_GET"):
+                if self.get_processing_performance("api_GET") != -1 and "server " in self.get_processing_performance("api_GET"):
                     self.statistics.set("srv_api_status", self.get_processing_performance("api_GET")["server"])
 
 
