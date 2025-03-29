@@ -169,7 +169,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 "db_connected_json": self.json.connected,
                 "db_locked_json": self.json.amount_locked(),
                 "db_error": "couch=" + str(self.couch.error) + " / json=" + str(self.json.error),
-                "db_error_msg": [*self.couch.error_msg, *self.json.error_msg],
+                "db_error_msg": [self.couch.error_msg, self.json.error_msg],
                 "handler_error": self.error,
                 "handler_error_msg": self.error_msg
             }
@@ -402,16 +402,20 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             filename = self.file_path(config, date)
             if self.db_type == "json":
                 self.json.write(filename, data, create)
+                self.logging.debug("   -> write2json: " + config + " | " + filename)
             elif self.db_type == "couch" and "config.json" in filename:
                 self.couch.write(filename, data, create)
                 self.json.write(filename, data, create)
+                self.logging.debug("   -> write2both: " + config + " | " + filename)
             elif self.db_type == "couch":
                 self.couch.write(filename, data, create)
+                self.logging.debug("   -> write2couch: " + config + " | " + filename)
                 if save_json:
                     self.json.write(filename, data, create)
             elif self.db_type == "both":
                 self.couch.write(filename, data, create)
                 self.json.write(filename, data, create)
+                self.logging.debug("   -> write2both: " + config + " | " + filename)
             else:
                 self.raise_error("Unknown DB type (" + str(self.db_type) + ")")
 
@@ -1499,6 +1503,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.views = None
         self.weather = None
         self.queue = None
+        self.statistics = None
 
         self.thread_status = {}
         self.thread_ctrl = {
@@ -1542,6 +1547,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.object_detection_build_views = False
 
         self.last_start = ""
+        self.measure_time = 60
+        self.measure_last = time.time()
 
         # read or create main config file
         self.db_handler = BirdhouseConfigDBHandler(self, "json", main_directory)
@@ -1654,6 +1661,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 if self.weather is not False:
                     self.weather.active(self.param["localization"]["weather_active"])
 
+            self.measure_status()
             self.thread_control()
             self.thread_wait()
 
@@ -2015,6 +2023,16 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.user_active = False
         return False
 
+    def set_statistics(self, statistics):
+        """
+        set statistics handler to self.statistics
+
+        Args:
+            statistics: statistics handler
+        """
+        self.statistics = statistics
+        self.measure_status(True)
+
     def set_views(self, views):
         """
         set handler for views
@@ -2168,8 +2186,13 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
 
         if category == "":
             return averaged_processing_performance
-        else:
+
+        elif category in self.processing_performance:
             return averaged_processing_performance[category]
+
+        else:
+            self.logging.debug("get_processing_performance: category '" + str(category) + "' not found.")
+            return -1
 
     def get_queue_size(self):
         """
@@ -2186,4 +2209,31 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         for key in self.queue.status_queue:
             queue_size["status"] += len(self.queue.status_queue[key])
         return queue_size
+
+    def measure_status(self, init=False):
+        """
+        add db queue and db cache size to statistics
+
+        Args:
+            init (bool): initialize the statistics
+        """
+        if init:
+            self.statistics.register("config_queue_db", "DB Queue")
+            self.statistics.register("config_queue_wait", "Queue Wait")
+            self.statistics.register("config_queue_write", "Queue Write")
+            self.statistics.register("config_cache_size", "Cache (MB)")
+
+        else:
+            if self.statistics and self.measure_last + self.measure_time > time.time():
+                self.measure_last = time.time()
+                queues = self.get_queue_size()
+                queue_size = 0
+                for key in queues:
+                    queue_size += queues[key]
+                self.statistics.set("config_queue_db", queue_size)
+                if self.get_processing_performance("config_queue_write") != -1 and "image" in self.get_processing_performance("config_queue_write"):
+                    self.statistics.set("config_queue_write", self.get_processing_performance("config_queue_write")["image"])
+                self.statistics.set("config_queue_wait", self.queue.queue_wait)
+                self.statistics.set("config_cache_size", self.db_handler.get_cache_size() / 1024 / 1024)
+
 

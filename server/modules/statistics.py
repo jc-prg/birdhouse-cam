@@ -18,7 +18,7 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="statistic", config=config)
-        self.thread_set_priority(3)
+        self.thread_set_priority(7)
 
         self._usage_time = time.time() - 60
         self._usage_interval = 60
@@ -45,11 +45,9 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
 
     def write_statistics(self):
         """
-        write statistic data to database
+        write statistic data to database, every 60 seconds (defined in self._usage_interval).
         """
         if time.time() - self._usage_time > self._usage_interval:
-            self.logging.info("Write statistic data ...")
-
             self._usage_time = time.time()
             save_stamp = self.config.local_time().strftime('%H:%M')
             save_time = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
@@ -84,6 +82,8 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
                     save_statistic_info[key] = self._statistics_info[key]
 
             if len(self._statistics) > 0:
+                self.logging.info("Add statistic data ("+str(len(self._statistics))+") to queue ...")
+
                 self.config.queue.entry_other(config="statistics", date="", key=save_stamp,
                                               entry=save_statistic_info.copy(), command="info")
                 self.config.queue.entry_add(config="statistics", date="", key=save_stamp,

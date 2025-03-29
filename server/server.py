@@ -1593,6 +1593,7 @@ if __name__ == "__main__":
     # start statistics
     statistics = BirdhouseStatistics(config=config)
     statistics.start()
+    config.set_statistics(statistics)
 
     # start relays
     relays = {}

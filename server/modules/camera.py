@@ -2291,7 +2291,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         else:
             self.logging.warning("image_recording_auto_light: Camera light mode '"+self.camera_light_mode+"' is not defined.")
 
-
     def measure_usage(self, init=False):
         """
         measure usage from time to time
@@ -2304,6 +2303,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.statistics.register(self.id.lower() + "_framerate", "Framerate " + self.id.upper())
             self.statistics.register(self.id.lower() + "_error", "Camera Error " + self.id.upper())
             self.statistics.register(self.id.lower() + "_raw_error", "Stream Error " + self.id.upper())
+            self.statistics.register("config_img_record_"+self.id.lower(), "Record Image " + self.id.upper())
+            if self.object:
+                self.statistics.register("config_queue_" + self.id.lower() + "_object", "Object Queue " + self.id.upper())
+                self.statistics.register("config_img_detect", "Detect Image")
 
         else:
             self.logging.debug("Measure stream usage ...")
@@ -2316,6 +2319,14 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.statistics.set(self.id.lower() + "_framerate", self.camera_stream_raw.get_framerate())
             self.statistics.set(self.id.lower() + "_error", self.if_error())
             self.statistics.set(self.id.lower() + "_raw_error", self.camera_stream_raw.if_error())
+            queue_size = 0
+            queue_size += len(self.object.detect_queue_image)
+            queue_size += len(self.object.detect_queue_archive)
+            self.statistics.set("config_img_record_"+self.id.lower(), self.config.get_processing_performance("camera_recording_image")[self.id])
+            if (self.object and self.config.get_processing_performance("object_detection") != -1 and
+                    "image" in self.config.get_processing_performance("object_detection")):
+                self.statistics.set("config_queue_" + self.id.lower() + "_object", queue_size)
+                self.statistics.set("config_img_detect", self.config.get_processing_performance("object_detection")["image"])
 
     def get_image_raw(self):
         """
