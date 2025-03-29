@@ -3,6 +3,7 @@ import sys
 import time
 import json
 import threading
+from pympler import asizeof
 
 from datetime import datetime, timezone, timedelta
 from shutil import which
@@ -45,6 +46,8 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         self.set_db_type(db_type)
         self.config_cache = {}
         self.config_cache_changed = {}
+        self.config_cache_size = 0
+        self.config_cache_size_update = time.time()
 
     def run(self):
         """
@@ -84,13 +87,15 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
 
     def get_cache_size(self):
         """
-        get size of cache in MByte
+        get size of cache in Byte
 
         Returns:
-            float: size of cache in MByte
+            float: size of cache in Byte
         """
-        #return 1
-        return float(sys.getsizeof(self.config_cache) / 1024)
+        if self.config_cache_size_update + 20 > time.time():
+            self.config_cache_size = asizeof.asizeof(self.config_cache)
+            self.config_cache_size_update = time.time()
+        return self.config_cache_size
 
     def set_db_type(self, db_type):
         """

@@ -693,6 +693,14 @@ function birdhouse_app_settings (name="Settings") {
 	        else                 { value = Math.round(value*10)/10}
 	        return value;
 	        }
+	    this.data_size = function(value) {
+	        var unit = "B";
+	        if (value > 1024 * 1024 * 1024)     { value = value / 1024 / 1024 / 1024; unit = "GB"}
+	        if (value > 1024 * 1024)            { value = value / 1024 / 1024; unit = "MB"}
+	        else if (value > 1024)              { value = value / 1024; unit = "kB"}
+	        value = this.round(value);
+	        return [value, unit];
+	        }
 
         this.set.dashboard_item_fill(id="server_up_time",     value=up_time);
         this.set.dashboard_item_fill(id="server_boot_time", value=this.round(status_prf["server"]["boot"]), unit="s");
@@ -720,7 +728,8 @@ function birdhouse_app_settings (name="Settings") {
             html += this.set.dashboard_item_fill(id="locked_db",      value=status["database"]["db_locked_json"], unit="", benchmark=true, warning=2, alarm=4);
             html += this.set.dashboard_item_fill(id="locked_db_wait", value=this.round(status["database"]["db_waiting_json"]), unit="s", benchmark=true, warning=2, alarm=4);
             }
-        html += this.set.dashboard_item_fill(id="cache_size", value=this.round(status["database"]["cache_size"]), unit="kB", benchmark=false);
+        var [cache_value, cache_unit] = this.data_size(status["database"]["cache_size"]);
+        html += this.set.dashboard_item_fill(id="cache_size", value=cache_value, unit=cache_unit, benchmark=false);
         html += this.set.dashboard_item_fill(id="cpu_usage", value=this.round(status["system"]["cpu_usage"]), unit="%", benchmark=true, warning=70, alarm=90);
 	    }
 
