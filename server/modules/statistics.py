@@ -20,7 +20,7 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
         BirdhouseClass.__init__(self, class_id="statistic", config=config)
         self.thread_set_priority(6)
 
-        self._usage_time = time.time() - 60
+        self._usage_time = time.time()
         self._usage_interval = 60
         self._write_interval = 4 * 60
 
@@ -37,10 +37,15 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
         """
         Starting thread
         """
-        self.logging.info("Starting statistic handler ...")
+        self.logging.info("Starting statistic handler ("+self.config.local_time().strftime('%H:%M')+"|"+str(self._write_interval)+"s) ...")
 
         while self._running:
-            self.write_statistics()
+
+            if time.time() - self._usage_time > self._write_interval:
+                self.logging.debug("... write statistics in next "+str(time.time() - self._usage_time)+"s > "+str(self._write_interval)+"s ...")
+                self._usage_time = time.time()
+                self.write_statistics()
+
             self.thread_control()
             self.thread_wait()
 
@@ -50,52 +55,50 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
         """
         write statistic data to database depending on self._write_interval.
         """
-        if self._write_interval + self._usage_time > time.time():
-            self._usage_time = time.time()
-            save_stamp = self.config.local_time().strftime('%H:%M')
-            #save_time = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+        save_stamp = self.config.local_time().strftime('%H:%M')
+        #save_time = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
-            statistics = self.config.db_handler.read(config="statistics")
-            if statistics == {} or "data" not in statistics or "info" not in statistics:
-                self.config.db_handler.write(config="statistics", date="", data=self._statistics_default, create=True,
-                                             save_json=True)
+        statistics = self.config.db_handler.read(config="statistics")
+        if statistics == {} or "data" not in statistics or "info" not in statistics:
+            self.config.db_handler.write(config="statistics", date="", data=self._statistics_default, create=True,
+                                         save_json=True)
 
-            save_statistic = {}
-            for key in self._statistics_array:
-                if "_" in key:
-                    parts = key.split("_")
-                    key2 = parts[0]
-                    key3 = key.replace(key2 + "_", "")
-                    if key2 not in save_statistic:
-                        save_statistic[key2] = {}
+        save_statistic = {}
+        for key in self._statistics_array:
+            if "_" in key:
+                parts = key.split("_")
+                key2 = parts[0]
+                key3 = key.replace(key2 + "_", "")
+                if key2 not in save_statistic:
+                    save_statistic[key2] = {}
 
-                    #save_statistic[key2][key3] = self._statistics[key]
-                    save_statistic[key2][key3] = sum(self._statistics_array[key]) / len(self._statistics_array[key])
-                    self._statistics_array[key] = []
-                else:
-                    #save_statistic[key] = self._statistics[key]
-                    save_statistic[key] = sum(self._statistics_array[key]) / len(self._statistics_array[key])
-                    self._statistics_array[key] = []
+                #save_statistic[key2][key3] = self._statistics[key]
+                save_statistic[key2][key3] = sum(self._statistics_array[key]) / len(self._statistics_array[key])
+                self._statistics_array[key] = []
+            else:
+                #save_statistic[key] = self._statistics[key]
+                save_statistic[key] = sum(self._statistics_array[key]) / len(self._statistics_array[key])
+                self._statistics_array[key] = []
 
-            save_statistic_info = {}
-            for key in self._statistics_info:
-                if "_" in key:
-                    parts = key.split("_")
-                    key2 = parts[0]
-                    key3 = key.replace(key2 + "_", "")
-                    if key2 not in save_statistic_info:
-                        save_statistic_info[key2] = {}
-                    save_statistic_info[key2][key3] = self._statistics_info[key]
-                else:
-                    save_statistic_info[key] = self._statistics_info[key]
+        save_statistic_info = {}
+        for key in self._statistics_info:
+            if "_" in key:
+                parts = key.split("_")
+                key2 = parts[0]
+                key3 = key.replace(key2 + "_", "")
+                if key2 not in save_statistic_info:
+                    save_statistic_info[key2] = {}
+                save_statistic_info[key2][key3] = self._statistics_info[key]
+            else:
+                save_statistic_info[key] = self._statistics_info[key]
 
-            if len(self._statistics_array) > 0:
-                self.logging.info("Add statistic data ("+str(len(self._statistics))+") to queue ...")
+        if len(self._statistics_array) > 0:
+            self.logging.info("Add statistic data ("+str(len(self._statistics_array))+") to queue ...")
 
-                self.config.queue.entry_other(config="statistics", date="", key=save_stamp,
-                                              entry=save_statistic_info.copy(), command="info")
-                self.config.queue.entry_add(config="statistics", date="", key=save_stamp,
-                                            entry=save_statistic.copy())
+            self.config.queue.entry_other(config="statistics", date="", key=save_stamp,
+                                          entry=save_statistic_info.copy(), command="info")
+            self.config.queue.entry_add(config="statistics", date="", key=save_stamp,
+                                        entry=save_statistic.copy())
 
     def register(self, key, description):
         """
