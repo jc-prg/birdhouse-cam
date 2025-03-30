@@ -425,7 +425,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             "last-answer", "favorit", "recycle", "update-views", "update-views-complete",
                             "archive-object-detection", "archive-remove-day", "archive-remove-list",
                             "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "WEATHER", "relay-on", "relay-off",
-                            "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS", "python-pkg"]
+                            "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS", "python-pkg",
+                            "STATISTICS"]
 
             param["session_id"] = elements[2]
             param["command"] = elements[3]

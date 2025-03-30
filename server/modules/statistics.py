@@ -145,7 +145,8 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
                     elif "raw_error" == value:
                         chart_value["error:raw-" + key] = key + ":" + value
                     elif "_" in value:
-                        cat, val = value.split("_")
+                        cat = value.split("_")[0]
+                        val = value.replace(cat + "_", "")
                         chart_value[cat + ":" + val + "-" + key] = key + ":" + value
                     else:
                         chart_value[value + ":" + key] = key + ":" + value
