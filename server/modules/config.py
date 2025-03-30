@@ -43,7 +43,10 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         self.json = None
         self.couch = None
         self.db_type = None
+        self.db_status_cache = {}
+        self.db_status_interval = 15
         self.set_db_type(db_type)
+
         self.config_cache = {}
         self.config_cache_changed = {}
         self.config_cache_size = 0
@@ -54,18 +57,20 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         """
         if db_type == json, create a backup regularly
         """
-        update_time = time.time()
+        time_cache2json = time.time()
+        time_cache_update = time.time()
+
         self.logging.info("Starting DB handler (" + self.db_type + "|" + self.main_directory + ") ...")
         while self._running:
-            if self.db_type == "couch" and update_time + self.backup_interval < time.time():
+
+            if self.db_type == "couch" and time_cache2json + self.backup_interval > time.time():
                 self.logging.info("Write cache to JSON ... " + str(self.backup_interval))
-                update_time = time.time()
+                time_cache2json = time.time()
                 self.write_cache_to_json()
-            else:
-                wait = round(update_time + self.backup_interval - time.time())
-                self.logging.debug("Wait to write cache to JSON ... " + str(wait) + "s")
-                if wait > 20:
-                    time.sleep(10)
+
+            if time_cache_update + self.db_status_interval > time.time():
+                time_cache_update = time.time()
+                self.get_db_status(cache=False)
 
             if self.config_cache_size > self.config_cache_size_max:
                 self.logging.info("Clean up cache ...")
@@ -128,52 +133,58 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             self.logging.error("  -> Unknown DB type (" + str(self.db_type) + ")")
             return False
 
-    def get_db_status(self):
+    def get_db_status(self, cache=True):
         """
         return db status
 
         Returns:
             dict: database status (type, db_connected, db_error, db_error_msg, handler_error, handler_error_msg)
         """
-        db_info = {}
-        if self.db_type == "json":
-            db_info = {
-                "type": self.db_type,
-                "cache_size": self.get_cache_size(),
-                "db_connected": self.json.connected,
-                "db_error": self.json.error,
-                "db_error_msg": self.json.error_msg,
-                "db_locked_json": self.json.amount_locked(),
-                "db_waiting_json": self.json.waiting_time,
-                "handler_error": self.error,
-                "handler_error_msg": self.error_msg
-            }
-        elif self.db_type == "couch":
-            db_info = {
-                "type": self.db_type,
-                "cache_size": self.get_cache_size(),
-                "db_connected": self.couch.connected,
-                "db_error": self.couch.error,
-                "db_error_msg": self.couch.error_msg,
-                "handler_error": self.error,
-                "handler_error_msg": self.error_msg
-            }
-        elif self.db_type == "both":
-            connected = (self.couch.connected and self.json.connected)
-            db_info = {
-                "type": self.db_type,
-                "cache_size": self.get_cache_size(),
-                "db_connected": connected,
-                "db_connected_info": "couch=" + str(self.couch.connected) + " / json=" + str(self.json.connected),
-                "db_connected_couch": self.couch.connected,
-                "db_connected_json": self.json.connected,
-                "db_locked_json": self.json.amount_locked(),
-                "db_error": "couch=" + str(self.couch.error) + " / json=" + str(self.json.error),
-                "db_error_msg": [self.couch.error_msg, self.json.error_msg],
-                "handler_error": self.error,
-                "handler_error_msg": self.error_msg
-            }
-        return db_info
+        update_start = time.time()
+        if cache:
+            return self.db_status_cache
+        else:
+            db_info = {}
+            if self.db_type == "json":
+                db_info = {
+                    "type": self.db_type,
+                    "cache_size": self.get_cache_size(),
+                    "db_connected": self.json.connected,
+                    "db_error": self.json.error,
+                    "db_error_msg": self.json.error_msg,
+                    "db_locked_json": self.json.amount_locked(),
+                    "db_waiting_json": self.json.waiting_time,
+                    "handler_error": self.error,
+                    "handler_error_msg": self.error_msg
+                }
+            elif self.db_type == "couch":
+                db_info = {
+                    "type": self.db_type,
+                    "cache_size": self.get_cache_size(),
+                    "db_connected": self.couch.connected,
+                    "db_error": self.couch.error,
+                    "db_error_msg": self.couch.error_msg,
+                    "handler_error": self.error,
+                    "handler_error_msg": self.error_msg
+                }
+            elif self.db_type == "both":
+                connected = (self.couch.connected and self.json.connected)
+                db_info = {
+                    "type": self.db_type,
+                    "cache_size": self.get_cache_size(),
+                    "db_connected": connected,
+                    "db_connected_info": "couch=" + str(self.couch.connected) + " / json=" + str(self.json.connected),
+                    "db_connected_couch": self.couch.connected,
+                    "db_connected_json": self.json.connected,
+                    "db_locked_json": self.json.amount_locked(),
+                    "db_error": "couch=" + str(self.couch.error) + " / json=" + str(self.json.error),
+                    "db_error_msg": [self.couch.error_msg, self.json.error_msg],
+                    "handler_error": self.error,
+                    "handler_error_msg": self.error_msg
+                }
+            self.db_status_cache = db_info.copy()
+            self.config.set_processing_performance("config", "db_status", update_start)
+            return db_info
 
     def wait_if_paused(self):
         """
