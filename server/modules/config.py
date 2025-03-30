@@ -63,12 +63,12 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         self.logging.info("Starting DB handler (" + self.db_type + "|" + self.main_directory + ") ...")
         while self._running:
 
-            if self.db_type == "couch" and time_cache2json + self.backup_interval > time.time():
+            if self.db_type == "couch" and time_cache2json + self.backup_interval < time.time():
                 self.logging.info("Write cache to JSON ... " + str(self.backup_interval))
                 time_cache2json = time.time()
                 self.write_cache_to_json()
 
-            if time_cache_update + self.db_status_interval > time.time():
+            if time_cache_update + self.db_status_interval < time.time():
                 time_cache_update = time.time()
                 self.get_db_status(cache=False)
 
@@ -102,7 +102,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         Returns:
             float: size of cache in Byte
         """
-        if self.config_cache_size_update + 20 > time.time():
+        if self.config_cache_size_update + 20 < time.time():
             self.config_cache_size = asizeof.asizeof(self.config_cache)
             self.config_cache_size_update = time.time()
 
@@ -2236,7 +2236,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             self.statistics.register("srv_api_status", "API Response Status")
 
         else:
-            if self.statistics and self.measure_last + self.measure_time > time.time():
+            if self.statistics and self.measure_last + self.measure_time < time.time():
                 self.measure_last = time.time()
                 queues = self.get_queue_size()
                 queue_size = 0

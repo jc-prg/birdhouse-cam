@@ -494,7 +494,7 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
 
         self.error = False
         self.update = False
-        self.update_time = 60 * 5
+        self.update_time = 60 * 10
         self.update_wait = 0
 
         self.module = None

@@ -423,7 +423,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path.startswith("/api"):
             param_no_cam = ["check-pwd", "status", "list", "kill-stream", "force-restart", "force-backup",
                             "last-answer", "favorit", "recycle", "update-views", "update-views-complete",
-                            "archive-object-detection", "archive-remove-day", "archive-remove-list",
+                            "archive-object-detection", "archive-remove-day", "archive-remove-list", "recreate-image-config",
                             "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "WEATHER", "relay-on", "relay-off",
                             "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS", "python-pkg",
                             "STATISTICS"]

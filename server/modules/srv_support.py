@@ -220,6 +220,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             self.read_available_devices()
 
             self._srv_info_time = round(time.time() - start_time, 2)
+            self.config.set_processing_performance("server", "srv_support", start_time)
 
             self.thread_control()
             self.thread_wait()
@@ -273,8 +274,10 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         read disk usage from linux command from time to time, interval defined in self.disk_usage_interval,
         and write data to statistics module
         """
-        if self.disk_usage_cache == {} or self.disk_usage_last + self.disk_usage_interval > time.time():
+        if self.disk_usage_cache == {} or self.disk_usage_last + self.disk_usage_interval < time.time():
             self.logging.info("... disk usage cache expired ...")
+            self.disk_usage_last = time.time()
+
             system = {}
             try:
                 # diskusage
