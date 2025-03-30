@@ -275,7 +275,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         and write data to statistics module
         """
         if self.disk_usage_cache == {} or self.disk_usage_last + self.disk_usage_interval < time.time():
-            self.logging.info("... disk usage cache expired ...")
+            self.logging.debug("... disk usage cache expired ...")
             self.disk_usage_last = time.time()
 
             system = {}
@@ -303,7 +303,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
                 self.logging.warning("Was not able to get size of data dir: " + (str(cmd_data)) + " - " + str(e))
             self.disk_usage_cache = system.copy()
         else:
-            self.logging.info("... disk usage cache still valid ...")
+            self.logging.debug("... disk usage cache still valid ...")
             system = self.disk_usage_cache.copy()
 
         for key in system:

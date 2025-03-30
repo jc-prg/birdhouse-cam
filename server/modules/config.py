@@ -141,7 +141,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             dict: database status (type, db_connected, db_error, db_error_msg, handler_error, handler_error_msg)
         """
         update_start = time.time()
-        if cache:
+        if cache and self.db_status_cache != {}:
             return self.db_status_cache
         else:
             db_info = {}
