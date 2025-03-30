@@ -197,6 +197,10 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
         self.main_dir = birdhouse_main_directories["project"]
 
+        self.disk_usage_interval = 10 * 60
+        self.disk_usage_cache = {}
+        self.disk_usage_last = 0
+
         self.statistics.register("srv_cpu", "CPU Usage")
         self.statistics.register("srv_cpu_temp", "CPU Temperature")
         self.statistics.register("srv_hdd_percentage", "HDD Used [%]")
@@ -211,6 +215,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         while self._running:
             start_time = time.time()
             self.read_memory_usage()
+            self.read_disk_usage()
             self.read_device_status()
             self.read_available_devices()
 
@@ -223,7 +228,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
     def read_memory_usage(self):
         """
-        Get data for current memory and HDD usage, to be requested via .get().
+        Get data for current memory , to be requested via .get().
         """
         system = {}
         try:
@@ -233,19 +238,12 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             system["mem_total"] = psutil.virtual_memory().total / 1024 / 1024
             system["mem_used"] = psutil.virtual_memory().used / 1024 / 1024
 
-            # diskusage
-            hdd = psutil.disk_usage("/")
-            system["hdd_used"] = hdd.used / 1024 / 1024 / 1024
-            system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
-
         except Exception as err:
             system = {
                 "cpu_usage": -1,
                 "cpu_usage_detail": -1,
                 "mem_total": -1,
                 "mem_used": -1,
-                "hdd_used": -1,
-                "hdd_total": -1
             }
 
         system["system_info_interval"] = self._srv_info_time
@@ -264,28 +262,56 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         # Give the result back to the caller.
         system["cpu_temperature"] = result
 
-        try:
-            cmd_data = ["du", "-hs", os.path.join(self.main_dir, "data")]
-            temp_data = str(subprocess.check_output(cmd_data))
-            temp_data = temp_data.replace("b'", "")
-            temp_data = temp_data.split("\\t")[0]
-            if "k" in temp_data:
-                system["hdd_data"] = float(temp_data.replace("k", "")) / 1024 / 1024
-            elif "M" in temp_data:
-                system["hdd_data"] = float(temp_data.replace("M", "")) / 1024
-            elif "G" in temp_data:
-                system["hdd_data"] = float(temp_data.replace("G", ""))
-        except Exception as e:
-            system["hdd_data"] = -1
-            self.logging.warning("Was not able to get size of data dir: " + (str(cmd_data)) + " - " + str(e))
-
         self.statistics.set(key="srv_cpu", value=system["cpu_usage"])
         self.statistics.set(key="srv_cpu_temp", value=system["cpu_temperature"])
+
+        for key in system:
+            self._system_status[key] = system[key]
+
+    def read_disk_usage(self):
+        """
+        read disk usage from linux command from time to time, interval defined in self.disk_usage_interval,
+        and write data to statistics module
+        """
+        if self.disk_usage_cache == {} or self.disk_usage_last + self.disk_usage_interval > time.time():
+            self.logging.info("... disk usage cache expired ...")
+            system = {}
+            try:
+                # diskusage
+                hdd = psutil.disk_usage("/")
+                system["hdd_used"] = hdd.used / 1024 / 1024 / 1024
+                system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
+            except Exception as err:
+                system = {
+                    "hdd_used": -1,
+                    "hdd_total": -1
+                }
+
+            try:
+                cmd_data = ["du", "-hs", os.path.join(self.main_dir, "data")]
+                temp_data = str(subprocess.check_output(cmd_data))
+                temp_data = temp_data.replace("b'", "")
+                temp_data = temp_data.split("\\t")[0]
+                if "k" in temp_data:
+                    system["hdd_data"] = float(temp_data.replace("k", "")) / 1024 / 1024
+                elif "M" in temp_data:
+                    system["hdd_data"] = float(temp_data.replace("M", "")) / 1024
+                elif "G" in temp_data:
+                    system["hdd_data"] = float(temp_data.replace("G", ""))
+            except Exception as e:
+                system["hdd_data"] = -1
+                self.logging.warning("Was not able to get size of data dir: " + (str(cmd_data)) + " - " + str(e))
+            self.disk_usage_cache = system.copy()
+        else:
+            self.logging.info("... disk usage cache still valid ...")
+            system = self.disk_usage_cache.copy()
+
+        for key in system:
+            self._system_status[key] = system[key]
+
         self.statistics.set(key="srv_hdd_percentage", value=round((system["hdd_used"]/system["hdd_total"]), 3))
         self.statistics.set(key="srv_hdd_used", value=round(system["hdd_used"], 3))
         self.statistics.set(key="srv_hdd_data", value=round(system["hdd_data"], 3))
-
-        self._system_status = system.copy()
 
     def read_available_devices(self):
         """
