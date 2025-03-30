@@ -921,7 +921,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         "info":       {}
                     }
                 api_response["STATUS"]["server_object_queues"]["image_"+cam_id] = len(camera[cam_id].object.detect_queue_image)
-
         if command in api_commands["status_small"]:
             api_response["STATUS"] = {
                 "admin_allowed": self.admin_allowed(),
@@ -1217,9 +1216,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             del api_response["WEATHER"]
 
         # add API request information
-        if param["session_id"] in request_times and param["session_id"] != "":
-            api_response["API"]["request_details"] = request_times
-            api_response["API"]["request_time"] = round(time.time() - request_start, 3)
+        #if param["session_id"] in request_times and param["session_id"] != "":
+        api_response["API"]["request_details"] = request_times
+        api_response["API"]["request_time"] = round(time.time() - request_start, 3)
         config.set_processing_performance("api_GET", command, request_start)
 
         self.stream_file(filetype='application/json', content=json.dumps(api_response).encode(encoding='utf_8'),
