@@ -44,6 +44,7 @@ function birdhouseStatus_connectionError() {
     var cameras     = app_data["SETTINGS"]["devices"]["cameras"];
     var microphones = app_data["SETTINGS"]["devices"]["microphones"];
     var sensors     = app_data["SETTINGS"]["devices"]["sensors"];
+    var relays      = app_data["SETTINGS"]["devices"]["relays"];
 
     setTextById("system_info_connection", "<font color='red'><b>Connection lost!</b></font>");
 
@@ -61,6 +62,10 @@ function birdhouseStatus_connectionError() {
     for (let sensor in sensors) {
         setStatusColor(status_id="status_active_"+sensor, "red");
         setStatusColor(status_id="status_error_"+sensor, "black");
+    }
+    for (let relay in relays) {
+        setStatusColor(status_id="status_active_"+relay, "red");
+        setStatusColor(status_id="status_error_"+relay, "black");
     }
     for (let micro in microphones) {
         setStatusColor(status_id="status_active_"+micro, "red");
@@ -103,7 +108,7 @@ function birdhouseStatus_print(data) {
 
     if (pages_settings.includes(app_active_page))           { birdhouseStatus_system(data); }
     if (pages_settings.includes(app_active_page))           { birdhouseStatus_processing(data); }
-    if (pages_settings.includes(app_active_page))           { birdhouseFunction_relays(data); }
+    if (pages_settings.includes(app_active_page))           { birdhouseStatus_relays(data); }
     if (pages_settings.includes(app_active_page))           { birdhouse_settings.server_dashboard_fill(data); }
     if (app_active_page == "DEVICE_SETTINGS")               { birdhouseStatus_sensors(data); }
 
@@ -394,9 +399,10 @@ function birdhouseStatus_weather(data) {
 *
 * @param (dict) data: response from API status request
 */
-function birdhouseFunction_relays(data) {
+function birdhouseStatus_relays(data) {
 
-    var relay_status  = data["STATUS"]["devices"]["relays"];
+    var relay_status   = data["STATUS"]["devices"]["relays"];
+    var relay_settings = data["SETTINGS"]["devices"]["relays"];
 
     for (let relay in relay_status) {
         var raw_status = relay_status[relay];
@@ -405,6 +411,9 @@ function birdhouseFunction_relays(data) {
         setTextById("relay_status_" + relay, status);
         setTextById("relay_status_long_" + relay, lang("STATUS") + ": " + status);
         setTextById("relay_raw_status_" + relay, raw_status);
+
+        if (relay_settings[relay]["active"]) { setStatusColor(status_id="status_active_"+relay, "white"); }
+        else                                 { setStatusColor(status_id="status_active_"+relay, "black"); }
         }
     }
 
