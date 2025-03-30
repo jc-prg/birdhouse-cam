@@ -50,7 +50,7 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
         """
         write statistic data to database depending on self._write_interval.
         """
-        if time.time() - self._usage_time > self._write_interval:
+        if self._write_interval + self._usage_time > time.time():
             self._usage_time = time.time()
             save_stamp = self.config.local_time().strftime('%H:%M')
             #save_time = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
@@ -89,7 +89,7 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
                 else:
                     save_statistic_info[key] = self._statistics_info[key]
 
-            if len(self._statistics) > 0:
+            if len(self._statistics_array) > 0:
                 self.logging.info("Add statistic data ("+str(len(self._statistics))+") to queue ...")
 
                 self.config.queue.entry_other(config="statistics", date="", key=save_stamp,
