@@ -18,11 +18,14 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="statistic", config=config)
-        self.thread_set_priority(7)
+        self.thread_set_priority(6)
 
         self._usage_time = time.time() - 60
         self._usage_interval = 60
+        self._write_interval = 4 * 60
+
         self._statistics = {}
+        self._statistics_array = {}
         self._statistics_info = {}
         self._statistics_default = {
             "info": {},
@@ -45,12 +48,12 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
 
     def write_statistics(self):
         """
-        write statistic data to database, every 60 seconds (defined in self._usage_interval).
+        write statistic data to database depending on self._write_interval.
         """
-        if time.time() - self._usage_time > self._usage_interval:
+        if time.time() - self._usage_time > self._write_interval:
             self._usage_time = time.time()
             save_stamp = self.config.local_time().strftime('%H:%M')
-            save_time = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+            #save_time = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
 
             statistics = self.config.db_handler.read(config="statistics")
             if statistics == {} or "data" not in statistics or "info" not in statistics:
@@ -58,16 +61,21 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
                                              save_json=True)
 
             save_statistic = {}
-            for key in self._statistics:
+            for key in self._statistics_array:
                 if "_" in key:
                     parts = key.split("_")
                     key2 = parts[0]
                     key3 = key.replace(key2 + "_", "")
                     if key2 not in save_statistic:
                         save_statistic[key2] = {}
-                    save_statistic[key2][key3] = self._statistics[key]
+
+                    #save_statistic[key2][key3] = self._statistics[key]
+                    save_statistic[key2][key3] = sum(self._statistics_array[key]) / len(self._statistics_array[key])
+                    self._statistics_array[key] = []
                 else:
-                    save_statistic[key] = self._statistics[key]
+                    #save_statistic[key] = self._statistics[key]
+                    save_statistic[key] = sum(self._statistics_array[key]) / len(self._statistics_array[key])
+                    self._statistics_array[key] = []
 
             save_statistic_info = {}
             for key in self._statistics_info:
@@ -107,7 +115,9 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
             key (str): statistic key
             value (Any): statistic value
         """
-        self._statistics[key] = value
+        if key not in self._statistics_array:
+            self._statistics_array[key] = []
+        self._statistics_array[key].append(value)
 
     def get_chart_data(self, categories, date="", values=False):
         """

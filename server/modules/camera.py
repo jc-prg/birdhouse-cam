@@ -2285,7 +2285,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.logging.info("image_recording_auto_light: Switch " + light_relay + " off  (mode=auto).")
                 self.relays[light_relay].switch_off()
 
-        elif self.camera_light_mode == "inactive":
+        elif self.camera_light_mode == "inactive" or self.camera_light_mode == "off" or self.camera_light_mode == "on":
             return
 
         else:
@@ -2325,8 +2325,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.statistics.set("config_img_record_"+self.id.lower(), self.config.get_processing_performance("camera_recording_image")[self.id])
             if (self.object and self.config.get_processing_performance("object_detection") != -1 and
                     "image" in self.config.get_processing_performance("object_detection")):
-                self.statistics.set("config_queue_" + self.id.lower() + "_object", queue_size)
                 self.statistics.set("config_img_detect", self.config.get_processing_performance("object_detection")["image"])
+            self.statistics.set("config_queue_" + self.id.lower() + "_object", queue_size)
 
     def get_image_raw(self):
         """

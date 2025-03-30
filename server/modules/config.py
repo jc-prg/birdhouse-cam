@@ -1547,7 +1547,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.object_detection_build_views = False
 
         self.last_start = ""
-        self.measure_time = 60
+        self.measure_time = 30
         self.measure_last = time.time()
 
         # read or create main config file
