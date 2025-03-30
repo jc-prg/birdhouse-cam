@@ -52,6 +52,9 @@ function birdhouseStatus_connectionError() {
         setStatusColor(status_id="status_error_"+camera, "black");
         setStatusColor(status_id="status_error_record_"+camera, "black");
 
+        setStatusColor(status_id="status_active_"+camera+"_object", "red");
+        setStatusColor(status_id="status_error_"+camera+"_object", "black");
+
         setStatusColor(status_id="status_"+camera+"_detection_active", "red");
         setStatusColor(status_id="status_"+camera+"_detection_loaded", "black");
     }
@@ -671,9 +674,16 @@ function birdhouseStatus_detection(data) {
         if (value["object_detection"]["active"])      { setStatusColor("status_" + key + "_detection_active", "white"); }
         else                                          { setStatusColor("status_" + key + "_detection_active", "black"); }
 
+        if (value["object_detection"]["active"])      { setStatusColor("status_active_" + key + "_object", "white"); }
+        else                                          { setStatusColor("status_active_" + key + "_object", "black"); }
+
         if (!value["object_detection"]["active"])     { setStatusColor("status_" + key + "_detection_loaded", "black"); }
         else if (status["models_loaded_status"][key]) { setStatusColor("status_" + key + "_detection_loaded", "green"); }
         else                                          { setStatusColor("status_" + key + "_detection_loaded", "red"); }
+
+        if (!value["object_detection"]["active"])     { setStatusColor("status_error_" + key + "_object", "black"); }
+        else if (status["models_loaded_status"][key]) { setStatusColor("status_error_" + key + "_object", "green"); }
+        else                                          { setStatusColor("status_error_" + key + "_object", "red"); }
         });
 
     }
