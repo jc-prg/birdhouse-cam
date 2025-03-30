@@ -282,10 +282,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
                 system["hdd_used"] = hdd.used / 1024 / 1024 / 1024
                 system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
             except Exception as err:
-                system = {
-                    "hdd_used": -1,
-                    "hdd_total": -1
-                }
+                system = {"hdd_used": -1, "hdd_total": -1}
 
             try:
                 cmd_data = ["du", "-hs", os.path.join(self.main_dir, "data")]
