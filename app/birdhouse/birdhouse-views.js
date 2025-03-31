@@ -515,8 +515,8 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 var birdhouse_STATISTICS_cache = {};
 var birdhouse_STATISTICS_selected = "";
 
-function birdhouse_STATISTICS_load(chart) {
-        setTextById("chart_container", birdhouse_printStatistic(title, birdhouse_STATISTICS_cache, chart=chart, groups=false));
+function birdhouse_STATISTICS_load(chart, container) {
+        setTextById(container, birdhouse_printStatistic(title, birdhouse_STATISTICS_cache, chart=chart, groups=false));
         }
 
 function birdhouse_STATISTICS(title, data) {
@@ -524,24 +524,33 @@ function birdhouse_STATISTICS(title, data) {
     var statistics  = data["DATA"]["data"]["entries"];
     var html        = "";
 
-
     if (birdhouse_STATISTICS_selected == "") { birdhouse_STATISTICS_selected == "hdd-overview"; }
 
-    var link = "birdhouse_STATISTICS_load(chart='hdd-overview')";
+    // container for the first diagram
+    var link = "birdhouse_STATISTICS_load(chart='hdd-overview', 'chart_container_1')";
     html += "<div class='statistic-container label'>";
     html += "<div class=\"statistic-label\" onclick=\""+link+"\">&nbsp;Overview&nbsp;</div>";
     Object.keys(statistics).sort().forEach(key => {
-        var link = "birdhouse_STATISTICS_load(chart='"+key+"')";
+        var link = "birdhouse_STATISTICS_load(chart='"+key+"', 'chart_container_1')";
         html += "<div class=\"statistic-label\" onclick=\""+link+"\">&nbsp;"+key.toUpperCase()+"&nbsp;</div>";
         });
-
     html += "</div>";
-    html += "<div id='chart_container' class='statistic-container'></div>";
+    html += "<div id='chart_container_1' class='statistic-container'></div>";
 
+    // container for the second diagram
+    var link = "birdhouse_STATISTICS_load(chart='hdd-overview', 'chart_container_2')";
+    html += "<div class='statistic-container label'>";
+    html += "<div class=\"statistic-label\" onclick=\""+link+"\">&nbsp;Overview&nbsp;</div>";
+    Object.keys(statistics).sort().forEach(key => {
+        var link = "birdhouse_STATISTICS_load(chart='"+key+"', 'chart_container_2')";
+        html += "<div class=\"statistic-label\" onclick=\""+link+"\">&nbsp;"+key.toUpperCase()+"&nbsp;</div>";
+        });
+    html += "</div>";
+    html += "<div id='chart_container_2' class='statistic-container'>&nbsp;</div>";
+
+    // write and load overview into the first container, 2nd stays empty at first
     appSettings.write(1, lang("STATISTICS"), html);
-    setTextById("chart_container", birdhouse_printStatistic(title, data, chart="hdd-overview", groups=false));
-
-    //html += birdhouse_printStatistic(title, data, chart="all", groups=true);
+    setTextById("chart_container_1", birdhouse_printStatistic(title, data, chart="hdd-overview", groups=false));
     }
 
 /*
