@@ -80,6 +80,51 @@
 @media (max-width: 706px)   { .button-settings-system { width : 32%; } }
 @media (min-width: 1250px)  { .button-settings-system { width : 19%; } }
 
+/* STATISTICS --------------------------------- */
+
+.statistic-label {
+    float         : left;
+    border-radius :  8px;
+    height        : 13px;
+    max-height    : 13px;
+    margin        :  4px;
+    padding       :  4px;
+    cursor        : pointer;
+    font-size     : 11px;
+    background    : #dd8888;
+    color         : black;
+    }
+
+.statistic-label.glow {
+  box-shadow: 0px 0px 3px 3px #333;
+  /* in order: x offset, y offset, blur size, spread size, color */
+  /* blur size and spread size are optional (they default to 0) */
+}
+
+.statistic-label:hover {
+      box-shadow: 0px 0px 3px 3px #dd8;
+      /* in order: x offset, y offset, blur size, spread size, color */
+      /* blur size and spread size are optional (they default to 0) */
+}
+
+.statistic-container {
+    color       : white;
+    background  : #333333;
+    border      : 1px gray solid;
+    border-radius : 5px;
+    width       : 96%;
+    padding     : 1%;
+    margin      : 1%;
+    float       : left;
+    }
+
+.statistic-container.label {
+    background  : #282828;
+    border      : 1px #444444 solid;
+    }
+
+
+
 /* ERROR MSG --------------------------------- */
 
 .settings_error_msg {

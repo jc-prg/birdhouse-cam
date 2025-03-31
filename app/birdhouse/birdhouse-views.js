@@ -528,15 +528,15 @@ function birdhouse_STATISTICS(title, data) {
     if (birdhouse_STATISTICS_selected == "") { birdhouse_STATISTICS_selected == "hdd-overview"; }
 
     var link = "birdhouse_STATISTICS_load(chart='hdd-overview')";
-    html += "<div style='margin:1%;padding:1%;width:96%;float:left;'>";
-    html += "<div class=\"detection_label\" onclick=\""+link+"\" style='padding:3px;background:#660000;'>&nbsp;Overview&nbsp;</div>";
+    html += "<div class='statistic-container label'>";
+    html += "<div class=\"statistic-label\" onclick=\""+link+"\">&nbsp;Overview&nbsp;</div>";
     Object.keys(statistics).sort().forEach(key => {
         var link = "birdhouse_STATISTICS_load(chart='"+key+"')";
-        html += "<div class=\"detection_label\" onclick=\""+link+"\" style='padding:3px;background:#660000;'>&nbsp;"+key.toUpperCase()+"&nbsp;</div>";
+        html += "<div class=\"statistic-label\" onclick=\""+link+"\">&nbsp;"+key.toUpperCase()+"&nbsp;</div>";
         });
 
     html += "</div>";
-    html += "<div id='chart_container' style='border:1px gray solid;width:96%;padding:1%;margin:1%;border-radius:5px;background:#333333;float:left;'></div>";
+    html += "<div id='chart_container' class='statistic-container'></div>";
 
     appSettings.write(1, lang("STATISTICS"), html);
     setTextById("chart_container", birdhouse_printStatistic(title, data, chart="hdd-overview", groups=false));
