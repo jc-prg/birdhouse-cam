@@ -480,7 +480,6 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             }
         }
 
-
 	// Set title
 	if (active_page == "TODAY" && active_date != "")    {
 	    var archive_title = "<span style='cursor:pointer' onclick='app_active_page=\"ARCHIVE\";birdhouseReloadView();'>";
@@ -507,6 +506,42 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 	    }
 	}
 
+/*
+* create view with server and usage statistics
+*
+* @param (string) title: title to be displayed
+* @param (dict) data: API response for list specific request
+*/
+var birdhouse_STATISTICS_cache = {};
+var birdhouse_STATISTICS_selected = "";
+
+function birdhouse_STATISTICS_load(chart) {
+        setTextById("chart_container", birdhouse_printStatistic(title, birdhouse_STATISTICS_cache, chart=chart, groups=false));
+        }
+
+function birdhouse_STATISTICS(title, data) {
+    birdhouse_STATISTICS_cache = data;
+    var statistics  = data["DATA"]["data"]["entries"];
+    var html        = "";
+
+
+    if (birdhouse_STATISTICS_selected == "") { birdhouse_STATISTICS_selected == "hdd-overview"; }
+
+    var link = "birdhouse_STATISTICS_load(chart='hdd-overview')";
+    html += "<div class=\"detection_label\" onclick=\""+link+"\" style='padding:3px;background:#660000;'>&nbsp;Overview&nbsp;</div>";
+    Object.keys(statistics).sort().forEach(key => {
+        var link = "birdhouse_STATISTICS_load(chart='"+key+"')";
+        html += "<div class=\"detection_label\" onclick=\""+link+"\" style='padding:3px;background:#660000;'>&nbsp;"+key.toUpperCase()+"&nbsp;</div>";
+        });
+
+    html += "<br/>&nbsp;<br/>";
+    html += "<div id='chart_container' style='border:1px gray solid;width:96%;padding:1%;margin:1%;border-radius:5px;background:#333333;'></div>";
+
+    appSettings.write(1, lang("STATISTICS"), html);
+    setTextById("chart_container", birdhouse_printStatistic(title, data, chart="hdd-overview", groups=false));
+
+    //html += birdhouse_printStatistic(title, data, chart="all", groups=true);
+    }
 
 /*
 * create view with server and usage statistics
@@ -514,56 +549,82 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 * @param (string) title: title to be displayed
 * @param (dict) data: API response for list specific request
 */
-function birdhouse_STATISTICS(title, data) {
+function birdhouse_printStatistic(title, data, chart_type="all", groups=true) {
 	var html          = "";
 	var admin         = data["STATUS"]["admin_allowed"];
 	var statistics    = data["DATA"]["data"]["entries"];
 	var camera_status = data["STATUS"]["devices"]["cameras"];
-	var open_category = ["cpu", "streams", "framerate"];
+	var open_category = [];
 	var system_data   = app_data["STATUS"]["system"];
+	var tab           = new birdhouse_table();
+	tab.style_cells["vertical-align"]   = "top";
+	tab.style_cells["padding"]          = "3px";
 
-    // resource usage
-    pie_data = { "titles": [], "data": []}
-    pie_data["titles"].push("Data");
-    pie_data["data"].push(system_data["hdd_data"] - system_data["hdd_archive"]);
-    pie_data["titles"].push("Archive");
-    pie_data["data"].push(system_data["hdd_archive"]);
-    pie_data["titles"].push("System");
-    pie_data["data"].push(system_data["hdd_used"] - system_data["hdd_data"]);
-    pie_data["titles"].push("Available");
-    pie_data["data"].push(system_data["hdd_total"] - system_data["hdd_used"]);
+    this.print_line_chart = function(key, open, groups) {
+        var html   = "";
+        var info   = "";
+        var status = camera_status[key];
+        var chart = "&nbsp;<br/>";
+        chart += birdhouseChart_create(label="", titles=statistics[key]["titles"],
+                                       data=statistics[key]["data"],
+                                       type="line",
+                                       sort_keys=true,
+                                       id="statisticsChart_"+key,
+                                       size={"height": "250px", "width": "100%"});
+        chart += "<br/>&nbsp;<br/>";
 
-    chart = birdhouseChart_create(label="HDD Usage", titles=pie_data["titles"], data=pie_data["data"], type="pie", sort_keys=false,
-                                  id="hdd_pie", size={"height": "270px", "width":"270px"}, set_colors=["red", "orange", "darkblue", "green"]);
+        if (groups) { html  += birdhouse_OtherGroup( "chart_"+key, lang("TODAY") + " " + key.toUpperCase() + " " + info, chart, open ); }
+        else        { html  += chart; }
+        return html;
+        }
 
-    // !!! Rework Format
-    chart += "<br/>&nbsp;<br/>";
-    chart += "Max parallel streams: " + statistics["streams"]["info"]["max"] + "<br/>";
-    chart += "Total viewing time: " + statistics["streams"]["info"]["views"] + "min<br/>&nbsp;";
+    if (chart_type == "all" || chart_type == "hdd-overview") {
+        // resource usage
+        pie_data = { "titles": [], "data": []}
+        pie_data["titles"].push("Data");
+        pie_data["data"].push(system_data["hdd_data"] - system_data["hdd_archive"]);
+        pie_data["titles"].push("Archive");
+        pie_data["data"].push(system_data["hdd_archive"]);
+        pie_data["titles"].push("System");
+        pie_data["data"].push(system_data["hdd_used"] - system_data["hdd_data"]);
+        pie_data["titles"].push("Available");
+        pie_data["data"].push(system_data["hdd_total"] - system_data["hdd_used"]);
 
-    html  += birdhouse_OtherGroup( "chart_hdd_pie", lang("TODAY") + " HDD Usage", chart, true );
+        var chart = birdhouseChart_create(label="HDD Usage", titles=pie_data["titles"], data=pie_data["data"], type="pie",
+                                          sort_keys=false, id="hdd_pie", size={"height": "270px", "width":"270px"},
+                                          set_colors=["red", "orange", "darkblue", "green"],
+                                          set_menu="right");
 
-    // statistics of the current day
-    Object.keys(statistics).sort().forEach((key) => {
-        //html += "<center><h2>" + lang("TODAY") + ": " + key + "<center></h2><br/>";
+        var info  = "<br/>&nbsp;<br/>";
+        info += "Max parallel streams: " + statistics["streams"]["info"]["max"] + "<br/>&nbsp;<br/>";
+        info += "Total viewing time: " + statistics["streams"]["info"]["views"] + "min<br/>&nbsp;";
+
+        var html_entry = tab.start();
+        html_entry    += tab.row(chart, info);
+        html_entry    += tab.end();
+
+        if (groups) { html  += birdhouse_OtherGroup( "chart_hdd_pie", lang("TODAY") + " HDD Usage", html_entry, true ); }
+        else        { html  += html_entry; }
+        }
+
+    if (chart_type == "all") {
+        // statistics of the current day
+        Object.keys(statistics).sort().forEach((key) => {
+            if (open_category.indexOf(key) > -1) { var open = true; }
+            else                                 { var open = false; }
+            html += this.print_line_chart(key, open, groups);
+            });
+        }
+    else if (statistics[chart_type]) {
+        var key = chart_type;
         if (open_category.indexOf(key) > -1) { var open = true; }
         else                                 { var open = false; }
-        var info = "";
-        var status = camera_status[key];
-        if (status != undefined && status["active"] == false) { open = false; info = "<i>(" + lang("INACTIVE") + ")</i>"; }
-
-        var chart = "&nbsp;<br/>";
-        chart += birdhouseChart_create(label="", titles=statistics[key]["titles"], data=statistics[key]["data"],
-                                      type="line", sort_keys=true, id="statisticsChart_"+key, size={"height": "250px", "width": "100%"});
-        chart += "<br/>&nbsp;<br/>";
-        html  += birdhouse_OtherGroup( "chart_"+key, lang("TODAY") + " " + key.toUpperCase() + " " + info, chart, open );
-    });
-
+        html += this.print_line_chart(key, open, groups);
+        }
 
 	//birdhouse_frameHeader(lang("STATISTICS"));
 	//setTextById(app_frame_content, html);
-
-	appSettings.write(1, lang("STATISTICS"), html);
+    return html;
 }
 
 /*

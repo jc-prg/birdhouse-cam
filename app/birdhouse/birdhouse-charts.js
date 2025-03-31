@@ -52,7 +52,7 @@ function birdhouse_loadChartJS() {
 * @param (string) id: id of div element
 * @param (dict) size: possibility to overwrite size of chart, e.g., {"height": "100px", "width": "90%"}
 */
-function birdhouseChart_create(label, titles, data, type="line", sort_keys=true, id="birdhouseChart", size="", set_colors=[]) {
+function birdhouseChart_create(label, titles, data, type="line", sort_keys=true, id="birdhouseChart", size="", set_colors=[], set_menu="bottom") {
 
     // https://www.chartjs.org/docs/latest/samples/line/line.html
     // data = { "label1" : [1, 2, 3], "label2" : [1, 2, 3] };
@@ -71,7 +71,7 @@ function birdhouseChart_create(label, titles, data, type="line", sort_keys=true,
     var data_labels = "";
     var data_data   = "";
     var data_sets   = [];
-	var colors  = [];
+	var colors      = [];
 
     if (set_colors != [])        { colors = set_colors;            border_pie = "white"; }
 	else if (appTheme == "dark") { colors = chartJS_darkColors;    border_pie = "white"; }
@@ -132,8 +132,8 @@ function birdhouseChart_create(label, titles, data, type="line", sort_keys=true,
             responsive: true,
             plugins: {
                 legend: {
-                    position: "right",
-                    align: "middle",
+                    position: set_menu,
+                    align: "left",
                     labels : {
                         boxHeight : 12,
                         boxWidth : 12,
