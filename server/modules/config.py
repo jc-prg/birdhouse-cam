@@ -49,7 +49,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
 
         self.config_cache = {}
         self.config_cache_changed = {}
-        self.config_cache_size = 0
+        self.config_cache_size = {"all": 0.0, "images": 0.0}
         self.config_cache_size_max = 20 * 1024 * 1024
         self.config_cache_size_update = time.time()
 
@@ -72,7 +72,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 time_cache_update = time.time()
                 self.get_db_status(cache=False)
 
-            if self.config_cache_size > self.config_cache_size_max:
+            if self.config_cache_size["all"] > self.config_cache_size_max:
                 self.logging.info("Clean up cache ...")
                 self.clean_up_cache("all")
 
@@ -95,7 +95,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         self._processing = False
         self.set_db_type(db_type)
 
-    def get_cache_size(self):
+    def get_cache_size(self, part="all"):
         """
         get size of cache in Byte (updated every 20 seconds)
 
@@ -103,10 +103,39 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             float: size of cache in Byte
         """
         if self.config_cache_size_update + 20 < time.time():
-            self.config_cache_size = asizeof.asizeof(self.config_cache)
+            self.config_cache_size["all"] = asizeof.asizeof(self.config_cache)
+
+            if "images" in self.config_cache:
+                self.config_cache_size["images"] = asizeof.asizeof(self.config_cache["images"])
+            if "backup" in self.config_cache:
+                self.config_cache_size["backup"] = asizeof.asizeof(self.config_cache["backup"])
             self.config_cache_size_update = time.time()
 
-        return self.config_cache_size
+        self.logging.debug("Cache keys: " + str(self.config_cache.keys()))
+
+        if part in self.config_cache_size:
+            return self.config_cache_size[part]
+        else:
+            return 0.0
+
+    def get_db_list(self):
+        """
+        get list of available databases
+
+        Returns:
+            list: list of available databases (json, couch - depending on db type)
+        """
+        db_list = {}
+        if self.db_type == "json":
+            db_list["json"] = self.json.get_db_list()
+        elif self.db_type == "couch":
+            db_list["json"] = self.json.get_db_list()
+            db_list["couch"] = self.couch.get_db_list()
+        elif self.db_type == "both":
+            db_list["json"] = self.json.get_db_list()
+            db_list["couch"] = self.couch.get_db_list()
+        return db_list
+
 
     def set_db_type(self, db_type):
         """
@@ -562,7 +591,8 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             else:
                 del self.config_cache[config]
         elif config == "all":
-            self.config_cache_size = 0
+            for key in self.config_cache_size:
+                self.config_cache_size[key] = 0
             self.config_cache = {}
             self.config_cache_changed = {}
             self.config_cache_size_update = time.time()
@@ -1876,23 +1906,48 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         """
         check if db_type has changed since last start and ensure that the data
         are migrated from the old type to the new one
+
+        JSON -> BOTH/COUCH
+        - for each DB in couch, delete
+        - for each DB in json, read and write to couch db
+
+        COUCH -> JSON
+        - initially connect to couch (as usually not yet loaded)
+        - check if JSON DB exists rewrite, if not create from couch
+        - keep JSON file (as usually they are used as backup)
         """
         if self.last_db_type != self.db_type and self.last_db_type is not None:
             self.logging.info("-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.")
             self.logging.info("DB type has changed: " + str(self.last_db_type) + " -> " + self.db_type)
             self.logging.info("-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.")
 
+            available_databases = self.db_handler.get_db_list()
+            self.logging.info(str(available_databases))
+
         self.logging.warning("NOT IMPLEMENTED YET: Migration from old DB type to new one.")
 
-    def local_time(self):
+    def local_time(self, day="today"):
         """
-        return time that includes the current timezone
+        return time that includes the current timezone (day="today")
+        other values: yesterday,
 
         Returns:
             datetime: local time for the current timezone
         """
-        date_tz_info = timezone(timedelta(hours=self.timezone))
-        return datetime.now(date_tz_info)
+        date_tz_info = datetime.now(timezone(timedelta(hours=self.timezone)))
+        date_tz_info_1 = datetime.now(timezone(timedelta(hours=self.timezone) - timedelta(days=1)))
+        self.logging.debug("Local time: " + str(date_tz_info) + " / " + str(date_tz_info_1))
+
+        if day == "yesterday":
+            return date_tz_info_1
+        else:
+            return date_tz_info
+
+    def local_date(self, days=0):
+        today = datetime.now()
+        target_date = today - timedelta(days=days)
+        self.logging.info("Target date: " + str(target_date))
+        return target_date.strftime('%Y%m%d')
 
     def force_shutdown(self):
         """
@@ -2230,10 +2285,12 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         """
         if init:
             self.statistics.register("config_queue_db", "DB Queue")
-            self.statistics.register("config_queue_wait", "Queue Wait")
-            self.statistics.register("config_queue_write", "Queue Write")
-            self.statistics.register("config_cache_size", "Cache (MB)")
-            self.statistics.register("srv_api_status", "API Response Status")
+            self.statistics.register("config_queue_wait", "Queue Wait [s]")
+            self.statistics.register("config_queue_write", "Queue Write [s]")
+            self.statistics.register("config_cache_size", "Cache [MB]")
+            self.statistics.register("config_cache_size_images", "Cache images [MB]")
+            self.statistics.register("config_cache_size_backup", "Cache images [MB]")
+            self.statistics.register("srv_api_status", "API Response Status [s]")
 
         else:
             if self.statistics and self.measure_last + self.measure_time < time.time():
@@ -2246,8 +2303,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 if self.get_processing_performance("config_queue_write") != -1 and "image" in self.get_processing_performance("config_queue_write"):
                     self.statistics.set("config_queue_write", self.get_processing_performance("config_queue_write")["image"])
                 self.statistics.set("config_queue_wait", self.queue.queue_wait)
-                self.statistics.set("config_cache_size", self.db_handler.get_cache_size() / 1024 / 1024)
+                self.statistics.set("config_cache_size", self.db_handler.get_cache_size("all") / 1024 / 1024)
+                self.statistics.set("config_cache_size_images", self.db_handler.get_cache_size("images") / 1024 / 1024)
+                self.statistics.set("config_cache_size_backup", self.db_handler.get_cache_size("backup") / 1024 / 1024)
                 if self.get_processing_performance("api_GET") != -1 and "status" in self.get_processing_performance("api_GET"):
                     self.statistics.set("srv_api_status", self.get_processing_performance("api_GET")["status"])
-
-

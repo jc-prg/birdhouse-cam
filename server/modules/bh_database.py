@@ -88,6 +88,8 @@ class BirdhouseJSON(BirdhouseDbClass):
         self.locked = {}
         self.sort_keys = True
         self.connected = True
+        self.db_list = []
+        self.get_db_list()
 
         self.logging.info("Connected JSON handler.")
 
@@ -145,6 +147,42 @@ class BirdhouseJSON(BirdhouseDbClass):
             self.locked[filename] = False
             self.raise_error("Could not write JSON file: " + filename + " - " + str(e))
 
+    def get_db_list(self):
+        """
+        get list of all json databases in data directory
+
+        Returns:
+            list: list of all json databases
+        """
+        self.logging.info(" - Get JSON DB list ... ")
+        json_files = []
+        directory = birdhouse_main_directories["data"]
+        count = 0
+
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                if file.endswith('.json'):
+                    count += 1
+                    path = os.path.join(root, file).replace(birdhouse_main_directories["data"], "")
+                    self.logging.debug(str(count) + ". " + str(path))
+                    json_files.append(path)
+        self.db_list = json_files.copy()
+        return json_files
+
+    def delete_db(self, filename):
+        """
+        delete json database file
+
+        Args:
+            filename: file to be deleted
+        """
+        if os.path.exists(filename):
+            os.remove(filename)
+            self.logging.info("The file "+filename+" has been deleted.")
+        else:
+            self.logging.warning("The file "+filename+" does not exist.")
+        pass
+
     def exists(self, filename) -> bool:
         """
         check if file exists
@@ -181,6 +219,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         self.basic_directory = db["db_basedir"]
         self.db_url = "http://" + db["db_usr"] + ":" + db["db_pwd"] + "@" + db["db_server"] + \
                       ":" + str(db["db_port"]) + "/"
+        self.db_list = []
 
         self.create_revisions = False
 
@@ -230,6 +269,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         check = self.check_db()
         if check:
             self.logging.info("Connected.")
+            self.get_db_list()
             return True
         else:
             self.logging.warning("Error CouchDB database check.")
@@ -258,6 +298,39 @@ class BirdhouseCouchDB(BirdhouseDbClass):
                                          "     And ensure that a swap file is available and used (see README.md).")
                     return False
         return True
+
+    def get_db_list(self):
+        """
+        get list of all databases in couch_db
+
+        Returns:
+            list: list of all databases in couch_db
+        """
+        self.logging.debug(" - Get Couch DB list ... ")
+        count = 0
+        for db_key in self.database:
+            count += 1
+            self.logging.debug(str(count) + ". " + db_key)
+            self.db_list.append(db_key)
+        return self.db_list
+
+    def delete_db(self, filename):
+        """
+        delete a database from couch_db
+
+        Args:
+            filename: filename to be translated into db_key and date
+        """
+        [db_key, date] = self.filename2keys(filename)
+        self.logging.debug("-----> DELETE DB: " + db_key + "/" + date + " - " + filename)
+        try:
+            if db_key in self.database:
+                self.database.delete(db_key)
+                self.logging.info("Database '"+db_key+"' deleted successfully.")
+            else:
+                self.logging.warning("Database '"+db_key+"' doesn't exist. Nothing to delete.")
+        except couchdb.http.ServerError as e:
+            self.logging.error("Error deleting database: " + str(e))
 
     def create(self, db_key):
         """

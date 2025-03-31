@@ -2559,7 +2559,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         entry_list = list(self.camera.keys())
         entry_list.append("srv")
-        content["entries"] = self.statistic.get_chart_data([])
+        #content["entries"] = self.statistic.get_chart_data([])
+        content["entries"] = self.statistic.get_chart_data_view([])
 
         content["view_count"] = []
         content["subtitle"] = presets.birdhouse_pages["statistics"][0]

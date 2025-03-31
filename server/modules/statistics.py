@@ -134,7 +134,10 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
              dict[str, Any]: data formatted for chart.js
         """
         chart = {}
-        chart_data = self.config.db_handler.read_cache("statistics")
+        db_name = "statistics"
+        if date != "":
+            db_name = "statistics_archive"
+        chart_data = self.config.db_handler.read_cache(db_name, date)
         chart_value = {}
         chart_values = {"data": {}, "info": {}}
 
@@ -203,5 +206,23 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
                                 if value > chart[category]["info"]["max"]:
                                     chart[category]["info"]["max"] = value
                                 chart[category]["info"]["views"] += value
+
+        return chart
+
+    def get_chart_data_view(self, categories, date="", values=False):
+        today = self.config.local_date()
+        yesterday = self.config.local_date(days=1)
+        day_minus_2days = self.config.local_date(days=2)
+        day_minus_3days = self.config.local_date(days=3)
+        day_minus_4days = self.config.local_date(days=4)
+        days_3 = [today, yesterday, day_minus_2days]
+        days_5 = [today, yesterday, day_minus_2days, day_minus_3days, day_minus_4days]
+        chart = {
+            "today" : self.get_chart_data(categories),
+            "yesterday": self.get_chart_data(categories, yesterday),
+            "3days": {}
+        }
+        for key in days_3:
+            chart["3days"][key] = self.get_chart_data(categories, key)
 
         return chart

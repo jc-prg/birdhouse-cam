@@ -420,6 +420,7 @@ birdhouse_directories = {
     "favorites": "images/",
     "sensor": "images/",
     "statistics": "other/",
+    "statistics_archive": "images/",
     "today": "00_today/",
     "objects": "images/",
     "custom_models": "custom_models/",
@@ -439,6 +440,7 @@ birdhouse_files = {
     "videos": "config_videos.json",
     "sensor": "config_sensor.json",
     "statistics": "config_statistics.json",
+    "statistics_archive": "config_statistics.json",
     "weather": "config_weather.json"
 }
 birdhouse_dir_to_database = {

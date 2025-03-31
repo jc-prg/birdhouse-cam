@@ -2300,13 +2300,13 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         if init:
             self.statistics.register(self.id.lower() + "_streams", "Streams " + self.id.upper())
-            self.statistics.register(self.id.lower() + "_framerate", "Framerate " + self.id.upper())
+            self.statistics.register(self.id.lower() + "_framerate", "Framerate " + self.id.upper() + " [fps]")
             self.statistics.register(self.id.lower() + "_error", "Camera Error " + self.id.upper())
             self.statistics.register(self.id.lower() + "_raw_error", "Stream Error " + self.id.upper())
-            self.statistics.register("config_img_record_"+self.id.lower(), "Record Image " + self.id.upper())
+            self.statistics.register("config_img_record_"+self.id.lower(), "Record Image " + self.id.upper() + " [s]")
             if self.object:
                 self.statistics.register("config_queue_" + self.id.lower() + "_object", "Object Queue " + self.id.upper())
-                self.statistics.register("config_img_detect", "Detect Image")
+                self.statistics.register("config_img_detect", "Detect Image [s]")
 
         else:
             self.logging.debug("Measure stream usage ...")
