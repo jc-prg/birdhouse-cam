@@ -143,7 +143,7 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
 
         values = True
         # reformat values if requested
-        if values:
+        if values and "info" in chart_data and "data" in chart_data:
             for key in chart_data["info"]:
                 for value in chart_data["info"][key]:
                     if "error" == value:
@@ -173,6 +173,8 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
                         chart_values["data"][stamp][k_cat] = {}
                     if v_cat in chart_data["data"][stamp] and v_val in chart_data["data"][stamp][v_cat]:
                         chart_values["data"][stamp][k_cat][k_val] = chart_data["data"][stamp][v_cat][v_val]
+        else:
+            return {}
 
         # create chart data
         if len(categories) == 0:
