@@ -1946,7 +1946,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
     def local_date(self, days=0):
         today = datetime.now()
         target_date = today - timedelta(days=days)
-        self.logging.info("Target date: " + str(target_date))
+        self.logging.debug("Target date: " + str(target_date))
         return target_date.strftime('%Y%m%d')
 
     def force_shutdown(self):
