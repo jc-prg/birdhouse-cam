@@ -2,9 +2,11 @@
 * cache statistic data to not every time reload statistic data
 */
 var birdhouse_STATISTICS_cache = {};
-var birdhouse_STATISTICS_selected = "";
-var birdhouse_STATISTICS_day1 = "today";
-var birdhouse_STATISTICS_day2 = "today";
+var birdhouse_STATISTICS_selected_1 = "overview";
+var birdhouse_STATISTICS_selected_2 = "";
+var birdhouse_STATISTICS_day_1 = "today";
+var birdhouse_STATISTICS_day_2 = "today";
+var birdhouse_STATISTICS_labels = {"day": [], "charts": ["overview"]}
 
 /*
 * create view with server and usage statistics
@@ -15,58 +17,82 @@ var birdhouse_STATISTICS_day2 = "today";
 function birdhouse_STATISTICS(title, data) {
     birdhouse_STATISTICS_cache = data;
     var link        = "";
-    var date        = birdhouse_STATISTICS_day1;
+    var date        = birdhouse_STATISTICS_day_1;
     var statistics  = data["DATA"]["data"]["entries"][date];
-    var timeframes  = {"today":1,"yesterday":2}; //data["DATA"]["data"]["entries"];
+    var timeframes  = data["DATA"]["data"]["entries"];
     var html        = "";
 
-    if (birdhouse_STATISTICS_selected == "") { birdhouse_STATISTICS_selected == "hdd-overview"; }
-
-    // container for the first diagram
-    link = "birdhouse_STATISTICS_load(chart='hdd-overview', 'chart_container_1', birdhouse_STATISTICS_day1);";
-    html += "<div class='statistic-container label'>";
-    html += "<div class=\"statistic-label\" onclick=\""+link+"\">&nbsp;Overview&nbsp;</div>";
-    Object.keys(statistics).sort().forEach(key => {
-        link = "birdhouse_STATISTICS_load(id=1, chart='"+key+"', 'chart_container_1', birdhouse_STATISTICS_day1);";
-        html += "<div class=\"statistic-label\" onclick=\""+link+"\">&nbsp;"+key.toUpperCase()+"&nbsp;</div>";
-        });
-    Object.keys(timeframes).forEach(key => {
-        link = "birdhouse_STATISTICS_day1='"+key+"';";
-        html += "<div class=\"statistic-label\" onclick=\""+link+"\" style=\"background:darkgreen;color:white;\">&nbsp;"+key.toUpperCase()+"&nbsp;</div>";
-        });
-    html += "</div>";
-    html += "<div id='chart_container_1' class='statistic-container'></div>";
-
-    // container for the second diagram
-    link = "birdhouse_STATISTICS_load(chart='hdd-overview', 'chart_container_2', birdhouse_STATISTICS_day2);";
-    html += "<div class='statistic-container label'>";
-    html += "<div class=\"statistic-label\" onclick=\""+link+"\">&nbsp;Overview&nbsp;</div>";
-    Object.keys(statistics).sort().forEach(key => {
-        link = "birdhouse_STATISTICS_load(id=2, chart='"+key+"', 'chart_container_2', birdhouse_STATISTICS_day2);";
-        html += "<div class=\"statistic-label\" onclick=\""+link+"\">&nbsp;"+key.toUpperCase()+"&nbsp;</div>";
-        });
-    Object.keys(timeframes).forEach(key => {
-        link = "birdhouse_STATISTICS_day2='"+key+"';";
-        html += "<div class=\"statistic-label\" onclick=\""+link+"\" style=\"background:darkgreen;color:white;\">&nbsp;"+key.toUpperCase()+"&nbsp;</div>";
-        });
-    html += "</div>";
-    html += "<div id='chart_container_2' class='statistic-container'>&nbsp;</div>";
+    this.create_container = function(chart_id) {
+        var html    = "";
+        var link    = "birdhouse_STATISTICS_click('"+chart_id+"', 'overview', '');";
+        html += "<div class='statistic-container label'>";
+        html += "<div id='label_"+chart_id+"_overview' class=\"statistic-label\" onclick=\""+link+"\">&nbsp;Overview&nbsp;</div>";
+        Object.keys(statistics).sort().forEach(key => {
+            birdhouse_STATISTICS_labels["charts"].push(key);
+            link    = "birdhouse_STATISTICS_click('"+chart_id+"', '"+key+"', '');";
+            html += "<div id='label_"+chart_id+"_"+key+"' class=\"statistic-label\" onclick=\""+link+"\">&nbsp;"+key.toUpperCase()+"&nbsp;</div>";
+            });
+        Object.keys(timeframes).forEach(key => {
+            birdhouse_STATISTICS_labels["day"].push(key);
+            link    = "birdhouse_STATISTICS_click('"+chart_id+"', '', '"+key+"');";
+            html += "<div id='label_"+chart_id+"_"+key+"' class=\"statistic-label\" onclick=\""+link+"\" style=\"background:darkgreen;color:white;\">&nbsp;"+key.toUpperCase()+"&nbsp;</div>";
+            });
+        html += "</div>";
+        html += "<div id='chart_container_"+chart_id+"' class='statistic-container'></div>";
+        return html;
+        }
 
     // write and load overview into the first container, 2nd stays empty at first
+    html += this.create_container("1");
+    html += this.create_container("2");
     appSettings.write(1, lang("STATISTICS"), html);
-    setTextById("chart_container_1", birdhouse_printStatistic(title, data, date, chart="hdd-overview", groups=false, id=1));
+    birdhouse_STATISTICS_click("1");
     }
 
 /*
-* load statistics into container build in birdhouse_STATISTICS
+* load statistics into container build in birdhouse_STATISTICS and add a glow to selected labels
 *
-* @param (string) chart: chart key
-* @param (string) container: container ID
+* @param (string) chart_id: chart_id
+* @param (string) select: key for chart to be loaded
+* @param (string) date: date_key for chart to be loaded (today, yesterday, 3days)
 */
-function birdhouse_STATISTICS_load(id, chart, container, date) {
+function birdhouse_STATISTICS_click(chart_id, select="", date="") {
+    if (date != ""   && chart_id == "1")   { birdhouse_STATISTICS_day_1 = date; }
+    if (date != ""   && chart_id == "2")   { birdhouse_STATISTICS_day_2 = date; }
+    if (select != "" && chart_id == "1")   { birdhouse_STATISTICS_selected_1 = select; }
+    if (select != "" && chart_id == "2")   { birdhouse_STATISTICS_selected_2 = select; }
 
-        setTextById(container, birdhouse_printStatistic(title, birdhouse_STATISTICS_cache, date, chart=chart, groups=false, id));
+    // remove all glows
+    for (var i=0;i<birdhouse_STATISTICS_labels["day"].length;i++) {
+        var label = "label_" + chart_id + "_" + birdhouse_STATISTICS_labels["day"][i];
+        if (document.getElementById(label)) { document.getElementById(label).className = "statistic-label"; }
         }
+    for (var i=0;i<birdhouse_STATISTICS_labels["charts"].length;i++) {
+        var label = "label_" + chart_id + "_" + birdhouse_STATISTICS_labels["charts"][i];
+        if (document.getElementById(label)) { document.getElementById(label).className = "statistic-label"; }
+        }
+
+    // add glows for selected entries
+    if (chart_id == "1")   {
+        label_select = "label_1_"+birdhouse_STATISTICS_selected_1;
+        label_day    = "label_1_"+birdhouse_STATISTICS_day_1;
+        }
+    if (chart_id == "2")   {
+        label_select = "label_2_"+birdhouse_STATISTICS_selected_2;
+        label_day    = "label_2_"+birdhouse_STATISTICS_day_2;
+        }
+    if (document.getElementById(label_select)) { document.getElementById(label_select).className = "statistic-label glow"; }
+    if (document.getElementById(label_day))    { document.getElementById(label_day).className    = "statistic-label glow"; }
+
+    // print charts
+    var chart_html = birdhouse_printStatistic("",
+                        birdhouse_STATISTICS_cache,
+                        eval("birdhouse_STATISTICS_day_"+chart_id),
+                        eval("birdhouse_STATISTICS_selected_"+chart_id),
+                        groups=false, chart_id
+                        );
+    setTextById("chart_container_" + chart_id, chart_html);
+    }
 
 /*
 * create view with server and usage statistics
@@ -103,7 +129,7 @@ function birdhouse_printStatistic(title, data, date, chart_type="all", groups=tr
         return html;
         }
 
-    if (chart_type == "all" || chart_type == "hdd-overview") {
+    if (chart_type == "all" || chart_type == "overview") {
         // resource usage
         pie_data = { "titles": [], "data": []}
         pie_data["titles"].push("Data");
@@ -146,9 +172,6 @@ function birdhouse_printStatistic(title, data, date, chart_type="all", groups=tr
         else                                 { var open = false; }
         html += this.print_line_chart(id, key, open, groups);
         }
-
-	//birdhouse_frameHeader(lang("STATISTICS"));
-	//setTextById(app_frame_content, html);
     return html;
 }
 

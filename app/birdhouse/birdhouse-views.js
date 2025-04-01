@@ -865,12 +865,19 @@ function birdhouse_LIST_chart_weather(data, active_page, camera) {
         title_s = title_s.replace("&ouml;", "ö");
         chart_titles.push(title_s);
     }
-    var chart = birdhouseChart_create(label="", titles=chart_titles,data=chart_data["data"]);
+    var chart = birdhouseChart_create(label="", titles=chart_titles,
+                                      data=chart_data["data"],
+                                      type="line",
+                                      sort_keys=true,
+                                      id="weather_chart",
+                                      size="", set_colors=[],
+                                      set_menu="right"
+                                      );
     chart    += birdhouseWeather_OverviewChart(weather_data); // + "<br/>";
 
     if (chartJS_loaded) {
         if (active_page == "TODAY") {
-            chart += "<hr/><div style='width:100%'>" + link_day_forward + " &nbsp; " + link_day_back + "</div><br/>&nbsp;";
+            chart += "<hr/><div style='width:100%;'>" + link_day_forward + " &nbsp; " + link_day_back + "</div><br/>&nbsp;";
             }
         else {
             chart += "<br/>&nbsp;";

@@ -31,6 +31,7 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
             "info": {},
             "data": {}
         }
+        self._statistics_3days = {}
         self._running = True
 
     def run(self):
@@ -217,14 +218,27 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
         day_minus_2days = self.config.local_date(days=2)
         day_minus_3days = self.config.local_date(days=3)
         day_minus_4days = self.config.local_date(days=4)
-        days_3 = [today, yesterday, day_minus_2days]
-        days_5 = [today, yesterday, day_minus_2days, day_minus_3days, day_minus_4days]
+        day_minus_5days = self.config.local_date(days=5)
+        days_3 = [yesterday, day_minus_2days, day_minus_3days]
+        days_5 = [yesterday, day_minus_2days, day_minus_3days, day_minus_4days, day_minus_5days]
         chart = {
             "today" : self.get_chart_data(categories),
             "yesterday": self.get_chart_data(categories, yesterday),
-            "3days": {}
+            "3days": self._statistics_3days
         }
-        for key in days_3:
-            chart["3days"][key] = self.get_chart_data(categories, key)
+        if chart["3days"] == {}:
+
+            for key in days_3:
+                short_date = key[6:8]+"."+key[4:6]+"."
+                day_data = self.get_chart_data(categories, key)
+
+                for category in day_data:
+                    if "category" not in chart["3days"]:
+                        chart["3days"][category] = {}
+                        chart["3days"][category]["data"] = {}
+                    chart["3days"][category]["titles"] = day_data[category]["titles"]
+
+                    for stamp in day_data[category]["data"]:
+                        chart["3days"][category]["data"][short_date + " " + stamp] = day_data[category]["data"][stamp]
 
         return chart
