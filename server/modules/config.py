@@ -2289,7 +2289,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             self.statistics.register("config_queue_write", "Queue Write [s]")
             self.statistics.register("config_cache_size", "Cache [MB]")
             self.statistics.register("config_cache_size_images", "Cache images [MB]")
-            self.statistics.register("config_cache_size_backup", "Cache images [MB]")
+            self.statistics.register("config_cache_size_backup", "Cache archive [MB]")
             self.statistics.register("srv_api_status", "API Response Status [s]")
 
         else:
