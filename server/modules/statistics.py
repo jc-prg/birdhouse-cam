@@ -233,7 +233,7 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
                 day_data = self.get_chart_data(categories, key)
 
                 for category in day_data:
-                    if "category" not in chart["3days"]:
+                    if category not in chart["3days"]:
                         chart["3days"][category] = {}
                         chart["3days"][category]["data"] = {}
                     chart["3days"][category]["titles"] = day_data[category]["titles"]
