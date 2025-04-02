@@ -228,15 +228,15 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
         days_3 = [day_minus_3days, day_minus_2days, yesterday]
         days_5 = [day_minus_5days, day_minus_4days, day_minus_3days, day_minus_2days, yesterday]
         chart = {
-            "today" : self.get_chart_data(categories),
-            "yesterday": self.get_chart_data(categories, yesterday),
+            "today" : self.get_chart_data([]),
+            "yesterday": self.get_chart_data([], yesterday),
             "3days": self._statistics_3days
         }
         if chart["3days"] == {}:
 
             for key in days_3:
                 short_date = key[6:8]+"."+key[4:6]+"."
-                day_data = self.get_chart_data(categories, key)
+                day_data = self.get_chart_data([], key)
 
                 for category in day_data:
                     if category not in chart["3days"]:

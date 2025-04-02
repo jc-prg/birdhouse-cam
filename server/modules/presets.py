@@ -455,7 +455,7 @@ birdhouse_dir_to_database = {
     birdhouse_directories["weather"] + "config_weather": "today_weather",
     birdhouse_directories["images"] + "<DATE>/config_images": "archive_images",
     birdhouse_directories["images"] + "<DATE>/config_statistics": "archive_statistics",
-    birdhouse_directories["images"] + "<DATE>/config_sensors": "archive_sensors",
+    birdhouse_directories["images"] + "<DATE>/config_sensor": "archive_sensors",
     birdhouse_directories["images"] + "<DATE>/config_weather": "archive_weather",
     birdhouse_directories["images"] + birdhouse_directories["today"] + "config_images": "today_images"
 }

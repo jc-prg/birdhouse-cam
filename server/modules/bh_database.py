@@ -154,7 +154,7 @@ class BirdhouseJSON(BirdhouseDbClass):
         Returns:
             list: list of all json databases
         """
-        self.logging.info(" - Get JSON DB list ... ")
+        self.logging.debug(" - Get JSON DB list ... ")
         json_files = []
         directory = birdhouse_main_directories["data"]
         count = 0
@@ -314,15 +314,20 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             self.db_list.append(db_key)
         return self.db_list
 
-    def delete_db(self, filename):
+    def delete_db(self, filename, db_key=""):
         """
         delete a database from couch_db
 
         Args:
-            filename: filename to be translated into db_key and date
+            db_key: db_key of the database to be deleted (if empty, db_key will be translated from filename)
+            filename: filename to be translated into db_key and date (if empty, db_key will be translated from filename)
         """
-        [db_key, date] = self.filename2keys(filename)
-        self.logging.debug("-----> DELETE DB: " + db_key + "/" + date + " - " + filename)
+        if db_key == "":
+            [db_key, date] = self.filename2keys(filename)
+            self.logging.debug("-----> DELETE DB: " + db_key + "/" + date + " - " + filename)
+        else:
+            self.logging.debug("-----> DELETE DB: " + db_key)
+
         try:
             if db_key in self.database:
                 self.database.delete(db_key)
@@ -390,6 +395,8 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         database = ""
         filename = filename.replace(self.basic_directory, "")
         filename = filename.replace(".json", "")
+        if filename.startswith("/"):
+            filename = filename[1:]
         self.logging.debug("filename2keys: " + filename)
 
         if filename in self.database_translation:
@@ -398,11 +405,20 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             self.logging.debug("  -> " + database)
         else:
             parts1 = filename.split("/")
-            parts2 = parts1[0] + "/<DATE>/" + parts1[2]
-            if parts2 in self.database_translation:
-                database = self.database_translation[parts2]
-                date = parts1[1]
-                self.logging.debug("  -> " + database + " / " + date)
+            if len(parts1) >= 3:
+                parts2 = parts1[0] + "/<DATE>/" + parts1[2]
+                if parts2 in self.database_translation:
+                    database = self.database_translation[parts2]
+                    date = parts1[1]
+                    self.logging.debug("  -> " + database + " / " + date)
+                else:
+                    database = filename.replace("/","_")
+                    self.logging.warning("  -> " + filename + " not found in database_translation.")
+                    self.logging.warning("  -> use the following DB name instead: " + database)
+            else:
+                database = filename.replace("/", "_")
+                self.logging.warning("  -> " + filename + " not found in database_translation.")
+                self.logging.warning("  -> use the following DB name instead: " + database)
 
         # experiment
         if date != "":
