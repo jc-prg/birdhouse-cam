@@ -1979,7 +1979,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
 
     def is_sunrise(self, hour_offset=0, mode="exact"):
         """
-        check if current time is sunrise; if weather is not available return False
+        check if current time is sunrise; if weather is not available, try from cache in config file or return False
 
         Args:
             hour_offset (int): hour offset for sunrise, e.g., +1 or -1
@@ -2028,7 +2028,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
 
     def is_sunset(self, hour_offset=0, mode="exact"):
         """
-        check if current time is sunset; if weather is not available return False
+        check if current time is sunset; if weather is not available try from cache in config file or return False
 
         Args:
             hour_offset (int): hour offset for sunset, e.g., +1 or -1

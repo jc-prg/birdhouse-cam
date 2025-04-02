@@ -212,7 +212,13 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
 
         return chart
 
-    def get_chart_data_view(self, categories, date="", values=False):
+    def get_chart_data_view(self):
+        """
+        create chart data for statistics view in the app for today, yesterday, 3days
+
+        Returns:
+            dict: chart data for statistics view to be used with chart.js
+        """
         today = self.config.local_date()
         yesterday = self.config.local_date(days=1)
         day_minus_2days = self.config.local_date(days=2)
