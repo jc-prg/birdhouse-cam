@@ -219,8 +219,8 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
         day_minus_3days = self.config.local_date(days=3)
         day_minus_4days = self.config.local_date(days=4)
         day_minus_5days = self.config.local_date(days=5)
-        days_3 = [yesterday, day_minus_2days, day_minus_3days]
-        days_5 = [yesterday, day_minus_2days, day_minus_3days, day_minus_4days, day_minus_5days]
+        days_3 = [day_minus_3days, day_minus_2days, yesterday]
+        days_5 = [day_minus_5days, day_minus_4days, day_minus_3days, day_minus_2days, yesterday]
         chart = {
             "today" : self.get_chart_data(categories),
             "yesterday": self.get_chart_data(categories, yesterday),
@@ -240,5 +240,7 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
 
                     for stamp in day_data[category]["data"]:
                         chart["3days"][category]["data"][short_date + " " + stamp] = day_data[category]["data"][stamp]
+
+            self._statistics_3days = chart["3days"]
 
         return chart

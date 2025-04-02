@@ -119,7 +119,7 @@ function birdhouse_printStatistic(title, data, date, chart_type="all", groups=tr
         chart += birdhouseChart_create(label="", titles=statistics[key]["titles"],
                                        data=statistics[key]["data"],
                                        type="line",
-                                       sort_keys=true,
+                                       sort_keys=false,
                                        id="statisticsChart_"+key+"_"+chart_id,
                                        size={"height": "250px", "width": "100%"});
         chart += "<br/>&nbsp;<br/>";
