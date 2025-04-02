@@ -1928,7 +1928,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         if self.last_db_type != self.db_type and self.last_db_type is not None:
             self.logging.info(line)
             self.logging.info("DB type has changed: " + str(self.last_db_type) + " -> " + self.db_type)
-            self.logging.info("(data path: " + str(birdhouse_main_directories["data"]) + ")")
+            self.logging.debug("(data path: " + str(birdhouse_main_directories["data"]) + ")")
             self.logging.info(line)
 
             available_databases = self.db_handler.get_db_list()
@@ -1948,7 +1948,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                     self.db_handler.couch.write(filename=database, data=data, create=True)
                 self.logging.info(line)
 
-        self.logging.warning("NOT IMPLEMENTED YET: Migration from old DB type to new one.")
+            else:
+                self.logging.warning("NOT IMPLEMENTED YET: change from " + str(self.last_db_type) + " to " + str(self.db_type))
 
     def local_time(self, day="today"):
         """
