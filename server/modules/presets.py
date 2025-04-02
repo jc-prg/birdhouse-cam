@@ -658,7 +658,10 @@ birdhouse_preset = {
         "location": "Munich",
         "gps_location": [48.14, 11.58, "Munich"],
         "source": "Open-Metheo",
-        "available_sources": ["Python-Weather", "Open-Metheo"]
+        "available_sources": ["Python-Weather", "Open-Metheo"],
+        "last_sunrise": "00:00",
+        "last_sunset": "00:00",
+        "last_sun_update": ""
     }
 }
 

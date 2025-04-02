@@ -1817,6 +1817,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         change configuration base on dict in form
 
         Args:
+            camera (str): camera id
             config (str): database name
             config_data (dict): selected vars to be changed in the format dict["key1:key2:key3"] = "value"
             date (str): date of database if required (format: YYYYMMDD)
@@ -1987,10 +1988,15 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             boolean: True if weather data available and current time is sunrise time (incl. hour offset)
         """
         if self.weather is None:
-            self.logging.debug("No weather data available to check sunrise time.")
-            return False
+            if "last_sunrise" in self.param["weather"]:
+                sunrise = self.param["weather"]["last_sunrise"]
+            else:
+                self.logging.debug("No weather data available to check sunrise time.")
+                return False
+        else:
+            sunrise = str(self.weather.get_sunrise())
 
-        sunrise = str(self.weather.get_sunrise()).split(":")
+        sunrise = sunrise.split(":")
         sunrise = str(int(sunrise[0]) + int(hour_offset)).zfill(2) + ":" + str(sunrise[1])
         local_time = str(self.local_time()).split(" ")[1].split(".")[0]
         local_time = local_time.split(":")[0] + ":" + local_time.split(":")[1]
@@ -2031,10 +2037,15 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             boolean: True if weather data available and current time is sunset time (incl. hour offset)
         """
         if self.weather is None:
-            self.logging.debug("No weather data available to check sunset time.")
-            return False
+            if "sunset" in self.param["weather"]:
+                sunset = self.param["weather"]["sunset"]
+            else:
+                self.logging.debug("No weather data available to check sunset time.")
+                return False
+        else:
+            sunset = str(self.weather.get_sunset())
 
-        sunset = str(self.weather.get_sunset()).split(":")
+        sunset = sunset.split(":")
         sunset = str(int(sunset[0]) + int(hour_offset)).zfill(2) + ":" + str(sunset[1])
         local_time = str(self.local_time()).split(" ")[1].split(".")[0]
         local_time = local_time.split(":")[0] + ":" + local_time.split(":")[1]

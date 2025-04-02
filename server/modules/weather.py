@@ -496,6 +496,7 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
         self.update = False
         self.update_time = 60 * 10
         self.update_wait = 0
+        self.wrote_sunrise_sunset = False
 
         self.module = None
         self.gps = BirdhouseGPS()
@@ -536,6 +537,14 @@ class BirdhouseWeather(threading.Thread, BirdhouseClass):
                             self.sunrise_today = self.weather_info["forecast"]["today"]["sunrise"]
                         if "sunset" in self.weather_info["forecast"]["today"]:
                             self.sunset_today = self.weather_info["forecast"]["today"]["sunset"]
+
+            # write sunset and sunrise to main config
+            if not self.wrote_sunrise_sunset and self.sunset_today is not None and self.sunrise_today is not None:
+                self.config.param["weather"]["last_sunrise"] = self.sunrise_today
+                self.config.param["weather"]["last_sunset"] = self.sunset_today
+                self.config.param["weather"]["last_sun_update"] = self.config.local_time().strftime("%Y%m%d %H:%M:%S")
+                self.config.db_handler.write(config="main", data=self.config.param)
+                self.wrote_sunrise_sunset = True
 
             # write weather data to file once every five minutes
             weather_stamp = self.config.local_time().strftime("%H%M")+"00"

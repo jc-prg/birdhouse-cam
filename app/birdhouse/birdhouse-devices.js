@@ -140,19 +140,20 @@ function birdhouseDevices_status(index, show) {
     birdhouse_device_list = [];
     for (var i=0;i<index.length;i++) {
         Object.keys(index[i]).forEach(key => {
+
             birdhouse_device_list.push(index[i][key]["group"]);
             var onclick     = "birdhouseDevices_openOne('"+index[i][key]["group"]+"')";
             var device_type = index[i][key]["type"];
             var button      = "";
 
-            if (device_type == "object" || device_type == "relay")  { var device_key = "<text><b>" + key + "</b></text>"; }
+            if (device_type == "object")  { var device_key = "<text><b>" + key + "</b></text>"; }
             else if (show_button)    { var device_key = "<text onclick=\""+onclick+"\" style=\"cursor:pointer;\"><u><b>" + key + "</b></u></text>"; }
             else                     { var device_key = key; }
 
-            if (short) {
+            if (short) { if (device_type != "object") {
                 if (typeof short_data[device_type] == 'undefined') { short_data[device_type] = ""; }
                 short_data[device_type] += "<div id='status_" + index[i][key]["status"][1] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>";
-                }
+                } }
             else {
                 var action = "<div style='float:left;'>";
                 for (var a=0; a<index[i][key]["status"].length;a++) {
@@ -532,7 +533,7 @@ function birdhouseDevices_relays(data) {
 	    relay_name   = relay.toUpperCase() + ": " + relays[relay]["name"];
 	    index_info[relay_name] = {};
 	    index_info[relay_name]["active"] = relays[relay]["active"];
-	    index_info[relay_name]["group"] = relays;
+	    index_info[relay_name]["group"] = relay;
 	    index_info[relay_name]["id"] = relay;
 	    index_info[relay_name]["type"] = "relay";
 	    index_info[relay_name]["status"] = ["active"];
