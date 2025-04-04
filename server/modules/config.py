@@ -1611,6 +1611,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.update_views = {"favorite": False, "archive": False}
         self.async_answers = []
         self.async_running = False
+        self.video_frame_count = 0
 
         self.param = None
         self.param_init = param_init
@@ -2409,6 +2410,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             self.statistics.register("config_cache_size_images", "Cache images [MB]")
             self.statistics.register("config_cache_size_backup", "Cache archive [MB]")
             self.statistics.register("srv_api_status", "API Response Status [s]")
+            self.statistics.register("config_img_video", "Video frames [fps]")
 
         else:
             if self.statistics and self.measure_last + self.measure_time < time.time():
@@ -2427,3 +2429,5 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 self.statistics.set("config_cache_size_backup", self.db_handler.get_cache_size("backup") / 1024 / 1024)
                 if self.get_processing_performance("api_GET") != -1 and "status" in self.get_processing_performance("api_GET"):
                     self.statistics.set("srv_api_status", self.get_processing_performance("api_GET")["status"])
+                self.statistics.set("config_img_video", self.video_frame_count / self.statistics.get_interval())
+                self.video_frame_count = 0

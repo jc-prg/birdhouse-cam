@@ -138,6 +138,8 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
         db_name = "statistics"
         if date != "":
             db_name = "statistics_archive"
+        if not self.config.db_handler.exists(db_name, date):
+            return {}
         chart_data = self.config.db_handler.read_cache(db_name, date)
         chart_value = {}
         chart_values = {"data": {}, "info": {}}
@@ -250,3 +252,10 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
             self._statistics_3days = chart["3days"]
 
         return chart
+
+    def get_interval(self):
+        """
+        Returns:
+            int: interval of statistic recording in seconds
+        """
+        return self._write_interval

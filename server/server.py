@@ -868,6 +868,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "view_archive_progress": views.tools.get_progress("archive"),
                     "view_favorite_progress": views.tools.get_progress("favorite"),
                     "view_object_progress": views.tools.get_progress("object"),
+                    "video_frame_count": config.video_frame_count,
                     "backup_process_running": backup.backup_running,
                     "queue_waiting_time": config.queue.queue_wait,
                     "health_check": health_check.status(),
@@ -1270,6 +1271,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         create video stream
         """
+        global config
+
         srv_logging.debug("VIDEO " + which_cam + ": GET API request '" + self.path + "' - Session-ID: " + param["session_id"])
 
         if ":" in which_cam and "+" in which_cam:
@@ -1309,6 +1312,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         self.stream_video_header()
         while stream_active:
+
+            config.video_frame_count += 1
 
             if camera[which_cam].get_stream_kill(stream_id_ext, stream_id_int) or config.thread_ctrl["shutdown"]:
                 stream_active = False
