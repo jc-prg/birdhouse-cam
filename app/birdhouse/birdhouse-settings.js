@@ -671,7 +671,7 @@ function birdhouse_app_settings (name="Settings") {
                 html     += this.set.dashboard_item(id="object_queue_size", type="number", title="Object queue", description="entries");
                 }
             Object.keys(app_data["SETTINGS"]["devices"]["cameras"]).forEach(key => {
-                if (data["server_performance"]["camera_recording_image"][key]) {
+                if (data["server_performance"]["camera_recording_image"] && data["server_performance"]["camera_recording_image"][key]) {
                     html += this.set.dashboard_item(id="record_image_"+key, type="number", title=key, description="image recording duration");
                     }
                 });
@@ -680,6 +680,8 @@ function birdhouse_app_settings (name="Settings") {
                 }
             if (data["database"]["type"] == "json" || data["database"]["type"] == "both") {
                 html     += this.set.dashboard_item(id="locked_db", type="number", title="Database JSON", description="locked json DB ("+data["database"]["type"]+")");
+                }
+            if (data["database"]["type"] == "json") {
                 html     += this.set.dashboard_item(id="locked_db_wait", type="number", title="Database JSON", description="waiting time locked DB");
                 }
             html     += this.set.dashboard_item(id="cache_size", type="number", title="Database", description="data in cache");
@@ -764,7 +766,6 @@ function birdhouse_app_settings (name="Settings") {
 			element.style.display = view_settings;
 			}
 		}
-
 }
 
 app_scripts_loaded += 1;

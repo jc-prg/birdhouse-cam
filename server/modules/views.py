@@ -1077,6 +1077,9 @@ class BirdhouseViewArchive(BirdhouseClass):
                 self.tools.calculate_progress("archive", "2/2", "", count, len(archive_entries))
 
             # set overarching information
+            if "changes" not in archive_info:
+                archive_info["changes"] = {}
+
             for key in archive_info["changes"]:
                 if key != "archive":
                     archive_changed["changes"][key] = archive_info["changes"][key]

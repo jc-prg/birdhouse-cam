@@ -36,6 +36,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         self.db = birdhouse_couchdb
         self.backup_interval = 60 * 15
         self.directories = birdhouse_directories
+        self.directories_complete = birdhouse_dir_to_database
         self.files = birdhouse_files
         self.main_directory = main_directory
 
@@ -213,6 +214,25 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             self.config.set_processing_performance("config", "db_status", update_start)
             return db_info
 
+    def get_db_config_date(self, filename="", db_key=""):
+        """
+        get config and date from database by given filename or db_key
+
+        Args:
+            filename: filename of JSON database file
+            db_key: database key of couch db (if filename is not given)
+
+        Returns:
+            [str, str]: config and date of database
+        """
+        if filename == "" and db_key != "":
+            pass
+
+        elif filename != "" and db_key == "":
+            [db_key, date] = self.couch.filename2keys(filename)
+
+        return ["", ""]
+
     def wait_if_paused(self):
         """
         wait if paused to avoid loss of data
@@ -342,7 +362,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 return True
         return False
 
-    def read(self, config="", date="", filename=""):
+    def read(self, config="", date="", filename="", write_other=True):
         """
         read data from database (for all db types)
 
@@ -350,6 +370,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
             filename (str): filename of database file (if not specified, use config name)
+            write_other (bool): write other data to other DB type if type is couch or both
         Returns:
             dict: complete data from database
         """
@@ -369,7 +390,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         elif "config.json" in filename:
             result = self.json.read(filename)
 
-        elif self.db_type == "couch" or self.db_type == "both":
+        elif write_other and self.db_type == "couch" or self.db_type == "both":
 
             if not self.couch.exists(filename) and self.json.exists(filename):
                 result = self.json.read(filename)
@@ -384,6 +405,9 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
 
             if result == {}:
                 result = self.json.read(filename)
+
+        elif self.db_type == "couch":
+            result = self.couch.read(filename)
 
         else:
             self.raise_error("Unknown DB type (" + str(self.db_type) + ")")
@@ -1562,6 +1586,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         }
 
         self.directories = birdhouse_directories
+        self.directories_complete = birdhouse_dir_to_database
+        self.directories_main = birdhouse_main_directories
         self.files = birdhouse_files
 
         self.config_cache = {}
@@ -1626,7 +1652,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.param["info"]["last_start_time"] = self.local_time().strftime("%H:%M:%S")
 
         # read birdhouse dictionary
-        self.birds = self.db_handler.json.read(os.path.join(birdhouse_main_directories["data"], birdhouse_files["birds"]))
+        self.birds = self.db_handler.json.read(os.path.join(self.directories_main["data"], birdhouse_files["birds"]))
         self.logging.debug(str(self.birds))
 
         # set database type if not JSON
@@ -1640,7 +1666,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         if self.db_type != "json" and ("db_type" not in self.param_init or self.param_init["db_type"] != "json"):
             if self.db_handler is not None:
                 self.db_handler.stop()
-            self.db_handler = BirdhouseConfigDBHandler(self, self.db_type, main_directory)
+            self.db_handler = BirdhouseConfigDBHandler(self, self.db_type, self.main_directory)
             self.db_handler.start()
 
         self.queue = BirdhouseConfigQueue(config=self, db_handler=self.db_handler)
@@ -1688,6 +1714,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                     self.param["info"]["last_day_running"] = date_today
                     self.last_day_running = date_today
                     self.db_handler.write(config="main", date="", data=self.param)
+                    for key in self.update_config:
+                        self.update_config[key] = True
                     time.sleep(2)
 
             # check if DB reconnect ist required
@@ -1917,23 +1945,23 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         JSON -> BOTH/COUCH
         - for each DB in couch, delete
         - for each DB in json migrate to couch db
-        ?? maybe reload date somehow
+        ?? maybe reload date somehow ??
 
-        COUCH -> JSON
+        COUCH -> JSON (not implemented yet)
         - initially connect to couch (as usually not yet loaded)
         - check if JSON DB exists rewrite, if not create from couch
         - keep JSON file (as usually they are used as backup)
         """
+        backup_date = self.local_time().strftime("%Y%m%d-%H%M%S")
         line = "-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-."
         if self.last_db_type != self.db_type and self.last_db_type is not None:
             self.logging.info(line)
             self.logging.info("DB type has changed: " + str(self.last_db_type) + " -> " + self.db_type)
-            self.logging.debug("(data path: " + str(birdhouse_main_directories["data"]) + ")")
+            self.logging.debug("(data path: " + str(self.directories_main["data"]) + ")")
             self.logging.info(line)
 
-            available_databases = self.db_handler.get_db_list()
             if self.last_db_type == "json" and self.db_type == "couch" or self.db_type == "both":
-
+                available_databases = self.db_handler.get_db_list()
                 self.logging.info("Delete all "+str(len(available_databases["couch"]))+" couch databases ...")
                 for database in available_databases["couch"]:
                     if not database.startswith("_"):
@@ -1942,14 +1970,50 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
 
                 self.logging.info("Migrate all "+str(len(available_databases["json"]))+" json databases to couch databases...")
                 for database in available_databases["json"]:
-                    path_to_db = birdhouse_main_directories["data"] + database
-                    self.logging.info("Migrate from JSON to couch DB: " + birdhouse_main_directories["data"] + "|" + database)
+                    path_to_db = self.directories_main["data"] + database
+                    self.logging.info("Migrate from JSON to couch DB: " + self.directories_main["data"] + "|" + database)
                     data = self.db_handler.json.read(path_to_db)
                     self.db_handler.couch.write(filename=database, data=data, create=True)
                 self.logging.info(line)
 
+            elif (self.last_db_type == "both" or self.last_db_type == "couch") and self.db_type == "json":
+                couch_db_handler = BirdhouseConfigDBHandler(self, "couch", self.main_directory)
+                couch_db_handler.couch.basic_directory = self.directories_main["data"]
+                available_couch_db = couch_db_handler.get_db_list()
+                for database in available_couch_db["couch"]:
+                    for key in self.directories_complete:
+                        if database.startswith(self.directories_complete[key]):
+                            filename = key + ".json"
+                            match = False
+                            if "<DATE>" in key and database[-1].isdigit():
+                                date = database.replace(self.directories_complete[key]+"_", "")
+                                filename = filename.replace("<DATE>", date)
+                                match = True
+                            elif not "<DATE>" in key and not database[-1].isdigit():
+                                date = ""
+                                match = True
+                            filename = self.directories_main["data"] + "/" + filename
+                            if match:
+                                self.logging.info("(Re)write JSON DB: " + database + " -> " + filename)
+                                self.logging.info("  -> data path: " + str(self.directories_main["data"]))
+
+                                # 1. read from couch
+                                data = couch_db_handler.read(filename=filename, write_other=False).copy()
+                                self.logging.debug("Read JSON DB: " + str(data))
+                                # 2. write to json (rewrite / create file)
+                                data_bu = self.db_handler.json.read(filename=filename).copy()
+                                if filename.endswith("data/config.json"):
+                                    data_bu["info"]["backup_time"] = backup_date
+                                    data_bu["info"]["migration_time"] = ""
+                                    data["info"]["migration_time"] = backup_date
+                                    self.param = data
+                                #self.db_handler.json.write(filename=filename.replace(".json", "." + backup_date + "_C.json"), data=data, create=True)
+                                self.db_handler.json.write(filename=filename.replace(".json", "." + backup_date + "_B.json"), data=data_bu, create=True)
+                                self.db_handler.json.write(filename=filename, data=data, create=True)
+
+                self.logging.warning("NOT FULLY IMPLEMENTED YET: change from " + str(self.last_db_type) + " to " + str(self.db_type))
             else:
-                self.logging.warning("NOT IMPLEMENTED YET: change from " + str(self.last_db_type) + " to " + str(self.db_type))
+                self.logging.debug("No migration required.")
 
     def local_time(self, day="today"):
         """
@@ -1969,6 +2033,12 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             return date_tz_info
 
     def local_date(self, days=0):
+        """
+        get current date in format YYYYMMDD with an offset of days (1 = yesterday, 2 = 2 days ago, ...)
+
+        Returns:
+            str: date in format YYYYMMDD
+        """
         today = datetime.now()
         target_date = today - timedelta(days=days)
         self.logging.debug("Target date: " + str(target_date))

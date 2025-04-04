@@ -444,19 +444,19 @@ birdhouse_files = {
     "weather": "config_weather.json"
 }
 birdhouse_dir_to_database = {
-    birdhouse_directories["main"] + "config": "config",
-    birdhouse_directories["main"] + "birds": "birds",
-    birdhouse_directories["backup"] + "config_backup": "archive_images",
-    birdhouse_directories["favorites"] + "config_favorites": "favorites",
-    birdhouse_directories["objects"] + "config_objects": "objects",
-    birdhouse_directories["sensor"] + "config_sensor": "today_sensors",
-    birdhouse_directories["statistics"] + "config_statistics": "today_statistics",
-    birdhouse_directories["videos"] + "config_videos": "archive_videos",
-    birdhouse_directories["weather"] + "config_weather": "today_weather",
-    birdhouse_directories["images"] + "<DATE>/config_images": "archive_images",
-    birdhouse_directories["images"] + "<DATE>/config_statistics": "archive_statistics",
-    birdhouse_directories["images"] + "<DATE>/config_sensor": "archive_sensors",
-    birdhouse_directories["images"] + "<DATE>/config_weather": "archive_weather",
+    birdhouse_directories["main"] + "config":                           "config",
+    birdhouse_directories["main"] + "birds":                            "birds",
+    birdhouse_directories["favorites"] + "config_favorites":            "favorites",
+    birdhouse_directories["objects"] + "config_objects":                "objects",
+    birdhouse_directories["sensor"] + "config_sensor":                  "today_sensors",
+    birdhouse_directories["statistics"] + "config_statistics":          "today_statistics",
+    birdhouse_directories["weather"] + "config_weather":                "today_weather",
+    birdhouse_directories["backup"] + "config_backup":                  "archive_images",
+    birdhouse_directories["videos"] + "config_videos":                  "archive_videos",
+    birdhouse_directories["images"] + "<DATE>/config_images":           "archive_images",
+    birdhouse_directories["images"] + "<DATE>/config_statistics":       "archive_statistics",
+    birdhouse_directories["images"] + "<DATE>/config_sensor":           "archive_sensors",
+    birdhouse_directories["images"] + "<DATE>/config_weather":          "archive_weather",
     birdhouse_directories["images"] + birdhouse_directories["today"] + "config_images": "today_images"
 }
 
