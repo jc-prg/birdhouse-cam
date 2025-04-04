@@ -545,6 +545,8 @@ function birdhouse_app_settings (name="Settings") {
         html_internal += this.tab.row("DB Daily Clean Up:&nbsp;",  daily_clean_up);
         html_internal += this.tab.row("DB Port:&nbsp;",            settings["server"]["database_port"]);
         html_internal += this.tab.row("DB Admin:",                 "<a href='"+link+"' target='_blank'>"+link+"</a>");
+        html_internal += this.tab.row("DB Cache:",                 "<div id='system_info_db_cache'>"+lang("PLEASE_WAIT")+"..</div>");
+    	html_internal += this.tab.row("DB Cache (Archive):",       "<div id='system_info_db_cache_archive'>"+lang("PLEASE_WAIT")+"..</div>");
         html_internal += this.tab.row("<hr/>");
 
         html_internal += this.tab.row("HTTP Server:&nbsp;",        settings["server"]["ip4_address"]);
@@ -684,7 +686,7 @@ function birdhouse_app_settings (name="Settings") {
             if (data["database"]["type"] == "json") {
                 html     += this.set.dashboard_item(id="locked_db_wait", type="number", title="Database JSON", description="waiting time locked DB");
                 }
-            html     += this.set.dashboard_item(id="cache_size", type="number", title="Database", description="data in cache");
+            html     += this.set.dashboard_item(id="cache_size", type="number", title="Database", description="data in cache ("+data["database"]["cache_active"]+")");
             }
 
 	    setTimeout(function() {birdhouse_settings.server_dashboard_fill(app_data);}, 1000);

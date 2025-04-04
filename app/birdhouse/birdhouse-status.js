@@ -565,6 +565,8 @@ function birdhouseStatus_system(data) {
     else {
         setTextById("system_info_db_error", "OK");
         }
+    setTextById("system_info_db_cache", status_db["cache_active"]);
+    setTextById("system_info_db_cache_archive", status_db["cache_archive_active"]);
 
     // health check
     if (status_srv["health_check"] != "OK" && status_srv["health_check"] != undefined) {

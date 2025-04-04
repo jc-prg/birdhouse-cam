@@ -47,6 +47,8 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         self.db_status_interval = 15
         self.set_db_type(db_type)
 
+        self.cache_active = birdhouse_env["database_cache"]
+        self.cache_archive_active = birdhouse_env["database_cache_archive"]
         self.config_cache = {}
         self.config_cache_changed = {}
         self.config_cache_size = {"all": 0.0, "images": 0.0}
@@ -177,6 +179,8 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 db_info = {
                     "type": self.db_type,
                     "cache_size": self.get_cache_size(),
+                    "cache_active": self.cache_active,
+                    "cache_archive_active": self.cache_archive_active,
                     "db_connected": self.json.connected,
                     "db_error": self.json.error,
                     "db_error_msg": self.json.error_msg,
@@ -189,6 +193,8 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 db_info = {
                     "type": self.db_type,
                     "cache_size": self.get_cache_size(),
+                    "cache_active": self.cache_active,
+                    "cache_archive_active": self.cache_archive_active,
                     "db_connected": self.couch.connected,
                     "db_error": self.couch.error,
                     "db_error_msg": self.couch.error_msg,
@@ -200,6 +206,8 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 db_info = {
                     "type": self.db_type,
                     "cache_size": self.get_cache_size(),
+                    "cache_active": self.cache_active,
+                    "cache_archive_active": self.cache_archive_active,
                     "db_connected": connected,
                     "db_connected_info": "couch=" + str(self.couch.connected) + " / json=" + str(self.json.connected),
                     "db_connected_couch": self.couch.connected,
@@ -424,11 +432,16 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         Returns:
             dict: complete data from database in cache
         """
-        if not birdhouse_cache_for_archive and not birdhouse_cache:
-            if not birdhouse_cache:
-                return self.read(config, date)
-            elif (config == "backup" or config == "images") and date != "":
-                return self.read(config, date)
+        #if not birdhouse_cache_for_archive and not birdhouse_cache:
+        #    if not birdhouse_cache:
+        #        return self.read(config, date)
+        #    elif (config == "backup" or config == "images") and date != "":
+        #        return self.read(config, date)
+
+        if not self.cache_active:
+            return self.read(config, date)
+        elif not self.cache_active and date != "" and config == "images":
+            return self.read(config, date)
 
         if config not in self.config_cache and date == "":
             self.config_cache[config] = self.read(config=config, date="")
@@ -519,7 +532,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             date (str): date of database if required (format: YYYYMMDD)
             data (dict): complete data for database
         """
-        if data is None:
+        if data is None or not self.cache_active:
             return
         if date == "":
             self.config_cache[config] = data

@@ -43,6 +43,8 @@ def set_global_configuration():
         "couchdb_port": "COUCHDB_PORT",
         "database_type": "DATABASE_TYPE",
         "database_cleanup": "DATABASE_DAILY_CLEANUP",
+        "database_cache": "DATABASE_CACHE",
+        "database_cache_archive": "DATABASE_CACHE_ARCHIVE",
         "detection_active": "OBJECT_DETECTION",
         "dir_project": "BIRDHOUSE_DIR_PROJECT",
         "dir_logging": "BIRDHOUSE_DIR_LOGGING",
@@ -74,7 +76,7 @@ def set_global_configuration():
             print('Value in .env not found: ' + str(birdhouse_env_keys[key]))
 
     for key in ["database_cleanup", "rpi_active", "rpi_64bit", "detection_active", "log_to_file",
-                "test_video_devices"]:
+                "test_video_devices", "database_cache", "database_cache_archive"]:
         if birdhouse_env[key] is not None:
             birdhouse_env[key] = str(birdhouse_env[key]).lower() in ("true", "1", "yes", "on")
 
