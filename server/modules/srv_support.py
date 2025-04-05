@@ -258,7 +258,10 @@ class ServerInformation(threading.Thread, BirdhouseClass):
                 "cpu_usage_detail": -1,
                 "mem_total": -1,
                 "mem_used": -1,
+                "mem_process": -1,
+                "mem_process_percent": -1
             }
+            self.logging.warning("Was not able to get memory usage: " + str(err))
 
         system["system_info_interval"] = self._srv_info_time
 
@@ -278,7 +281,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
         self.statistics.set(key="srv_cpu", value=system["cpu_usage"])
         self.statistics.set(key="srv_cpu_temp", value=system["cpu_temperature"])
-        self.statistics.set(key="srv_cpu_mem", value=(system["mem_process_percent"]))
+        self.statistics.set(key="srv_cpu_mem", value=system["mem_process_percent"])
 
         for key in system:
             self._system_status[key] = system[key]
