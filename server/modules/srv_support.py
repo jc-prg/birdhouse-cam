@@ -29,6 +29,8 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             self._text_files = BirdhouseTEXT()
             self.set_shutdown(False)
             self.set_restart(False)
+            self._last_garbage_collection = time.time()
+            self._interval_garbage_collection = 60 * 10
         else:
             self._running = False
             self._text_files = BirdhouseTEXT()
@@ -40,6 +42,11 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
         while self._running:
             self.thread_wait()
             self.thread_control()
+
+            if self._last_garbage_collection + self._interval_garbage_collection < time.time():
+                self.logging.info("Garbage collection (every " + str(self._interval_garbage_collection/60) + "min) ...")
+                self._last_garbage_collection = time.time()
+                gc.collect()
 
             if self.config.thread_ctrl["shutdown"]:
                 time.sleep(5)
@@ -214,7 +221,6 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         Running thread to continuously update server information in the background and
         trigger a garbage collection from time to time.
         """
-        count = 0
         self.logging.info("Starting Server Information ...")
         while self._running:
             start_time = time.time()
@@ -225,12 +231,6 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
             self._srv_info_time = round(time.time() - start_time, 2)
             self.config.set_processing_performance("server", "srv_support", start_time)
-
-            count += 1
-            if count == 10:
-                self.logging.info("Garbage collection ...")
-                count = 0
-                gc.collect()
 
             self.thread_control()
             self.thread_wait()
