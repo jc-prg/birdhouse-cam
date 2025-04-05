@@ -2291,7 +2291,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             self.relays[light_relay].switch_off()
 
         elif self.camera_light_mode == "manual":
-            self.logging.info("image_recording_auto_light: "+light_relay+" is set to manual .")
+            self.logging.debug("image_recording_auto_light: "+light_relay+" is set to manual .")
             return
 
         elif self.camera_light_mode == "auto":

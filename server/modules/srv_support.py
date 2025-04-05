@@ -204,6 +204,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
         self.statistics.register("srv_cpu", "CPU Usage")
         self.statistics.register("srv_cpu_temp", "CPU Temperature")
+        self.statistics.register("srv_cpu_mem", "Mem Usage")
         self.statistics.register("srv_hdd_percentage", "HDD Used [%]")
         self.statistics.register("srv_hdd_used", "HDD Used [GB]")
         self.statistics.register("srv_hdd_data", "HDD Data [GB]")
@@ -276,6 +277,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
         self.statistics.set(key="srv_cpu", value=system["cpu_usage"])
         self.statistics.set(key="srv_cpu_temp", value=system["cpu_temperature"])
+        self.statistics.set(key="srv_cpu_mem", value=system["mem_process"])
 
         for key in system:
             self._system_status[key] = system[key]
