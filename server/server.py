@@ -504,7 +504,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         """
-        REST API for javascript commands e.g. to change values in runtime
+        Handles HTTP POST requests for a variety of operations including managing camera and server
+        settings, executing tasks, and updating views. This method processes the incoming data,
+        validates commands and parameters, and executes the corresponding action based on command.
+
+        Returns:
+            None
         """
         global camera
 
@@ -802,7 +807,17 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
     def do_GET_api(self):
         """
-        create API response
+        Handles API GET requests by processing and responding with structured data based
+        on the provided command and parameters.
+
+        This method parses the incoming API request, determines the appropriate course
+        of action based on the defined commands, and generates a response with detailed
+        status, settings, and data information. The response structure is defined based
+        on the command and the parameters specified in the request.
+
+        Returns:
+            None: The method sends a response back to the client with relevant data and
+                does not explicitly return any value.
         """
         global camera, sensor, config
 
@@ -1226,6 +1241,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                          no_cache=True)
 
     def do_GET_image(self, which_cam):
+        """
+        Handles GET requests to provide image-related operations, including comparing images and extracting a single
+        image. This function supports serving different variations of images, such as images showing differences between
+        two images and images extracted directly from the camera stream.
+
+        Args:
+            which_cam: The identifier for selecting the camera used to perform image operations.
+        """
         # show compared images
         if '/compare/' in self.path and '/image.jpg' in self.path:
             srv_logging.debug("Compare: Create and return image that shows differences to the former image ...")
@@ -1269,7 +1292,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
     def do_GET_stream_video(self, which_cam, which_cam2, param):
         """
-        create video stream
+        Handles video streaming for a specified camera or set of cameras, managing configurations,
+        stream properties, and error handling during streaming operations.
+
+        Args:
+            which_cam: Identifier of the primary camera to stream video from.
+            which_cam2: Identifier of the secondary camera to be used in Picture-in-Picture (PiP) mode, if applicable.
+            param: Dictionary containing additional configuration parameters for the streaming session.
+                Includes session metadata and API request details.
         """
         global config
 
@@ -1308,7 +1338,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             stream_resolution = "hires"
 
         stream_id = stream_type + "_" + stream_resolution
-        frame_id = None
+        frame_id = frame_raw = frame_raw_pip = None
 
         self.stream_video_header()
         while stream_active:
@@ -1365,6 +1395,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                                                                                    position=int(cam2_pos),
                                                                                    distance=distance)
 
+                # burn addition information onto the video image if recording or processing
                 if stream_type == "camera" \
                         and not camera[which_cam].if_error() \
                         and not camera[which_cam].image.if_error() \
@@ -1373,7 +1404,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     if camera[which_cam].video.recording:
                         srv_logging.debug("VIDEO RECORDING")
                         record_info = camera[which_cam].video.record_info()
-                        length = str(round(record_info["length"], 1)) + "s"
+                        #length = str(round(record_info["length"], 1)) + "s"
                         framerate = str(round(record_info["framerate"], 1)) + "fps"
                         time_s = int(record_info["length"]) % 60
                         time_m = round((int(record_info["length"]) - time_s) / 60)
@@ -1386,8 +1417,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     elif camera[which_cam].video.processing:
                         srv_logging.debug("VIDEO PROCESSING")
                         record_info = camera[which_cam].video.record_info()
-                        length = str(round(record_info["length"], 1)) + "s"
-                        framerate = str(round(record_info["framerate"], 1)) + "fps"
+                        #length = str(round(record_info["length"], 1)) + "s"
+                        #framerate = str(round(record_info["framerate"], 1)) + "fps"
                         progress = str(round(float(record_info["percent"]), 1)) + "%"
                         time_s = int(record_info["elapsed"]) % 60
                         time_m = round((int(record_info["elapsed"]) - time_s) / 60)
@@ -1402,8 +1433,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         camera[which_cam].set_system_info_lowres(False)
 
                 if not stream_active:
-                    self.stream_video_end()
                     srv_logging.info("Closed streaming client: " + stream_id_ext)
+                    frame_id = frame_raw = frame_raw_pip = None
+                    break
 
                 elif frame_raw is None or len(frame_raw) == 0:
                     srv_logging.warning("Stream: Got an empty frame for '" + which_cam + "' ...")
@@ -1414,10 +1446,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         self.stream_video_frame(frame)
                     except Exception as error_msg:
                         stream_active = False
+                        frame_id = frame_raw = frame_raw_pip = None
                         if "Errno 104" in str(error_msg) or "Errno 32" in str(error_msg):
                             srv_logging.debug('Removed streaming client %s: %s', self.client_address, str(error_msg))
                         else:
                             srv_logging.warning('Removed streaming client %s: %s', self.client_address, str(error_msg))
+                        break
 
             if camera[which_cam].error or camera[which_cam].image.error:
                 time.sleep(stream_wait_while_error)
@@ -1432,9 +1466,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             time.sleep(stream_wait_while_recording)
                             break
 
+        self.stream_video_end()
+
     def do_GET_stream_audio(self, this_path):
         """
-        Audio streaming generator function
+        Handles the GET request for streaming audio data from a specified microphone. This function
+        streams audio in either WAV or MP3 format, depending on the API request URL, provided
+        the microphone is connected, error-free, and MP3 encoding (if required) is available.
+
+        Args:
+            this_path (str): The requested API path containing the microphone identifier and session ID.
         """
         param = this_path.split("/")[-2]
         which_cam = param.split("&")[0]
