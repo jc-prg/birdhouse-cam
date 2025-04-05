@@ -250,7 +250,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             system["mem_used"] = psutil.virtual_memory().used / 1024 / 1024
             mem_process = psutil.Process(os.getpid()).memory_info()
             system["mem_process"] = mem_process.rss / 1024 / 1024
-            system["mem_process_percent"] = mem_process.percent
+            system["mem_process_percent"] = system["mem_process"] / system["mem_total"] * 100
 
         except Exception as err:
             system = {
