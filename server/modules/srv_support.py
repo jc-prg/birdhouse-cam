@@ -3,6 +3,7 @@ import time
 import psutil
 import subprocess
 import os
+import gc
 
 from modules.bh_class import BirdhouseClass
 from modules.bh_database import BirdhouseTEXT
@@ -209,8 +210,10 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
     def run(self):
         """
-        Running thread to continuously update server information in the background.
+        Running thread to continuously update server information in the background and
+        trigger a garbage collection from time to time.
         """
+        count = 0
         self.logging.info("Starting Server Information ...")
         while self._running:
             start_time = time.time()
@@ -221,6 +224,12 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
             self._srv_info_time = round(time.time() - start_time, 2)
             self.config.set_processing_performance("server", "srv_support", start_time)
+
+            count += 1
+            if count == 10:
+                self.logging.info("Garbage collection ...")
+                count = 0
+                gc.collect()
 
             self.thread_control()
             self.thread_wait()
@@ -238,6 +247,8 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             system["cpu_usage_detail"] = psutil.cpu_percent(interval=1, percpu=True)
             system["mem_total"] = psutil.virtual_memory().total / 1024 / 1024
             system["mem_used"] = psutil.virtual_memory().used / 1024 / 1024
+            mem_process = psutil.Process(os.getpid()).memory_info()
+            system["mem_process"] = mem_process.rss / 1024 / 1024
 
         except Exception as err:
             system = {
