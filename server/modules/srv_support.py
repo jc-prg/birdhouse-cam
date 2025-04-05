@@ -250,6 +250,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             system["mem_used"] = psutil.virtual_memory().used / 1024 / 1024
             mem_process = psutil.Process(os.getpid()).memory_info()
             system["mem_process"] = mem_process.rss / 1024 / 1024
+            system["mem_process_percent"] = mem_process.percent
 
         except Exception as err:
             system = {
@@ -277,7 +278,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
         self.statistics.set(key="srv_cpu", value=system["cpu_usage"])
         self.statistics.set(key="srv_cpu_temp", value=system["cpu_temperature"])
-        self.statistics.set(key="srv_cpu_mem", value=(system["mem_process"]/1024))
+        self.statistics.set(key="srv_cpu_mem", value=(system["mem_process_percent"]))
 
         for key in system:
             self._system_status[key] = system[key]
