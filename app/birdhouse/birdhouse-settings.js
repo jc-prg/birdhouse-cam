@@ -659,7 +659,7 @@ function birdhouse_app_settings (name="Settings") {
             html     += this.set.dashboard_item(id="cpu_usage",          type="number", title="CPU", description="current usage (" + data["system"]["cpu_usage_detail"].length + " CPUs)" );
             html     += this.set.dashboard_item(id="cpu_temperature",    type="number", title="CPU", description="temperature" );
             html     += this.set.dashboard_item(id="hdd_available",      type="number", title="HDD", description="available disk space" );
-            html     += this.set.dashboard_item(id="mem_used",           type="number", title="Memory", description="available memory" );
+            html     += this.set.dashboard_item(id="mem_available",      type="number", title="Memory", description="available memory" );
             }
 
         if (part == "operation" || part == "all") {
@@ -686,7 +686,7 @@ function birdhouse_app_settings (name="Settings") {
             if (data["database"]["type"] == "json") {
                 html     += this.set.dashboard_item(id="locked_db_wait", type="number", title="Database JSON", description="waiting time locked DB");
                 }
-            html     += this.set.dashboard_item(id="mem_used",      type="number", title="Memory", description="memory used by server" );
+            html     += this.set.dashboard_item(id="mem_used",   type="number", title="Memory", description="memory used by server" );
             html     += this.set.dashboard_item(id="cache_size", type="number", title="Database", description="data in cache ("+data["database"]["cache_active"]+")");
             }
 
@@ -753,7 +753,7 @@ function birdhouse_app_settings (name="Settings") {
         html += this.set.dashboard_item_fill(id="cpu_temperature", value=this.round(status["system"]["cpu_temperature"]), unit="°C", benchmark=true, warning=60, alarm=75);
         html += this.set.dashboard_item_fill(id="hdd_available", value=this.round(available_hdd), unit="GB", benchmark=true, warning=5, alarm=2);
         html += this.set.dashboard_item_fill(id="mem_available", value=this.round(available_mem), unit="GB", benchmark=true, warning=1, alarm=0.4);
-        html += this.set.dashboard_item_fill(id="mem_used", value=this.round(status["system"]["mem_process"]), unit="GB", benchmark=true, warning=1, alarm=0.4);
+        html += this.set.dashboard_item_fill(id="mem_used", value=this.round(status["system"]["mem_process"] / 1024), unit="GB", benchmark=true, warning=1, alarm=0.4);
 	    }
 
 	this.toggle	= function (active=false) {
