@@ -184,7 +184,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="srv-info", config=config_handler)
-        self.thread_set_priority(4)
+        self.thread_set_priority(8)
 
         self._system_status = {}
         self._device_status = {
