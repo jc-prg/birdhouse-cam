@@ -753,7 +753,7 @@ function birdhouse_app_settings (name="Settings") {
         html += this.set.dashboard_item_fill(id="cpu_temperature", value=this.round(status["system"]["cpu_temperature"]), unit="°C", benchmark=true, warning=60, alarm=75);
         html += this.set.dashboard_item_fill(id="hdd_available", value=this.round(available_hdd), unit="GB", benchmark=true, warning=5, alarm=2);
         html += this.set.dashboard_item_fill(id="mem_available", value=this.round(available_mem), unit="GB", benchmark=true, warning=1, alarm=0.4);
-        html += this.set.dashboard_item_fill(id="mem_used", value=this.round(status["system"]["mem_process"] / 1024), unit="GB", benchmark=true, warning=1, alarm=0.4);
+        html += this.set.dashboard_item_fill(id="mem_used", value=this.round(status["system"]["mem_process"] / 1024), unit="GB", benchmark=true, warning=1.5, alarm=2.5);
 	    }
 
 	this.toggle	= function (active=false) {
