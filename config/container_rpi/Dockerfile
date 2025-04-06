@@ -2,8 +2,9 @@ FROM debian:12.4
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update
-RUN apt-get -y upgrade
+RUN apt-get update \
+    && apt-get -y upgrade
+RUN apt-get -y install locales --fix-missing
 RUN apt-get -y install python3.11 python3-distutils python3-pip python3-apt apt-utils
 RUN apt-get -y install rpi.gpio
 RUN apt-get -y install iputils-ping
