@@ -1,4 +1,4 @@
-numpy==2.1.1
+#numpy==2.1.1
 imutils==0.5.4
 tqdm==4.67.1
 wheel
@@ -19,4 +19,4 @@ couchdb
 pympler
 
 # installed as apt package: flask, psutil, setuptools, requests
-# -> python3-flask python3-psutil python3-setuptools python3-requests python3-couchdb
+# -> python3-flask python3-psutil python3-setuptools python3-requests
