@@ -1,5 +1,5 @@
-#FROM ubuntu:24.04
-FROM debian:12.9
+FROM ubuntu:24.04
+#FROM debian:12.9
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -15,19 +15,13 @@ RUN apt-get -y install usbutils
 #RUN apt-get -y install rpi.gpio
 #RUN apt-get -y install --reinstall libraspberrypi0 libraspberrypi-dev libraspberrypi-bin
 
-#RUN apt-get install 'ffmpeg'\
-#    'libsm6'\
-#    'libxext6'  -y
-
 RUN apt-get -y install python3-numpy python3-flask python3-psutil python3-setuptools python3-requests
-RUN apt-get -y install python3-opencv python3-skimage python3-pyaudio
-RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
+RUN apt-get -y install python3-opencv python3-pyaudio
+RUN rm /usr/lib/python3.12/EXTERNALLY-MANAGED
 
 COPY ./requirements.txt ./requirements.txt
 RUN export PYTHONPATH=/usr/bin/python3 \
-    && pip3 install --upgrade pip \
     && pip3 install -r requirements.txt --ignore-installed
-RUN pip3 install --upgrade numpy scikit-image
 
 ENV PYTHONIOENCODING=utf-8
 ENV LANG=en_US.UTF-8

@@ -1,5 +1,6 @@
-imutils
-tqdm
+numpy==2.1.1
+imutils==0.5.4
+tqdm==4.67.1
 wheel
 ffmpeg-python
 #python-ffmpeg
@@ -9,10 +10,13 @@ python_weather
 suntime
 geopy
 python-dotenv
-torch
-lameenc
+torch==2.4.1
+#torchvision==0.21.0
+ultralytics==8.3.91
+scikit-image==0.25.2
+lameenc==1.7.0
 couchdb
-ultralytics
+pympler
 
 # available as apt package
 #numpy
