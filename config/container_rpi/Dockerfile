@@ -11,8 +11,7 @@ RUN apt-get -y install iputils-ping
 RUN apt-get -y install libgpiod2
 RUN apt-get -y install ffmpeg
 RUN apt-get -y install python3-opencv
-RUN apt-get -y install --no-install-recommends python3-skimage
-#RUN pip install skikit-image
+RUN apt-get -y install python3-skimage
 #RUN apt-get -y install --reinstall libraspberrypi0 libraspberrypi-dev libraspberrypi-bin
 RUN apt-get -y install v4l-utils
 RUN apt-get -y install usbutils
