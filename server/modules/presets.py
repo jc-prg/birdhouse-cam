@@ -364,10 +364,11 @@ camera_list = []
 birdhouse_env = {}
 birdhouse_status = {"object_detection": False, "object_detection_details": ""}
 birdhouse_picamera = False
-birdhouse_cache = True
-birdhouse_cache_for_archive = False
 
 set_global_configuration()
+
+birdhouse_cache = birdhouse_env["database_cache"]
+birdhouse_cache_for_archive = birdhouse_env["database_cache_archive"]
 
 # ------------------------------------
 # database configuration

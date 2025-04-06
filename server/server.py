@@ -1434,6 +1434,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                 if not stream_active:
                     srv_logging.info("Closed streaming client: " + stream_id_ext)
+                    self.stream_video_end()
                     frame_id = frame_raw = frame_raw_pip = None
                     break
 
@@ -1465,8 +1466,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         if camera[key].video.recording:
                             time.sleep(stream_wait_while_recording)
                             break
-
-        self.stream_video_end()
+        super().finish()
 
     def do_GET_stream_audio(self, this_path):
         """
