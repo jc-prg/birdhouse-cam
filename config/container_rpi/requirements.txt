@@ -16,6 +16,7 @@ python_weather
 board
 geopy
 python-dotenv
+pympler
 #torch
 #picamera2
 #psutil
