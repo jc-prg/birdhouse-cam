@@ -18,11 +18,5 @@ lameenc==1.7.0
 couchdb
 pympler
 
-# available as apt package
-#numpy
-#flask
-#psutil
-#setuptools
-#requests
-
-#python3-numpy python3-flask python3-psutil python3-setuptools python3-requests python3-couchdb
+# installed as apt package: flask, psutil, setuptools, requests
+# -> python3-flask python3-psutil python3-setuptools python3-requests python3-couchdb
