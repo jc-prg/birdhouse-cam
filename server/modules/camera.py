@@ -60,7 +60,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         self._stream_last = None
         self._stream_last_time = None
         self._stream_image_id = 0
-        self._timeout = 5
+        self._timeout = 3
 
         self._last_activity = 0
         self._last_activity_count = 0
@@ -98,9 +98,11 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
             if self.param["active"] \
                     and not self.maintenance_mode \
                     and self.camera is not None and self.camera.if_connected() \
-                    and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
+                    and self._last_activity > 0 and self._last_activity + self._timeout > time.time():
+
                 try:
                     raw = self.read_from_camera()
+                    self.logging.debug("RAW - reading images from camera: " + str(len(raw)) + " bytes.")
                     if raw is None or len(raw) == 0:
                         raise Exception("Error with 'read_from_camera()': empty image.")
 
@@ -110,6 +112,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
                     self._stream_last_time = time.time()
                     self._stream_image_id += 1
                     circle_in_cache = False
+                    del raw
 
                 except Exception as e:
                     self.raise_error("Error reading RAW stream for '" + self.id + "': " + str(e))
@@ -426,7 +429,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
 
         self._active_streams = 0
         self._recording = False
-        self._timeout = 6
+        self._timeout = 3
         self._last_activity = 0
         self._last_activity_count = 0
         self._last_activity_per_stream = {}
@@ -520,11 +523,13 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                 self._stream_last_time = time.time()
                 time.sleep(1)
 
-            elif self.active and self.stream_raw is not None \
-                    and self._last_activity > 0 and self._last_activity + self._timeout > self._start_time:
+            elif self.active and self.stream_raw is not None and self._last_activity > 0 \
+                    and self._last_activity + self._timeout > time.time():
                 try:
                     raw = self.read_raw_and_edit(stream=True, stream_id=self._stream_id_base,
                                                  return_error_image=True)
+                    self.logging.debug("EDIT - reading images from camera: " + self.id + "|" + self.type +
+                                       ":" + str(len(raw)) + " bytes.")
                     if raw is None or len(raw) == 0:
                         raise Exception("Error with 'read_raw_and_edit()': empty image.")
 
@@ -532,6 +537,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
                     self._stream_last = raw.copy()
                     self._stream_image_id += 1
                     self._stream_last_time = time.time()
+                    del raw
 
                 except Exception as e:
                     self.raise_error("Error reading EDIT stream for '" + self.id + "/" + self.type + "': " + str(e))
