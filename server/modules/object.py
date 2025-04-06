@@ -98,7 +98,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                 if first_load or not birdhouse_status["object_detection"]:
                     from modules.detection.detection_v8 import DetectionModel, ImageHandling
                     self.DetectionModel = DetectionModel
-                    self.detect_visualize = ImageHandling()
+                    self.detect_visualize = ImageHandling(self.detect_settings["model"])
 
                 if self.detect_settings["active"]:
 
@@ -107,10 +107,10 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
                     else:
                         model_to_load = self.detect_settings["model"]
+                        self.logging.info("Initialize object detection model ("+self.name+":"+model_to_load+") ...")
                         if model_to_load.endswith(".pt"):
                             model_to_load = os.path.join(detection_custom_model_path, model_to_load)
-                        self.logging.info("Initialize object detection model (" + self.name + ") ...")
-                        self.logging.info(" -> '" + model_to_load + "'")
+                        self.logging.debug(" -> '" + model_to_load + "'")
                         if "/" not in model_to_load or os.path.exists(model_to_load):
                             self.detect_objects = self.DetectionModel(model_to_load)
                             if self.detect_objects.loaded:
@@ -300,6 +300,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             image_info["info"]["duration_2"] = round(time.time() - start_time, 3)
 
             self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
+            del img
 
         else:
             self.logging.debug("Object detection not loaded (" + stamp + ")")
