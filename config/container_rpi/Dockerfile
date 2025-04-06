@@ -21,7 +21,7 @@ RUN pip3 install --upgrade pip --break-system-packages
 RUN python3 -m pip install -r requirements.txt --break-system-packages
 
 RUN apt -y install python3-pyaudio
-RUN apt -y install locales
+RUN apt -y install locales --fix-missing
 ENV PYTHONIOENCODING=utf-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
