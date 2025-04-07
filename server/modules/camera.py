@@ -68,6 +68,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         self._last_image = None
         self._start_time = None
         self._start_delay_stream = 1
+        self._start_image_id = 0
         self._connected = False
 
     def run(self):
@@ -94,6 +95,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
 
         while self._running:
             self._start_time = time.time()
+            self._start_image_id = self._stream_image_id
 
             if self.param["active"] \
                     and not self.maintenance_mode \
@@ -138,8 +140,8 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
                 self._last_activity_per_stream = {}
 
             self.stream_count()
-            self.stream_framerate_check()
             self.thread_control()
+            self.stream_framerate_check()
 
         self.logging.info("Stopped CAMERA raw stream for '"+self.id+"'.")
 
@@ -290,6 +292,11 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         duration = time.time() - self._start_time
         duration_max = self.duration_max
 
+        if self._start_image_id <= self._stream_image_id:
+            image_count = self._stream_image_id - self._start_image_id
+        else:
+            image_count = 0
+
         if self.slow_stream:
             duration_max = self.duration_slow
 
@@ -297,11 +304,12 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
             time.sleep(duration_max - duration)
 
         duration = time.time() - self._start_time
-        if self.active:
-            self.fps = 1 / duration
-            self.set_framerate(self.fps)
-        else:
-            self.fps = 0
+        self.fps = image_count / duration
+        #if self.active:
+        #    self.fps = image_count / duration
+        #else:
+        #    self.fps = 0
+        self.set_framerate(self.fps)
 
     def slow_down(self, slow_down=True):
         """
