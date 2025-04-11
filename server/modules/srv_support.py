@@ -31,7 +31,6 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             self.set_restart(False)
             self._last_garbage_collection = time.time()
             self._interval_garbage_collection = 60 * 10
-            self._thread_statistics = birdhouse_env["statistics_threads"]
         else:
             self._running = False
             self._text_files = BirdhouseTEXT()
@@ -99,7 +98,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             if count == 4:
                 count = 0
                 self.logging.info("Live sign health check!")
-                if self._thread_statistics:
+                if birdhouse_env["statistics_threads"]:
                     self.check_thread_cpu_usage()
 
         self.logging.info("Stopped Server Health Check.")
