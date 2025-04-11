@@ -204,7 +204,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
                 thread_usage["other"] += usage
 
         for key in thread_usage:
-            if thread_usage[key] != 0:
+            if total_usage != 0:
                 thread_usage_percent = thread_usage[key] / total_usage * 100
                 self.logging.debug(f"Thread {key.ljust(12)}: {str(thread_usage_percent).rjust(8)}%")
                 if "process_request_thread" in key:
