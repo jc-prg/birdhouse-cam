@@ -78,7 +78,8 @@ def set_global_configuration():
             print('Value in .env not found: ' + str(birdhouse_env_keys[key]))
 
     for key in ["database_cleanup", "rpi_active", "rpi_64bit", "detection_active", "log_to_file",
-                "test_video_devices", "database_cache", "database_cache_archive"]:
+                "test_video_devices", "database_cache", "database_cache_archive",
+                "statistics_threads","statistics_error"]:
         if birdhouse_env[key] is not None:
             birdhouse_env[key] = str(birdhouse_env[key]).lower() in ("true", "1", "yes", "on")
 
