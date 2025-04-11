@@ -68,6 +68,7 @@ def set_global_configuration():
         "test_video_devices": "BIRDHOUSE_VIDEO_DEVICE_TEST",
         "which_instance": "BIRDHOUSE_INSTANCE",
         "statistics_threads": "STATISTICS_THREADS",
+        "statistics_error": "STATISTICS_ERROR",
     }
 
     birdhouse_env = {}
@@ -561,7 +562,8 @@ birdhouse_default_cam = {
         "classes": [],
         "detection_size": 40,
         "live": False,
-        "model": "yolov5m",
+        "model": "yolo11n",
+        "similarity": False,
         "threshold": 50
     },
     "video": {
@@ -695,7 +697,7 @@ file_types = {
     '.jpeg': 'image/jpg',
 }
 
-detection_default_models = ["yolov8n", "yolov8s", "yolov8m", "yolov8l", "yolov8x"]
+detection_default_models = ["yolov8n", "yolov8s", "yolov8m", "yolov8l", "yolo11n", "yolo11s", "yolo11m", "yolo11l"]
 detection_custom_model_path = os.path.join(birdhouse_main_directories["data"],
                                            birdhouse_directories["custom_models"])
 detection_custom_models = glob.glob(os.path.join(detection_custom_model_path, "*.pt"))

@@ -6,18 +6,14 @@ import signal
 import sys
 import traceback
 
-import psutil
 import socket
 import math
 import urllib.parse
 import socketserver
-#import pkg_resources
 
 from http import server
 from datetime import datetime
 from urllib.parse import unquote
-
-from pip._internal.metadata import pkg_resources
 
 if len(sys.argv) == 0 or ("--help" not in sys.argv and "--shutdown" not in sys.argv):
     from modules.backup import BirdhouseArchive

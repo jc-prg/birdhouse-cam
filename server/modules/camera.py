@@ -15,6 +15,8 @@ from modules.image import BirdhouseImageProcessing, BirdhouseImageSupport
 from modules.video import BirdhouseVideoProcessing
 from modules.object import BirdhouseObjectDetection
 from modules.camera_handler import BirdhousePiCameraHandler, BirdhouseCameraHandler, CameraInformation
+
+
 # https://pyimagesearch.com/2016/01/04/unifying-picamera-and-cv2-videocapture-into-a-single-class-with-opencv/
 
 
@@ -1811,8 +1813,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     elif self.record:
                         start_time_record = time.time()
                         self.image_recording(current_time, stamp, similarity, sensor_last)
-                        self.image_recording_auto_light()
                         self.config.set_processing_performance("camera_recording_image", self.id, start_time_record)
+                        self.image_recording_auto_light()
 
                     # Check and record active streams
                     self.measure_usage()
@@ -2097,11 +2099,14 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.image.write(filename=path_hires, image=image_hires)
                 self.image.write(filename=path_lowres, image=image_lowres)
 
+                # add to object detection queue, if active
                 if (self.detect_active and self.detect_settings["active"]
                         and image_hires is not None and os.path.exists(path_hires)):
-                    self.object.add2queue_analyze_image(stamp, path_hires, image_hires, image_info)
-
-                # !!! unclear what happens with this analyze image?
+                    self.logging.debug("Add image to object detection queue ("+str(self.detect_settings)+" | similarity="+str(similarity)+") ...")
+                    if not "similarity" in self.detect_settings or self.detect_settings["similarity"] is False:
+                        self.object.add2queue_analyze_image(stamp, path_hires, image_hires, image_info)
+                    elif float(similarity) <= float(self.param["similarity"]["threshold"]):
+                        self.object.add2queue_analyze_image(stamp, path_hires, image_hires, image_info)
 
                 self.record_image_error = False
                 self.record_image_error_msg = []
@@ -2343,9 +2348,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         if init:
             self.statistics.register(self.id.lower() + "_streams", "Streams " + self.id.upper())
             self.statistics.register(self.id.lower() + "_framerate", "Framerate " + self.id.upper() + " [fps]")
-            self.statistics.register(self.id.lower() + "_error", "Camera Error " + self.id.upper())
-            self.statistics.register(self.id.lower() + "_raw_error", "Stream Error " + self.id.upper())
             self.statistics.register("config_img_record_"+self.id.lower(), "Record Image " + self.id.upper() + " [s]")
+            if birdhouse_env["statistics_error"]:
+                self.statistics.register(self.id.lower() + "_error", "Camera Error " + self.id.upper())
+                self.statistics.register(self.id.lower() + "_raw_error", "Stream Error " + self.id.upper())
             if self.object:
                 self.statistics.register("config_queue_" + self.id.lower() + "_object", "Object Queue " + self.id.upper())
                 self.statistics.register("config_img_detect", "Detect Image [s]")
@@ -2359,8 +2365,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
             self.statistics.set(self.id.lower() + "_streams", count)
             self.statistics.set(self.id.lower() + "_framerate", self.camera_stream_raw.get_framerate())
-            self.statistics.set(self.id.lower() + "_error", self.if_error())
-            self.statistics.set(self.id.lower() + "_raw_error", self.camera_stream_raw.if_error())
+            if birdhouse_env["statistics_error"]:
+                self.statistics.set(self.id.lower() + "_error", self.if_error())
+                self.statistics.set(self.id.lower() + "_raw_error", self.camera_stream_raw.if_error())
+
             queue_size = 0
             queue_size += len(self.object.detect_queue_image)
             queue_size += len(self.object.detect_queue_archive)
