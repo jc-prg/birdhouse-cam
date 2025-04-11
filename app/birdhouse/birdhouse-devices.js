@@ -150,7 +150,7 @@ function birdhouseDevices_status(index, show) {
             else if (show_button)    { var device_key = "<text onclick=\""+onclick+"\" style=\"cursor:pointer;\"><u><b>" + key + "</b></u></text>"; }
             else                     { var device_key = key; }
 
-            if (short) { if (device_type != "object") {
+            if (short) { if (device_type != "object" && device_type != "relay") {
                 if (typeof short_data[device_type] == 'undefined') { short_data[device_type] = ""; }
                 short_data[device_type] += "<div id='status_" + index[i][key]["status"][1] + "_" + index[i][key]["id"] + "' style='float:left;'><div id='black'></div></div>";
                 } }
