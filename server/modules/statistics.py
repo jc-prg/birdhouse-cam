@@ -74,11 +74,13 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
                     save_statistic[key2] = {}
 
                 #save_statistic[key2][key3] = self._statistics[key]
-                save_statistic[key2][key3] = sum(self._statistics_array[key]) / len(self._statistics_array[key])
+                if len(self._statistics_array[key]) > 0:
+                    save_statistic[key2][key3] = sum(self._statistics_array[key]) / len(self._statistics_array[key])
                 self._statistics_array[key] = []
             else:
                 #save_statistic[key] = self._statistics[key]
-                save_statistic[key] = sum(self._statistics_array[key]) / len(self._statistics_array[key])
+                if len(self._statistics_array[key]) > 0:
+                    save_statistic[key] = sum(self._statistics_array[key]) / len(self._statistics_array[key])
                 self._statistics_array[key] = []
 
         save_statistic_info = {}
