@@ -1,3 +1,5 @@
+import os
+import threading
 import time
 import logging
 from random import random
@@ -249,6 +251,8 @@ class BirdhouseClass(object):
         elif init:
             self.config.thread_status[self.class_id] = {
                 "id": self.class_id,
+                "pid_1": "",
+                "pid_2": "",
                 "device": self.id,
                 "thread": False,
                 "priority": self._thread_priority,
@@ -263,6 +267,11 @@ class BirdhouseClass(object):
                     "error_msg": []
                 },
             }
+            try:
+                self.config.thread_status[self.class_id]["pid_1"] = threading.get_ident()
+                self.config.thread_status[self.class_id]["pid_2"] = threading.get_native_id()
+            except Exception as e:
+                self.logging.debug("... " +str(e))
         else:
             self.config.thread_status[self.class_id]["thread"] = True
             self.config.thread_status[self.class_id]["priority"] = self._thread_priority

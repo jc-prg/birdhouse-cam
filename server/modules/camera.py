@@ -70,6 +70,7 @@ class BirdhouseCameraStreamRaw(threading.Thread, BirdhouseCameraClass):
         self._start_delay_stream = 1
         self._start_image_id = 0
         self._connected = False
+        self.config.set_thread_id(self.class_id, threading.get_ident())
 
     def run(self):
         """
@@ -476,6 +477,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         self.initial_connect_msg = {}
 
         self._init_error_images()
+        self.config.set_thread_id(self.class_id, threading.get_ident())
 
     def _init_error_images(self):
         """
@@ -1174,7 +1176,7 @@ class BirdhouseCameraStreamEdit(threading.Thread, BirdhouseCameraClass):
         if self.system_status["active"] and self.resolution == "hires":
             lowres_position = self.config.param["views"]["index"]["lowres_pos_"+self.id]
             size = self.config.param["devices"]["cameras"][self.id]["image"]["resolution_cropped"]
-            self.logging.debug("...... " + self.name + " " + str(size))
+            self.logging.debug("...... " + self.param["name"] + " " + str(size))
 
             [width, height] = [float(size[0]), float(size[1])]
             if int(lowres_position) != 3:
@@ -1358,7 +1360,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             microphones (dict[str, modules.micro.BirdhouseMicrophone]): reference to microphone handler
             first_cam (bool): set True for the first camera to load relevant Python modules only once
         """
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, name=camera_id + "-main")
         BirdhouseCameraClass.__init__(self, class_id=camera_id + "-main", class_log="cam-main",
                                       camera_id=camera_id, config=config)
 
@@ -1369,7 +1371,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.config.update["camera_" + self.id] = False
         self.config.update_config["camera_" + self.id] = False
 
-        self.name = self.param["name"]
+        #self.name = self.param["name"]
         self.active = self.param["active"]
         self.source = self.param["source"]
         self.type = self.param["type"]
@@ -1480,6 +1482,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.connect()
         self.measure_usage(init=True)
+        self.config.set_thread_id(self.class_id, threading.Thread.ident)
 
     def _init_image_processing(self):
         """
@@ -2933,7 +2936,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.config_update_small = False
 
         self.param = temp_data["devices"]["cameras"][self.id]
-        self.name = self.param["name"]
+        #self.name = self.param["name"]
         self.active = self.param["active"]
         self.source = self.param["source"]
         self.type = self.param["type"]

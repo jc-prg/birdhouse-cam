@@ -1597,6 +1597,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 "pid": ""
             }
         }
+        self.thread_ids = {}
 
         self.directories = birdhouse_directories
         self.directories_complete = birdhouse_dir_to_database
@@ -1689,6 +1690,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         # text file handler
         self.txt_handler = BirdhouseTEXT(config=self)
         self.main_config_app()
+        self.set_thread_id(self.id, threading.get_native_id())
 
     def run(self):
         """
@@ -2431,3 +2433,6 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                     self.statistics.set("srv_api_status", self.get_processing_performance("api_GET")["status"])
                 self.statistics.set("config_img_video", self.video_frame_count / self.statistics.get_interval())
                 self.video_frame_count = 0
+
+    def set_thread_id(self, id, name):
+        self.thread_ids[id] = name

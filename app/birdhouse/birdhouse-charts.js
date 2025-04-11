@@ -11,13 +11,14 @@ var chartJS_chart  = undefined;
 var chartJS_defaultColors = ["coral","cornflowerblue", "cadetblue",
 				"crimson", "darkblue", "darkgoldenrod", "darkgreen", "darkmagenta",
 				"darkorange", "darksalmon", "darkviolet", "dodgerblue", "firebrick",
-				"forestgreen", "goldenrod", "greenyellow", "hotpink", "indigo"
+				"forestgreen", "goldenrod", "greenyellow", "hotpink", "indigo",
 				];
-var chartJS_darkColors = ["red", "aquamarine", "chartreuse", "coral", "cadetblue",
-				"crimson", "darkblue", "goldenrod", "green", "magenta",
-				"orange", "salmon", "violet", "dodgerblue", "firebrick",
-				"forestgreen", "goldenrod", "greenyellow", "hotpink", "indigo"
+var chartJS_darkColors = ["red", "aquamarine", "chartreuse", "coral", "cadetblue", "crimson", "darkblue", "goldenrod",
+                "green", "magenta", "orange", "salmon", "violet", "firebrick", "goldenrod", "Lime", "MediumVioletRed",
+                "GreenYellow", "HotPink", "indigo", "yellow", "cyan", "blue", "CornflowerBlue", "DarkCyan", "DarkMagenta",
+                "DarkViolet", "DeepPink", "DeepSkyBlue", "DodgerBlue", "ForestGreen", "LightSeaGreen", "Olive", "Purple",
 				];
+var chartJS_hddPieChart = ["red", "orange", "darkblue", "green"];
 
 /*
 * load javascript file for chart rendering if not done before

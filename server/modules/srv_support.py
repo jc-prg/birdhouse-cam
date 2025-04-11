@@ -31,6 +31,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             self.set_restart(False)
             self._last_garbage_collection = time.time()
             self._interval_garbage_collection = 60 * 10
+            self._thread_statistics = birdhouse_env["statistics_threads"]
         else:
             self._running = False
             self._text_files = BirdhouseTEXT()
@@ -94,9 +95,12 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
                 self.set_start()
                 self.config.force_shutdown()
 
+            count += 1
             if count == 4:
                 count = 0
                 self.logging.info("Live sign health check!")
+                if self._thread_statistics:
+                    self.check_thread_cpu_usage()
 
         self.logging.info("Stopped Server Health Check.")
 
@@ -165,6 +169,55 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             self._text_files.write(self._shutdown_signal_file, "SHUTDOWN")
         else:
             self._text_files.write(self._shutdown_signal_file, "")
+
+    def check_thread_cpu_usage(self):
+        self.logging.info("Checking CPU usage per thread ...")
+        pid = os.getpid()
+        process = psutil.Process(pid)
+
+        total_percent = process.cpu_percent(0.1)
+        total_time = sum(process.cpu_times())
+        self.logging.info(f"Total usage: {total_percent}, Total time: {total_time}")
+
+        total_usage = 0
+        total_usage_2 = 0
+        thread_list = {}
+        thread_usage = {"other" : 0}
+        for thread in threading.enumerate():
+            #self.logging.info(">> " + str(thread.name) + " (" + str(thread.ident) + "): " + str(thread.native_id))
+            thread_list[thread.native_id] = thread.name
+
+        self.logging.debug(f"------")
+
+        for thread in process.threads():
+            usage = total_percent * ((thread.system_time + thread.user_time) / total_time)
+            total_usage += usage
+
+            if thread.id in thread_list:
+                #self.logging.info(f"Thread {thread.id} {thread_list[thread.id]}: {usage}%")
+                total_usage_2 += usage
+                if not thread_list[thread.id] in thread_usage:
+                    thread_usage[thread_list[thread.id]] = 0
+                thread_usage[thread_list[thread.id]] += usage
+            else:
+                #self.logging.info(f"Thread {thread.id}: {usage}%")
+                thread_usage["other"] += usage
+
+        for key in thread_usage:
+            thread_usage_percent = thread_usage[key] / total_usage * 100
+            self.logging.debug(f"Thread {key.ljust(12)}: {str(thread_usage_percent).rjust(8)}%")
+            if "process_request_thread" in key:
+                key = "process-request"
+
+            self.config.statistics.register("threads_usage_"+key, key + " [%]")
+            self.config.statistics.set(key="threads_usage_"+key, value=round(thread_usage_percent,3))
+
+
+        self.logging.debug(f"Total CPU usage: {total_usage}%")
+        self.logging.debug(f"Total CPU usage 2: {total_usage_2}%")
+        self.logging.debug(f"------")
+
+        return
 
 
 class ServerInformation(threading.Thread, BirdhouseClass):

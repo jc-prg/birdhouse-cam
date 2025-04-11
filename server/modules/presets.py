@@ -67,6 +67,7 @@ def set_global_configuration():
         "test_instance": "BIRDHOUSE_INSTANCE",
         "test_video_devices": "BIRDHOUSE_VIDEO_DEVICE_TEST",
         "which_instance": "BIRDHOUSE_INSTANCE",
+        "statistics_threads": "STATISTICS_THREADS",
     }
 
     birdhouse_env = {}

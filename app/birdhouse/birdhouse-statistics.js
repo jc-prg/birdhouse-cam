@@ -121,7 +121,8 @@ function birdhouse_printStatistic(title, data, date, chart_type="all", groups=tr
                                        type="line",
                                        sort_keys=false,
                                        id="statisticsChart_"+key+"_"+chart_id,
-                                       size={"height": "250px", "width": "100%"});
+                                       size={"height": "250px", "width": "100%"},
+                                       set_colors=chartJS_darkColors);
         chart += "<br/>&nbsp;<br/>";
 
         if (groups) { html  += birdhouse_OtherGroup( "chart_"+key, lang("TODAY") + " " + key.toUpperCase() + " " + info, chart, open ); }
@@ -143,7 +144,7 @@ function birdhouse_printStatistic(title, data, date, chart_type="all", groups=tr
 
         var chart = birdhouseChart_create(label="HDD Usage", titles=pie_data["titles"], data=pie_data["data"], type="pie",
                                           sort_keys=false, id="hdd_pie_"+id, size={"height": "270px", "width":"270px"},
-                                          set_colors=["red", "orange", "darkblue", "green"],
+                                          set_colors=chartJS_hddPieChart,
                                           set_menu="right");
 
         var info  = "<br/>&nbsp;<br/>";
