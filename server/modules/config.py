@@ -555,13 +555,12 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         start_time = time.time()
         self.logging.info("Create backup from cached data ...")
         for config in self.config_cache:
-            if config != "backup":
-                if self.config_cache_changed[config]:
-                    filename = self.file_path(config=config, date="")
-                    self.json.write(filename=filename, data=self.config_cache[config])
-                    self.logging.info("   -> backup2json: " + config + " (" + str(round(time.time() - start_time, 1)) + "s)")
-                    self.config_cache_changed[config] = False
-            else:
+            if config != "backup" and config in self.config_cache_changed:
+                filename = self.file_path(config=config, date="")
+                self.json.write(filename=filename, data=self.config_cache[config])
+                self.logging.info("   -> backup2json: " + config + " (" + str(round(time.time() - start_time, 1)) + "s)")
+                self.config_cache_changed[config] = False
+            elif config in self.config_cache_changed:
                 for date in self.config_cache[config]:
                     if config + "_" + date in self.config_cache_changed \
                             and self.config_cache_changed[config + "_" + date]:
