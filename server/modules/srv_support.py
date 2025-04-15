@@ -68,7 +68,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
                 if self._initial:
                     self._initial = False
-                    self.logging.info("... checking the following threads: " + str(self._thread_info.keys()))
+                    self.logging.debug("... checking the following threads: " + str(self._thread_info.keys()))
 
                 problem = []
                 for key in self._thread_info:
@@ -95,7 +95,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
                 self.config.force_shutdown()
 
             count += 1
-            if count == 4:
+            if count == 12:
                 count = 0
                 self.logging.info("Live sign health check!")
                 if birdhouse_env["statistics_threads"]:
