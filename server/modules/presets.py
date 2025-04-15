@@ -421,6 +421,7 @@ birdhouse_directories = {
     "backup_info": "images/",
     "html": "../app/",
     "data": "../data/",
+    "downloads": "downloads/",
     "main": "",
     "images": "images/",
     "favorites": "images/",

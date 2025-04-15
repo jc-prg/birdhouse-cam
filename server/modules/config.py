@@ -286,23 +286,30 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         elif date == "EMPTY":
             date = ""
 
-        if include_main:
-            dir_path = os.path.join(self.main_directory, self.directories["data"], self.directories[config], date)
+        if config in self.directories:
+            if include_main:
+                dir_path = os.path.join(self.main_directory, self.directories["data"], self.directories[config], date)
+            else:
+                dir_path = os.path.join(self.directories[config], date)
+            if ".." in dir_path:
+                elements = dir_path.split("/")
+                path_new = []
+                for element in elements:
+                    if element == ".." and len(path_new) > 0:
+                        path_new.pop(-1)
+                    else:
+                        path_new.append(element)
+                dir_path = ""
+                for element in path_new:
+                    dir_path += "/" + element
+                dir_path = dir_path.replace("//", "/")
+            return dir_path
         else:
-            dir_path = os.path.join(self.directories[config], date)
-        if ".." in dir_path:
-            elements = dir_path.split("/")
-            path_new = []
-            for element in elements:
-                if element == ".." and len(path_new) > 0:
-                    path_new.pop(-1)
-                else:
-                    path_new.append(element)
-            dir_path = ""
-            for element in path_new:
-                dir_path += "/" + element
-            dir_path = dir_path.replace("//", "/")
-        return dir_path
+            self.logging.error("Directory doesn't exist in self.directories: " + config)
+            if include_main:
+                return os.path.join(self.main_directory, self.directories["data"])
+            else:
+                return ""
 
     def directory_create(self, config, date=""):
         """
