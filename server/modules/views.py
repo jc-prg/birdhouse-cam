@@ -138,8 +138,8 @@ class BirdhouseViewCharts(BirdhouseClass):
                 data_activity[cam] = {}
                 activity_dict[cam] = {}
 
-        self.logging.info("create_chart_data_new: " + datestamp + " / " + date_eu + " / " + date_us +
-                          " for cam: " + str(cameras))
+        self.logging.debug("create_chart_data_new: " + datestamp + " / " + date_eu + " / " + date_us +
+                           " for cam: " + str(cameras))
 
         # Calculate image activity
         for cam in cameras:
