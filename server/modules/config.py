@@ -839,6 +839,10 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
             if config_file == "statistics":
 
                 entries = self.db_handler.read_cache(config_file)
+                if "data" not in entries:
+                    entries["data"] = {}
+                if "info" not in entries:
+                    entries["info"] = {}
                 self.db_handler.lock(config_file)
 
                 count_files += 1
