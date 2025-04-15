@@ -559,13 +559,15 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         self.wait_if_process_running()
         self._processing = True
 
+        count = 0
         start_time = time.time()
-        self.logging.info("Create backup from cached data ...")
+        self.logging.debug("Create backup from cached data ...")
         for config in self.config_cache:
+            count += 1
             if config != "backup" and config in self.config_cache_changed:
                 filename = self.file_path(config=config, date="")
                 self.json.write(filename=filename, data=self.config_cache[config])
-                self.logging.info("   -> backup2json: " + config + " (" + str(round(time.time() - start_time, 1)) + "s)")
+                self.logging.debug("   -> backup2json: " + config + " (" + str(round(time.time() - start_time, 1)) + "s)")
                 self.config_cache_changed[config] = False
             elif config in self.config_cache_changed:
                 for date in self.config_cache[config]:
@@ -573,9 +575,10 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                             and self.config_cache_changed[config + "_" + date]:
                         filename = self.file_path(config=config, date=date)
                         self.json.write(filename=filename, data=self.config_cache[config][date])
-                        self.logging.info("   -> backup2json: " + config + " / " + date +
+                        self.logging.debug("   -> backup2json: " + config + " / " + date +
                                           " (" + str(round(time.time() - start_time, 1)) + "s)")
                         self.config_cache_changed[config + "_" + date] = False
+        self.logging.info(f"Wrote {count} databases as backup to JSON files.")
         self._processing = False
 
     def clean_all_data(self, config, date=""):
