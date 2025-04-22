@@ -29,7 +29,7 @@ function birdhouse_OBJECTS(title, data) {
     // list of all available detections
     var all_labels = "<div id='label_all' class='detection_label_function' onclick='birdhouse_OBJECTS_open();birdhouse_labels_highlight(\"all\",\"label_key_list\");'>&nbsp;&nbsp;"+lang("ALL_LABELS")+"&nbsp;&nbsp;</div>";
     var all_labels_list = Object.keys(detections);
-    all_labels_list.sort().reverse();
+    all_labels_list.sort();
 
     for (var i=0;i<all_labels_list.length;i++) {
         var key = all_labels_list[i];
@@ -63,7 +63,7 @@ function birdhouse_OBJECTS(title, data) {
 
         var day_count = 0;
         Object.entries(value["detections"]["default_dates"]).forEach(([camera, date_list])=>{
-            date_list.sort();
+            date_list.sort().reverse();
             for (var k=0;k<date_list.length;k++) {
                 var stamp      = date_list[k];
                 var date       = stamp.substring(6,8) + "." + stamp.substring(4,6) + "." + stamp.substring(2,4);
