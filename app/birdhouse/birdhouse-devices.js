@@ -223,6 +223,7 @@ function birdhouseDevices_cameras(data, subset="") {
                 camera_name += " &nbsp; <i>(inactive)</i>";
                 }
             camera_stream = birdhouse_Image(camera_name, "info", info);
+            camera_stream = camera_stream.replaceAll("'thumbnail'", "'thumbnail_settings'");
 
             index_info[camera_name] = {};
             index_info[camera_name]["active"] = cameras[camera]["active"];
@@ -791,6 +792,7 @@ function birdhouseDevices_cameraSettings (data) {
 	    info["id"]    = camera + "_img";
 	    camera_name   = camera.toUpperCase() + ": " + camera_settings[camera]["name"];
 	    camera_stream = birdhouse_Image(camera_name, "info", info);
+        camera_stream = camera_stream.replaceAll("'thumbnail'", "'thumbnail_settings'");
 
         // check if camera available
 	    if (!camera_properties[camera] || (camera_properties[camera]["error"] || camera_settings[camera]["active"] == false)) {

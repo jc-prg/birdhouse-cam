@@ -32,8 +32,9 @@
 
 @media (min-width: 820px) {
 
-    .thumbnail       { width : 125px; }
-    .thumbnail.error { width : 115px; }
+    .thumbnail          { width : 125px; }
+    .thumbnail_settings { width : 125px; }
+    .thumbnail.error    { width : 115px; }
     .weather_hide_if_small { display: block; }
 }
 

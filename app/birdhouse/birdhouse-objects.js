@@ -29,7 +29,7 @@ function birdhouse_OBJECTS(title, data) {
     // list of all available detections
     var all_labels = "<div id='label_all' class='detection_label_function' onclick='birdhouse_OBJECTS_open();birdhouse_labels_highlight(\"all\",\"label_key_list\");'>&nbsp;&nbsp;"+lang("ALL_LABELS")+"&nbsp;&nbsp;</div>";
     var all_labels_list = Object.keys(detections);
-    all_labels_list.sort();
+    all_labels_list.sort().reverse();
 
     for (var i=0;i<all_labels_list.length;i++) {
         var key = all_labels_list[i];

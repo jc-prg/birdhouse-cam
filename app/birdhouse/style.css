@@ -83,6 +83,12 @@ nav-active {
     border        : 1px solid white;
 }
 
+.thumbnail_settings {
+    width         : 137px;
+    margin-bottom : 5px;
+    border        : 1px solid white;
+}
+
 .thumbnail.error {
     display         : table-cell;
     text-align      : center;
