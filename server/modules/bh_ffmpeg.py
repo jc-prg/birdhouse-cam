@@ -33,7 +33,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         self.camera_config = config.param["devices"]["cameras"][self.camera_id]
         self.micro_id = config.param["devices"]["cameras"][self.camera_id]["record_micro"]
         self.micro_config = {}
-        if self.micro_id != "" and self.micro_id in config["devices"]["micros"]:
+        if self.micro_id != "" and self.micro_id in config.param["devices"]["micros"]:
             self.micro_config = self.camera_config["devices"]["micros"][self.micro_id]
             self.audio_samplerate = str(self.micro_config["sample_rate"])
 
