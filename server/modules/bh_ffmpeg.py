@@ -14,7 +14,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
     class to control ffmpeg transcoding
     """
 
-    def __init__(self, camera_id, config):
+    def __init__(self, camera_id, config, device_id):
         """
         Constructor method for initializing the class.
 
@@ -27,6 +27,18 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
 
         self.audio_filename = ""
         self.audio_framerate = 12
+        self.audio_samplerate = 0
+
+        self.camera_id = device_id
+        self.camera_config = config["devices"]["cameras"][self.camera_id]
+        self.micro_id = config["devices"]["cameras"][self.camera_id]["record_micro"]
+        self.micro_config = {}
+        if self.micro_id != "" and self.micro_id in config["devices"]["micros"]:
+            self.micro_config = self.camera_config["devices"]["micros"][self.micro_id]
+            self.audio_samplerate = str(self.micro_config["sample_rate"])
+
+        self.logging.info("Connect ffmpeg for '" + self.camera_id + "' / '" + self.micro_id + "'")
+
         self.progress_info = {"percent": 0, "frame_count": 0, "frames": 0, "elapsed": 0}
         self.output_codec = {
             "video-codec": "libx264",
@@ -49,6 +61,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
 
         self.ffmpeg_create_av = self.ffmpeg_command + \
                                 "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
+                                "-ar {INPUT_AUDIO_SAMPLERATE} " + \
                                 "-i {INPUT_AUDIO_FILENAME} " + \
                                 "-c:v " + self.output_codec["video-codec"] + " " + \
                                 "-c:a " + self.output_codec["audio-codec"] + " " + \
@@ -88,6 +101,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_FILENAMES}", infile)
         cmd_ffmpeg = cmd_ffmpeg.replace("{VSTATS_PATH}", vstats_path)
         cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_AUDIO_FILENAME}", self.audio_filename)
+        cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_AUDIO_SAMPLERATE}", self.audio_samplerate)
         cmd_ffmpeg = cmd_ffmpeg.replace("{OUTPUT_FILENAME}", outfile)
         cmd_ffmpeg = cmd_ffmpeg.replace("{FRAMERATE}", str(round(float(self.audio_framerate), 1)))
         cmd_ffmpeg = cmd_ffmpeg.replace("   ", " ")

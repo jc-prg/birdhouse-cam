@@ -46,7 +46,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.config.set_processing("video-recording", self.id, False)
 
         self.img_support = BirdhouseImageSupport(camera_id, config)
-        self.ffmpeg = BirdhouseFfmpegTranscoding(self.id, self.config)
+        self.ffmpeg = BirdhouseFfmpegTranscoding(self.id, self.config, camera_id)
         self.count_length = 8
         self.info = {
             "start": 0,
