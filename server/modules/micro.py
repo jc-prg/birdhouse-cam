@@ -132,7 +132,8 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             if self.recording_processing:
                 self.record_process()
 
-            self.thread_control()
+            if not self.recording:
+                self.thread_control()
 
         try:
             if self.stream is not None:
