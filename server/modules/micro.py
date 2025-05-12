@@ -88,7 +88,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
             if self.restart_stream:
                 self._paused = False
-                self.restart_stream = False
+                #self.restart_stream = False
 
             if self.recording_start:
                 self.logging.debug("Request recording for '" + self.id + "' ...")
@@ -119,6 +119,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                             self.recording_frames.append(self.chunk)
 
                 except Exception as err:
+                    self.logging.debug("Could not read chunk: " + str(err))
                     self.raise_error("Could not read chunk: " + str(err))
                     self.count = 0
 
