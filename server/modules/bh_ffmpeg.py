@@ -61,7 +61,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
 
         self.ffmpeg_create_av = self.ffmpeg_command + \
                                 "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
-                                "-ar {INPUT_AUDIO_SAMPLERATE} " + \
+                                #"-ar {INPUT_AUDIO_SAMPLERATE} " + \
                                 "-i {INPUT_AUDIO_FILENAME} " + \
                                 "-c:v " + self.output_codec["video-codec"] + " " + \
                                 "-c:a " + self.output_codec["audio-codec"] + " " + \
