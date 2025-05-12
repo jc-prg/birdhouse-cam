@@ -41,7 +41,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.processing = False
         self.processing_cancel = False
         self.max_length = 60
-        self.delete_temp_files = True   # usually set to True, can temporarily be used to keep recorded files for analysis
+        self.delete_temp_files = False   # usually set to True, can temporarily be used to keep recorded files for analysis
 
         self.config.set_processing("video-recording", self.id, False)
 
