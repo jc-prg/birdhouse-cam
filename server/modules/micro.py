@@ -80,7 +80,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         while self._running:
             self.logging.debug("Micro thread '" + self.id +
                                "' - last_active=" + str(round(time.time() - self.last_active, 2)) + "s; timeout=" +
-                               str(round(self.timeout, 2)) + "s - pause=" + str(self._paused))
+                               str(round(self.timeout, 2)) + "s - pause=" + str(self._paused) + " - (" + str(self.count) + ")")
 
             # Pause if not used for a while
             if time.time() - self.last_active > self.timeout:
@@ -88,6 +88,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
             if self.restart_stream:
                 self._paused = False
+                self.restart_stream = False
 
             if self.recording_start:
                 self.logging.debug("Request recording for '" + self.id + "' ...")
@@ -307,7 +308,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         """
         data = None
         self.last_active = time.time()
-        self.restart_stream = False
+        self.restart_stream = True
         if self.connected and not self.error and len(self.chunk) > 0:
             data = self.chunk
         return data
