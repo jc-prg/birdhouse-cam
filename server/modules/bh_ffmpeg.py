@@ -59,6 +59,14 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         if self.ffmpeg_handler == "ffmpeg-progress":
             self.ffmpeg_command = self.ffmpeg_command + self.ffmpeg_progress
 
+        self.ffmpeg_create_av_test = self.ffmpeg_command + \
+                                "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
+                                "-ar {SAMPLERATE} -i {INPUT_AUDIO_FILENAME} " + \
+                                "-c:v " + self.output_codec["video-codec"] + " " + \
+                                "-c:a " + self.output_codec["audio-codec"] + " " + \
+                                "-crf " + str(self.output_codec["crf"]) + " " + \
+                                "{OUTPUT_FILENAME}"
+
         self.ffmpeg_create_av = self.ffmpeg_command + \
                                 "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
                                 "-i {INPUT_AUDIO_FILENAME} " + \
@@ -66,7 +74,6 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
                                 "-c:a " + self.output_codec["audio-codec"] + " " + \
                                 "-crf " + str(self.output_codec["crf"]) + " " + \
                                 "{OUTPUT_FILENAME}"
-                                #"-ar {INPUT_AUDIO_SAMPLERATE} " + \ # vor input_audio_filename
 
         self.ffmpeg_create = self.ffmpeg_command + \
                              "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
@@ -101,7 +108,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_FILENAMES}", infile)
         cmd_ffmpeg = cmd_ffmpeg.replace("{VSTATS_PATH}", vstats_path)
         cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_AUDIO_FILENAME}", self.audio_filename)
-        cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_AUDIO_SAMPLERATE}", self.audio_samplerate)
+        cmd_ffmpeg = cmd_ffmpeg.replace("{SAMPLERATE}", self.audio_samplerate)
         cmd_ffmpeg = cmd_ffmpeg.replace("{OUTPUT_FILENAME}", outfile)
         cmd_ffmpeg = cmd_ffmpeg.replace("{FRAMERATE}", str(round(float(self.audio_framerate), 1)))
         cmd_ffmpeg = cmd_ffmpeg.replace("   ", " ")
