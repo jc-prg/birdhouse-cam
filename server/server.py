@@ -1491,9 +1491,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_logging.error("AUDIO device '" + which_cam + "' not connected or with error.")
             return
 
-        srv_logging.info("Start streaming from '"+which_cam+"' ...")
+        srv_logging.info("Start streaming from '"+which_cam+"' ("+self.path+") ...")
         size = microphones[which_cam].file_header(size=True)
         streaming = True
+        data = ""
 
         if ".wav" in self.path:
             self.stream_audio_header(size)
@@ -1504,6 +1505,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.stream_audio_header(size, "audio/mp3")
             data = microphones[which_cam].get_first_chunk()
 
+        srv_logging.debug("... got first chunk (" + str(len(data)) + ")")
         last_count = 0
         count = 0
         while streaming:
