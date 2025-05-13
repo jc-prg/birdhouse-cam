@@ -435,7 +435,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.config.record_audio_info["length_record"] = round(time.time() - self.record_start_time, 3)
 
         samples = len(self.recording_frames) * self.CHUNK
-        sample_rate = round(samples / self.config.record_audio_info["length_record"])
+        sample_rate = round(samples / self.config.record_audio_info["length_record"], 0)
         self.config.record_audio_info["sample_rate_real"] = sample_rate
         self.logging.debug(str(self.config.record_audio_info))
 
