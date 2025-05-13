@@ -396,12 +396,14 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.recording_processing_start = True
         self.last_active = time.time()
         self.restart_stream = False
+
         duration = time.time() - self.record_start_time
+        samples = len(self.recording_frames) * self.CHUNK
+        sample_rate = round(samples / duration, 1)
+
         self.logging.info("Stopping recording of '" + self.recording_filename + "' ...")
         self.logging.info(" --> Chunks: " + str(len(self.recording_frames)) + " | length: " + str(round(duration,1)) + "s")
         self.logging.info(" --> Chunk size: " + str(self.CHUNK) + " | channels: " + str(self.CHANNELS) + " | bits per sample: " + str(self.BITS_PER_SAMPLE))
-        samples = len(self.recording_frames) * self.CHUNK
-        sample_rate = round(samples / duration, 1)
         self.logging.info(" --> Real Samplerate: " + str(sample_rate) + " Hz | total samples: " + str(samples))
         self.logging.info(" --> Exp. Samplerate: " + str(self.RATE) + " Hz")
 
@@ -432,10 +434,16 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.config.record_audio_info["stamp_end"] = time.time()
         self.config.record_audio_info["length_record"] = round(time.time() - self.record_start_time, 3)
 
+        samples = len(self.recording_frames) * self.CHUNK
+        sample_rate = round(samples / self.config.record_audio_info["length_record"], 2)
+        self.config.record_audio_info["sample_rate_real"] = sample_rate
+        self.logging.debug(str(self.config.record_audio_info))
+
         wf = wave.open(self.recording_filename, 'wb')
         wf.setnchannels(self.CHANNELS)
         wf.setsampwidth(self.audio.get_sample_size(self.FORMAT))
-        wf.setframerate(self.RATE)
+        #wf.setframerate(self.RATE)
+        wf.setframerate(sample_rate)
         wf.writeframes(b''.join(self.recording_frames))
         wf.close()
 
