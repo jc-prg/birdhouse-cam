@@ -148,6 +148,7 @@ function birdhouse_printStatistic(title, data, date, chart_type="all", groups=tr
                                           set_menu="right");
 
         var info  = "";
+        info += "Date:<br/><b><big>" + date + "</big></b><br/>&nbsp;<br/>";
         info += "Max parallel streams:<br/><b><big>" + statistics["streams"]["info"]["max"] + "</big></b><br/>&nbsp;<br/>";
         info += "Total viewing time:<br/><b><big>" + convert_second2time(Math.round(statistics["streams"]["info"]["views"])) + "</big></b><br/>&nbsp;";
 
