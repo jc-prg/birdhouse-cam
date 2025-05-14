@@ -1,4 +1,4 @@
-# Birdhouse Camera v1.2.0
+# Birdhouse Camera v1.3.0
 
 Raspberry Pi project to observe our birdhouse with two webcams: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, 
@@ -30,7 +30,7 @@ app in English and German, ...
 <img src="info/images/birdcam_023.PNG" width="19%"> <img src="info/images/birdcam_025.PNG" width="19%"> <img 
      src="info/images/birdcam_032.PNG" width="19%"> <img src="info/images/birdcam_033.PNG" width="19%"> <img 
      src="info/images/birdcam_100.PNG" width="19%">
-[notes.md](notes.md)
+
 Find further impressions [here](info/impressions.md).
 
 
@@ -62,7 +62,7 @@ Find further impressions [here](info/impressions.md).
 * **Listening and recording audio stream** from microphone
   * listening currently browser only (no iPhone)
   * recording audio with video stream
-* **Detecting birds** (objects) via YOLOv8
+* **Detecting birds** (objects) via YOLOv11
   * Bird detection model in an early stage trained with [a few European singing birds](data/birds.json)
   * View with all detected birds and objects -> jump to other views filtered by bird
   * Filter by detected birds in archive and favorite view as well as for admins in complete view of current day
@@ -75,7 +75,7 @@ Find further impressions [here](info/impressions.md).
   * Edit device settings, reconnect devices (devices must be added via config file)
   * Edit camera and image settings (contrast, saturation, hue, brightness, ...)
   * See amount of currently active streams
-  * Download archived data (hires, config-files, object detection as YOLOv8)
+  * Download archived data (hires, config-files, object detection as YOLOv11)
   * Statistics (streams & frame rates, viewing time, CPU usage & temperature, HDD usage, ...)
 * **Forwarding web-app** as entry point for one or more birdhouses using IPv6 addresses
 
