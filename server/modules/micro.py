@@ -37,6 +37,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.connected = False
         self.chunk = None
         self.first_micro = first_micro
+        self.is_reconnect = False
 
         self.recording = False
         self.recording_start = False
@@ -168,27 +169,38 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         if "channels" in self.param:
             self.CHANNELS = self.param["channels"]
 
-        if self.audio is None:
-            try:
-                self.audio = pyaudio.PyAudio()
-            except Exception as e:
-                self.raise_error("Could not connect microphone '" + self.id + "': " + str(e))
+        self.logging.warning("!")
 
-        elif self.stream is not None and not self.stream.is_stopped():
-            try:
-                self.stream.stop_stream()
-                self.stream.close()
-                self.audio.terminate()
-                time.sleep(1)
-                self.audio = pyaudio.PyAudio()
-            except Exception as e:
-                self.raise_error("Could not reconnect microphone '" + self.id + "': " + str(e))
+        try:
+            if self.audio is None:
+                try:
+                    self.audio = pyaudio.PyAudio()
+                    self.logging.info("Connected PyAudio ...")
+                except Exception as e:
+                    self.raise_error("Could not connect microphone '" + self.id + "': " + str(e))
+
+            elif self.stream is not None and not self.stream.is_stopped(): ### can produce an error if not connected properly before!!
+                try:
+                    self.stream.stop_stream()
+                    self.stream.close()
+                    self.audio.terminate()
+                    time.sleep(1)
+                    self.audio = pyaudio.PyAudio()
+                    self.logging.info("Reconnected PyAudio ...")
+                except Exception as e:
+                    self.raise_error("Could not reconnect microphone '" + self.id + "': " + str(e))
+
+        except Exception as e:
+            self.raise_error("Could not reconnect: " + str(e))
+
+        self.logging.warning("!!")
 
         self.info = self.audio.get_host_api_info_by_index(0)
         num_devices = self.info.get('deviceCount')
 
-        if self.first_micro:
+        if self.first_micro or self.is_reconnect:
             self.logging.info("Identified " + str(num_devices) + " audio devices:")
+            self.is_reconnect = False
             for i in range(0, num_devices):
                 check = self.audio.get_device_info_by_host_api_device_index(0, i)
                 is_micro = ((check.get("input") is not None and check.get("input") > 0) or
@@ -196,6 +208,8 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                 self.logging.info(" - " + str(i).rjust(2) + ": " + check.get("name").ljust(40) + " : micro=" +
                                   str(is_micro))
                 self.logging.debug(" - " + str(check))
+
+        self.logging.warning("!!!")
 
         if not self.param["active"]:
             self.logging.info("Device '" + self.id + "' is inactive, did not connect.")
@@ -205,6 +219,8 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             self.raise_error("... AUDIO device '" + str(self.DEVICE) + "' not available (range: 0, " +
                              str(num_devices)+")")
             return
+
+        self.logging.warning("!!!!")
 
         self.device = self.audio.get_device_info_by_host_api_device_index(0, self.DEVICE)
         is_micro = ((self.device.get("input") is not None and self.device.get("input") > 0) or
@@ -217,6 +233,8 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         if self.device.get('name') != self.param["device_name"]:
             self.raise_warning("... AUDIO device '" + str(self.DEVICE) + "' not the same as expected: " +
                                self.device.get('name') + " != " + self.param["device_name"])
+
+        self.logging.warning("!!!!")
 
         try:
             self.stream = self.audio.open(format=self.FORMAT, channels=int(self.CHANNELS),
@@ -232,6 +250,16 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.connected = True
         self.last_reload = time.time()
         self.logging.info("Microphone connected: " + str(self.DEVICE) + ", " + str(self.info))
+        self.logging.info("Microphone settings:  " + str(self.CHUNK) + ", " + str(self.CHANNELS) + ", " + str(self.RATE))
+
+    def reconnect(self):
+        """
+        reconnect microphone
+        """
+        self.logging.info("Reconnect of microphone '" + self.id + "' requested ...")
+        self.is_reconnect = True
+        self.connect()
+        return {}
 
     def update_config(self):
         """
