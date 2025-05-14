@@ -409,7 +409,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         elif "config.json" in filename:
             result = self.json.read(filename)
 
-        elif (write_other and self.db_type == "couch") or self.db_type == "both":
+        elif write_other and self.db_type == "couch" or self.db_type == "both":
 
             if not self.couch.exists(filename) and self.json.exists(filename):
                 result = self.json.read(filename)
