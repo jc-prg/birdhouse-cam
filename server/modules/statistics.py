@@ -209,11 +209,10 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
                     chart[category]["info"] = {"max": 0, "views": 0}
                     for stamp in chart[category]["data"]:
                         for value in chart[category]["data"][stamp]:
-                            if "int" in str(type(value)):
+                            if "int" in str(type(value)) or "float" in str(type(value)):
                                 if value > chart[category]["info"]["max"]:
-                                    chart[category]["info"]["max"] = value
-                                chart[category]["info"]["views"] += value
-
+                                    chart[category]["info"]["max"] = round(value, 0)
+                                chart[category]["info"]["views"] += round(value * (self._write_interval / 60), 1)
         return chart
 
     def get_chart_data_view(self):
