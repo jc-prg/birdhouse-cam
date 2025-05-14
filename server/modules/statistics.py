@@ -140,9 +140,9 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
         db_name = "statistics"
         if date != "":
             db_name = "statistics_archive"
-        if not self.config.db_handler.exists(db_name, date):
+        if not self.config.db_handler.exists(db_name, date, db_type="both"):
             return {}
-        chart_data = self.config.db_handler.read_cache(db_name, date)
+        chart_data = self.config.db_handler.read(db_name, date, db_type="both")
         chart_value = {}
         chart_values = {"data": {}, "info": {}}
 
