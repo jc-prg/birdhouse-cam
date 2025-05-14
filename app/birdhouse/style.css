@@ -9,7 +9,7 @@ h1        { margin : 4px; }
 h2        { margin : 4px; }
 h3        { margin : 4px; }
 
-body      { touch-action: none; }
+/* body   { touch-action: none; } */
 
 .frame_column { color : black; }
 
@@ -22,6 +22,10 @@ body      { touch-action: none; }
    - 9x -> Header (app-framework)
 
 */
+
+nav-active {
+  color                : yellow;
+}
 
 /* header functions */
 
@@ -79,6 +83,12 @@ body      { touch-action: none; }
     border        : 1px solid white;
 }
 
+.thumbnail_settings {
+    width         : 137px;
+    margin-bottom : 5px;
+    border        : 1px solid white;
+}
+
 .thumbnail.error {
     display         : table-cell;
     text-align      : center;
@@ -108,18 +118,6 @@ body      { touch-action: none; }
     margin        : 2px;
 }
 
-.separator_group_body {
-}
-.separator_group_body.settings2 {
-        background:
-            linear-gradient(to top,     rgba(68, 68, 96, 0.05) 0%, rgba(68, 68, 96, 0.05) 95%, rgba(68, 68, 96, 0) 100%),
-            linear-gradient(to left,    rgba(68, 68, 96, 0.05) 0%, rgba(68, 68, 96, 0.05) 95%, rgba(68, 68, 96, 0) 100%),
-            linear-gradient(to right,   rgba(68, 68, 96, 0.05) 0%, rgba(68, 68, 96, 0.05) 95%, rgba(68, 68, 96, 0) 100%),
-            linear-gradient(to bottom,  rgba(68, 68, 96, 0.05) 0%, rgba(68, 68, 96, 0.05) 95%, rgba(68, 68, 96, 0) 100%);
-        border-radius: 20px;
-        padding: 20px;
-        }
-
 .separator_group {
     float         : left;
     width         : 98%;
@@ -141,6 +139,19 @@ body      { touch-action: none; }
     background    : #444460;
     }
     
+.separator_group_body {
+    width         : 98%;
+}
+.separator_group_body.settings2 {
+        background:
+            linear-gradient(to top,     rgba(68, 68, 96, 0.05) 0%, rgba(68, 68, 96, 0.05) 95%, rgba(68, 68, 96, 0) 100%),
+            linear-gradient(to left,    rgba(68, 68, 96, 0.05) 0%, rgba(68, 68, 96, 0.05) 95%, rgba(68, 68, 96, 0) 100%),
+            linear-gradient(to right,   rgba(68, 68, 96, 0.05) 0%, rgba(68, 68, 96, 0.05) 95%, rgba(68, 68, 96, 0) 100%),
+            linear-gradient(to bottom,  rgba(68, 68, 96, 0.05) 0%, rgba(68, 68, 96, 0.05) 95%, rgba(68, 68, 96, 0) 100%);
+        border-radius: 20px;
+        padding: 20px;
+        }
+
 /* configuration of elements on camera info page */
 
 .camera_info {
@@ -442,18 +453,6 @@ img .play_button  {
     cursor           : default;
 }
 
-.button-settings-api {
-    background-color    : lightgray;
-    color               : black;
-    width               : 90px;
-    height              : 40px;
-    max-height          : 40px;
-    margin              :  3px;
-    padding             :  2px;
-    overflow            : hidden;
-    float               : left;
-}
-
 .button-back-and-forth {
     border-radius       : 5px;
     cursor              : pointer;
@@ -577,4 +576,8 @@ img .play_button  {
   100% {
     background-color: white;
   }
+}
+
+#error_log a {
+    color: darkred;
 }

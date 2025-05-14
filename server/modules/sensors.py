@@ -9,7 +9,8 @@ error_module_msg = ""
 loaded_gpio = False
 loaded_dht11 = False
 loaded_dht22 = False
-loaded_dht22_pins = ['D0', 'D1', 'D10', 'D12', 'D13', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9']
+loaded_dht22_pins = ['D0', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9',
+                     'D10', 'D12', 'D13', 'D15', 'D16', 'D18', 'D19', 'D21', 'D22', 'D23', 'D24']
 loaded_dht22_ada_pins = {}
 
 try:
@@ -56,6 +57,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
         self.thread_set_priority(5)
 
         self.config.update["sensor_"+self.id] = False
+        self.config.update_config["sensor_"+self.id] = False
         self.param = self.config.param["devices"]["sensors"][sensor_id]
         self.active = self.param["active"]
 
@@ -108,6 +110,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                 self.logging.info("....... Reload SENSOR '"+self.id+"' after update: Reread configuration.")
                 self.param = self.config.param["devices"]["sensors"][self.id]
                 self.config.update["sensor_"+self.id] = False
+                self.config.update_config["sensor_"+self.id] = False
                 self.active = self.param["active"]
                 self.reset_error()
 
@@ -198,6 +201,7 @@ class BirdhouseSensor(threading.Thread, BirdhouseClass):
                     self.sensor = dht11.DHT11(pin=self.pin)
                 elif self.param["type"] == "dht22":
                     ada_pin = loaded_dht22_ada_pins["D"+str(self.pin)]
+                    #self.sensor = dht22.DHT22(int(self.pin), use_pulseio=False)
                     self.sensor = dht22.DHT22(ada_pin, use_pulseio=False)
                 else:
                     raise "Sensor type not supported"

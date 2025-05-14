@@ -44,6 +44,7 @@ function birdhouseStatus_connectionError() {
     var cameras     = app_data["SETTINGS"]["devices"]["cameras"];
     var microphones = app_data["SETTINGS"]["devices"]["microphones"];
     var sensors     = app_data["SETTINGS"]["devices"]["sensors"];
+    var relays      = app_data["SETTINGS"]["devices"]["relays"];
 
     setTextById("system_info_connection", "<font color='red'><b>Connection lost!</b></font>");
 
@@ -52,6 +53,9 @@ function birdhouseStatus_connectionError() {
         setStatusColor(status_id="status_error_"+camera, "black");
         setStatusColor(status_id="status_error_record_"+camera, "black");
 
+        setStatusColor(status_id="status_active_"+camera+"_object", "red");
+        setStatusColor(status_id="status_error_"+camera+"_object", "black");
+
         setStatusColor(status_id="status_"+camera+"_detection_active", "red");
         setStatusColor(status_id="status_"+camera+"_detection_loaded", "black");
     }
@@ -59,12 +63,19 @@ function birdhouseStatus_connectionError() {
         setStatusColor(status_id="status_active_"+sensor, "red");
         setStatusColor(status_id="status_error_"+sensor, "black");
     }
+    for (let relay in relays) {
+        setStatusColor(status_id="status_active_"+relay, "red");
+        setStatusColor(status_id="status_error_"+relay, "black");
+    }
     for (let micro in microphones) {
         setStatusColor(status_id="status_active_"+micro, "red");
         setStatusColor(status_id="status_error_"+micro, "black");
     }
+
     setStatusColor(status_id="status_active_WEATHER", "red");
     setStatusColor(status_id="status_error_WEATHER", "black");
+
+    birdhouse_settings.server_dashboard_fill(app_data);
 }
 
 /*
@@ -75,9 +86,13 @@ function birdhouseStatus_connectionError() {
 function birdhouseStatus_print(data) {
     //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
     console.debug("Update Status ...");
+    setTextById("navActive", app_active_page);
+
+    var pages_content   = ["INDEX", "OBJECTS", "FAVORITES", "ARCHIVE", "TODAY", "TODAY_COMPLETE", "WEATHER"];
+    var pages_settings  = ["SETTINGS", "CAMERA_SETTINGS", "DEVICE_SETTINGS", "IMAGE_SETTINGS", "STATISTICS", "INFORMATION"];
 
     // set latest status data to var app_data
-    app_data       = data;
+    //app_data       = data;
     weather_footer = [];
     app_processing_active = false;
     app_server_error = false;
@@ -85,27 +100,37 @@ function birdhouseStatus_print(data) {
     // check page length vs. screen height
     var body = document.body, html = document.documentElement;
     var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
-    if (height > 1.5 * document.body.clientHeight) { elementVisible("move_up"); }
-    else { elementHidden("move_up"); }
 
-    birdhouseStatus_system(data);
-    birdhouseStatus_cameras(data);
-    birdhouseStatus_weather(data);
-    birdhouseStatus_sensors(data);
-    birdhouseStatus_microphones(data);
+    if (height > 1.5 * document.body.clientHeight)          { elementVisible("move_up"); }
+    else                                                    { elementHidden("move_up"); }
 
-    birdhouseStatus_loadingViews(data);
-    birdhouseStatus_detection(data);
-    birdhouseStatus_downloads(data);
-    birdhouseStatus_processing(data);
-    birdhouseStatus_recordButtons(data);
+    if (appSettings.loaded_index)                           { setTextById("device_status_short", birdhouseDevices("", data, "short")); appSettings.loaded_index = false; }
 
-    document.getElementById(app_frame_info).style.display = "block";
+    if (pages_settings.includes(app_active_page))           { birdhouseStatus_system(data); }
+    if (pages_settings.includes(app_active_page))           { birdhouseStatus_processing(data); }
+    if (pages_settings.includes(app_active_page))           { birdhouseStatus_relays(data); }
+    if (pages_settings.includes(app_active_page))           { birdhouse_settings.server_dashboard_fill(data); }
+    if (app_active_page == "DEVICE_SETTINGS")               { birdhouseStatus_sensors(data); }
 
-    html = "<center><i><font color='gray'>";
-    html += weather_footer.join(" / ");
-    html += "</font></i></center>";
-    setTextById(app_frame_info, html);
+    if (app_active_page == "INDEX" || "CAMERA_SETTINGS")    { birdhouseStatus_cameras(data); }
+    if (app_active_page == "INDEX" || "CAMERA_SETTINGS")    { birdhouseStatus_microphones(data); }
+
+    if (app_active_page == "INDEX")                         { birdhouseStatus_recordButtons(data); }
+    if (pages_content.includes(app_active_page))            { birdhouseStatus_loadingViews(data); }
+    if (app_active_page == "ARCHIVE" || "TODAY")            { birdhouseStatus_downloads(data); }
+    if (app_active_page == "ARCHIVE" || "TODAY")            { birdhouseStatus_detection(data); }
+    if (app_active_page == "DEVICE_SETTINGS")               { birdhouseStatus_weather(data); }
+    if (app_active_page == "WEATHER")                       { birdhouseStatus_weather(data); }
+    if (pages_content.includes(app_active_page))            { birdhouseStatus_weather(data); }
+
+    if (!appSettings.active) {
+        document.getElementById(app_frame_info).style.display = "block";
+        html = "<center><i><font color='gray'>";
+        html += weather_footer.join(" / ");
+        html += "</font></i></center>";
+        setTextById(app_frame_info, html);
+        }
+
 }
 
 /*
@@ -118,6 +143,8 @@ function birdhouseStatus_cameras(data) {
     var cameras         = data["SETTINGS"]["devices"]["cameras"];
     var camera_status   = data["STATUS"]["devices"]["cameras"];
     var camera_streams  = 0;
+    var camera_offset   = [];
+    var camera_amount   = cameras.length;
 
     for (let camera in cameras) {
         if (camera_status[camera]) {
@@ -157,7 +184,12 @@ function birdhouseStatus_cameras(data) {
             if (camera_status[camera]["record_image_start"] == "-1:-1") { record_time_info = "<i>N/A (camera not active)</i>"; }
             setTextById("get_record_image_time_"+camera, record_time_info);
 
-            //birdhouseStatus_cameraParam(data, camera);
+            // check offset settings
+            if (document.getElementById("set_record_offset_"+camera)) {
+                camera_offset.push(document.getElementById("set_record_offset_"+camera).value);
+                if (camera_offset.length == 2) { if (camera_offset[0] == camera_offset[1]) { appMsg.alert(lang("ERROR_SAME_OFFSET")); } }
+                if (camera_offset.length == 3) { if (camera_offset[0] == camera_offset[1] || camera_offset[1] == camera_offset[2] || camera_offset[0] == camera_offset[2]) { appMsg.alert(lang("ERROR_SAME_OFFSET")); } }
+                }
 
             // error recording images
             if (camera_status[camera]["error"]) {
@@ -241,21 +273,58 @@ function birdhouseStatus_cameras(data) {
 * @param (dict) data: response from API status request
 */
 function birdhouseStatus_cameraParam(data, camera) {
-    // camera parameter (image settings)
-    //var camera_status   = data["STATUS"]["devices"]["cameras"];
-    var camera_status   = data["DATA"]["data"];
+
+    var camera_status   = data["DATA"]["camera_properties"];
     if (camera_status["properties"]) {
         for (let key in camera_status["properties"]) {
             var prop_text = camera_status["properties"][key][0];
-            setTextById("prop_" + key + "_" + camera, prop_text);
-            if (document.activeElement != document.getElementById("set_" + key + "_" + camera) && document.activeElement != document.getElementById("set_" + key + "_" + camera + "_range")) {
-                setValueById("set_" + key + "_" + camera, camera_status["properties"][key][0]);
-                setValueById("set_" + key + "_" + camera + "_range", camera_status["properties"][key][0]);
+            setTextById("prop_" + key.toLowerCase() + "_" + camera, prop_text);
+            if (document.activeElement != document.getElementById("set_" + key.toLowerCase() + "_" + camera)
+                    && document.activeElement != document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_range")) {
+
+                setValueById("set_" + key.toLowerCase() + "_" + camera, camera_status["properties"][key][0]);
+                setValueById("set_" + key.toLowerCase() + "_" + camera + "_range", camera_status["properties"][key][0]);
+
+                if (document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_range")) {
+                    document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_range").className = "bh-slider start";
+                    }
                 }
             //console.error(key + ":" + camera_status[camera]["properties"][key].toString());
         }
         for (let key in camera_status["properties_image"]) {
             setTextById("img_" + key + "_" + camera, Math.round(camera_status["properties_image"][key]*100)/100);
+            //console.error(key + ":" + camera_status[camera]["properties"][key].toString());
+        }
+    }
+    if (camera_status["properties_new"]) {
+        for (let key in camera_status["properties_new"]) {
+            var prop_text = JSON.stringify(camera_status["properties_new"][key][0]);
+            setTextById("prop_" + key.toLowerCase() + "_" + camera, prop_text.replaceAll(",", ",  "));
+            setTextById("prop_" + key.toLowerCase() + "_" + camera, prop_text.replaceAll(",", ",  "));
+            if (document.activeElement != document.getElementById("set_" + key + "_" + camera)
+                    && document.activeElement != document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_range")) {
+
+                var data_type  = "";
+                if (document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_data_type")) {
+                    data_type = document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_data_type").value;
+                    }
+
+                var data_value = camera_status["properties_new"][key][0];
+                var data_class = "start";
+                var data_true  = [1, "True", "true", true];
+                var data_false = [0, "False", "false", false];
+                if (data_type == "boolean" && data_true.includes(data_value))    { data_value = 1; data_class = "on"; }
+                if (data_type == "boolean" && data_false.includes(data_value)) { data_value = 0; data_class = "off"; }
+
+                setValueById("set_" + key.toLowerCase() + "_" + camera, data_value);
+                setValueById("set_" + key.toLowerCase() + "_" + camera + "_range", data_value);
+                setValueById("set_" + key.toLowerCase() + "_" + camera, data_value);
+                setValueById("set_" + key.toLowerCase() + "_" + camera + "_range", data_value);
+
+                if (document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_range")) {
+                    document.getElementById("set_" + key.toLowerCase() + "_" + camera + "_range").className = "bh-slider " + data_class;
+                    }
+                }
             //console.error(key + ":" + camera_status[camera]["properties"][key].toString());
         }
     }
@@ -268,7 +337,7 @@ function birdhouseStatus_cameraParam(data, camera) {
 */
 function birdhouseStatus_weather(data) {
     // weather information
-    var weather         = data["WEATHER"];
+    var weather         = data["STATUS"]["weather"];
     var settings        = data["SETTINGS"]["devices"]["weather"];
 
     var entry           = "";
@@ -324,6 +393,29 @@ function birdhouseStatus_weather(data) {
     coordinates = "(" + settings["gps_coordinates"].toString().replaceAll(",", ", ") + ")";
     setTextById("gps_coordinates", coordinates);
 }
+
+/*
+* check relay status and fill respective placeholder with this information if exists
+*
+* @param (dict) data: response from API status request
+*/
+function birdhouseStatus_relays(data) {
+
+    var relay_status   = data["STATUS"]["devices"]["relays"];
+    var relay_settings = data["SETTINGS"]["devices"]["relays"];
+
+    for (let relay in relay_status) {
+        var raw_status = relay_status[relay];
+        var status     = ".";
+        if (raw_status == false) { status = "OFF"; } else { status = "ON"; }
+        setTextById("relay_status_" + relay, status);
+        setTextById("relay_status_long_" + relay, lang("STATUS") + ": " + status);
+        setTextById("relay_raw_status_" + relay, raw_status);
+
+        if (relay_settings[relay]["active"]) { setStatusColor(status_id="status_active_"+relay, "white"); }
+        else                                 { setStatusColor(status_id="status_active_"+relay, "black"); }
+        }
+    }
 
 /*
 * read latest sensor status information and fill respective placeholders with information if exist
@@ -473,6 +565,8 @@ function birdhouseStatus_system(data) {
     else {
         setTextById("system_info_db_error", "OK");
         }
+    setTextById("system_info_db_cache", status_db["cache_active"]);
+    setTextById("system_info_db_cache_archive", status_db["cache_archive_active"]);
 
     // health check
     if (status_srv["health_check"] != "OK" && status_srv["health_check"] != undefined) {
@@ -591,9 +685,16 @@ function birdhouseStatus_detection(data) {
         if (value["object_detection"]["active"])      { setStatusColor("status_" + key + "_detection_active", "white"); }
         else                                          { setStatusColor("status_" + key + "_detection_active", "black"); }
 
+        if (value["object_detection"]["active"])      { setStatusColor("status_active_" + key + "_object", "white"); }
+        else                                          { setStatusColor("status_active_" + key + "_object", "black"); }
+
         if (!value["object_detection"]["active"])     { setStatusColor("status_" + key + "_detection_loaded", "black"); }
         else if (status["models_loaded_status"][key]) { setStatusColor("status_" + key + "_detection_loaded", "green"); }
         else                                          { setStatusColor("status_" + key + "_detection_loaded", "red"); }
+
+        if (!value["object_detection"]["active"])     { setStatusColor("status_error_" + key + "_object", "black"); }
+        else if (status["models_loaded_status"][key]) { setStatusColor("status_error_" + key + "_object", "green"); }
+        else                                          { setStatusColor("status_error_" + key + "_object", "red"); }
         });
 
     }

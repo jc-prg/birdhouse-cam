@@ -15,7 +15,24 @@
     <LINK rel=apple-touch-icon             href="favicon.png"></LINK>
     <LINK rel=apple-touch-icon-precomposed href="favicon.png"></LINK>
 
-    <script src="/modules/modules_1.2.js"></script>
+    <style>
+       .loading_overlay {
+            position   : absolute;
+            top        : 0px;
+            left       : 0px;
+            z-index    : 200;
+            width      : 100%;
+            height     : 100%;
+            display    : block;
+            background : lightgray;
+            border     : solid 0px #111111;
+            display    : flex;
+            justify-content : center;
+            align-items     : center;
+            }
+    </style>
+
+    <script src="/modules/modules_1.2.1.js"></script>
     <script src="/framework/app-fw.js"></script>
     <script src="/birdhouse/birdhouse.js"></script>
     <link rel="stylesheet" type="text/css" href="birdhouse/style-index.css" />
@@ -32,13 +49,14 @@
 <!-- APP specific  html elements // END -->
 
 <nav id="nav">
-<nav-logo id="rest_status"></nav-logo>
-<nav-title id="navTitle">...</nav-title>
-<ul>
-  <li id="navi"><div onClick="javascript:appClickMenu();"  id="navi-click"><img src="framework/img/button.png" /></div>
-    <ul id='menuItems' style="visibility:hidden;"><!-- drop down menu - filled by script --></ul>
-  </li>
-</ul>
+    <nav-logo id="rest_status"></nav-logo>
+    <nav-title id="navTitle" style="display:block;z-index:101;">...</nav-title>
+    <nav-active id="navActive" style="display:none;z-index:100;">+++</nav-active>
+    <ul>
+      <li id="navi"><div onClick="javascript:appClickMenu();"  id="navi-click"><img src="framework/img/button.png" /></div>
+        <ul id='menuItems' style="visibility:hidden;"><!-- drop down menu - filled by script --></ul>
+      </li>
+    </ul>
 </nav>
 
 <div id="statusLED"><div id="red"></div></div>
@@ -51,7 +69,7 @@
 <div id='reload_info'  style="width:100%;display:none;"></div>
 <div id='remote_block' style="width:100%">
   <div class='frame_block'>
-    <div class='remote_nav' id='remote_nav'><nav-b>
+    <div class='remote_nav' id='remote_nav'><nav-b id="nav-b">
      <ul>
       <li>
         <ul id='menuItems2'><!-- fixed menu for wide screens - filled by script --></ul>
@@ -104,9 +122,9 @@
             startApp();
             }
         else {
-            if (birdhouse_modules_loaded() == false)    { console.error("Birdhouse not yet loaded: " + birdhouse_modules_loaded()); }
-            if (modules_loaded() == false)              { console.error("Modules not yet loaded: " + modules_loaded()); }
-            if (framework_modules_loaded() == false)    { console.error("Framework not yet loaded: " + framework_modules_loaded()); }
+            if (birdhouse_modules_loaded() == false)    { console.warn("Birdhouse not yet loaded: " + birdhouse_modules_loaded()); }
+            if (modules_loaded() == false)              { console.warn("Modules not yet loaded: " + modules_loaded()); }
+            if (framework_modules_loaded() == false)    { console.warn("Framework not yet loaded: " + framework_modules_loaded()); }
 
             setTimeout( function() {
                 wait_until_loaded();

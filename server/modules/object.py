@@ -62,12 +62,16 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                                " (prio=" + str(self.priority_processing()) + ")")
 
             if not self.priority_processing() and len(self.detect_queue_image) > 0:
+                start_time = time.time()
                 [stamp, path_hires, image_hires, image_info] = self.detect_queue_image.pop()
                 self.analyze_image(stamp, path_hires, image_hires, image_info)
+                self.config.set_processing_performance("object_detection", "image", start_time)
 
             elif not self.priority_processing() and len(self.detect_queue_archive) > 0:
+                start_time = time.time()
                 [date, threshold] = self.detect_queue_archive.pop()
                 self.analyze_archive_day(date, threshold)
+                self.config.set_processing_performance("object_detection", "day", start_time)
 
             self.config.object_detection_processing = self._processing
             self.config.object_detection_progress = self._processing_percentage
@@ -94,7 +98,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                 if first_load or not birdhouse_status["object_detection"]:
                     from modules.detection.detection_v8 import DetectionModel, ImageHandling
                     self.DetectionModel = DetectionModel
-                    self.detect_visualize = ImageHandling()
+                    self.detect_visualize = ImageHandling(self.detect_settings["model"])
 
                 if self.detect_settings["active"]:
 
@@ -103,10 +107,10 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
                     else:
                         model_to_load = self.detect_settings["model"]
+                        self.logging.info("Initialize object detection model ("+self.name+":"+model_to_load+") ...")
                         if model_to_load.endswith(".pt"):
                             model_to_load = os.path.join(detection_custom_model_path, model_to_load)
-                        self.logging.info("Initialize object detection model (" + self.name + ") ...")
-                        self.logging.info(" -> '" + model_to_load + "'")
+                        self.logging.debug(" -> '" + model_to_load + "'")
                         if "/" not in model_to_load or os.path.exists(model_to_load):
                             self.detect_objects = self.DetectionModel(model_to_load)
                             if self.detect_objects.loaded:
@@ -114,6 +118,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                                 self.detect_loaded = True
                                 self.last_model = self.detect_settings["model"]
                                 birdhouse_status["object_detection"] = True
+                                birdhouse_status["object_detection_details"] = "OK"
                                 self.logging.info(" -> '" + model_to_load + "': OK")
                             else:
                                 self.detect_loaded = False
@@ -128,7 +133,10 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                 self.logging.error(" -> Could not load 'modules.detection': " + str(e))
                 self.detect_loaded = False
                 birdhouse_status["object_detection"] = False
+                birdhouse_status["object_detection_details"] = "Could not load 'modules.detection': " + str(e)
         else:
+            birdhouse_status["object_detection"] = False
+            birdhouse_status["object_detection_details"] = "Object detection is set to inactive"
             self.detect_loaded = False
             self.logging.info(" -> Object detection inactive (" + self.name + "), see .env-file.")
 
@@ -292,6 +300,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
             image_info["info"]["duration_2"] = round(time.time() - start_time, 3)
 
             self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
+            del img
 
         else:
             self.logging.debug("Object detection not loaded (" + stamp + ")")

@@ -13,6 +13,8 @@ config/install/x264
 
 data/images/
 data/videos/
+data/other/
+data/downloads/
 data/couchdb/_dbs.couch
 data/couchdb/_nodes.couch
 

@@ -1,5 +1,6 @@
 import cv2
 import threading
+import time
 
 from modules.presets import *
 from modules.bh_class import BirdhouseCameraClass
@@ -46,7 +47,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.config.set_processing("video-recording", self.id, False)
 
         self.img_support = BirdhouseImageSupport(camera_id, config)
-        self.ffmpeg = BirdhouseFfmpegTranscoding(self.id, self.config)
+        self.ffmpeg = BirdhouseFfmpegTranscoding(self.id, self.config, camera_id)
         self.count_length = 8
         self.info = {
             "start": 0,
@@ -231,9 +232,9 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                 self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 2)
             else:
                 self.info["framerate"] = 0
-            self.logging.info("---------------------> Length: "+str(self.info["length"]))
-            self.logging.info("---------------------> Count: "+str(self.info["image_count"]))
-            self.logging.info("---------------------> FPS: "+str(self.info["framerate"]))
+            self.logging.info("--------------------> Length: "+str(self.info["length"]))
+            self.logging.info("--------------------> Count: "+str(self.info["image_count"]))
+            self.logging.info("--------------------> FPS: "+str(self.info["framerate"]))
             self.logging.info(" <-- " + self.id + " --- " + str(time.time()) + " ... (" +
                               str(round(time.time() - self.record_start_time, 3)) + ")")
             self.recording = False
@@ -348,13 +349,12 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         cmd_delete_audio = "rm " + self.record_audio_filename
 
         try:
+            if success:
+                self.logging.info(cmd_thumb)
+                message = os.system(cmd_thumb)
+                self.logging.debug(message)
+
             if self.delete_temp_files:
-
-                if success:
-                    self.logging.info(cmd_thumb)
-                    message = os.system(cmd_thumb)
-                    self.logging.debug(message)
-
                 self.logging.info(cmd_delete)
                 message = os.system(cmd_delete)
                 self.logging.debug(message)

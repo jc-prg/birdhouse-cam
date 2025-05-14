@@ -3,6 +3,7 @@ import time
 import psutil
 import subprocess
 import os
+import gc
 
 from modules.bh_class import BirdhouseClass
 from modules.bh_database import BirdhouseTEXT
@@ -11,7 +12,8 @@ from modules.presets import *
 
 class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
-    def __init__(self, config, maintain=False):
+    def __init__(self, config, server, maintain=False):
+        self.server = server
         self._shutdown_signal_file = "/tmp/birdhouse-cam-shutdown"
         self._wait_till_start = 60
         if not maintain:
@@ -27,6 +29,8 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             self._text_files = BirdhouseTEXT()
             self.set_shutdown(False)
             self.set_restart(False)
+            self._last_garbage_collection = time.time()
+            self._interval_garbage_collection = 60 * 10
         else:
             self._running = False
             self._text_files = BirdhouseTEXT()
@@ -38,6 +42,19 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
         while self._running:
             self.thread_wait()
             self.thread_control()
+
+            if self._last_garbage_collection + self._interval_garbage_collection < time.time():
+                self.logging.info("Garbage collection (every " + str(self._interval_garbage_collection/60) + "min) ...")
+                self._last_garbage_collection = time.time()
+                gc.collect()
+
+            if self.config.thread_ctrl["shutdown"]:
+                time.sleep(5)
+                self.config.shut_down = False
+                self.logging.info("FINALLY KILLING ALL PROCESSES NOW!")
+                self.server.server_close()
+                self.server.shutdown()
+                return
 
             if last_update + self._interval_check < time.time():
                 self.logging.info("Health check ...")
@@ -51,7 +68,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
                 if self._initial:
                     self._initial = False
-                    self.logging.info("... checking the following threads: " + str(self._thread_info.keys()))
+                    self.logging.debug("... checking the following threads: " + str(self._thread_info.keys()))
 
                 problem = []
                 for key in self._thread_info:
@@ -77,9 +94,12 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
                 self.set_start()
                 self.config.force_shutdown()
 
-            if count == 4:
+            count += 1
+            if count == 12:
                 count = 0
                 self.logging.info("Live sign health check!")
+                if birdhouse_env["statistics_threads"]:
+                    self.check_thread_cpu_usage()
 
         self.logging.info("Stopped Server Health Check.")
 
@@ -113,7 +133,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
         if os.path.exists(self._shutdown_signal_file):
             content = self._text_files.read(self._shutdown_signal_file)
             if "START" in content:
-                print("START signal set ... waiting " + str(self._wait_till_start) + "s to starting birdhouse server.")
+                print("START signal received ... waiting " + str(self._wait_till_start) + "s before starting birdhouse server.")
                 self._text_files.write(self._shutdown_signal_file, "")
                 time.sleep(self._wait_till_start)
                 print("Starting ...")
@@ -149,11 +169,61 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
         else:
             self._text_files.write(self._shutdown_signal_file, "")
 
+    def check_thread_cpu_usage(self):
+        self.logging.info("Checking CPU usage per thread ...")
+        pid = os.getpid()
+        process = psutil.Process(pid)
+
+        total_percent = process.cpu_percent(0.1)
+        total_time = sum(process.cpu_times())
+        self.logging.info(f"Total usage: {total_percent}, Total time: {total_time}")
+
+        total_usage = 0
+        total_usage_2 = 0
+        thread_list = {}
+        thread_usage = {"other" : 0}
+        for thread in threading.enumerate():
+            #self.logging.info(">> " + str(thread.name) + " (" + str(thread.ident) + "): " + str(thread.native_id))
+            thread_list[thread.native_id] = thread.name
+
+        self.logging.debug(f"------")
+
+        for thread in process.threads():
+            usage = total_percent * ((thread.system_time + thread.user_time) / total_time)
+            total_usage += usage
+
+            if thread.id in thread_list:
+                #self.logging.info(f"Thread {thread.id} {thread_list[thread.id]}: {usage}%")
+                total_usage_2 += usage
+                if not thread_list[thread.id] in thread_usage:
+                    thread_usage[thread_list[thread.id]] = 0
+                thread_usage[thread_list[thread.id]] += usage
+            else:
+                #self.logging.info(f"Thread {thread.id}: {usage}%")
+                thread_usage["other"] += usage
+
+        for key in thread_usage:
+            if total_usage != 0:
+                thread_usage_percent = thread_usage[key] / total_usage * 100
+                self.logging.debug(f"Thread {key.ljust(12)}: {str(thread_usage_percent).rjust(8)}%")
+                if "process_request_thread" in key:
+                    key = "process-request"
+
+                self.config.statistics.register("threads_usage_"+key, key + " [%]")
+                self.config.statistics.set(key="threads_usage_"+key, value=round(thread_usage_percent,3))
+
+
+        self.logging.debug(f"Total CPU usage: {total_usage}%")
+        self.logging.debug(f"Total CPU usage 2: {total_usage_2}%")
+        self.logging.debug(f"------")
+
+        return
+
 
 class ServerInformation(threading.Thread, BirdhouseClass):
 
     def __init__(self, initial_camera_scan, config_handler, camera_handler, sensor_handler,
-                 microphone_handler, statistics):
+                 microphone_handler, relay_handler, statistics):
         """
         Constructor of the class
 
@@ -167,13 +237,14 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         """
         threading.Thread.__init__(self)
         BirdhouseClass.__init__(self, class_id="srv-info", config=config_handler)
-        self.thread_set_priority(4)
+        self.thread_set_priority(8)
 
         self._system_status = {}
         self._device_status = {
             "cameras": {},
             "sensors": {},
             "microphones": {},
+            "relays": {},
             "available": {}
         }
         self._srv_info_time = 0
@@ -183,27 +254,36 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         self.microphone = microphone_handler
         self.sensor = sensor_handler
         self.statistics = statistics
+        self.relays = relay_handler
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
         self.main_dir = birdhouse_main_directories["project"]
 
+        self.disk_usage_interval = 10 * 60
+        self.disk_usage_cache = {}
+        self.disk_usage_last = 0
+
         self.statistics.register("srv_cpu", "CPU Usage")
         self.statistics.register("srv_cpu_temp", "CPU Temperature")
+        self.statistics.register("srv_cpu_mem", "Mem Usage")
         self.statistics.register("srv_hdd_percentage", "HDD Used [%]")
         self.statistics.register("srv_hdd_used", "HDD Used [GB]")
         self.statistics.register("srv_hdd_data", "HDD Data [GB]")
 
     def run(self):
         """
-        Running thread to continuously update server information in the background.
+        Running thread to continuously update server information in the background and
+        trigger a garbage collection from time to time.
         """
         self.logging.info("Starting Server Information ...")
         while self._running:
             start_time = time.time()
             self.read_memory_usage()
+            self.read_disk_usage()
             self.read_device_status()
             self.read_available_devices()
 
             self._srv_info_time = round(time.time() - start_time, 2)
+            self.config.set_processing_performance("server", "srv_support", start_time)
 
             self.thread_control()
             self.thread_wait()
@@ -212,7 +292,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
     def read_memory_usage(self):
         """
-        Get data for current memory and HDD usage, to be requested via .get().
+        Get data for current memory , to be requested via .get().
         """
         system = {}
         try:
@@ -221,11 +301,9 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             system["cpu_usage_detail"] = psutil.cpu_percent(interval=1, percpu=True)
             system["mem_total"] = psutil.virtual_memory().total / 1024 / 1024
             system["mem_used"] = psutil.virtual_memory().used / 1024 / 1024
-
-            # diskusage
-            hdd = psutil.disk_usage("/")
-            system["hdd_used"] = hdd.used / 1024 / 1024 / 1024
-            system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
+            mem_process = psutil.Process(os.getpid()).memory_info()
+            system["mem_process"] = mem_process.rss / 1024 / 1024
+            system["mem_process_percent"] = system["mem_process"] / system["mem_total"] * 100
 
         except Exception as err:
             system = {
@@ -233,9 +311,10 @@ class ServerInformation(threading.Thread, BirdhouseClass):
                 "cpu_usage_detail": -1,
                 "mem_total": -1,
                 "mem_used": -1,
-                "hdd_used": -1,
-                "hdd_total": -1
+                "mem_process": -1,
+                "mem_process_percent": -1
             }
+            self.logging.warning("Was not able to get memory usage: " + str(err))
 
         system["system_info_interval"] = self._srv_info_time
 
@@ -253,28 +332,56 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         # Give the result back to the caller.
         system["cpu_temperature"] = result
 
-        try:
-            cmd_data = ["du", "-hs", os.path.join(self.main_dir, "data")]
-            temp_data = str(subprocess.check_output(cmd_data))
-            temp_data = temp_data.replace("b'", "")
-            temp_data = temp_data.split("\\t")[0]
-            if "k" in temp_data:
-                system["hdd_data"] = float(temp_data.replace("k", "")) / 1024 / 1024
-            elif "M" in temp_data:
-                system["hdd_data"] = float(temp_data.replace("M", "")) / 1024
-            elif "G" in temp_data:
-                system["hdd_data"] = float(temp_data.replace("G", ""))
-        except Exception as e:
-            system["hdd_data"] = -1
-            self.logging.warning("Was not able to get size of data dir: " + (str(cmd_data)) + " - " + str(e))
-
         self.statistics.set(key="srv_cpu", value=system["cpu_usage"])
         self.statistics.set(key="srv_cpu_temp", value=system["cpu_temperature"])
+        self.statistics.set(key="srv_cpu_mem", value=system["mem_process_percent"])
+
+        for key in system:
+            self._system_status[key] = system[key]
+
+    def read_disk_usage(self):
+        """
+        read disk usage from linux command from time to time, interval defined in self.disk_usage_interval,
+        and write data to statistics module
+        """
+        if self.disk_usage_cache == {} or self.disk_usage_last + self.disk_usage_interval < time.time():
+            self.logging.debug("... disk usage cache expired ...")
+            self.disk_usage_last = time.time()
+
+            system = {}
+            try:
+                # diskusage
+                hdd = psutil.disk_usage("/")
+                system["hdd_used"] = hdd.used / 1024 / 1024 / 1024
+                system["hdd_total"] = hdd.total / 1024 / 1024 / 1024
+            except Exception as err:
+                system = {"hdd_used": -1, "hdd_total": -1}
+
+            try:
+                cmd_data = ["du", "-hs", os.path.join(self.main_dir, "data")]
+                temp_data = str(subprocess.check_output(cmd_data))
+                temp_data = temp_data.replace("b'", "")
+                temp_data = temp_data.split("\\t")[0]
+                if "k" in temp_data:
+                    system["hdd_data"] = float(temp_data.replace("k", "")) / 1024 / 1024
+                elif "M" in temp_data:
+                    system["hdd_data"] = float(temp_data.replace("M", "")) / 1024
+                elif "G" in temp_data:
+                    system["hdd_data"] = float(temp_data.replace("G", ""))
+            except Exception as e:
+                system["hdd_data"] = -1
+                self.logging.warning("Was not able to get size of data dir: " + (str(cmd_data)) + " - " + str(e))
+            self.disk_usage_cache = system.copy()
+        else:
+            self.logging.debug("... disk usage cache still valid ...")
+            system = self.disk_usage_cache.copy()
+
+        for key in system:
+            self._system_status[key] = system[key]
+
         self.statistics.set(key="srv_hdd_percentage", value=round((system["hdd_used"]/system["hdd_total"]), 3))
         self.statistics.set(key="srv_hdd_used", value=round(system["hdd_used"], 3))
         self.statistics.set(key="srv_hdd_data", value=round(system["hdd_data"], 3))
-
-        self._system_status = system.copy()
 
     def read_available_devices(self):
         """
@@ -341,6 +448,9 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         # get microphone data and create streaming information
         for key in self.microphone:
             self._device_status["microphones"][key] = self.microphone[key].get_device_status()
+
+        for key in self.relays:
+            self._device_status["relays"][key] = self.relays[key].is_on()
 
         # get camera data and create streaming information
         for key in self.camera:

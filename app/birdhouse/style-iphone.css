@@ -1,107 +1,146 @@
-/* iPhone X/XS */
-@media only screen and
-    (device-width : 375px) and (device-height : 812px) and (orientation : portrait)  {
+/* iPhone X/XS  ---------------------------------------- */
+
+@media only screen and (device-width : 375px) and (device-height : 812px) and (orientation : portrait)  {
     }
-@media only screen and
-    (device-width : 375px) and (device-height : 812px) and (orientation : landscape) {
-}
-/* iPhone SE2 */
-@media only screen and
-    (device-width : 375px) and (device-height : 667px) and (orientation : portrait)  {
-    }
-@media only screen and
-    (device-width : 375px) and (device-height : 667px) and (orientation : landscape) {
-    }
-
-/* iPhone 5S/C */
-@media only screen and
-    (device-width : 320px) and (device-height : 568px) and (orientation : portrait)  {
-
-        .separator_group                { width  : 280px; font-size : 9px; }
-        .thumbnail                      { width :  88px;  }
-        .thumbnail.error                { width :  78px;  height: 90px; }
-        .thumbnail_container            { width : 90px; }
-
-        .detection_label.image          { width : 70px; }
-        .image_container.fixed_height   { height: 180px;}
-
-        .other_label { font-size: 8px; width: auto; }
-    }
-@media only screen and
-    (device-width : 568px) and (device-height : 320px) and (orientation : landscape) {
-
-        .frame_column.wide { width : 530px; }
-        .separator_group                { font-size : 9px; }
-        .thumbnail                      { width :  98px;  }
-        .thumbnail.error                { width :  88px;  height: 100px; }
-        .thumbnail_container            { width : 100px; }
-
-        .detection_label.image          { width : 60px; }
-        .image_container.fixed_height   { height: 200px;}
-    }
-
-/* iPhone SE2 & X/XS */
-
-@media only screen and
-    (device-width : 375px) and (orientation : portrait) {
-
-        .livestream_main                { max-width : 320px; }
-        .separator_group                { width  : 328px; font-size : 11px; }
-        .thumbnail                      { width :  78px;  }
-        .thumbnail.error                { width :  68px;  height: 90px; }
-        .thumbnail_container            { width :  80px;  }
-
-        .detection_label.image          { width : 70px; }
-        .image_container.fixed_height   { height  : 180px; }
-
-        .camera_info_image .image_container {
-            width  : 95%;
-            height : 270px;
-        }
-
-        .camera_info_image .image_container .thumbnail_container {
-            width  : 95%;
-            height : 100%;
-        }
-
-        .camera_info_image .image_container img {
-            min-height  : 200px;
-            max-height  : 230px;
-        }
-
-        .camera_info_image.video_edit .image_container img {
-            min-height  : auto;
-            max-height  : 230px;
-            max-width   : 230px;
-        }
+@media only screen and (device-width : 375px) and (device-height : 812px) and (orientation : landscape) {
 }
 
-/* iPhone XS: landscape */
+/* iPhone SE2 / 6 / 7 / 8 ----------------------------------------- */
 
-@media only screen and
-    (device-width : 375px) and (device-height : 812px) and (orientation : landscape) {
+@media only screen and (device-width : 375px) and (device-height : 667px) and (orientation : portrait)  {
+    }
+@media only screen and (((device-width : 375px) and (device-height : 667px) and (orientation : landscape))
+                   or ((device-height : 375px) and (device-width : 667px))) {
 
-        .livestream_main { max-width : 330px; }
-        .separator_group { font-size : 9px; }
-
-        .image_container.fixed_height { height  : 230px; }
-
-        .thumbnail           { width :  98%;  }
-        .thumbnail.error     { width :  96%;  height: 180px; }
-        .thumbnail_container { width : 130px; }
-
-        .recycle         { width   : 20px;  height   : 20px;  top : 12px; }
-        .recycle_img     { width   : 20px;  height   : 20px; }
-        .star            { width   : 20px;  height   : 20px;  top : 5px; }
-        .star_img        { width   : 20px;  height   : 20px; }
-        .checkbox        { width   : 20px;  height   : 20px;  top : 10px; }
-        .checkbox_img    { width   : 20px;  height   : 20px; }
-
-        .frame_column.wide { width : 695px; }
-
-        .weather_hide_if_small { display: block; }
+    .frame_column.wide              { width : 620px; }
+    .setting_bg.header              { width : 620px; }
+    .settings_button_index          { width : 32%; margin : 0.5%; }
     }
 
-/* ----------*/
+/* iPhone 5/SE1 ----------------------------------------- */
 
+@media only screen and (device-width : 320px) and (device-height : 568px) and (orientation : portrait)  {
 
+    .separator_group                { width  : 280px; font-size : 9px; }
+    .separator_group_body           { width  : 280px; font-size : 9px; }
+    .thumbnail                      { width :  88px;  }
+    .thumbnail.error                { width :  78px;  height: 90px; }
+    .thumbnail_container            { width : 90px; }
+
+    .detection_label.image          { width : 70px; }
+    .image_container.fixed_height   { height: 180px;}
+
+    .other_label                    { font-size: 8px; width: auto; }
+}
+
+@media only screen and (device-width : 568px) and (device-height : 320px) and (orientation : landscape) {
+
+    .frame_column.wide              { width : 530px; }
+    .setting_bg.header              { width : 530px; }
+
+    .separator_group                { font-size : 9px; }
+    .thumbnail                      { width :  98px;  }
+    .thumbnail.error                { width :  88px;  height: 100px; }
+    .thumbnail_container            { width : 100px; }
+
+    .detection_label.image          { width : 60px; }
+    .image_container.fixed_height   { height: 200px;}
+}
+
+/* iPhone SE2 & X/XS ------------------------------------- */
+
+@media only screen and (device-width : 375px) and (orientation : portrait) {
+
+    .frame_column.wide              { width : 342px; }
+    .setting_bg.header              { width : 342px; }
+    .settings_button_index.header   { width : 52px; }
+
+    .livestream_main                { max-width : 320px; }
+    .separator_group                { width  : 328px; font-size : 11px; }
+    .separator_group_body           { width  : 328px; }
+    .thumbnail                      { width :  78px;  }
+    .thumbnail.error                { width :  68px;  height: 90px; }
+    .thumbnail_container            { width :  80px;  }
+
+    .detection_label.image          { width : 70px; }
+    .image_container.fixed_height   { height  : 180px; }
+
+    .camera_info_image .image_container                         { width  : 95%; height : 270px; }
+    .camera_info_image .image_container .thumbnail_container    { width  : 95%; height : 100%; }
+    .camera_info_image .image_container img                     { min-height : 200px; max-height : 230px; }
+    .camera_info_image.video_edit .image_container img          { min-height : auto;  max-height : 230px; max-width : 230px; }
+}
+
+/* iPhone XS: landscape ---------------------------------- */
+
+@media only screen and (((device-width : 375px) and (device-height : 812px) and (orientation : landscape))
+                    or  ((device-height : 375px) and (device-width : 812px))) {
+
+    .frame_column.wide              { width : 695px; }
+    .setting_bg.header              { width : 695px; }
+
+    .livestream_main                { max-width : 330px; }
+    .separator_group                { font-size : 9px; }
+    .image_container.fixed_height   { height  : 230px; }
+
+    .thumbnail                      { width :  98%;  }
+    .thumbnail.error                { width :  96%;  height: 180px; }
+    .thumbnail_container            { width : 130px; }
+
+    .recycle                        { width   : 20px;  height   : 20px;  top : 12px; }
+    .recycle_img                    { width   : 20px;  height   : 20px; }
+    .star                           { width   : 20px;  height   : 20px;  top : 5px; }
+    .star_img                       { width   : 20px;  height   : 20px; }
+    .checkbox                       { width   : 20px;  height   : 20px;  top : 10px; }
+    .checkbox_img                   { width   : 20px;  height   : 20px; }
+
+    .weather_hide_if_small          { display: block; }
+}
+
+/* iPhone 16pro ------------------------------------------ */
+
+@media only screen and (device-width : 402px) {
+
+    .setting_bg.header              { width : 366px; }
+    .frame_column.wide              { width : 366px; }
+    .settings_button_index.header   { width : 56px; }
+    }
+
+@media only screen and (device-width : 402px) and (device-height : 874px) and (orientation : portrait) {
+
+    .frame_column.wide                  { width : 366px; }
+    .setting_bg.header                  { width : 366px; }
+    .settings_button_index.header       { width : 47px; }
+    .settings_button_index.header.invisible { width : 46px; }
+    .settings_button_index.header img       { max-width : 36px; }
+
+    .thumbnail                      { width :  98%;  }
+    .thumbnail.error                { width :  96%;  height: 180px; }
+    .thumbnail_container            { width : 100px; }
+
+    .detection_label.image          { width  :  90px; }
+    .image_container.fixed_height   { height : 180px; }
+
+    /* ---> use next part as generic for for all sizes in a specific range ??? !!! <--- */
+    .camera_info_image .image_container                         { width  : 95%; height : 270px; }
+    .camera_info_image .image_container .thumbnail_container    { width  : 95%; height : 100%; }
+    .camera_info_image .image_container img                     { min-height : 200px; max-height : 230px; }
+    .camera_info_image.video_edit .image_container img          { min-height : auto;  max-height : 230px; max-width : 230px; }
+    }
+
+@media only screen and (((device-width : 402px) and (device-height : 874px) and (orientation : landscape))
+                     or ((device-height : 402px) and (device-width : 874px)))  {
+
+    .frame_column.wide              { width :   550px; }
+    .setting_bg.header              { width :   550px; left  : 163px; }
+
+    .thumbnail                      { width :  98%;  }
+    .thumbnail.error                { width :  96%;  height: 180px; }
+    .thumbnail_container            { width : 130px; }
+
+    #remote_nav                     { display : block; }
+    #nav-b                          { display : block; }
+    #navi-click                     { display : none; }
+}
+
+/* ------------------------------------------------------- */

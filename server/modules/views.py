@@ -138,8 +138,8 @@ class BirdhouseViewCharts(BirdhouseClass):
                 data_activity[cam] = {}
                 activity_dict[cam] = {}
 
-        self.logging.info("create_chart_data_new: " + datestamp + " / " + date_eu + " / " + date_us +
-                          " for cam: " + str(cameras))
+        self.logging.debug("create_chart_data_new: " + datestamp + " / " + date_eu + " / " + date_us +
+                           " for cam: " + str(cameras))
 
         # Calculate image activity
         for cam in cameras:
@@ -600,6 +600,9 @@ class BirdhouseViewFavorite(BirdhouseClass):
             dir_list = self.tools.get_directories(main_directory)
             self.logging.debug(str(dir_list))
             delete_entries = []
+            if not "entries" in content:
+                content["entries"] = {}
+
             if not complete:
                 for stamp in content["entries"]:
                     entry: dict = content["entries"][stamp]
@@ -713,10 +716,10 @@ class BirdhouseViewFavorite(BirdhouseClass):
             files: dict = self.config.db_handler.read(config="images")
             files_complete["files"] = files.copy()
 
-        elif self.config.db_handler.exists(config="backup", date=date):
+        elif self.config.db_handler.exists(config="backup", date=date, db_type="both"):
             today = False
             category = "/backup/" + date + "/"
-            files_complete = self.config.db_handler.read(config="backup", date=date)
+            files_complete = self.config.db_handler.read(config="backup", date=date, db_type="both")
             self.logging.debug("  -> " + category + " ... " + str(files_complete.keys()))
 
             if "files" in files_complete:
@@ -725,7 +728,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
             else:
                 files["error"] = True
         else:
-            self.logging.warning("  -> Could not read favorites from " + category + ", no data available.")
+            self.logging.warning("  -> Could not read favorites from " + category + " (" + date + "), no data available.")
             return {}
 
         if complete:
@@ -942,11 +945,12 @@ class BirdhouseViewArchive(BirdhouseClass):
         archive_entries = archive_dirs.copy()
 
         for cam in self.camera:
-            for date in archive_info[cam]["entries"]:
-                if date not in archive_days:
-                    archive_days.append(date)
-                if date not in archive_entries:
-                    archive_entries.append(date)
+            if cam in archive_info:
+                for date in archive_info[cam]["entries"]:
+                    if date not in archive_days:
+                        archive_days.append(date)
+                    if date not in archive_entries:
+                        archive_entries.append(date)
 
         if recreate or complete or archive_info == {} or "info" not in archive_info:
 
@@ -970,51 +974,53 @@ class BirdhouseViewArchive(BirdhouseClass):
                 day_db_exists = self._list_create_database_ok(date)
 
                 for cam in self.camera:
-                    if day_deleted:
-                        self.logging.info("  -> " + date + " / " + cam + ": delete data")
+                    if cam in archive_info:
 
-                    elif day_new:
-                        self.logging.info("  -> " + date + " / " + cam + ": create data from day database " +
-                                          "(db_exists=" + str(day_db_exists) + ")")
+                        if day_deleted:
+                            self.logging.info("  -> " + date + " / " + cam + ": delete data")
 
-                        if not day_db_exists:
-                            start_time_recreate = time.time()
-                            self.logging.info("     * Start recreation of config file for " + date + " ...")
-                            self.config_recreate_progress = True
-                            self.config_recreate.append(date)
+                        elif day_new:
+                            self.logging.info("  -> " + date + " / " + cam + ": create data from day database " +
+                                              "(db_exists=" + str(day_db_exists) + ")")
 
-                            while self.config_recreate_progress or start_time_recreate + 20 > time.time():
-                                time.sleep(0.2)
+                            if not day_db_exists:
+                                start_time_recreate = time.time()
+                                self.logging.info("     * Start recreation of config file for " + date + " ...")
+                                self.config_recreate_progress = True
+                                self.config_recreate.append(date)
 
-                            if self.config_recreate_progress:
-                                self.logging.warning("     * Recreation of config file for " + date +
-                                                     " takes longer than expected, don't wait longer here.")
-                            else:
-                                self.logging.info("     * Recreated of config file for " + date + ".")
+                                while self.config_recreate_progress or start_time_recreate + 20 > time.time():
+                                    time.sleep(0.2)
 
-                        file_data = self._list_create_file_data(date, day_db_exists)
-                        day_entry = self._list_create_from_database(cam, archive_info[cam], date, file_data)
+                                if self.config_recreate_progress:
+                                    self.logging.warning("     * Recreation of config file for " + date +
+                                                         " takes longer than expected, don't wait longer here.")
+                                else:
+                                    self.logging.info("     * Recreated of config file for " + date + ".")
 
-                        config_images = self.config.db_handler.read_cache("backup", date)
-                        if "detection" in config_images and len(config_images["detection"]):
-                            day_entry["detection"] = True
+                            file_data = self._list_create_file_data(date, day_db_exists)
+                            day_entry = self._list_create_from_database(cam, archive_info[cam], date, file_data)
 
-                        archive_changed[cam]["entries"][date] = day_entry.copy()
+                            config_images = self.config.db_handler.read_cache("backup", date)
+                            if "detection" in config_images and len(config_images["detection"]):
+                                day_entry["detection"] = True
 
-                    elif day_changed:
-                        self.logging.info("  -> " + date + " / " + cam + ": update data from day database" +
-                                          "(db_exists=" + str(day_db_exists) + ")")
-                        if "archive" in archive_info["changes"] and date in archive_info["changes"]["archive"]:
-                            del archive_info["changes"]["archive"][date]
+                            archive_changed[cam]["entries"][date] = day_entry.copy()
 
-                        file_data = self._list_create_file_data(date, day_db_exists)
-                        day_entry = self._list_create_from_database(cam, archive_info[cam], date, file_data)
-                        archive_changed[cam]["entries"][date] = day_entry.copy()
+                        elif day_changed:
+                            self.logging.info("  -> " + date + " / " + cam + ": update data from day database" +
+                                              "(db_exists=" + str(day_db_exists) + ")")
+                            if "archive" in archive_info["changes"] and date in archive_info["changes"]["archive"]:
+                                del archive_info["changes"]["archive"][date]
 
-                    else:
-                        self.logging.info("  -> " + date + " / " + cam + ": keep data")
-                        day_entry = archive_info[cam]["entries"][date].copy()
-                        archive_changed[cam]["entries"][date] = day_entry
+                            file_data = self._list_create_file_data(date, day_db_exists)
+                            day_entry = self._list_create_from_database(cam, archive_info[cam], date, file_data)
+                            archive_changed[cam]["entries"][date] = day_entry.copy()
+
+                        else:
+                            self.logging.info("  -> " + date + " / " + cam + ": keep data")
+                            day_entry = archive_info[cam]["entries"][date].copy()
+                            archive_changed[cam]["entries"][date] = day_entry
 
                 if self.if_shutdown():
                     self.logging.info("Interrupt creating the archive list due to shutdown command ...")
@@ -1071,6 +1077,9 @@ class BirdhouseViewArchive(BirdhouseClass):
                 self.tools.calculate_progress("archive", "2/2", "", count, len(archive_entries))
 
             # set overarching information
+            if "changes" not in archive_info:
+                archive_info["changes"] = {}
+
             for key in archive_info["changes"]:
                 if key != "archive":
                     archive_changed["changes"][key] = archive_info["changes"][key]
@@ -2553,7 +2562,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         entry_list = list(self.camera.keys())
         entry_list.append("srv")
-        content["entries"] = self.statistic.get_chart_data([])
+        content["entries"] = self.statistic.get_chart_data_view()
 
         content["view_count"] = []
         content["subtitle"] = presets.birdhouse_pages["statistics"][0]

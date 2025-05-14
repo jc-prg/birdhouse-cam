@@ -2,8 +2,9 @@ FROM debian:12.4
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update
-RUN apt-get -y upgrade
+RUN apt-get update \
+    && apt-get -y upgrade
+RUN apt-get -y install locales --fix-missing
 RUN apt-get -y install python3.11 python3-distutils python3-pip python3-apt apt-utils
 RUN apt-get -y install rpi.gpio
 RUN apt-get -y install iputils-ping
@@ -21,7 +22,7 @@ RUN pip3 install --upgrade pip --break-system-packages
 RUN python3 -m pip install -r requirements.txt --break-system-packages
 
 RUN apt -y install python3-pyaudio
-RUN apt -y install locales
+RUN apt -y install locales --fix-missing
 ENV PYTHONIOENCODING=utf-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en

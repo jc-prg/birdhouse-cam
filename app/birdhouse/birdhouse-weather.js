@@ -11,9 +11,9 @@
 * @param (dict) data: data returned form server API for this view
 */
 function birdhouseWeather( data ) {
-    var settings        = data["SETTINGS"];
-    var admin_allowed   = data["STATUS"]["admin_allowed"];
-    var status          = data["STATUS"];
+    var settings        = app_data["SETTINGS"];
+    var admin_allowed   = app_data["STATUS"]["admin_allowed"];
+    var status          = app_data["STATUS"];
 	var weather	        = data["WEATHER"];
 
     if (settings["localization"]["weather_active"] == false) {
@@ -153,6 +153,8 @@ function birdhouseWeather( data ) {
         chart   += "<b>" + date + "</b><br/>";
         chart   += "<center>" + birdhouseWeather_OverviewChart(weather_data[date], "key", false) + "</center>" ;
         });
+
+    chart        += "<br/>&nbsp;<br/>";
     html_weather += birdhouse_OtherGroup( "chart", lang("WEATHER") + " (3 " + lang("DAYS") + ")", chart, true );
     if (admin_allowed) {
         html_weather += html;

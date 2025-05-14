@@ -221,8 +221,22 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
 
         self.error_camera = False
         self.error_image = {}
+        self.color_schema = "BGR"
 
         self.logging.info("Connected IMAGE processing (" + self.id + ") ...")
+
+    def set_color_schema(self, schema):
+        """
+        set schema of the camera for color operations, RGB / BGR / HSV / GRAY
+        Args:
+            schema (str): schema of the camera: RGB / BGR / HSV / GRAY
+        """
+        available = ["BGR", "RGB", "HSV", "GRAY"]
+        if schema in available:
+            self.color_schema = schema
+            self.logging.debug("Set color schema to " + schema)
+        else:
+            self.logging.warning("Schema '" + schema + "' not defined! (available: " + str(available) + ")")
 
     def compare(self, image_1st, image_2nd, detection_area=None):
         """
@@ -241,6 +255,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         image_1st = self.convert_to_raw(image_1st)
         image_2nd = self.convert_to_raw(image_2nd)
         similarity = self.compare_raw(image_1st, image_2nd, detection_area)
+        del image_1st, image_2nd
         return similarity
 
     def compare_raw(self, image_1st, image_2nd, detection_area=None):
@@ -250,7 +265,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         Args:
             image_1st (numpy.ndarray): first image to be compared (raw format)
             image_2nd (numpy.ndarray): second image to be compared (raw format)
-            detection_area (list): area of image to be compared (start_x, start_y, end_x, end_y)
+            detection_area (list): relative area of image to be compared (start_x, start_y, end_x, end_y) -> [0.0-1.0]
         Returns:
             float: structural similarity index (SSIM)
         """
@@ -281,6 +296,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             self.raise_warning("Error comparing images (" + str(e) + ")")
             score = 0
 
+        del image_1st, image_2nd
         return round(score * 100, 1)
 
     def compare_raw_show(self, image_1st, image_2nd):
@@ -303,6 +319,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         image_diff = self.draw_area_raw(raw=image_diff, area=self.param["similarity"]["detection_area"],
                                         color=(0, 255, 255))
 
+        del image_1st, image_2nd
         return image_diff
 
     def convert_from_raw(self, raw):
@@ -319,6 +336,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             r, buf = cv2.imencode(".jpg", raw, encode_param)
             size = len(buf)
             image = bytearray(buf)
+            del raw
             return image
         except Exception as e:
             self.raise_error("Error convert RAW image -> image (" + str(e) + ")")
@@ -339,6 +357,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         try:
             image = np.frombuffer(image, dtype=np.uint8)
             raw = cv2.imdecode(image, 1)
+            del image
             return raw
         except Exception as e:
             self.raise_error("Error convert image -> RAW image (" + str(e) + ")")
@@ -408,6 +427,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         raw = self.convert_to_raw(image)
         raw, area = self.crop_raw(raw, crop_area, crop_type)
         image = self.convert_from_raw(raw)
+        del raw
         return image
 
     def crop_raw(self, raw, crop_area, crop_type="relative"):
@@ -502,6 +522,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         raw = self.convert_to_raw(image)
         raw = self.draw_text_raw(raw, text, position=position, font=font, scale=scale, color=color, thickness=thickness)
         image = self.convert_from_raw(raw)
+        del raw
         return image
 
     def draw_text_raw(self, raw, text, position=None, font=None, scale=None, color=None, thickness=0):
@@ -634,7 +655,6 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             (depending on lowres position)
         """
         (start_x, start_y, end_x, end_y) = self.param["image"]["crop_area"]
-        #position = self.config.param["views"]["index"]["lowres_position"]
         position = self.config.param["views"]["index"]["lowres_pos_"+self.id]
         if position == 1:
             default_position = (end_x - 25, start_y + 30)
@@ -646,6 +666,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             color = default_color
         raw_bullet = cv2.circle(raw, default_position, 4, color, 6)
         if raw_bullet is not None:
+            del raw
             return raw_bullet
         else:
             return raw
@@ -677,6 +698,7 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         if position == 4:
             raw[w1 - (distance + w2):w1 - distance, h1 - (distance + h2):h1 - distance] = raw2
 
+        del raw2
         return raw
 
     def rotate_raw(self, raw, degree):
@@ -718,9 +740,11 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
         try:
             height = frame.shape[0]
             width = frame.shape[1]
+            del image
             return [width, height]
         except Exception as e:
             self.raise_warning("Could not analyze image (" + str(e) + ")")
+            del image
             return [0, 0]
 
     def size_raw(self, raw, scale_percent=100):
@@ -740,9 +764,11 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
                 raw = cv2.resize(raw, (width, height))
             width = raw.shape[1]
             height = raw.shape[0]
+            del raw
             return [width, height]
         except Exception as e:
             self.raise_warning("Could not analyze image (" + str(e) + ")")
+            del raw
             return [0, 0]
 
     def resize_raw(self, raw, scale_percent=100, scale_size=None):
@@ -770,6 +796,26 @@ class BirdhouseImageProcessing(BirdhouseCameraClass):
             except Exception as e:
                 self.raise_error("Could not resize raw image: " + str(e))
         return raw
+
+    def get_brightness_raw(self, raw):
+        """
+        calculate normalized brightness of an image
+
+        Args:
+            raw (numpy.ndarray): raw image to be analyzed
+
+        Returns:
+            int: normalized brightness (0..100)
+        """
+        # Convert to grayscale
+        gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
+        # Compute the mean brightness
+        brightness = np.mean(gray)
+        normalized_brightness = (brightness / 255) * 100
+        self.logging.debug("Calculated image brightness: " + str(normalized_brightness))
+
+        del raw
+        return normalized_brightness
 
     def write(self, filename, image, scale_percent=100):
         """

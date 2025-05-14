@@ -11,7 +11,11 @@
          background-color : #222222;
          border           : #333333 1px solid;
          color            : #dddddd;
-     }
+        }
+
+    .setting_bg {
+        border           : #333333 1px solid;
+        }
 
     .frame_column img    { opacity: 1.0; }
     .overlay_content img { opacity: 1.0; }

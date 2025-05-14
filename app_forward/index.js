@@ -7,9 +7,18 @@ var port_video = 8007;
 function checkAvailability(key, apiURL) {
     // Make the GET request
     Object.entries(birdhouses).forEach(([key,value]) => {
+
+        var port_http = value["http"];
+        var port_api  = value["api"];
+        var server    = '['  + value["ipv6"] + ']';
+
+        if (value["server"] != "") {
+            server = value["server"];
+            }
+
         var timestamp = Date.now() + "";
-        var apiUrl    = 'http://[' + value["ipv6"] + ']:' + value["api"] + '/api/status/';
-        var streamUrl = 'http://[' + value["ipv6"] + ']:' + value["api"] + '/lowres/stream.mjpg?cam1?' + key + '?bh-' + key + '-' + timestamp;
+        var apiUrl    = 'http://' + server + ':' + port_api + '/api/status/';
+        var streamUrl = 'http://' + server + ':' + port_api + '/lowres/stream.mjpg?cam1?' + key + '?bh-' + key + '-' + timestamp;
         if (document.getElementById("bh-image-id-" + key)) {
             var image_id = document.getElementById("bh-image-id-" + key).innerHTML;
             }
@@ -42,7 +51,7 @@ function checkAvailability(key, apiURL) {
             document.getElementById("bh-label-" + key).innerHTML = data["SETTINGS"]["title"];
 
             if (image_id == "update") {
-                var html = '<img src="http://[' + value["ipv6"] + ']:' + value["api"] +  '/lowres/stream.mjpg?cam1?' + key + '?bh-' + key + '-' + timestamp + '" class="image" id="bh-' + key + '" style="display:block;"/>';
+                var html = '<img src="http://' + server + ':' + port_api +  '/lowres/stream.mjpg?cam1?' + key + '?bh-' + key + '-' + timestamp + '" class="image" id="bh-' + key + '" style="display:block;"/>';
                 document.getElementById("bh-image-" + key).innerHTML = html;
                 document.getElementById("bh-image-id-" + key).innerHTML = timestamp;
             }
@@ -67,10 +76,18 @@ var interval = 0;
 Object.entries(birdhouses).forEach(([key,value]) => {
     html += '<div class="image_container"><center>';
 
-    html += '<a href="http://['  + value["ipv6"] + ']:' + value["http"] + '"><b><label id="bh-label-' + key + '">Birdhouse ' + key + '</label></b><br/>&nbsp;<br/>';
+    var port_http = value["http"];
+    var port_api  = value["api"];
+    var server    = '['  + value["ipv6"] + ']';
+
+    if (value["server"] != "") {
+        server = value["server"];
+        }
+
+    html += '<a href="http://' + server + ':' + port_http + '/"><b><label id="bh-label-' + key + '">Birdhouse ' + key + '</label></b><br/>&nbsp;<br/>';
     html += '<div id="bh-image-id-'+ key +'" style="display:none;">' + timestamp + "</div>";
     html += '<div id="bh-image-'+ key +'">';
-    html += '<img src="http://[' + value["ipv6"] + ']:' + value["api"] +  '/lowres/stream.mjpg?cam1?' + key + '?bh-' + key + '-' + timestamp + '" class="image" id="bh-' + key + '" style="display:block;"/>';
+    html += '<img src="http://' + server + ':' + port_api +  '/lowres/stream.mjpg?cam1?' + key + '?bh-' + key + '-' + timestamp + '" class="image" id="bh-' + key + '" style="display:block;"/>';
     html += "</div></a>";
     html += '<div class="image_error" id="bh-error-' + key + '" style="display:none;">Test</div>';
 

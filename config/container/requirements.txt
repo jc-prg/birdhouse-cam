@@ -1,19 +1,22 @@
-numpy
-imutils
-flask
-tqdm
-psutil
-setuptools
+#numpy==2.1.1
+imutils==0.5.4
+tqdm==4.67.1
 wheel
 ffmpeg-python
 #python-ffmpeg
 #better-ffmpeg-progress
 ffmpeg-progress
-couchdb
-requests
 python_weather
 suntime
 geopy
 python-dotenv
-torch
-lameenc
+torch==2.4.1
+#torchvision==0.21.0
+ultralytics==8.3.91
+scikit-image==0.25.2
+lameenc==1.7.0
+couchdb
+pympler
+
+# installed as apt package: flask, psutil, setuptools, requests
+# -> python3-flask python3-psutil python3-setuptools python3-requests

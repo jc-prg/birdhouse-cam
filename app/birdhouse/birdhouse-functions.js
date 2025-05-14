@@ -8,7 +8,7 @@
 * The following 4 functions are used to create a dialog to edit parameters of different types,
 * to validate the input and to hand it over to the API functions.
 */
-function birdhouse_edit_field(id, field, type="input", options="", data_type="string", on_change="") {
+function birdhouse_edit_field(id, field="", type="input", options="", data_type="string", on_change="") {
     var fields = field.split(":");
     var settings = app_data["SETTINGS"];
     var data   = "";
@@ -16,20 +16,21 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
     var style  = "";
     var step   = "1";
 
-    if (fields.length == 1) { data = settings[fields[0]]; }
-    else if (fields.length == 2) { data = settings[fields[0]][fields[1]]; }
-    else if (fields.length == 3) { data = settings[fields[0]][fields[1]][fields[2]]; }
-    else if (fields.length == 4) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]]; }
-    else if (fields.length == 5) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]][fields[4]]; }
-    else if (fields.length == 6) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]][fields[4]][fields[5]]; }
+    if (field != "") {
+        if (fields.length == 1)      { data = settings[fields[0]]; }
+        else if (fields.length == 2) { data = settings[fields[0]][fields[1]]; }
+        else if (fields.length == 3) { data = settings[fields[0]][fields[1]][fields[2]]; }
+        else if (fields.length == 4) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]]; }
+        else if (fields.length == 5) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]][fields[4]]; }
+        else if (fields.length == 6) { data = settings[fields[0]][fields[1]][fields[2]][fields[3]][fields[4]][fields[5]]; }
+        }
 
     if (data_type == "json")                            { data = JSON.stringify(data); }
     if (data_type == "integer" || data_type == "float") { style += "width:60px;" }
 
     if (type == "input") {
-
         html += "<input id='"+id+"' value='"+data+"' style='"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");' onchange='"+on_change+"'>";
-    }
+        }
     else if (type == "select_dict" || type == "select_dict_sort") {
 
         if (type == "select_dict_sort") {
@@ -44,8 +45,8 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
         var exists = false;
         html += "<select id='"+id+"' onchange='"+on_change+"' style='max-width:220px;'>";
         html += "<option value=''>(empty)</option>";
-        if (data == true || data == false) { data_str = data.toString(); }
-        else { data_str = data; }
+        if (data == true || data == false)  { data_str = data.toString(); }
+        else                                { data_str = data; }
 
         if (Object.prototype.toString.call(options) === '[object Array]') {
             for (var i=0;i<options.length;i++) {
@@ -65,7 +66,7 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
                 }
                 //});
             }
-        if (!exists) {
+        if (!exists && data_str != "") {
             html += "<option selected='selected'>"+data_str+"</option>";
             }
         html += "</select>";
@@ -90,20 +91,43 @@ function birdhouse_edit_field(id, field, type="input", options="", data_type="st
             }
         html += "</select>";
         }
-    else if (type == "range") {
-        range = options.split(":");
-        if (options.indexOf(".") > 0)                       { step = "0.1"; }
-        else if (range.length > 2 && range[2] == "float")   { step = "0.1"; }
+    else if (type == "boolean") {
+        style     = "width:50px";
+        on_value  = "if (this.value == 0)      { document.getElementById(\""+id+"_range\").value = 0; } ";
+        on_value += "else if (this.value == 1) { document.getElementById(\""+id+"_range\").value = 1; }";
+        on_value += "if (this.value.toLowerCase == \"false\")     { document.getElementById(\""+id+"_range\").value = 0; } ";
+        on_value += "else if (this.value.toLowerCase == \"true\") { document.getElementById(\""+id+"_range\").value = 1; }";
 
-        style = "width:100px";
-        if (range[0] == 0 && range[1] == 1) { style = "width:40px;"; }
-        on_set    = "document.getElementById(\""+id+"\").value = this.value;";
-        on_value  = "document.getElementById(\""+id+"_range\").value = this.value;";
+        on_set    = "if (this.value == 0) { document.getElementById(\""+id+"\").value = false; } else { document.getElementById(\""+id+"\").value = true; }";
+        on_set   += "this.className=\"bh-slider set\";";
+
         html += "<div class='bh-slidecontainer' style='float:left;width:100px;height:auto;'>";
-        html += "<input id='"+id+"_range' class='bh-slider' type='range' name='' min='"+range[0]+"' max='"+range[1]+"' step='"+step+"' style='"+style+"' onchange='"+on_set+on_change+"'>";
+        html += "<input id='"+id+"_range' class='bh-slider undef' type='range' name='' min='0' max='1' step='1' style='"+style+"' onchange='"+on_set+on_change+"'>";
         html += "</div><div style='float:left;margin-left:12px;'>";
         html += "<input id='"+id+"' class='bh-slider-value' style='width:30px;' onchange='"+on_value+"'>";
         html += "</div>";
+        }
+    else if (type == "range") {
+        on_value  = "document.getElementById(\""+id+"_range\").value = this.value;";
+        on_set    = "document.getElementById(\""+id+"\").value = this.value;";
+        on_set   += "this.className=\"bh-slider set\";";
+
+        range = options.split(":");
+        if (options.indexOf(".") > 0)                       { step = "0.1"; }
+        else if (range.length > 2 && range[2] == "float")   { step = "0.1"; }
+        if (data_type == "float")                           { step = "0.1"; }
+
+        style = "width:100px";
+        if (range[0] == 0 && range[1] == 1) { style = "width:50px;"; }
+
+        html += "<div class='bh-slidecontainer' style='float:left;width:100px;height:auto;'>";
+        html += "<input id='"+id+"_range' class='bh-slider undef' type='range' name='' min='"+range[0]+"' max='"+range[1]+"' step='"+step+"' style='"+style+"' onchange='"+on_set+on_change+"'>";
+        html += "</div><div style='float:left;margin-left:12px;'>";
+        html += "<input id='"+id+"' class='bh-slider-value' style='width:30px;' onchange='"+on_value+"'>";
+        html += "</div>";
+        }
+    else {
+        html += "<font style='color:"+header_color_error+"'><i>wrong edit field type</i></font>";
         }
     html += "<input id='"+id+"_data' style='display:none' value='"+field+"'>\n";
     html += "<input id='"+id+"_data_type' style='display:none' value='"+data_type+"'>\n";
@@ -253,6 +277,8 @@ function birdhouse_view_images_threshold(threshold) {
 * "block" if yes and to "none" if not.
 */
 function birdhouse_view_images_objects(object) {
+
+    if (!document.getElementById("group_list")) { return; }
     group_list = document.getElementById("group_list").innerHTML.split(" ");
     image_list = [];
     image_list_active = [];
@@ -265,7 +291,9 @@ function birdhouse_view_images_objects(object) {
         image_ids_in_group = document.getElementById("group_ids_"+prefix+group_list[i]).innerHTML.split(" ");
         image_list = image_list.concat(image_ids_in_group);
         }
-    console.log(image_list);
+
+    console.debug("birdhouse_view_images_objects() -> image_list");
+    console.debug(image_list);
 
     for (a=0;a<image_list.length;a++) {
         if (image_list[a] != "") {

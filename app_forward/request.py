@@ -56,6 +56,8 @@ def identify_ipv6(server_url, ipv6):
     url = f"{server_url}?identify_ipv6={ipv6}&identify_birdhouse=" + str(get_env("BIRDHOUSE_ID"))
     url += "&http=" + get_env("BIRDHOUSE_HTTP_PORT")
     url += "&api=" + get_env("BIRDHOUSE_API_PORT")
+    if get_env("BIRDHOUSE_SERVER_EXT") != "your_external_server_name":
+        url += "&server=" + get_env("BIRDHOUSE_SERVER_EXT")
     print(url)
     response = requests.get(url)
     return response.text

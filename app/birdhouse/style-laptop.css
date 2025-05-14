@@ -4,9 +4,10 @@
 
 @media (min-width: 705px) {
 
-    .livestream_main { max-width : 640px; }
-    .separator_group { width : 98%; }
-    .image_container.fixed_height { height : 250px; }
+    .livestream_main                { max-width : 640px; }
+    .separator_group                { width : 98%; }
+    .separator_group_body           { width : 98%; }
+    .image_container.fixed_height   { height : 250px; }
 
     .admin_status_client_full { display: block; }
     .admin_status_client_small { display: none; }
@@ -31,8 +32,9 @@
 
 @media (min-width: 820px) {
 
-    .thumbnail       { width : 125px; }
-    .thumbnail.error { width : 115px; }
+    .thumbnail          { width : 125px; }
+    .thumbnail_settings { width : 125px; }
+    .thumbnail.error    { width : 115px; }
     .weather_hide_if_small { display: block; }
 }
 

@@ -11,13 +11,14 @@ var chartJS_chart  = undefined;
 var chartJS_defaultColors = ["coral","cornflowerblue", "cadetblue",
 				"crimson", "darkblue", "darkgoldenrod", "darkgreen", "darkmagenta",
 				"darkorange", "darksalmon", "darkviolet", "dodgerblue", "firebrick",
-				"forestgreen", "goldenrod", "greenyellow", "hotpink", "indigo"
+				"forestgreen", "goldenrod", "greenyellow", "hotpink", "indigo",
 				];
-var chartJS_darkColors = ["red", "aquamarine", "chartreuse", "coral", "cadetblue",
-				"crimson", "darkblue", "goldenrod", "green", "magenta",
-				"orange", "salmon", "violet", "dodgerblue", "firebrick",
-				"forestgreen", "goldenrod", "greenyellow", "hotpink", "indigo"
+var chartJS_darkColors = ["red", "aquamarine", "chartreuse", "coral", "cadetblue", "crimson", "darkblue", "goldenrod",
+                "green", "magenta", "orange", "salmon", "violet", "firebrick", "goldenrod", "Lime", "MediumVioletRed",
+                "GreenYellow", "HotPink", "indigo", "yellow", "cyan", "blue", "CornflowerBlue", "DarkCyan", "DarkMagenta",
+                "DarkViolet", "DeepPink", "DeepSkyBlue", "DodgerBlue", "ForestGreen", "LightSeaGreen", "Olive", "Purple",
 				];
+var chartJS_hddPieChart = ["red", "orange", "darkblue", "green"];
 
 /*
 * load javascript file for chart rendering if not done before
@@ -52,28 +53,30 @@ function birdhouse_loadChartJS() {
 * @param (string) id: id of div element
 * @param (dict) size: possibility to overwrite size of chart, e.g., {"height": "100px", "width": "90%"}
 */
-function birdhouseChart_create(label, titles, data, type="line", sort_keys=true, id="birdhouseChart", size="") {
+function birdhouseChart_create(label, titles, data, type="line", sort_keys=true, id="birdhouseChart", size="", set_colors=[], set_menu="bottom") {
 
-      	// https://www.chartjs.org/docs/latest/samples/line/line.html
-      	// data = { "label1" : [1, 2, 3], "label2" : [1, 2, 3] };
+    // https://www.chartjs.org/docs/latest/samples/line/line.html
+    // data = { "label1" : [1, 2, 3], "label2" : [1, 2, 3] };
 
-	var html 	= "";
-	var canvas_size = {"height": "unset", "width": "unset"};
-    var data_keys	= Object.keys(data);
-    if (sort_keys)	{ data_keys = data_keys.sort(); }
+	var html 	        = "";
+    var html_no_entries = "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>";
+	var canvas_size     = {"height": "unset", "width": "unset"};
+    var data_keys	    = Object.keys(data);
+    if (sort_keys)	    { data_keys = data_keys.sort(); }
 
 	if (data == undefined || data == {} || data_keys.length == 0) {
-	    html += lang("NO_ENTRIES");
+	    html += html_no_entries;
 	    return html;
 	}
     var data_rows	= data[data_keys[0]].length;		// startet with only 1 line per chart!
     var data_labels = "";
     var data_data   = "";
     var data_sets   = [];
-	var colors  = [];
+	var colors      = [];
 
-	if (appTheme == "dark") { colors = chartJS_darkColors;    border_pie = "white"; }
-	else                    { colors = chartJS_defaultColors; border_pie = "white"; }
+    if (set_colors != [])        { colors = set_colors;            border_pie = "white"; }
+	else if (appTheme == "dark") { colors = chartJS_darkColors;    border_pie = "white"; }
+	else                         { colors = chartJS_defaultColors; border_pie = "white"; }
 
     if (type == "line") {
         for (var x=0;x<data_rows;x++) {
@@ -130,8 +133,8 @@ function birdhouseChart_create(label, titles, data, type="line", sort_keys=true,
             responsive: true,
             plugins: {
                 legend: {
-                    position: "right",
-                    align: "middle",
+                    position: set_menu,
+                    align: "left",
                     labels : {
                         boxHeight : 12,
                         boxWidth : 12,

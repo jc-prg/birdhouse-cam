@@ -12,13 +12,17 @@ services:
     ports:
     - '${BIRDHOUSE_HTTP_PORT}:80'
     - '8081:81'
+    - '443:443'
     volumes:
     - ./config/apache/apache2.conf:/usr/local/apache2/conf/apache2.conf
     - ./config/apache/httpd.conf:/usr/local/apache2/conf/httpd.conf
+    - ./config/apache/ssl/server.crt:/usr/local/apache2/conf/server.crt
+    - ./config/apache/ssl/server.key:/usr/local/apache2/conf/server.key
     - ./app:/usr/local/apache2/htdocs
     - ./data/images:/usr/local/apache2/htdocs/images
     - ./data/videos:/usr/local/apache2/htdocs/videos
     - ./data/downloads:/usr/local/apache2/htdocs/downloads
+    restart: ${RESTART_APP:-on-failure}
     deploy:
       resources:
         limits:
@@ -39,7 +43,7 @@ services:
       resources:
         limits:
           memory: ${MEMORY_MAX_COUCHDB:-200M}
-    restart: always
+    restart: ${RESTART_DB:-on-failure}
     networks:
       my-net:
         ipv4_address: 192.168.202.3
@@ -62,7 +66,7 @@ services:
       resources:
         limits:
           memory: ${MEMORY_MAX_SERVER:-600M}
-    restart: always
+    restart: ${RESTART_SERVER:-always}
     networks:
       my-net:
         ipv4_address: 192.168.202.4
@@ -80,7 +84,7 @@ services:
       resources:
         limits:
           memory: ${MEMORY_MAX_STREAM:-100M}
-    restart: on-failure
+    restart: ${RESTART_VIDEO:-on-failure}
     networks:
       my-net:
         ipv4_address: 192.168.202.5

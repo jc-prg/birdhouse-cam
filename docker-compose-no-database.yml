@@ -1,0 +1,77 @@
+#--------------------------------------------
+# Birdhouse Server and Database
+#----------------------------------------
+
+version: "3"
+
+services:
+
+  birdhouse_app:
+    image: httpd:latest
+    container_name: birdhouse_app
+    ports:
+    - '${BIRDHOUSE_HTTP_PORT}:80'
+    - '8081:81'
+    - '443:443'
+    volumes:
+    - ./config/apache/apache2.conf:/usr/local/apache2/conf/apache2.conf
+    - ./config/apache/httpd.conf:/usr/local/apache2/conf/httpd.conf
+    - ./config/apache/ssl/server.crt:/usr/local/apache2/conf/server.crt
+    - ./config/apache/ssl/server.key:/usr/local/apache2/conf/server.key
+    - ./app:/usr/local/apache2/htdocs
+    - ./data/images:/usr/local/apache2/htdocs/images
+    - ./data/videos:/usr/local/apache2/htdocs/videos
+    - ./data/downloads:/usr/local/apache2/htdocs/downloads
+    restart: ${RESTART_APP:-on-failure}
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_MAX_APP:-50M}
+
+  birdhouse_server:
+    build: ${CONTAINER_SERVER:-./config/container_rpi/}
+    container_name: birdhouse_server
+    privileged: true
+    volumes:
+      - ${BIRDHOUSE_DIR_LOGGING:-./log}:${BIRDHOUSE_DIR_LOGGING:-/log}
+      - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}
+      - ./:/usr/src/app/
+      - /tmp/:/tmp/
+      - /dev/v4l/:/dev/v4l/
+    ports:
+      - "${BIRDHOUSE_API_PORT}:${BIRDHOUSE_API_PORT}"
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_MAX_SERVER:-600M}
+    restart: ${RESTART_SERVER:-always}
+    networks:
+      my-net:
+        ipv4_address: 192.168.202.4
+
+  birdhouse_video_stream:
+    build: ${CONTAINER_VIDEO:-./config/container_video_rpi/}
+    container_name: birdhouse_video
+    volumes:
+      - ${BIRDHOUSE_DIR_LOGGING:-./log}:${BIRDHOUSE_DIR_LOGGING:-/log}
+      - ${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}:${BIRDHOUSE_DIR_PROJECT:-/projects/prod/birdhouse-cam/}
+      - ./:/usr/src/app/
+    ports:
+      - "${BIRDHOUSE_VIDEO_PORT}:${BIRDHOUSE_VIDEO_PORT}"
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_MAX_STREAM:-100M}
+    restart: ${RESTART_VIDEO:-on-failure}
+    networks:
+      my-net:
+        ipv4_address: 192.168.202.5
+
+networks:
+  my-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.202.0/24
+

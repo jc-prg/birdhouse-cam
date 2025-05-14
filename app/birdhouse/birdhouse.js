@@ -59,12 +59,12 @@ var birdhouse_js = [
     "birdhouse-image-overlay.js",
     "birdhouse-objects.js",
     "birdhouse-settings.js",
+    "birdhouse-statistics.js",
     "birdhouse-status.js",
     "birdhouse-views.js",
     "birdhouse-views-index.js",
     "birdhouse-weather.js",
     "video-player-template.js",
-//    "pinch-zoom.umd.js",
     "config_language.js",
     "config_main.js",
     "config_stage.js"
@@ -77,8 +77,8 @@ var birdhouse_css = [
     "style-settings.css",
     "style-labels.css",
     "style-laptop.css",
-    "style-iphone.css",
     "style-ipad.css",
+    "style-iphone.css",
     "style-image-overlay.css",
     "style-dark.css",
     "style-slider.css",
@@ -91,7 +91,7 @@ function birdhouse_modules_loaded() {
 }
 
 /*
-* request loading of a specific view -> calls birdhousePrint() with retuned data
+* request loading of a specific view -> calls birdhousePrint() with returned data
 *
 * @param (string) view: view to be requested; available: INDEX, TODAY, TODAY_COMPLETE, ARCHIVE, OBJECT, SETTINGS, FAVORITES, VIDEOS, VIDEO_DETAIL, PROCESSING, INFO, ...
 * @param (string) camera: camera id of active camera
@@ -103,13 +103,20 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 	if (app_first_load || app_2nd_load) {
 	    if (app_first_load) { app_first_load = false; }
 	    else                { app_2nd_load = false; }
-	    var param = window.location.href.split("?");
-	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "OBJECTS", "TODAY", "INFO",
-	                   "WEATHER", "IMAGE_SETTINGS", "SETTINGS", "PROCESSING", "STATISTICS"];
+
+	    var param_session_id = window.location.href.split("&");
+	    var param            = param_session_id[0].split("?");
+
+	    var options = ["INDEX", "DEVICES", "FAVORITES", "ARCHIVE", "OBJECTS", "TODAY", "INFO", "INFORMATION", "IMAGE",
+	                   "WEATHER", "IMAGE_SETTINGS", "SETTINGS", "PROCESSING", "STATS", "SERVER", "CAMERAS"];
 	    if (options.includes(param[1])) {
 	        view = param[1];
 	        app_active_page = param[1];
 	        app_last_active_page = param[1];
+	        }
+	    if (param_session_id.length > 1) {
+	        app_session_id = param_session_id[1];
+	        console.log("Login session ID given with URL: " + app_session_id);
 	        }
 
         birdhouse_loadChartJS();
@@ -139,10 +146,12 @@ function birdhousePrint(data) {
 	var data_settings = app_data["SETTINGS"];
 	var data_active   = data["DATA"]["active"];
 
+    if (data["STATUS"]["server"])       { initial_setup = data["STATUS"]["server"]["initial_setup"]; }
+    else                                { initial_setup = false; }
+
     birdhouseSetMainVars(data);
     overlayImageList = [];
-
-    var initial_setup   = data["STATUS"]["server"]["initial_setup"];
+// ---> PROBLEM BEIM AUFRUFEN DER BILDBEARBEITUNG UND DEN DEVICE EINSTELLUNGEN
 	var date            = data_active["active_date"];
 	var camera          = data_active["active_cam"];
 	if (camera == "") 	{ camera = app_active_cam; }
@@ -178,27 +187,39 @@ function birdhousePrint(data) {
     birdhouse_KillActiveStreams();
 	birdhouseSetMainStatus(data);
 	birdhousePrintTitle(data, app_active_page);
-    setTextById("headerRight", birdhouseHeaderFunctions() );
+
+	if (app_active_page != "WEATHER") { setTextById("headerRight", birdhouseHeaderFunctions() ); }
 
 	console.log("---> birdhousePrint: "+app_active_page+" / "+camera+" / "+date);
 
     var success = true;
 	if (app_active_page == "INDEX" && initial_setup) { birdhouse_settings.create(); return; }
 	else if (app_active_page == "ARCHIVE")           { success = birdhouse_LIST(lang("ARCHIVE"), data, camera); }
-	else if (app_active_page == "DEVICES")           { birdhouseDevices(lang("DEVICES"), data, camera); }
-	else if (app_active_page == "FAVORITES")         { success = birdhouse_LIST(lang("FAVORITES"), data, camera); }
-	else if (app_active_page == "IMAGE_SETTINGS")    { birdhouseDevices_cameraSettings(data); }
-	else if (app_active_page == "INDEX")             { birdhouse_INDEX(data, camera); }
+	//else if (app_active_page == "DEVICES")           { birdhouseDevices(lang("DEVICES"), data, "settings"); }
+	//else if (app_active_page == "DEVICES")           { birdhouseDevices(lang("DEVICES"), data, "settings", "devices"); }
+	else if (app_active_page == "SETTINGS")          { birdhouse_settings.toggle(true); appSettings.create(); }
+	else if (app_active_page == "CAMERAS")           { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("CAMERA"); }
+	else if (app_active_page == "DEVICES")           { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("DEVICE"); }
+	else if (app_active_page == "SERVER")            { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("SERVER"); }
+	else if (app_active_page == "IMAGE")             { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("IMAGE"); }
+	else if (app_active_page == "STATS")             { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("STATS"); }
+	else if (app_active_page == "INFORMATION")       { birdhouse_settings.toggle(true); appSettings.create(); appSettings.create("INFO"); }
+
 	else if (app_active_page == "INFO") 	         { birdhouse_settings.create("INFO_ONLY"); }
+	else if (app_active_page == "CAMERA_SETTINGS")   { birdhouseDevices(lang("CAMERAS"), data, "settings", "cameras"); }
+	else if (app_active_page == "DEVICE_SETTINGS")   { birdhouseDevices(lang("DEVICES"), data, "settings", "devices"); }
+	else if (app_active_page == "IMAGE_SETTINGS")    { birdhouseDevices_cameraSettings(data); }
+	else if (app_active_page == "STATISTICS")        { birdhouse_STATISTICS("STATISTICS", data); }
+
+	else if (app_active_page == "FAVORITES")         { success = birdhouse_LIST(lang("FAVORITES"), data, camera); }
+	else if (app_active_page == "INDEX")             { birdhouse_INDEX(data, camera); }
 	else if (app_active_page == "PROCESSING")        { birdhouse_settings.create("PROCESSING"); }
 	else if (app_active_page == "OBJECTS")           { birdhouse_OBJECTS(lang("BIRDS_DETECTED"), data); }
-	else if (app_active_page == "SETTINGS")          { birdhouse_settings.create(); }
-	else if (app_active_page == "STATISTICS")        { birdhouse_STATISTICS("STATISTICS", data); }
 	else if (app_active_page == "TODAY")             { birdhouse_LIST(lang("TODAY"), data, camera); }
 	else if (app_active_page == "TODAY_COMPLETE")    { birdhouse_LIST(lang("TODAY_COMPLETE"), data, camera, false); }
 	else if (app_active_page == "VIDEOS")            { birdhouse_LIST(lang("VIDEOS"), data, camera); }
 	else if (app_active_page == "VIDEO_DETAIL")	     { birdhouse_VIDEO_DETAIL(lang("VIDEOS"), data, camera); }
-	else if (app_active_page == "WEATHER")           { birdhouse_showWeather(); }
+	else if (app_active_page == "WEATHER")           { birdhouseWeather(data); }
 	else { setTextById(app_frame_content,lang("ERROR") + ": "+app_active_page); }
 
 	if (success == false) {
@@ -216,6 +237,8 @@ function birdhousePrint(data) {
 * @param (string) active_page: active page
 */
 function birdhousePrintTitle(data, active_page="") {
+
+    if (!data["DATA"]["view"]) { return; }
 
 	var title         = document.getElementById("navTitle");
 	var data_view     = data["DATA"]["view"];
@@ -249,9 +272,9 @@ function birdhouseLoadSettings(data) {
 * @param (dict) data: data returned from API
 */
 function birdhouseSetMainVars(data) {
-    //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
+
     var data_settings = data["SETTINGS"];
-    var initial_setup = data["STATUS"]["server"]["initial_setup"];
+    if (!data["SETTINGS"]) { data_settings = app_data["SETTINGS"]; }
 
 	if (data_settings["devices"]["cameras"] != undefined) {
 	    for (let key in data_settings["devices"]["cameras"]) {
@@ -277,7 +300,11 @@ function birdhouseSetMainVars(data) {
 * @param (dict) data: data returned from API
 */
 function birdhouseSetMainStatus(data) {
-    var status_view  = data["STATUS"]["view"];
+
+    if (data["STATUS"]["view"])        { var status_view  = data["STATUS"]["view"]; }
+    else if (data["DATA"]["active"])   { var status_view  = data["DATA"]["active"]; }
+    else                               { return; }
+
     var status_admin = data["STATUS"]["admin_allowed"];
 
 	app_active_mic = app_available_micros[0];
@@ -299,13 +326,21 @@ function birdhouseSetMainStatus(data) {
 * @returns (string): html header content
 */
 function birdhouseHeaderFunctions() {
+
+    if (app_active_mic != "") {
+        var mic_config      = app_data["SETTINGS"]["devices"]["microphones"][app_active_mic];
+	    var audio_stream    = "<img id='stream_toggle_header' class='header_icon_wide' src='birdhouse/img/icon_bird_mute.png' onclick='birdhouseAudioStream_toggle(\"\",\"\",\""+mic_config["codec"]+"\");'>";
+	    }
+	else {
+	    var audio_stream    = "";
+	    var mic_config      = {};
+	    }
+
 	var html = "";
-	var mic_config      = app_data["SETTINGS"]["devices"]["microphones"][app_active_mic];
 	var download_info   = "<img class='header_icon' src='birdhouse/img/download-white.png' onclick='archivDownload_requestList();' style='position:relative;right:22px;top:-2px;'>";
 	download_info       = "<text class='download_label' id='collect4download_amount2' onclick='archivDownload_requestList();'>0</text>" + download_info;
 	var switch_cam      = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();' style='position:relative;top:-4px;'>";
 	var reload_view     = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
-	var audio_stream    = "<img id='stream_toggle_header' class='header_icon_wide' src='birdhouse/img/icon_bird_mute.png' onclick='birdhouseAudioStream_toggle(\"\",\"\",\""+mic_config["codec"]+"\");'>";
 	var active_cam      = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_cam.toUpperCase()+"</text>";
 
     if (app_active_mic && mic_config && mic_config["codec"] && mic_config["codec"] == "mp3")
@@ -313,13 +348,9 @@ function birdhouseHeaderFunctions() {
 	else if (app_active_mic && !iOS())   { var active_mic  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_mic.toUpperCase()+"</text>"  + audio_stream; }
 	else                                 { var active_mic = ""; }
 
-	console.error(app_active_mic);
-	console.error(app_data["SETTINGS"]["devices"]["microphones"][app_active_mic]);
-
 	var info_parent     = "&nbsp;";
 	var info            = birdhouse_tooltip( info_parent, "<div id='command_dropdown' style='width:90%;margin:auto;'>empty</div>", "info", "" );
 	
-	//html = reload_view + audio_stream + active_cam + switch_cam + "&nbsp;&nbsp;&nbsp;" + info;
 	html = reload_view;
 	if (app_available_cameras != undefined && app_available_cameras.length > 1) { html += active_cam + switch_cam; }
 	if (app_available_cameras != undefined && app_available_micros.length > 1)  { html += active_mic; }
@@ -360,15 +391,20 @@ function birdhouseReloadView() {
 	birdhouse_overlayHide();
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 
-	if (app_active_page != "INDEX" && app_active_page != "IMAGE_SETTINGS" && app_active_page != "DEVICES") {
+	var no_reload_views = ["INDEX", "IMAGE", "DEVICES", "CAMERAS", "SETTINGS", "SERVER", "INFORMATION"];
+
+    console.warn("RELOAD -> " + app_active_page);
+
+	//if (app_active_page != "INDEX" && app_active_page != "IMAGE" && app_active_page != "DEVICES" && app_active_page != "CAMERAS") {
+	if (!no_reload_views.includes(app_active_page)) {
 		birdhousePrint_load(view=app_active_page, camera=app_active_cam, date=app_active_date);
 		}
 	// if (app_active_page == "INDEX" || app_active_page == "TODAY" || app_active_page == "DEVICES") {
-	if (app_active_page == "INDEX" || app_active_page == "IMAGE_SETTINGS" || app_active_page == "DEVICES") {
-		for (let key in app_camera_source) {
+	//if (app_active_page == "INDEX" || app_active_page == "IMAGE" || app_active_page == "DEVICES" || app_active_page == "CAMERAS") {
 
-		    console.log("--->"+app_active_cam+"/"+key);
-		    console.log(app_camera_source[key]);
+	if (no_reload_views.includes(app_active_page)) {
+		for (let key in app_camera_source) {
+		    console.log("---> active:"+app_active_cam + " / key:" + key +" --- " + app_camera_source[key]);
 
 			var image = document.getElementById("stream_"+key);
 			if (image) {

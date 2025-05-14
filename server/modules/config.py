@@ -3,10 +3,12 @@ import sys
 import time
 import json
 import threading
+from pympler import asizeof
 
 from datetime import datetime, timezone, timedelta
+from shutil import which
+
 from modules.presets import *
-from modules.presets import birdhouse_cache_for_archive, birdhouse_cache
 from modules.weather import BirdhouseWeather
 from modules.bh_database import BirdhouseCouchDB, BirdhouseJSON, BirdhouseTEXT
 from modules.bh_class import BirdhouseClass
@@ -34,32 +36,47 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         self.db = birdhouse_couchdb
         self.backup_interval = 60 * 15
         self.directories = birdhouse_directories
+        self.directories_complete = birdhouse_dir_to_database
         self.files = birdhouse_files
         self.main_directory = main_directory
 
         self.json = None
         self.couch = None
         self.db_type = None
+        self.db_status_cache = {}
+        self.db_status_interval = 15
         self.set_db_type(db_type)
+
+        self.cache_active = birdhouse_env["database_cache"]
+        self.cache_archive_active = birdhouse_env["database_cache_archive"]
         self.config_cache = {}
         self.config_cache_changed = {}
+        self.config_cache_size = {"all": 0.0, "images": 0.0}
+        self.config_cache_size_max = 20 * 1024 * 1024
+        self.config_cache_size_update = time.time()
 
     def run(self):
         """
         if db_type == json, create a backup regularly
         """
-        update_time = time.time()
+        time_cache2json = time.time()
+        time_cache_update = time.time()
+
         self.logging.info("Starting DB handler (" + self.db_type + "|" + self.main_directory + ") ...")
         while self._running:
-            if self.db_type == "couch" and update_time + self.backup_interval < time.time():
+
+            if self.db_type == "couch" and time_cache2json + self.backup_interval < time.time():
                 self.logging.info("Write cache to JSON ... " + str(self.backup_interval))
-                update_time = time.time()
+                time_cache2json = time.time()
                 self.write_cache_to_json()
-            else:
-                wait = round(update_time + self.backup_interval - time.time())
-                self.logging.debug("Wait to write cache to JSON ... " + str(wait) + "s")
-                if wait > 20:
-                    time.sleep(10)
+
+            if time_cache_update + self.db_status_interval < time.time():
+                time_cache_update = time.time()
+                self.get_db_status(cache=False)
+
+            if self.config_cache_size["all"] > self.config_cache_size_max:
+                self.logging.info("Clean up cache ...")
+                self.clean_up_cache("all")
 
             self.thread_control()
             self.thread_wait()
@@ -79,6 +96,47 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         self.reset_error()
         self._processing = False
         self.set_db_type(db_type)
+
+    def get_cache_size(self, part="all"):
+        """
+        get size of cache in Byte (updated every 20 seconds)
+
+        Returns:
+            float: size of cache in Byte
+        """
+        if self.config_cache_size_update + 20 < time.time():
+            self.config_cache_size["all"] = asizeof.asizeof(self.config_cache)
+
+            if "images" in self.config_cache:
+                self.config_cache_size["images"] = asizeof.asizeof(self.config_cache["images"])
+            if "backup" in self.config_cache:
+                self.config_cache_size["backup"] = asizeof.asizeof(self.config_cache["backup"])
+            self.config_cache_size_update = time.time()
+
+        self.logging.debug("Cache keys: " + str(self.config_cache.keys()))
+
+        if part in self.config_cache_size:
+            return self.config_cache_size[part]
+        else:
+            return 0.0
+
+    def get_db_list(self):
+        """
+        get list of available databases
+
+        Returns:
+            list: list of available databases (json, couch - depending on db type)
+        """
+        db_list = {"json": [], "couch": []}
+        if self.db_type == "json":
+            db_list["json"] = self.json.get_db_list()
+        elif self.db_type == "couch":
+            db_list["json"] = self.json.get_db_list()
+            db_list["couch"] = self.couch.get_db_list()
+        elif self.db_type == "both":
+            db_list["json"] = self.json.get_db_list()
+            db_list["couch"] = self.couch.get_db_list()
+        return db_list
 
     def set_db_type(self, db_type):
         """
@@ -105,46 +163,83 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             self.logging.error("  -> Unknown DB type (" + str(self.db_type) + ")")
             return False
 
-    def get_db_status(self):
+    def get_db_status(self, cache=True):
         """
         return db status
 
         Returns:
             dict: database status (type, db_connected, db_error, db_error_msg, handler_error, handler_error_msg)
         """
-        db_info = {}
-        if self.db_type == "json":
-            db_info = {
-                "type": self.db_type,
-                "db_connected": self.json.connected,
-                "db_error": self.json.error,
-                "db_error_msg": self.json.error_msg,
-                "handler_error": self.error,
-                "handler_error_msg": self.error_msg
-            }
-        elif self.db_type == "couch":
-            db_info = {
-                "type": self.db_type,
-                "db_connected": self.couch.connected,
-                "db_error": self.couch.error,
-                "db_error_msg": self.couch.error_msg,
-                "handler_error": self.error,
-                "handler_error_msg": self.error_msg
-            }
-        elif self.db_type == "both":
-            connected = (self.couch.connected and self.json.connected)
-            db_info = {
-                "type": self.db_type,
-                "db_connected": connected,
-                "db_connected_info": "couch=" + str(self.couch.connected) + " / json=" + str(self.json.connected),
-                "db_connected_couch": self.couch.connected,
-                "db_connected_json": self.json.connected,
-                "db_error": "couch=" + str(self.couch.error) + " / json=" + str(self.json.error),
-                "db_error_msg": [*self.couch.error_msg, *self.json.error_msg],
-                "handler_error": self.error,
-                "handler_error_msg": self.error_msg
-            }
-        return db_info
+        update_start = time.time()
+        if cache and self.db_status_cache != {}:
+            return self.db_status_cache
+        else:
+            db_info = {}
+            if self.db_type == "json":
+                db_info = {
+                    "type": self.db_type,
+                    "cache_size": self.get_cache_size(),
+                    "cache_active": self.cache_active,
+                    "cache_archive_active": self.cache_archive_active,
+                    "db_connected": self.json.connected,
+                    "db_error": self.json.error,
+                    "db_error_msg": self.json.error_msg,
+                    "db_locked_json": self.json.amount_locked(),
+                    "db_waiting_json": self.json.waiting_time,
+                    "handler_error": self.error,
+                    "handler_error_msg": self.error_msg
+                }
+            elif self.db_type == "couch":
+                db_info = {
+                    "type": self.db_type,
+                    "cache_size": self.get_cache_size(),
+                    "cache_active": self.cache_active,
+                    "cache_archive_active": self.cache_archive_active,
+                    "db_connected": self.couch.connected,
+                    "db_error": self.couch.error,
+                    "db_error_msg": self.couch.error_msg,
+                    "handler_error": self.error,
+                    "handler_error_msg": self.error_msg
+                }
+            elif self.db_type == "both":
+                connected = (self.couch.connected and self.json.connected)
+                db_info = {
+                    "type": self.db_type,
+                    "cache_size": self.get_cache_size(),
+                    "cache_active": self.cache_active,
+                    "cache_archive_active": self.cache_archive_active,
+                    "db_connected": connected,
+                    "db_connected_info": "couch=" + str(self.couch.connected) + " / json=" + str(self.json.connected),
+                    "db_connected_couch": self.couch.connected,
+                    "db_connected_json": self.json.connected,
+                    "db_locked_json": self.json.amount_locked(),
+                    "db_error": "couch=" + str(self.couch.error) + " / json=" + str(self.json.error),
+                    "db_error_msg": [self.couch.error_msg, self.json.error_msg],
+                    "handler_error": self.error,
+                    "handler_error_msg": self.error_msg
+                }
+            self.db_status_cache = db_info.copy()
+            self.config.set_processing_performance("config", "db_status", update_start)
+            return db_info
+
+    def get_db_config_date(self, filename="", db_key=""):
+        """
+        get config and date from database by given filename or db_key
+
+        Args:
+            filename: filename of JSON database file
+            db_key: database key of couch db (if filename is not given)
+
+        Returns:
+            [str, str]: config and date of database
+        """
+        if filename == "" and db_key != "":
+            pass
+
+        elif filename != "" and db_key == "":
+            [db_key, date] = self.couch.filename2keys(filename)
+
+        return ["", ""]
 
     def wait_if_paused(self):
         """
@@ -191,23 +286,30 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         elif date == "EMPTY":
             date = ""
 
-        if include_main:
-            dir_path = os.path.join(self.main_directory, self.directories["data"], self.directories[config], date)
+        if config in self.directories:
+            if include_main:
+                dir_path = os.path.join(self.main_directory, self.directories["data"], self.directories[config], date)
+            else:
+                dir_path = os.path.join(self.directories[config], date)
+            if ".." in dir_path:
+                elements = dir_path.split("/")
+                path_new = []
+                for element in elements:
+                    if element == ".." and len(path_new) > 0:
+                        path_new.pop(-1)
+                    else:
+                        path_new.append(element)
+                dir_path = ""
+                for element in path_new:
+                    dir_path += "/" + element
+                dir_path = dir_path.replace("//", "/")
+            return dir_path
         else:
-            dir_path = os.path.join(self.directories[config], date)
-        if ".." in dir_path:
-            elements = dir_path.split("/")
-            path_new = []
-            for element in elements:
-                if element == ".." and len(path_new) > 0:
-                    path_new.pop(-1)
-                else:
-                    path_new.append(element)
-            dir_path = ""
-            for element in path_new:
-                dir_path += "/" + element
-            dir_path = dir_path.replace("//", "/")
-        return dir_path
+            self.logging.error("Directory doesn't exist in self.directories: " + config)
+            if include_main:
+                return os.path.join(self.main_directory, self.directories["data"])
+            else:
+                return ""
 
     def directory_create(self, config, date=""):
         """
@@ -232,30 +334,37 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             os.mkdir(self.directory(config, date))
             self.logging.info("OK.")
 
-    def exists(self, config, date=""):
+    def exists(self, config, date="", db_type=""):
         """
         check if file or DB exists
 
         Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
+            db_type (str): type of database if not current settings (couch, json, both)
         Returns:
-            bool: status if dir exists
+            bool: status if database exists
         """
         if_exists = False
         filename = self.file_path(config, date)
-        self.logging.debug(filename)
+        self.logging.debug("-----> Check DB exists: " + filename)
 
-        if self.db_type == "json":
+        if db_type == "":
+            db_type = self.db_type
+        if self.couch is None and db_type != "json":
+            self.logging.warning("DB type '" + db_type + "' is currently not available, switch to 'json'.")
+            db_type = "json"
+
+        if db_type == "json":
             if_exists = os.path.isfile(filename)
-        elif self.db_type == "couch":
+        elif db_type == "couch":
             if_exists = self.couch.exists(filename)
-        elif self.db_type == "both":
+        elif db_type == "both":
             if_exists = self.couch.exists(filename)
             if not if_exists:
                 if_exists = os.path.isfile(filename)
 
-        self.logging.debug("-----> Check DB exists: " + str(if_exists) + " (" + self.db_type + " | " + filename + ")")
+        self.logging.debug("-----> Check DB exists: " + str(if_exists) + " (" + db_type + " | " + filename + ")")
         return if_exists
 
     def exists_in_cache(self, config, date=""):
@@ -275,26 +384,42 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 return True
         return False
 
-    def read(self, config, date=""):
+    def read(self, config="", date="", filename="", write_other=True, db_type=""):
         """
         read data from database (for all db types)
 
         Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
+            filename (str): filename of database file (if not specified, use config name)
+            write_other (bool): write other data to other DB type if type is couch or both
+            db_type (str): type of database if not current settings (couch, json, both)
         Returns:
             dict: complete data from database
         """
         result = {}
-        filename = self.file_path(config, date)
+        if db_type == "":
+            db_type = self.db_type
+        if self.couch is None and db_type != "json":
+            self.logging.warning("DB type '" + db_type + "' is currently not available, switch to 'json'.")
+            db_type = "json"
 
-        if self.db_type == "json":
+        if filename == "" and config != "":
+            self.logging.debug("Reading data from database " + config + " / " + date + " (config) ...")
+            filename = self.file_path(config, date)
+        elif filename != "" and config == "":
+            self.logging.debug("Reading data from database " + filename + " (filename) ...")
+        elif filename != "" and config != "":
+            self.logging.warning("No DB specified to read data from!")
+            return result
+
+        if db_type == "json":
             result = self.json.read(filename)
 
         elif "config.json" in filename:
             result = self.json.read(filename)
 
-        elif self.db_type == "couch" or self.db_type == "both":
+        elif write_other and db_type == "couch" or db_type == "both":
 
             if not self.couch.exists(filename) and self.json.exists(filename):
                 result = self.json.read(filename)
@@ -310,8 +435,11 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             if result == {}:
                 result = self.json.read(filename)
 
+        elif db_type == "couch":
+            result = self.couch.read(filename)
+
         else:
-            self.raise_error("Unknown DB type (" + str(self.db_type) + ")")
+            self.raise_error("Unknown DB type (" + str(db_type) + "|" + self.db_type + ")")
 
         return result.copy()
 
@@ -325,11 +453,11 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         Returns:
             dict: complete data from database in cache
         """
-        if not birdhouse_cache_for_archive and not birdhouse_cache:
-            if not birdhouse_cache:
-                return self.read(config, date)
-            elif (config == "backup" or config == "images") and date != "":
-                return self.read(config, date)
+        if not self.cache_active:
+            return self.read(config, date)
+
+        elif not self.cache_active and date != "" and config == "images":
+            return self.read(config, date)
 
         if config not in self.config_cache and date == "":
             self.config_cache[config] = self.read(config=config, date="")
@@ -373,16 +501,20 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             filename = self.file_path(config, date)
             if self.db_type == "json":
                 self.json.write(filename, data, create)
+                self.logging.debug("   -> write2json: " + config + " | " + filename)
             elif self.db_type == "couch" and "config.json" in filename:
                 self.couch.write(filename, data, create)
                 self.json.write(filename, data, create)
+                self.logging.debug("   -> write2both: " + config + " | " + filename)
             elif self.db_type == "couch":
                 self.couch.write(filename, data, create)
+                self.logging.debug("   -> write2couch: " + config + " | " + filename)
                 if save_json:
                     self.json.write(filename, data, create)
             elif self.db_type == "both":
                 self.couch.write(filename, data, create)
                 self.json.write(filename, data, create)
+                self.logging.debug("   -> write2both: " + config + " | " + filename)
             else:
                 self.raise_error("Unknown DB type (" + str(self.db_type) + ")")
 
@@ -416,7 +548,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             date (str): date of database if required (format: YYYYMMDD)
             data (dict): complete data for database
         """
-        if data is None:
+        if data is None or not self.cache_active:
             return
         if date == "":
             self.config_cache[config] = data
@@ -436,24 +568,26 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         self.wait_if_process_running()
         self._processing = True
 
+        count = 0
         start_time = time.time()
-        self.logging.info("Create backup from cached data ...")
+        self.logging.debug("Create backup from cached data ...")
         for config in self.config_cache:
-            if config != "backup":
-                if self.config_cache_changed[config]:
-                    filename = self.file_path(config=config, date="")
-                    self.json.write(filename=filename, data=self.config_cache[config])
-                    self.logging.info("   -> backup2json: " + config + " (" + str(round(time.time() - start_time, 1)) + "s)")
-                    self.config_cache_changed[config] = False
-            else:
+            count += 1
+            if config != "backup" and config in self.config_cache_changed:
+                filename = self.file_path(config=config, date="")
+                self.json.write(filename=filename, data=self.config_cache[config])
+                self.logging.debug("   -> backup2json: " + config + " (" + str(round(time.time() - start_time, 1)) + "s)")
+                self.config_cache_changed[config] = False
+            elif config in self.config_cache_changed:
                 for date in self.config_cache[config]:
                     if config + "_" + date in self.config_cache_changed \
                             and self.config_cache_changed[config + "_" + date]:
                         filename = self.file_path(config=config, date=date)
                         self.json.write(filename=filename, data=self.config_cache[config][date])
-                        self.logging.info("   -> backup2json: " + config + " / " + date +
+                        self.logging.debug("   -> backup2json: " + config + " / " + date +
                                           " (" + str(round(time.time() - start_time, 1)) + "s)")
                         self.config_cache_changed[config + "_" + date] = False
+        self.logging.info(f"Wrote {count} databases as backup to JSON files.")
         self._processing = False
 
     def clean_all_data(self, config, date=""):
@@ -511,15 +645,18 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
         """
+        self.logging.debug("Clean up cache for " + config + " " + date)
         if config != "" and config != "all":
             if date != "":
                 del self.config_cache[config][date]
             else:
                 del self.config_cache[config]
         elif config == "all":
-            keys = list(self.config_cache.keys())
-            for conf_key in keys:
-                del self.config_cache[conf_key]
+            for key in self.config_cache_size:
+                self.config_cache_size[key] = 0
+            self.config_cache = {}
+            self.config_cache_changed = {}
+            self.config_cache_size_update = time.time()
             self.logging.info("Removed all data from cache.")
 
     def lock(self, config, date=""):
@@ -601,12 +738,12 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
             active_files = []
 
             if start_time + self.queue_wait < time.time():
+                start_time = time.time()
+                self.config.set_processing_performance("config", "queue", self.queue_wait + time.time())
                 self.logging.debug("... Check Queue (" + str(self.queue_wait) + "s)")
                 self.logging.debug("    ... edit:   " + str(len(self.edit_queue)))
                 self.logging.debug("    ... range:  " + str(len(self.range_queue)))
                 self.logging.debug("    ... status: " + str(len(self.status_queue)))
-
-                start_time = time.time()
 
                 # check first if entries are available
                 entries_available = False
@@ -624,6 +761,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                                 entries_available = True
 
                 if entries_available:
+                    start_time_available = time.time()
                     self.logging.debug("... Entries available in the queue (" +
                                        str(round(time.time() - start_time, 2)) + "s)")
 
@@ -636,10 +774,14 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                             self.db_handler.connect(self.db_handler.db_type)
                         time.sleep(5)
 
+                    # Check queues and write existing entries to db
+                    start_time_exec = time.time()
                     if self.execute_edit_queue():
                         update_views = True
+                    self.config.set_processing_performance("config", "write_1", start_time_exec)
                     if self.execute_status_queue():
                         update_views = True
+                    self.config.set_processing_performance("config", "write", start_time_exec)
 
                     check_count_entries += count_entries
                     self.logging.debug("Queue execution: wrote " + str(count_entries) + " entries to " +
@@ -663,6 +805,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                         time.sleep(1)
 
+                    self.config.set_processing_performance("config", "available", start_time_available)
+
             if start_time_2 + self.queue_wait_max * 6 < time.time():
                 self.logging.info("Queue: wrote " + str(check_count_entries) + " entries since the last " +
                                   str(self.queue_wait_max * 6) + "s.")
@@ -670,9 +814,11 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                 start_time_2 = time.time()
 
             if update_views:
+                start_time_update = time.time()
                 self.views.archive.list_update()
                 self.views.favorite.list_update()
                 self.views.object.list_update()
+                self.config.set_processing_performance("views", "update_all", start_time_update)
 
             self.thread_control()
             self.thread_wait()
@@ -694,6 +840,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         self.edit_queue_in_progress = True
         for config_file in config_files:
 
+            start_time = time.time()
             if len(self.edit_queue[config_file]) == 0:
                 continue
             else:
@@ -704,6 +851,10 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
             if config_file == "statistics":
 
                 entries = self.db_handler.read_cache(config_file)
+                if "data" not in entries:
+                    entries["data"] = {}
+                if "info" not in entries:
+                    entries["info"] = {}
                 self.db_handler.lock(config_file)
 
                 count_files += 1
@@ -814,8 +965,10 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                             if "to_be_deleted" in entries[key]:
                                 del entries[key]["to_be_deleted"]
 
+
                 self.db_handler.unlock(config_file)
                 self.db_handler.write(config_file, "", entries)
+                self.config.set_processing_performance("config_queue_write", config_file, start_time)
 
             # EDIT QUEUE: backup (with date)
             elif config_file == "backup":
@@ -845,15 +998,15 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                             count_entries += 1
 
                             if key == "info":
-                                self.logging.info(" +++> " + command + " +++ " + key)
+                                self.logging.debug(" +++> " + command + " +++ " + key)
                                 file_info = entry.copy()
 
                             elif key == "detection":
-                                self.logging.info(" +++> " + command + " +++ " + key)
+                                self.logging.debug(" +++> " + command + " +++ " + key)
                                 detection_info = entry.copy()
 
                             else:
-                                self.logging.info(" +++> " + command + " +++ " + key)
+                                self.logging.debug(" +++> " + command + " +++ " + key)
 
                                 if command == "add" or command == "edit":
                                     entries[key] = entry
@@ -890,7 +1043,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                     update_views = True
 
-        self.logging.debug("    -> Edit queue: " + config_file + " done.)")
+            self.config.set_processing_performance("config_queue_edit", config_file, start_time)
+            self.logging.debug("    -> Edit queue: " + config_file + " done.")
 
         self.edit_queue_in_progress = False
         return update_views
@@ -909,6 +1063,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
         self.status_queue_in_progress = True
         for config_file in config_files:
+
+            start_time = time.time()
 
             # STATUS QUEUE: today, video (without date)
             if config_file != "backup" and len(self.status_queue[config_file]) > 0:
@@ -991,6 +1147,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
                     update_views = True
 
+            self.config.set_processing_performance("config_queue_status", config_file, start_time)
             self.logging.debug("    -> Status queue: " + config_file + " done.)")
 
         self.status_queue_in_progress = False
@@ -1090,7 +1247,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         Returns:
             dict: API response
         """
-        self.logging.info("Status recycle: " + str(param))
+        self.logging.debug("Status recycle: " + str(param))
 
         response = {}
         config_data = {}
@@ -1237,8 +1394,8 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         Returns:
             dict: API response
         """
-        self.logging.info("Start to identify RECYCLE range ...")
-        self.logging.info("Status recycle range: " + str(param))
+        self.logging.debug("Start to identify RECYCLE range ...")
+        self.logging.debug("Status recycle range: " + str(param))
 
         response = {}
         config_data = {}
@@ -1452,6 +1609,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.views = None
         self.weather = None
         self.queue = None
+        self.statistics = None
 
         self.thread_status = {}
         self.thread_ctrl = {
@@ -1461,17 +1619,22 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 "pid": ""
             }
         }
+        self.thread_ids = {}
 
         self.directories = birdhouse_directories
+        self.directories_complete = birdhouse_dir_to_database
+        self.directories_main = birdhouse_main_directories
         self.files = birdhouse_files
 
         self.config_cache = {}
         self.device_signal = {}
         self.locked = {}
         self.update = {}
+        self.update_config = {}
         self.update_views = {"favorite": False, "archive": False}
         self.async_answers = []
         self.async_running = False
+        self.video_frame_count = 0
 
         self.param = None
         self.param_init = param_init
@@ -1485,6 +1648,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.camera_scan = {}
 
         self.processing_information = {}
+        self.processing_performance = {}
+
         self.object_detection_processing = None
         self.object_detection_progress = None
         self.object_detection_waiting = None
@@ -1492,8 +1657,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.object_detection_build_views = False
 
         self.last_start = ""
-        self.last_activity_cache = time.time()
-        self.last_activity_empty_cache = 15 * 60
+        self.measure_time = 30
+        self.measure_last = time.time()
 
         # read or create main config file
         self.db_handler = BirdhouseConfigDBHandler(self, "json", main_directory)
@@ -1501,7 +1666,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.main_directory = main_directory
         if self.db_handler.exists("main"):
             self.param = self.db_handler.read("main")
-        if not self.db_handler.exists("main") or self.param == {}:
+        if not self.db_handler.exists("main", "", "json") or self.param == {}:
+            self.logging.warning("Main configuration doesn't exist yet (data/config.json).")
             self.main_config_create()
 
         # read main config, modify status info
@@ -1522,18 +1688,23 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             self.param["info"]["last_day_running"] = self.last_day_running
         self.param["info"]["last_start_date"] = self.local_time().strftime("%Y-%m-%d")
         self.param["info"]["last_start_time"] = self.local_time().strftime("%H:%M:%S")
-        self.db_handler.write(config="main", data=self.param)
 
         # read birdhouse dictionary
-        self.birds = self.db_handler.json.read(os.path.join(birdhouse_main_directories["data"], birdhouse_files["birds"]))
+        self.birds = self.db_handler.json.read(os.path.join(self.directories_main["data"], birdhouse_files["birds"]))
         self.logging.debug(str(self.birds))
 
         # set database type if not JSON
         self.db_type = birdhouse_env["database_type"]
+        self.last_db_type = None
+        if "info" in self.param and "last_db_type" in self.param["info"]:
+            self.last_db_type = self.param["info"]["last_db_type"]
+        self.param["info"]["last_db_type"] = self.db_type
+        self.db_handler.write(config="main", data=self.param)
+
         if self.db_type != "json" and ("db_type" not in self.param_init or self.param_init["db_type"] != "json"):
             if self.db_handler is not None:
                 self.db_handler.stop()
-            self.db_handler = BirdhouseConfigDBHandler(self, self.db_type, main_directory)
+            self.db_handler = BirdhouseConfigDBHandler(self, self.db_type, self.main_directory)
             self.db_handler.start()
 
         self.queue = BirdhouseConfigQueue(config=self, db_handler=self.db_handler)
@@ -1542,6 +1713,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         # text file handler
         self.txt_handler = BirdhouseTEXT(config=self)
         self.main_config_app()
+        self.set_thread_id(self.id, threading.get_native_id())
 
     def run(self):
         """
@@ -1553,6 +1725,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         count = 0
         self.param = self.db_handler.read("main")
         self.param["path"] = self.main_directory
+        self.main_config_db_changed()
 
         if "weather" not in self.param_init or self.param_init["weather"] is not False:
             self.weather = BirdhouseWeather(config=self)
@@ -1580,12 +1753,9 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                     self.param["info"]["last_day_running"] = date_today
                     self.last_day_running = date_today
                     self.db_handler.write(config="main", date="", data=self.param)
+                    for key in self.update_config:
+                        self.update_config[key] = True
                     time.sleep(2)
-
-            # check when last active access via app has been done -> delete cache from time to time
-            if self.last_activity_cache + self.last_activity_empty_cache < time.time():
-                self.db_handler.clean_up_cache("all")
-                self.last_activity_cache = time.time()
 
             # check if DB reconnect ist required
             connected = self.db_handler.get_db_status()["db_connected"]
@@ -1605,6 +1775,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 if self.weather is not False:
                     self.weather.active(self.param["localization"]["weather_active"])
 
+            self.measure_status()
             self.thread_control()
             self.thread_wait()
 
@@ -1642,18 +1813,22 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 self.logging.info("Create data directory: " + path)
                 os.makedirs(path)
 
-    def main_config_edit(self, config, config_data, date=""):
+    def main_config_decompose(self, config_data, param=None):
         """
-        change configuration base on dict in form
+        decompose config data into a list of dictionaries
 
         Args:
-            config (str): database name
             config_data (dict): selected vars to be changed in the format dict["key1:key2:key3"] = "value"
-            date (str): date of database if required (format: YYYYMMDD)
+            param (dict): parameter to be changed
+
+        Returns:
+            dict: config data transformed to dict["key1"]["key2"]["key3"] = "value"
         """
-        self.logging.info("Change configuration ... " + config + "/" + date + " ... " + str(config_data))
-        param = self.db_handler.read(config, date)
+        if param is None:
+            param = {}
+
         data_type = ""
+        difference = []
         for key in config_data:
             keys = key.split(":")
             if "||" in config_data[key]:
@@ -1683,27 +1858,82 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 value = value.replace("-dev-v4l-by-id-", "/dev/v4l/by-id/")
                 value = value.replace("-dev-", "/dev/")
 
-            if ":" not in key:
-                param[key] = value
-            elif len(keys) == 2:
-                param[keys[0]][keys[1]] = value
-            elif len(keys) == 3:
-                param[keys[0]][keys[1]][keys[2]] = value
-            elif len(keys) == 4:
-                param[keys[0]][keys[1]][keys[2]][keys[3]] = value
-            elif len(keys) == 5:
-                param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]] = value
-            elif len(keys) == 6:
-                param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]][keys[5]] = value
+            try:
+                if ":" not in key:
+                    if param[key] != value:
+                        param[key] = value
+                        difference.append(key)
+                elif len(keys) == 2:
+                    if param[keys[0]][keys[1]] != value:
+                        param[keys[0]][keys[1]] = value
+                        difference.append(keys[0]+":"+keys[1])
+                elif len(keys) == 3:
+                    if param[keys[0]][keys[1]][keys[2]] != value:
+                        param[keys[0]][keys[1]][keys[2]] = value
+                        difference.append(keys[0]+":"+keys[1]+":"+keys[2])
+                elif len(keys) == 4:
+                    if param[keys[0]][keys[1]][keys[2]][keys[3]] != value:
+                        param[keys[0]][keys[1]][keys[2]][keys[3]] = value
+                        difference.append(keys[0] + ":" + keys[1] + ":" + keys[2] + ":" + keys[3])
+                elif len(keys) == 5:
+                    if param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]] != value:
+                        param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]] = value
+                        difference.append(keys[0] + ":" + keys[1] + ":" + keys[2] + ":" + keys[3] + ":" + keys[4])
+                elif len(keys) == 6:
+                    if param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]][keys[5]] != value:
+                        param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]][keys[5]] = value
+                        difference.append(keys[0] + ":" + keys[1] + ":" + keys[2] + ":" + keys[3] + ":" + keys[4] + ":" + keys[5])
+
+            except Exception as e:
+                self.logging.warning("Could not decompose keys (" + str(keys) + "): " + str(e))
+                self.logging.warning("Check and add missing keys in your config file or start with a new config file.")
+
+        return param, difference
+
+    def main_config_edit(self, config, config_data, date="", camera=""):
+        """
+        change configuration base on dict in form
+
+        Args:
+            camera (str): camera id
+            config (str): database name
+            config_data (dict): selected vars to be changed in the format dict["key1:key2:key3"] = "value"
+            date (str): date of database if required (format: YYYYMMDD)
+        """
+        self.logging.info("Change configuration ... " + config + "/" + date + " ... " + str(config_data))
+
+        param = self.db_handler.read(config, date)
+        param, difference = self.main_config_decompose(config_data, param.copy())
+
+        difference_update = False
+        difference_update_fields = ["devices:cameras:" + camera + ":source",
+                                    "devices:cameras:" + camera + ":active",
+                                    "devices:microphones:mic1:device_id",
+                                    "devices:microphones:mic2:device_id"]
+
         self.db_handler.write(config, date, param)
+
+        if not difference:
+            self.logging.info("main-config-edit: No changes detected.")
+        else:
+            self.logging.info("main-config-edit: Detected changes: " + str(difference))
+            for value in difference:
+                if value in difference_update_fields:
+                    difference_update = True
+                    self.logging.info("main-config-edit: Force device reconnect (" + value + ")")
+            if not difference_update:
+                self.logging.info("main-config-edit: No device reconnect required (" + camera + ").")
+
 
         if config == "main":
             self.param = self.db_handler.read(config, date)
-            # self.db_handler.set_db_type(db_type=self.param["server"]["database_type"])
             self.db_handler.set_db_type(db_type=birdhouse_env["database_type"])
 
-            for key in self.update:
-                self.update[key] = True
+            if difference_update:
+                for key in self.update:
+                    self.update[key] = True
+            if camera != "" and difference:
+                self.update_config["camera_" + camera] = True
 
             for camera in self.param["devices"]["cameras"]:
                 source = self.param["devices"]["cameras"][camera]["source"]
@@ -1751,15 +1981,112 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.logging.info("Write App config file: " + filename)
         self.logging.debug(birdhouse_client_presets["content"])
 
-    def local_time(self):
+    def main_config_db_changed(self):
         """
-        return time that includes the current timezone
+        check if db_type has changed since last start and ensure that the data
+        are migrated from the old type to the new one
+
+        JSON -> BOTH/COUCH
+        - for each DB in couch, delete
+        - for each DB in json migrate to couch db
+        ?? maybe reload date somehow ??
+
+        COUCH -> JSON (not implemented yet)
+        - initially connect to couch (as usually not yet loaded)
+        - check if JSON DB exists rewrite, if not create from couch
+        - keep JSON file (as usually they are used as backup)
+        """
+        backup_date = self.local_time().strftime("%Y%m%d-%H%M%S")
+        line = "-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-."
+        if self.last_db_type != self.db_type and self.last_db_type is not None:
+            self.logging.info(line)
+            self.logging.info("DB type has changed: " + str(self.last_db_type) + " -> " + self.db_type)
+            self.logging.debug("(data path: " + str(self.directories_main["data"]) + ")")
+            self.logging.info(line)
+
+            if self.last_db_type == "json" and self.db_type == "couch" or self.db_type == "both":
+                available_databases = self.db_handler.get_db_list()
+                self.logging.info("Delete all "+str(len(available_databases["couch"]))+" couch databases ...")
+                for database in available_databases["couch"]:
+                    if not database.startswith("_"):
+                        self.logging.info("Delete old couch DB: " + database)
+                        self.db_handler.couch.delete_db("", database)
+
+                self.logging.info("Migrate all "+str(len(available_databases["json"]))+" json databases to couch databases...")
+                for database in available_databases["json"]:
+                    path_to_db = self.directories_main["data"] + database
+                    self.logging.info("Migrate from JSON to couch DB: " + self.directories_main["data"] + "|" + database)
+                    data = self.db_handler.json.read(path_to_db)
+                    self.db_handler.couch.write(filename=database, data=data, create=True)
+                self.logging.info(line)
+
+            elif (self.last_db_type == "both" or self.last_db_type == "couch") and self.db_type == "json":
+                couch_db_handler = BirdhouseConfigDBHandler(self, "couch", self.main_directory)
+                couch_db_handler.couch.basic_directory = self.directories_main["data"]
+                available_couch_db = couch_db_handler.get_db_list()
+                for database in available_couch_db["couch"]:
+                    for key in self.directories_complete:
+                        if database.startswith(self.directories_complete[key]):
+                            filename = key + ".json"
+                            match = False
+                            if "<DATE>" in key and database[-1].isdigit():
+                                date = database.replace(self.directories_complete[key]+"_", "")
+                                filename = filename.replace("<DATE>", date)
+                                match = True
+                            elif not "<DATE>" in key and not database[-1].isdigit():
+                                date = ""
+                                match = True
+                            filename = self.directories_main["data"] + "/" + filename
+                            if match:
+                                self.logging.info("(Re)write JSON DB: " + database + " -> " + filename)
+                                self.logging.info("  -> data path: " + str(self.directories_main["data"]))
+
+                                # 1. read from couch
+                                data = couch_db_handler.read(filename=filename, write_other=False).copy()
+                                self.logging.debug("Read JSON DB: " + str(data))
+                                # 2. write to json (rewrite / create file)
+                                data_bu = self.db_handler.json.read(filename=filename).copy()
+                                if filename.endswith("data/config.json"):
+                                    data_bu["info"]["backup_time"] = backup_date
+                                    data_bu["info"]["migration_time"] = ""
+                                    data["info"]["migration_time"] = backup_date
+                                    self.param = data
+                                #self.db_handler.json.write(filename=filename.replace(".json", "." + backup_date + "_C.json"), data=data, create=True)
+                                #self.db_handler.json.write(filename=filename.replace(".json", "." + backup_date + "_B.json"), data=data_bu, create=True)
+                                self.db_handler.json.write(filename=filename, data=data, create=True)
+
+                self.logging.warning("NOT FULLY IMPLEMENTED YET: change from " + str(self.last_db_type) + " to " + str(self.db_type))
+            else:
+                self.logging.debug("No migration required.")
+
+    def local_time(self, day="today"):
+        """
+        return time that includes the current timezone (day="today")
+        other values: yesterday,
 
         Returns:
             datetime: local time for the current timezone
         """
-        date_tz_info = timezone(timedelta(hours=self.timezone))
-        return datetime.now(date_tz_info)
+        date_tz_info = datetime.now(timezone(timedelta(hours=self.timezone)))
+        date_tz_info_1 = datetime.now(timezone(timedelta(hours=self.timezone) - timedelta(days=1)))
+        self.logging.debug("Local time: " + str(date_tz_info) + " / " + str(date_tz_info_1))
+
+        if day == "yesterday":
+            return date_tz_info_1
+        else:
+            return date_tz_info
+
+    def local_date(self, days=0):
+        """
+        get current date in format YYYYMMDD with an offset of days (1 = yesterday, 2 = 2 days ago, ...)
+
+        Returns:
+            str: date in format YYYYMMDD
+        """
+        today = datetime.now()
+        target_date = today - timedelta(days=days)
+        self.logging.debug("Target date: " + str(target_date))
+        return target_date.strftime('%Y%m%d')
 
     def force_shutdown(self):
         """
@@ -1771,7 +2098,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             self.thread_ctrl["shutdown"] = True
             self.stop()
 
-    def if_new_day(self):
+    def is_new_day(self):
         """
         check if it's a new day
 
@@ -1786,6 +2113,104 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
             self.current_day = self.local_time().strftime("%Y%m%d")
             return True
         else:
+            return False
+
+    def is_sunrise(self, hour_offset=0, mode="exact"):
+        """
+        check if current time is sunrise; if weather is not available, try from cache in config file or return False
+
+        Args:
+            hour_offset (int): hour offset for sunrise, e.g., +1 or -1
+            mode (str): mode how to check - available modes: "exact", "before", "after"
+        Returns:
+            boolean: True if weather data available and current time is sunrise time (incl. hour offset)
+        """
+        if self.weather is None:
+            if "last_sunrise" in self.param["weather"]:
+                sunrise = self.param["weather"]["last_sunrise"]
+            else:
+                self.logging.debug("No weather data available to check sunrise time.")
+                return False
+        else:
+            sunrise = str(self.weather.get_sunrise())
+
+        sunrise = sunrise.split(":")
+        sunrise = str(int(sunrise[0]) + int(hour_offset)).zfill(2) + ":" + str(sunrise[1])
+        local_time = str(self.local_time()).split(" ")[1].split(".")[0]
+        local_time = local_time.split(":")[0] + ":" + local_time.split(":")[1]
+
+        sunrise = int(sunrise.replace(":", ""))
+        local_time = int(local_time.replace(":", ""))
+
+        if sunrise == local_time and mode == "exact":
+            self.logging.debug("It's time for sunrise (True): " + str(local_time) + " / " + str(sunrise))
+            return True
+        elif mode == "exact":
+            self.logging.debug("No sunrise at the moment (False): " + str(local_time) + " / " + str(sunrise))
+            return False
+        elif sunrise > local_time and mode == "before":
+            self.logging.debug("It's before sunrise (True): " + str(local_time) + " / " + str(sunrise))
+            return True
+        elif mode == "before":
+            self.logging.debug("It's after sunrise (False): " + str(local_time) + " / " + str(sunrise))
+            return False
+        elif sunrise < local_time and mode == "after":
+            self.logging.debug("It's after sunrise (True): " + str(local_time) + " / " + str(sunrise))
+            return True
+        elif mode == "after":
+            self.logging.debug("It's before sunrise (False): " + str(local_time) + " / " + str(sunrise))
+            return False
+        else:
+            self.logging.warning("Error:  " + str(mode) + " / " + str(local_time) + " / " + str(sunrise))
+            return False
+
+    def is_sunset(self, hour_offset=0, mode="exact"):
+        """
+        check if current time is sunset; if weather is not available try from cache in config file or return False
+
+        Args:
+            hour_offset (int): hour offset for sunset, e.g., +1 or -1
+            mode (str): mode how to check - available modes: "exact", "before", "after"
+        Returns:
+            boolean: True if weather data available and current time is sunset time (incl. hour offset)
+        """
+        if self.weather is None:
+            if "sunset" in self.param["weather"]:
+                sunset = self.param["weather"]["sunset"]
+            else:
+                self.logging.debug("No weather data available to check sunset time.")
+                return False
+        else:
+            sunset = str(self.weather.get_sunset())
+
+        sunset = sunset.split(":")
+        sunset = str(int(sunset[0]) + int(hour_offset)).zfill(2) + ":" + str(sunset[1])
+        local_time = str(self.local_time()).split(" ")[1].split(".")[0]
+        local_time = local_time.split(":")[0] + ":" + local_time.split(":")[1]
+
+        sunset = int(sunset.replace(":", ""))
+        local_time = int(local_time.replace(":", ""))
+
+        if mode == "exact" and sunset == local_time:
+            self.logging.debug("It's time for sunset (True):  " + str(local_time) + " / " + str(sunset))
+            return True
+        elif mode == "exact":
+            self.logging.debug("No sunset at the moment (False):  " + str(local_time) + " / " + str(sunset))
+            return False
+        elif mode == "after" and local_time > sunset:
+            self.logging.debug("It's after sunset (True):  " + str(local_time) + " / " + str(sunset))
+            return True
+        elif mode == "after":
+            self.logging.debug("It's before sunset (False):  " + str(local_time) + " / " + str(sunset))
+            return False
+        elif mode == "before" and local_time > sunset:
+            self.logging.debug("It's before sunset (True):  " + str(local_time) + " / " + str(sunset))
+            return True
+        elif mode == "before":
+            self.logging.debug("It's after sunset (False):  " + str(local_time) + " / " + str(sunset))
+            return False
+        else:
+            self.logging.warning("Error:  " + str(mode) + " / " + str(local_time) + " / " + str(sunset))
             return False
 
     def user_activity(self, cmd="get", param=""):
@@ -1812,6 +2237,16 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
 
         self.user_active = False
         return False
+
+    def set_statistics(self, statistics):
+        """
+        set statistics handler to self.statistics
+
+        Args:
+            statistics: statistics handler
+        """
+        self.statistics = statistics
+        self.measure_status(True)
 
     def set_views(self, views):
         """
@@ -1915,4 +2350,117 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 return None
         else:
             return None
+        
+    def set_processing_performance(self, category, object_id, start, end=None):
+        """
+        save performance information in a central place
 
+        Args:
+            category (str): category of performance information
+            id (str): id of the object
+            start (float): start time of the process
+            end (float): end time of the process
+        """
+        if not end:
+            end = time.time()
+        value = end - start
+        if object_id == "":
+            object_id = "default"
+        if category not in self.processing_performance:
+            self.processing_performance[category] = {}
+        if not object_id in self.processing_performance[category]:
+            self.processing_performance[category][object_id] = []
+
+        self.processing_performance[category][object_id].append(value)
+        if len(self.processing_performance[category][object_id]) > 20:
+            self.processing_performance[category][object_id].pop(0)
+        self.processing_performance[category]["last_update"] = str(self.local_time()).split(".")[0]
+
+    def get_processing_performance(self, category=""):
+        """
+        Returns average processing performance information of the last 20 or all existing values
+
+        Args:
+            category (str): category of performance information
+
+        Returns:
+            dict: list of performance information
+        """
+        round_digits = 4
+        averaged_processing_performance = {}
+
+        for key in self.processing_performance:
+            if key not in averaged_processing_performance:
+                averaged_processing_performance[key] = {}
+
+            for object_id in self.processing_performance[key]:
+                if object_id != "last_update":
+                    averaged_processing_performance[key][object_id] = round(sum(self.processing_performance[key][object_id]) / len(self.processing_performance[key][object_id]), round_digits)
+                else:
+                    averaged_processing_performance[key][object_id] = self.processing_performance[key][object_id]
+
+        if category == "":
+            return averaged_processing_performance
+
+        elif category in self.processing_performance:
+            return averaged_processing_performance[category]
+
+        else:
+            self.logging.debug("get_processing_performance: category '" + str(category) + "' not found.")
+            return -1
+
+    def get_queue_size(self):
+        """
+        Calculate the size of the config queues
+
+        Returns:
+            dict: size of the config queues
+        """
+        queue_size = {"status" : 0, "edit" : 0, "range" : 0}
+        for key in self.queue.edit_queue:
+            queue_size["edit"] += len(self.queue.edit_queue[key])
+        for key in self.queue.range_queue:
+            queue_size["range"] += len(self.queue.range_queue[key])
+        for key in self.queue.status_queue:
+            queue_size["status"] += len(self.queue.status_queue[key])
+        return queue_size
+
+    def measure_status(self, init=False):
+        """
+        add db queue and db cache size to statistics
+
+        Args:
+            init (bool): initialize the statistics
+        """
+        if init:
+            self.statistics.register("config_queue_db", "DB Queue")
+            self.statistics.register("config_queue_wait", "Queue Wait [s]")
+            self.statistics.register("config_queue_write", "Queue Write [s]")
+            self.statistics.register("config_cache_size", "Cache [MB]")
+            self.statistics.register("config_cache_size_images", "Cache images [MB]")
+            self.statistics.register("config_cache_size_backup", "Cache archive [MB]")
+            self.statistics.register("srv_api_status", "API Response Status [s]")
+            self.statistics.register("config_img_video", "Video frames [fps]")
+
+        else:
+            if self.statistics and self.measure_last + self.measure_time < time.time():
+                self.measure_last = time.time()
+                queues = self.get_queue_size()
+                queue_size = 0
+                for key in queues:
+                    queue_size += queues[key]
+                self.statistics.set("config_queue_db", queue_size)
+                config_queue_write = self.get_processing_performance("config_queue_write")
+                if config_queue_write != -1 and "images" in config_queue_write:
+                    self.statistics.set("config_queue_write", config_queue_write["images"])
+                self.statistics.set("config_queue_wait", self.queue.queue_wait)
+                self.statistics.set("config_cache_size", self.db_handler.get_cache_size("all") / 1024 / 1024)
+                self.statistics.set("config_cache_size_images", self.db_handler.get_cache_size("images") / 1024 / 1024)
+                self.statistics.set("config_cache_size_backup", self.db_handler.get_cache_size("backup") / 1024 / 1024)
+                if self.get_processing_performance("api_GET") != -1 and "status" in self.get_processing_performance("api_GET"):
+                    self.statistics.set("srv_api_status", self.get_processing_performance("api_GET")["status"])
+                self.statistics.set("config_img_video", self.video_frame_count / self.statistics.get_interval())
+                self.video_frame_count = 0
+
+    def set_thread_id(self, id, name):
+        self.thread_ids[id] = name

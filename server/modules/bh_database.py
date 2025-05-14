@@ -86,7 +86,10 @@ class BirdhouseJSON(BirdhouseDbClass):
         """
         BirdhouseDbClass.__init__(self, "JSON", "DB-json", config)
         self.locked = {}
+        self.sort_keys = True
         self.connected = True
+        self.db_list = []
+        self.get_db_list()
 
         self.logging.info("Connected JSON handler.")
 
@@ -122,6 +125,7 @@ class BirdhouseJSON(BirdhouseDbClass):
         """
         self.wait_if_locked(filename)
         try:
+            start_write_time = time.time()
             file_path = filename.split("/")
             file = file_path[-1]
             path = filename.replace(file, "")
@@ -131,9 +135,10 @@ class BirdhouseJSON(BirdhouseDbClass):
                 os.makedirs(path)
 
             self.locked[filename] = True
-            with open(filename, 'wb') as json_file:
-                json.dump(data, codecs.getwriter('utf-8')(json_file), ensure_ascii=False, sort_keys=True, indent=4)
+            with open(filename, 'w', encoding='utf-8') as json_file:
+                json.dump(data, json_file, ensure_ascii=False, sort_keys=self.sort_keys, indent=4)
                 json_file.close()
+            self.config.set_processing_performance("db_write_file", "write_file", start_write_time)
             self.locked[filename] = False
             self.logging.debug("Write JSON file: " + filename)
             self.logging.debug("                 " + str(list(data.keys()))[:80])
@@ -141,6 +146,44 @@ class BirdhouseJSON(BirdhouseDbClass):
         except Exception as e:
             self.locked[filename] = False
             self.raise_error("Could not write JSON file: " + filename + " - " + str(e))
+
+    def get_db_list(self):
+        """
+        get list of all json databases in data directory
+
+        Returns:
+            list: list of all json databases
+        """
+        self.logging.debug(" - Get JSON DB list ... ")
+        json_files = []
+        directory = birdhouse_main_directories["data"]
+        count = 0
+
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                if file.endswith('.json'):
+                    parts = file.split(".")
+                    if len(parts) == 2:
+                        count += 1
+                        path = os.path.join(root, file).replace(birdhouse_main_directories["data"], "")
+                        self.logging.debug(str(count) + ". " + str(path))
+                        json_files.append(path)
+        self.db_list = json_files.copy()
+        return json_files
+
+    def delete_db(self, filename):
+        """
+        delete json database file
+
+        Args:
+            filename: file to be deleted
+        """
+        if os.path.exists(filename):
+            os.remove(filename)
+            self.logging.info("The file "+filename+" has been deleted.")
+        else:
+            self.logging.warning("The file "+filename+" does not exist.")
+        pass
 
     def exists(self, filename) -> bool:
         """
@@ -178,6 +221,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         self.basic_directory = db["db_basedir"]
         self.db_url = "http://" + db["db_usr"] + ":" + db["db_pwd"] + "@" + db["db_server"] + \
                       ":" + str(db["db_port"]) + "/"
+        self.db_list = []
 
         self.create_revisions = False
 
@@ -227,6 +271,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         check = self.check_db()
         if check:
             self.logging.info("Connected.")
+            self.get_db_list()
             return True
         else:
             self.logging.warning("Error CouchDB database check.")
@@ -255,6 +300,44 @@ class BirdhouseCouchDB(BirdhouseDbClass):
                                          "     And ensure that a swap file is available and used (see README.md).")
                     return False
         return True
+
+    def get_db_list(self):
+        """
+        get list of all databases in couch_db
+
+        Returns:
+            list: list of all databases in couch_db
+        """
+        self.logging.debug(" - Get Couch DB list ... ")
+        count = 0
+        for db_key in self.database:
+            count += 1
+            self.logging.debug(str(count) + ". " + db_key)
+            self.db_list.append(db_key)
+        return self.db_list
+
+    def delete_db(self, filename, db_key=""):
+        """
+        delete a database from couch_db
+
+        Args:
+            db_key: db_key of the database to be deleted (if empty, db_key will be translated from filename)
+            filename: filename to be translated into db_key and date (if empty, db_key will be translated from filename)
+        """
+        if db_key == "":
+            [db_key, date] = self.filename2keys(filename, "couch delete")
+            self.logging.debug("-----> DELETE DB: " + db_key + "/" + date + " - " + filename)
+        else:
+            self.logging.debug("-----> DELETE DB: " + db_key)
+
+        try:
+            if db_key in self.database:
+                self.database.delete(db_key)
+                self.logging.info("Database '"+db_key+"' deleted successfully.")
+            else:
+                self.logging.warning("Database '"+db_key+"' doesn't exist. Nothing to delete.")
+        except couchdb.http.ServerError as e:
+            self.logging.error("Error deleting database: " + str(e))
 
     def create(self, db_key):
         """
@@ -301,7 +384,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         self.logging.info("   -> DB created: " + db_key + " " + str(time.time()))
         return
 
-    def filename2keys(self, filename):
+    def filename2keys(self, filename, call=""):
         """
         translate filename to keys
 
@@ -314,6 +397,8 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         database = ""
         filename = filename.replace(self.basic_directory, "")
         filename = filename.replace(".json", "")
+        if filename.startswith("/"):
+            filename = filename[1:]
         self.logging.debug("filename2keys: " + filename)
 
         if filename in self.database_translation:
@@ -322,11 +407,23 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             self.logging.debug("  -> " + database)
         else:
             parts1 = filename.split("/")
-            parts2 = parts1[0] + "/<DATE>/" + parts1[2]
-            if parts2 in self.database_translation:
-                database = self.database_translation[parts2]
-                date = parts1[1]
-                self.logging.debug("  -> " + database + " / " + date)
+            if len(parts1) >= 3:
+                parts2 = parts1[0] + "/<DATE>/" + parts1[2]
+                if parts2 in self.database_translation:
+                    database = self.database_translation[parts2]
+                    date = parts1[1]
+                    self.logging.debug("  -> " + database + " / " + date)
+                else:
+                    database = filename.replace("/","_")
+                    database = filename.replace(".._","_")
+                    self.logging.warning("  -> " + filename + " not found in database_translation #1 ("+call+").")
+                    self.logging.debug("  -> basic directory: " + self.basic_directory)
+                    self.logging.warning("  -> use the following DB name instead: " + database)
+            else:
+                database = filename.replace("/", "_")
+                self.logging.warning("  -> " + filename + " not found in database_translation #2 ("+call+").")
+                self.logging.debug("  -> basic directory: " + self.basic_directory)
+                self.logging.warning("  -> use the following DB name instead: " + database)
 
         # experiment
         if date != "":
@@ -346,7 +443,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             dict: data from database
         """
         data = {}
-        [db_key, date] = self.filename2keys(filename)
+        [db_key, date] = self.filename2keys(filename, "couch read")
         self.logging.debug("-----> READ DB: " + db_key + "/" + date + " - " + filename)
 
         if db_key == "":
@@ -388,7 +485,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
             create (bool): create database if not exists
             retry (bool): retry after error
         """
-        [db_key, date] = self.filename2keys(filename)
+        [db_key, date] = self.filename2keys(filename, "couch write")
         self.logging.debug("-----> WRITE: " + filename + " (" + self.basic_directory + ")")
         self.logging.debug("-----> WRITE DB: " + db_key + "/" + date)
 
@@ -458,7 +555,7 @@ class BirdhouseCouchDB(BirdhouseDbClass):
         Returns:
             bool: status if database exists
         """
-        [db_key, date] = self.filename2keys(filename)
+        [db_key, date] = self.filename2keys(filename, "couch exists")
         self.logging.debug("-----> CHECK DB: " + db_key + "/" + date)
 
         if db_key == "":

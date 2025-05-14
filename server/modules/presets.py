@@ -43,11 +43,14 @@ def set_global_configuration():
         "couchdb_port": "COUCHDB_PORT",
         "database_type": "DATABASE_TYPE",
         "database_cleanup": "DATABASE_DAILY_CLEANUP",
+        "database_cache": "DATABASE_CACHE",
+        "database_cache_archive": "DATABASE_CACHE_ARCHIVE",
         "detection_active": "OBJECT_DETECTION",
         "dir_project": "BIRDHOUSE_DIR_PROJECT",
         "dir_logging": "BIRDHOUSE_DIR_LOGGING",
         "http_server": "BIRDHOUSE_HTTP_SERVER",
         "installation_type": "BIRDHOUSE_INSTALLATION_TYPE",
+        "restart_server": "RESTART_SERVER",
         "log_level": "BIRDHOUSE_LOG_LEVEL",
         "log_level_debug": "BIRDHOUSE_LOG_DEBUG",
         "log_level_info": "BIRDHOUSE_LOG_INFO",
@@ -64,6 +67,8 @@ def set_global_configuration():
         "test_instance": "BIRDHOUSE_INSTANCE",
         "test_video_devices": "BIRDHOUSE_VIDEO_DEVICE_TEST",
         "which_instance": "BIRDHOUSE_INSTANCE",
+        "statistics_threads": "STATISTICS_THREADS",
+        "statistics_error": "STATISTICS_ERROR",
     }
 
     birdhouse_env = {}
@@ -73,7 +78,8 @@ def set_global_configuration():
             print('Value in .env not found: ' + str(birdhouse_env_keys[key]))
 
     for key in ["database_cleanup", "rpi_active", "rpi_64bit", "detection_active", "log_to_file",
-                "test_video_devices"]:
+                "test_video_devices", "database_cache", "database_cache_archive",
+                "statistics_threads","statistics_error"]:
         if birdhouse_env[key] is not None:
             birdhouse_env[key] = str(birdhouse_env[key]).lower() in ("true", "1", "yes", "on")
 
@@ -308,6 +314,7 @@ birdhouse_main_directories = {
     "app": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "app"),
     "log": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "log"),
     "data": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data"),
+    "images": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data/images"),
     "download": os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data/downloads")
 }
 
@@ -342,7 +349,7 @@ birdhouse_loglevel_modules_all = [
     'cam-main', 'cam-img', 'cam-pi', 'cam-ffmpg', 'cam-video', 'cam-out', 'cam-other', 'cam-object', 'cam-stream',
     'cam-handl', 'cam-info', 'statistics',
     'config', 'config-Q',
-    'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors',
+    'DB-text', 'DB-json', 'DB-couch', 'DB-handler', 'image', 'mic-main', 'sensors', 'relay',
     'video', 'video-srv', "img-eval",
     'views', 'view-head', 'view-chart', 'view-fav', 'view-arch', 'view-obj',
     'weather', 'weather-py', 'weather-om']
@@ -358,12 +365,13 @@ birdhouse_loglevel_modules_error = []
 # ------------------------------------
 camera_list = []
 birdhouse_env = {}
-birdhouse_status = {"object_detection": False}
+birdhouse_status = {"object_detection": False, "object_detection_details": ""}
 birdhouse_picamera = False
-birdhouse_cache = True
-birdhouse_cache_for_archive = False
 
 set_global_configuration()
+
+birdhouse_cache = birdhouse_env["database_cache"]
+birdhouse_cache_for_archive = birdhouse_env["database_cache_archive"]
 
 # ------------------------------------
 # database configuration
@@ -388,7 +396,7 @@ birdhouse_pages = {
     "today": ("Heute", "/list_short.html", "TODAY"),
     "today_complete": ("Alle heute", "/list_new.html", "TODAY_COMPLETE"),
     "favorit": ("Favoriten", "/list_star.html", "FAVORITES"),
-    "cam_info": ("Ger&auml;te", "/cameras.html", "DEVICES"),
+    "cam_info": ("Einstellungen", "/cameras.html", "SETTINGS"),
     "video_info": ("Video Info", "/video-info.html", ""),
     "videos": ("Videos", "/videos.html", "VIDEOS"),
     "object": ("Birds", "/birds.html", "BIRDS"),
@@ -413,11 +421,13 @@ birdhouse_directories = {
     "backup_info": "images/",
     "html": "../app/",
     "data": "../data/",
+    "downloads": "downloads/",
     "main": "",
     "images": "images/",
     "favorites": "images/",
     "sensor": "images/",
     "statistics": "other/",
+    "statistics_archive": "images/",
     "today": "00_today/",
     "objects": "images/",
     "custom_models": "custom_models/",
@@ -437,22 +447,23 @@ birdhouse_files = {
     "videos": "config_videos.json",
     "sensor": "config_sensor.json",
     "statistics": "config_statistics.json",
+    "statistics_archive": "config_statistics.json",
     "weather": "config_weather.json"
 }
 birdhouse_dir_to_database = {
-    birdhouse_directories["main"] + "config": "config",
-    birdhouse_directories["main"] + "birds": "birds",
-    birdhouse_directories["backup"] + "config_backup": "archive_images",
-    birdhouse_directories["favorites"] + "config_favorites": "favorites",
-    birdhouse_directories["objects"] + "config_objects": "objects",
-    birdhouse_directories["sensor"] + "config_sensor": "today_sensors",
-    birdhouse_directories["statistics"] + "config_statistics": "today_statistics",
-    birdhouse_directories["videos"] + "config_videos": "archive_videos",
-    birdhouse_directories["weather"] + "config_weather": "today_weather",
-    birdhouse_directories["images"] + "<DATE>/config_images": "archive_images",
-    birdhouse_directories["images"] + "<DATE>/config_statistics": "archive_statistics",
-    birdhouse_directories["images"] + "<DATE>/config_sensors": "archive_sensors",
-    birdhouse_directories["images"] + "<DATE>/config_weather": "archive_weather",
+    birdhouse_directories["main"] + "config":                           "config",
+    birdhouse_directories["main"] + "birds":                            "birds",
+    birdhouse_directories["favorites"] + "config_favorites":            "favorites",
+    birdhouse_directories["objects"] + "config_objects":                "objects",
+    birdhouse_directories["sensor"] + "config_sensor":                  "today_sensors",
+    birdhouse_directories["statistics"] + "config_statistics":          "today_statistics",
+    birdhouse_directories["weather"] + "config_weather":                "today_weather",
+    birdhouse_directories["backup"] + "config_backup":                  "archive_images",
+    birdhouse_directories["videos"] + "config_videos":                  "archive_videos",
+    birdhouse_directories["images"] + "<DATE>/config_images":           "archive_images",
+    birdhouse_directories["images"] + "<DATE>/config_statistics":       "archive_statistics",
+    birdhouse_directories["images"] + "<DATE>/config_sensor":           "archive_sensors",
+    birdhouse_directories["images"] + "<DATE>/config_weather":          "archive_weather",
     birdhouse_directories["images"] + birdhouse_directories["today"] + "config_images": "today_images"
 }
 
@@ -503,6 +514,12 @@ birdhouse_weather = {
 }
 birdhouse_default_cam = {
     "type": "default",
+    "camera_light": {
+        "switch": "relay1",
+        "mode": "auto",
+        "mode_values": ["on", "off", "auto", "manual"],
+        "threshold": 25
+    },
     "name": "NAME",
     "source": "/dev/video0",
     "source_id": None,
@@ -511,8 +528,10 @@ birdhouse_default_cam = {
     "record": True,
     "record_micro": "",
     "image": {
+        "black_white": False,
         "crop": (0.1, 0.0, 0.85, 1.0),
         "resolution": "800x600",
+        "color_schema": "BGR",
         "show_framerate": True,
         "framerate": 8,
         "saturation": 50,
@@ -546,7 +565,8 @@ birdhouse_default_cam = {
         "classes": [],
         "detection_size": 40,
         "live": False,
-        "model": "yolov5m",
+        "model": "yolo11n",
+        "similarity": False,
         "threshold": 50
     },
     "video": {
@@ -564,7 +584,7 @@ birdhouse_default_cam1["record_micro"] = "mic1"
 birdhouse_default_cam2 = birdhouse_default_cam.copy()
 birdhouse_default_cam2["name"] = "Outside"
 birdhouse_default_cam2["source"] = "/dev/video1"
-birdhouse_default_cam2["image_save"]["offset"] = "5"
+birdhouse_default_cam2["image_save"]["rhythm_offset"] = "5"
 birdhouse_default_cam2["image_save"]["record_from"] = "sunrise+0"
 birdhouse_default_cam2["image_save"]["record_to"] = "sunset+0"
 
@@ -592,6 +612,14 @@ birdhouse_default_sensor = {
         "humidity": "%"
     }
 }
+
+birdhouse_default_relay = {
+    "active": False,
+    "name": "IR Light cam1",
+    "pin": 17,
+    "type": "JQC3F"
+}
+
 birdhouse_preset = {
     "backup": {
         "preview": "0700",  # HHMM
@@ -600,14 +628,17 @@ birdhouse_preset = {
     },
     "devices": {
         "cameras": {
-            "cam1": birdhouse_default_cam1,
-            "cam2": birdhouse_default_cam2
+            "cam1": birdhouse_default_cam1.copy(),
+            "cam2": birdhouse_default_cam2.copy()
         },
         "microphones": {
-            "mic1": birdhouse_default_micro
+            "mic1": birdhouse_default_micro.copy()
         },
         "sensors": {
-            "sensor1": birdhouse_default_sensor
+            "sensor1": birdhouse_default_sensor.copy()
+        },
+        "relays": {
+            "relay1": birdhouse_default_relay.copy()
         }
     },
     "info": {},
@@ -636,9 +667,14 @@ birdhouse_preset = {
         "location": "Munich",
         "gps_location": [48.14, 11.58, "Munich"],
         "source": "Open-Metheo",
-        "available_sources": ["Python-Weather", "Open-Metheo"]
+        "available_sources": ["Python-Weather", "Open-Metheo"],
+        "last_sunrise": "00:00",
+        "last_sunset": "00:00",
+        "last_sun_update": ""
     }
 }
+birdhouse_preset["devices"]["cameras"]["cam1"]["image_save"]["rhythm_offset"] = "0"
+birdhouse_preset["devices"]["cameras"]["cam2"]["image_save"]["rhythm_offset"] = "5"
 
 birdhouse_client_presets = {
     "filename": "config_stage.js",
@@ -666,7 +702,7 @@ file_types = {
     '.jpeg': 'image/jpg',
 }
 
-detection_default_models = ["yolov8n", "yolov8s", "yolov8m", "yolov8l", "yolov8x"]
+detection_default_models = ["yolov8n", "yolov8s", "yolov8m", "yolov8l", "yolo11n", "yolo11s", "yolo11m", "yolo11l"]
 detection_custom_model_path = os.path.join(birdhouse_main_directories["data"],
                                            birdhouse_directories["custom_models"])
 detection_custom_models = glob.glob(os.path.join(detection_custom_model_path, "*.pt"))

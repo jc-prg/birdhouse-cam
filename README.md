@@ -1,4 +1,4 @@
-# Birdhouse Camera v1.1.0
+# Birdhouse Camera v1.2.0
 
 Raspberry Pi project to observe our birdhouse with two webcams: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, 
@@ -21,6 +21,7 @@ app in English and German, ...
 8. [Other sources](#other-sources)
 
 
+
 ## Impressions
 
 <img src="info/images/birdcam_002.PNG" width="19%"> <img src="info/images/birdcam_003.PNG" width="19%"> <img 
@@ -29,7 +30,7 @@ app in English and German, ...
 <img src="info/images/birdcam_023.PNG" width="19%"> <img src="info/images/birdcam_025.PNG" width="19%"> <img 
      src="info/images/birdcam_032.PNG" width="19%"> <img src="info/images/birdcam_033.PNG" width="19%"> <img 
      src="info/images/birdcam_100.PNG" width="19%">
-
+[notes.md](notes.md)
 Find further impressions [here](info/impressions.md).
 
 
@@ -37,8 +38,9 @@ Find further impressions [here](info/impressions.md).
 
 * **Birdhouse web-app for Browser and SmartPhone** (English and German, optimized for iPhone)
 * **Watching live stream** with 1 or 2 cameras (RPi4 recommend for fluent stream) 
-  * via Raspberry Pi camera
-  * USB web cam (e.g. RPi cam inside and USB web cam outside)
+  * _INSIDE_: Raspberry Pi camera with IR light  or USB camera that supports IR light 
+  * _OUTSIDE_: USB webcam (optimal viewing angle dependens on distance between birdhouse and camera)
+  * Light switch support, using the JQC3F relay, e.g., for an IR light inside the birdhouse
 * **Continuously recording photos**
   * e.g. every 20 seconds from sunrise to 20:00 local time (configurable in the device settings)
   * Similarity detection, filter photos with movement in a defined area (visualize differences)
@@ -71,9 +73,10 @@ Find further impressions [here](info/impressions.md).
   * Deny recording and admin functionality for specific IP addresses (e.g. router or proxy, to deny for access from the internet) or use password to login as administrator
   * Edit server settings (partly, other settings define in file .env)
   * Edit device settings, reconnect devices (devices must be added via config file)
-  * Edit camera and image settings (contrast, saturation, hue, brightness ...)
+  * Edit camera and image settings (contrast, saturation, hue, brightness, ...)
   * See amount of currently active streams
   * Download archived data (hires, config-files, object detection as YOLOv8)
+  * Statistics (streams & frame rates, viewing time, CPU usage & temperature, HDD usage, ...)
 * **Forwarding web-app** as entry point for one or more birdhouses using IPv6 addresses
 
 ## Birdhouse
@@ -86,12 +89,13 @@ Here are some options. Calculate with a little bit more space in the height for 
 ## Technology
 
 * IT Hardware
-  * Raspberry Pi 3B+, Raspberry Pi 4 (recommended for two cameras and/or object detection)
+  * Raspberry Pi 4 (recommended for two cameras and/or object detection) or Raspberry Pi 3B+ (if only inside view)
   * Micro SD with 64 GByte
-  * USB camera for outside view (and maybe inside view)
-  * _optional:_ PiCamera with IR for the inside view (wide-angle, e.g., 110°)
+  * USB camera for outside view and/or inside view (recommendation for inside view: HBVCAM-F20216HD 92° viewing angle)
+  * _optional:_ PiCamera with IR for the inside view (wide-angle min. 100°)
   * _optional:_ Small USB Microphone
-  * _optional:_ DHT11 / DHT22 Sensor
+  * _optional:_ DHT11 / DHT22 Sensor (DHT22 if used for temperatures below 0 °C)
+  * _optional:_ JQC3F relay to switch on/off a camera light (e.g. IR light of the RPi camera)
 * Software
   * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, YOLOv8
   * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
@@ -132,7 +136,7 @@ Depending on the needs there are three options available how to install and run 
 
 *  [(1) Docker based installation](#1-docker-based-installation) - the easiest way to install and run the birdhouse-cam, 
   but with limitations: you have to decide if you want to use a PiCamera on a 32bit OS or 
-  object detection with 64bit OS.
+  object detection with 64bit OS. On 32bit systems the server functionality is limited, e.g., audio streaming (mp3 via lameenc) doesn't work. 
 * [(2) Direct installation](#2-direct-installation) - complete installation of all components with a bigger effort but without the limitations of (1)
 * [(3) Hybrid installation](#3-hybrid-installation) - combination with less effort than (2) and without the limitations
   of (1), recommend if you want to use PiCamera and object detection

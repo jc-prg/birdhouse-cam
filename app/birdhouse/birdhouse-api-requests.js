@@ -127,6 +127,11 @@ function birdhouse_reconnectCamera(camera) {
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerReconnect,'','birdhouse_reconnectCamera');
 	}
 
+function birdhouse_reconnectMicrophone(micro) {
+	commands = ["reconnect-microphone",micro];
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerReconnect,'','birdhouse_reconnectMicrophone');
+	}
+
 function birdhouse_cameraSettings(camera, key, value) {
 	commands = ["camera-settings", key, value, camera];
 	birdhouse_apiRequest('POST', commands, '', '','','birdhouse_cameraSettings');
@@ -275,6 +280,11 @@ function birdhouse_recordStopAudio(micro) {
     birdhouse_apiRequest('POST',commands,"","","","birdhouse_recordStopAudio");
 }
 
+function birdhouse_relayOnOff(relay, on_off) {
+	commands = ["relay-"+on_off,relay];
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_relayOnOff');
+}
+
 function birdhouse_forceBackup(camera) {
 	commands = ["force-backup",camera];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceBackup');
@@ -288,7 +298,7 @@ function birdhouse_forceUpdateViews(view="all", complete=false) {
 
 function birdhouse_forceRestart() {
 
-    appMsg.confirm("Restart Birdhouse-Server?", "birdhouse_forceRestart_exec();", 250);
+    appMsg.confirm("Restart Birdhouse-Server?", "birdhouse_forceRestart_exec();", 150);
     }
 
 function birdhouse_forceRestart_exec() {
@@ -296,8 +306,22 @@ function birdhouse_forceRestart_exec() {
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceRestart');
 	}
 
+function birdhouse_forceShutdown() {
+
+    appMsg.confirm("<font color='red'><b>Shutdown</b></font> Birdhouse-Server?", "birdhouse_forceShutdown_exec();", 150);
+    }
+
+function birdhouse_forceShutdown_exec() {
+	commands = ["force-shutdown"];
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceShutdown');
+	}
+
 function birdhouse_killStream(camera_id, stream_id) {
+
+// !!!! Still kills things that are produced somehow even if not necessary?!
+
     console.log("birdhouse_killStream: "+camera_id+" - "+stream_id);
+	birdhouse_active_video_streams[stream_id] = false;
     camera_id = camera_id.replace("_img", "");
     stream_id = stream_id.replace("_img", "");
 	commands = ["kill-stream", stream_id, camera_id];
@@ -308,6 +332,9 @@ function birdhouse_killStreamAnswer(data) {
     if (data["kill-stream-id"] && birdhouse_active_video_streams[data["kill-stream-id"]] != undefined) {
         birdhouse_active_video_streams[data["kill-stream-id"]] = false;
         console.log("birdhouse_killStreamAnswer: killed stream " + data["kill-stream"] + "; id=" + data["kill-stream-id"]);
+        }
+    else if (data["kill-stream-id"] && birdhouse_active_video_streams[data["kill-stream-id"]] == undefined) {
+        console.warn("birdhouse_killStreamAnswer: requested ID wasn't available any more.");
         }
     else {
         console.error("birdhouse_killStreamAnswer: unexpected data returned.");
@@ -440,12 +467,12 @@ function birdhouse_getCameraParam(camera) {
 }
 
 function birdhouse_showCameraParam(data) {
-    camera = data["DATA"]["active"]["active_cam"];
+    camera = data["DATA"]["active_cam"];
     birdhouseStatus_cameraParam(data, camera);
 }
 
 function birdhouse_showWeather() {
-	commands = ["status"];
+	commands = ["WEATHER"];
 	birdhouse_apiRequest('GET', commands, '', birdhouseWeather,'','birdhouseWeather');
 }
 
@@ -455,8 +482,8 @@ function birdhouse_birdNamesRequest() {
 }
 
 function birdhouse_birdNamesSet(data) {
+    //console.log(app_bird_names);
     app_bird_names = data["DATA"]["data"]["birds"];
-    console.log(app_bird_names);
 }
 
 function birdhouse_AnswerDelete(data) {

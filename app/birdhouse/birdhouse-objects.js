@@ -63,7 +63,7 @@ function birdhouse_OBJECTS(title, data) {
 
         var day_count = 0;
         Object.entries(value["detections"]["default_dates"]).forEach(([camera, date_list])=>{
-            date_list.sort();
+            date_list.sort().reverse();
             for (var k=0;k<date_list.length;k++) {
                 var stamp      = date_list[k];
                 var date       = stamp.substring(6,8) + "." + stamp.substring(4,6) + "." + stamp.substring(2,4);
