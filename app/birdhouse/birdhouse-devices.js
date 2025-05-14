@@ -655,6 +655,8 @@ function birdhouseDevices_microphones(data) {
 	    }
 	}
 	for (let micro in micros) {
+        var onclick_micro    = "birdhouse_reconnectMicrophone('"+micro+"');";
+
 	    micro_name = micro.toUpperCase() + ": " + micros[micro]["name"];
 
 	    index_info[micro_name] = {};
@@ -726,8 +728,10 @@ function birdhouseDevices_microphones(data) {
         html_temp += tab.end();
         html_entry += birdhouse_OtherGroup( micro + "_error", "Status", html_temp, false );
 
+        var reconnect =  "<button onclick=\""+onclick_micro+"\" class=\"button-video-edit\">&nbsp;"+lang("RECONNECT_MICRO")+"&nbsp;</button> &nbsp; ";
+
 		html_entry += "<hr/>";
-		html_entry += "<center>"+birdhouse_edit_save(id="edit_"+micro, id_list)+"</center>";
+		html_entry += "<center>" + reconnect + birdhouse_edit_save(id="edit_"+micro, id_list) + "</center>";
 
         html_entry += "</div></div>";
 

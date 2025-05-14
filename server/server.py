@@ -422,7 +422,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             "archive-object-detection", "archive-remove-day", "archive-remove-list", "recreate-image-config",
                             "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "WEATHER", "relay-on", "relay-off",
                             "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS", "python-pkg",
-                            "STATISTICS"]
+                            "STATISTICS", "reconnect-microphone"]
 
             param["session_id"] = elements[2]
             param["command"] = elements[3]
@@ -589,6 +589,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = backup.download_files(param, body_data)
         elif param["command"] == "reconnect-camera":
             response = camera[which_cam].reconnect()
+        elif param["command"] == "reconnect-microphone":
+            which_mic = param["parameter"][0]
+            if which_mic in microphones:
+                response = microphones[which_mic].reconnect()
+            else:
+                response = {}
+                srv_logging.warning("reconnect-microphone: " + which_mic + " not found.")
         elif param["command"] == "camera-settings":
             response = camera[which_cam].get_camera_settings(param)
         elif param["command"] == "start-recording":

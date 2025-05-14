@@ -127,6 +127,11 @@ function birdhouse_reconnectCamera(camera) {
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerReconnect,'','birdhouse_reconnectCamera');
 	}
 
+function birdhouse_reconnectMicrophone(micro) {
+	commands = ["reconnect-microphone",micro];
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerReconnect,'','birdhouse_reconnectMicrophone');
+	}
+
 function birdhouse_cameraSettings(camera, key, value) {
 	commands = ["camera-settings", key, value, camera];
 	birdhouse_apiRequest('POST', commands, '', '','','birdhouse_cameraSettings');
