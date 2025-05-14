@@ -62,7 +62,8 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         self.ffmpeg_create_av_test = self.ffmpeg_command + \
                                 "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
                                 "-ar {SAMPLERATE} -i {INPUT_AUDIO_FILENAME} " + \
-                                "-c:v " + self.output_codec["video-codec"] + " " + \
+                                 "-filter_complex \"[1:a]adeclick[aud]\"  -map 0:v -map \"[aud]\" " + \
+                                 "-c:v " + self.output_codec["video-codec"] + " " + \
                                 "-c:a " + self.output_codec["audio-codec"] + " " + \
                                 "-crf " + str(self.output_codec["crf"]) + " " + \
                                 "{OUTPUT_FILENAME}"
@@ -70,6 +71,7 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         self.ffmpeg_create_av = self.ffmpeg_command + \
                                 "-f image2 -r {FRAMERATE} -i {INPUT_FILENAMES} " + \
                                 "-i {INPUT_AUDIO_FILENAME} " + \
+                                "-af adeclick " + \
                                 "-c:v " + self.output_codec["video-codec"] + " " + \
                                 "-c:a " + self.output_codec["audio-codec"] + " " + \
                                 "-crf " + str(self.output_codec["crf"]) + " " + \

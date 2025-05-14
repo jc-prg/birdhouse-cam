@@ -528,6 +528,7 @@ birdhouse_default_cam = {
     "record": True,
     "record_micro": "",
     "image": {
+        "black_white": False,
         "crop": (0.1, 0.0, 0.85, 1.0),
         "resolution": "800x600",
         "color_schema": "BGR",
@@ -627,17 +628,17 @@ birdhouse_preset = {
     },
     "devices": {
         "cameras": {
-            "cam1": birdhouse_default_cam1,
-            "cam2": birdhouse_default_cam2
+            "cam1": birdhouse_default_cam1.copy(),
+            "cam2": birdhouse_default_cam2.copy()
         },
         "microphones": {
-            "mic1": birdhouse_default_micro
+            "mic1": birdhouse_default_micro.copy()
         },
         "sensors": {
-            "sensor1": birdhouse_default_sensor
+            "sensor1": birdhouse_default_sensor.copy()
         },
         "relays": {
-            "relay1": birdhouse_default_relay
+            "relay1": birdhouse_default_relay.copy()
         }
     },
     "info": {},
@@ -672,6 +673,8 @@ birdhouse_preset = {
         "last_sun_update": ""
     }
 }
+birdhouse_preset["devices"]["cameras"]["cam1"]["image_save"]["rhythm_offset"] = "0"
+birdhouse_preset["devices"]["cameras"]["cam2"]["image_save"]["rhythm_offset"] = "5"
 
 birdhouse_client_presets = {
     "filename": "config_stage.js",

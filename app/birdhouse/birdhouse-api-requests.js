@@ -308,7 +308,7 @@ function birdhouse_forceRestart_exec() {
 
 function birdhouse_forceShutdown() {
 
-    appMsg.confirm("Shutdown Birdhouse-Server?", "birdhouse_forceShutdown_exec();", 150);
+    appMsg.confirm("<font color='red'><b>Shutdown</b></font> Birdhouse-Server?", "birdhouse_forceShutdown_exec();", 150);
     }
 
 function birdhouse_forceShutdown_exec() {

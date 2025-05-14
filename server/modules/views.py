@@ -716,10 +716,10 @@ class BirdhouseViewFavorite(BirdhouseClass):
             files: dict = self.config.db_handler.read(config="images")
             files_complete["files"] = files.copy()
 
-        elif self.config.db_handler.exists(config="backup", date=date):
+        elif self.config.db_handler.exists(config="backup", date=date, db_type="both"):
             today = False
             category = "/backup/" + date + "/"
-            files_complete = self.config.db_handler.read(config="backup", date=date)
+            files_complete = self.config.db_handler.read(config="backup", date=date, db_type="both")
             self.logging.debug("  -> " + category + " ... " + str(files_complete.keys()))
 
             if "files" in files_complete:
@@ -728,7 +728,7 @@ class BirdhouseViewFavorite(BirdhouseClass):
             else:
                 files["error"] = True
         else:
-            self.logging.warning("  -> Could not read favorites from " + category + ", no data available.")
+            self.logging.warning("  -> Could not read favorites from " + category + " (" + date + "), no data available.")
             return {}
 
         if complete:

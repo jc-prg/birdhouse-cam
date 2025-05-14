@@ -349,8 +349,11 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         filename = self.file_path(config, date)
         self.logging.debug("-----> Check DB exists: " + filename)
 
-        if db_type != "":
+        if db_type == "":
             db_type = self.db_type
+        if self.couch is None and db_type != "json":
+            self.logging.warning("DB type '" + db_type + "' is currently not available, switch to 'json'.")
+            db_type = "json"
 
         if db_type == "json":
             if_exists = os.path.isfile(filename)
@@ -381,7 +384,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
                 return True
         return False
 
-    def read(self, config="", date="", filename="", write_other=True):
+    def read(self, config="", date="", filename="", write_other=True, db_type=""):
         """
         read data from database (for all db types)
 
@@ -390,10 +393,17 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             date (str): date of database if required (format: YYYYMMDD)
             filename (str): filename of database file (if not specified, use config name)
             write_other (bool): write other data to other DB type if type is couch or both
+            db_type (str): type of database if not current settings (couch, json, both)
         Returns:
             dict: complete data from database
         """
         result = {}
+        if db_type == "":
+            db_type = self.db_type
+        if self.couch is None and db_type != "json":
+            self.logging.warning("DB type '" + db_type + "' is currently not available, switch to 'json'.")
+            db_type = "json"
+
         if filename == "" and config != "":
             self.logging.debug("Reading data from database " + config + " / " + date + " (config) ...")
             filename = self.file_path(config, date)
@@ -403,13 +413,13 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             self.logging.warning("No DB specified to read data from!")
             return result
 
-        if self.db_type == "json":
+        if db_type == "json":
             result = self.json.read(filename)
 
         elif "config.json" in filename:
             result = self.json.read(filename)
 
-        elif write_other and self.db_type == "couch" or self.db_type == "both":
+        elif write_other and db_type == "couch" or db_type == "both":
 
             if not self.couch.exists(filename) and self.json.exists(filename):
                 result = self.json.read(filename)
@@ -425,11 +435,11 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             if result == {}:
                 result = self.json.read(filename)
 
-        elif self.db_type == "couch":
+        elif db_type == "couch":
             result = self.couch.read(filename)
 
         else:
-            self.raise_error("Unknown DB type (" + str(self.db_type) + ")")
+            self.raise_error("Unknown DB type (" + str(db_type) + "|" + self.db_type + ")")
 
         return result.copy()
 
@@ -988,15 +998,15 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                             count_entries += 1
 
                             if key == "info":
-                                self.logging.info(" +++> " + command + " +++ " + key)
+                                self.logging.debug(" +++> " + command + " +++ " + key)
                                 file_info = entry.copy()
 
                             elif key == "detection":
-                                self.logging.info(" +++> " + command + " +++ " + key)
+                                self.logging.debug(" +++> " + command + " +++ " + key)
                                 detection_info = entry.copy()
 
                             else:
-                                self.logging.info(" +++> " + command + " +++ " + key)
+                                self.logging.debug(" +++> " + command + " +++ " + key)
 
                                 if command == "add" or command == "edit":
                                     entries[key] = entry
@@ -1656,7 +1666,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.main_directory = main_directory
         if self.db_handler.exists("main"):
             self.param = self.db_handler.read("main")
-        if not self.db_handler.exists("main") or self.param == {}:
+        if not self.db_handler.exists("main", "", "json") or self.param == {}:
+            self.logging.warning("Main configuration doesn't exist yet (data/config.json).")
             self.main_config_create()
 
         # read main config, modify status info
@@ -1847,30 +1858,35 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                 value = value.replace("-dev-v4l-by-id-", "/dev/v4l/by-id/")
                 value = value.replace("-dev-", "/dev/")
 
-            if ":" not in key:
-                if param[key] != value:
-                    param[key] = value
-                    difference.append(key)
-            elif len(keys) == 2:
-                if param[keys[0]][keys[1]] != value:
-                    param[keys[0]][keys[1]] = value
-                    difference.append(keys[0]+":"+keys[1])
-            elif len(keys) == 3:
-                if param[keys[0]][keys[1]][keys[2]] != value:
-                    param[keys[0]][keys[1]][keys[2]] = value
-                    difference.append(keys[0]+":"+keys[1]+":"+keys[2])
-            elif len(keys) == 4:
-                if param[keys[0]][keys[1]][keys[2]][keys[3]] != value:
-                    param[keys[0]][keys[1]][keys[2]][keys[3]] = value
-                    difference.append(keys[0] + ":" + keys[1] + ":" + keys[2] + ":" + keys[3])
-            elif len(keys) == 5:
-                if param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]] != value:
-                    param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]] = value
-                    difference.append(keys[0] + ":" + keys[1] + ":" + keys[2] + ":" + keys[3] + ":" + keys[4])
-            elif len(keys) == 6:
-                if param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]][keys[5]] != value:
-                    param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]][keys[5]] = value
-                    difference.append(keys[0] + ":" + keys[1] + ":" + keys[2] + ":" + keys[3] + ":" + keys[4] + ":" + keys[5])
+            try:
+                if ":" not in key:
+                    if param[key] != value:
+                        param[key] = value
+                        difference.append(key)
+                elif len(keys) == 2:
+                    if param[keys[0]][keys[1]] != value:
+                        param[keys[0]][keys[1]] = value
+                        difference.append(keys[0]+":"+keys[1])
+                elif len(keys) == 3:
+                    if param[keys[0]][keys[1]][keys[2]] != value:
+                        param[keys[0]][keys[1]][keys[2]] = value
+                        difference.append(keys[0]+":"+keys[1]+":"+keys[2])
+                elif len(keys) == 4:
+                    if param[keys[0]][keys[1]][keys[2]][keys[3]] != value:
+                        param[keys[0]][keys[1]][keys[2]][keys[3]] = value
+                        difference.append(keys[0] + ":" + keys[1] + ":" + keys[2] + ":" + keys[3])
+                elif len(keys) == 5:
+                    if param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]] != value:
+                        param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]] = value
+                        difference.append(keys[0] + ":" + keys[1] + ":" + keys[2] + ":" + keys[3] + ":" + keys[4])
+                elif len(keys) == 6:
+                    if param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]][keys[5]] != value:
+                        param[keys[0]][keys[1]][keys[2]][keys[3]][keys[4]][keys[5]] = value
+                        difference.append(keys[0] + ":" + keys[1] + ":" + keys[2] + ":" + keys[3] + ":" + keys[4] + ":" + keys[5])
+
+            except Exception as e:
+                self.logging.warning("Could not decompose keys (" + str(keys) + "): " + str(e))
+                self.logging.warning("Check and add missing keys in your config file or start with a new config file.")
 
         return param, difference
 
@@ -2036,7 +2052,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
                                     data["info"]["migration_time"] = backup_date
                                     self.param = data
                                 #self.db_handler.json.write(filename=filename.replace(".json", "." + backup_date + "_C.json"), data=data, create=True)
-                                self.db_handler.json.write(filename=filename.replace(".json", "." + backup_date + "_B.json"), data=data_bu, create=True)
+                                #self.db_handler.json.write(filename=filename.replace(".json", "." + backup_date + "_B.json"), data=data_bu, create=True)
                                 self.db_handler.json.write(filename=filename, data=data, create=True)
 
                 self.logging.warning("NOT FULLY IMPLEMENTED YET: change from " + str(self.last_db_type) + " to " + str(self.db_type))
