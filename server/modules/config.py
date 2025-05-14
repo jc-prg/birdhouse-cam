@@ -334,30 +334,34 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
             os.mkdir(self.directory(config, date))
             self.logging.info("OK.")
 
-    def exists(self, config, date=""):
+    def exists(self, config, date="", db_type=""):
         """
         check if file or DB exists
 
         Args:
             config (str): database name
             date (str): date of database if required (format: YYYYMMDD)
+            db_type (str): type of database if not current settings (couch, json, both)
         Returns:
-            bool: status if dir exists
+            bool: status if database exists
         """
         if_exists = False
         filename = self.file_path(config, date)
-        self.logging.debug(filename)
+        self.logging.debug("-----> Check DB exists: " + filename)
 
-        if self.db_type == "json":
+        if db_type != "":
+            db_type = self.db_type
+
+        if db_type == "json":
             if_exists = os.path.isfile(filename)
-        elif self.db_type == "couch":
+        elif db_type == "couch":
             if_exists = self.couch.exists(filename)
-        elif self.db_type == "both":
+        elif db_type == "both":
             if_exists = self.couch.exists(filename)
             if not if_exists:
                 if_exists = os.path.isfile(filename)
 
-        self.logging.debug("-----> Check DB exists: " + str(if_exists) + " (" + self.db_type + " | " + filename + ")")
+        self.logging.debug("-----> Check DB exists: " + str(if_exists) + " (" + db_type + " | " + filename + ")")
         return if_exists
 
     def exists_in_cache(self, config, date=""):
@@ -405,7 +409,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         elif "config.json" in filename:
             result = self.json.read(filename)
 
-        elif write_other and self.db_type == "couch" or self.db_type == "both":
+        elif (write_other and self.db_type == "couch") or self.db_type == "both":
 
             if not self.couch.exists(filename) and self.json.exists(filename):
                 result = self.json.read(filename)
@@ -439,14 +443,9 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         Returns:
             dict: complete data from database in cache
         """
-        #if not birdhouse_cache_for_archive and not birdhouse_cache:
-        #    if not birdhouse_cache:
-        #        return self.read(config, date)
-        #    elif (config == "backup" or config == "images") and date != "":
-        #        return self.read(config, date)
-
         if not self.cache_active:
             return self.read(config, date)
+
         elif not self.cache_active and date != "" and config == "images":
             return self.read(config, date)
 
