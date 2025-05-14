@@ -8,19 +8,19 @@ var app_setting_count        = 4;
 var app_setting_style        = "frame_column wide";
 var app_setting_style_header = "setting_bg header";
 
-var app_last_load         = 0;
-var app_title             = "jc://birdhouse/";
-var app_version           = "v1.2.1";
-var app_api_version       = "N/A";
-var app_api_dir           = "api/";
-var app_api_status        = "status";
-var app_reload_interval   = 5;
-var app_loading_image     = "birdhouse/img/bird.gif"; // source: https://gifer.com/en/ZHug
-var app_error_connect_image = "birdhouse/img/camera_na_server.jpg";
-var app_unique_stream_url = true;			// doesn't work for chrome (assumption: mjpeg-streams are not closed correctly)
-var app_unique_stream_id  = new Date().getTime();     // new ID per App-Start
-var app_session_id        = "";
-var app_status_commands   = ["last-answer"];
+var app_last_load            = 0;
+var app_title                = "jc://birdhouse/";
+var app_version              = "v1.3.0";
+var app_api_version          = "N/A";
+var app_api_dir              = "api/";
+var app_api_status           = "status";
+var app_reload_interval      = 5;
+var app_loading_image        = "birdhouse/img/bird.gif"; // source: https://gifer.com/en/ZHug
+var app_error_connect_image  = "birdhouse/img/camera_na_server.jpg";
+var app_unique_stream_url    = true;			// doesn't work for chrome (assumption: mjpeg-streams are not closed correctly)
+var app_unique_stream_id     = new Date().getTime();     // new ID per App-Start
+var app_session_id           = "";
+var app_status_commands      = ["last-answer"];
 
 
 /**

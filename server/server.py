@@ -34,8 +34,8 @@ from modules.statistics import BirdhouseStatistics
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 api_start_tc = time.time()
-api_description = {"name": "BirdhouseCAM", "version": "v1.2.1"}
-app_framework = "v1.2.1"
+api_description = {"name": "BirdhouseCAM", "version": "v1.3.0"}
+app_framework = "v1.3.0"
 
 
 def on_exit(signum, handler):
