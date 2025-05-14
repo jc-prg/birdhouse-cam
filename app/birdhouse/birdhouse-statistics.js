@@ -147,13 +147,12 @@ function birdhouse_printStatistic(title, data, date, chart_type="all", groups=tr
                                           set_colors=chartJS_hddPieChart,
                                           set_menu="right");
 
-        var info  = "<br/>&nbsp;<br/>";
-        info += "Max parallel streams: <b>" + statistics["streams"]["info"]["max"] + "</b><br/>&nbsp;<br/>";
-        info += "Total viewing time: <b>" + convert_second2time(Math.round(statistics["streams"]["info"]["views"])) + "</b><br/>&nbsp;";
+        var info  = "";
+        info += "Max parallel streams:<br/><b><big>" + statistics["streams"]["info"]["max"] + "</big></b><br/>&nbsp;<br/>";
+        info += "Total viewing time:<br/><b><big>" + convert_second2time(Math.round(statistics["streams"]["info"]["views"])) + "</big></b><br/>&nbsp;";
 
-        var html_entry = tab.start();
-        html_entry    += tab.row(chart, info);
-        html_entry    += tab.end();
+        var html_entry = "<div><div style='float:left;padding:5px;'>" + chart + "</div>";
+        html_entry    += "<div style='float:left;padding:5px;'>" + info + "</div></div>";
 
         if (groups) { html  += birdhouse_OtherGroup( "chart_hdd_pie", lang("TODAY") + " HDD Usage", html_entry, true ); }
         else        { html  += html_entry; }
