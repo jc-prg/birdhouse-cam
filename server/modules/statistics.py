@@ -163,7 +163,7 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
             return {}
         chart_data = self.config.db_handler.read(db_name, date, db_type="both")
         chart_value = {}
-        chart_values = {"data": {}, "info": {}}
+        chart_values = {"titles": {}, "data": {}, "info": {}}
 
         values = True
         # reformat values if requested
@@ -223,6 +223,19 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
                             else:
                                 values.append(key)
                     chart[category]["data"][stamp] = values
+
+                # pic max values here and sum up values of all cameras - maybe get data from source directly
+                """
+                    "data": {
+                        "07:37": {
+                            "cam1": {
+                                "framerate": 7.737179487179487,
+                                "streams": 2.158119658119658,
+                                "streams_max": 3.0
+                            },
+                        }
+                """
+
 
                 if category == "streams":
                     chart[category]["info"] = {"max": 0, "views": 0}
