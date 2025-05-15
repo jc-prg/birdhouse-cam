@@ -1395,6 +1395,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.weather_active = self.config.param["weather"]["active"]
         self.weather_sunrise = None
         self.weather_sunset = None
+
         self.camera_light_missing = True
         self.camera_light_date = ""
         self.camera_light_mode = ""
@@ -1462,6 +1463,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
 
         self.camera_stream_raw = None
         self.camera_streams = {}
+        self.camera_streams_max = 0
+        self.camera_statistics_time = 0
         self.available_devices = {}
 
         self.date_last = self.config.local_time().strftime("%Y-%m-%d")
@@ -2347,6 +2350,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         if init:
             self.statistics.register(self.id.lower() + "_streams", "Streams " + self.id.upper())
+            self.statistics.register(self.id.lower() + "_streams_max", "Max Streams " + self.id.upper())
             self.statistics.register(self.id.lower() + "_framerate", "Framerate " + self.id.upper() + " [fps]")
             self.statistics.register("config_img_record_"+self.id.lower(), "Record Image " + self.id.upper() + " [s]")
             if birdhouse_env["statistics_error"]:
@@ -2363,7 +2367,14 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             for stream_id in self.camera_streams:
                 count += self.camera_streams[stream_id].get_active_streams()
 
+            if self.camera_statistics_time != self.config.last_wrote_statistics:
+                self.camera_streams_max = count
+                self.camera_statistics_time = self.config.last_wrote_statistics
+            elif count > self.camera_streams_max:
+                self.camera_streams_max = count
+
             self.statistics.set(self.id.lower() + "_streams", count)
+            self.statistics.set(self.id.lower() + "_streams_max", self.camera_streams_max, value_type="max")
             self.statistics.set(self.id.lower() + "_framerate", self.camera_stream_raw.get_framerate())
             if birdhouse_env["statistics_error"]:
                 self.statistics.set(self.id.lower() + "_error", self.if_error())

@@ -352,7 +352,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         if db_type == "":
             db_type = self.db_type
         if self.couch is None and db_type != "json":
-            self.logging.warning("DB type '" + db_type + "' is currently not available, switch to 'json'.")
+            self.logging.debug("DB type '" + db_type + "' is currently not available, switch to 'json'.")
             db_type = "json"
 
         if db_type == "json":
@@ -401,7 +401,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         if db_type == "":
             db_type = self.db_type
         if self.couch is None and db_type != "json":
-            self.logging.warning("DB type '" + db_type + "' is currently not available, switch to 'json'.")
+            self.logging.debug("DB type '" + db_type + "' is currently not available, switch to 'json'.")
             db_type = "json"
 
         if filename == "" and config != "":
@@ -1659,6 +1659,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.last_start = ""
         self.measure_time = 30
         self.measure_last = time.time()
+        self.last_wrote_statistics = 0
 
         # read or create main config file
         self.db_handler = BirdhouseConfigDBHandler(self, "json", main_directory)

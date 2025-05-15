@@ -107,6 +107,7 @@ function birdhouse_printStatistic(title, data, date, chart_type="all", groups=tr
 	var camera_status = data["STATUS"]["devices"]["cameras"];
 	var open_category = [];
 	var system_data   = app_data["STATUS"]["system"];
+
 	var tab           = new birdhouse_table();
 	tab.style_cells["vertical-align"]   = "top";
 	tab.style_cells["padding"]          = "3px";
