@@ -140,6 +140,7 @@ Depending on the needs there are three options available how to install and run 
 * [(2) Direct installation](#2-direct-installation) - complete installation of all components with a bigger effort but without the limitations of (1)
 * [(3) Hybrid installation](#3-hybrid-installation) - combination with less effort than (2) and without the limitations
   of (1), recommend if you want to use PiCamera and object detection
+* [(4) Update existing installation](#4-update-existing-installation) - update your existing installation
 
 #### (1) Docker based installation
 
@@ -245,6 +246,16 @@ _Note:_ This installation is not fully tested yet. Recommend are (1) and (2).
 4. Initial start to create a config file, see (2.5) and [First run and device configuration](#First-run-and-device-configuration)
 5. Add lines to crontab to start on boot, see (2.7.i)
 6. Examine logging messages if there are any problems, see (1.6)
+
+#### (4) Update existing installation
+
+Use ```sudo git pull``` in the root directory to get the latest state of the software.
+If you're updating an existing installation it's highly recommend to back up you're current configuration and start with a fresh one:
+
+* Remove your server config [.env](.env) and create a new one from the file [sample.env](sample.env)
+* Remove your data and device configuration [data/config.json](data/config.json), when restarting the server a fresh one will be created.
+
+When created the new files, adapt the new config files to your needs. Check the log files for errors, e.g., using ```./watchlog```.
 
 ### First run and device configuration
 
