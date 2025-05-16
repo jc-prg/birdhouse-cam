@@ -426,7 +426,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             "archive-object-detection", "archive-remove-day", "archive-remove-list", "recreate-image-config",
                             "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "WEATHER", "relay-on", "relay-off",
                             "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS", "python-pkg",
-                            "STATISTICS", "reconnect-microphone"]
+                            "STATISTICS", "reconnect-microphone", "edit-labels", "delete-labels"]
 
             param["session_id"] = elements[2]
             param["command"] = elements[3]
@@ -711,7 +711,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_logging.info(str(data))
 
             config.main_config_edit("main", data, "", which_cam)
-
+        elif param["command"] == "edit-labels":
+            msg = "API CALL '" + param["command"] + "' not implemented yet (" + str(self.path) + ")"
+            srv_logging.info(msg)
+            srv_logging.info(str(param))
+            response = config.queue.entry_edit_object_labels("edit", param["parameter"][0], param["parameter"][1], param["parameter"][2])
         elif param["command"] == "set-temp-threshold":
             srv_logging.debug("Set temporary threshold to camera '"+which_cam+"': " + str(param["parameter"]))
             if which_cam in camera:

@@ -965,7 +965,6 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                             if "to_be_deleted" in entries[key]:
                                 del entries[key]["to_be_deleted"]
 
-
                 self.db_handler.unlock(config_file)
                 self.db_handler.write(config_file, "", entries)
                 self.config.set_processing_performance("config_queue_write", config_file, start_time)
@@ -1563,6 +1562,69 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         """
         self.logging.debug("Request to edit data (" + config + "/" + date + "/" + key + ").")
         self.add_to_edit_queue(config, date, key, entry, "edit")
+
+    def entry_edit_object_labels(self, command, date, key, data=""):
+        """
+        edit or delete labels for image entry (today or archive)
+
+        Args:
+            command (str): use "edit" (no further commands implemented yet)
+            date (str): date of archived day, empty for today
+            key (str): time key of image entry
+            data (Any): data in the format "0::object1,1::object2,2::object3"
+
+        Returns:
+            dict: API response
+        """
+        entry = {}
+        response = {}
+        self.logging.info("Edit detection labels for '" + date + "_" + key + "': " + data)
+
+        if date == "TODAY":
+            date = ""
+        entries = self.db_handler.read_cache("images", date)
+        if date != "" and key in entries["files"]:
+            self.logging.debug("Archive - FOUND ("+key+")")
+            entry = entries["files"][key]
+        elif key in entries:
+            self.logging.debug("Today - FOUND ("+key+")")
+            entry = entries[key]
+        else:
+            error_msg = "Edit labels - entry NOT FOUND ("+date+"_"+key+")"
+            self.logging.warning()
+            self.logging.debug(str(entries))
+            response = {"result": "ERROR: " + error_msg}
+            return response
+
+        label_object_list = []
+        data_list = data.split(",")
+        for item in data_list:
+            if not "::" in item:
+                continue
+            number, value = item.split("::")
+            number = int(number)
+            if number >= len(entry["detections"]):
+                continue
+            label_object = entry["detections"][number]
+            if value != "DELETE":
+                if value != label_object["label"]:
+                    if not "label_org" in label_object:
+                        label_object["label_org"] = label_object["label"]
+                    label_object["label"] = value
+                    label_object["confidence_org"] = label_object["confidence"]
+                    label_object["confidence"] = 1.0
+                label_object_list.append(label_object)
+        entry["detections"] = label_object_list
+
+        self.logging.debug("---> entry_edit_object_labels: " + str(entry))
+
+        if date == "":
+            self.add_to_edit_queue("images", date, key, entry, "edit")
+        else:
+            self.add_to_edit_queue("backup", date, key, entry, "edit")
+
+        response = {"result": "OK"}
+        return response
 
     def entry_delete(self, config, date, key):
         """

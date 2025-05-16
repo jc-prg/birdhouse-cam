@@ -16,10 +16,10 @@ function birdhouse_INDEX(data, camera, object=false) {
 	var html            = "";
     var html_no_entries = "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>";
 	var active_camera = camera;
+	var admin_allowed = data["STATUS"]["admin_allowed"];
 	var cameras       = app_data["SETTINGS"]["devices"]["cameras"];
 	var title         = app_data["SETTINGS"]["title"];
 	var index_view    = app_data["SETTINGS"]["views"]["index"];
-	var admin_allowed = app_data["STATUS"]["admin_allowed"];
 	var camera_status = app_data["STATUS"]["devices"]["cameras"];
 	var object_detect = app_data["STATUS"]["object_detection"]["active"];
 	var stream_server = RESTurl;
@@ -105,11 +105,13 @@ function birdhouse_INDEX(data, camera, object=false) {
         if (Object.keys(cameras).length == 1 || other_cams.length == 0)         { selected_view = "single"; }
         else if (index_template[index_view["type"]])                            { selected_view = index_view["type"]; }
         else                                                                    { selected_view = "default"; }
-        if (admin_allowed && index_template[selected_view+"_admin"])            { selected_view += "_admin"; }
+        if (admin_allowed)                                                      { selected_view += "_admin"; }
 
+        console.log("Selected INDEX view: " + selected_view + " (" + index_view["type"] + " | ADMIN " + admin_allowed + ")");
         html += index_template[selected_view];
         html += index_template["offline"];
-        html  = html.replace("<!--ADMIN-->", index_template["admin"]);
+
+        if (admin_allowed)  { html  = html.replace("<!--ADMIN-->", index_template["admin"]); }
 
         if (object) {
             object_command = "birdhouse_INDEX(app_data, '"+active_camera+"', false);";
