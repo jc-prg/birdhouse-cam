@@ -224,27 +224,39 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
                                 values.append(key)
                     chart[category]["data"][stamp] = values
 
-                # pic max values here and sum up values of all cameras - maybe get data from source directly
-                """
-                    "data": {
-                        "07:37": {
-                            "cam1": {
-                                "framerate": 7.737179487179487,
-                                "streams": 2.158119658119658,
-                                "streams_max": 3.0
-                            },
-                        }
-                """
-
-
+                # calculate total view time and max streams
                 if category == "streams":
                     chart[category]["info"] = {"max": 0, "views": 0}
+                    count = 0
+                    index_max = []
+                    index_avg = []
+                    for title in chart[category]["titles"]:
+                        if title.startswith("Max"):
+                            index_max.append(count)
+                        else:
+                            index_avg.append(count)
+                        count += 1
+                    self.logging.debug("---------> avg | " + str(index_avg))
+                    self.logging.debug("---------> max | " + str(index_max))
+
                     for stamp in chart[category]["data"]:
-                        for value in chart[category]["data"][stamp]:
-                            if "int" in str(type(value)) or "float" in str(type(value)):
-                                if value > chart[category]["info"]["max"]:
-                                    chart[category]["info"]["max"] = round(value, 0)
-                                chart[category]["info"]["views"] += round(value * (self._write_interval / 60), 1)
+                        self.logging.debug("---------> " + stamp + " | " + str(chart[category]["data"][stamp]) + " | " + str(type(chart[category]["data"][stamp])))
+
+                        for position in index_avg:
+                            if position < len(chart[category]["data"][stamp]):
+                                value = chart[category]["data"][stamp][position]
+                                if isinstance(value, int) or isinstance(value, float):
+                                    chart[category]["info"]["views"] += round(value * (self._write_interval / 60), 1)
+
+                        count_streams = 0
+                        for position in index_max:
+                            if position < len(chart[category]["data"][stamp]):
+                                value = chart[category]["data"][stamp][position]
+                                if isinstance(value, int) or isinstance(value, float):
+                                    count_streams += value
+                        if count_streams > chart[category]["info"]["max"]:
+                            chart[category]["info"]["max"] = count_streams
+
         return chart
 
     def get_chart_data_view(self):
