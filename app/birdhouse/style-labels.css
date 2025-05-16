@@ -105,7 +105,7 @@
     border          : 1px solid gray;
     }
 
-.labels_edit_table th,td {
+.labels_edit_table th, .labels_edit_table td {
     padding         : 5px;
     }
 
