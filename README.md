@@ -1,4 +1,4 @@
-# Birdhouse Camera v1.3.0
+# Birdhouse Camera v1.3.1
 
 Raspberry Pi project to observe our birdhouse with two webcams: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, 
