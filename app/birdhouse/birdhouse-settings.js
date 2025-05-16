@@ -409,6 +409,9 @@ function birdhouse_app_settings (name="Settings") {
 						"jcMsg: " 		+ appMsg.appVersion + "<br/>" +
 						"jcApp: "		+ appFW.appVersion);
 		html_entry += this.tab.row("Source:","<a href='https://github.com/jc-prg/birdhouse-cam/' target='_blank'>https://github.com/jc-prg/birdhouse-cam/</a>");
+		html_entry += this.tab.row("Client:",
+		                "IP: " + app_data["API"]["request_ip"] + "<br/>" +
+		                "<a href='" + window.location.href + "' target=_blank>" + window.location.href + "</a>");
 		html_entry += this.tab.row("&nbsp;");
 		html_entry += this.tab.end();
         return html_entry;
