@@ -177,5 +177,80 @@ function bird_lang(bird_class) {
     }
 }
 
+/*
+* create dialog to edit or delete labels from object detections
+*
+* @param (string) date: date of archived day, empty if today
+* @param (string) time: timestamp of selected image
+* @param (string) camera: camera of selected image
+* @param (string) label: label (optional)
+*/
+function birdhouse_labels_edit(date, time, camera, label="") {
+
+    var api_request = [];
+    var message     = "<b>"+lang("EDIT_OBJECT_LABELS")+"</b><hr/>";
+    var cmd         = "alert('not implemented yet');";
+
+    if (date == "") { api_request = ["TODAY", camera]; date = "TODAY";  }
+    else            { api_request = ["TODAY", date, camera]; if (time.indexOf("_") > 0) { time = time.split("_")[1]; } }
+
+    message += "<i>" + date + " | " + time + " | " + camera  + "</i>";
+    message += "<hr/>";
+    message += "<div id='edit_label_dialog' style='width:100%'>&nbsp;<br/>"+lang("PLEASE_WAIT")+"<br/>&nbsp;<br/></div>";
+    message += "<div id='edit_label_id' style='display:none'>"+time+"</div>";
+    //message += JSON.stringify(app_data);
+
+    birdhouse_apiRequest("GET", api_request, "", birdhouse_labels_edit_load, "", "birdhouse_label_edit");
+
+    appMsg.dialog(msg=message, cmd=cmd, height=80, width=85);
+}
+
+/*
+* create list of labels for the selected image and embed the list into the edit dialog
+*
+* @param (object) data: date of archived day, empty if today
+*/
+function birdhouse_labels_edit_load(data) {
+
+    var message     = "";
+    var id          = document.getElementById("edit_label_id").innerHTML;
+    var entry       = data["DATA"]["data"]["entries"][id];
+    var detections  = entry["detections"];
+    var imageURL    = entry["directory"] + entry["hires"];
+    imageURL        = imageURL.replaceAll("//", "/");
+    var count       = 0;
+    var img_ids     = "";
+
+    message += "&nbsp;<br/>";
+    message += "<table class='labels_edit_table'>";
+    message += "<tr style='font-weight:bold;'><td width='15px'>#</td><td width='55px'>" + lang("IMAGE") + "</td><td>" + lang("CURRENT_LABEL") + "</td><td>" + lang("EDIT_LABEL") + "</td></tr>";
+
+    for (var i=0;i<detections.length;i++) {
+        var object      = detections[i];
+        var label       = object["label"];
+        var coordinates = object["coordinates"];
+        var image       = birdhouse_ImageCropped("labels_edit_img_"+count, imageURL, coordinates, "max-height:80px;max-width:80px;border:1px solid black;");
+        img_ids        += "labels_edit_img_"+count+",";
+
+        var select      = "<select>";
+        select         += "<option>" + label + "</option>";
+        Object.keys(app_bird_names).forEach(key => {
+            select         += "<option>" + key.toLowerCase() + "</option>";
+            });
+        select         += "<option style='color: red; font-weight: bold;'>"+lang("DELETE").toUpperCase().replace("&OUML","&Ouml")+"!</option>";
+        select         += "</select>";
+
+        message += "<tr><td width='10px'>" + count + "</td><td width='50px'>" + image + "</td><td>" + label + "</td><td>"+select+"</td></tr>";
+        count   += 1;
+        }
+    message += "</table>";
+    message += "<br/>&nbsp;<br/>";
+    message += "<div id='labels_edit_ids' style='display:none;'>" + img_ids + "</div>";
+
+    //message = message.replaceAll(id, "<font color='red'>"+id+"</font>");
+
+    setTextById("edit_label_dialog", message);
+}
+
 
 app_scripts_loaded += 1;

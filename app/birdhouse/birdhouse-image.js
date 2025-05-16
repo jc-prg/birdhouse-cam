@@ -566,9 +566,10 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
 */
 function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admin=false, video_short=false) {
 	const img_url = ""; // RESTurl;
-	var settings     = app_data["SETTINGS"];
-	var settings_cam = app_data["SETTINGS"]["devices"]["camera"];
-	var detect_sign  = "<sup>D</sup>";
+	var admin_allowed = app_data["STATUS"]["admin_allowed"];
+	var settings      = app_data["SETTINGS"];
+	var settings_cam  = app_data["SETTINGS"]["devices"]["camera"];
+	var detect_sign   = "<sup>D</sup>";
     var image_data        = {
         "img_id2"       : "",
         "edit"          : false,
@@ -626,6 +627,12 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
                 else            { info = confidence[key] + "%"; }
                 image_data["description_hires"] += "[div class=detection_label style=cursor:default;]&nbsp;"+bird_lang(key)+"&nbsp;("+info+")&nbsp;[/div]";
                 });
+
+            if (admin_allowed) {
+                var cmd_edit_labels = "onclick=birdhouse_labels_edit('"+app_active_date+"','"+entry_id+"','"+app_active_cam+"','');";
+                image_data["description_hires"] += "[div class=detection_label style=cursor:default "+cmd_edit_labels+"][img src='/birdhouse/img/edit.png' style='max-height:10px;max-width:10px;'][/div]";
+                }
+
             image_data["description_hires"] += "[/div][/center]";
             image_data["detect_sign"]        = detect_sign;
             image_data["hires_detect"]       = birdhouse_ImageURL(img_url + entry["directory"] + entry["hires_detect"]);
@@ -743,7 +750,8 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
     // further image properties -> img_id2
     if (entry["type"] == "addon")                                           { image_data["img_id2"] = "stream_lowres_" + app_active_cam; }
     else if (entry["type"] == "detection")                                  { image_data["img_id2"] = "stream_detect_" + entry["id"]; }
-    else                                                                    { image_data["img_id2"] += entry["directory"] + entry["lowres"]; image_data["img_id2"] = image_data["img_id2"].replaceAll( "/", "_"); }
+    else                                                                    { image_data["img_id2"] += entry["directory"] + entry["lowres"];
+                                                                              image_data["img_id2"] = image_data["img_id2"].replaceAll( "/", "_"); }
 
     // further image properties -> border style
     if (entry["favorit"] == 1 || entry["favorit"] == "1")                   { image_data["style"] = "border: 1px solid "+color_code["star"]+";"; }
@@ -807,6 +815,70 @@ function birdhouse_ImageURL(URL) {
 	URL = URL.replace("https:/","https://");
 	return URL;
 	}
+
+/*
+* load an area of an image - return HTML
+*
+* @param (string) id: ...
+* @param (string) URL: ...
+* @param (area) coordinates: ...
+* @returns (string): html for image to be loaded
+*/
+function birdhouse_ImageCropped(id, URL, coordinates, style="") {
+    var html     = "<img id=\""+id+"_crop\" src=\""+URL+"\" style=\"display:none;\" />";
+    html        += "<div id=\""+id+"_coordinates\" style=\"display:none;\" />" + JSON.stringify(coordinates) + "</div>";
+    html        += "<canvas id=\""+id+"_canvas\" style=\""+style+"\"></canvas>";
+
+    setTimeout(function() {
+        birdhouse_ImageCropped_load(id);
+        }, 1000);
+    return html;
+}
+
+/*
+* load an area of an image - load cropped image into HTML
+*
+* @param (string) id: ...
+*/
+function birdhouse_ImageCropped_load(id) {
+
+    const img           = document.getElementById(id+'_crop');
+    const canvas        = document.getElementById(id+'_canvas');
+    const coordinates   = JSON.parse(document.getElementById(id+'_coordinates').innerHTML);
+    const ctx           = canvas.getContext('2d');
+
+    //img.onload = function() {
+      const imgWidth = img.naturalWidth;
+      const imgHeight = img.naturalHeight;
+
+      // Normalized coordinates (0 to 1)
+      const normX = coordinates[0]; // 0.1;    // 10% from the left
+      const normY = coordinates[1]; // 0.2;    // 20% from the top
+      //const normW = coordinates[2]; // 0.5;    // 50% of image width
+      //const normH = coordinates[3]; // 0.4;    // 40% of image height
+      const normW = coordinates[2] - coordinates[0]; // 0.5;    // 50% of image width
+      const normH = coordinates[3] - coordinates[1]; // 0.4;    // 40% of image height
+
+      // Convert to absolute pixels
+      const cropX = normX * imgWidth;
+      const cropY = normY * imgHeight;
+      const cropWidth = normW * imgWidth;
+      const cropHeight = normH * imgHeight;
+
+      // Set canvas size to match crop area
+      canvas.width = cropWidth;
+      canvas.height = cropHeight;
+
+      // Draw cropped portion
+      ctx.drawImage(
+        img,
+        cropX, cropY,
+        cropWidth, cropHeight,
+        0, 0,
+        cropWidth, cropHeight
+      );
+    //};
+}
 
 
 

@@ -99,6 +99,16 @@
   /* blur size and spread size are optional (they default to 0) */
 }
 
+.labels_edit_table {
+    min-width       : 80%;
+    border-collapse : collapse;
+    border          : 1px solid gray;
+    }
+
+.labels_edit_table th,td {
+    padding         : 5px;
+    }
+
 
 @media (prefers-color-scheme: dark) {
 
