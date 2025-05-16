@@ -338,30 +338,34 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         admin_deny = birdhouse_env["admin_ip4_deny"]
         admin_allow = birdhouse_env["admin_ip4_allow"]
         admin_pwd = birdhouse_env["admin_password"]
+        current_ip = self.address_string().replace("::ffff:","")
 
         srv_logging.debug("Check if administration is allowed: " +
                           admin_type + " / " + self.address_string() + " / " +
                           "DENY=" + str(admin_deny) + "; ALLOW=" + str(admin_allow))
 
         if admin_type == "DENY":
-            if self.address_string() in admin_deny:
+            if current_ip in admin_deny:
                 return False
             else:
                 return True
         elif admin_type == "ALLOW":
-            if self.address_string() in admin_allow:
+            if current_ip in admin_allow:
                 return True
             else:
                 return False
         elif admin_type == "LOGIN":
-            # initial implementation, later with session ID
-            param = self.path_split(check_allowed=False)
-            srv_logging.debug("CHECK if " + param["session_id"] + " == " +  admin_pwd + " !!!!!!!! " +
-                              str(param["session_id"] == admin_pwd))
-            if param["session_id"] == admin_pwd:
+            if current_ip in admin_allow:
                 return True
             else:
-                return False
+                # initial implementation, later with session ID
+                param = self.path_split(check_allowed=False)
+                srv_logging.debug("CHECK if " + param["session_id"] + " == " +  admin_pwd + " !!!!!!!! " +
+                                  str(param["session_id"] == admin_pwd))
+                if param["session_id"] == admin_pwd:
+                    return True
+                else:
+                    return False
         else:
             return False
 
@@ -848,6 +852,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         api_response["API"]["request_url"] = self.path
         api_response["API"]["request_param"] = param
         api_response["API"]["request_command"] = command
+        api_response["API"]["request_ip"] = self.address_string().replace("::ffff:","")
         api_commands = {
             "data"     : ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL",
                           "DEVICES", "OBJECTS", "STATISTICS", "bird-names", "WEATHER",
