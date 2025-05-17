@@ -10,6 +10,7 @@
   justify-content: center;
   align-items: center;
   //border: 1px solid blue;
+  padding: 5px;
 }
 
 .streams_index_overlay {
