@@ -117,18 +117,19 @@ index_template["picture-in-picture"] = `
 //-------------------------------------------------
 
 index_template["overlay"] = `
-    <div id="video_stream_online" style="display:block;">
+    <div id="video_stream_online">
         <center>
-        <div style="position:relative;margin:10px;">
+        <div class="streams_wrapper">
+            <div class="streams_index_overlay">
 
-            <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
-                <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="" style="width:100%;height:auto;border:white solid 1px;">
-            </a>
-
-            <div style="position:absolute;<!--CAM2_LOWRES_POS-->;width:25%;">
-                <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM2_ID-->');" style="cursor:pointer;">
-                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class=""  style="width:100%;height:auto;border:white solid 1px;">
+                <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
+                    <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="streams_index_main">
                 </a>
+
+                <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM2_ID-->');" style="cursor:pointer;">
+                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class="streams_index_second" style="<!--CAM2_LOWRES_POS-->">
+                </a>
+
             </div>
         </div>
         </center>
@@ -136,23 +137,22 @@ index_template["overlay"] = `
 `
 
 index_template["overlay_admin"] = `
-    <div id="video_stream_online" style="display:block;">
+    <div id="video_stream_online">
         <center>
-        <div style="position:relative;margin:10px;">
+        <div class="streams_wrapper">
+            <div class="streams_index_overlay">
 
-            <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
-                <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="" style="width:100%;height:auto;border:white solid 1px;">
-            </a>
-
-            <div style="position:absolute;<!--CAM2_LOWRES_POS-->;width:25%;">
-                <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM2_ID-->');" style="cursor:pointer;">
-                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class=""  style="width:100%;height:auto;border:white solid 1px;">
+                <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
+                    <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="streams_index_main">
                 </a>
+
+                <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM2_ID-->');" style="cursor:pointer;">
+                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class="streams_index_second" style="<!--CAM2_LOWRES_POS-->">
+                </a>
+
             </div>
-
-        </table>
-
         </div>
+        &nbsp;<br/>
         <!--ADMIN-->
         </center>
     </div>
