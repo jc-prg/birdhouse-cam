@@ -16,6 +16,7 @@ app in English and German, ...
    * [Accessing images via WebDAV](#Accessing-images-via-WebDAV)
    * [Optimizing system configuration](#optimizing-system-configuration)
    * [Sample proxy server configuration](#Sample-proxy-server-configuration)
+   * [Server performance recommendations](server-performance-recommendations)
 6. [Train bird detection](#Train-bird-detection)
 7. [Helping stuff](#helping-stuff)
 8. [Other sources](#other-sources)
@@ -365,6 +366,26 @@ of your birdhouse server:
     ```
 * Open ```https://<your-external-server>/birdhouse/``` in your browser to get an easy link to your birdhouses
   using its IPv6 addresses.
+
+### Server performance recommendations
+
+Choose the server configuration based on your needs. Here are some recommendations and options how to improve the 
+performance.
+
+#### Tested configurations
+
+* **Raspberry Pi v3** (1 GB): 1 camera with ~5fps @ 1024x768, AV recording, no bird detection
+* **Raspberry Pi v4** (4 GB): 2 cameras with ~8fps @ 1024x768 + ~8fps @ 1280x720, AV recording, bird detection (YOLOv11) for one camera
+* **Raspberry Pi v5**: not tested yet
+
+#### Ways to increase server performance
+
+* ensure all connected devices are up and running without error or deactivate them (e.g. microphone)
+* combine bird detection with similarity detection (detect only if image differs more than the defined threshold
+* reduce camera resolution
+* reduce maximum fps value for image recording
+* reduce time of image recording rhythm (default is 20 seconds)
+* use database mode COUCH instead of JSON or BOTH (see .env)
 
 ## Train bird detection
 
