@@ -1,0 +1,99 @@
+/* BUTTONS & FIELDS VIDEO EDITING ---------------------------- */
+
+.input-video-edit {
+    width            : 80px;
+    height           : 25px;
+    background       : gray;
+    border-radius    : 5px;
+    color            : black;
+}
+
+.button-video-edit {
+    height           : 28px;
+    background       : #888888;
+    border-radius    : 5px;
+    color            : black;
+    border           : 1px solid white;
+    overflow         : hidden;
+    float            : left;
+}
+
+.button-video-edit:disabled {
+    height           : 28px;
+    background       : #666666;
+    border-radius    : 5px;
+    color            : white;
+    border           : 1px solid red;
+    font-style       : italic;
+}
+
+/* BUTTONS VIDEO RECORDING -------------------------------------- */
+
+.button-video-record {
+    vertical-align   : middle;
+    width            : 30px;
+    height           : 28px;
+    background       : gray;
+    border-radius    : 5px;
+    margin           : 2px;
+    color            : white;
+    border           : 1px solid white;
+    cursor           : pointer;
+}
+
+.button-video-record:disabled {
+    background       : #333333;
+    color            : #aaaaaa;
+    cursor           : default;
+}
+
+.button-back-and-forth {
+    border-radius       : 5px;
+    cursor              : pointer;
+    padding             : 5px;
+    margin              : 10px;
+}
+
+
+/* VIDEO EDITING (VIEWS) ------------------------- */
+
+.camera_video_edit {
+    position   : fixed;
+    top        : 0px;
+    left       : 0px;
+    height     : 100%;
+    width      : 100%;
+    text-align : center;
+    z-index    : 61;
+    /*
+    float      : left;
+    margin     : 5px;
+    display    : none;
+    width      : 100%;
+    text-align : center;
+    padding    : auto;
+*/
+}
+
+.camera_video_edit_overlay {
+    position   : fixed;
+    top        : 0px;
+    left       : 0px;
+    height     : 100%;
+    width      : 100%;
+    text-align : center;
+    opacity    : 50%;
+    z-index    : 60;
+    background-color: black;
+}
+
+.camera_video_trim {
+    width     : 800px;
+    max-width : 80vw;
+    background-color: darkgray;
+    border : solid 1px white;
+    border-radius : 4px;
+    padding : 4px;
+    margin : 4px;
+}
+
