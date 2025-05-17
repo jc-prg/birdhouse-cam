@@ -26,6 +26,7 @@
   width: auto;
   object-fit: contain;
   border: 1px solid white;
+  border-radius: 3px;
   display: block;
   position: relative; /* or omit this; not absolutely positioned */
 }
@@ -38,6 +39,7 @@
   height: auto;
   object-fit: contain;
   border: 1px solid white;
+  border-radius: 3px;
 }
 
 /* FRAME ELEMENTS --------------------------------- */
