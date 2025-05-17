@@ -192,14 +192,12 @@
     padding    : 2px;
     float      : left;
     text-align : center;
-    width      : 100%
 }
 
 .camera_info_image {
     width      : calc(30% - 10px);
     float      : left;
     margin     : 5px;
-    width      : 100%;
     text-align : center;
 }
 
