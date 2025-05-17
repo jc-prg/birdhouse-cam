@@ -400,7 +400,7 @@ function birdhouse_groupClose(id) {
 * @param (dict) lowres_size: set lowres size using integers (pixel size) for the following values: 'container_width', 'container_height', 'thumbnail_width', 'thumbnail_height'
 * @returns (string): html sequence to display lowres image
 */
-function birdhouse_Image_(title, entry_id, entry, header_open=true, admin=false, video_short=false, group_id="", same_img_size=false, lowres_size=0) {
+function birdhouse_Image_old(title, entry_id, entry, header_open=true, admin=false, video_short=false, group_id="", same_img_size=false, lowres_size=0) {
 
 	if (entry["type"] == "data") { return ""; }
 
@@ -578,6 +578,8 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
 
 	console.debug("Active Page: " + app_active_page);
 
+    entry["directory"] = "videos/";
+
 	var image_data        = birdhouse_ImageDisplayData(title, entry_id, entry, app_active_page, admin, video_short);
     var lowres            = image_data["lowres"];
     var hires             = image_data["hires"];
@@ -589,6 +591,9 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
     var img_id2           = image_data["img_id2"];
     var play_button       = image_data["play_button"];
     var img_missing       = image_data["img_missing"];
+
+    console.error(entry);
+    console.error(image_data);
 
     if (image_data["same_img_size"]) { same_img_size = image_data["same_img_size"]; }
 
@@ -895,8 +900,7 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
 
 		image_data["onclick"]     = "birdhouse_videoOverlay(\""+image_data["hires"]+"\",\""+image_data["description"]+"\");";
 		image_data["play_button"] = "<img src=\"birdhouse/img/play.png\" class=\"play_button\" style=\"min-width:auto;min-height:auto;\" onclick='"+image_data["onclick"]+"' />";
-
-		entry["lowres"]     = entry["thumbnail"];
+		entry["lowres"]           = entry["thumbnail"];
 
 		if (admin) {
 			var cmd_edit = "birdhousePrint_load(view=\"VIDEO_DETAIL\", camera=\""+app_active_cam+"\", date=\""+entry["date_start"]+"\");"

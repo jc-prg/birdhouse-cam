@@ -1,30 +1,135 @@
 /*
-* define style of elements in the setting section
+* define style of elements in the setting section (default theme, for dark theme see style-dark.css)
 */
 
-/* CAMERA INFO ---------------------------------------------------------------------------- */
-/* settings layout with image left (or on the top) and respective settings right (or below) */
-.camera_info {
-    width: 100%;
+/* SETTINGS ELEMENTS --------------------------------- */
+
+.setting_bg {
+    width           : calc(100% - 36px);
+    float           : left;
+    margin          : 4px;
+    padding         : 5px;
+
+    opacity         : 0.9;
+    border-radius   : 5px;
+    background-color: #cccccc;
+    font-family     : sans-serif;
+    font-size       : 12px;
+    }
+
+.setting_bg.header {
+    position        : fixed;
+    width           : calc(100% - 36px);
+
+    display         : none;
+    justify-content : center;
+    align-items     : center;
+    z-index         : 89;
+    }
+
+.setting_bg.header.empty {
+    background-color: unset;
+    border          : 0px;
+    min-height      : 44px;
+    position        : unset;
+    justify-content : center;
+    align-items     : center;
+    z-index         : 0;
+    }
+
+.setting_bg.header.empty2 {
+    background-color: white;
+    border          : 0px;
+    height          : 105px;
+    width           : 100%;
+    position        : fixed;
+    top             : 0;
+    left            : 0;
+    justify-content : center;
+    align-items     : center;
+    z-index         : 84;
+    }
+
+.setting_bg.wide {}
+
+.setting_bg_inside {
+    width           : auto;
+    margin          : auto;
+    }
+
+.settings_icon_big {
+    max-width       : 100px;
+    max-height      :  50px;
+    }
+
+.settings_icon_small {
+    max-width       : 45px;
+    max-height      : 28px;
+    }
+
+.setting_headline {
+    margin-top      : 6px;
+    margin-bottom   : 12px;
+    font-size       : 16px;
+    }
+
+.setting_line {
+    width           : 98%;
+    height          : 2px;
+    margin          : 6px;
+    margin-bottom   : 12px;
+    border          : 1px solid white;
+    }
+
+
+/* SETTING FRAMES SIZE -------------------------------------------------------------------- */
+
+.setting_bg.header {
+    width: calc(100% - 36px);
 }
 
-.camera_info_image {
-    width: calc(30% - 10px);
+/* reduce width if menu is shown */
+@media (min-width: 890px) {
+
+    .setting_bg         { width: calc(100% - 191px); }
+    .setting_bg.header  { width: calc(100% - 191px); }
 }
 
-.camera_info_text {
-    width:  calc(70% - 10px);
-}
 
-/* landscape or width big enough */
-@media (max-width: 550px) {
-    .camera_info_text  { width: calc(100% - 10px); }
-    .camera_info_image { width: calc(100% - 10px); }
-    .camera_info_image #loading_img { display: none; }
-}
+/* SETTING BUTTONS #1 ---------------------------------------------------------------------- */
 
-/* SETTING BUTTONS ------------------------------------------------------------------------- */
-/* adapted layout for birdhouse app */
+.settings_button_index {
+    width           : 48%;
+    height          : 120px;
+    margin          :   1%;
+    padding         :   5px;
+    float           :  left;
+    background      : #333399;
+    border          : solid 2px #5555AA;
+    }
+
+.settings_button_index.info {
+    background      : #111122;
+    border          : solid 0px #5555AA;
+    cursor          : default;
+    }
+
+.settings_button_index.header {
+    width           : 60px;
+    height          : 40px;
+    margin          :  2px;
+    border          : 1px solid gray;
+    }
+
+.settings_button_index.header.invisible {
+    border          : 0px;
+    margin          : 3px;
+    background      : unset;
+    }
+
+.settings_button_index.selected {
+    border          : 1px solid white;
+    }
 
 .settings_button_index     { margin : 3px; width : calc(50% - 6px); height : 120px; }
 .settings_button_index img { max-width: 90%; }
@@ -40,3 +145,193 @@
   .settings_button_index    { margin : 3px; width : calc(25% - 6px); height : 140px; }
   .settings_icon_big        { max-width : 140px; max-height : 80px; }
   }
+
+/* SETTING BUTTONS #2 ---------------------------------------------------------------------- */
+
+.button-settings-api {
+    background-color    : lightgray;
+    color               : black;
+    width               : 90px;
+    height              : 40px;
+    max-height          : 40px;
+    margin              :  3px;
+    padding             :  2px;
+    overflow            : hidden;
+    float               : left;
+}
+
+.button-settings-system {
+    width           : calc(25% - 6px);
+    height          :  90px;
+    margin          :   3px;
+    padding         :   5px;
+    float           :  left;
+    background      : #117711;
+    border          : solid 2px #55AA55;
+    }
+
+.button-settings-system.attention {
+    background      : #771111;
+    border          : solid 2px #AA5555;
+    }
+
+.button-settings-system.other {
+    background      : #111177;
+    border          : solid 2px #5555AA;
+    }
+
+@media (max-width: 706px)   { .button-settings-system { width : calc(33.333% - 6px); } }
+@media (min-width: 1250px)  { .button-settings-system { width : calc(20% - 6px); } }
+
+
+/* CAMERA INFO ---------------------------------------------------------------------------- */
+/* settings layout with image left (or on the top) and respective settings right (or below) */
+
+.camera_info {
+    width      : 100%;
+    padding    : 2px;
+    float      : left;
+    text-align : center;
+    width      : 100%
+}
+
+.camera_info_image {
+    width      : calc(30% - 10px);
+    float      : left;
+    margin     : 5px;
+    width      : 100%;
+    text-align : center;
+}
+
+.camera_info_text {
+    width      :  calc(70% - 10px);
+    float      : left;
+    margin     : 5px;
+    text-align : left;
+}
+
+/* landscape or width big enough */
+@media (max-width: 550px) {
+    .camera_info_text  { width: calc(100% - 10px); }
+    .camera_info_image { width: calc(100% - 10px); }
+    .camera_info_image #loading_img { display: none; }
+}
+
+
+/* SETTING INFO DASHBOARD ITEMS ------------------------------------------------------------- */
+
+.dashboard_container {
+    width : 100%;
+}
+.dashboard_item {
+    width           : calc(33.333% - 20px);
+    margin          :   3px;
+    height          :  90px;
+    padding         :   3px;
+    float           :  left;
+    background      : #333399;
+    border          : solid 2px #5555AA;
+    border-radius   : 5px;
+    overflow        : hidden;
+    }
+
+.dashboard_item.default { background : #333399; border : solid 2px #5555AA; }
+.dashboard_item.blue    { background : #333399; border : solid 2px #5555AA; }
+.dashboard_item.red     { background : #993333; border : solid 2px #AA5555; }
+.dashboard_item.orange  { background : #996644; border : solid 2px #AA8855; }
+.dashboard_item.green   { background : #339933; border : solid 2px #55AA55; }
+.dashboard_item.gray    { background : #3C3C3C; border : solid 2px #555555; }
+
+.dashboard_item.offline { background : #3C3C3C; border : solid 2px #555555; }
+.dashboard_item.ok      { background : #448844; border : solid 2px #55AA55; }
+.dashboard_item.warn    { background : #AA7744; border : solid 2px #AA8855; }
+.dashboard_item.alarm   { background : #993333; border : solid 2px #AA5555; }
+
+.dashboard_content {
+    color           : #eeeeee;
+    font-size       : 12px;
+    width           : 100%;
+    padding         : 3px;
+    float           : left;
+    text-align      : center;
+    }
+
+.dashboard_content.title        {}
+.dashboard_content.value        { font-size : 36px; font-weight: bold; color : #ffffee; line-height: 1.1;  }
+.dashboard_content.description  { font-style: italic; }
+
+@media (max-width: 706px)   {
+    .dashboard_item             { width : calc(33.333% - 20px); height : 70px; }
+    .dashboard_content          { font-size :  8px; }
+    .dashboard_content.title    { font-size : 10px; }
+    .dashboard_content.value    { font-size : 23px; }
+    }
+
+@media (min-width: 1000px)  {
+    .dashboard_item { width : calc(25% - 20px); }
+    }
+@media (min-width: 1200px)  {
+    .dashboard_item { width : calc(20% - 20px); }
+    }
+@media (min-width: 1400px)  {
+    .dashboard_item { width : calc(16.6% - 20px); }
+    }
+
+/* ERROR MSG --------------------------------- */
+
+.settings_error_msg {
+    font-family : sans-serif;
+    font-size   : 8px;
+    width       : 95%;
+    height      : 100px;
+    margin      : 3px;
+
+    background-color    : #FFFFDD;
+    border-radius       : 3px;
+    border              : solid 1px red;
+}
+
+#error_log {
+        font-size  : 12px;
+        text-align : left;
+        overflow   : auto;
+
+        width      : 97%;
+        height     : 200px;
+        float      : left;
+        margin     : 2px;
+        padding    : 2px;
+
+	font-face	: sanserif;
+	font-size	: 10px;
+	color		: black;
+
+        border          : red;
+        border-radius   : 5px;
+        border-style    : solid;
+        border-width    : 1px;
+        background-color: khaki;
+        opacity         : 0.9;
+        z-index         : 80;
+
+	position: relative;
+	top: 0px;
+}
+
+#error_msg {
+	display    : none;
+	width      : 250px;
+	margin     : 0 auto;
+	padding    : 10px;
+	position   : relative;
+	left       : 0;
+	top        : 10px;
+	z-index    : 10;
+	background : white;
+	border     : 2px solid #cccccc;
+	border-radius:10px;
+
+        font-family: Helvetica;
+        text-align : center;
+/*        overflow   : auto; */
+}

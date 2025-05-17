@@ -8,13 +8,17 @@
     a:hover   { color  : #dddd00; font-weight : bold; }
 
     .frame_column      {
-         background-color : #222222;
-         border           : #333333 1px solid;
-         color            : #dddddd;
+        background-color : #222222;
+        border           : #333333 1px solid;
+        color            : #dddddd;
         }
 
     .setting_bg {
         border           : #333333 1px solid;
+        }
+
+    .setting_bg.header.empty2 {
+        background-color : #111111;
         }
 
     .frame_column img    { opacity: 1.0; }

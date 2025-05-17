@@ -177,19 +177,18 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 		var video_stream        = birdhouse_Image("Complete", key, video[key]);
 		var video_stream_short  = "";
 
+        console.log("---> video: " + key + ", " + JSON.stringify(video[key]));
 		console.log(video_stream);
 
 		if (video[key]["video_file_short"] != undefined && video[key]["video_file_short"] != "") {
-	                short                     = true;
-		        var video_short           = {};
-		        Object.assign( video_short, video[key] );
-		        var short_video_file      = video[key]["video_file_short"];
-		        video_short["video_file"] = short_video_file;
-		        video_stream_short        = birdhouse_Image("Short", "short", video_short);
-		        }
-
-		console.log(video_stream);
-		console.log(video_stream_short);
+            short                     = true;
+            var video_short           = {};
+            Object.assign( video_short, video[key] );
+            var short_video_file      = video[key]["video_file_short"];
+            video_short["video_file"] = short_video_file;
+            video_stream_short        = birdhouse_Image("Short", "short", video_short);
+            console.log(video_stream_short);
+            }
 
         tab.style_rows["height"]           = "20px";
         tab.style_cells["vertical-align"]  = "top";
@@ -235,26 +234,19 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 
 			loadJS(videoplayer_script, "", document.body);
 
-            var video_stream_server = "";
-            if (server_info["ip4_stream_video"] != "") {
-                video_stream_server = server_info["ip4_stream_video"];
-                }
-            else if (server_info["ip4_address"] != "") {
-                video_stream_server = server_info["ip4_address"];
-                }
-            else {
-                video_stream_server = window.location.href.split("//")[1];
-                video_stream_server = video_stream_server.split("/")[0];
-                video_stream_server = video_stream_server.split(":")[0];
-                }
-			video_stream_server = "http://" + video_stream_server + ":" + server_info["port_video"] + "/";
+            var video_stream_server = window.location.href.split("//")[1];
+            video_stream_server = video_stream_server.split("/")[0];
+            video_stream_server = video_stream_server.split(":")[0];
+            video_stream_server = "http://" + video_stream_server + ":" + server_info["port_video"] + "/";
+
+			console.log("-----> video-streaming: " + video_stream_server + " (http[s]: " + window.location.href + ")");
 
 			video_values = {};
 			video_values["VIDEOID"]    = key;
 			video_values["ACTIVE"]     = app_active_cam;
 			video_values["LENGTH"]     = video[key]["length"];
 			video_values["THUMBNAIL"]  = "";
-			video_values["VIDEOFILE"]  = video[key]["directory"] + video[key]["video_file"];
+			video_values["VIDEOFILE"]  = video_stream_server + video[key]["video_file"];
 			video_values["JAVASCRIPT"] = trim_command;
 			videoplayer  = videoplayer_template;
 			for (let key in video_values) {

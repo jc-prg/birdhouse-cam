@@ -17,6 +17,7 @@ board
 geopy
 python-dotenv
 torch
+pympler
 #picamera2
 #psutil
 #tqdm

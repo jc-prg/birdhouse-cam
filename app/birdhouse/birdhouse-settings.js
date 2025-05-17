@@ -653,7 +653,7 @@ function birdhouse_app_settings (name="Settings") {
 	}
 
 	this.server_dashboard = function (part="all") {
-	    var html = "<div>";
+	    var html = "<div class='dashboard_container'>";
 	    var data    = app_data["STATUS"];
 	    var data_p  = data["server_performance"];
 

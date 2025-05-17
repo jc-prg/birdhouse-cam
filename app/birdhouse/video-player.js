@@ -94,7 +94,7 @@ function updateProgress() {
 // roughly work out what point in the video the user will skip to if
 // the progress bar is clicked at that point
 function updateSeekTooltip(event) {
-  return;
+  /*
   const skipTo = Math.round(
     (event.offsetX / event.target.clientWidth) *
       parseInt(event.target.getAttribute('max'), 10)
@@ -104,6 +104,7 @@ function updateSeekTooltip(event) {
   seekTooltip.textContent = `${t.minutes}:${t.seconds}`;
   const rect = video.getBoundingClientRect();
   seekTooltip.style.left = `${event.pageX - rect.left}px`;
+  */
 }
 
 // skipAhead jumps to a different point in the video when the progress bar
