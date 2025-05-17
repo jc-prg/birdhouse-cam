@@ -43,8 +43,8 @@ index_template["single_admin"] = `
     </div>
 `
 
-index_template["picture-in-picture_admin"]  = index_template["single_admin"]
-index_template["picture-in-picture"]        = index_template["single"]
+index_template["picture-in-picture_admin"]  = index_template["single_admin"].replace("CAM1_URL", "CAM1_PIP_URL")
+index_template["picture-in-picture"]        = index_template["single"].replace("CAM1_URL", "CAM1_PIP_URL")
 
 //-------------------------------------------------
 

@@ -7,6 +7,7 @@
 /* default fill complete width */
 .frame_column.wide {
     width: calc(100% - 20px);
+    font-size: 10px;
 }
 
 .setting_bg.header {
@@ -17,6 +18,7 @@
 @media (min-width: 890px) {
     .frame_column.wide {
         width: calc(100% - 175px);
+        font-size: 10px;
     }
     .setting_bg.header {
         width: calc(100% - 191px);

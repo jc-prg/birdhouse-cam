@@ -1385,7 +1385,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     if stream_pip and which_cam2 != "" and which_cam2 in camera:
                         frame_raw_pip = camera[which_cam2].get_stream(stream_id=str(stream_id_int),
                                                                       stream_type=stream_type,
-                                                                      stream_resolution="hires",  # lowres
+                                                                      stream_resolution="lowres",  # hires
                                                                       system_info=False,
                                                                       wait=False)
 

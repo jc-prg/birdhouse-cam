@@ -381,8 +381,9 @@ function birdhouse_recycleRange(group_id, index, status, lowres_file) {
 
 	info_text = document.getElementById("command_dropdown");
 
+    var cancel_button = "<button id='recycle_button_cancel' onclick='button_tooltip.hide(\"info\");' class='button-video-edit' style='margin-top:6px;float:unset;'>&nbsp;"+lang("CANCEL")+"&nbsp;</button>"
 	if (info_keys.length == 1) {
-		info_text.innerHTML = lang("RANGE_ADD_ENTRY"); // + " ("+info_keys[0]+")";
+		info_text.innerHTML = lang("RANGE_ADD_ENTRY") + "<br/>" + cancel_button; // + " ("+info_keys[0]+")";
 		button_tooltip.show("info");
 		}
 	else if (info_keys.length == 2) {
@@ -395,7 +396,8 @@ function birdhouse_recycleRange(group_id, index, status, lowres_file) {
 		onclick     += "document.getElementById(\"recycle_button\").innerHTML=\""+lang("PLEASE_WAIT")+"\";";
 		onclick     += "document.getElementById(\"recycle_button\").disabled=true;";
 
-		info_text.innerHTML += "<br/><button id='recycle_button' onclick='"+onclick+"' class='button-video-edit' style='margin-top:6px;float:unset;'>&nbsp;"+lang("RANGE_DELETE")+"&nbsp;</button>";
+		info_text.innerHTML += "<br/>" + cancel_button +
+		        "<button id='recycle_button' onclick='"+onclick+"' class='button-video-edit' style='margin-top:6px;float:unset;'>&nbsp;"+lang("RANGE_DELETE")+"&nbsp;</button>";
 		button_tooltip.show("info");
 		}
 	else {

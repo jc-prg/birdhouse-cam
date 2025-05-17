@@ -78,6 +78,7 @@ function birdhouse_INDEX(data, camera, object=false) {
 	}
 
     console.log("---> birdhouse_INDEX: selected:" + camera + " / app_active:" + app_active_cam + " / view_active:" + active_camera + " / view:" + index_view["type"] + " / other:" + other_cams.length );
+    console.log(app_camera_source);
 
     if (active_cam != {} && active_cam["name"]) {
         var replace_tags = {};
