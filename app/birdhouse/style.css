@@ -187,10 +187,6 @@ nav-active {
 }
 */
 
-img .play_button  {
-    min-width  : auto;
-}
-
 .camera_info_text {
     float      : left;
     margin     : 5px;
@@ -246,12 +242,16 @@ img .play_button  {
 
 /* image overlay - configuration of delete, recycle and video play symbols (overlay on images) */
 
+img .play_button  {
+    min-width  : auto;
+}
+
 .play_button {
     position    : absolute;
-    width       : 40px;
-    height      : 40px;
-    max-width       : 40px;
-    max-height      : 40px;
+    width       : 25%;
+    height      : auto;
+    max-width   : 40px;
+    max-height  : 40px;
     left        : 50%;
     top         : 40%;
     margin-left : -20px; /*half of the width */

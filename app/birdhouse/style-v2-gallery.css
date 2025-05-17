@@ -76,16 +76,14 @@
 }
 
 /* Play button centered */
-.play_button_xx {
+.play_button {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%); /* Perfectly centers the element */
-    width: 40px;   /* Adjust size as needed */
-    height: 40px;
     z-index: 60;
     pointer-events: none; /* So it doesn't interfere with clicks on the image */
-    //opacity: 0.5;
+    opacity: 0.5;
 }
 
 /* Star icon in upper-left */
