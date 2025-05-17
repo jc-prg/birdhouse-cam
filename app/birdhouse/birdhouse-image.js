@@ -578,8 +578,6 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
 
 	console.debug("Active Page: " + app_active_page);
 
-    entry["directory"] = "videos/";
-
 	var image_data        = birdhouse_ImageDisplayData(title, entry_id, entry, app_active_page, admin, video_short);
     var lowres            = image_data["lowres"];
     var hires             = image_data["hires"];
