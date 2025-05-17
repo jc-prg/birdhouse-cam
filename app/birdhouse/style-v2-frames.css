@@ -1,0 +1,27 @@
+/*
+* define size of frames and menu
+*/
+
+/* FRAME ELEMENTS --------------------------------- */
+
+/* default fill complete width */
+.frame_column.wide {
+    width: calc(100% - 20px);
+}
+
+.setting_bg.header {
+    width: calc(100% - 36px);
+}
+
+/* reduce width if menu is shown */
+@media (min-width: 890px) {
+    .frame_column.wide {
+        width: calc(100% - 175px);
+    }
+    .setting_bg.header {
+        width: calc(100% - 191px);
+    }
+    .separator_group {
+        width: 99%;
+    }
+}

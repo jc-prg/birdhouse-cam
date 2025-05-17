@@ -1,0 +1,24 @@
+/*
+* define style of elements in the setting section
+*/
+
+
+/* settings layout with image left (or on the top) and respective settings right (or below) */
+.camera_info {
+    width: 100%;
+}
+
+.camera_info_image {
+    width: calc(30% - 10px);
+}
+
+.camera_info_text {
+    width:  calc(70% - 10px);
+}
+
+/* landscape or width big enough */
+@media (max-width: 550px) {
+    .camera_info_text  { width: calc(100% - 10px); }
+    .camera_info_image { width: calc(100% - 10px); }
+    .camera_info_image #loading_img { display: none; }
+}

@@ -108,9 +108,9 @@
 
 @media only screen and (device-width : 402px) and (device-height : 874px) and (orientation : portrait) {
 
-    .frame_column.wide                  { width : 366px; }
-    .setting_bg.header                  { width : 366px; }
-    .settings_button_index.header       { width : 47px; }
+    .frame_column.wide                      { width : 366px; }
+    .setting_bg.header                      { width : 366px; }
+    .settings_button_index.header           { width : 47px; }
     .settings_button_index.header.invisible { width : 46px; }
     .settings_button_index.header img       { max-width : 36px; }
 

@@ -11,7 +11,10 @@ h3        { margin : 4px; }
 
 /* body   { touch-action: none; } */
 
-.frame_column { color : black; }
+.frame_column {
+
+    color : black;
+}
 
 /* Layer - z-index */
 
@@ -45,7 +48,7 @@ nav-active {
 
 .headerToolTip {
     position    : fixed;
-    top         :  10px;
+    top         :  30px;
     right       : 200px;
     z-index     : 100;
     font-family : sans-serif;
@@ -67,6 +70,7 @@ nav-active {
 
 /* configuration of image / thumbnail sizes */
 
+/* -------------------------------------------> REMOVE
 .image_container { 
     padding : 2px; 
     float   : left; 
@@ -76,6 +80,7 @@ nav-active {
 .image_container.fixed_height {
     height  : 240px;
 }
+*/
 
 .thumbnail { 
     width         : 137px;
@@ -168,6 +173,7 @@ nav-active {
     text-align : center;
 }
 
+/*
 .camera_info_image .image_container {
     width  : 100%;
 }
@@ -179,6 +185,7 @@ nav-active {
 .camera_info_image .image_container img {
     min-width  : 60%;
 }
+*/
 
 img .play_button  {
     min-width  : auto;
@@ -517,66 +524,6 @@ img .play_button  {
   float: right;
 }
 
-.loading-dots {
-  display: inline-block;
-}
-
-.admin_status_client_full { display: none; }
-.admin_status_client_small { display: block; }
-
-
-.dot {
-  display:  inline-block;
-  width: 8px;
-  height: 8px;
-  background-color: white;
-  border-radius: 50%;
-  margin-right: 4px;
-}
-
-.dot.red {
-  animation: dot-animation-red 1.5s infinite;
-}
-
-.dot.green {
-  animation: dot-animation-green 1.5s infinite;
-}
-
-.dot:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.dot:nth-child(2) {
-  animation-delay: 0.3s;
-}
-
-.dot:nth-child(3) {
-  animation-delay: 0.5s;
-}
-
-@keyframes dot-animation-red {
-  0% {
-    background-color: white;
-  }
-  50% {
-    background-color: red;
-  }
-  100% {
-    background-color: white;
-  }
-}
-
-@keyframes dot-animation-green {
-  0% {
-    background-color: white;
-  }
-  50% {
-    background-color: green;
-  }
-  100% {
-    background-color: white;
-  }
-}
 
 #error_log a {
     color: darkred;

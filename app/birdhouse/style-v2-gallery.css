@@ -1,0 +1,152 @@
+/*
+* define style of images and images in galleries, the following classes are defined here
+*
+* .image_group          - container for an image gallery
+* .image_container      - container for the image, additional icons and the description
+* .image_wrapper        - container for the image and its icons
+* .thumbnail_container  - container for the image (thumbnail)
+* .play_button          - icon placed in the center ontop of the image
+* .star                 - icon placed in the upper left corner ontop of the image
+* .recycle              - icon placed below the star icon
+*
+* gallery definition, in general here - details per device are possible, depending on the width of .frame_column.wide (e.g. in style-v2-iphone.css)
+*/
+
+.image_group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px; /* space between items */
+    padding: 5px; /* space between items */
+}
+
+/* Styling for each image container */
+.image_container_xx {
+    flex: 0 0 calc(20% - 10px);     /* 4 per row with some gap */
+    box-sizing: border-box;
+
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+/* Thumbnail container styling */
+.thumbnail_container_xx {
+    text-align: center;      /* Center-align the text below the image */
+}
+
+/* Styling for images */
+.thumbnail_container_xx img {
+    width: 100%;             /* Make images fill the container width */
+    height: auto;            /* Maintain aspect ratio */
+    display: block;          /* Remove bottom space/whitespace under images */
+    margin: 0 auto;          /* Center the image horizontally if needed */
+    border-radius: 3px;
+}
+
+/* Styling for image descriptions */
+.thumbnail_container_xx br {
+    //display: none;           /* Hide <br> tag, assuming description text is on the next line */
+}
+
+.thumbnail_container_xx p {
+    font-size: 14px;         /* Adjust font size for description */
+    color: #555;             /* Darker text color */
+    margin-top: 8px;         /* Add space between image and description */
+    text-align: center;      /* Center the description text */
+}
+
+/* Clear floats after each row of images */
+.frame_column::after {
+    content: "";
+    display: table;
+    clear: both;             /* Ensures the float is cleared and the container has correct height */
+}
+
+/* ------------------------------- */
+
+.image_wrapper_xx {
+    position: relative;
+    width: 100%;
+}
+
+/* Main image */
+.image_wrapper_xx img:first-child {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Play button centered */
+.play_button_xx {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Perfectly centers the element */
+    width: 40px;   /* Adjust size as needed */
+    height: 40px;
+    z-index: 60;
+    pointer-events: none; /* So it doesn't interfere with clicks on the image */
+    //opacity: 0.5;
+}
+
+/* Star icon in upper-left */
+.star_xx {
+    position: absolute;
+    top: 7px;
+    left: 5px;
+    width: 20px;
+    height: 20px;
+    z-index: 60;
+}
+
+.recycle_xx {
+    position: absolute;
+    top: 35px;
+    left: 5px;
+    width: 20px;
+    height: 20px;
+    z-index: 60;
+}
+
+/* --------------------------------------------------------- */
+
+@media (min-width: 1000px) {
+    .image_container_xx {
+        flex: 0 0 calc(16.66666% - 11px); /* 6 per row */
+    }
+}
+
+@media (min-width: 1200px) {
+    .image_container_xx {
+        flex: 0 0 calc(12.5% - 10px); /* 8 per row */
+    }
+}
+@media (min-width: 1400px) {
+    .image_container_xx {
+        flex: 0 0 calc(10% - 10px); /* 10 per row */
+    }
+}
+
+
+@media (max-width: 800px) {
+    .image_container_xx {
+        flex: 0 0 calc(25% - 10px); /* 3 per row */
+    }
+}
+
+@media (max-width: 420px) {
+    .image_container_xx {
+        flex: 0 0 calc(33.33% - 10px); /* 3 per row */
+    }
+}
+
+@media (max-width: 370px) {
+    .image_container_xx {
+        flex: 0 0 calc(50% - 10px); /* 2 per row */
+    }
+}
+
+@media (max-width: 310px) {
+    .image_container_xx {
+        flex: 0 0 calc(100% - 2px); /* 1 per row */
+    }
+}

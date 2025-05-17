@@ -76,13 +76,19 @@ var birdhouse_css = [
     "video-player.css",
     "style-settings.css",
     "style-labels.css",
-    "style-laptop.css",
-    "style-ipad.css",
-    "style-iphone.css",
+    //"style-laptop.css",
+    //"style-ipad.css",
+    //"style-iphone.css",
     "style-image-overlay.css",
     "style-dark.css",
     "style-slider.css",
     "style-slider-dark.css",
+    "style-v2-settings.css",
+    "style-v2-settings-processing.css",
+    "style-v2-gallery.css",
+    "style-v2-frames.css",
+    "style-v2-ipad.css",
+    "style-v2-iphone.css",
 ];
 
 function birdhouse_modules_loaded() {
