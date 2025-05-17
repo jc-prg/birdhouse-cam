@@ -36,7 +36,7 @@ Find further impressions [here](info/impressions.md).
 
 ## Main Features
 
-* **Birdhouse web-app for Browser and SmartPhone** (English and German, optimized for iPhone)
+* **Birdhouse web-app for Browser and SmartPhone** (English and German)
 * **Watching live stream** with 1 or 2 cameras (RPi4 recommend for fluent stream) 
   * _INSIDE_: Raspberry Pi camera with IR light  or USB camera that supports IR light 
   * _OUTSIDE_: USB webcam (optimal viewing angle dependens on distance between birdhouse and camera)
@@ -60,7 +60,7 @@ Find further impressions [here](info/impressions.md).
   * from sensors connected to the Raspberry Pi (DHT11/DHT22)
   * GPS lookup for cities or addresses via GeoPy to set weather location
 * **Listening and recording audio stream** from microphone
-  * listening currently browser only (no iPhone)
+  * listening (currently browser only, not on iOS devices)
   * recording audio with video stream
 * **Detecting birds** (objects) via YOLOv11
   * Bird detection model in an early stage trained with [a few European singing birds](data/birds.json)

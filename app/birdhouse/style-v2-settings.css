@@ -2,7 +2,7 @@
 * define style of elements in the setting section
 */
 
-
+/* CAMERA INFO ---------------------------------------------------------------------------- */
 /* settings layout with image left (or on the top) and respective settings right (or below) */
 .camera_info {
     width: 100%;
@@ -22,3 +22,21 @@
     .camera_info_image { width: calc(100% - 10px); }
     .camera_info_image #loading_img { display: none; }
 }
+
+/* SETTING BUTTONS ------------------------------------------------------------------------- */
+/* adapted layout for birdhouse app */
+
+.settings_button_index     { margin : 3px; width : calc(50% - 6px); height : 120px; }
+.settings_button_index img { max-width: 90%; }
+.settings_icon_big         { max-width : 120px; max-height : 60px; }
+
+
+@media (min-width: 705px) {
+  .settings_button_index    { margin : 3px; width : calc(33.333% - 6px); height : 140px; }
+  .settings_icon_big        { max-width : 120px; max-height : 60px; }
+  }
+
+@media (min-width: 1250px) {
+  .settings_button_index    { margin : 3px; width : calc(25% - 6px); height : 140px; }
+  .settings_icon_big        { max-width : 140px; max-height : 80px; }
+  }
