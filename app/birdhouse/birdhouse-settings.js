@@ -259,9 +259,10 @@ function birdhouse_app_settings (name="Settings") {
         html_entry += this.tab.row("BU Index Time:&nbsp;",      birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
         html_entry += this.tab.row("<hr/>");
 
-        html_entry += this.tab.row("Index View:&nbsp;",         birdhouse_edit_field(id="set_index_view", field="views:index:type", type="select", options="default,overlay,picture-in-picture", data_type="string") );
-        html_entry += this.tab.row("LowRes Position (CAM1):&nbsp;",    birdhouse_edit_field(id="set_index_lowres", field="views:index:lowres_pos_cam1", type="select", options="1,2,3,4", data_type="integer") );
-        html_entry += this.tab.row("LowRes Position (CAM2):&nbsp;",    birdhouse_edit_field(id="set_index_lowres2", field="views:index:lowres_pos_cam2", type="select", options="1,2,3,4", data_type="integer") );
+
+        html_entry += this.tab.row("Index View:&nbsp;",                birdhouse_edit_field(id="set_index_view", field="views:index:type", type="select", options="default,overlay,picture-in-picture", data_type="string") );
+        html_entry += this.tab.row("LowRes Position (CAM1):&nbsp;",    birdhouse_edit_field(id="set_index_lowres", field="views:index:lowres_pos_cam1", type="select_dict_sort", options=index_lowres_position, data_type="integer") );
+        html_entry += this.tab.row("LowRes Position (CAM2):&nbsp;",    birdhouse_edit_field(id="set_index_lowres2", field="views:index:lowres_pos_cam2", type="select_dict_sort", options=index_lowres_position, data_type="integer") );
 
         var id_list = "set_preview_fav:set_initial_setup:set_language:";
         id_list    += "set_timezone:set_title:set_backup:set_preview:set_rpi:set_index_lowres:set_index_view:set_index_lowres2";

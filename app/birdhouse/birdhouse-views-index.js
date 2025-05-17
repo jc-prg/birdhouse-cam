@@ -1,10 +1,10 @@
 
 var index_template = {};
 var index_lowres_position = {
-  "1": "top:6%;left:3%;",
-  "2": "top:3%;right:3%;",
-  "3": "bottom:3%;left:3%;",
-  "4": "bottom:3%;right:3%;"
+  "1": "upper_left", //"top:6%;left:3%;",
+  "2": "upper_right", //"top:3%;right:3%;",
+  "3": "lower_left", //"bottom:3%;left:3%;",
+  "4": "lower_right", //"bottom:3%;right:3%;"
 };
 
 //-------------------------------------------------
@@ -127,7 +127,7 @@ index_template["overlay"] = `
                 </a>
 
                 <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM2_ID-->');" style="cursor:pointer;">
-                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class="streams_index_second" style="<!--CAM2_LOWRES_POS-->">
+                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class="streams_index_second <!--CAM2_LOWRES_POS-->">
                 </a>
 
             </div>
@@ -147,7 +147,7 @@ index_template["overlay_admin"] = `
                 </a>
 
                 <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM2_ID-->');" style="cursor:pointer;">
-                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class="streams_index_second" style="<!--CAM2_LOWRES_POS-->">
+                    <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class="streams_index_second <!--CAM2_LOWRES_POS-->">
                 </a>
 
             </div>
