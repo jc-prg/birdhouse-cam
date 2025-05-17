@@ -88,7 +88,9 @@ function birdhouse_OBJECTS(title, data) {
         entry_information += favorite_label + default_dates;
 
         var html_entry = tab.start();
-        html_entry    += tab.row(birdhouse_Image(bird_lang(key), key, value), entry_information);
+        var image      = "<div class='detection_title_image'>" + birdhouse_Image(bird_lang(key), key, value) + "</div>";
+        image          = image.replace("<img", "<img style='max-height:200px;width:auto;'")
+        html_entry    += tab.row(image, entry_information);
         html_entry    += tab.end();
 
         var bird_key = bird_lang(key);
@@ -263,7 +265,7 @@ function birdhouse_labels_edit_load(data) {
 }
 
 /*
-*
+* send request to save edited label information
 */
 function birdhouse_label_edit_request() {
     var entry_id   = getTextById('edit_label_time');

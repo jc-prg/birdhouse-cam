@@ -83,6 +83,7 @@ var birdhouse_css = [
     "style-dark.css",
     "style-slider.css",
     "style-slider-dark.css",
+    "style-v2-index.css",
     "style-v2-settings.css",
     "style-v2-settings-processing.css",
     "style-v2-gallery.css",

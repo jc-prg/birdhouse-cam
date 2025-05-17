@@ -2,6 +2,16 @@
 * define for processing information in settings (blink red and green dots in header)
 */
 
+#processing_info_header {
+  display: block;
+  float: right;
+}
+
+#server_info_header {
+  display: block;
+  float: right;
+}
+
 .loading-dots {
   display: inline-block;
 }

@@ -133,10 +133,10 @@ nav-active {
     cursor        : pointer;
     border-bottom : 1px solid gray;
     border-radius : 3px;
-    
-    text-align    : left;
-    color         : white;
     background    : #222222;
+
+    color         : white;
+    text-align    : left;
     font-size     : 10px;
     }
 
@@ -513,16 +513,6 @@ img .play_button  {
 }
 
 /* loading dots */
-
-#processing_info_header {
-  display: block;
-  float: right;
-}
-
-#server_info_header {
-  display: block;
-  float: right;
-}
 
 
 #error_log a {

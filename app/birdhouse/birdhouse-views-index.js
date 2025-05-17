@@ -1,40 +1,50 @@
 
 var index_template = {};
 var index_lowres_position = {
-  "1": "upper_left", //"top:6%;left:3%;",
-  "2": "upper_right", //"top:3%;right:3%;",
-  "3": "lower_left", //"bottom:3%;left:3%;",
-  "4": "lower_right", //"bottom:3%;right:3%;"
+  "1": "upper_left",
+  "2": "upper_right",
+  "3": "lower_left",
+  "4": "lower_right",
 };
 
 //-------------------------------------------------
 
 index_template["single"] = `
-    <div id="video_stream_online" style="display:block;">
+    <div id="video_stream_online">
         <center>
-            <div class="livestream_main_container cam1">
+        <div class="streams_wrapper">
+            <div class="streams_index_overlay">
+
                 <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
-                    <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="livestream_main">
+                    <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="streams_index_main">
                 </a>
+
             </div>
+        </div>
         </center>
-        <br>&nbsp;<br>
     </div>
 `
 
 index_template["single_admin"] = `
-    <div id="video_stream_online" style="display:block;">
+    <div id="video_stream_online">
         <center>
-            <div class="livestream_main_container cam1">
+        <div class="streams_wrapper">
+            <div class="streams_index_overlay">
+
                 <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
-                    <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="livestream_main">
+                    <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="streams_index_main">
                 </a>
-                <!--ADMIN-->
+
             </div>
+        </div>
+        &nbsp;<br/>
+        <!--ADMIN-->
         </center>
-        <br>&nbsp;<br>
     </div>
 `
+
+index_template["picture-in-picture_admin"]  = index_template["single_admin"]
+index_template["picture-in-picture"]        = index_template["single"]
 
 //-------------------------------------------------
 

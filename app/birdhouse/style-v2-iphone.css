@@ -54,6 +54,7 @@
 
     .frame_column.wide      { width: calc(100% - 175px); }
     .setting_bg.header      { width: calc(100% - 191px); left: 163px;}
+    .separator_group        { font-size : 9px; }
 }
 
 /* ------------------------------------------------------- */
