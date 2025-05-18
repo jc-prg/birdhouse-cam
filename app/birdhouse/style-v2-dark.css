@@ -1,0 +1,13 @@
+/* dark scheme */
+
+@media (prefers-color-scheme: dark) {
+
+  a         { color  : #dddd00; }
+  a:link    { color  : #dddd00; }
+  a:visited { color  : #aaaa00; }
+  a:hover   { color  : #dddd00; font-weight : bold; }
+
+  body      { background: #111111; }
+
+  .loading_overlay { background: #111111; border: solid 0px #111111; }
+}

@@ -1,0 +1,15 @@
+/* dark scheme */
+
+@media (prefers-color-scheme: dark) {
+
+    /* SETTINGS ELEMENTS --------------------------------- */
+
+    .setting_bg {
+        border           : #333333 1px solid;
+        }
+
+    .setting_bg.header.empty2 {
+        background-color : #111111;
+        }
+
+}

@@ -1,0 +1,13 @@
+/* dark scheme */
+
+@media (prefers-color-scheme: dark) {
+
+    .livestream_main     { border : #dddddd 1px solid; }
+    .livestream_2nd      { border : #dddddd 1px solid; }
+
+    .button-video-record {
+         background-color : #555555;
+         border           : #999999 1px solid;
+         color            : #dddddd;
+     }
+}

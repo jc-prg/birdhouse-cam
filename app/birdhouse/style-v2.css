@@ -1,0 +1,28 @@
+/* configuration of default HTML elements */ 
+
+a         { color  : blue; }
+a:link    { color  : blue; }
+a:visited { color  : darkblue; }
+a:hover   { color  : darkblue; font-weight : bold; }
+
+h1        { margin : 4px; }
+h2        { margin : 4px; }
+h3        { margin : 4px; }
+
+/* body   { touch-action: none; } */
+
+.loading_overlay {
+    position        : absolute;
+    top             : 0px;
+    left            : 0px;
+    z-index         : 200;
+    background      : lightgray;
+    border          : solid 0px lightgray;
+    height          : 100%;
+    width           : 100%;
+    border-radius   : 0px;
+    border          :0px;
+    display         : flex; /* Add flexbox */
+    justify-content : center; /* Center horizontally */
+    align-items     : center; /* Center vertically */
+}
