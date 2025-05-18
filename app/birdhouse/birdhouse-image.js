@@ -333,6 +333,7 @@ function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 * @param (string/boolean) open: command, default is "toggle", other values are true (open) or false (close)
 */
 function birdhouse_groupToggle(id, open="toggle", show="flex") {
+alert("test");
     if (open == "toggle") {
         if (document.getElementById("group_"+id).style.display == "none")   { birdhouse_groupOpen(id, show); }
         else                                                                { birdhouse_groupClose(id); }
