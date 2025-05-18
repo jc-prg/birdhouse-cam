@@ -279,8 +279,9 @@ function birdhouse_view_images_threshold(threshold) {
 function birdhouse_view_images_objects(object) {
 
     if (!document.getElementById("group_list")) { return; }
-    group_list = document.getElementById("group_list").innerHTML.split(" ");
-    image_list = [];
+    group_list += " TODAY_FAVORITE";
+    group_list  = document.getElementById("group_list").innerHTML.split(" ");
+    image_list  = [];
     image_list_active = [];
 
     var prefix = "";
@@ -298,17 +299,21 @@ function birdhouse_view_images_objects(object) {
     for (a=0;a<image_list.length;a++) {
         if (image_list[a] != "") {
             image_objects = document.getElementById(image_list[a]+"_objects");
-            image_container = image_list[a] + "_container";
+            image_container     = image_list[a] + "_container";
+            image_container_fav = image_list[a] + "_FAV_container";
             if (object == "EMPTY" && image_objects != undefined && image_objects.value.indexOf(",") < 0) {
                 image_list_active.push(image_list[a]);
                 elementVisible(image_container);
+                elementVisible(image_container_fav);
                 }
             else if ((image_objects && image_objects.value && image_objects.value.indexOf(object) >= 0) || (object == "")) {
                 image_list_active.push(image_list[a]);
                 elementVisible(image_container);
+                elementVisible(image_container_fav);
             }
             else {
                 elementHidden(image_container);
+                elementHidden(image_container_fav);
             }
         }
 

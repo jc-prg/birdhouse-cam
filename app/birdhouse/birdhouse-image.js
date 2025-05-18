@@ -107,10 +107,13 @@ function birdhouse_OtherGroupHeader( key, title, header_open, css_class="") {
 function birdhouse_ImageGroup( group_id, title, entries, entry_count, entry_category, header_open, admin=false, video_short=false,
                                same_img_size=false, max_lowres_size=0, max_text_lines=1) {
 
-	var count     = {};
-	var html      = "";
-	var image_ids = "";
-	var display   = "";
+	var count            = {};
+	var html             = "";
+	var image_ids        = "";
+	var display          = "";
+	var special_category = "";
+
+    if (group_id.indexOf("FAVORITE") > 0 ) { special_category = "_FAV"; }
 
 	if (admin && entry_count) {
 		for (i=0;i<entry_count.length;i++) 	{ count[entry_count[i]] = 0; }
@@ -243,7 +246,7 @@ function birdhouse_ImageGroup( group_id, title, entries, entry_count, entry_cate
             var img_title = key;
             html += birdhouse_Image(title=img_title, entry_id=key, entry=entries[key], header_open=header_open, admin=admin,
                                     video_short=video_short, group_id=group_id, same_img_size=same_img_size,
-                                    lowres_size=lowres_size);
+                                    lowres_size=lowres_size, special_category=special_category);
             if (entries[key]["detections"]) {
                 for (var j=0;j<entries[key]["detections"].length;j++) {
                     var label = entries[key]["detections"][j]["label"];
@@ -558,7 +561,8 @@ function birdhouse_Image_old(title, entry_id, entry, header_open=true, admin=fal
 
 /* -------------------------------------------- */
 
-function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, video_short=false, group_id="", same_img_size=false, lowres_size=0) {
+function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, video_short=false, group_id="",
+                         same_img_size=false, lowres_size=0, special_category="") {
 
 	if (entry["type"] == "data") { return ""; }
 
@@ -586,7 +590,7 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
     var onclick           = image_data["onclick"];
 	var style             = image_data["style"];
     var edit              = image_data["edit"];
-    var img_id2           = image_data["img_id2"];
+    var img_id2           = image_data["img_id2"] + special_category;
     var play_button       = image_data["play_button"];
     var img_missing       = image_data["img_missing"];
 

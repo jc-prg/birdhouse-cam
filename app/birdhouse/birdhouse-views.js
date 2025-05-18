@@ -376,6 +376,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             var keys = Object.keys(entries).sort().reverse();
             var keys2 = overloadImageKeys.concat(keys);
             overloadImageKeys = keys2;
+            group_list.push("TODAY_FAVORITE")
 
             for (var key in entries_favorite) { overloadImageEntries[key] = entries_favorite[key]; }
             }
