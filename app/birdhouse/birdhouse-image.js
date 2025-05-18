@@ -351,12 +351,11 @@ function birdhouse_groupToggle(id, open="toggle") {
 function birdhouse_groupOpen(id) {
     var show = "flex";
     document.getElementById("group_"+id).style.display = show;
+    document.getElementById("group_"+id).offsetHeight;
     app_header_opened["group_"+id] = true;
 
     if (document.getElementById("group_intro_"+id)) {
-        document.getElementById("group_intro_"+id).style.display = "block";
         document.getElementById("group_intro_"+id).style.display = show;
-        document.getElementById("group_intro_"+id).offsetHeight;
     }
     if (document.getElementById("group_ids_"+id)) {
         images = document.getElementById("group_ids_"+id).innerHTML;
