@@ -403,164 +403,6 @@ function birdhouse_groupClose(id) {
 * @param (dict) lowres_size: set lowres size using integers (pixel size) for the following values: 'container_width', 'container_height', 'thumbnail_width', 'thumbnail_height'
 * @returns (string): html sequence to display lowres image
 */
-function birdhouse_Image_old(title, entry_id, entry, header_open=true, admin=false, video_short=false, group_id="", same_img_size=false, lowres_size=0) {
-
-	if (entry["type"] == "data") { return ""; }
-
-	var html        = "";
-	var category    = "";
-    var rotation    = 0;
-	var onclick_difference = "";
-	var settings     = app_data["SETTINGS"];
-	var settings_cam = app_data["SETTINGS"]["devices"]["camera"];
-	var img_url      = ""; // RESTurl;
-	var img_missing  = false;
-	var detect_sign  = "";
-
-	var dont_load   = "";
-	if (header_open == false) { dont_load = "data-"; }
-	if (entry["directory"] && entry["directory"].charAt(entry["directory"].length - 1) != "/") { entry["directory"] += "/"; }
-
-	console.debug("Active Page: " + app_active_page);
-
-	var image_data        = birdhouse_ImageDisplayData(title, entry_id, entry, app_active_page, admin, video_short);
-    var lowres            = image_data["lowres"];
-    var hires             = image_data["hires"];
-    var description       = image_data["description"];
-    var description_hires = image_data["description_hires"];
-    var onclick           = image_data["onclick"];
-	var style             = image_data["style"];
-    var edit              = image_data["edit"];
-    var img_id2           = image_data["img_id2"];
-    var play_button       = image_data["play_button"];
-    var img_missing       = image_data["img_missing"];
-
-    if (image_data["same_img_size"]) { same_img_size = image_data["same_img_size"]; }
-
-	var star                    = "";
-	var recycle                 = "";
-	var thumbnail_width         = "";
-	var thumbnail_height        = "";
-
-	if (admin && edit) {
-		var img_id      = entry["category"];
-		var img_name    = entry["lowres"];
-		var img_star    = entry["favorit"];
-		var img_recycle = entry["to_be_deleted"];
-		var img_dir     = "birdhouse/img/";
-		if (img_star == undefined || img_star == -1)         { img_star = 0; }
-		if (img_recycle == undefined || img_recycle == -1)   { img_recycle = 0; }
-		if (parseInt(img_star) == 0)     { img_star_r = 1; }    else { img_star_r = 0; }
-		if (parseInt(img_recycle) == 0)  { img_recycle_r = 1; } else { img_recycle_r = 0; }
-
-		var onclick_star    = "birdhouse_setFavorite(index=\""+img_id+"\",status=document.getElementById(\"s_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\",img_id=\""+img_id2+"\");";
-		var onclick_recycle = "birdhouse_setRecycle(index=\""+img_id+"\",status=document.getElementById(\"d_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\",img_id=\""+img_id2+"\");";
-		if (app_active_page == "TODAY" || app_active_page == "TODAY_COMPLETE") {
-		    onclick_recycle    += "birdhouse_recycleRange(group_id=\""+group_id+"\", index=\""+img_id+"\", status=document.getElementById(\"d_"+img_id2+"_value\").innerHTML, lowres_file=\""+img_name+"\")";
-		    }
-		star                = "<div id='s_"+img_id2+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id2+"' src='"+img_dir+"star"+img_star+".png'       onclick='"+onclick_star+"'/>";
-		recycle             = "<div id='d_"+img_id2+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='recycle_img' id='d_"+img_id2+"' src='"+img_dir+"recycle"+img_recycle+".png' onclick='"+onclick_recycle+"'/>";
-
-        if (app_collect4download) {
-            if (entry["type"] == "image") {
-                var collect_entry    = entry["camera"]+"_"+entry["datestamp"]+"_"+entry["time"].replaceAll(":","");
-                var onclick_checkbox = "collect4download_toggle(\"" + collect_entry + "\", \""+img_id2+"\");";
-                onclick              = onclick_checkbox;
-                var img_checkbox     = collect4download_image(collect_entry);
-                checkbox = "<div id='c_"+img_id2+"_value' style='display:none;'>"+img_recycle_r+"</div><img class='checkbox_img' id='cb_"+img_id2+"' src='"+img_checkbox+"' onclick='"+onclick_checkbox+"'/>";
-                star = checkbox;
-                recycle = "";
-                }
-            else {
-                star    = "";
-                recycle = "";
-                onclick = "";
-                }
-            }
-        }
-
-    var height                  = "";
-    var container_style         = "";
-    var thumb_container_style   = "";
-    var container_id            = "";
-
-    if (!same_img_size) {
-        height = " fixed_height_xx";
-        }
-    else if (lowres_size != 0) {
-        container_width  = lowres_size["container_width"];
-        container_height = lowres_size["container_height"];
-        thumbnail_width  = lowres_size["thumbnail_width"];
-        thumbnail_height = lowres_size["thumbnail_height"];
-        style           += "width:" + thumbnail_width + "px;height:" + thumbnail_height + "px;";
-        container_style += "width:" + container_width + "px;height:" + container_height + "px;";
-        thumb_container_style += "width:" + thumbnail_width + "px;";
-        }
-
-    if (entry["type"] == "addon")   {
-        container_id = "lowres_today";
-        var image_onload = "onload='error_img=document.getElementById(\"lowres_error_"+entry["camera"]+"\");error_img.height=this.height;error_img.width=this.width;'";
-        var image_onload = "";
-        }
-    else {
-        container_id = img_id2 + "_container";
-        var image_onload = "";
-        }
-
-	html += "<div id='"+container_id+"' class='image_container_xx"+height+"' style='" + container_style + "'>";
-	html += "  <div class='star'>"+star+"</div>";
-	html += "  <div class='recycle'>"+recycle+"</div>";
-    html += "  <div class='thumbnail_container_xx' style='" + thumb_container_style + "'>";
-
-    if (!img_missing) {
-        html += "    <a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id2+"' class='thumbnail' style='"+style+"' "+image_onload+"/></a>";
-        if (entry["similarity"]) {
-            html += "<input id='"+img_id2+"_similarity' value='"+entry["similarity"]+"' style='display:none;'>";
-            }
-        //if (entry["detections"]) {
-            var labels = "";
-            if (entry["detections"]) {
-                for (var i=0;i<entry["detections"].length;i++) {
-                    var label = entry["detections"][i]["label"];
-                    if (label == "") { label = "without-label"; }
-                    if (labels.indexOf(label) < 0) { labels += label + ","; }
-                    }
-                }
-            if (entry["type"] == "video") { labels += "video,"; }
-            html += "<input id='"+img_id2+"_objects' value='"+labels+"' style='display:none;'>";
-        //    }
-
-        birdhouse_image_ids.push(img_id2);
-        html += play_button;
-        }
-    else {
-        console.debug("birdhouse_Image - " + img_id2);
-        console.debug(image_data);
-        //if (style == "") { style = "height:140px;"; }
-        html += "<div class='thumbnail error' style='"+style+"' id='error_"+img_id2+"'>";
-        html += lang("NO_IMAGE_IN_ARCHIVE")+"</div>";
-        birdhouse_image_ids_error.push(img_id2);
-        }
-	html += "    <br/><center><small>" + description + "</small></center>";
-	html += "  </div>";
-	html += "</div>";
-
-	if (entry["type"] == "addon") {
-        html += "<div id='lowres_today_error' class='image_container_xx"+height+"' style='" + container_style +  ";display:none;'>";
-        html += "  <div class='star'></div>";
-        html += "  <div class='recycle'></div>";
-        html += "  <div class='thumbnail_container_xx' style='" + thumb_container_style + "'>";
-        html += "     <div class='thumbnail error' id='lowres_error_"+entry["camera"]+"' style='"+style+";padding:0px;'>"+lang("CONNECTION_ERROR")+"</div>"
-        html += "    <br/>";
-        html += "  </div>";
-        html += "</div>";
-	}
-
-	return html;
-}
-
-/* -------------------------------------------- */
-
 function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, video_short=false, group_id="",
                          same_img_size=false, lowres_size=0, special_category="") {
 
@@ -661,9 +503,9 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
         var image_onload = "";
         }
 
-	html += "<div class='image_container_xx' id='"+container_id+"'>";
-    html += "  <div class='thumbnail_container_xx'>";
-	html += "    <div class='image_wrapper_xx'>"
+	html += "<div class='image_container' id='"+container_id+"'>";
+    html += "  <div class='thumbnail_container'>";
+	html += "    <div class='image_wrapper'>"
 
     if (!img_missing) {
         html += "<a onclick='"+onclick+"' style='cursor:pointer;'><img "+dont_load+"src='"+lowres+"' id='"+img_id2+"' class='thumbnail' style='"+style+"' "+image_onload+"/></a>";
@@ -692,18 +534,18 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
         html += lang("NO_IMAGE_IN_ARCHIVE")+"</div>";
         birdhouse_image_ids_error.push(img_id2);
         }
-	html += "      <div class='star_xx'>"+star+"</div>";
-	html += "      <div class='recycle_xx'>"+recycle+"</div>";
+	html += "      <div class='star'>"+star+"</div>";
+	html += "      <div class='recycle'>"+recycle+"</div>";
 	html += "    </div>";
 	html += "    <center style='margin-top:4px;'><small>" + description + "</small></center>";
 	html += "  </div>";
 	html += "</div>";
 
 	if (entry["type"] == "addon") {
-        html += "<div  class='image_container_xx' id='lowres_today_error' style='" + container_style +  ";display:none;'>";
-        html += "  <div class='thumbnail_container_xx'>";
-        html += "    <div class='image_wrapper_xx'>"
-        html += "      <div class='thumbnail_container_xx' style='" + thumb_container_style + "'>";
+        html += "<div  class='image_container' id='lowres_today_error' style='" + container_style +  ";display:none;'>";
+        html += "  <div class='thumbnail_container'>";
+        html += "    <div class='image_wrapper'>"
+        html += "      <div class='thumbnail_container' style='" + thumb_container_style + "'>";
         html += "        <div class='thumbnail error' id='lowres_error_"+entry["camera"]+"' style='"+error_style+";padding:0px;'>"+lang("CONNECTION_ERROR")+"</div>"
         html += "        <br/>";
         html += "       </div>";
