@@ -354,7 +354,7 @@ function birdhouse_groupOpen(id) {
     app_header_opened["group_"+id] = true;
 
     if (document.getElementById("group_intro_"+id)) {
-        //document.getElementById("group_intro_"+id).style.display = "block";
+        document.getElementById("group_intro_"+id).style.display = "block";
         document.getElementById("group_intro_"+id).style.display = show;
         document.getElementById("group_intro_"+id).offsetHeight;
     }
