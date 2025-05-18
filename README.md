@@ -16,7 +16,7 @@ app in English and German, ...
    * [Accessing images via WebDAV](#Accessing-images-via-WebDAV)
    * [Optimizing system configuration](#optimizing-system-configuration)
    * [Sample proxy server configuration](#Sample-proxy-server-configuration)
-   * [Server performance recommendations](server-performance-recommendations)
+   * [Server performance recommendations](#server-performance-recommendations)
 6. [Train bird detection](#Train-bird-detection)
 7. [Helping stuff](#helping-stuff)
 8. [Other sources](#other-sources)
@@ -37,7 +37,7 @@ Find further impressions [here](info/impressions.md).
 
 ## Main Features
 
-* **Birdhouse web-app for Browser and SmartPhone** (English and German)
+* **Birdhouse web-app for Browser and SmartPhone** (English and big parts in German)
 * **Watching live stream** with 1 or 2 cameras (RPi4 recommend for fluent stream) 
   * _INSIDE_: Raspberry Pi camera with IR light  or USB camera that supports IR light 
   * _OUTSIDE_: USB webcam (optimal viewing angle dependens on distance between birdhouse and camera)
@@ -82,17 +82,18 @@ Find further impressions [here](info/impressions.md).
 
 ## Birdhouse
 
-Here are some options. Calculate with a little bit more space in the height for the camera inside the birdhouse.
+Here are some options. Calculate with a little bit more space in the height for the camera inside the birdhouse. 
+If you want to use a camera without IR light include a small semi-transparent window, e.g., within the roof of the birdhouse.
 
-* German instructions: [NABU - Nistkästen selber bauen](https://www.nabu.de/tiere-und-pflanzen/voegel/helfen/nistkaesten/index.html)
 * English instructions: [Simple birdhouse](https://suncatcherstudio.com/birds/birdhouse-plans-simple/)
+* German instructions: [NABU - Nistkästen selber bauen](https://www.nabu.de/tiere-und-pflanzen/voegel/helfen/nistkaesten/index.html)
 
 ## Technology
 
 * IT Hardware
   * Raspberry Pi 4 (recommended for two cameras and/or object detection) or Raspberry Pi 3B+ (if only inside view)
   * Micro SD with 64 GByte
-  * USB camera for outside view and/or inside view (recommendation for inside view: HBVCAM-F20216HD 92° viewing angle)
+  * USB camera for outside view and/or inside view (recommendation for inside view: HBVCAM-F20216HD 92° viewing angle, requires a semi-transparent window in the birdhouse to get enough light inside)
   * _optional:_ PiCamera with IR for the inside view (wide-angle min. 100°)
   * _optional:_ Small USB Microphone
   * _optional:_ DHT11 / DHT22 Sensor (DHT22 if used for temperatures below 0 °C)
