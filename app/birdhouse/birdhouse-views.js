@@ -237,7 +237,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
             video_stream_server = video_stream_server.split(":")[0];
             video_stream_server = "http://" + video_stream_server + ":" + server_info["port_video"] + "/";
 
-			console.log("-----> video-streaming: " + video_stream_server + " (http[s]: " + window.location.href + ")");
+			console.log("-----> video-streaming: " + video_stream_server + " (http[s]: " + window.location.href  + ")");
 
 			video_values = {};
 			video_values["VIDEOID"]    = key;
@@ -345,7 +345,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
     // overview of archived days
     else if (active_page == "ARCHIVE" && (active_date == "" || active_date == undefined)) {
-        if (app_admin_allowed) { html += birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page, active_date); }
+        if (app_admin_allowed) { html += birdhouse_LIST_admin_archive_overview(data, app_admin_allowed, camera, active_page, active_date); }
         html += birdhouse_LIST_calendar(groups);
         }
 
@@ -462,7 +462,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
     if (app_admin_allowed) {
         if (entries_yesterday != undefined && Object.keys(entries_yesterday).length > 0) {
             html += birdhouse_ImageGroup(active_page+"_YESTERDAY",lang("YESTERDAY"), entries_yesterday, entry_count, entry_category,
-                                         false, app_admin_allowedadmin, video_short, same_img_size, max_image_size_LR);
+                                         false, app_admin_allowed, video_short, same_img_size, max_image_size_LR);
             entries_available = true;
             }
         if (entries_delete != undefined && Object.keys(entries_delete).length > 0) {
