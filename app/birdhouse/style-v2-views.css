@@ -2,6 +2,19 @@
 * define style for views
 */
 
+
+.weather-3day-overview {
+  width : 100%;
+  float: left;
+  margin: 10px;
+}
+
+@media (min-width: 1100px) {
+    .weather-3day-overview {
+      width : calc( 33.3% - 20px);
+    }
+}
+
 /* INDEX STREAMS ---------------------------------- */
 
 .streams_wrapper {

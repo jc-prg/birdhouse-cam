@@ -58,7 +58,7 @@ function birdhouseWeather( data ) {
     current_weather += tab.row(lang("HUMIDITY")+":",    weather_today["humidity"] +"%");
     current_weather += tab.row(lang("WIND")+":",        weather_today["wind_speed"] + " km/h");
     current_weather += tab.row(lang("STATUS")+":",      weather_today["date"] + " " + weather_today["time"]);
-    // current_weather += tab.row(lang("PRESSURE")+":",    weather_today["pressure"] + " hPa");
+    //current_weather += tab.row(lang("PRESSURE")+":",    weather_today["pressure"] + " hPa");
     //current_weather += tab.row(lang("UV_INDEX")+":",    weather_today["uv_index"]);
     if (weather["info_module"]["provider_link_required"]) {
         current_weather += tab.row(lang("SOURCE")+":",  weather["info_module"]["provider_link"]);
@@ -150,8 +150,10 @@ function birdhouseWeather( data ) {
     chart        += "<br/>&nbsp;<br/>";
 
     Object.keys(weather_data).forEach(date=>{
+        chart   += "<div class='weather-3day-overview'>";
         chart   += "<b>" + date + "</b><br/>";
         chart   += "<center>" + birdhouseWeather_OverviewChart(weather_data[date], "key", false) + "</center>" ;
+        chart   += "</div>";
         });
 
     chart        += "<br/>&nbsp;<br/>";
