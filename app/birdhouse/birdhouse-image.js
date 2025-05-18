@@ -354,6 +354,8 @@ function birdhouse_groupOpen(id) {
         console.error("Element not found: 'group_"+id+"'");
         }
 
+alert("group_id");
+
     var show = "flex";
     var html = document.getElementById("group_"+id).innerHTML;
     document.getElementById("group_"+id).innerHTML = "xxx";
