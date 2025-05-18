@@ -345,7 +345,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
     // overview of archived days
     else if (active_page == "ARCHIVE" && (active_date == "" || active_date == undefined)) {
-        if (admin) { html += birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page, active_date); }
+        if (app_admin_allowed) { html += birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page, active_date); }
         html += birdhouse_LIST_calendar(groups);
         }
 
