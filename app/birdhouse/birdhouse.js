@@ -144,8 +144,11 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 * @param (dict) data: data returned from API
 */
 function birdhousePrint(data) {
-    //app_data = data;
-	console.debug("Request->Print ...");
+	/*
+	// potentially add admin login check here, as it could happen that login status is change by the server
+	var status_admin = data["STATUS"]["admin_allowed"];
+	if (status_admin != undefined) { app_admin_allowed = status_admin; }
+    */
 
 	window.scrollTo(0,0);
 	var data_settings = app_data["SETTINGS"];
@@ -306,11 +309,10 @@ function birdhouseSetMainVars(data) {
 */
 function birdhouseSetMainStatus(data) {
 
-    if (data["STATUS"]["view"])        { var status_view  = data["STATUS"]["view"]; }
-    else if (data["DATA"]["active"])   { var status_view  = data["DATA"]["active"]; }
-    else                               { return; }
-
-    var status_admin = data["STATUS"]["admin_allowed"];
+    if (data["STATUS"]["view"])             { var status_view  = data["STATUS"]["view"]; }
+    else if (data["DATA"]["active"])        { var status_view  = data["DATA"]["active"]; }
+    else                                    { return; }
+    if (data["STATUS"]["admin_allowed"])    { app_admin_allowed = true;}
 
 	app_active_mic = app_available_micros[0];
 
@@ -321,8 +323,6 @@ function birdhouseSetMainStatus(data) {
 	if (status_view["active_date"] != "" && status_view["active_date"] != undefined)
 	                                                        { app_active_date = status_view["active_date"]; }
 	else                                                    { app_active_date = ""; }
-
-	if (status_admin != undefined) { app_admin_allowed = status_admin; }
 	}
 
 /*

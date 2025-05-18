@@ -16,7 +16,6 @@ function birdhouse_INDEX(data, camera, object=false) {
 	var html            = "";
     var html_no_entries = "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>";
 	var active_camera = camera;
-	var admin_allowed = data["STATUS"]["admin_allowed"];
 	var cameras       = app_data["SETTINGS"]["devices"]["cameras"];
 	var title         = app_data["SETTINGS"]["title"];
 	var index_view    = app_data["SETTINGS"]["views"]["index"];
@@ -72,7 +71,7 @@ function birdhouse_INDEX(data, camera, object=false) {
 
 	if (active_cam == {} && other_cams != [])                   { active_cam = other_cams[0]; other_cams.shift(); }
 	if (Object.keys(cameras).length == 0 || active_cam == {})   { html += html_no_entries; }
-	if (other_cams.length == 1 && admin_allowed == false) {
+	if (other_cams.length == 1 && app_admin_allowed == false) {
 	    if (other_cams[0]["error"])     { other_cams = []; }
 	    else if (active_cam["error"])   { active_cam = other_cams[0]; other_cams = []; }
 	}
@@ -106,13 +105,13 @@ function birdhouse_INDEX(data, camera, object=false) {
         if (Object.keys(cameras).length == 1 || other_cams.length == 0)         { selected_view = "single"; }
         else if (index_template[index_view["type"]])                            { selected_view = index_view["type"]; }
         else                                                                    { selected_view = "default"; }
-        if (admin_allowed)                                                      { selected_view += "_admin"; }
+        if (app_admin_allowed)                                                      { selected_view += "_admin"; }
 
-        console.log("Selected INDEX view: " + selected_view + " (" + index_view["type"] + " | ADMIN " + admin_allowed + ")");
+        console.log("Selected INDEX view: " + selected_view + " (" + index_view["type"] + " | ADMIN " + app_admin_allowed + ")");
         html += index_template[selected_view];
         html += index_template["offline"];
 
-        if (admin_allowed)  { html  = html.replace("<!--ADMIN-->", index_template["admin"]); }
+        if (app_admin_allowed)  { html  = html.replace("<!--ADMIN-->", index_template["admin"]); }
 
         if (object) {
             object_command = "birdhouse_INDEX(app_data, '"+active_camera+"', false);";
@@ -166,7 +165,6 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 
 	var html        = "";
 	var video       = data["DATA"]["data"]["entries"];
-	var admin       = data["STATUS"]["admin_allowed"];
 	var server_info = app_data["SETTINGS"]["server"];
     var tab         = new birdhouse_table();
 
@@ -223,7 +221,7 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 			html += tab.row(lang("SHORT_VERSION") + ": ", Math.round(video[key]["video_file_short_length"]*10)/10 + " s");
 			}
 
-		if (admin) {
+		if (app_admin_allowed) {
 		    html += tab.row("&nbsp;");
 			html += tab.row(lang("EDIT") + ":", "<button onclick=\"birdhouse_videoOverlayToggle();\" class=\"button-video-edit\">&nbsp;"+lang("SHORTEN_VIDEO")+"&nbsp;</button>&nbsp;");
 
@@ -312,8 +310,6 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
 	var active_page       = app_active_page;
 	var active_date       = data_list["active"]["active_date"];
-
-	var admin             = data["STATUS"]["admin_allowed"];
 	var server_status     = app_data["STATUS"]["server"];
 	var video_short       = true;
 	var page_title        = "";
@@ -328,7 +324,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
     // complete list of images from today
     if (active_page == "TODAY_COMPLETE") {
         same_img_size = true;
-        if (admin) { html += birdhouse_LIST_admin_today_complete(data, admin, camera, active_page, active_date); }
+        if (app_admin_allowed) { html += birdhouse_LIST_admin_today_complete(data, app_admin_allowed, camera, active_page, active_date); }
         html += birdhouse_LIST_chart_weather(data, active_page, camera);
         html += birdhouse_LIST_label(entries, active_page);
         }
@@ -342,7 +338,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
     // images from an archived day
     else if (active_page == "TODAY") {
         same_img_size = true;
-        if (admin) { html += birdhouse_LIST_admin_archive(data, admin, camera, active_page, active_date); }
+        if (app_admin_allowed) { html += birdhouse_LIST_admin_archive(data, app_admin_allowed, camera, active_page, active_date); }
         html += birdhouse_LIST_chart_weather(data, active_page, camera);
         html += birdhouse_LIST_label(entries, active_page);
         }
@@ -380,7 +376,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
             for (var key in entries_favorite) { overloadImageEntries[key] = entries_favorite[key]; }
             }
-        birdhouse_overlayLoadImages(overloadImageKeys, overloadImageEntries, app_active_page, admin);
+        birdhouse_overlayLoadImages(overloadImageKeys, overloadImageEntries, app_active_page, app_admin_allowed);
         }
 
 	// list today complete, favorites -> list in monthly or hourly groups
@@ -400,7 +396,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 				//--> doesn't work if image names double across the different groups; image IDs have to be changed (e.g. group id to be added)
             }
 			delete group_entries["999999"];
-			html += birdhouse_ImageGroup(active_page + "_" + group, title, group_entries, entry_count, entry_category, header_open, admin,
+			html += birdhouse_ImageGroup(active_page + "_" + group, title, group_entries, entry_count, entry_category, header_open, app_admin_allowed,
 			                             video_short, same_img_size, max_image_size_LR);
 			group_list.push(title);
 			count_groups += 1;
@@ -425,7 +421,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         // include favorites and videos if exist
         if (entries_favorite && Object.keys(entries_favorite).length > 0) {
             html += birdhouse_ImageGroup(active_page+"_FAVORITE", lang("FAVORITES_VIDEOS"), entries_favorite, ["all"], entry_category, true,
-                                         admin, video_short, same_img_size, max_image_size_LR);
+                                         app_admin_allowed, video_short, same_img_size, max_image_size_LR);
             entries_available = true;
             }
 
@@ -434,7 +430,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         else if (title.length == 8)                         { title = title.substring(6,8) + "." + title.substring(4,6) + "." + title.substring(0,4); }
 
         if (entries != undefined &&  Object.keys(entries).length > 0) {
-            html += birdhouse_ImageGroup(title, title, entries, entry_count, entry_category, header_open, admin, video_short, same_img_size, max_image_size_LR);
+            html += birdhouse_ImageGroup(title, title, entries, entry_count, entry_category, header_open, app_admin_allowed, video_short, same_img_size, max_image_size_LR);
 			group_list.push(title);
             entries_available = true;
             }
@@ -463,15 +459,15 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         html += "<div id='group_list' style='display:none;'>" + group_list.join(" ") + "</div>";
 		}
 
-    if (admin) {
+    if (app_admin_allowed) {
         if (entries_yesterday != undefined && Object.keys(entries_yesterday).length > 0) {
             html += birdhouse_ImageGroup(active_page+"_YESTERDAY",lang("YESTERDAY"), entries_yesterday, entry_count, entry_category,
-                                         false, admin, video_short, same_img_size, max_image_size_LR);
+                                         false, app_admin_allowedadmin, video_short, same_img_size, max_image_size_LR);
             entries_available = true;
             }
         if (entries_delete != undefined && Object.keys(entries_delete).length > 0) {
             html += birdhouse_ImageGroup(active_page+"_RECYCLE", lang("RECYCLE"), entries_delete, ["recycle"], entry_category, false,
-                                         admin, video_short, same_img_size, max_image_size_LR);
+                                         app_admin_allowed, video_short, same_img_size, max_image_size_LR);
             entries_available = true;
             }
         }

@@ -12,7 +12,6 @@
 */
 function birdhouseWeather( data ) {
     var settings        = app_data["SETTINGS"];
-    var admin_allowed   = app_data["STATUS"]["admin_allowed"];
     var status          = app_data["STATUS"];
 	var weather	        = data["WEATHER"];
 
@@ -158,7 +157,7 @@ function birdhouseWeather( data ) {
 
     chart        += "<br/>&nbsp;<br/>";
     html_weather += birdhouse_OtherGroup( "chart", lang("WEATHER") + " (3 " + lang("DAYS") + ")", chart, true );
-    if (admin_allowed) {
+    if (app_admin_allowed) {
         html_weather += html;
         }
 

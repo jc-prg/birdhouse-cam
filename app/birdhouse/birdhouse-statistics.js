@@ -102,7 +102,6 @@ function birdhouse_STATISTICS_click(chart_id, select="", date="") {
 */
 function birdhouse_printStatistic(title, data, date, chart_type="all", groups=true, id=0) {
 	var html          = "";
-	var admin         = data["STATUS"]["admin_allowed"];
 	var statistics    = data["DATA"]["data"]["entries"][date];
 	var camera_status = data["STATUS"]["devices"]["cameras"];
 	var open_category = [];

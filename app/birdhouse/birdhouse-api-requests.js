@@ -53,6 +53,7 @@ function birdhouse_loginReturn(data) {
     if (data["check-pwd"]) {
         birdhousePrint_load();
         birdhouse_adminAnswer(true);
+        app_admin_allowed = true;
         appMsg.alert("Login successful.");
     }
     else {
