@@ -349,9 +349,16 @@ function birdhouse_groupToggle(id, open="toggle") {
 * @param (string) id: unique key/identifier of the group
 */
 function birdhouse_groupOpen(id) {
+
+    if (!document.getElementById("group_"+id)) {
+        console.error("Element not found: 'group_"+id+"'");
+        }
+
     var show = "flex";
+    var html = document.getElementById("group_"+id).innerHTML;
+
     document.getElementById("group_"+id).style.display = show;
-    document.getElementById("group_"+id).offsetHeight;
+    document.getElementById("group_"+id).innerHTML = html;
     app_header_opened["group_"+id] = true;
 
     if (document.getElementById("group_intro_"+id)) {
