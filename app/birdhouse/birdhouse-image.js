@@ -594,9 +594,6 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
     var play_button       = image_data["play_button"];
     var img_missing       = image_data["img_missing"];
 
-    console.error(entry);
-    console.error(image_data);
-
     if (image_data["same_img_size"]) { same_img_size = image_data["same_img_size"]; }
 
 	var star                    = "";
