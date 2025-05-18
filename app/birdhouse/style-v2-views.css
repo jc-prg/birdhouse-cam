@@ -3,6 +3,8 @@
 */
 
 
+/* WEATHER --------------------------------------- */
+
 .weather-3day-overview {
   width : 100%;
   float: left;
@@ -35,7 +37,8 @@
 .streams_index_main {
   max-width: 100%;
   max-height: calc(100vh - 270px);
-  min-height: 300px;
+  min-height: 250px;
+  min-width: 200px;
   height: auto;
   width: auto;
   object-fit: contain;
