@@ -316,6 +316,10 @@
 	top: 0px;
 }
 
+#error_log a {
+    color: darkred;
+}
+
 #error_msg {
 	display    : none;
 	width      : 250px;

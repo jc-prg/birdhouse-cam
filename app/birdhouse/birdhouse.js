@@ -71,23 +71,29 @@ var birdhouse_js = [
 ];
 
 var birdhouse_css = [
-    "style.css",
-    "style-streams.css",
-    "style-labels.css",
-    "style-slider.css",
-    "style-slider-dark.css",
+    "style-v2.css",
+    "style-v2-dark.css",
+    "style-v2-streams.css",
     "style-v2-frames.css",
-    "style-v2-views.css",
-    "style-v2-settings.css",
-    "style-v2-settings-processing.css",
-    "style-v2-settings-statistics.css",
+    "style-v2-frames-dark.css",
+    "style-v2-streams.css",
+    "style-v2-streams-dark.css",
+    "style-v2-labels.css",
+    "style-v2-labels-dark.css",
+    "style-v2-slider.css",
+    "style-v2-slider-dark.css",
     "style-v2-gallery.css",
     "style-v2-gallery-overlay.css",
+    "style-v2-settings.css",
+    "style-v2-settings-dark.css",
+    "style-v2-settings-processing.css",
+    "style-v2-settings-statistics.css",
+    "style-v2-other.css",
+    "style-v2-other-dark.css",
     "style-v2-video-editing.css",
     "style-v2-ipad.css",
     "style-v2-iphone.css",
-    "video-player.css",
-    "style-dark.css",
+    "video-player.css"
 ];
 
 function birdhouse_modules_loaded() {
