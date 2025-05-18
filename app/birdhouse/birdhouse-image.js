@@ -350,7 +350,7 @@ function birdhouse_groupToggle(id, open="toggle", show="flex") {
 */
 function birdhouse_groupOpen(id, show="flex") {
 
-alert("test");
+alert(id +".."+ show);
 
     document.getElementById("group_"+id).style.display = show;
     app_header_opened["group_"+id] = true;
