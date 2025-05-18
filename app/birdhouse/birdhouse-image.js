@@ -80,7 +80,7 @@ function birdhouse_OtherGroupHeader( key, title, header_open, css_class="") {
 	var status = "−";
 	if (header_open == false) { status = "+"; }
 	var html   = "";
-	html += "<div id='group_header_"+key+"' class='separator_group"+css_class+"' onclick='birdhouse_groupToggle(\""+key+"\", \"block\")'>";
+	html += "<div id='group_header_"+key+"' class='separator_group"+css_class+"' onclick='birdhouse_groupToggle(\""+key+"\", \"toggle\", "\"block\")'>";
 	html += "<text id='group_link_"+key+"' style='cursor:pointer;'>("+status+")</text> ";
 	html += title;
 	html += "</div>";
@@ -349,8 +349,6 @@ function birdhouse_groupToggle(id, open="toggle", show="flex") {
 * @param (string) id: unique key/identifier of the group
 */
 function birdhouse_groupOpen(id, show="flex") {
-
-alert(id +".."+ show);
 
     document.getElementById("group_"+id).style.display = show;
     app_header_opened["group_"+id] = true;
