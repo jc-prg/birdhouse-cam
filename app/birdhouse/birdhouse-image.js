@@ -356,9 +356,10 @@ function birdhouse_groupOpen(id) {
 
     var show = "flex";
     var html = document.getElementById("group_"+id).innerHTML;
+    document.getElementById("group_"+id).innerHTML = "xxx";
 
     document.getElementById("group_"+id).style.display = show;
-    document.getElementById("group_"+id).innerHTML = html;
+    //document.getElementById("group_"+id).innerHTML = html;
     app_header_opened["group_"+id] = true;
 
     if (document.getElementById("group_intro_"+id)) {
