@@ -80,7 +80,7 @@ function birdhouse_OtherGroupHeader( key, title, header_open, css_class="") {
 	var status = "−";
 	if (header_open == false) { status = "+"; }
 	var html   = "";
-	html += "<div id='group_header_"+key+"' class='separator_group"+css_class+"' onclick='birdhouse_groupToggle(\""+key+"\")'>";
+	html += "<div id='group_header_"+key+"' class='separator_group"+css_class+"' onclick='birdhouse_groupToggle(\""+key+"\", \"block\")'>";
 	html += "<text id='group_link_"+key+"' style='cursor:pointer;'>("+status+")</text> ";
 	html += title;
 	html += "</div>";
@@ -332,13 +332,13 @@ function birdhouse_ImageGroupHeader( key, title, header_open, count={} ) {
 * @param (string) id: unique key/identifier of the group
 * @param (string/boolean) open: command, default is "toggle", other values are true (open) or false (close)
 */
-function birdhouse_groupToggle(id, open="toggle") {
+function birdhouse_groupToggle(id, open="toggle", show="flex") {
     if (open == "toggle") {
-        if (document.getElementById("group_"+id).style.display == "none")   { birdhouse_groupOpen(id); }
+        if (document.getElementById("group_"+id).style.display == "none")   { birdhouse_groupOpen(id, show); }
         else                                                                { birdhouse_groupClose(id); }
     }
     else {
-        if (open == true)   { birdhouse_groupOpen(id); }
+        if (open == true)   { birdhouse_groupOpen(id, show); }
         else                { birdhouse_groupClose(id); }
     }
 }
@@ -348,20 +348,13 @@ function birdhouse_groupToggle(id, open="toggle") {
 *
 * @param (string) id: unique key/identifier of the group
 */
-function birdhouse_groupOpen(id) {
+function birdhouse_groupOpen(id, show="flex") {
 
     if (!document.getElementById("group_"+id)) {
         console.error("Element not found: 'group_"+id+"'");
         }
 
-alert("group_id");
-
-    var show = "flex";
-    var html = document.getElementById("group_"+id).innerHTML;
-    document.getElementById("group_"+id).innerHTML = "xxx";
-
     document.getElementById("group_"+id).style.display = show;
-    document.getElementById("group_"+id).innerHTML = html;
     app_header_opened["group_"+id] = true;
 
     if (document.getElementById("group_intro_"+id)) {
