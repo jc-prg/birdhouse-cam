@@ -24,6 +24,17 @@
   display: blocK;
 }
 
+#birdhouseChart {
+  max-height:300px;
+}
+
+.weather_chart {
+  max-height:400px;
+}
+
+#weather_chart {
+  max-height:300px;
+}
 
 /* SENSOR INFO ------------------------------------ */
 

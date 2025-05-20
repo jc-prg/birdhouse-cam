@@ -325,7 +325,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
     if (active_page == "TODAY_COMPLETE") {
         same_img_size = true;
         if (app_admin_allowed) { html += birdhouse_LIST_admin_today_complete(data, app_admin_allowed, camera, active_page, active_date); }
+        html += "<div class='weather_chart'>";
         html += birdhouse_LIST_chart_weather(data, active_page, camera);
+        html += "</div>";
         html += birdhouse_LIST_label(entries, active_page);
         }
 
@@ -357,6 +359,7 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 
     // all videos
     else if (active_page == "VIDEOS") {
+
         html += birdhouse_LIST_calendar(groups);
     }
 
@@ -379,9 +382,22 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
         birdhouse_overlayLoadImages(overloadImageKeys, overloadImageEntries, app_active_page, app_admin_allowed);
         }
 
+    console.log("!!!!!!!!!!!!!!");
+    console.log(groups);
+
 	// list today complete, favorites -> list in monthly or hourly groups
 	if (groups != undefined && groups != {}) {
 		var count_groups = 0;
+		var favorites = false;
+
+        // include favorites if exist
+        if (entries_favorite && Object.keys(entries_favorite).length > 0) {
+            html += birdhouse_ImageGroup(active_page+"_FAVORITE", lang("FAVORITES"), entries_favorite, ["all"], entry_category, true,
+                                         app_admin_allowed, video_short, same_img_size, max_image_size_LR);
+            entries_available = true;
+            favorites = true;
+            group_list.push(lang("FAVORITES"));
+            }
 
         Object.keys(groups).sort().reverse().forEach( group => {
 			var title = group;
@@ -394,6 +410,9 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
 				title = lang("ARCHIVE") + " &nbsp; (" + group + ")";
 				if (count_groups > 0) { header_open = false; }
 				//--> doesn't work if image names double across the different groups; image IDs have to be changed (e.g. group id to be added)
+            }
+            else if (active_page == "VIDEOS" && favorites) {
+                header_open = false;
             }
 			delete group_entries["999999"];
 			html += birdhouse_ImageGroup(active_page + "_" + group, title, group_entries, entry_count, entry_category, header_open, app_admin_allowed,

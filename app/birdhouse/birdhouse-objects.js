@@ -209,6 +209,7 @@ function birdhouse_labels_edit(date, time, camera, label="") {
     message += "<div id='edit_label_time' style='display:none'>"+time+"</div>";
     //message += JSON.stringify(app_data);
 
+    console.log("labels edit - get data: " + JSON.stringify(api_request))
     birdhouse_apiRequest("GET", api_request, "", birdhouse_labels_edit_load, "", "birdhouse_label_edit");
 
     appMsg.dialog(msg=message, cmd=cmd, height=80, width=85);

@@ -342,6 +342,7 @@ function birdhouse_app_settings (name="Settings") {
             api_call   += this.button_api("api/no-id/INDEX/",           lang("INDEX"));
             api_call   += this.button_api("api/no-id/OBJECTS/",         lang("OBJECT_DETECTION"));
             api_call   += this.button_api("api/no-id/STATISTICS/",      lang("STATISTICS"));
+            api_call   += this.button_api("api/no-id/VIDEOS/",          lang("VIDEOS"));
             api_call   += this.button_api("api/no-id/FAVORITES/",       lang("FAVORITES"));
             api_call   += this.button_api("api/no-id/WEATHER/",         lang("WEATHER"));
             api_call   += this.button_api("api/no-id/IMAGE_SETTINGS/",  lang("IMAGE_SETTINGS"));

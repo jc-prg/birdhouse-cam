@@ -2721,8 +2721,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         which_cam = param["which_cam"]
         content = {"active_cam": which_cam, "view": "list_videos"}
 
-        files_delete = {}
         files_show = {}
+        files_delete = {}
+        files_favorite = {}
         content["entries"] = {}
         content["groups"] = {}
 
@@ -2738,11 +2739,15 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     files_delete[file] = files_all[file]
                 else:
                     files_show[file] = files_all[file]
+                    if "favorit" in files_all[file] and int(files_all[file]["favorit"]) == 1:
+                        files_favorite[file] = files_all[file]
 
             if len(files_show) > 0:
                 content["entries"] = files_show
             if len(files_delete) > 0 and param["admin_allowed"]:
                 content["entries_delete"] = files_delete
+            if len(files_favorite) > 0:
+                content["entries_favorites"] = files_favorite
 
         # videos
         files_videos = content["entries"].copy()
