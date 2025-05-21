@@ -908,9 +908,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "server_object_queues": {},
                 "system": {},
                 "video_recording": {},
+                "video_creation_day": {},
                 "object_detection": {
                     "active": birdhouse_status["object_detection"],
                     "processing": config.object_detection_processing,
+                    "processing_info": config.object_detection_info,
                     "progress": config.object_detection_progress,
                     "waiting": config.object_detection_waiting,
                     "waiting_dates": config.object_detection_waiting_keys,
@@ -927,8 +929,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             }
             # grab recording infos for defined cameras
             for cam_id in camera:
-                api_response["STATUS"]["video_recording"][cam_id] = {}
                 active = camera[cam_id].active
+                api_response["STATUS"]["video_recording"][cam_id] = {}
+                api_response["STATUS"]["video_creation_day"][cam_id] = {}
                 api_response["STATUS"]["server_object_queues"]["archive_"+cam_id] = len(camera[cam_id].object.detect_queue_archive)
                 if camera[cam_id].if_error():
                     active = False
@@ -945,6 +948,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         "active":     active,
                         "processing": camera[cam_id].video.processing,
                         "recording":  camera[cam_id].video.recording,
+                        "error":      camera[cam_id].if_error(),
+                        "info":       {}
+                    }
+                if camera[cam_id].video.processing_day_video:
+                    api_response["STATUS"]["video_creation_day"][cam_id] = {
+                        "active":     active,
+                        "processing": camera[cam_id].video.processing_day_video,
+                        "error":      camera[cam_id].if_error(),
+                        "info":       camera[cam_id].video.record_info()
+                    }
+                else:
+                    api_response["STATUS"]["video_creation_day"][cam_id] = {
+                        "active":     active,
+                        "processing": camera[cam_id].video.processing_day_video,
                         "error":      camera[cam_id].if_error(),
                         "info":       {}
                     }
