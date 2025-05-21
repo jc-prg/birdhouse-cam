@@ -27,6 +27,7 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
         self.image = BirdhouseImageProcessing(camera_id=self.id, config=self.config)
         self.image.resolution = self.param["image"]["resolution"]
 
+        self.camera_id = camera_id
         self.DetectionModel = None
         self.detect_active = birdhouse_env["detection_active"]
         self.detect_settings = self.param["object_detection"]
@@ -75,6 +76,15 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
 
             self.config.object_detection_processing = self._processing
             self.config.object_detection_progress = self._processing_percentage
+
+            if not self.camera_id in self.config.object_detection_info:
+                self.config.object_detection_info[self.camera_id] = {}
+            self.config.object_detection_info[self.camera_id]["active"] = self.detect_loaded
+            self.config.object_detection_info[self.camera_id]["model"] = self.detect_settings["model"]
+            self.config.object_detection_info[self.camera_id]["processing"] = self._processing
+            self.config.object_detection_info[self.camera_id]["progress"] = self._processing_percentage
+            self.config.object_detection_info[self.camera_id]["waiting"] = len(self.detect_queue_archive)
+            self.config.object_detection_info[self.camera_id]["waiting_keys"] = self.detect_queue_archive
 
             # !!! update unclear ?!
             if self.id != "":
@@ -387,6 +397,13 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                 self._processing_percentage = round(count / len(archive_entries) * 100, 1)
                 self.config.object_detection_processing = self._processing
                 self.config.object_detection_progress = self._processing_percentage
+                if not self.camera_id in self.config.object_detection_info:
+                    self.config.object_detection_info[self.camera_id] = {}
+                self.config.object_detection_info[self.camera_id]["processing"] = self._processing
+                self.config.object_detection_info[self.camera_id]["progress"] = self._processing_percentage
+                self.config.object_detection_info[self.camera_id]["waiting"] = len(self.detect_queue_archive)
+                self.config.object_detection_info[self.camera_id]["waiting_keys"] = self.detect_queue_archive
+
                 self.config.object_detection_waiting = len(self.detect_queue_archive)
                 self.config.object_detection_waiting_keys = self.detect_queue_archive
                 if self._processing_percentage == 100:
