@@ -1714,6 +1714,8 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
 
         self.object_detection_processing = None
         self.object_detection_progress = None
+        self.object_detection_info = {}
+
         self.object_detection_waiting = None
         self.object_detection_waiting_keys = None
         self.object_detection_build_views = False
