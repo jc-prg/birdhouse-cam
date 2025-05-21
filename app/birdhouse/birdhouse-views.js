@@ -76,8 +76,9 @@ function birdhouse_INDEX(data, camera, object=false) {
 	    else if (active_cam["error"])   { active_cam = other_cams[0]; other_cams = []; }
 	}
 
-    console.log("---> birdhouse_INDEX: selected:" + camera + " / app_active:" + app_active_cam + " / view_active:" + active_camera + " / view:" + index_view["type"] + " / other:" + other_cams.length );
-    console.log(app_camera_source);
+    console.debug("---> birdhouse_INDEX: selected:" + camera + " / app_active:" + app_active_cam + " / view_active:" + active_camera +
+                " / view:" + index_view["type"] + " / other:" + other_cams.length + " / admin: " + app_admin_allowed);
+    console.debug(app_camera_source);
 
     if (active_cam != {} && active_cam["name"]) {
         var replace_tags = {};
@@ -107,7 +108,6 @@ function birdhouse_INDEX(data, camera, object=false) {
         else                                                                    { selected_view = "default"; }
         if (app_admin_allowed)                                                      { selected_view += "_admin"; }
 
-        console.log("Selected INDEX view: " + selected_view + " (" + index_view["type"] + " | ADMIN " + app_admin_allowed + ")");
         html += index_template[selected_view];
         html += index_template["offline"];
 
@@ -701,8 +701,6 @@ function birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page,
     var record_from       = status_data["record_image_start"];
     var record_to         = status_data["record_image_end"];
     var rhythm            = cam_settings["image_save"]["rhythm"] + "s";
-    var onclick           = "birdhouse_createDayVideo('"+camera+"');";
-    var create            =  "<div onclick=\""+onclick+"\" style=\"cursor:pointer\"><u>" + lang("CREATE_DAY") + ": " + current_date + "</u></div>";
 
 	var tab = new birdhouse_table();
 	tab.style_cells["vertical-align"] = "top";
@@ -711,11 +709,14 @@ function birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page,
 
     info_text += "&nbsp;";
     info_text += tab.start();
-    info_text += tab.row("&nbsp;&nbsp;" + lang("CAMERA") + ":", "<b>" + camera.toUpperCase() + "</b> - " + cam_settings["name"]);
-    info_text += tab.row("&nbsp;&nbsp;" + lang("RECORDING_TIMES") + ":", lang("FROM_TO_EVERY", [record_from, record_to, rhythm]));
-    info_text += tab.row("&nbsp;&nbsp;" + lang("VIDEO") + ":", create );
-    info_text += tab.row("&nbsp;&nbsp;" + lang("THRESHOLD") + ":", threshold_slider );
-    info_text += tab.row("&nbsp;&nbsp;" + lang("RECREATE_IMG_CONFIG") + ":",
+    info_text += tab.row(lang("CAMERA") + ":", "<b>" + camera.toUpperCase() + "</b> - " + cam_settings["name"]);
+    info_text += tab.row(lang("RECORDING_TIMES") + ":", lang("FROM_TO_EVERY", [record_from, record_to, rhythm]));
+    info_text += tab.row(lang("THRESHOLD_ADJUST") + ":", threshold_slider );
+    info_text += tab.row(lang("CREATE_DAY") + " (" + current_date + "/"+camera+"):",
+                         "<button onclick='birdhouse_createDayVideo('"+camera+"');' class='bh-slider-button' style='width:100px'>"+lang("START")+"</button>" );
+    info_text += tab.row(lang("FORCE_BACKUP") + ":",
+                         "<button onclick='birdhouse_forceBackup();' class='bh-slider-button' style='width:100px'>"+lang("START")+"</button>" );
+    info_text += tab.row(lang("RECREATE_IMG_CONFIG") + ":",
                          "<button onclick='birdhouse_recreateImageConfig();' class='bh-slider-button' style='width:100px'>"+lang("START")+"</button>" );
     info_text += tab.end();
     info_text += "&nbsp;<br/>&nbsp;";

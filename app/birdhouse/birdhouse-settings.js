@@ -483,13 +483,14 @@ function birdhouse_app_settings (name="Settings") {
         tab.style_cells["vertical-align"] = "top";
 
         var process_information = {
-            "Object Detection":                 "processing_object_detection",
+            "Backup process":                   "processing_backup",
             "Download preparation":             "processing_downloads",
             "Loading archive view":             "processing_archive_view",
             "Loading favorite view":            "processing_favorite_view",
             "Loading object detection view":    "processing_object_view",
-            "Backup process":                   "processing_backup",
-            "Video recording / processing":     "processing_video",
+            "Video recording":                  "processing_video",
+            "Video create day video":           "processing_video_day",
+            "Object Detection":                 "processing_object_detection",
         }
 
         html += tab.start();
