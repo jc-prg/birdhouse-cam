@@ -52,9 +52,9 @@
     #remote_nav, #nav-b     { display : block; }
     #navi-click             { display : none; }
 
-    .frame_column.wide      { width: calc(100% - 175px); }
+    .frame_column.wide      { width: calc(100% - 175px); font-size : 12px; }
     .setting_bg.header      { width: calc(100% - 191px); left: 163px;}
-    .separator_group        { font-size : 9px; }
+    .separator_group        { font-size : 12px; }
 }
 
 /* ------------------------------------------------------- */
