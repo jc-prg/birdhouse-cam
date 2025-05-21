@@ -1,6 +1,7 @@
 import cv2
 import threading
 import time
+import os
 
 from modules.presets import *
 from modules.bh_class import BirdhouseCameraClass
@@ -41,6 +42,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.recording = False
         self.processing = False
         self.processing_cancel = False
+        self.processing_day_video = False
         self.max_length = 60
         self.delete_temp_files = True   # usually set to True, can temporarily be used to keep recorded files for analysis
 
@@ -279,18 +281,26 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         if self.recording:
             self.info["length"] = round(self.config.local_time().timestamp() - self.info["stamp_start"], 1)
+            self.info["process"] = "recording"
         elif self.processing:
             self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 1)
-
-        self.info["image_size"] = self.image_size
-
-        if float(self.info["length"]) > 1:
-            self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+            self.info["process"] = "processing"
+        elif self.processing_day_video:
+            self.info["process"] = "video_of_day"
         else:
-            self.info["framerate"] = 0
+            self.info["process"] = "none"
 
-        for key in self.ffmpeg.progress_info:
-            self.info[key] = self.ffmpeg.progress_info[key]
+        if self.info["process"] != "none":
+
+            self.info["image_size"] = self.image_size
+
+            if float(self.info["length"]) > 1:
+                self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+            else:
+                self.info["framerate"] = 0
+
+            for key in self.ffmpeg.progress_info:
+                self.info[key] = self.ffmpeg.progress_info[key]
 
         return self.info
 
@@ -421,6 +431,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         framerate = 20
 
         self.thread_register_process("day_video", self.id, "start", 0)
+        self.processing_day_video = True
 
         self.logging.info("Remove old files from '" + self.config.db_handler.directory("videos_temp") + "' ...")
         cmd_rm = "rm " + self.config.db_handler.directory("videos_temp") + "*"
@@ -525,6 +536,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             "data": video_data
         }
 
+        self.processing_day_video = False
         self.thread_register_process("day_video", self.id, "remove", 0)
         return response
 

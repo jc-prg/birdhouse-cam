@@ -73,9 +73,13 @@ nav-active {
 }
 
 /* reduce width if menu is shown */
+@media (min-width: 550px) {
+
+  .frame_column.wide  { font-size: 12px; }
+}
 @media (min-width: 890px) {
 
-  .frame_column.wide  { width: calc(100% - 175px); font-size: 10px; }
+  .frame_column.wide  { width: calc(100% - 175px); font-size: 14px; }
 }
 
 
@@ -122,8 +126,13 @@ nav-active {
   padding: 20px;
 }
 
+@media (min-width: 550px) {
+
+  .separator_group    { font-size: 12px; }
+}
+
 @media (min-width: 890px) {
 
-  .separator_group    { width: 99%; }
+  .separator_group    { width: 99%; font-size: 14px; }
 }
 
