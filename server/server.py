@@ -1159,6 +1159,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             }
             api_response["SETTINGS"]["server"] = server_config
 
+        if self.admin_allowed():
+            api_response["SETTINGS"]["webdav"] = {
+                "port": birdhouse_env["webdav_port"],
+                "user": birdhouse_env["webdav_user"],
+                "pwd": birdhouse_env["webdav_pwd"],
+            }
+
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
         if command in api_commands["data"] or command in api_commands["status"]:
             param_to_publish = ["entries", "entries_delete", "entries_yesterday", "entries_favorites", "groups",
@@ -1631,7 +1638,7 @@ if __name__ == "__main__":
     ch_logging = set_logging('cam-handl')
     view_logging = set_logging("view-head")
 
-    time.sleep(2)
+    time.sleep(1)
 
     if birdhouse_loglevel_default == logging.WARNING:
         srv_logging.warning('---------------------------------------------')
@@ -1650,6 +1657,10 @@ if __name__ == "__main__":
         srv_logging.info('* Logging into File: ' + str(birdhouse_log_as_file))
         srv_logging.info('* Cache handling: cache=' + str(birdhouse_cache) +
                          ", cache_for_archive=" + str(birdhouse_cache_for_archive))
+
+    while time.time() < 1700000000:  # timestamp for mid-2023
+        srv_logging.info("Waiting for time sync...")
+        time.sleep(5)
 
     check_submodules()
     set_error_images()

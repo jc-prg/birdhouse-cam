@@ -69,6 +69,9 @@ def set_global_configuration():
         "which_instance": "BIRDHOUSE_INSTANCE",
         "statistics_threads": "STATISTICS_THREADS",
         "statistics_error": "STATISTICS_ERROR",
+        "webdav_port": "WEBDAV_PORT",
+        "webdav_user": "WEBDAV_USER",
+        "webdav_pwd": "WEBDAV_PWD",
     }
 
     birdhouse_env = {}
