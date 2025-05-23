@@ -169,10 +169,11 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
     var tab         = new birdhouse_table();
 
 	for (let key in video) {
-		app_active_date         = key;
-        video[key]["directory"] = "videos/";
-        video[key]["path"]      = "videos/";
-        video[key]["type"]      = "video_org";
+		app_active_date             = key;
+        video[key]["directory"]     = "videos/";
+        video[key]["path"]          = "videos/";
+        video[key]["type"]          = "video_org";
+        video[key]["long_length"]   = true;
 
 		var short               = false;
 		var thumbnail           = false;
@@ -184,12 +185,13 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 		console.log(video_stream);
 
 		if (video[key]["video_file_short"] != undefined && video[key]["video_file_short"] != "") {
-            short                     = true;
-            var video_short           = {};
+            short                      = true;
+            var video_short            = {};
             Object.assign( video_short, video[key] );
-            var short_video_file      = video[key]["video_file_short"];
-            video_short["video_file"] = short_video_file;
-            video_stream_short        = birdhouse_Image("Short", "short", video_short);
+            var short_video_file       = video[key]["video_file_short"];
+            video_short["video_file"]  = short_video_file;
+            video_short["long_length"] = false;
+            video_stream_short         = birdhouse_Image("Short", "short", video_short);
             console.log(video_stream_short);
             }
 
@@ -398,9 +400,6 @@ function birdhouse_LIST(title, data, camera, header_open=true) {
             }
         birdhouse_overlayLoadImages(overloadImageKeys, overloadImageEntries, app_active_page, app_admin_allowed);
         }
-
-    console.log("!!!!!!!!!!!!!!");
-    console.log(groups);
 
 	// list today complete, favorites -> list in monthly or hourly groups
 	if (groups != undefined && groups != {}) {
