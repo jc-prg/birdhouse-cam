@@ -265,7 +265,11 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         Returns:
             str: path of database file
         """
-        return os.path.join(self.directory(config, date), self.files[config])
+        if config in self.files:
+            return os.path.join(self.directory(config, date), self.files[config])
+        else:
+            self.logging.warning("Could not find a path for '" + config + "/" + date + "'.")
+            return ""
 
     def directory(self, config, date="", include_main=True):
         """
