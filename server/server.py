@@ -211,8 +211,10 @@ class StreamingServerIPv6(socketserver.ThreadingMixIn, server.HTTPServer):
     address_family = socket.AF_INET6
 
     def server_bind(self):
-        # Override server_bind to allow both IPv4 and IPv6 connections
-        # Bind to the wildcard address ("::") to enable dual-stack support
+        """
+        Override server_bind to allow both IPv4 and IPv6 connections
+        Bind to the wildcard address ("::") to enable dual-stack support
+        """
         self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
         super().server_bind()
 
@@ -244,6 +246,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
     def stream_file(self, filetype, content, no_cache=False):
         """
         send file content (HTML, image, ...)
+
+        Args:
+            filetype (str): file type for http header
+            content (Any): content to calculate the content size
+            no_cache (bool): info if cache-control shall be set in the header
         """
         if len(content) > 0:
             self.send_response(200)
@@ -282,8 +289,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         send header for video stream
         see https://stackoverflow.com/questions/13275409/playing-a-wav-file-on-ios-safari
-        """
 
+        Args:
+            size (Any): not used at the moment
+            content_type (str): content type of audio to be streamed, default is 'audio/x-wav'
+        """
         self.send_response(200)
 
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -310,6 +320,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
     def stream_video_frame(self, frame):
         """
         send header and frame inside a MJPEG video stream
+
+        Args:
+            frame (Any): video frame content to calculate its length
         """
         # try:
         self.wfile.write(b'--FRAME\r\n')
@@ -495,6 +508,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         return param
 
     def do_OPTIONS(self):
+        """
+        create http response if asked for OPTIONS
+        """
         self.send_response(200, "ok")
         self.send_header('Access-Control-Allow-Credentials', 'true')
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -760,7 +776,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         """
-        check path and send requested content
+        check path and send requested content, forwards to other functions depending on the requested content
         """
         global camera, sensor, config
 
@@ -1602,12 +1618,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 streaming = False
 
         srv_logging.info("Stopped streaming from '"+which_cam+"'.")
-
-    def do_GET_files(self):
-        """
-        create API response
-        """
-        return
 
 
 on_exception_setting()

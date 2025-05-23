@@ -16,6 +16,14 @@ from modules.presets import *
 class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
     def __init__(self, config, server, maintain=False):
+        """
+        Constructor of the class
+
+        Args:
+            config (modules.config.BirdhouseConfig): reference to config handler
+            server (Any): streaming server handler
+            maintain (bool): info if maintenance mode, then load only minimum
+        """
         self.server = server
         self._shutdown_signal_file = "/tmp/birdhouse-cam-shutdown"
         self._wait_till_start = 60
@@ -39,6 +47,10 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             self._text_files = BirdhouseTEXT()
 
     def run(self):
+        """
+        loop to continuously check the status of all running threads, which are registered during their construction,
+        central way to shut down all running threads when shutdown was requested
+        """
         self.logging.info("Starting Server Health Check ...")
         count = 0
         last_update = time.time()
@@ -107,11 +119,20 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
         self.logging.info("Stopped Server Health Check.")
 
     def status(self):
+        """
+        return health status
+
+        Returns:
+            str: health status inkl. a list of services, that are not running for a while
+        """
         return self._health_status
 
     def check_restart(self):
         """
         check if external shutdown signal has been set
+
+        Returns:
+            bool: True if REBOOT is requested (set in the signal file)
         """
         if os.path.exists(self._shutdown_signal_file):
             content = self._text_files.read(self._shutdown_signal_file)
@@ -173,6 +194,9 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             self._text_files.write(self._shutdown_signal_file, "")
 
     def check_thread_cpu_usage(self):
+        """
+        Checking CPU usage per thread and write it to the statistics
+        """
         self.logging.info("Checking CPU usage per thread ...")
         pid = os.getpid()
         process = psutil.Process(pid)
@@ -303,7 +327,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
     def read_memory_usage(self):
         """
-        Get data for current memory , to be requested via .get().
+        Read data for current memory and CPU usage, to be requested via .get().
         """
         system = {}
         try:
