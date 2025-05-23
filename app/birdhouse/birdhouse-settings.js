@@ -184,7 +184,7 @@ function birdhouse_app_settings (name="Settings") {
         var open_settings = {
             "app_info_01"           : true,
             "server_dashboard_1"    : true,
-            "server_dashboard_2"    : true,
+            "server_dashboard_2"    : false,
             "device_info"           : false,
             "process_info"          : false,
             "server_info"           : false,
@@ -404,6 +404,8 @@ function birdhouse_app_settings (name="Settings") {
 	    var instance = " (prod)";
 	    if (test) { instance = " (test)"; }
 		var html_entry = this.tab.start();
+		var settings = app_data["SETTINGS"];
+
 		html_entry += this.tab.row("App:",	"<a href='/app/index.html?INFORMATION&" + app_session_id + "' target='_blank'>"+ app_title + "</a>" + instance);
 		html_entry += this.tab.row("Versions:",
 						"App: " 		+ app_version + "<br/>" +
@@ -414,6 +416,21 @@ function birdhouse_app_settings (name="Settings") {
 		html_entry += this.tab.row("Client:",
 		                "IP: " + app_data["API"]["request_ip"] + "<br/>" +
 		                "<a href='" + window.location.href + "' target=_blank>" + window.location.href + "</a>");
+
+        if (settings["webdav"]) {
+            var webdav_url = window.location.href.split("//")[1].split("/")[0].split(":")[0];
+
+            if (settings["webdav"]["active"])   { var running = "<font color=" + header_color_ok + ">[" + lang("ACTIVE") + "]</font>"; }
+            else                                { var running = "<font color=" + header_color_error + ">[" + lang("INACTIVE") + "]</font>"; }
+
+            webdav_url_1    = "dav://" + settings["webdav"]["user"] + ":" + settings["webdav"]["pwd"] + "@" + webdav_url + ":" + settings["webdav"]["port"] + "/";
+            webdav_url_2    = "dav://" + webdav_url + ":" + settings["webdav"]["port"] + "/";
+            webdav_url_3    = "http://" + settings["webdav"]["user"] + ":" + settings["webdav"]["pwd"] + "@" + webdav_url + ":" + settings["webdav"]["port"] + "/";
+            webdav_url_4    = "http://" + webdav_url + ":" + settings["webdav"]["port"] + "/";
+
+            html_entry += this.tab.row("WebDAV "+running+":", "<a href='" + webdav_url_1 + "' target=_blank>" + webdav_url_2 + "</a> (Webdav-App)<br/>" +
+                                       "<a href='" + webdav_url_3 + "' target=_blank>" + webdav_url_4 + "</a> (Browser)");
+            }
 		html_entry += this.tab.row("&nbsp;");
 		html_entry += this.tab.end();
         return html_entry;
@@ -533,9 +550,9 @@ function birdhouse_app_settings (name="Settings") {
     this.server_side_settings = function() {
         var settings = app_data["SETTINGS"];
         var status   = app_data["STATUS"];
-        if (settings["server"]["rpi_active"])           { rpi_active = "true"; } else { rpi_active = "false"; }
-        if (settings["server"]["detection_active"])     { detection_active = "true"; } else { detection_active = "false"; }
-        if (settings["server"]["daily_clean_up"])       { daily_clean_up = "true"; } else { daily_clean_up = "false"; }
+        if (settings["server"]["rpi_active"])           { rpi_active = "true"; }        else { rpi_active = "false"; }
+        if (settings["server"]["detection_active"])     { detection_active = "true"; }  else { detection_active = "false"; }
+        if (settings["server"]["daily_clean_up"])       { daily_clean_up = "true"; }    else { daily_clean_up = "false"; }
 
         if (settings["server"]["database_server"] && settings["server"]["database_server"] != "") {
             var link = "http://"+settings["server"]["database_server"]+":"+settings["server"]["database_port"]+"/_utils/";

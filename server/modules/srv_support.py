@@ -4,7 +4,10 @@ import psutil
 import subprocess
 import os
 import gc
+import requests
 
+from requests.auth import HTTPBasicAuth
+from xml.etree import ElementTree
 from modules.bh_class import BirdhouseClass
 from modules.bh_database import BirdhouseTEXT
 from modules.presets import *
@@ -257,6 +260,12 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         self.relays = relay_handler
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
         self.main_dir = birdhouse_main_directories["project"]
+        self.webdav_available = False
+        self.webdav = {
+                "port": birdhouse_env["webdav_port"],
+                "user": birdhouse_env["webdav_user"],
+                "pwd": birdhouse_env["webdav_pwd"],
+            }
 
         self.disk_usage_interval = 10 * 60
         self.disk_usage_cache = {}
@@ -281,6 +290,8 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             self.read_disk_usage()
             self.read_device_status()
             self.read_available_devices()
+
+            self.webdav_available = self.check_webdav(self.webdav["port"], self.webdav["user"], self.webdav["pwd"])
 
             self._srv_info_time = round(time.time() - start_time, 2)
             self.config.set_processing_performance("server", "srv_support", start_time)
@@ -471,4 +482,71 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         Get device data which are updated continuously in the background.
         """
         return self._device_status
+
+    def check_webdav(self, port, username, password):
+        """
+        Checks if the WebDAV server at the given URL contains 'videos' and 'images' directories.
+
+        Args:
+            port (str): The base WebDAV port (http://localhost:<port>/)
+            username (str): WebDAV username
+            password (str): WebDAV password
+        Returns:
+            bool: True if both 'videos' and 'images' directories exist, False otherwise
+        """
+        # internal webdav address, defined in docker-compose-webdav.yml
+        url = "http://192.168.202.100:80/"
+        # Ensure the URL ends with a slash
+        if not url.endswith('/'):
+            url += '/'
+
+        # WebDAV PROPFIND headers
+        headers = {
+            "Depth": "1",
+            "Content-Type": "application/xml"
+        }
+
+        # Minimal XML body to list directory contents
+        data = """<?xml version="1.0"?>
+        <D:propfind xmlns:D="DAV:">
+            <D:prop>
+                <D:displayname/>
+            </D:prop>
+        </D:propfind>
+        """
+
+        try:
+            response = requests.request(
+                method="PROPFIND",
+                url=url,
+                data=data,
+                headers=headers,
+                auth=HTTPBasicAuth(username, password)
+            )
+
+            if response.status_code not in (207, 200):
+                self.logging.error(f"WebDAV connection failed: HTTP {response.status_code}")
+                return False
+
+            # Parse XML to find directory names
+            tree = ElementTree.fromstring(response.content)
+            found_dirs = []
+
+            for response_element in tree.findall('{DAV:}response'):
+                href = response_element.find('{DAV:}href')
+                if href is not None:
+                    path = href.text.strip('/')
+                    dir_name = path.split('/')[-1]
+                    found_dirs.append(dir_name)
+
+            if "videos" in found_dirs and "images" in found_dirs:
+                self.logging.info("Webdav connection OK.")
+                return True
+            else:
+                self.logging.error("Required directories 'videos' and/or 'images' not found.")
+                return False
+
+        except Exception as e:
+            self.logging.error(f"Error connecting to WebDAV: {e}")
+            return False
 

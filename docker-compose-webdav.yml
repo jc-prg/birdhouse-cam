@@ -9,7 +9,7 @@ services:
     container_name: birdhouse_webdav
     build: ./config/webdav
     ports:
-      - "${BIRDHOUSE_WEBDAV_PORT}:80"
+      - "${WEBDAV_PORT}:80"
     volumes:
       - "./data/images:/media/images"
       - "./data/videos:/media/videos"
@@ -19,3 +19,14 @@ services:
       - UID=1000
       - GID=1000
       - TZ=Europe/Berlin
+    networks:
+      my-net:
+        ipv4_address: 192.168.202.100
+
+networks:
+  my-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.202.0/24

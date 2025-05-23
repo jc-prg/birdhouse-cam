@@ -1161,6 +1161,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         if self.admin_allowed():
             api_response["SETTINGS"]["webdav"] = {
+                "active": sys_info.webdav_available,
                 "port": birdhouse_env["webdav_port"],
                 "user": birdhouse_env["webdav_user"],
                 "pwd": birdhouse_env["webdav_pwd"],
