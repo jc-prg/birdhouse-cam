@@ -1166,6 +1166,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "user": birdhouse_env["webdav_user"],
                 "pwd": birdhouse_env["webdav_pwd"],
             }
+        else:
+            api_response["SETTINGS"]["webdav"] = {
+                "active": sys_info.webdav_available,
+                "port": birdhouse_env["webdav_port"],
+                "user": "",
+                "pwd": "",
+            }
 
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
         if command in api_commands["data"] or command in api_commands["status"]:
