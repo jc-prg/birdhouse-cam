@@ -771,10 +771,12 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
 		    image_title     = entry["camera"].toUpperCase() + ": " + entry["camera_name"];
 		    }
         if (entry["video_file_short_length"] && !entry["long_length"]) {
-            image_title    += "</b><i> - " + Math.round(entry["video_file_short_length"]*10)/10 + "s</i>";
+            //image_title    += "</b><i> - " + Math.round(entry["video_file_short_length"]*10)/10 + "s</i>";
+            image_title    += "</b><i style=\"color:gray\"> - " + convert_second2time(Math.round(entry["video_file_short_length"])) + "</i>";
             }
         else {
-            image_title    += "</b><i> - " + Math.round(entry["length"]*10)/10 + "s</i>";
+            //image_title    += "</b><i> - " + Math.round(entry["length"]*10)/10 + "s</i>";
+            image_title    += "</b><i style=\"color:gray\"> - " + convert_second2time(Math.round(entry["length"])) + "</i>";
             }
 
         // set thumbnail if selected
