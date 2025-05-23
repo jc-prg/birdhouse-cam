@@ -443,6 +443,7 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
     var img_id2           = image_data["img_id2"] + special_category;
     var play_button       = image_data["play_button"];
     var img_missing       = image_data["img_missing"];
+    var video_length      = image_data["video_length"];
 
     console.debug("Image Display (" + image_data["type"] + "):");
     console.debug(image_data);
@@ -549,6 +550,7 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
         }
 	html += "      <div class='star'>"+star+"</div>";
 	html += "      <div class='recycle'>"+recycle+"</div>";
+	html += "      <div class='video_length'>"+video_length+"</div>";
 	html += "    </div>";
 	html += "    <center style='margin-top:4px;'><small>" + description + "</small></center>";
 	html += "  </div>";
@@ -593,7 +595,8 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
         "play_button"   : "",
         "swipe"         : false,
         "style"         : "",
-        "type"          : entry["type"]
+        "type"          : entry["type"],
+        "video_length"  : "",
         };
 
     if (entry["date"])  { [day,month,year]  = entry["date"].split("."); }
@@ -772,11 +775,13 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
 		    }
         if (entry["video_file_short_length"] && !entry["long_length"]) {
             //image_title    += "</b><i> - " + Math.round(entry["video_file_short_length"]*10)/10 + "s</i>";
-            image_title    += "</b><i style=\"color:gray\"> - " + convert_second2time(Math.round(entry["video_file_short_length"])) + "</i>";
+            //image_title    += "</b><i style=\"color:gray\"> - " + convert_second2time(Math.round(entry["video_file_short_length"])) + "</i>";
+            image_data["video_length"] = convert_second2time(Math.round(entry["video_file_short_length"]));
             }
         else {
             //image_title    += "</b><i> - " + Math.round(entry["length"]*10)/10 + "s</i>";
-            image_title    += "</b><i style=\"color:gray\"> - " + convert_second2time(Math.round(entry["length"])) + "</i>";
+            //image_title    += "</b><i style=\"color:gray\"> - " + convert_second2time(Math.round(entry["length"])) + "</i>";
+            image_data["video_length"] = convert_second2time(Math.round(entry["length"]));
             }
 
         // set thumbnail if selected
