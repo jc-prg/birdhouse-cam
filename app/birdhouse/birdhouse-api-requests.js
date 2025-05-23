@@ -120,7 +120,7 @@ function birdhouse_createThumbVideo() {
                 cam            = document.getElementById("active-cam").value;
 
 	        commands = ["create-thumb-video",video_id_value,tc_in,tc_out,cam];
-	        birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerTrim,'','birdhouse_createThumbVideo');
+	        birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerThumb,'','birdhouse_createThumbVideo');
 	        }
 	else {
 	        console.error("birdhouse_createThumbVideo: Field 'video-id' is missing!");
@@ -520,6 +520,12 @@ function birdhouse_AnswerDeleteRequest(data) {
 function birdhouse_AnswerTrim(data) {
 	//console.log(data);
 	appMsg.alert(lang("TRIM_STARTED"));
+	birdhouseReloadView();
+	}
+
+function birdhouse_AnswerThumb(data) {
+	//console.log(data);
+	appMsg.alert(lang("THUMB_STARTED"));
 	birdhouseReloadView();
 	}
 
