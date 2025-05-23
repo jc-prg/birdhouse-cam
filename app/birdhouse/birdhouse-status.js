@@ -673,46 +673,42 @@ function birdhouseStatus_detection(data) {
                   "progress: " + data["STATUS"]["object_detection"]["progress"] + " / waiting: " + data["STATUS"]["object_detection"]["waiting"]);
 
 
-    console.log(detection_cameras);
-
-    Object.entries(detection_cameras).forEach(([key,value])=> {
-        i++;
-        message += key.toUpperCase() + ": ";
-        if (detection_cameras[key] && detection_cameras[key]["active"] && detection_cameras[key]["processing"]) {
-            message += "OK processing <b>" + detection_cameras[key]["progress"] + "%</b> "
-            message += "(" + detection_cameras[key]["model"] + " | waiting: " + detection_cameras[key]["waiting"] + ")";
-            app_active_processes["processing_object_detection_"+key] = true;
-            }
-        else if (detection_cameras[key] && detection_cameras[key]["active"]) {
-            message += lang("INACTIVE");
-            app_active_processes["processing_object_detection_"+key] = false;
-            }
-        else {
-            message += "N/A";
-            app_active_processes["processing_object_detection_"+key] = false;
-            }
-        message += "<br/>";
-        });
-    setTextById("processing_object_detection", message);
-
-    if (data["STATUS"]["object_detection"]["processing"]) {
-        message_1 = data["STATUS"]["object_detection"]["progress"] + " %";
-        message_2 = message_1;
-        if (data["STATUS"]["object_detection"]["waiting"] > 1) {
-            message_1 += "<br/><i>(" + lang("WAITING_DATES", [data["STATUS"]["object_detection"]["waiting"]]) + ")</i>";
-            message_2 += " &nbsp; <i>(" + lang("WAITING_DATES", [data["STATUS"]["object_detection"]["waiting"]]) + ")</i>";
-            }
-        else if (data["STATUS"]["object_detection"]["waiting"] == 1) {
-            message_1 += "<br/><i>(" + lang("WAITING_DATE") + ")</i>";
-            message_2 += " &nbsp; <i>(" + lang("WAITING_DATE") + ")</i>";
-            }
-        setTextById("last_answer_detection_progress", message_1);
-        //setTextById("processing_object_detection", message_2);
-        //app_active_processes["processing_object_detection"] = true;
+    if (detection_cameras != undefined && document.getElementById("processing_object_detection") != undefined) {
+        Object.entries(detection_cameras).forEach(([key,value])=> {
+            i++;
+            message += key.toUpperCase() + ": ";
+            if (detection_cameras[key] && detection_cameras[key]["active"] && detection_cameras[key]["processing"]) {
+                message += "OK processing <b>" + detection_cameras[key]["progress"] + "%</b> "
+                message += "(" + detection_cameras[key]["model"] + " | waiting: " + detection_cameras[key]["waiting"] + ")";
+                app_active_processes["processing_object_detection_"+key] = true;
+                }
+            else if (detection_cameras[key] && detection_cameras[key]["active"]) {
+                message += lang("INACTIVE");
+                app_active_processes["processing_object_detection_"+key] = false;
+                }
+            else {
+                message += "N/A";
+                app_active_processes["processing_object_detection_"+key] = false;
+                }
+            message += "<br/>";
+            });
+        setTextById("processing_object_detection", message);
         }
-    else if (data["STATUS"]["object_detection"]["progress"] != undefined && data["STATUS"]["object_detection"]["waiting"] == 0) {
-        //setTextById("processing_object_detection", lang("INACTIVE"));
-        //app_active_processes["processing_object_detection"] = false;
+
+    if (document.getElementById("last_answer_detection_progress") != undefined) {
+        if (data["STATUS"]["object_detection"]["processing"]) {
+            message_1 = data["STATUS"]["object_detection"]["progress"] + " %";
+            message_2 = message_1;
+            if (data["STATUS"]["object_detection"]["waiting"] > 1) {
+                message_1 += "<br/><i>(" + lang("WAITING_DATES", [data["STATUS"]["object_detection"]["waiting"]]) + ")</i>";
+                message_2 += " &nbsp; <i>(" + lang("WAITING_DATES", [data["STATUS"]["object_detection"]["waiting"]]) + ")</i>";
+                }
+            else if (data["STATUS"]["object_detection"]["waiting"] == 1) {
+                message_1 += "<br/><i>(" + lang("WAITING_DATE") + ")</i>";
+                message_2 += " &nbsp; <i>(" + lang("WAITING_DATE") + ")</i>";
+                }
+            setTextById("last_answer_detection_progress", message_1);
+            }
         }
 
     var status   = app_data["STATUS"]["object_detection"];
