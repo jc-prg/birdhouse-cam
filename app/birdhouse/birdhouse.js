@@ -29,6 +29,8 @@ var app_camera_source     = {};
 var app_recycle_range     = {};
 var app_active_cam        = "cam1";
 var app_admin_allowed     = false;
+var app_session_id        = "";
+var app_session_id_count  = 0;
 var app_data              = {};
 var app_bird_names        = {};
 
@@ -315,10 +317,9 @@ function birdhouseSetMainVars(data) {
 */
 function birdhouseSetMainStatus(data) {
 
-    if (data["STATUS"]["view"])             { var status_view  = data["STATUS"]["view"]; }
-    else if (data["DATA"]["active"])        { var status_view  = data["DATA"]["active"]; }
-    else                                    { return; }
-    if (data["STATUS"]["admin_allowed"])    { app_admin_allowed = true;}
+    if (data["STATUS"]["view"])                     { var status_view  = data["STATUS"]["view"]; }
+    else if (data["DATA"]["active"])                { var status_view  = data["DATA"]["active"]; }
+    else                                            { return; }
 
 	app_active_mic = app_available_micros[0];
 

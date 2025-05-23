@@ -518,6 +518,9 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         Returns:
             bool: True if both 'videos' and 'images' directories exist, False otherwise
         """
+        if not birdhouse_env["webdav_show"]:
+            return False
+
         # internal webdav address, defined in docker-compose-webdav.yml
         url = "http://192.168.202.100:80/"
         # Ensure the URL ends with a slash

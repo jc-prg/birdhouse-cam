@@ -90,6 +90,15 @@ function birdhouseStatus_print(data) {
     console.debug("Update Status ...");
     setTextById("navActive", app_active_page);
 
+    if (data["STATUS"]["admin_allowed"] != false)   { app_admin_allowed = true; }
+    else {
+        app_session_id_count += 1;
+        if (app_session_id_count > 2 && app_session_id != "") {
+            birdhouse_logout();
+            app_session_id_count = 0;
+        }
+    }
+
     var pages_content   = ["INDEX", "OBJECTS", "FAVORITES", "ARCHIVE", "TODAY", "TODAY_COMPLETE", "WEATHER"];
     var pages_settings  = ["SETTINGS", "CAMERA_SETTINGS", "DEVICE_SETTINGS", "IMAGE_SETTINGS", "STATISTICS", "INFORMATION"];
 

@@ -69,6 +69,7 @@ def set_global_configuration():
         "which_instance": "BIRDHOUSE_INSTANCE",
         "statistics_threads": "STATISTICS_THREADS",
         "statistics_error": "STATISTICS_ERROR",
+        "webdav_show": "WEBDAV_ACTIVE",
         "webdav_port": "WEBDAV_PORT",
         "webdav_user": "WEBDAV_USER",
         "webdav_pwd": "WEBDAV_PWD",
@@ -82,7 +83,7 @@ def set_global_configuration():
 
     for key in ["database_cleanup", "rpi_active", "rpi_64bit", "detection_active", "log_to_file",
                 "test_video_devices", "database_cache", "database_cache_archive",
-                "statistics_threads","statistics_error"]:
+                "statistics_threads","statistics_error", "webdav_show"]:
         if birdhouse_env[key] is not None:
             birdhouse_env[key] = str(birdhouse_env[key]).lower() in ("true", "1", "yes", "on")
 
@@ -370,6 +371,7 @@ camera_list = []
 birdhouse_env = {}
 birdhouse_status = {"object_detection": False, "object_detection_details": ""}
 birdhouse_picamera = False
+birdhouse_sessions = {}
 
 set_global_configuration()
 

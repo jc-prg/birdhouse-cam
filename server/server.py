@@ -5,6 +5,8 @@ import json
 import signal
 import sys
 import traceback
+import secrets
+import string
 
 import socket
 import math
@@ -34,8 +36,8 @@ from modules.statistics import BirdhouseStatistics
 
 api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 api_start_tc = time.time()
-api_description = {"name": "BirdhouseCAM", "version": "v1.5.0"}
-app_framework = "v1.5.0"
+api_description = {"name": "BirdhouseCAM", "version": "v1.5.1"}
+app_framework = "v1.5.1"
 
 
 def on_exit(signum, handler):
@@ -192,6 +194,32 @@ def decode_url_string(string):
     """
     decoded_path = urllib.parse.unquote(string)
     return decoded_path
+
+
+def check_pwd(password):
+    """
+    check if password is correct and return a session ID, if correct
+
+    Args:
+        password: password from login dialog
+    Returns:
+        Any: True if password is correct
+    """
+    timeout = 5 * 60
+    if password == birdhouse_env["admin_password"]:
+        characters = string.ascii_letters + string.digits  # Letters and digits
+        session_id = ''.join(secrets.choice(characters) for _ in range(32))
+        birdhouse_sessions[session_id] = time.time()
+        srv_logging.info("Login successful: " + str(session_id))
+        return session_id
+
+    elif password in birdhouse_sessions and birdhouse_sessions[password] + timeout > time.time():
+        birdhouse_sessions[password] = time.time()
+        return password
+
+    else:
+        srv_logging.debug("Login failed: " + password)
+        return False
 
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
@@ -375,10 +403,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 param = self.path_split(check_allowed=False)
                 srv_logging.debug("CHECK if " + param["session_id"] + " == " +  admin_pwd + " !!!!!!!! " +
                                   str(param["session_id"] == admin_pwd))
-                if param["session_id"] == admin_pwd:
-                    return True
-                else:
-                    return False
+                return check_pwd(param["session_id"])
         else:
             return False
 
@@ -751,11 +776,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "kill-stream-id": stream_id
                 }
         elif param["command"] == "check-pwd":
-            admin_pwd = birdhouse_env["admin_password"]
-            if admin_pwd == param["parameter"][0]:
-                response["check-pwd"] = True
-            else:
+            check = check_pwd(param["parameter"][0])
+            if check == False:
                 response["check-pwd"] = False
+                response["session-id"] = ""
+            else:
+                response["check-pwd"] = True
+                response["session-id"] = check
         elif param["command"] == "reset-image-presets":
             response = camera[which_cam].reset_image_presets()
             srv_logging.info(str(param))
@@ -1180,6 +1207,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if self.admin_allowed():
             api_response["SETTINGS"]["webdav"] = {
                 "active": sys_info.webdav_available,
+                "show": birdhouse_env["webdav_show"],
                 "port": birdhouse_env["webdav_port"],
                 "user": birdhouse_env["webdav_user"],
                 "pwd": birdhouse_env["webdav_pwd"],
@@ -1188,6 +1216,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             api_response["SETTINGS"]["webdav"] = {
                 "active": sys_info.webdav_available,
                 "port": birdhouse_env["webdav_port"],
+                "show": birdhouse_env["webdav_show"],
                 "user": "",
                 "pwd": "",
             }

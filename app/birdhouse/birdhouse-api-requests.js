@@ -10,9 +10,11 @@ function birdhouse_apiRequest(method, commands, data, return_cmd, wait_till_exec
     // app_unique_stream_id -> timestamp
     // app_session_id -> pwd
 
-    if (commands[0] != "status" && commands[0] != "version") {
-        if (app_session_id != "")     { commands.unshift(app_session_id); }
-        else                          { commands.unshift(app_unique_stream_id); }
+    if (app_session_id != "") {
+        commands.unshift(app_session_id);
+        }
+    else if (commands[0] != "status" && commands[0] != "version") {
+        commands.unshift(app_unique_stream_id);
         }
 	appFW.requestAPI(method, commands, data, return_cmd, wait_till_executed, method_name);
 }
@@ -30,23 +32,8 @@ function birdhouse_loginDialog() {
 }
 
 function birdhouse_loginCheck(pwd) {
-    // check via API
-    // set session ID based on returned data, if pwd is valid
-    // else show message, that pwd is wrong
-    app_session_id = pwd;
+
     birdhouse_apiRequest("POST", ["check-pwd", pwd], "", birdhouse_loginReturn, "", "birdhouse_loginCheck");
-}
-
-function birdhouse_logout() {
-    app_session_id = "";
-    app_admin_allowed = false;
-    birdhouse_apiRequest("POST", ["check-pwd", '--logout--'], "", birdhouse_logoutMsg, "", "birdhouse_loginCheck");
-    }
-
-function birdhouse_logoutMsg() {
-
-    birdhouse_adminAnswer(false);
-    appMsg.alert(lang("LOGOUT_MSG"));
 }
 
 function birdhouse_loginReturn(data) {
@@ -54,11 +41,29 @@ function birdhouse_loginReturn(data) {
         birdhousePrint_load();
         birdhouse_adminAnswer(true);
         app_admin_allowed = true;
+        app_session_id = data["session-id"];
+        appFW.appList = app_session_id+"/status";
         appMsg.alert("Login successful.");
     }
     else {
         appMsg.alert("Wrong password!");
     }
+}
+
+function birdhouse_logout() {
+    app_session_id = "";
+    appFW.appList = "status";
+    app_admin_allowed = false;
+    birdhouse_apiRequest("POST", ["check-pwd", '--logout--'], "", birdhouse_logoutMsg, "", "birdhouse_logout");
+    }
+
+function birdhouse_logoutMsg() {
+
+    birdhousePrint_load("INDEX", app_active_cam);
+    birdhouse_settings.toggle(true);
+    appSettings.hide();
+    birdhouse_adminAnswer(false);
+    appMsg.alert(lang("LOGOUT_MSG"));
 }
 
 function birdhouse_adminAnswer(set=true) {

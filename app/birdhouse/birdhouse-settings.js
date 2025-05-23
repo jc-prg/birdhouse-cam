@@ -415,9 +415,10 @@ function birdhouse_app_settings (name="Settings") {
 		html_entry += this.tab.row("Source:","<a href='https://github.com/jc-prg/birdhouse-cam/' target='_blank'>https://github.com/jc-prg/birdhouse-cam/</a>");
 		html_entry += this.tab.row("Client:",
 		                "IP: " + app_data["API"]["request_ip"] + "<br/>" +
+		                "Session: " + app_session_id + "<br/>" +
 		                "<a href='" + window.location.href + "' target=_blank>" + window.location.href + "</a>");
 
-        if (settings["webdav"]) {
+        if (settings["webdav"] && settings["webdav"]["show"] == true) {
             var webdav_url = window.location.href.split("//")[1].split("/")[0].split(":")[0];
 
             if (settings["webdav"]["active"])   { var running = "<font color=" + header_color_ok + ">[" + lang("ACTIVE") + "]</font>"; }
