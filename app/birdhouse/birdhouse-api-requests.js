@@ -112,6 +112,7 @@ function birdhouse_createShortVideo() {
 	}
 	
 function birdhouse_createThumbVideo() {
+        setTCin();
         video_id = document.getElementById("video-id");
         if (video_id != null) {
                 video_id_value = video_id.value;

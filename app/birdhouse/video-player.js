@@ -238,6 +238,7 @@ function hideControls() {
 
 // showControls displays the video controls
 function showControls() {
+
   videoControls.classList.remove('hide');
 }
 
