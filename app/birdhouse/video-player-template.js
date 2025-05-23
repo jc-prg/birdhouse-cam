@@ -15,7 +15,7 @@ var videoplayer_template = `
         </svg>
       </div>
 
-      <video controls class="video" id="video" preload="metadata" poster="<!--THUMBNAIL-->">
+      <video controls class="video" id="video" preload="metadata" poster="<!--FILE_THUMBNAIL-->">
         <source src="<!--VIDEOFILE-->" type="video/mp4"></source>
       </video>
 
@@ -112,12 +112,16 @@ var videoplayer_template = `
   
   <center>
   <div class="camera_video_trim">
-    <input id="video-id" type="text" class="input-video-edit" disabled value="<!--VIDEOID-->" style="display:none;">
-    <input id="active-cam" type="text" class="input-video-edit" disabled value="<!--ACTIVE-->" style="display:none;">
-    <button class="button-video-edit" onclick="setTCin();">&nbsp;&nbsp;IN&nbsp;&nbsp;</button>: &nbsp; <input id="tc-in" type="text" class="input-video-edit" value="0"> &nbsp; &nbsp; 
-    <button class="button-video-edit" onclick="setTCout();">&nbsp;OUT&nbsp;</button>: &nbsp; <input id="tc-out" type="text" class="input-video-edit" value="<!--LENGTH-->"> &nbsp; &nbsp; &nbsp; &nbsp; 
-    <button onclick="javascript:<!--JAVASCRIPT-->" class="button-video-edit">&nbsp;Erzeuge gekürzte Version&nbsp;</button> &nbsp; 
-    <button onclick="javascript:toggleVideoEdit(false)" class="button-video-edit">&nbsp;Fertig&nbsp;</button>
+    <button class="button-video-edit" onclick="setTCin();">&nbsp;&nbsp;IN&nbsp;&nbsp;</button>
+    <input  class="input-video-edit" id="tc-in" type="text" value="0">
+    <input  class="input-video-edit"  id="video-id" type="text" disabled value="<!--VIDEOID-->" style="display:none;">
+    <button class="button-video-edit" onclick="setTCout();">&nbsp;OUT&nbsp;</button>
+    <input  class="input-video-edit" id="tc-out" type="text" value="<!--LENGTH-->">
+    <input  class="input-video-edit"  id="active-cam" type="text" disabled value="<!--ACTIVE-->" style="display:none;">
+    <div    class="div-video-edit">&nbsp;&nbsp;&nbsp;</div>
+    <button class="button-video-edit" onclick="javascript:<!--JAVASCRIPT_SHORTEN-->">&nbsp;<!--SHORTEN-->&nbsp;</button>
+    <button class="button-video-edit" onclick="javascript:<!--JAVASCRIPT_THUMBNAIL-->">&nbsp;<!--THUMBNAIL-->&nbsp;</button>
+    <button class="button-video-edit" onclick="javascript:toggleVideoEdit(false)">&nbsp;<!--CANCEL-->&nbsp;</button>
   </div>
   </center>
     

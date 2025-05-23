@@ -422,7 +422,8 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
 	if (header_open == false) { dont_load = "data-"; }
 	if (entry["directory"] && entry["directory"].charAt(entry["directory"].length - 1) != "/") { entry["directory"] += "/"; }
 
-	console.debug("Active Page: " + app_active_page);
+    console.debug("Image: " + title + " - " + entry_id);
+    console.debug(entry);
 
 	var image_data        = birdhouse_ImageDisplayData(title, entry_id, entry, app_active_page, admin, video_short);
     var lowres            = image_data["lowres"];
@@ -435,6 +436,9 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
     var img_id2           = image_data["img_id2"] + special_category;
     var play_button       = image_data["play_button"];
     var img_missing       = image_data["img_missing"];
+
+    console.debug("Image Display (" + image_data["type"] + "):");
+    console.debug(image_data);
 
     if (image_data["same_img_size"]) { same_img_size = image_data["same_img_size"]; }
 
@@ -502,6 +506,8 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
         container_id = img_id2 + "_container";
         var image_onload = "";
         }
+
+    console.error(title + " --- " + lowres + " / " + img_name);
 
 	html += "<div class='image_container' id='"+container_id+"'>";
     html += "  <div class='thumbnail_container'>";
@@ -709,7 +715,25 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
                 }
             }
         }
-    else if (entry["type"] == "video") {
+    else if (entry["type"] == "thumbnail") {
+		image_data["lowres"]            = birdhouse_ImageURL(img_url + entry["path"] + entry["thumbnail"]);
+		image_data["hires"]             = birdhouse_ImageURL(img_url + entry["path"] + entry["thumbnail"]);
+		image_data["onclick"]           = "";
+		image_data["play_button"]       = "";
+		image_data["description"]       = title;
+		image_data["description_hires"] = title;
+        image_data["edit"]              = false;
+        }
+    else if (entry["type"] == "thumbnail_selected") {
+		image_data["lowres"]            = birdhouse_ImageURL(img_url + entry["path"] + entry["thumbnail_selected"]);
+		image_data["hires"]             = birdhouse_ImageURL(img_url + entry["path"] + entry["thumbnail_selected"]);
+		image_data["onclick"]           = "";
+		image_data["play_button"]       = "";
+		image_data["description"]       = title;
+		image_data["description_hires"] = title;
+        image_data["edit"]              = false;
+        }
+	else if (entry["type"] == "video" || entry["type"] == "video_org") {
 		var note        = "";
 		var video_file  = entry["video_file"];
 		if (entry["video_file_short"] != undefined && entry["video_file_short"] != "") {
@@ -732,7 +756,15 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
 		if (entry["title"] && entry["title"] != "") { image_title = "<b>" + entry["title"] + "</b>"; }
 		else                                        { image_title = entry["camera"].toUpperCase() + ": " + entry["camera_name"]; }
 
-		image_data["lowres"]      = birdhouse_ImageURL(img_url + entry["path"] + entry["thumbnail"]);
+		var image_file    = entry["thumbnail"];
+        if (entry["type"] == "video" && entry["thumbnail_selected"] != undefined && entry["thumbnail_selected"] != "") {
+    		image_file    = entry["thumbnail_selected"];
+            }
+
+		image_data["lowres"]      = birdhouse_ImageURL(img_url + entry["path"] + image_file);
+
+		console.error(title + " ..." + image_data["lowres"]);
+
 		image_data["hires"]       = birdhouse_ImageURL(streaming_url + video_file);
 		image_data["description"] = "";
 		if (title.indexOf("_") > 0)                 { image_data["description"] = entry["date"] + "[br/]" + image_title; }
@@ -740,13 +772,17 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
 
 		image_data["onclick"]     = "birdhouse_videoOverlay(\""+image_data["hires"]+"\",\""+image_data["description"]+"\");";
 		image_data["play_button"] = "<img src=\"birdhouse/img/play.png\" class=\"play_button\" style=\"min-width:auto;min-height:auto;\" onclick='"+image_data["onclick"]+"' />";
-		entry["lowres"]           = entry["thumbnail"];
+		entry["lowres"]           = image_file;
 
 		if (admin) {
 			var cmd_edit = "birdhousePrint_load(view=\"VIDEO_DETAIL\", camera=\""+app_active_cam+"\", date=\""+entry["date_start"]+"\");"
 			image_data["description"] += "<br/><a onclick='"+cmd_edit+"' style='cursor:pointer;'>"+lang("EDIT")+"</a>"+note;
             }
         image_data["edit"] = true;
+        }
+    else {
+        console.warn("Entry type not supported: " + entry["type"]);
+        console.warn(entry);
         }
 
     // further image properties -> img_id2

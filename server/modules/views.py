@@ -2798,11 +2798,12 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     video_server = "<!--CURRENT_SERVER-->"
                 files = {
                     "VIDEOFILE": "http://" + video_server + ":" + str(birdhouse_env["port_video"]) + "/",
-                    "THUMBNAIL": data["thumbnail"],
+                    "FILE_THUMBNAIL": data["thumbnail"],
                     "LENGTH": str(data["length"]),
                     "VIDEOID": video_id,
                     "ACTIVE": which_cam,
-                    "JAVASCRIPT": "createShortVideo();"
+                    "JAVASCRIPT_SHORTEN": "createShortVideo();",
+                    "JAVASCRIPT_THUMBNAIL": "createThumbVideo();"
                 }
 
         content["view_count"] = []

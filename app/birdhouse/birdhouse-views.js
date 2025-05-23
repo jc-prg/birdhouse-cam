@@ -170,7 +170,12 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 
 	for (let key in video) {
 		app_active_date         = key;
+        video[key]["directory"] = "videos/";
+        video[key]["path"]      = "videos/";
+        video[key]["type"]      = "video_org";
+
 		var short               = false;
+		var thumbnail           = false;
 		var video_name          = video[key]["date"];
 		var video_stream        = birdhouse_Image("Complete", key, video[key]);
 		var video_stream_short  = "";
@@ -188,21 +193,27 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
             console.log(video_stream_short);
             }
 
+        if (video[key]["thumbnail_selected"] != undefined && video[key]["thumbnail_selected"] != "") {
+            thumbnail                 = true;
+            video[key]["type"]        = "thumbnail_selected";
+            video_stream_thumb        = birdhouse_Image("Thumbnail", "thumb", video[key]);
+            console.log(video_stream_thumb);
+        }
+
         tab.style_rows["height"]           = "20px";
         tab.style_cells["vertical-align"]  = "top";
 
         var video_title  = "";
         if (video[key]["title"]) { video_title  = video[key]["title"]; }
         var onclick_video = "birdhouse_editVideoTitle(title=\"set_video_title\", video_id=\""+key+"\", camera=\""+video[key]["camera"]+"\");";
-        var edit_title    = "<input id='set_video_title' value='"+video_title+"' style='width:100px;'>&nbsp;&nbsp;";
+        var edit_title    = "<input id='set_video_title' value='"+video_title+"' class='input-video-edit' style='width:100px;background:white;'>&nbsp;&nbsp;";
         edit_title       += "<button class='button-video-edit' onclick='"+onclick_video+"'>"+lang("SAVE")+"</button>";
 
 		html += "<div class='camera_info' style='height:auto;'>";
 		html += "<div class='camera_info_image video_edit'>";
-		html += video_stream;
-		if (short) {
-			html += video_stream_short;
-			}
+		html += "<div class='video-edit-thumb'>" + video_stream + "</div>";
+		if (short)      { html += "<div class='video-edit-thumb'>" + video_stream_short + "</div>"; }
+		if (thumbnail)  { html += "<div class='video-edit-thumb'>" + video_stream_thumb + "</div>"; }
 		html += "</div>";
 		html += "<div class='camera_info_text'>";
 		html += "<h3>"+video_name+"</h3>";
@@ -228,7 +239,8 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 			var player = "<div id='camera_video_edit_overlay' class='camera_video_edit_overlay' style='display:none'></div>";
 			player += "<div id='camera_video_edit' class='camera_video_edit' style='display:none'>";
 			player += "<div style='height:46px;width:100%'></div>";
-			var trim_command = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_createShortVideo();";
+			var trim_command  = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_createShortVideo();";
+			var thumb_command = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_createThumbVideo();";
 
 			loadJS(videoplayer_script, "", document.body);
 
@@ -240,12 +252,17 @@ function birdhouse_VIDEO_DETAIL( title, data ) {
 			console.log("-----> video-streaming: " + video_stream_server + " (http[s]: " + window.location.href  + ")");
 
 			video_values = {};
-			video_values["VIDEOID"]    = key;
-			video_values["ACTIVE"]     = app_active_cam;
-			video_values["LENGTH"]     = video[key]["length"];
-			video_values["THUMBNAIL"]  = "";
-			video_values["VIDEOFILE"]  = video_stream_server + video[key]["video_file"];
-			video_values["JAVASCRIPT"] = trim_command;
+			video_values["VIDEOID"]                 = key;
+			video_values["ACTIVE"]                  = app_active_cam;
+			video_values["LENGTH"]                  = video[key]["length"];
+			video_values["THUMBNAIL"]               = lang("THUMBNAIL");
+			video_values["SHORTEN"]                 = lang("SHORTEN");
+			video_values["CANCEL"]                  = lang("CANCEL");
+			video_values["FILE_THUMBNAIL"]          = "";
+			video_values["VIDEOFILE"]               = video_stream_server + video[key]["video_file"];
+			video_values["JAVASCRIPT_SHORTEN"]      = trim_command;
+			video_values["JAVASCRIPT_THUMBNAIL"]    = thumb_command;
+
 			videoplayer  = videoplayer_template;
 			for (let key in video_values) {
 				videoplayer = videoplayer.replace("<!--"+key+"-->",video_values[key]);

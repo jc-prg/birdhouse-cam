@@ -33,6 +33,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.directory = self.config.db_handler.directory("videos")
         self.queue_create = []
         self.queue_trim = []
+        self.queue_thumb = []
         self.queue_wait = 10
 
         self.record_audio_filename = ""
@@ -101,6 +102,13 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                     response = self.create_video_trimmed(video_id, start, end)
                     self.config.async_answers.append(["TRIM_DONE", video_id, response["result"]])
                     self.config.async_running = True
+
+                # create thumbnail of video
+                if len(self.queue_thumb) > 0:
+                    [video_id, start, end] = self.queue_thumb.pop()
+                    self.logging.info("Start thumbnail extraction (" + video_id + "): " + str(start) + ".")
+                    response = self.create_video_thumb(video_id, start)
+                    self.config.async_answers.append(["THUMB_DONE", video_id, response["result"]])
 
             self.thread_control()
 
@@ -596,6 +604,38 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.logging.warning("No video with the ID " + str(video_id) + " available.")
             return {"result": "No video with the ID " + str(video_id) + " available."}
 
+    def create_video_thumb(self, video_id, start):
+        """
+        create thumbnail
+
+        Args:
+            video_id (str): id of the video to be trimmed
+            start (float): image timecode
+
+        Returns:
+            str: success state (OK, Error)
+        """
+        config_file = self.config.db_handler.read_cache("videos")
+        if video_id in config_file:
+            input_file = config_file[video_id]["video_file"]
+            output_file = config_file[video_id]["thumbnail"]
+            output_file = output_file.replace(".jpeg", "_selected.jpeg")
+            framerate = config_file[video_id]["framerate"]
+            result = self.create_video_thumb_exec(input_file=input_file,
+                                                  output_file=output_file,
+                                                  start_timecode=start)
+            if result == "OK":
+                config_file[video_id]["thumbnail_selected"] = output_file
+
+                self.config.db_handler.write("videos", "", config_file)
+                return {"result": "OK"}
+            else:
+                return {"result": "Error while creating shorter video."}
+
+        else:
+            self.logging.warning("No video with the ID " + str(video_id) + " available.")
+            return {"result": "No video with the ID " + str(video_id) + " available."}
+
     def create_video_trimmed_exec(self, input_file, output_file, start_timecode, end_timecode, framerate):
         """
         creates a shortened version of the video
@@ -613,6 +653,27 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         output_file = os.path.join(self.config.db_handler.directory("videos"), output_file)
 
         success = self.ffmpeg.trim_video(input_file, output_file, start_timecode, end_timecode, framerate)
+
+        if success and os.path.isfile(output_file):
+            return "OK"
+        else:
+            return "Error"
+
+    def create_video_thumb_exec(self, input_file, output_file, start_timecode):
+        """
+        creates a thumbnail of the video
+
+        Args:
+            input_file (str): filename of input file
+            output_file (str): filename for output thumbnail file
+            start_timecode (float): timecode for video
+        Returns:
+            str: success state (OK, Error)
+         """
+        input_file = os.path.join(self.config.db_handler.directory("videos"), input_file)
+        output_file = os.path.join(self.config.db_handler.directory("videos"), output_file)
+
+        success = self.ffmpeg.create_thumbnail(input_file, output_file, start_timecode)
 
         if success and os.path.isfile(output_file):
             return "OK"
@@ -640,6 +701,31 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         else:
             self.queue_trim.append([parameter[0], parameter[1], parameter[2]])
             response["command"] = ["Create short version of video"]
+            response["video"] = {"video_id": parameter[0], "start": parameter[1], "end": parameter[2]}
+
+        return response
+
+    def create_video_thumb_queue(self, param):
+        """
+        create a thumb video and save in DB (not deleting the old video at the moment)
+
+        Args:
+            param (dict): input from API request
+        Returns:
+            dict: information for API response
+        """
+        response = {}
+        parameter = param["parameter"]
+
+        self.logging.info("Create short version of video: " + str(parameter) + " ...")
+        config_data = self.config.db_handler.read_cache(config="videos")
+
+        if parameter[0] not in config_data:
+            response["result"] = "Error: video ID '" + str(parameter[0]) + "' doesn't exist."
+            self.logging.warning("VideoID '" + str(parameter[0]) + "' doesn't exist.")
+        else:
+            self.queue_thumb.append([parameter[0], parameter[1], parameter[2]])
+            response["command"] = ["Create thumbnail of video"]
             response["video"] = {"video_id": parameter[0], "start": parameter[1], "end": parameter[2]}
 
         return response

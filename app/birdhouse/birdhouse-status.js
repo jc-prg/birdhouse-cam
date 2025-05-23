@@ -753,7 +753,7 @@ function birdhouseStatus_recordVideo(data) {
         if (p_video != undefined) {
             p_video_info += key.toUpperCase() + ": ";
             if (value["error"])                                   { p_video_info += "N/A "; }
-            else if (!value["processing"] && !value["recording"]) { p_video_info += "inactive"; }
+            else if (!value["processing"] && !value["recording"]) { p_video_info += lang("INACTIVE"); }
             else if (value["active"])                             { p_video_info += "OK "; }
 
             if (value["recording"])         {

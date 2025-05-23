@@ -89,6 +89,10 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
                            "-crf " + str(self.output_codec["crf"]) + " " + \
                            "-ss {START_TIME} -to {END_TIME} " + \
                            "{OUTPUT_FILENAME}"
+
+        self.ffmpeg_extract_img = self.ffmpeg_command + \
+                            "-ss {TIMECODE} -i {INPUT_FILENAME} -frames:v 1 -q:v 2 {OUTPUT_FILENAME}"
+
         self.current_output_file = ""
 
     def ffmpeg_callback(self, infile, outfile, vstats_path):
@@ -145,6 +149,40 @@ class BirdhouseFfmpegTranscoding(BirdhouseClass):
         """
         self.progress_info = {"percent": 0, "frame_count": 0, "frames": 0, "elapsed": 0}
         self.logging.info('ffmpeg-progress: DONE')
+
+    def create_thumbnail(self, input_filename, output_filename, timecode):
+        """
+        extract a thumbnail from a give file and timecode
+
+        Args:
+            input_filename: input mp4 file
+            output_filename: filename for the thumbnail
+            timecode: timecode for the thumbnail
+
+        Returns:
+            bool: True if successful
+        """
+        try:
+            if self.ffmpeg_handler == "ffmpeg-python":
+                self.logging.warning("Extract image not yet implemented for '" + self.ffmpeg_handler + "'!")
+
+            elif self.ffmpeg_handler == "python-ffmpeg":
+                self.logging.warning("Extract image not yet implemented for '" + self.ffmpeg_handler + "'!")
+
+            elif self.ffmpeg_handler == "cmd-line" or self.ffmpeg_handler == "ffmpeg-progress":
+                cmd_ffmpeg = self.ffmpeg_extract_img
+                cmd_ffmpeg = cmd_ffmpeg.replace("{TIMECODE}", timecode)
+                cmd_ffmpeg = cmd_ffmpeg.replace("{INPUT_FILENAME}", input_filename)
+                cmd_ffmpeg = cmd_ffmpeg.replace("{OUTPUT_FILENAME}", output_filename)
+                self.logging.info("Call ffmpeg: " + cmd_ffmpeg)
+                message = os.system(cmd_ffmpeg)
+
+        except Exception as err:
+            self.raise_error(
+                "Error during ffmpeg image extraction (" + self.id + " / " + self.ffmpeg_handler + "): " + str(err))
+            return False
+
+        return True
 
     def create_video(self, process_id, input_filenames, framerate, output_filename, input_audio_filename=""):
         """

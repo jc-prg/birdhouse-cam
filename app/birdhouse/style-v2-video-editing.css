@@ -1,15 +1,18 @@
 /* BUTTONS & FIELDS VIDEO EDITING ---------------------------- */
 
 .input-video-edit {
-    width            : 80px;
+    width            : 30px;
     height           : 25px;
     background       : gray;
     border-radius    : 5px;
+    margin           : 2px;
     color            : black;
+    float            : left;
 }
 
 .button-video-edit {
-    height           : 28px;
+    height           : 30px;
+    margin           : 2px;
     background       : #888888;
     border-radius    : 5px;
     color            : black;
@@ -19,13 +22,30 @@
 }
 
 .button-video-edit:disabled {
-    height           : 28px;
+    height           : 25px;
     background       : #666666;
-    border-radius    : 5px;
     color            : white;
     border           : 1px solid red;
     font-style       : italic;
 }
+
+.div-video-edit {
+    height           : 30px;
+    margin           : 2px;
+    padding          : 5px;
+    float            : left;
+}
+
+.video-edit-thumb {
+    width           : 100%;
+    float           : left;
+}
+
+@media (min-width: 890px) {
+
+  .video-edit-thumb    { width: 45%; margin: 2%;}
+}
+
 
 /* BUTTONS VIDEO RECORDING -------------------------------------- */
 
@@ -88,12 +108,15 @@
 }
 
 .camera_video_trim {
-    width     : 800px;
-    max-width : 80vw;
-    background-color: darkgray;
-    border : solid 1px white;
-    border-radius : 4px;
-    padding : 4px;
-    margin : 4px;
+    width      : 800px;
+    max-width  : 80vw;
+    min-height : 40px;
+    display    : block;
+
+    background-color : darkgray;
+    border           : solid 1px white;
+    border-radius    : 4px;
+    padding          : 4px;
+    margin           : 4px;
 }
 

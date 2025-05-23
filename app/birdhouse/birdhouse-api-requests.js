@@ -111,6 +111,22 @@ function birdhouse_createShortVideo() {
 		}
 	}
 	
+function birdhouse_createThumbVideo() {
+        video_id = document.getElementById("video-id");
+        if (video_id != null) {
+                video_id_value = video_id.value;
+                tc_in          = document.getElementById("tc-in").value;
+                tc_out         = document.getElementById("tc-out").value;
+                cam            = document.getElementById("active-cam").value;
+
+	        commands = ["create-thumb-video",video_id_value,tc_in,tc_out,cam];
+	        birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerTrim,'','birdhouse_createThumbVideo');
+	        }
+	else {
+	        console.error("birdhouse_createThumbVideo: Field 'video-id' is missing!");
+		}
+	}
+
 function birdhouse_createDayVideo(camera) {
 	commands = ["create-day-video",camera];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerCreateDay,'','birdhouse_createDayVideo');

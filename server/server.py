@@ -558,6 +558,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = config.queue.set_status_recycle_range(param)
         elif param["command"] == "create-short-video":
             response = camera[which_cam].video.create_video_trimmed_queue(param)
+        elif param["command"] == "create-thumb-video":
+            response = camera[which_cam].video.create_video_thumb_queue(param)
         elif param["command"] == "recreate-image-config":
             response = backup.create_image_config_api(param)
         elif param["command"] == "create-day-video":
