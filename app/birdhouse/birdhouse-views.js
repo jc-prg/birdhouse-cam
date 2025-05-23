@@ -729,7 +729,7 @@ function birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page,
     info_text += tab.row(lang("RECORDING_TIMES") + ":", lang("FROM_TO_EVERY", [record_from, record_to, rhythm]));
     info_text += tab.row(lang("THRESHOLD_ADJUST") + ":", threshold_slider );
     info_text += tab.row(lang("CREATE_DAY") + " (" + current_date + "/"+camera+"):",
-                         "<button onclick='birdhouse_createDayVideo('"+camera+"');' class='bh-slider-button' style='width:100px'>"+lang("START")+"</button>" );
+                         "<button onclick='birdhouse_createDayVideo(\""+camera+"\");' class='bh-slider-button' style='width:100px'>"+lang("START")+"</button>" );
     info_text += tab.row(lang("FORCE_BACKUP") + ":",
                          "<button onclick='birdhouse_forceBackup();' class='bh-slider-button' style='width:100px'>"+lang("START")+"</button>" );
     info_text += tab.row(lang("RECREATE_IMG_CONFIG") + ":",
