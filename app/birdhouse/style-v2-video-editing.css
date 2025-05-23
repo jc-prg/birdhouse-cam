@@ -46,6 +46,11 @@
   .video-edit-thumb    { width: 45%; margin: 2%;}
 }
 
+@media (max-width: 550px) {
+
+  .video-edit-thumb    { width: 45%; margin: 2%;}
+}
+
 
 /* BUTTONS VIDEO RECORDING -------------------------------------- */
 
