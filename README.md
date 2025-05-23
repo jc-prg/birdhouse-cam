@@ -210,8 +210,8 @@ Depending on the needs there are three options available how to install and run 
       # birdhouse-cam: start database, web-server, and videoserver
       @reboot     /usr/local/bin/docker-compose -f /<path_to_script>/docker-compose-hybrid.yml up -docker
       
-      # birdhouse-cam: start birdhouse server
-      @reboot     /usr/bin/python3 /<path_to_script>/server/server.py
+      # birdhouse-cam: start birdhouse server (use --rpi to delay starting on Raspberry Pi for a minute, required for correct time)
+      @reboot     /usr/bin/python3 /<path_to_script>/server/server.py --rpi
       
       # birdhouse-cam: start if restart has been requested 
       * * * * *   /usr/bin/python3 /<path_to_script>/server/server.py --check-if-start > /tmp/birdhouse-cam-cron 2>&1

@@ -1633,6 +1633,10 @@ if __name__ == "__main__":
         restart_thread.set_restart()
         exit()
 
+    elif len(sys.argv) > 0 and "--rpi" in sys.argv:
+        # when rpi wait a minute, as RPI have to connect to the internet first to get the correct time
+        time.sleep(60)
+
     set_server_logging(sys.argv)
 
     srv_logging = set_logging('root')
@@ -1658,10 +1662,6 @@ if __name__ == "__main__":
         srv_logging.info('* Logging into File: ' + str(birdhouse_log_as_file))
         srv_logging.info('* Cache handling: cache=' + str(birdhouse_cache) +
                          ", cache_for_archive=" + str(birdhouse_cache_for_archive))
-
-    while time.time() < 1700000000:  # timestamp for mid-2023
-        srv_logging.info("Waiting for time sync...")
-        time.sleep(5)
 
     check_submodules()
     set_error_images()
