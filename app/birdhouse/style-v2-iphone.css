@@ -53,6 +53,7 @@
     #navi-click             { display : none; }
 
     .frame_column.wide      { width: calc(100% - 175px); font-size : 10px; }
+    .frame_column.wide td   { font-size : 10px; }
     .setting_bg.header      { width: calc(100% - 191px); left: 163px;}
     .separator_group        { font-size : 10px; }
 }

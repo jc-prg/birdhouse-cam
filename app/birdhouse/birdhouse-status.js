@@ -4,9 +4,10 @@
 // show status functions
 //--------------------------------------
 
-var header_color_error = "#993333";
-var header_color_warning = "#666633";
-var header_color_default = "";
+var header_color_error      = "#993333";
+var header_color_ok         = "#339933";
+var header_color_warning    = "#666633";
+var header_color_default    = "";
 var weather_footer = [];
 var loading_dots_red   = '<span class="loading-dots"><span class="dot red"></span><span class="dot red"></span><span class="dot red"></span></span>';
 var loading_dots_green = '<span class="loading-dots"><span class="dot green"></span><span class="dot green"></span><span class="dot green"></span></span>';

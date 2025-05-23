@@ -1656,7 +1656,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         elif not database_ok and config_available:
             self.logging.debug("  -> read from file")
             # file_data = self.config.db_handler.json.read(config_file)
-            file_data = self.config.db_handler.json.read(config="backup", date=archive_directory)
+            file_data = self.config.db_handler.read(config="backup", date=archive_directory, db_type="json")
             if file_data != {}:
                 self.logging.debug("  -> write to DB: " + str(file_data.keys()))
                 file_data["info"]["changed"] = False
