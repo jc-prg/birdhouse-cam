@@ -205,10 +205,10 @@ function birdhouse_app_settings (name="Settings") {
         html += birdhouse_OtherGroup( "app_info_01", "App (module versions)", html_entry, open_settings["app_info_01"] );
 
         html_entry = this.server_dashboard("server");
-        html += birdhouse_OtherGroup( "server_dashboard_1", "Overview Server", html_entry, open_settings["server_dashboard"] );
+        html += birdhouse_OtherGroup( "server_dashboard_1", "Overview Server", html_entry, open_settings["server_dashboard_1"] );
 
         html_entry = this.server_dashboard("operation");
-        html += birdhouse_OtherGroup( "server_dashboard_2", "Overview Operation", html_entry, open_settings["server_dashboard"] );
+        html += birdhouse_OtherGroup( "server_dashboard_2", "Overview Operation", html_entry, open_settings["server_dashboard_2"] );
 
         //html_entry = this.device_information();
         //html += birdhouse_OtherGroup( "device_info", "Devices", html_entry, open_settings["device_info"] );
