@@ -1,4 +1,4 @@
-# Birdhouse Camera v1.4.0
+# Birdhouse Camera v1.5.0
 
 Raspberry Pi project to observe our birdhouse with two webcams: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, 
@@ -55,7 +55,7 @@ Find further impressions [here](info/impressions.md).
 * **Recording and streaming videos** (admin)
   * create mp4 video incl. audio, works with iOS devices
   * Create video from all pictures of the current day
-  * Trim videos
+  * Trim videos, select thumbnail
 * **Recording and visualizing weather data**:
   * via internet for a defined location (python_weather OR [Open Meteo](https://open-meteo.com/))
   * from sensors connected to the Raspberry Pi (DHT11/DHT22)

@@ -10,7 +10,7 @@ var app_setting_style_header = "setting_bg header";
 
 var app_last_load            = 0;
 var app_title                = "jc://birdhouse/";
-var app_version              = "v1.4.0";
+var app_version              = "v1.5.0";
 var app_api_version          = "N/A";
 var app_api_dir              = "api/";
 var app_api_status           = "status";
