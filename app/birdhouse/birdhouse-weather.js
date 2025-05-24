@@ -10,7 +10,7 @@
 *
 * @param (dict) data: data returned form server API for this view
 */
-function birdhouseWeather( data ) {
+function birdhouse_WEATHER( data ) {
     var settings        = app_data["SETTINGS"];
     var status          = app_data["STATUS"];
 	var weather	        = data["WEATHER"];

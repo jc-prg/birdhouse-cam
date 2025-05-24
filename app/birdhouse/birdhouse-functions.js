@@ -319,7 +319,7 @@ function birdhouse_view_images_objects(object) {
 
     }
 
-    console.log("birdhouse_view_images_objects: OBJECT=" + object + ", FOUND=" + image_list_active.length  + ", TOTAL=" + image_list.length);
+    console.debug("birdhouse_view_images_objects: OBJECT=" + object + ", FOUND=" + image_list_active.length  + ", TOTAL=" + image_list.length);
 }
 
 
@@ -456,6 +456,27 @@ function toggleVideoEdit() {
 		}
 	}
 
+/*
+* get URL parameters
+*
+* @params (string) url: url to identify parameters from
+*/
+function getUrlParams(analyze_url) {
+    const url = new URL(analyze_url);
+
+    // Get query parameters from the URL
+    const params = new URLSearchParams(url.search);
+
+    // Create an empty object to store the parameters
+    let paramDict = {};
+
+    // Loop through each parameter and add it to the object
+    params.forEach((value, key) => {
+        paramDict[key] = value;
+        });
+
+    return paramDict;
+    }
 
 //-----------------------------------------
 

@@ -65,35 +65,6 @@ function birdhouseDevices(title, data, show="settings", subset="all") {
         }
 }
 
-/*
-* Create status view for all cameras that shows if object detections is loaded and active
-* (if object detection is active in general)
-*/
-/*
-function birdhouseDevices_objectStatus() {}
-    var html        = "";
-    var status_obj  = app_data["STATUS"]["object_detection"];
-    var tab         = new birdhouse_table();
-    tab.style_rows["height"]        = "27px";
-    tab.style_cells["min-width"]    = "150px";
-    tab.style_cells["width"]        = "50%";
-
-    if (status_obj["active"]) {
-        html += tab.start();
-        Object.entries(status_obj["models_loaded"]).forEach(([key,value])=> {
-            var description = "Detection " + key + " (" + value + "):";
-            var action = "<div style='float:left;'>";
-            action += "<div id='status_" + key + "_detection_active' style='float:left;'><div id='black'></div></div>";
-            action += "<div id='status_" + key + "_detection_loaded' style='float:left;'><div id='black'></div></div>";
-
-            html += tab.row(description, action);
-            });
-        html += tab.end();
-        }
-    return html;
-    }
-*/
-
 
 /*
 * Create status view for all configured devices - to be filled and updated by birdhouseStatus_print();

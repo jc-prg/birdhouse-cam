@@ -2227,7 +2227,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         if param["admin_allowed"]:
             content["links"] = self.tools.print_links_json(link_list=("favorit", "today", "backup", "cam_info"))
         else:
-            content["links"] = self.tools.print_links_json(link_list=("favorit", "today", "backup"))
+            content["links"] = self.tools.print_links_json(link_list=("favorit", "videos", "today", "backup"))
 
         return content
 

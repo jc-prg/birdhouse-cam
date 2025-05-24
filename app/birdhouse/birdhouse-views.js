@@ -142,12 +142,12 @@ function birdhouse_INDEX(data, camera, object=false) {
 	if (active_cam["object"] && object_detect && selected_view != "picture-in-picture") {
 	    elementVisible("button_object_detection");
         if (object)  {
-            document.getElementById("show_stream_fps_"+replace_tags["CAM1_ID"]).style.display = "none";
-            document.getElementById("show_stream_object_fps_"+replace_tags["CAM1_ID"]).style.display = "block";
+            elementHidden("show_stream_fps_"+replace_tags["CAM1_ID"]);
+            elementVisible("show_stream_object_fps_"+replace_tags["CAM1_ID"]);
             }
         else  {
-            document.getElementById("show_stream_fps_"+replace_tags["CAM1_ID"]).style.display = "block";
-            document.getElementById("show_stream_object_fps_"+replace_tags["CAM1_ID"]).style.display = "none";
+            elementVisible("show_stream_fps_"+replace_tags["CAM1_ID"]);
+            elementHidden("show_stream_object_fps_"+replace_tags["CAM1_ID"]);
             }
 	    }
 
@@ -156,146 +156,21 @@ function birdhouse_INDEX(data, camera, object=false) {
 }
 
 /*
-* create view for video editing (detail for video view)
-*
-* @param (string) title: title to be displayed
-* @param (dict) data: API response for video specific request
-*/
-function birdhouse_VIDEO_DETAIL( title, data ) {
-
-	var html        = "";
-	var video       = data["DATA"]["data"]["entries"];
-	var server_info = app_data["SETTINGS"]["server"];
-    var tab         = new birdhouse_table();
-
-	for (let key in video) {
-		app_active_date             = key;
-        video[key]["directory"]     = "videos/";
-        video[key]["path"]          = "videos/";
-        video[key]["type"]          = "video_org";
-        video[key]["long_length"]   = true;
-
-		var short               = false;
-		var thumbnail           = false;
-		var video_name          = video[key]["date"];
-		var video_stream        = birdhouse_Image("Complete", key, video[key]);
-		var video_stream_short  = "";
-
-        console.log("---> video: " + key + ", " + JSON.stringify(video[key]));
-		console.log(video_stream);
-
-		if (video[key]["video_file_short"] != undefined && video[key]["video_file_short"] != "") {
-            short                      = true;
-            var video_short            = {};
-            Object.assign( video_short, video[key] );
-            var short_video_file       = video[key]["video_file_short"];
-            video_short["video_file"]  = short_video_file;
-            video_short["long_length"] = false;
-            video_stream_short         = birdhouse_Image("Short", "short", video_short);
-            console.log(video_stream_short);
-            }
-
-        if (video[key]["thumbnail_selected"] != undefined && video[key]["thumbnail_selected"] != "") {
-            thumbnail                 = true;
-            video[key]["type"]        = "thumbnail_selected";
-            video_stream_thumb        = birdhouse_Image("Thumbnail", "thumb", video[key]);
-            console.log(video_stream_thumb);
-        }
-
-        tab.style_rows["height"]           = "20px";
-        tab.style_cells["vertical-align"]  = "top";
-
-        var video_title  = "";
-        if (video[key]["title"]) { video_title  = video[key]["title"]; }
-        var onclick_video = "birdhouse_editVideoTitle(title=\"set_video_title\", video_id=\""+key+"\", camera=\""+video[key]["camera"]+"\");";
-        var edit_title    = "<input id='set_video_title' value='"+video_title+"' class='input-video-edit' style='width:100px;background:white;'>&nbsp;&nbsp;";
-        edit_title       += "<button class='button-video-edit' onclick='"+onclick_video+"'>"+lang("SAVE")+"</button>";
-
-		html += "<div class='camera_info' style='height:auto;'>";
-		html += "<div class='camera_info_image video_edit'>";
-		html += "<div class='video-edit-thumb'>" + video_stream + "</div>";
-		if (short)      { html += "<div class='video-edit-thumb'>" + video_stream_short + "</div>"; }
-		if (thumbnail)  { html += "<div class='video-edit-thumb'>" + video_stream_thumb + "</div>"; }
-		html += "</div>";
-		html += "<div class='camera_info_text'>";
-		html += "<h3>"+video_name+"</h3>";
-		html += "&nbsp;<br/>";
-
-        html += tab.start();
-		html += tab.row(lang("CAMERA")      + ": ", video[key]["camera"].toUpperCase() + " - " + video[key]["camera_name"]);
-		html += tab.row(lang("TITLE")       + ": ", edit_title);
-		html += tab.row(lang("LENGTH")      + ": ", Math.round(video[key]["length"]*10)/10 + " s<br/>");
-		html += tab.row(lang("FRAMERATE")   + ": ", video[key]["framerate"]   + " fps");
-		html += tab.row(lang("FRAME_COUNT") + ": ", video[key]["image_count"]);
-		html += tab.row(lang("IMAGESIZE")   + ": ", video[key]["image_size"]);
-//		html += lang("FILES")  + ": " + video[key]["video_file"]  + "<br/>";
-		if (short) {
-//			html += lang("FILES")  + ": " + video[key]["video_file_short"]  + "<br/>";
-			html += tab.row(lang("SHORT_VERSION") + ": ", Math.round(video[key]["video_file_short_length"]*10)/10 + " s");
-			}
-
-		if (app_admin_allowed) {
-		    html += tab.row("&nbsp;");
-			html += tab.row(lang("EDIT") + ":", "<button onclick=\"birdhouse_videoOverlayToggle();\" class=\"button-video-edit\">&nbsp;"+lang("SHORTEN_VIDEO")+"&nbsp;</button>&nbsp;");
-
-			var player = "<div id='camera_video_edit_overlay' class='camera_video_edit_overlay' style='display:none'></div>";
-			player += "<div id='camera_video_edit' class='camera_video_edit' style='display:none'>";
-			player += "<div style='height:46px;width:100%'></div>";
-			var trim_command  = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_createShortVideo();";
-			var thumb_command = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_createThumbVideo();";
-
-			loadJS(videoplayer_script, "", document.body);
-
-            var video_stream_server = window.location.href.split("//")[1];
-            video_stream_server = video_stream_server.split("/")[0];
-            video_stream_server = video_stream_server.split(":")[0];
-            video_stream_server = "http://" + video_stream_server + ":" + server_info["port_video"] + "/";
-
-			console.log("-----> video-streaming: " + video_stream_server + " (http[s]: " + window.location.href  + ")");
-
-			video_values = {};
-			video_values["VIDEOID"]                 = key;
-			video_values["ACTIVE"]                  = app_active_cam;
-			video_values["LENGTH"]                  = video[key]["length"];
-			video_values["THUMBNAIL"]               = lang("THUMBNAIL");
-			video_values["SHORTEN"]                 = lang("SHORTEN");
-			video_values["CANCEL"]                  = lang("CANCEL");
-			video_values["FILE_THUMBNAIL"]          = "";
-			video_values["VIDEOFILE"]               = video_stream_server + video[key]["video_file"];
-			video_values["JAVASCRIPT_SHORTEN"]      = trim_command;
-			video_values["JAVASCRIPT_THUMBNAIL"]    = thumb_command;
-
-			videoplayer  = videoplayer_template;
-			for (let key in video_values) {
-				videoplayer = videoplayer.replace("<!--"+key+"-->",video_values[key]);
-				}
-			player += videoplayer;
-			player += "</div>";
-
-			setTextById("videoplayer",player);
-			}
-		}
-    html += tab.end();
-    html += "</div>";
-
-	setTextById(app_frame_content,html);
-	}
-
-/*
 * coordinate list view creation for all lists (today, today complete, favorites, videos, object detection, ...)
 *
-* @param (string) title: title to be displayed
+* @param (string) page: page to be displayed
 * @param (dict) data: API response for list specific request
 * @param (string) camera: ID of active camera
 * @param (boolean) header_open: set if group header should be open
 */
-function birdhouse_LIST(title, data, camera, header_open=true) {
+function birdhouse_LIST(page, data, camera, header_open=true) {
 
-    if (title == "FAVORITES" && birdhouseStatus_loadingViews(app_data, "favorite") != "done") { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
-    if (title == "ARCHIVE"   && birdhouseStatus_loadingViews(app_data, "archive") != "done")  { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
-    if (title == "OBJECTS"   && birdhouseStatus_loadingViews(app_data, "object") != "done")   { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
+    if (page == "FAVORITES" && birdhouseStatus_loadingViews(app_data, "favorite") != "done") { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
+    if (page == "ARCHIVE"   && birdhouseStatus_loadingViews(app_data, "archive") != "done")  { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
+    if (page == "OBJECTS"   && birdhouseStatus_loadingViews(app_data, "object") != "done")   { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
 
 	var html              = "";
+	var title             = lang(page);
 	var html_no_entries   = "<center>&nbsp;<br/>"+lang("NO_ENTRIES")+"<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;</center>";
 	var entry_category    = [];
 	var same_img_size     = false;
@@ -703,7 +578,8 @@ function birdhouse_LIST_admin_archive_overview(data, admin, camera, active_page,
 * @param (string) active page: currently active page
 * @param (string) active date: currently active date
 * @returns (string): html with admin functionality for the today_complete view
-*/function birdhouse_LIST_admin_today_complete(data, admin, camera, active_page, active_date) {
+*/
+function birdhouse_LIST_admin_today_complete(data, admin, camera, active_page, active_date) {
 
     var html              = "";
     var info_text         = "";
@@ -984,7 +860,7 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
 
         // create labels
         Object.entries(labels).sort().forEach(([key, value]) => {
-            console.log("     - " + key + ": " + value.length);
+            console.debug("     - " + key + ": " + value.length);
             var onclick = "birdhouse_view_images_objects(\""+key+"\"); birdhouse_labels_highlight(\""+key+"\", \"label_key_list\");";
             if (active_page == "TODAY_COMPLETE") { onclick    += "birdhouse_OBJECTS_open(\""+key+"\", true, \""+active_page+"\");"; }
             label_information += "<div id='label_"+key+"' class='detection_label' onclick='" + onclick + "'>&nbsp;" + bird_lang(key) + " (" + value.length + ")&nbsp;</div>";
@@ -1015,6 +891,133 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
     }
     return html;
 }
+
+/*
+* create view for video editing (detail for video view)
+*
+* @param (string) title: title to be displayed
+* @param (dict) data: API response for video specific request
+*/
+function birdhouse_VIDEO_DETAIL( data ) {
+
+	var html        = "";
+    var title       = lang("VIDEO_DETAIL");
+	var video       = data["DATA"]["data"]["entries"];
+	var server_info = app_data["SETTINGS"]["server"];
+    var tab         = new birdhouse_table();
+
+	for (let key in video) {
+		app_active_date             = key;
+        video[key]["directory"]     = "videos/";
+        video[key]["path"]          = "videos/";
+        video[key]["type"]          = "video_org";
+        video[key]["long_length"]   = true;
+
+		var short               = false;
+		var thumbnail           = false;
+		var video_name          = video[key]["date"];
+		var video_stream        = birdhouse_Image("Complete", key, video[key]);
+		var video_stream_short  = "";
+
+        console.log("---> video: " + key + ", " + JSON.stringify(video[key]));
+		console.log(video_stream);
+
+		if (video[key]["video_file_short"] != undefined && video[key]["video_file_short"] != "") {
+            short                      = true;
+            var video_short            = {};
+            Object.assign( video_short, video[key] );
+            var short_video_file       = video[key]["video_file_short"];
+            video_short["video_file"]  = short_video_file;
+            video_short["long_length"] = false;
+            video_stream_short         = birdhouse_Image("Short", "short", video_short);
+            console.log(video_stream_short);
+            }
+
+        if (video[key]["thumbnail_selected"] != undefined && video[key]["thumbnail_selected"] != "") {
+            thumbnail                 = true;
+            video[key]["type"]        = "thumbnail_selected";
+            video_stream_thumb        = birdhouse_Image("Thumbnail", "thumb", video[key]);
+            console.log(video_stream_thumb);
+        }
+
+        tab.style_rows["height"]           = "20px";
+        tab.style_cells["vertical-align"]  = "top";
+
+        var video_title  = "";
+        if (video[key]["title"]) { video_title  = video[key]["title"]; }
+        var onclick_video = "birdhouse_editVideoTitle(title=\"set_video_title\", video_id=\""+key+"\", camera=\""+video[key]["camera"]+"\");";
+        var edit_title    = "<input id='set_video_title' value='"+video_title+"' class='input-video-edit' style='width:100px;background:white;'>&nbsp;&nbsp;";
+        edit_title       += "<button class='button-video-edit' onclick='"+onclick_video+"'>"+lang("SAVE")+"</button>";
+
+		html += "<div class='camera_info' style='height:auto;'>";
+		html += "<div class='camera_info_image video_edit'>";
+		html += "<div class='video-edit-thumb'>" + video_stream + "</div>";
+		if (short)      { html += "<div class='video-edit-thumb'>" + video_stream_short + "</div>"; }
+		if (thumbnail)  { html += "<div class='video-edit-thumb'>" + video_stream_thumb + "</div>"; }
+		html += "</div>";
+		html += "<div class='camera_info_text'>";
+		html += "<h3>"+video_name+"</h3>";
+		html += "&nbsp;<br/>";
+
+        html += tab.start();
+		html += tab.row(lang("CAMERA")      + ": ", video[key]["camera"].toUpperCase() + " - " + video[key]["camera_name"]);
+		html += tab.row(lang("TITLE")       + ": ", edit_title);
+		html += tab.row(lang("LENGTH")      + ": ", Math.round(video[key]["length"]*10)/10 + " s<br/>");
+		html += tab.row(lang("FRAMERATE")   + ": ", video[key]["framerate"]   + " fps");
+		html += tab.row(lang("FRAME_COUNT") + ": ", video[key]["image_count"]);
+		html += tab.row(lang("IMAGESIZE")   + ": ", video[key]["image_size"]);
+//		html += lang("FILES")  + ": " + video[key]["video_file"]  + "<br/>";
+		if (short) {
+//			html += lang("FILES")  + ": " + video[key]["video_file_short"]  + "<br/>";
+			html += tab.row(lang("SHORT_VERSION") + ": ", Math.round(video[key]["video_file_short_length"]*10)/10 + " s");
+			}
+
+		if (app_admin_allowed) {
+		    html += tab.row("&nbsp;");
+			html += tab.row(lang("EDIT") + ":", "<button onclick=\"birdhouse_videoOverlayToggle();\" class=\"button-video-edit\">&nbsp;"+lang("SHORTEN_VIDEO")+"&nbsp;</button>&nbsp;");
+
+			var player = "<div id='camera_video_edit_overlay' class='camera_video_edit_overlay' style='display:none'></div>";
+			player += "<div id='camera_video_edit' class='camera_video_edit' style='display:none'>";
+			player += "<div style='height:46px;width:100%'></div>";
+			var trim_command  = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_createShortVideo();";
+			var thumb_command = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_createThumbVideo();";
+
+			loadJS(videoplayer_script, "", document.body);
+
+            var video_stream_server = window.location.href.split("//")[1];
+            video_stream_server = video_stream_server.split("/")[0];
+            video_stream_server = video_stream_server.split(":")[0];
+            video_stream_server = "http://" + video_stream_server + ":" + server_info["port_video"] + "/";
+
+			console.log("-----> video-streaming: " + video_stream_server + " (http[s]: " + window.location.href  + ")");
+
+			video_values = {};
+			video_values["VIDEOID"]                 = key;
+			video_values["ACTIVE"]                  = app_active_cam;
+			video_values["LENGTH"]                  = video[key]["length"];
+			video_values["THUMBNAIL"]               = lang("THUMBNAIL");
+			video_values["SHORTEN"]                 = lang("SHORTEN");
+			video_values["CANCEL"]                  = lang("CANCEL");
+			video_values["FILE_THUMBNAIL"]          = "";
+			video_values["VIDEOFILE"]               = video_stream_server + video[key]["video_file"];
+			video_values["JAVASCRIPT_SHORTEN"]      = trim_command;
+			video_values["JAVASCRIPT_THUMBNAIL"]    = thumb_command;
+
+			videoplayer  = videoplayer_template;
+			for (let key in video_values) {
+				videoplayer = videoplayer.replace("<!--"+key+"-->",video_values[key]);
+				}
+			player += videoplayer;
+			player += "</div>";
+
+			setTextById("videoplayer",player);
+			}
+		}
+    html += tab.end();
+    html += "</div>";
+
+	setTextById(app_frame_content,html);
+	}
 
 
 app_scripts_loaded += 1;

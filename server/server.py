@@ -34,8 +34,6 @@ from modules.bh_database import BirdhouseTEXT
 from modules.srv_support import ServerInformation, ServerHealthCheck
 from modules.statistics import BirdhouseStatistics
 
-api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_start_tc = time.time()
 api_description = {"name": "BirdhouseCAM", "version": "v1.5.1"}
 app_framework = "v1.5.1"
 
@@ -782,6 +780,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 response["session-id"] = ""
             else:
                 response["check-pwd"] = True
+                response["return-page"] = param["parameter"][1]
                 response["session-id"] = check
         elif param["command"] == "reset-image-presets":
             response = camera[which_cam].reset_image_presets()
@@ -906,6 +905,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             "data"     : ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL",
                           "DEVICES", "OBJECTS", "STATISTICS", "bird-names", "WEATHER",
                           "SETTINGS", "CAMERA_SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS",
+                          "SETTINGS_CAMERAS", "SETTINGS_DEVICES", "SETTINGS_IMAGE", "SETTINGS_INFORMATION", "SETTINGS_STATISTICS",
                           "status", "list"],
             "info"     : ["camera-param", "version", "reload","python-pkg"],
             "status"   : ["status", "list", "WEATHER"],
@@ -1088,6 +1088,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif command == "OBJECTS":
             content = views.object.list(param=param)
         elif command == "STATISTICS":
+            content = views.statistic_list(param=param)
+        elif command == "SETTINGS_STATISTICS":
             content = views.statistic_list(param=param)
         elif command == "VIDEOS":
             content = views.video_list(param=param)
@@ -1654,6 +1656,8 @@ sys.excepthook = on_exception
 
 
 if __name__ == "__main__":
+    api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+    api_start_tc = time.time()
 
     # help
     if len(sys.argv) > 0 and "--help" in sys.argv:
@@ -1684,9 +1688,10 @@ if __name__ == "__main__":
     elif len(sys.argv) > 0 and "--rpi" in sys.argv:
         # when rpi wait a minute, as RPI have to connect to the internet first to get the correct time
         time.sleep(60)
+        api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+        api_start_tc = time.time()
 
     set_server_logging(sys.argv)
-
     srv_logging = set_logging('root')
     ch_logging = set_logging('cam-handl')
     view_logging = set_logging("view-head")

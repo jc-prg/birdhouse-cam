@@ -10,11 +10,12 @@
 * @param (string) title: title of this view
 * @param (dict) data: data returned form server API for this view
 */
-function birdhouse_OBJECTS(title, data) {
+function birdhouse_OBJECTS( data ) {
 
-    var html = "";
-    var detections     = data["DATA"]["data"]["entries"];
-	var server_status  = app_data["STATUS"]["server"];
+    var html            = "";
+    var title           = lang("BIRDS_DETECTED");
+    var detections      = data["DATA"]["data"]["entries"];
+	var server_status   = app_data["STATUS"]["server"];
 
     if (!detections && server_status["view_archive_loading"] != "done") {
         var progress_info = "<i><div id='loading_status_object'></div></i>";

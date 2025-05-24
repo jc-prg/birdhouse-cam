@@ -6,6 +6,16 @@
 
 var intervalAdmin;
 
+/*
+* execute API request using the app_session_id if exists
+*
+* @param (string) method: API request method - GET or POST
+* @param (list) commands: list of command parameters
+* @param (object) data: data to be transmitted
+* @param (object) return_cmd: callback function
+* @param (boolean) wait_till_executed: set true for synchronous API request
+* @param (string) method_name: name of requesting function for logging
+*/
 function birdhouse_apiRequest(method, commands, data, return_cmd, wait_till_executed, method_name) {
     // app_unique_stream_id -> timestamp
     // app_session_id -> pwd
@@ -24,18 +34,35 @@ function birdhouse_genericApiRequest(method, commands, return_cmd) {
 	birdhouse_apiRequest(method, commands, '', return_cmd,'','birdhouse_genericApiRequest');
 }
 
-function birdhouse_loginDialog() {
+/*
+* create dialog to login
+*
+* @param (string) login_type: page name to be opened after successful login
+*/
+function birdhouse_loginDialog(login_type="default") {
     message  = lang("LOGIN_MSG") + "<br/>&nbsp;<br/>";
     message += "<input id='adm_pwd' type='password'>";
-    appMsg.confirm(message, "birdhouse_loginCheck(document.getElementById('adm_pwd').value);", 200);
+    message += "<input id='login_type' type='string' value='"+login_type+"' style='display:none;'>";
+    appMsg.confirm(message, "birdhouse_loginCheck(document.getElementById('adm_pwd').value,document.getElementById('login_type').value);", 200);
     document.getElementById('adm_pwd').focus();
 }
 
-function birdhouse_loginCheck(pwd) {
-
-    birdhouse_apiRequest("POST", ["check-pwd", pwd], "", birdhouse_loginReturn, "", "birdhouse_loginCheck");
+/*
+* send API request to check the password
+*
+* @param (string) pwd: admin password
+* @param (string) login_type: page name to be opened after successful login
+*/
+function birdhouse_loginCheck(pwd, login_type="") {
+    console.log("Check password: " + pwd + " / " + login_type);
+    birdhouse_apiRequest("POST", ["check-pwd", pwd, login_type], "", birdhouse_loginReturn, "", "birdhouse_loginCheck");
 }
 
+/*
+* check in if server returns the password was value
+*
+* @param (object) data: API response
+*/
 function birdhouse_loginReturn(data) {
     if (data["check-pwd"]) {
         birdhousePrint_load();
@@ -44,12 +71,16 @@ function birdhouse_loginReturn(data) {
         app_session_id = data["session-id"];
         appFW.appList = app_session_id+"/status";
         appMsg.alert("Login successful.");
+        if (data["return-page"] != "") { birdhousePrint_page(data["return-page"].toUpperCase()); }
     }
     else {
         appMsg.alert("Wrong password!");
     }
 }
 
+/*
+* remove session id and trigger server-side logout
+*/
 function birdhouse_logout() {
     app_session_id = "";
     appFW.appList = "status";
@@ -57,6 +88,9 @@ function birdhouse_logout() {
     birdhouse_apiRequest("POST", ["check-pwd", '--logout--'], "", birdhouse_logoutMsg, "", "birdhouse_logout");
     }
 
+/*
+* show message when server-side logout has been done
+*/
 function birdhouse_logoutMsg() {
 
     birdhousePrint_load("INDEX", app_active_cam);
@@ -66,6 +100,11 @@ function birdhouse_logoutMsg() {
     appMsg.alert(lang("LOGOUT_MSG"));
 }
 
+/*
+* activate and clear interval request when logged in as administrator
+*
+* @param (boolean) set: true to start the interval request and false to clear the interval
+*/
 function birdhouse_adminAnswer(set=true) {
     if (set == true) {
         if (intervalAdmin == undefined) {
@@ -77,11 +116,20 @@ function birdhouse_adminAnswer(set=true) {
     }
 }
 
+/*
+* regular interval request when logged in as administrator, this request looks for processes started by the
+* administrator that have been finished
+*/
 function birdhouse_adminAnswerRequest() {
 
     birdhouse_apiRequest("GET", ["last-answer"], "", birdhouse_adminAnswerReturn, "", "birdhouse_adminLastAnswer");
 }
 
+/*
+* show a message and reload view when an administrator process has been finished
+*
+* @param (object) data: API response
+*/
 function birdhouse_adminAnswerReturn(data) {
     var status = data["STATUS"]["server"];
     if (status["last_answer"] != "") {
@@ -95,11 +143,17 @@ function birdhouse_adminAnswerReturn(data) {
     birdhouseStatus_detection(data);
 }
 
+/*
+* API request to load status and settings (default request)
+*/
 function birdhouse_loadSettings() {
     commands = ["status"];
 	birdhouse_apiRequest('GET', commands, '', birdhouseLoadSettings,'','birdhouse_loadSettings');
 }
 
+/*
+* API request to shorten a video file based on given timecodes
+*/
 function birdhouse_createShortVideo() {
         video_id = document.getElementById("video-id");
         if (video_id != null) {
@@ -116,6 +170,9 @@ function birdhouse_createShortVideo() {
 		}
 	}
 	
+/*
+* API request to create another thumbnail base on a given timecode
+*/
 function birdhouse_createThumbVideo() {
         setTCin();
         video_id = document.getElementById("video-id");
@@ -133,38 +190,73 @@ function birdhouse_createThumbVideo() {
 		}
 	}
 
+/*
+* API request to start the create of a time-lapse video from all recorded images of today
+*/
 function birdhouse_createDayVideo(camera) {
 	commands = ["create-day-video",camera];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerCreateDay,'','birdhouse_createDayVideo');
 	}
 
+/*
+* API request to change the title of a recorded video
+*
+* @param (string) title: new title for the video file
+* @param (string) video_id: ID of the video file in the format YYYYMMDD_HHMMSS
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+*/
 function birdhouse_editVideoTitle(title, video_id, camera) {
     title    = document.getElementById(title).value;
     if (title == "") { title = "EMPTY_TITLE_FIELD"; }
 	commands = ["edit-video-title", video_id, title, camera];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_editVideoTitle');
 }
-	
+
+/*
+* API request to trigger a camera reconnect
+*
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+*/
 function birdhouse_reconnectCamera(camera) {
 	commands = ["reconnect-camera",camera];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerReconnect,'','birdhouse_reconnectCamera');
 	}
 
+/*
+* API request to trigger a microphone reconnect
+*
+* @param (string) micro: microphone ID, e.g., "mic1" or "mic2"
+*/
 function birdhouse_reconnectMicrophone(micro) {
 	commands = ["reconnect-microphone",micro];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerReconnect,'','birdhouse_reconnectMicrophone');
 	}
 
+/*
+* API request to change image settings for a camera, e.g., brightness, contrast, hue or other (depending on camera model)
+*
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+* @param (string) key: camera parameter to be change (depending on camera model)
+* @param (float) value: value to be set for the parameter
+*/
 function birdhouse_cameraSettings(camera, key, value) {
 	commands = ["camera-settings", key, value, camera];
 	birdhouse_apiRequest('POST', commands, '', '','','birdhouse_cameraSettings');
 }
 
+/*
+* API request to reset camera presets
+*
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+*/
 function birdhouse_cameraResetPresets(camera) {
 	commands = ["reset-image-presets",camera];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_cameraResetPresets');
 }
 
+/*
+* trigger an API request timeout for demonstration purpose
+*/
 function birdhouse_checkTimeout() {
 	commands = ["check_timeout"];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_checkTimeout');
@@ -341,9 +433,7 @@ function birdhouse_forceShutdown_exec() {
 
 function birdhouse_killStream(camera_id, stream_id) {
 
-// !!!! Still kills things that are produced somehow even if not necessary?!
-
-    console.log("birdhouse_killStream: "+camera_id+" - "+stream_id);
+    console.debug("birdhouse_killStream: "+camera_id+" - "+stream_id);
 	birdhouse_active_video_streams[stream_id] = false;
     camera_id = camera_id.replace("_img", "");
     stream_id = stream_id.replace("_img", "");
@@ -354,7 +444,7 @@ function birdhouse_killStream(camera_id, stream_id) {
 function birdhouse_killStreamAnswer(data) {
     if (data["kill-stream-id"] && birdhouse_active_video_streams[data["kill-stream-id"]] != undefined) {
         birdhouse_active_video_streams[data["kill-stream-id"]] = false;
-        console.log("birdhouse_killStreamAnswer: killed stream " + data["kill-stream"] + "; id=" + data["kill-stream-id"]);
+        console.debug("birdhouse_killStreamAnswer: killed stream " + data["kill-stream"] + "; id=" + data["kill-stream-id"]);
         }
     else if (data["kill-stream-id"] && birdhouse_active_video_streams[data["kill-stream-id"]] == undefined) {
         console.warn("birdhouse_killStreamAnswer: requested ID wasn't available any more.");

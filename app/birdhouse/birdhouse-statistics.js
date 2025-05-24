@@ -14,8 +14,10 @@ var birdhouse_STATISTICS_labels = {"day": [], "charts": ["overview"]}
 * @param (string) title: title to be displayed
 * @param (dict) data: API response for list specific request
 */
-function birdhouse_STATISTICS(title, data) {
+function birdhouse_STATISTICS(data) {
+
     birdhouse_STATISTICS_cache = data;
+
     var link        = "";
     var date        = birdhouse_STATISTICS_day_1;
     var statistics  = data["DATA"]["data"]["entries"][date];
