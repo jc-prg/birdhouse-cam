@@ -121,7 +121,6 @@ function birdhouseStatus_print(data) {
     if (pages_settings.includes(app_active_page))           { birdhouseStatus_processing(data); }
     if (pages_settings.includes(app_active_page))           { birdhouseStatus_relays(data); }
     if (pages_settings.includes(app_active_page))           { birdhouse_settings.server_dashboard_fill(data); }
-    if (pages_settings.includes(app_active_page))           { birdhouseStatus_sensors(data); }
 
     if (app_active_page == "INDEX" || "SETTINGS_CAMERAS")   { birdhouseStatus_cameras(data); }
     if (app_active_page == "INDEX" || "SETTINGS_CAMERAS")   { birdhouseStatus_microphones(data); }
@@ -132,10 +131,13 @@ function birdhouseStatus_print(data) {
     if (pages_content.includes(app_active_page))            { birdhouseStatus_loadingViews(data); }
     if (app_active_page == "ARCHIVE" || "TODAY")            { birdhouseStatus_downloads(data); }
     if (app_active_page == "ARCHIVE" || "TODAY")            { birdhouseStatus_detection(data); }
-    //if (app_active_page == "SETTINGS_DEVICES")              { birdhouseStatus_weather(data); }
-    if (app_active_page == "WEATHER")                       { birdhouseStatus_weather(data); }
+
     if (pages_settings.includes(app_active_page))           { birdhouseStatus_weather(data); }
-    if (pages_content.includes(app_active_page))            { birdhouseStatus_weather(data); }
+    else if (app_active_page == "WEATHER")                  { birdhouseStatus_weather(data); }
+    else if (pages_content.includes(app_active_page))       { birdhouseStatus_weather(data, "content"); }
+
+    if (pages_settings.includes(app_active_page))           { birdhouseStatus_sensors(data); }
+    else if (pages_content.includes(app_active_page))       { birdhouseStatus_sensors(data, "content"); }
 
     document.getElementById(app_frame_info).style.display = "block";
     html = "<center><i><font color='gray'>";
@@ -347,7 +349,7 @@ function birdhouseStatus_cameraParam(data, camera) {
 *
 * @param (dict) data: response from API status request
 */
-function birdhouseStatus_weather(data) {
+function birdhouseStatus_weather(data, type="all") {
     // weather information
     var weather         = data["STATUS"]["weather"];
     var settings        = data["SETTINGS"]["devices"]["weather"];
@@ -359,51 +361,48 @@ function birdhouseStatus_weather(data) {
 
     if (weather["current"] && weather["current"]["description_icon"]) {
         if (settings["active"]) {
-            if (weather["info_city"] != "") {
-                entry = weather["info_city"] + ": " + weather["current"]["temperature"] + "°C";
-                }
-            else if (weather["info_module"]["name"]) {
-                entry = weather["info_module"]["name"] + ": " + weather["current"]["temperature"] + "°C";
-            }
-            else  {
-                entry = "Internet: " + weather["current"]["temperature"] + "°C";
-            }
+            if (weather["info_city"] != "")             { entry = weather["info_city"] + ": " + weather["current"]["temperature"] + "°C"; }
+            else if (weather["info_module"]["name"])    { entry = weather["info_module"]["name"] + ": " + weather["current"]["temperature"] + "°C"; }
+            else                                        { entry = "Internet: " + weather["current"]["temperature"] + "°C"; }
             entry = "<big>" + weather["current"]["description_icon"] + "</big> &nbsp; " + entry;
             weather_icon = weather["current"]["description_icon"];
             weather_update = weather["info_update"];
         }
-        weather_error = "Running: " + weather["info_status"]["running"] + "\n";
-        if (weather["info_status"]["error"] || weather["info_status"]["running"] == "error") {
-            weather_error += "Error: " + weather["info_status"]["error"].toString() + "\n";
-            weather_error += "Message: " + weather["info_status"]["error_msg"];
-            setHeaderColor(header_id="weather_error", header_color=header_color_error);
-            setHeaderColor(header_id="weather_settings", header_color=header_color_error);
-            setStatusColor(status_id="status_error_WEATHER", "red");
-        }
-        else if (weather["info_status"]["running"].indexOf("paused") > -1) {
-            setHeaderColor(header_id="weather_error", header_color=header_color_warning);
-            setStatusColor(status_id="status_error_WEATHER", "black");
-        }
-        else {
-            setHeaderColor(header_id="weather_settings", header_color="");
-            setHeaderColor(header_id="weather_error", header_color="");
-            setStatusColor(status_id="status_error_WEATHER", "green");
-        }
-        if (settings["active"] == true) {
-            setStatusColor(status_id="status_active_WEATHER", "white");
+        if (type == "all") {
+            weather_error = "Running: " + weather["info_status"]["running"] + "\n";
+            if (weather["info_status"]["error"] || weather["info_status"]["running"] == "error") {
+                weather_error += "Error: " + weather["info_status"]["error"].toString() + "\n";
+                weather_error += "Message: " + weather["info_status"]["error_msg"];
+                setHeaderColor(header_id="weather_error", header_color=header_color_error);
+                setHeaderColor(header_id="weather_settings", header_color=header_color_error);
+                setStatusColor(status_id="status_error_WEATHER", "red");
             }
-        else{
-            setStatusColor(status_id="status_active_WEATHER", "black");
-            setStatusColor(status_id="status_error_WEATHER", "black");
+            else if (weather["info_status"]["running"].indexOf("paused") > -1) {
+                setHeaderColor(header_id="weather_error", header_color=header_color_warning);
+                setStatusColor(status_id="status_error_WEATHER", "black");
+            }
+            else {
+                setHeaderColor(header_id="weather_settings", header_color="");
+                setHeaderColor(header_id="weather_error", header_color="");
+                setStatusColor(status_id="status_error_WEATHER", "green");
+            }
+            if (settings["active"] == true) {
+                setStatusColor(status_id="status_active_WEATHER", "white");
+                }
+            else{
+                setStatusColor(status_id="status_active_WEATHER", "black");
+                setStatusColor(status_id="status_error_WEATHER", "black");
+            }
         }
-    }
-    if (entry != "") { weather_footer.push(entry); }
-    setTextById("weather_info_icon", weather_icon);
-    setTextById("weather_info_update", weather_update);
-    setTextById("weather_info_error", weather_error);
+        setTextById("weather_info_icon", weather_icon);
+        setTextById("weather_info_update", weather_update);
+        setTextById("weather_info_error", weather_error);
 
-    coordinates = "(" + settings["gps_coordinates"].toString().replaceAll(",", ", ") + ")";
-    setTextById("gps_coordinates", coordinates);
+        coordinates = "(" + settings["gps_coordinates"].toString().replaceAll(",", ", ") + ")";
+        setTextById("gps_coordinates", coordinates);
+    }
+
+    if (entry != "") { weather_footer.push(entry); }
 }
 
 /*
@@ -434,7 +433,7 @@ function birdhouseStatus_relays(data) {
 *
 * @param (dict) data: response from API status request
 */
-function birdhouseStatus_sensors(data) {
+function birdhouseStatus_sensors(data, type="all") {
     // add sensor information
     var sensors         = data["SETTINGS"]["devices"]["sensors"];
     var status_dev      = data["STATUS"]["devices"];
@@ -442,36 +441,38 @@ function birdhouseStatus_sensors(data) {
     var sensor_status   = status_dev["sensors"];
     var keys            = Object.keys(sensors);
     for (let sensor in sensors) {
-        if (sensor_status[sensor]) {
-            //var status = sensors[sensor]["status"];
-            var status = sensor_status[sensor];
-            var sensor_error_01 = status["error_msg"]; //.join(",\n");
-            var sensor_error_02 = "Error: " + status["error"].toString() + "\n\n";
-            if (status["error_connect"]) {
-                sensor_error_02    += "Error Connect: " + status["error_connect"].toString() + "\n\n";
+        if (type == "all") {
+            if (sensor_status[sensor]) {
+                //var status = sensors[sensor]["status"];
+                var status = sensor_status[sensor];
+                var sensor_error_01 = status["error_msg"]; //.join(",\n");
+                var sensor_error_02 = "Error: " + status["error"].toString() + "\n\n";
+                if (status["error_connect"]) {
+                    sensor_error_02    += "Error Connect: " + status["error_connect"].toString() + "\n\n";
+                    }
+                if (status["error_module"]) {
+                    sensor_error_02    += "Error Module: " + status["error_module"].toString();
+                    }
+                setTextById("error_sensor1_"+sensor, sensor_error_01);
+                setTextById("error_sensor2_"+sensor, sensor_error_02);
+                setTextById("status_sensor_"+sensor, status["running"]);
+                setTextById("status_sensor_last_"+sensor, Math.round(status["last_read"]*10)/10 +"s");
+                if (status["running"] == "OK") {
+                    setStatusColor(status_id="status_active_"+sensor, "white");
                 }
-            if (status["error_module"]) {
-                sensor_error_02    += "Error Module: " + status["error_module"].toString();
+                else {
+                    setStatusColor(status_id="status_active_"+sensor, "black");
                 }
-            setTextById("error_sensor1_"+sensor, sensor_error_01);
-            setTextById("error_sensor2_"+sensor, sensor_error_02);
-            setTextById("status_sensor_"+sensor, status["running"]);
-            setTextById("status_sensor_last_"+sensor, Math.round(status["last_read"]*10)/10 +"s");
-            if (status["running"] == "OK") {
-                setStatusColor(status_id="status_active_"+sensor, "white");
-            }
-            else {
-                setStatusColor(status_id="status_active_"+sensor, "black");
-            }
-            if (status["error"] || status["error_module"] || status["connect"]) {
-                setHeaderColor(header_id=sensor+"_error", header_color=header_color_error);
-                setHeaderColor(header_id=sensor, header_color=header_color_error);
-                setStatusColor(status_id="status_error_"+sensor, "red");
-            }
-            else {
-                setHeaderColor(header_id=sensor+"_error", header_color="");
-                setHeaderColor(header_id=sensor, header_color="");
-                setStatusColor(status_id="status_error_"+sensor, "green");
+                if (status["error"] || status["error_module"] || status["connect"]) {
+                    setHeaderColor(header_id=sensor+"_error", header_color=header_color_error);
+                    setHeaderColor(header_id=sensor, header_color=header_color_error);
+                    setStatusColor(status_id="status_error_"+sensor, "red");
+                }
+                else {
+                    setHeaderColor(header_id=sensor+"_error", header_color="");
+                    setHeaderColor(header_id=sensor, header_color="");
+                    setStatusColor(status_id="status_error_"+sensor, "green");
+                }
             }
         }
 
