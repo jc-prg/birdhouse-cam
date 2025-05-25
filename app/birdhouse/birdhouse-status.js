@@ -87,7 +87,7 @@ function birdhouseStatus_connectionError() {
 */
 function birdhouseStatus_print(data) {
     //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
-    console.debug("Update Status ...");
+    console.debug("Update Status ("+app_active_page+") ...");
     setTextById("navActive", app_active_page);
 
     if (data["STATUS"]["admin_allowed"] != false)   { app_admin_allowed = true; }
