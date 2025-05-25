@@ -62,6 +62,7 @@ function birdhouse_loginDialog(login_type="default") {
 */
 function birdhouse_loginCheck(pwd, login_type="") {
     console.log("Check password: " + pwd + " / " + login_type);
+    if (login_type == "INDEX" && app_active_page == "INDEX") { login_type == ""; }
     birdhouse_apiRequest("POST", ["check-pwd", pwd, login_type], "", birdhouse_loginReturn, "", "birdhouse_loginCheck");
 }
 
@@ -77,12 +78,12 @@ function birdhouse_loginReturn(data) {
         app_admin_allowed = true;
         app_session_id = data["session-id"];
         appFW.appList = app_session_id+"/status";
-        appMsg.alert("Login successful.");
+        appMsg.alert(lang("LOGIN_SUCCESS"));
         setTimeout(function(){ appMsg.hide(); }, 2000);
         if (data["return-page"] != "") { birdhousePrint_page(data["return-page"].toUpperCase()); }
     }
     else {
-        appMsg.alert("Wrong password!");
+        appMsg.alert(lang("LOGIN_FAILED"));
     }
 }
 

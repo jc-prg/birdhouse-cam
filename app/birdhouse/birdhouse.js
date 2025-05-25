@@ -133,8 +133,9 @@ function birdhousePrint_page(page="INDEX", param="") {
         }
     else if (app_pages_other.includes(page)) {
         console.log("Load other page: " + page);
+        if (param == "") { param = "INDEX"; }
         if (page == "LOGIN") {
-            birdhouse_loginDialog(page);
+            birdhouse_loginDialog(param);
             }
         else if (page == "LOGOUT") {
             birdhouse_logout();
@@ -143,7 +144,7 @@ function birdhousePrint_page(page="INDEX", param="") {
         }
     else {
         console.warn("birdhousePrint_page: requested page '" + page + "' not found.");
-        birdhousePrint_page(page="INDEX");
+        birdhousePrint_load(page="INDEX", app_active_cam, app_active_date, lang(page));
         }
     }
 
