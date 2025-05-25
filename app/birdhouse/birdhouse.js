@@ -234,6 +234,7 @@ function birdhousePrint(data) {
 	if (camera == "") 	{ camera = app_active_cam; }
 	else			    { app_active_cam = camera; }
 
+	setTextById("headerRight", birdhouseHeaderFunctions() );
 	birdhouseAudioStream_load(app_data["SETTINGS"]["devices"]["microphones"]);
 
     birdhouse_KillActiveStreams();
