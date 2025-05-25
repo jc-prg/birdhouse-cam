@@ -134,7 +134,7 @@ function birdhousePrint_page(page="INDEX", param="") {
     else if (app_pages_other.includes(page)) {
         console.log("Load other page: " + page);
         if (page == "LOGIN") {
-            birdhouse_loginDialog(param);
+            birdhouse_loginDialog(page);
             }
         else if (page == "LOGOUT") {
             birdhouse_logout();
