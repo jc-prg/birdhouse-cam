@@ -249,13 +249,15 @@ function setTCin() {
   tcIn = document.getElementById("tc-in");
   //tcIn.value = `${time.minutes}:${time.seconds}.${time.mseconds}`;
   tcIn.value = `${time.tseconds}`;
+  console.log("TC-IN: " + tcIn.value);
 }
 
 function setTCout() {
   const time = formatTime(video.currentTime);
-  tcIn = document.getElementById("tc-out");
-  //tcIn.value = `${time.minutes}:${time.seconds}.${time.mseconds}`;
-  tcIn.value = `${time.tseconds}`;
+  tcOut = document.getElementById("tc-out");
+  //tcOut.value = `${time.minutes}:${time.seconds}.${time.mseconds}`;
+  tcOut.value = `${time.tseconds}`;
+  console.log("TC-OUT: " + tcOut.value);
 }
 
 // keyboardShortcuts executes the relevant functions for
@@ -323,3 +325,5 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 document.addEventListener('keyup', keyboardShortcuts);
+
+app_scripts_loaded += 1;

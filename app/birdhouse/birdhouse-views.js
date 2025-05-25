@@ -920,7 +920,7 @@ function birdhouse_VIDEO_DETAIL( data ) {
 		var video_stream_short  = "";
 
         console.log("---> video: " + key + ", " + JSON.stringify(video[key]));
-		console.log(video_stream);
+		//console.log(video_stream);
 
 		if (video[key]["video_file_short"] != undefined && video[key]["video_file_short"] != "") {
             short                      = true;
