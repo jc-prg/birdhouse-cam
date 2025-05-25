@@ -275,7 +275,9 @@ Go to the settings and create a single node.
 
 ### Accessing images via WebDAV
 
-To access image and video files via WebDAV define credentials and port in the [.env](sample.env)-file and start docker container.
+To access image and video files via WebDAV define credentials and port in the [.env](sample.env)-file and start the 
+docker container as shown below. As administrator, you'll find a link in the settings and there in the "client and 
+server information" section.
 
   ```bash
   $ sudo docker-compose -f docker-compose-webdav.yml up -d

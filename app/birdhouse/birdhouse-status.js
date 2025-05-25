@@ -136,14 +136,12 @@ function birdhouseStatus_print(data) {
     if (app_active_page == "WEATHER")                       { birdhouseStatus_weather(data); }
     if (pages_content.includes(app_active_page))            { birdhouseStatus_weather(data); }
 
-    if (!appSettings.active) {
-        document.getElementById(app_frame_info).style.display = "block";
-        html = "<center><i><font color='gray'>";
-        html += weather_footer.join(" / ");
-        html += "</font></i></center>";
-        setTextById(app_frame_info, html);
-        }
-
+    document.getElementById(app_frame_info).style.display = "block";
+    html = "<center><i><font color='gray'>";
+    html += weather_footer.join(" / ");
+    html += "</font></i></center>";
+    setTextById(app_frame_info, html);
+    setTextById("server_start_time", lang("STARTTIME") + ": " + data["STATUS"]["start_time"]);
 }
 
 /*

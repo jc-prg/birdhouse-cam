@@ -279,7 +279,7 @@ function birdhousePrintTitle(data, active_page="") {
 
 	if (data_view["links"] != undefined)         { birdhouse_frameFooter(birdhouse_Links(data_view["links"])); }
 
-	setTextById("frame5", "<center><small><div id='server_start_time'>" + lang("PLEASE_WAIT") + "</div></small></center>");
+	setTextById("frame5", "<center><small><div id='server_start_time'></div></small></center>");
 	}
 
 /*
