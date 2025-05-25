@@ -132,12 +132,12 @@ function birdhouseStatus_print(data) {
     if (app_active_page == "ARCHIVE" || "TODAY")            { birdhouseStatus_downloads(data); }
     if (app_active_page == "ARCHIVE" || "TODAY")            { birdhouseStatus_detection(data); }
 
-    if (pages_settings.includes(app_active_page))           { birdhouseStatus_sensors(data); }
-    else if (pages_content.includes(app_active_page))       { birdhouseStatus_sensors(data, "content"); }
-
     if (pages_settings.includes(app_active_page))           { birdhouseStatus_weather(data); }
     else if (app_active_page == "WEATHER")                  { birdhouseStatus_weather(data); }
     else if (pages_content.includes(app_active_page))       { birdhouseStatus_weather(data, "content"); }
+
+    if (pages_settings.includes(app_active_page))           { birdhouseStatus_sensors(data); }
+    else if (pages_content.includes(app_active_page))       { birdhouseStatus_sensors(data, "content"); }
 
     document.getElementById(app_frame_info).style.display = "block";
     html = "<center><i><font color='gray'>";
