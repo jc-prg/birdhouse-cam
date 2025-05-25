@@ -96,6 +96,7 @@ function birdhouseStatus_print(data) {
         if (app_session_id_count > 2 && app_session_id != "") {
             birdhouse_logout();
             app_session_id_count = 0;
+            if (app_pages_admin.includes(app_active_page)) { birdhousePrint_page("INDEX"); }
         }
     }
 
