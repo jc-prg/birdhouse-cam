@@ -954,7 +954,7 @@ function birdhouseDevices_cameraSettings (data) {
 * @param (string) camera: camera ID
 * @param (boolean) active: activate (true) or deactivate (false)
 */
-function birdhouseDevices_cameraSettingsLoad (camera, active=true) {
+function birdhouseDevices_cameraSettingsLoad(camera, active=true) {
     clearInterval(birdhouse_camera_interval[camera]);
     delete birdhouse_camera_interval[camera];
 

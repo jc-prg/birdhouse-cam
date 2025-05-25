@@ -116,6 +116,7 @@ function birdhouse_modules_loaded() {
 */
 function birdhousePrint_page(page="INDEX", param="") {
 	window.scrollTo(0,0);
+    for (let camera in app_data["SETTINGS"]["devices"]["cameras"]) { birdhouseDevices_cameraSettingsLoad(camera, false); }
 
     if (app_pages_content.includes(page)) {
         console.log("Load content page: " + page);
@@ -233,9 +234,6 @@ function birdhousePrint(data) {
 	if (camera == "") 	{ camera = app_active_cam; }
 	else			    { app_active_cam = camera; }
 
-    for (let camera in app_data["SETTINGS"]["devices"]["cameras"]) {
-        birdhouseDevices_cameraSettingsLoad(camera, false);
-    }
 	birdhouseAudioStream_load(app_data["SETTINGS"]["devices"]["microphones"]);
 
     birdhouse_KillActiveStreams();

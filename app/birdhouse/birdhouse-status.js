@@ -101,7 +101,7 @@ function birdhouseStatus_print(data) {
     }
 
     var pages_content   = ["INDEX", "OBJECTS", "FAVORITES", "ARCHIVE", "TODAY", "TODAY_COMPLETE", "WEATHER"];
-    var pages_settings  = ["SETTINGS", "CAMERA_SETTINGS", "DEVICE_SETTINGS", "IMAGE_SETTINGS", "STATISTICS", "INFORMATION"];
+    var pages_settings  = ["SETTINGS", "SETTINGS_CAMERAS", "SETTINGS_DEVICES", "SETTINGS_IMAGE", "SETTINGS_STATISTICS", "SETTINGS_INFORMATION"];
 
     // set latest status data to var app_data
     //app_data       = data;

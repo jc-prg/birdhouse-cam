@@ -156,6 +156,7 @@ function birdhouse_app_settings (name="Settings") {
         this.set.show(true);
         window.scrollTo(0, 0);
 
+        for (let camera in app_data["SETTINGS"]["devices"]["cameras"]) { birdhouseDevices_cameraSettingsLoad(camera, false); }
         var default_settings = ["SETTINGS_IMAGE", "SETTINGS_DEVICES", "SETTINGS_CAMERAS"];
         var load_settings    = ["SETTINGS_STATISTICS"];
         if (type == "SETTINGS_SERVER") {
