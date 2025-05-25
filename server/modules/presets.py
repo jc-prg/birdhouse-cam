@@ -396,17 +396,19 @@ if birdhouse_env["installation_type"].upper() != "DOCKER":
     birdhouse_couchdb["db_basedir"] = birdhouse_env["dir_project"] + "data/"
 
 birdhouse_pages = {
-    "live": ("Live-Stream", "/index.html", "INDEX"),
-    "backup": ("Archiv", "/list_backup.html", "ARCHIVE"),
-    "today": ("Heute", "/list_short.html", "TODAY"),
-    "today_complete": ("Alle heute", "/list_new.html", "TODAY_COMPLETE"),
-    "favorit": ("Favoriten", "/list_star.html", "FAVORITES"),
-    "cam_info": ("Einstellungen", "/cameras.html", "SETTINGS"),
-    "video_info": ("Video Info", "/video-info.html", ""),
-    "videos": ("Videos", "/videos.html", "VIDEOS"),
-    "object": ("Birds", "/birds.html", "BIRDS"),
-    "statistics": ("Statistics", "/statistic.html", "STATISTICS"),
-    "save": ("Speichern", "/image.jpg", "")
+    "live":             ["INDEX"],
+    "backup":           ["ARCHIVE"],
+    "today":            ["TODAY"],
+    "today_complete":   ["TODAY_COMPLETE"],
+    "favorit":          ["FAVORITES"],
+    "favorite":         ["FAVORITES"],
+    "cam_info":         ["SETTINGS"],
+    "video_info":       ["VIDEO_INFO"],
+    "videos":           ["VIDEOS"],
+    "object":           ["BIRDS"],
+    "settings":         ["SETTINGS"],
+    "statistics":       ["SETTINGS_STATISTICS"],
+    "save":             ["SAVE"]
 }
 birdhouse_databases = {
     "config": {},

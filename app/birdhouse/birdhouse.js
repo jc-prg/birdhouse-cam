@@ -116,6 +116,7 @@ function birdhouse_modules_loaded() {
 * @param (string) page: available: INDEX, TODAY, TODAY_COMPLETE, ARCHIVE, OBJECT, SETTINGS, FAVORITES, VIDEOS, INFO, ...
 */
 function birdhousePrint_page(page="INDEX", param="") {
+	window.scrollTo(0,0);
 
     if (app_pages_content.includes(page)) {
         console.log("Load content page: " + page);
@@ -166,8 +167,19 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
                         birdhousePrint_page("LOGIN", page);
                         }, login_timeout);
                     birdhousePrint_page("INDEX");
+                    history.pushState({page: 1}, view, "/");
+                    return;
+	                }
+	            else if (app_pages_admin.includes(page) && params["pwd"] != undefined) {
+                    setTimeout(function() {
+                        appMsg.alert(lang("VERIFY_PASSWORD"));
+                        birdhouse_loginCheck(params["pwd"], params["page"]);
+                        }, login_timeout);
+                    birdhousePrint_page("INDEX");
+                    history.pushState({page: 1}, view, "/");
 	                return;
 	                }
+
 	            birdhousePrint_page(page);
                 history.pushState({page: 1}, view, "/");
                 console.log("Load page directly: " + page);
@@ -188,6 +200,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
         birdhouse_loadChartJS();
 	    birdhouse_birdNamesRequest();
 	    }
+	if (view == "SETTINGS") { birdhousePrint_page(view); return; }
 
 	var commands = [view];
 	if (camera != "" && date != "")	{ commands.push(date); commands.push(camera); app_active_cam = camera; }
@@ -293,7 +306,7 @@ function birdhousePrintTitle(data, active_page="") {
 	if (title.innerHTML == "..." && data_settings["title"] != undefined)
 	                                             { setNavTitle(data_settings["title"]); setTextById("title",data_settings["title"]); }
 
-	if (data_view["subtitle"] != undefined)      { birdhouse_frameHeader(data_view["subtitle"]); }
+	if (data_view["subtitle"] != undefined)      { birdhouse_frameHeader(lang(data_view["subtitle"])); }
 	else if (data_view["title"] != undefined)    { birdhouse_frameHeader(data_view["title"]); }
 
 	if (data_view["links"] != undefined)         { birdhouse_frameFooter(birdhouse_Links(data_view["links"])); }

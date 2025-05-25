@@ -1293,7 +1293,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
     def set_status_recycle_object(self, param, which_cam):
         """
-        Set / unset recycling based on given threshold
+        identify RECYCLE images based on detected objects
 
         Args:
             param (dict): parameters given via API

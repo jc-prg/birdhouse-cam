@@ -34,8 +34,8 @@ from modules.bh_database import BirdhouseTEXT
 from modules.srv_support import ServerInformation, ServerHealthCheck
 from modules.statistics import BirdhouseStatistics
 
-api_description = {"name": "BirdhouseCAM", "version": "v1.5.1"}
-app_framework = "v1.5.1"
+api_description = {"name": "BirdhouseCAM", "version": "v1.5.2"}
+app_framework = "v1.5.2"
 
 
 def on_exit(signum, handler):
@@ -1232,7 +1232,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 if key in content:
                     api_data["data"][key] = content[key]
 
-            param_to_publish = ["view", "view_count", "links", "subtitle", "max_image_size", "label"]
+            param_to_publish = ["view", "view_count", "links", "max_image_size", "label"]
             for key in param_to_publish:
                 if key in content:
                     api_data["view"][key] = content[key]

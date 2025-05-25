@@ -29,6 +29,13 @@ function birdhouse_apiRequest(method, commands, data, return_cmd, wait_till_exec
 	appFW.requestAPI(method, commands, data, return_cmd, wait_till_executed, method_name);
 }
 
+/*
+* execute API request (without using the app_session_id)
+*
+* @param (string) method: API request method - GET or POST
+* @param (list) commands: list of command parameters
+* @param (object) return_cmd: callback function
+*/
 function birdhouse_genericApiRequest(method, commands, return_cmd) {
 
 	birdhouse_apiRequest(method, commands, '', return_cmd,'','birdhouse_genericApiRequest');
@@ -71,6 +78,7 @@ function birdhouse_loginReturn(data) {
         app_session_id = data["session-id"];
         appFW.appList = app_session_id+"/status";
         appMsg.alert("Login successful.");
+        setTimeout(function(){ appMsg.hide(); }, 2000);
         if (data["return-page"] != "") { birdhousePrint_page(data["return-page"].toUpperCase()); }
     }
     else {
@@ -262,21 +270,53 @@ function birdhouse_checkTimeout() {
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_checkTimeout');
 	}
 
+/*
+* API request to save changed settings in the main config file (server, cameras, devices, ...)
+*
+* @param (object) data: data to be saved
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+*/
 function birdhouse_editData(data, camera) {
     commands = ["edit-presets", data, camera];
     birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerEditSend,"","birdhouse_editData");
 }
 
+/*
+* API request to set or unset recycling based on given threshold
+*
+* @param (string) category: config type (usually "backup")
+* @param (string) date: date of config (archived day)
+* @param (float) threshold: threshold to be set (0..100)
+* @param (integer) del: 1 if to be deleted, 0 if to be "undeleted"
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+*/
 function birdhouse_recycleThreshold(category, date, threshold, del, camera) {
     commands = ["recycle-threshold", category, date, threshold, del, camera];
     birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerEditSend,"","birdhouse_editData");
 }
 
+/*
+* API request to identify RECYCLE images based on detected objects
+*
+* @param (string) category: config type (usually "backup")
+* @param (string) date: date of config (archived day)
+* @param (integer) del: 1 if to be deleted, 0 if to be "undeleted"
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+*/
 function birdhouse_recycleObject(category, date, del, camera) {
     commands = ["recycle-object-detection", category, date, del, camera];
     birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerEditSend,"","birdhouse_editData");
 }
 
+/*
+* confirm message if object detection for one or more archived days shall be started
+*
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+* @param (string) date_stamp: ...
+* @param (string) date: date of config (archived day)
+* @param (string) date_list: list of date separated by comma
+* @param (float) threshold: threshold to be used (0..100)
+*/
 function birdhouse_archiveObjectDetection(camera, date_stamp, date, date_list="", threshold="") {
     if (threshold != "") {
         var threshold = document.getElementById(threshold).value;
@@ -307,37 +347,78 @@ function birdhouse_archiveObjectDetection(camera, date_stamp, date, date_list=""
     appMsg.confirm(message, "birdhouse_archiveObjectDetection_exec('"+camera+"', '"+date_stamp+"', '" + threshold + "');", 150);
     }
 
-function birdhouse_archiveRemoveObjectDetection(camera, date_stamp, date) {
-    var message = lang("OBJECT_DETECTION_REQUEST_REMOVE", [date]);
-    appMsg.confirm(message, "birdhouse_archiveRemoveObjectDetection_exec('"+camera+"', '"+date_stamp+"');", 150);
-    }
-
+/*
+* API request to start object detection for one or more archived days
+*
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+* @param (string) date: date of config (archived day)
+* @param (float) threshold: threshold to be used (0..100)
+*/
 function birdhouse_archiveObjectDetection_exec(camera, date, threshold) {
     commands = ["archive-object-detection", camera, date, threshold];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_archiveObjectDetection_progress,'','birdhouse_forceBackup');
     }
 
-function birdhouse_archiveRemoveObjectDetection_exec(camera, date) {
-    commands = ["remove-archive-object-detection", camera, date];
-	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
-    }
-
+/*
+* alert message to observe the object detection process
+*
+* @param (object) data: API response
+*/
 function birdhouse_archiveObjectDetection_progress(data) {
 
     var msg = lang("DETECTION_PROGRESS") + "<br/><text id='last_answer_detection_progress'>0 %</text>";
     appMsg.alert(msg);
     }
 
+/*
+* confirm message whether to remove object detection data from an archived day
+*
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+* @param (string) date_stamp: ...
+* @param (string) date: date of the archived day to be removed
+*/
+function birdhouse_archiveRemoveObjectDetection(camera, date_stamp, date) {
+    var message = lang("OBJECT_DETECTION_REQUEST_REMOVE", [date]);
+    appMsg.confirm(message, "birdhouse_archiveRemoveObjectDetection_exec('"+camera+"', '"+date_stamp+"');", 150);
+    }
+
+/*
+* API request to remove object detection data from an archived day
+*
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+* @param (string) date: date of the archived day
+*/
+function birdhouse_archiveRemoveObjectDetection_exec(camera, date) {
+    commands = ["remove-archive-object-detection", camera, date];
+	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_forceBackup');
+    }
+
+/*
+* confirm message whether to delete all data of an archived day
+*
+* @param (string) date_stamp: ...
+* @param (string) date: date of the archived day to be removed
+*/
 function birdhouse_archiveDayDelete(date_stamp, date) {
 
     appMsg.confirm(lang("DELETE_ARCHIVE_DAY", [date]), "birdhouse_archiveDayDelete_exec('"+date_stamp+"');", 150);
     }
 
+/*
+* API request to delete all data of an archived day
+*
+* @param (string) date_stamp: ...
+*/
 function birdhouse_archiveDayDelete_exec(date_stamp) {
     commands = ["archive-remove-day", date_stamp];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_archiveDayDelete_done,'','birdhouse_archiveDayDelete_exec(\"'+date_stamp+'\")');
     }
 
+/*
+* alert message for the information when deletion is done
+*
+* @param (object) data: API response
+*/
 function birdhouse_archiveDayDelete_done(data) {
     window.setTimeout(function(){
         app_active_page='ARCHIVE';
@@ -346,6 +427,11 @@ function birdhouse_archiveDayDelete_done(data) {
         },5000);
     }
 
+/*
+* API request to start video recording for the given camera
+*
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+*/
 function birdhouse_recordStart(camera) {
     commands = ["start-recording", camera];
     birdhouse_apiRequest('POST',commands,"","","","birdhouse_recordStart");
@@ -359,6 +445,11 @@ function birdhouse_recordStart(camera) {
     b_cancel.disabled = "";
 }
 
+/*
+* API request to stop video recording for the given camera
+*
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+*/
 function birdhouse_recordStop(camera) {
     commands = ["stop-recording", camera];
     birdhouse_apiRequest('POST',commands,"","","","birdhouse_recordStop");
@@ -372,6 +463,11 @@ function birdhouse_recordStop(camera) {
     b_cancel.disabled = "disabled";
 }
 
+/*
+* API request to cancel the video recording or processing for the given camera
+*
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+*/
 function birdhouse_recordCancel(camera) {
     commands = ["cancel-recording", camera];
     birdhouse_apiRequest('POST',commands,"","","","birdhouse_recordCancel");
@@ -385,47 +481,86 @@ function birdhouse_recordCancel(camera) {
     b_cancel.disabled = "disabled";
 }
 
+/*
+* API request to start audio recording into a test file (not used yet)
+*
+* @param (string) micro: microphone ID, e.g., "mic1" or "mic2"
+*/
 function birdhouse_recordStartAudio(micro) {
     commands = ["start-recording-audio", micro];
     birdhouse_apiRequest('POST',commands,"","","","birdhouse_recordStartAudio");
 }
 
+/*
+* API request to stop audio recording into a test file (not used yet)
+*
+* @param (string) micro: microphone ID, e.g., "mic1" or "mic2"
+*/
 function birdhouse_recordStopAudio(micro) {
     commands = ["stop-recording-audio", micro];
     birdhouse_apiRequest('POST',commands,"","","","birdhouse_recordStopAudio");
 }
 
+/*
+* API request to switch a relay on or off, e.g., a relay that is used to control an IR light inside the birdhouse
+*
+* @param (string) relay: microphone ID, e.g., "mic1" or "mic2"
+* @param (string) on_off: target state "on" or "off"
+*/
 function birdhouse_relayOnOff(relay, on_off) {
 	commands = ["relay-"+on_off,relay];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_relayOnOff');
 }
 
+/*
+* API request to force an archiving of all images from today
+*
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+*/
 function birdhouse_forceBackup(camera) {
 	commands = ["force-backup",camera];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceBackup');
 	}
 
+/*
+* API request to force an update of all or specific views (archive, object, favorites)
+*
+* @param (string) view: all or name of the view to be updated (archive, object, favorites)
+* @param (boolean) complete: update from config files (false) or recreate them partly (true), usually "false" should be enough
+*/
 function birdhouse_forceUpdateViews(view="all", complete=false) {
     if (complete)   { commands = ["update-views-complete", view]; }
 	else            { commands = ["update-views", view]; }
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceUpdateViews');
 	}
 
+/*
+* confirm message whether to restart the birdhouse-cam server
+*/
 function birdhouse_forceRestart() {
 
     appMsg.confirm("Restart Birdhouse-Server?", "birdhouse_forceRestart_exec();", 150);
     }
 
+/*
+* API request to force a restart of the birdhouse-cam server
+*/
 function birdhouse_forceRestart_exec() {
 	commands = ["force-restart"];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceRestart');
 	}
 
+/*
+* confirm message whether to shutdown the birdhouse-cam server
+*/
 function birdhouse_forceShutdown() {
 
     appMsg.confirm("<font color='red'><b>Shutdown</b></font> Birdhouse-Server?", "birdhouse_forceShutdown_exec();", 150);
     }
 
+/*
+* API request to force a shutdown of the birdhouse-cam server
+*/
 function birdhouse_forceShutdown_exec() {
 	commands = ["force-shutdown"];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceShutdown');

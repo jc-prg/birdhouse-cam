@@ -91,7 +91,7 @@ class BirdhouseViewTools(BirdhouseClass):
 
         for link in link_list:
             json[link] = {
-                "link": presets.birdhouse_pages[link][2],
+                "link": presets.birdhouse_pages[link][0],
                 "camera": cam_link,
                 "description": presets.birdhouse_pages[link][0],
                 "position": count
@@ -2225,9 +2225,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             "view": "index"
         }
         if param["admin_allowed"]:
-            content["links"] = self.tools.print_links_json(link_list=("favorit", "today", "backup", "cam_info"))
+            content["links"] = self.tools.print_links_json(link_list=("favorite", "today", "backup", "settings"))
         else:
-            content["links"] = self.tools.print_links_json(link_list=("favorit", "videos", "today", "backup"))
+            content["links"] = self.tools.print_links_json(link_list=("favorite", "videos", "today", "backup"))
 
         return content
 
