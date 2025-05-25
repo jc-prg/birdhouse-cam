@@ -127,6 +127,7 @@ function birdhousePrint_page(page="INDEX", param="") {
         console.log("Load settings page: " + page);
         if (page != "SETTINGS") { appSettings.create(page); }
         else                    { appSettings.create(); }
+        app_active_page = page;
         appSettings.clear_content_frames();
         }
     else if (app_pages_other.includes(page)) {
