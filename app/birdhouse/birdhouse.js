@@ -344,7 +344,11 @@ function birdhouseSetMainStatus(data) {
 	                                                        { app_active_date = status_view["active_date"]; }
 	else                                                    { app_active_date = ""; }
 
-    if (data["SETTINGS"] && data["SETTINGS"]["localization"]["language"]) { LANG = data["SETTINGS"]["localization"]["language"]; }
+    if (data["SETTINGS"] && data["SETTINGS"]["localization"]["language"]) {
+        LANG_old = LANG;
+        LANG = data["SETTINGS"]["localization"]["language"];
+        if (LANG != LANG_old) { app_setting_entries(); }
+        }
 	}
 
 /*
