@@ -112,12 +112,15 @@ var videoplayer_template = `
   
   <center>
   <div class="camera_video_trim">
-    <button class="button-video-edit" onclick="setTCin();">&nbsp;&nbsp;IN&nbsp;&nbsp;</button>
-    <input  class="input-video-edit" id="tc-in" type="text" value="0">
-    <input  class="input-video-edit"  id="video-id" type="text" disabled value="<!--VIDEOID-->" style="display:none;">
-    <button class="button-video-edit" onclick="setTCout();">&nbsp;OUT&nbsp;</button>
-    <input  class="input-video-edit" id="tc-out" type="text" value="<!--LENGTH-->">
+    <input  class="input-video-edit"  id="video-id"   type="text" disabled value="<!--VIDEOID-->" style="display:none;">
     <input  class="input-video-edit"  id="active-cam" type="text" disabled value="<!--ACTIVE-->" style="display:none;">
+
+    <button class="button-video-edit" onclick="setTCin();">&nbsp;&nbsp;IN&nbsp;&nbsp;</button>
+    <input  class="input-video-edit"  id="tc-in" type="text" value="0" style="background:#FFDDDD;">
+
+    <button class="button-video-edit" onclick="setTCout();">&nbsp;OUT&nbsp;</button>
+    <input  class="input-video-edit"  id="tc-out" type="text" value="<!--LENGTH-->" style="background:#FFDDDD;">
+
     <div    class="div-video-edit">&nbsp;&nbsp;&nbsp;</div>
     <button class="button-video-edit" onclick="javascript:<!--JAVASCRIPT_SHORTEN-->">&nbsp;<!--SHORTEN-->&nbsp;</button>
     <button class="button-video-edit" onclick="javascript:<!--JAVASCRIPT_THUMBNAIL-->">&nbsp;<!--THUMBNAIL-->&nbsp;</button>

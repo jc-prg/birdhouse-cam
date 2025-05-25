@@ -28,6 +28,16 @@ if (videoWorks) {
 
 // Add functions here
 
+// the TC IN / TC OUT fields per default are colored in lightred
+// if this JS file is loaded, the following changes it to white as indicator that everything is fine
+function initButtons() {
+  tcOut = document.getElementById("tc-out");
+  tcOut.style.background = "white";
+  tcIn  = document.getElementById("tc-in");
+  tcIn.style.background = "white";
+}
+initButtons();
+
 // togglePlay toggles the playback state of the video.
 // If the video playback is paused or ended, the video is played
 // otherwise, the video is paused
