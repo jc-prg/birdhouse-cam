@@ -141,7 +141,7 @@ function birdhouseStatus_print(data) {
 
     document.getElementById(app_frame_info).style.display = "block";
     html = "<center><i><font color='gray'>";
-    html += weather_footer.join(" / ");
+    html += weather_footer.join("&nbsp;&nbsp;/&nbsp;&nbsp;");
     html += "</font></i></center>";
     setTextById(app_frame_info, html);
     setTextById("server_start_time", lang("STARTTIME") + ": " + data["STATUS"]["start_time"]);
