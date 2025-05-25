@@ -566,6 +566,12 @@ function birdhouse_forceShutdown_exec() {
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_forceShutdown');
 	}
 
+/*
+* API request to kill a video stream on server side to ensure a better server performance
+*
+* @param (string) camera_id: camera ID, e.g., "cam1" or "cam2"
+* @param (string) stream_id: stream ID of the stream to be killed
+*/
 function birdhouse_killStream(camera_id, stream_id) {
 
     console.debug("birdhouse_killStream: "+camera_id+" - "+stream_id);
@@ -576,6 +582,11 @@ function birdhouse_killStream(camera_id, stream_id) {
 	birdhouse_apiRequest('POST', commands, '', birdhouse_killStreamAnswer, '', 'birdhouse_killStream');
     }
 
+/*
+* Use API response to show in logs if the stream has been kill successfully
+*
+* @param (object) data: API response
+*/
 function birdhouse_killStreamAnswer(data) {
     if (data["kill-stream-id"] && birdhouse_active_video_streams[data["kill-stream-id"]] != undefined) {
         birdhouse_active_video_streams[data["kill-stream-id"]] = false;
@@ -590,31 +601,63 @@ function birdhouse_killStreamAnswer(data) {
     }
 }
 
+/*
+* API request to delete all image files marked as to be recycled
+*
+* @param (string) param1: entry category, e.g., video, today or backup
+* @param (string) param2: entry date
+*/
 function birdhouse_deleteMarkedFiles(param1,param2) {
 	commands = ["remove", param1, param2];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerDeleteRequest,'','birdhouse_deleteMarkedFiles');
     }
 
+/*
+* confirm message whether to remove all image data from today
+*/
 function birdhouse_removeDataToday() {
 
     appMsg.confirm("Remove all the data from today?", "birdhouse_removeDataToday_exec();", 150);
 }
 
+/*
+* API request to remove all image data from today
+*/
 function birdhouse_removeDataToday_exec() {
 	commands = ["clean-data-today"];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRequested,'','birdhouse_removeDataToday');
 }
 
+/*
+* confirm message whether to recreate the image config file for today or another date, e.g.,
+* if the file is broken but the image files are still available
+*
+* @param (string) date: date of the day to recreate the image config file, leave empty for today
+*/
 function birdhouse_recreateImageConfig(date="") {
 
     appMsg.confirm(lang("RECREATE_IMG_CONFIG")+"?", "birdhouse_recreateImageConfig_exec();", 150);
 }
 
+/*
+* API request to recreate the image config file for today or another date, e.g.,
+* if the file is broken but the image files are still available
+*
+* @param (string) date: date of the day to recreate the image config file, leave empty for today
+*/
 function birdhouse_recreateImageConfig_exec(date="") {
 	commands = ["recreate-image-config", date=""];
 	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerRecreateImageConfig,'','birdhouse_recreateImageConfig');
 	}
 
+/*
+* check, how many other images are selected in the same group and gather relevant data to request the recycling of a range
+*
+* @param (string) group_id: id of the group of images to analyze
+* @param (string) index: id of the currently selected image
+* @param (string) status: status of the currently selected image - 1 = recycle; 0 = not recycle
+* @param (string) lowres_file: filename of lowres file
+*/
 function birdhouse_recycleRange(group_id, index, status, lowres_file) {
 	console.log("birdhouse_recycleRange: "+group_id+"/"+index+"/"+lowres_file);
 
@@ -653,6 +696,12 @@ function birdhouse_recycleRange(group_id, index, status, lowres_file) {
 		}
 	}
 
+/*
+* API request to recycle a range of images between two images marked as to be deleted
+*
+* @param (string) index: ids of both images that mark the range
+* @param (integer) status: 1 = recycle; 0 = unset recycle
+*/
 function birdhouse_setRecycleRange(index, status) {
 	console.log("birdhouse_setRecycleRange: /"+index+"/"+status);
 	
@@ -662,14 +711,24 @@ function birdhouse_setRecycleRange(index, status) {
         birdhouse_apiRequest('POST',commands,"",[birdhouse_setRecycleRangeShow,[index,status,lowres_file]],"","birdhouse_setRecycleRange");
 	}
 
+/*
+* show API response for range recycling in the logs
+*/
 function birdhouse_setRecycleRangeShow(command, param) {
-	console.log("birdhouse_setRecycleRangeShow: /"+command+"/"+param);
-
 	[ index, status, lowres_file, img_id ] = param
-        console.log("birdhouse_setRecycleRangeShow: "+lowres_file+" | "+status+" | "+index+" | "+img_id)
-        //setTimeout(function(){ birdhouseReloadView(); }, reloadInterval*1000);
+	console.log("birdhouse_setRecycleRangeShow: /"+JSON.stringify(command)+"/"+JSON.stringify(param));
+    console.log("birdhouse_setRecycleRangeShow: "+lowres_file+" | "+status+" | "+index+" | "+img_id)
+    //setTimeout(function(){ birdhouseReloadView(); }, reloadInterval*1000);
 	}
 	
+/*
+* API request to change "recycle" status of an image
+*
+* @param (string) index: image entry id in the database (usually timestamp)
+* @param (string) status: 1 = recycle, 0 = is not recycle
+* @param (string) lowres_file: file name and path of the lowres file
+* @param (string) img_id: id of the html image element
+*/
 function birdhouse_setRecycle(index, status, lowres_file="", img_id="") {
         commands    = index.split("/");
         commands[0] = "recycle";
@@ -679,6 +738,12 @@ function birdhouse_setRecycle(index, status, lowres_file="", img_id="") {
         birdhouse_apiRequest('POST',commands,"",[birdhouse_setRecycleShow,[index,status,lowres_file,img_id]],"","birdhouse_setRecycle");
 	}
 
+/*
+* React on API response to change "recycle" status of an image and visualize its new status
+*
+* @param (object) command: data of API response
+* @param (array) param: param given by birdhouse_setRecycle
+*/
 function birdhouse_setRecycleShow(command, param) {
 	[ index, status, lowres_file, img_id ] = param
         console.log("birdhouse_setRecycleShow: "+lowres_file+" | "+status+" | "+index+" | "+img_id);
@@ -691,6 +756,14 @@ function birdhouse_setRecycleShow(command, param) {
         document.getElementById(img_id).style.borderColor = color;
 	}
 
+/*
+* API request to change "favorite" status of an image
+*
+* @param (string) index: image entry id in the database (usually timestamp)
+* @param (string) status: 1 = favorite, 0 = is not favorite
+* @param (string) lowres_file: file name and path of the lowres file
+* @param (string) img_id: id of the html image element
+*/
 function birdhouse_setFavorite(index, status, lowres_file="", img_id="") {
         commands    = index.split("/");
         commands[0] = "favorit";
@@ -700,6 +773,12 @@ function birdhouse_setFavorite(index, status, lowres_file="", img_id="") {
         birdhouse_apiRequest('POST',commands,"",[birdhouse_setFavoriteShow,[index,status,lowres_file,img_id]],"","birdhouse_setFavorit");
 	}
 
+/*
+* React on API response to change "favorite" status of an image and visualize its new status
+*
+* @param (object) command: data of API response
+* @param (array) param: param given by birdhouse_setFavorite
+*/
 function birdhouse_setFavoriteShow(command, param) {
 	[ index, status, lowres_file, img_id ] = param
         console.log("birdhouse_setFavoriteShow: "+lowres_file+" | "+status+" | "+index)
@@ -711,87 +790,164 @@ function birdhouse_setFavoriteShow(command, param) {
         document.getElementById(img_id).style.borderColor = color;
 	}
 
+/*
+* API request to load camera related data
+*
+* @param (string) camera: camera ID, e.g., "cam1" or "cam2"
+*/
 function birdhouse_getCameraParam(camera) {
     commands = ["camera-param", camera];
     birdhouse_apiRequest('GET',commands,"",birdhouse_showCameraParam,"","birdhouse_getCameraParam");
 }
 
+/*
+* Use API response to load data and pass it to a function that fills the respective placeholders with camera information
+*/
 function birdhouse_showCameraParam(data) {
     camera = data["DATA"]["active_cam"];
     birdhouseStatus_cameraParam(data, camera);
 }
 
+/*
+* API request to load data and pass it to the weather page
+*/
 function birdhouse_showWeather() {
 	commands = ["WEATHER"];
 	birdhouse_apiRequest('GET', commands, '', birdhouseWeather,'','birdhouseWeather');
 }
 
+/*
+* API request to get available bird names from the server
+*
+* @param (object) data: API response
+*/
 function birdhouse_birdNamesRequest() {
 	commands = ["bird-names"];
 	birdhouse_apiRequest('GET', commands, '', birdhouse_birdNamesSet,'','birdhouse_birdNamesRequest()');
 }
 
+/*
+* Set bird names for the app from requested data
+*
+* @param (object) data: API response
+*/
 function birdhouse_birdNamesSet(data) {
     //console.log(app_bird_names);
     app_bird_names = data["DATA"]["data"]["birds"];
 }
 
+/*
+* Use API response to show deletion of how many files has been successful
+*
+* @param (object) data: API response
+*/
 function birdhouse_AnswerDelete(data) {
 	//console.log(data);
 	appMsg.alert(lang("DELETE_DONE") + "<br/>(" + data["STATUS"]["deleted_count"] + " " + lang("FILES")+")","");
 	birdhouseReloadView();
 	}
 
+/*
+* Use API response to show the API request to delete files
+* has been accepted by the server and reload current view
+*
+* @param (object) data: API response
+*/
 function birdhouse_AnswerDeleteRequest(data) {
 	//console.log(data);
 	appMsg.alert(lang("DELETE_REQUESTED"),"");
 	birdhouseReloadView();
 	}
 
+/*
+* Use API response to show the API request to create a shortened video
+* has been accepted by the server and reload current view
+*
+* @param (object) data: API response
+*/
 function birdhouse_AnswerTrim(data) {
 	//console.log(data);
 	appMsg.alert(lang("TRIM_STARTED"));
 	birdhouseReloadView();
 	}
 
+/*
+* Use API response to show the API request to create another video thumbnail
+* has been accepted by the server and reload current view
+*
+* @param (object) data: API response
+*/
 function birdhouse_AnswerThumb(data) {
 	//console.log(data);
 	appMsg.alert(lang("THUMB_STARTED"));
 	birdhouseReloadView();
 	}
 
+/*
+* Use API response to show the API request to start the create of a time-lapse video from all recorded images of
+* today has been accepted by the server and reload current view
+*
+* @param (object) data: API response
+*/
 function birdhouse_AnswerCreateDay(data) {
 	//console.log(data);
 	appMsg.alert(lang("CREATE_DAY_STARTED"));
 	birdhouseReloadView();
 	}
 
+/*
+* Use API response to show a request has been accepted by the server and reload current view
+*
+* @param (object) data: API response
+*/
 function birdhouse_AnswerOther(data) {
 	//console.log(data);
 	appMsg.alert(lang("DONE"));
 	birdhouseReloadView();
 	}
 
+/*
+* Use API response to show a request has been accepted by the server and reload current view
+*
+* @param (object) data: API response
+*/
 function birdhouse_AnswerRequested(data) {
 	//console.log(data);
 	appMsg.alert(lang("REQUEST_SEND"));
 	birdhouseReloadView();
 	}
 
+/*
+* Use API response to show reconnect request has been accepted by the server
+*
+* @param (object) data: API response
+*/
 function birdhouse_AnswerReconnect(data) {
 	//console.log(data);
 	appMsg.alert(lang("DONE"));
 	}
 
+/*
+* Use API response to show data have been send and accepted by the server
+*
+* @param (object) data: API response
+*/
 function birdhouse_AnswerEditSend(data) {
 	//console.log(data);
 	appMsg.alert(lang("DONE"));
 	}
 
+/*
+* Use API response to show the API request to start the recreation of the current day config file
+* has been accepted by the server and reload current view
+*
+* @param (object) data: API response
+*/
 function birdhouse_AnswerRecreateImageConfig(data) {
 	//console.log(data);
 	appMsg.alert(lang("RECREATE_IMAGE_CONFIG"));
 	birdhouseReloadView();
 	}
+
 
 app_scripts_loaded += 1;

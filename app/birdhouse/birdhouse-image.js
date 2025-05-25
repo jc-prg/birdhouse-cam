@@ -94,7 +94,7 @@ function birdhouse_OtherGroupHeader( key, title, header_open, css_class="") {
 * @param (string) title: titel for the group displayed in the header
 * @param (dict) entries: database entries with all elements to be displayed in the group
 * @param (array) entry_count: types that shall be counted in the header when logged in as admin, available: 'all', 'star', 'recycle', 'object', 'detect', 'data'
-* @param (string) entry_category: ... tbc.
+* @param (string) entry_category: entry category, e.g., video, today or backup
 * @param (boolean) header_open: definition if header starts opened or closed
 * @param (boolean) admin: value if logged in as admin
 * @param (boolean) video_short: ... tbc.
