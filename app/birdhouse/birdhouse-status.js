@@ -121,10 +121,10 @@ function birdhouseStatus_print(data) {
     if (pages_settings.includes(app_active_page))           { birdhouseStatus_processing(data); }
     if (pages_settings.includes(app_active_page))           { birdhouseStatus_relays(data); }
     if (pages_settings.includes(app_active_page))           { birdhouse_settings.server_dashboard_fill(data); }
-    if (app_active_page == "DEVICE_SETTINGS")               { birdhouseStatus_sensors(data); }
+    if (pages_settings.includes(app_active_page))           { birdhouseStatus_sensors(data); }
 
-    if (app_active_page == "INDEX" || "CAMERA_SETTINGS")    { birdhouseStatus_cameras(data); }
-    if (app_active_page == "INDEX" || "CAMERA_SETTINGS")    { birdhouseStatus_microphones(data); }
+    if (app_active_page == "INDEX" || "SETTINGS_CAMERAS")   { birdhouseStatus_cameras(data); }
+    if (app_active_page == "INDEX" || "SETTINGS_CAMERAS")   { birdhouseStatus_microphones(data); }
 
     if (app_active_page == "INDEX" ||
         pages_settings.includes(app_active_page))           { birdhouseStatus_recordVideo(data); }
@@ -132,7 +132,7 @@ function birdhouseStatus_print(data) {
     if (pages_content.includes(app_active_page))            { birdhouseStatus_loadingViews(data); }
     if (app_active_page == "ARCHIVE" || "TODAY")            { birdhouseStatus_downloads(data); }
     if (app_active_page == "ARCHIVE" || "TODAY")            { birdhouseStatus_detection(data); }
-    if (app_active_page == "DEVICE_SETTINGS")               { birdhouseStatus_weather(data); }
+    if (app_active_page == "SETTINGS_DEVICES")              { birdhouseStatus_weather(data); }
     if (app_active_page == "WEATHER")                       { birdhouseStatus_weather(data); }
     if (pages_content.includes(app_active_page))            { birdhouseStatus_weather(data); }
 
