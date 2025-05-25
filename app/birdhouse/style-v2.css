@@ -9,6 +9,8 @@ h1        { margin : 4px; }
 h2        { margin : 4px; }
 h3        { margin : 4px; }
 
+#remote_nav { height: 100vh; }
+
 /* body   { touch-action: none; } */
 
 .loading_overlay {
