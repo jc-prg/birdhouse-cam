@@ -357,7 +357,8 @@ function diary_createCalendar(year, month) {
                 var date_key        = day.getFullYear() + "" + String(day.getMonth() + 1).padStart(2, '0') + "" + String(day.getDate()).padStart(2, '0');
 
                 if (isToday) {
-                    dayDiv.style.backgroundColor = "#450000";
+                    //dayDiv.style.backgroundColor = "#450000";
+                    dayDiv.className = "day today";
                     }
 
                 if (app_admin_allowed) {

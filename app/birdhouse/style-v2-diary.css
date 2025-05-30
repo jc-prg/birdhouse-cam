@@ -1,3 +1,5 @@
+/* buttons ----------------------------------*/
+
 .nav-buttons {
   margin-bottom: 20px;
 }
@@ -9,6 +11,8 @@
   cursor: pointer;
   //border: 1px solid gray;
 }
+
+/* calendar elements ----------------------------------*/
 
 .calendar-container {
   display: flex;
@@ -28,7 +32,12 @@
   min-width: 100%;
 }
 
-@media (min-width: 1001px) {
+.legend-entry {
+  float: left;
+  margin: 4px;
+}
+
+@media (min-width: 1054px) {
   .calendar-container {
     flex-direction: row;
     flex-wrap: nowrap;
@@ -37,6 +46,13 @@
     min-width: 0;
   }
 }
+
+@media (max-width: 460px) {
+    .calendar-container {
+        padding: 0px;
+    }
+}
+/* months and days ----------------------------------*/
 
 .month {
   box-sizing: border-box;
@@ -78,34 +94,44 @@
 
 .day {
   border: 1px solid gray;
-  padding: 4px;
   box-sizing: border-box;
   //background: #fff;
   position: relative;
   overflow: hidden;
 }
 
+.day.today {
+    border: 1px solid red;
+    //background-color: red;
+    background-color: #450000;
+}
+
+/* inside elements ----------------------------------*/
+
 .day > strong {
   display: block;
+  padding: 2px;
   margin-bottom: 5px;
+  margin-right: 8px;
   height: auto;
+  width: 100%;
 }
 
 .milestone {
-  height: 14px;
-  width:  14px;
+  height: 13px;
+  width:  13px;
   border-radius: 7px;
   float: left;
-  margin: 2px;
+  margin: 1.5px;
   margin-top: 3px;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   padding: 0px;
 
   display: flex;
   justify-content: center;  /* Horizontal alignment */
   align-items: center;      /* Vertical alignment */
 
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
   cursor: pointer;
   line-height: 1;
@@ -121,33 +147,30 @@
   overflow: hidden;
 }
 
-.legend-entry {
-  float: left;
-  margin: 4px;
-}
-
 .diary-icon-image {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   background-image: url('img/image.png');
   background-size: cover; /* or contain, depending on desired behavior */
   background-position: center;
   background-repeat: no-repeat;
   display: block;
   float: right;
-  margin: 1px;
+  margin: 2px;
+  margin-top: 0px;
 }
 
 .diary-icon-add {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
   background-image: url('img/add.png');
   background-size: cover; /* or contain, depending on desired behavior */
   background-position: center;
   background-repeat: no-repeat;
   display: block;
   float: right;
-  margin: 1px;
+  margin: 2px;
+  margin-top: 0px;
 }
 
 .diary-icon-edit {
@@ -206,20 +229,47 @@
 .type-7 .diary-icon-edit            { background-image: url('img/edit_black.png'); }
 .type-7 .milestone.type-edit        { background-color: #FF5252; }
 
+
+
+@media (min-width: 1200px) {
+    .milestone { margin: 3px; margin-bottom: 15px; }
+}
+
+@media (min-width: 1000px) {
+    .milestone { height: 16px; width: 16px; font-size: 12px; }
+}
+
+@media (max-width: 420px) {
+    .diary-icon-image { max-height: 11px; max-width: 11px; margin: 1px; }
+    .diary-icon-add   { max-height: 11px; max-width: 11px; margin: 1px; }
+    .diary-icon-edit  { max-height: 11px; max-width: 11px; margin: 1px; }
+}
+
+@media (max-width: 400px) {
+    .milestone { height: 10px; width: 10px; font-size: 8px; margin-bottom: 3px;}
+}
+
+@media (max-width: 360px) {
+    .day { overflow: unset; }
+    .day > strong { max-height: 30px; height: 30px; }
+}
+
+/*
 @media (max-width: 1100px) {
-    .diary-icon-image { max-height: 9px; max-width: 9px; margin: 0px; }
-    .diary-icon-add   { max-height: 9px; max-width: 9px; margin: 0px; }
-    .diary-icon-edit  { max-height: 9px; max-width: 9px; margin: 0px; }
+    .diary-icon-image { max-height: 9px; max-width: 9px; margin: 2px; }
+    .diary-icon-add   { max-height: 9px; max-width: 9px; margin: 2px; }
+    .diary-icon-edit  { max-height: 9px; max-width: 9px; margin: 2px; }
 }
 @media (max-width: 1000px) {
-    .diary-icon-image { max-height: 11px; max-width: 11px; margin: 0px; }
-    .diary-icon-add   { max-height: 11px; max-width: 11px; margin: 0px; }
-    .diary-icon-edit  { max-height: 11px; max-width: 11px; margin: 0px; }
+    .diary-icon-image { max-height: 11px; max-width: 11px; margin: 2px; }
+    .diary-icon-add   { max-height: 11px; max-width: 11px; margin: 2px; }
+    .diary-icon-edit  { max-height: 11px; max-width: 11px; margin: 2px; }
 }
 @media (max-width: 800px) {
-    .diary-icon-image { max-height: 9px; max-width: 9px; margin: 0px; }
-    .diary-icon-add   { max-height: 9px; max-width: 9px; margin: 0px; }
-    .diary-icon-edit  { max-height: 9px; max-width: 9px; margin: 0px; }
+    .diary-icon-image { max-height: 9px; max-width: 9px; margin: 2px; }
+    .diary-icon-add   { max-height: 9px; max-width: 9px; margin: 2px; }
+    .diary-icon-edit  { max-height: 9px; max-width: 9px; margin: 2px; }
 
     .milestone        { max-height: 11px; max-width: 11px; margin: 1px; font-size: 9px; }
 }
+*
