@@ -12,7 +12,7 @@ h3        { margin : 4px; }
 #remote_nav { height: 100vh; }
 
 #nav        { width: 51%; z-index: 200; }
-#nav2       { width: 51%; z-index: 100; left: 50%; }
+#nav2       { width: 100%; z-index: 100; left: 0%; display: block; }
 
 #headerRight            { z-index: 101; }
 #statusLED              { z-index: 102; }
