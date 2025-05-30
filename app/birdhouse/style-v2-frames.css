@@ -114,7 +114,8 @@ nav-active {
 }
 
 .separator_group_body {
-  width         : 98%;
+  float         : left;
+  width         : 99%;
 }
 .separator_group_body.settings2 {
   background:
