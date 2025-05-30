@@ -51,11 +51,22 @@ var stage_definition    = {};
 var stage_legend        = "";
 var stage_values        = {};
 var brood_list          = {};
+var archive_keys        = [];
 var dataset             = sample_dataset["diary"];
 var calendarContainer   = undefined;
 var currentOffset       = 0;
 var btn_previous        = "<button onclick=\"diary_changeMonth(-1)\" style=\"float:left\">&nbsp;&nbsp;◀</button>";
 var btn_next            = "<button onclick=\"diary_changeMonth(1)\" style=\"float:right\">▶</button>";
+var image_archive       = "<img src='birdhouse/img/image.png' style='max-width:15px;max-height:15px;'>";
+var image_archive       = "<div class='diary-icon-image' title='"+lang("ARCHIVE")+"'></div>";
+var image_archive_b     = "<img src='birdhouse/img/image_black.png' style='max-width:15px;max-height:15px;'>";
+var image_add           = "<img src='birdhouse/img/add.png' style='max-width:15px;max-height:15px;'>";
+var image_add           = "<div class='diary-icon-add'  title='"+lang("ADD")+"'></div>";
+var image_add_b         = "<img src='birdhouse/img/add_black.png' style='max-width:15px;max-height:15px;'>";
+var image_edit          = "<img src='birdhouse/img/edit.png' style='max-width:15px;max-height:15px;'>";
+var image_edit           = "<div class='diary-icon-edit' title='"+lang("EDIT")+"'></div>";
+
+
 
 
 /*
@@ -87,6 +98,7 @@ function diary_setVariables(data) {
     currentOffset   = 0;
     diary_data      = data["DATA"]["data"]["diary"];
     dataset         = diary_data["entries"];
+    archive_keys    = diary_data["archive"];
     //bird_class      = diary_data["birds"];
     brood_list      = {};
 
@@ -113,6 +125,7 @@ function diary_setVariables(data) {
     stage_values = {
         "start": lang("START"),
         "end": lang("END"),
+        "one_day": lang("ONE_DAY"),
         "termination": lang("TERMINATION"),
         "1": "1",
         "2": "2",
@@ -330,32 +343,33 @@ function diary_createCalendar(year, month) {
             dayDiv.style.Height     = `${rowHeight}px`;
 
             if (day) {
-                // Get today's date
-                const today = new Date();
+                const d             = day.getDate();
+                const dateKey       = `${day.getFullYear()}${String(day.getMonth() + 1).padStart(2, '0')}${String(d).padStart(2, '0')}`;
+                const today         = new Date();
 
                 // Compare the year, month, and day (ignore time part)
-                const isToday   = day.getFullYear() === today.getFullYear() &&
-                                day.getMonth() === today.getMonth() &&
-                                day.getDate() === today.getDate();
-                const isFuture = day > today;
-
-                                day.getMonth() > today.getMonth() &&
-                                day.getDate() === today.getDate();
-                var edit      = "";
-                var date_key  = day.getFullYear() + "" + String(day.getMonth() + 1).padStart(2, '0') + "" + String(day.getDate()).padStart(2, '0');
+                const isToday       = day.getFullYear() === today.getFullYear() &&
+                                      day.getMonth() === today.getMonth() &&
+                                      day.getDate() === today.getDate();
+                const isFuture      = day > today;
+                var edit            = "";
+                var archive         = "";
+                var date_key        = day.getFullYear() + "" + String(day.getMonth() + 1).padStart(2, '0') + "" + String(day.getDate()).padStart(2, '0');
 
                 if (isToday) {
                     dayDiv.style.backgroundColor = "#450000";
                     }
 
                 if (app_admin_allowed) {
-                    var on_click = "diary_editDetails(\""+date_key+"\");"
-                    edit = "<div class='milestone type-edit' title='"+lang("ADD")+"' onclick='"+on_click+"'>+</div>";
+                    var on_click    = "diary_editDetails(\""+dateKey+"\");"
+                    edit            = "<div class='milestone type-edit' onclick='"+on_click+"'>"+image_add+"</div>";
                     }
+                if (archive_keys.includes(dateKey)) {
+                    var on_click    = "birdhousePrint_load(view=\"TODAY\", camera=\""+app_active_cam+"\", date=\""+dateKey+"\");";
+                    archive         =  "<div class='milestone type-edit' onclick='"+on_click+"'>"+image_archive+"</div>";
+                }
 
-                const d             = day.getDate();
-                const dateKey       = `${day.getFullYear()}${String(day.getMonth() + 1).padStart(2, '0')}${String(d).padStart(2, '0')}`;
-                dayDiv.innerHTML    = `<strong>${d}${edit}</strong>`;
+                dayDiv.innerHTML    = `<strong>${d}${edit}${archive}</strong>`;
                 dayEntry            = document.createElement("div");
 
                 if (dataset[dateKey]) {
@@ -366,10 +380,12 @@ function diary_createCalendar(year, month) {
                         milestone.className     = `milestone type-${info.type}`;
                         milestone.title         = title;
                         milestone.textContent   = ' ';
-                        if (info.type == "2" && info.value != "start" && info.value != "end" && info.value != "termination") { milestone.textContent = info.value; }
+                        if (info.type == "2" && info.value != "start" && info.value != "end"
+                            && info.value != "termination" && info.value != "one_day") { milestone.textContent = info.value; }
 
                         // visualize stage by coloring the <hr/> line element
                         if (info.value == "start")   { dayDiv.firstChild.className = `stage type-${info.type}`; last_stage_value = info.type; }
+                        if (info.value == "one_day") { dayDiv.firstChild.className = `stage type-${info.type}`; }
                         if (last_stage_value != "")  { dayDiv.firstChild.className = `stage type-${last_stage_value}`; }
                         if (last_stage_value == "end" || last_stage_value == "cancel")  { last_stage_value = ""; }
 

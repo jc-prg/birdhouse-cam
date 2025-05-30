@@ -2123,9 +2123,21 @@ class BirdhouseViewDiary(BirdhouseClass):
         get diary data from the database. if not exist, return empty data set.
         """
         data = self.config.db_handler.read_cache("diary")
+        archive = self.config.db_handler.read_cache("backup_info")
+        archive_keys = []
+
+        for key in archive:
+            if "entries" in archive[key]:
+                for day in archive[key]["entries"]:
+                    if day not in archive_keys:
+                        archive_keys.append(day)
+
         if data == {}:
             data = self.create_data
             self.config.db_handler.write(config="diary", date="", data=data, create=True)
+
+        data["archive"] = archive_keys
+
         return data
 
     def edit_milestone(self, date, title, entry):

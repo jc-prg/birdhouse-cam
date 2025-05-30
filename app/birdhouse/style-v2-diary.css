@@ -126,6 +126,42 @@
   margin: 4px;
 }
 
+.diary-icon-image {
+  width: 13px;
+  height: 13px;
+  background-image: url('img/image.png');
+  background-size: cover; /* or contain, depending on desired behavior */
+  background-position: center;
+  background-repeat: no-repeat;
+  display: block;
+  float: right;
+  margin: 1px;
+}
+
+.diary-icon-add {
+  width: 12px;
+  height: 12px;
+  background-image: url('img/add.png');
+  background-size: cover; /* or contain, depending on desired behavior */
+  background-position: center;
+  background-repeat: no-repeat;
+  display: block;
+  float: right;
+  margin: 1px;
+}
+
+.diary-icon-edit {
+  width: 13px;
+  height: 13px;
+  background-image: url('img/edit.png');
+  background-size: cover; /* or contain, depending on desired behavior */
+  background-position: center;
+  background-repeat: no-repeat;
+  display: block;
+  float: right;
+  margin: 1px;
+}
+
 .type-1 { background-color: #81C784; color: #222222; }
 .type-2 { background-color: #4FC3F7; color: #222222; }
 .type-3 { background-color: #FFEB3B; color: #222222; }
@@ -134,3 +170,39 @@
 .type-6 { background-color: #BA68C8; color: #222222; }
 .type-7 { background-color: #FF5252; color: #222222; }
 .type-edit {background-color: #000000; color: gray; border-radius: 2px; float: right;}
+
+.type-1 .diary-icon-image           { background-image: url('img/image_black.png'); }
+.type-1 .diary-icon-add             { background-image: url('img/add_black.png'); }
+.type-1 .diary-icon-edit            { background-image: url('img/edit_black.png'); }
+.type-1 .milestone.type-edit        { background-color: #81C784; }
+
+.type-2 .diary-icon-image           { background-image: url('img/image_black.png'); }
+.type-2 .diary-icon-add             { background-image: url('img/add_black.png'); }
+.type-2 .diary-icon-edit            { background-image: url('img/edit_black.png'); }
+.type-2 .milestone.type-edit        { background-color: #4FC3F7; }
+
+.type-3 .diary-icon-image           { background-image: url('img/image_black.png'); }
+.type-3 .diary-icon-add             { background-image: url('img/add_black.png'); }
+.type-3 .diary-icon-edit            { background-image: url('img/edit_black.png'); }
+.type-3 .milestone.type-edit        { background-color: #FFEB3B; }
+
+.type-4 .diary-icon-image           { background-image: url('img/image_black.png'); }
+.type-4 .diary-icon-add             { background-image: url('img/add_black.png'); }
+.type-4 .diary-icon-edit            { background-image: url('img/edit_black.png'); }
+.type-4 .milestone.type-edit        { background-color: #FF972D; }
+
+.type-5 .diary-icon-image           { background-image: url('img/image_black.png'); }
+.type-5 .diary-icon-add             { background-image: url('img/add_black.png'); }
+.type-5 .diary-icon-edit            { background-image: url('img/edit_black.png'); }
+.type-5 .milestone.type-edit        { background-color: #F06292; }
+
+.type-6 .diary-icon-image           { background-image: url('img/image_black.png'); }
+.type-6 .diary-icon-add             { background-image: url('img/add_black.png'); }
+.type-6 .diary-icon-edit            { background-image: url('img/edit_black.png'); }
+.type-6 .milestone.type-edit        { background-color: #BA68C8; }
+
+.type-7 .diary-icon-image           { background-image: url('img/image_black.png'); }
+.type-7 .diary-icon-add             { background-image: url('img/add_black.png'); }
+.type-7 .diary-icon-edit            { background-image: url('img/edit_black.png'); }
+.type-7 .milestone.type-edit        { background-color: #FF5252; }
+
