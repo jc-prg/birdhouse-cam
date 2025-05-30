@@ -1,0 +1,136 @@
+.nav-buttons {
+  margin-bottom: 20px;
+}
+
+.nav-buttons button {
+  padding: 8px 12px;
+  font-size: 14px;
+  margin-right: 10px;
+  cursor: pointer;
+  //border: 1px solid gray;
+}
+
+.calendar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 10px;
+}
+
+.calendar-month {
+  flex: 1;
+  min-width: 100%;
+}
+
+.calendar-legend {
+  margin-top: 50px;
+  margin: 6px;
+  min-width: 100%;
+}
+
+@media (min-width: 801px) {
+  .calendar-container {
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+  .calendar-month {
+    min-width: 0;
+  }
+}
+
+.month {
+  box-sizing: border-box;
+  margin-top: 10px;
+}
+
+.month-name {
+  text-align: center;
+  font-weight: bold;
+  font-size: 20px;
+
+  background-color: #000066;
+  color: white;
+  border: 1px gray solid;
+  border-radius: 4px;
+
+  padding: 8px 0;
+  margin-bottom: 5px;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.weekday {
+  background-color: #00008f;
+
+  text-align: center;
+  font-weight: bold;
+  height: 30px;
+  line-height: 30px;
+  border: 1px solid gray;
+}
+
+.week-row {
+  display: contents;
+}
+
+.day {
+  border: 1px solid gray;
+  padding: 4px;
+  box-sizing: border-box;
+  //background: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.day > strong {
+  display: block;
+  margin-bottom: 5px;
+  height: auto;
+}
+
+.milestone {
+  height: 14px;
+  width:  14px;
+  border-radius: 7px;
+  float: left;
+  margin: 2px;
+  margin-top: 3px;
+  margin-bottom: 10px;
+  padding: 0px;
+
+  display: flex;
+  justify-content: center;  /* Horizontal alignment */
+  align-items: center;      /* Vertical alignment */
+
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.stage {
+  height: auto;
+  max-height: 18px;
+  width: 100%;
+  border: 0px;
+  background-color: none;
+  padding-left: 3px;
+  overflow: hidden;
+}
+
+.legend-entry {
+  float: left;
+  margin: 4px;
+}
+
+.type-1 { background-color: #81C784; color: #222222; }
+.type-2 { background-color: #4FC3F7; color: #222222; }
+.type-3 { background-color: #FFEB3B; color: #222222; }
+.type-4 { background-color: #FF972D; color: #222222; }
+.type-5 { background-color: #F06292; color: #222222; }
+.type-6 { background-color: #BA68C8; color: #222222; }
+.type-7 { background-color: #FF5252; color: #222222; }
+.type-edit {background-color: #000000; color: gray; border-radius: 2px; float: right;}
