@@ -67,8 +67,6 @@ var image_edit          = "<img src='birdhouse/img/edit.png' style='max-width:15
 var image_edit           = "<div class='diary-icon-edit' title='"+lang("EDIT")+"'></div>";
 
 
-
-
 /*
 * function to show diary entries such as the first egg laid in a calendar view
 *
@@ -77,9 +75,20 @@ var image_edit           = "<div class='diary-icon-edit' title='"+lang("EDIT")+"
 function birdhouse_DIARY(data) {
     diary_setVariables(data);
 
-    var html = "";
-    html += "<div id='calendarContainer' class='calendar-container'></div>";
-    html += "<div id='calendarLegend' class='calendar-legend'>"+stage_legend+"</div>";
+    var settings    = "";
+    var html        = "";
+    var calendar    = "";
+    calendar += "<div id='calendarContainer' class='calendar-container'></div>";
+    calendar += "<div id='calendarLegend' class='calendar-legend'>"+stage_legend+"</div>";
+
+    if (app_admin_allowed) {
+        settings += "&nbsp;<br/><center><i>not implemented yet</i></center><br/>";
+        html     += birdhouse_OtherGroup( "DIARY_SETTINGS", lang("SETTINGS"), settings, false, "settings" );
+        html     += birdhouse_OtherGroup( "DIARY_CALENDAR", lang("CALENDAR"), calendar, true, "" );
+        }
+    else {
+        html = calendar;
+        }
 
     setTextById(app_frame_header, "<center><h2>" + lang("BIRDHOUSE") + " " + lang("DIARY") + "</h2></center>");
     setTextById(app_frame_content, html);
