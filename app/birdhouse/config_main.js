@@ -56,6 +56,7 @@ function app_menu_entries(data) {
 		["LINE"],
 		[lang("TODAY_COMPLETE"),    "script", "birdhousePrint_page('TODAY_COMPLETE');"],
 		[lang("SETTINGS"),          "script", "birdhousePrint_page('SETTINGS');"],
+		[lang("DIARY"),             "script", "birdhousePrint_page('DIARY');"],
 		]);
 		if (admin_type == "LOGIN") {
     	    app_menu = app_menu.concat([

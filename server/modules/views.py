@@ -2811,3 +2811,17 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         content["links"] = self.tools.print_links_json(link_list=("live", "favorit", "today", "videos", "backup"))
 
         return content
+
+    def diary_view(self, param):
+        self.logging.debug("Create data for diary view.")
+        which_cam = param["which_cam"]
+        content = {
+            "active_cam": which_cam,
+            "view": "diary",
+            "links": self.tools.print_links_json(link_list=("favorite", "videos", "today", "backup")),
+            "diary": self.config.db_handler.read_cache("diary")
+        }
+        content["diary"]["birds"] = self.config.birds
+
+        return content
+

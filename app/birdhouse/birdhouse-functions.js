@@ -6,7 +6,18 @@
 
 /*
 * The following 4 functions are used to create a dialog to edit parameters of different types,
-* to validate the input and to hand it over to the API functions.
+* to validate the input and to hand it over to the API functions. This first one creates an input field.
+*
+* @param (string) id: unique id for input element
+* @param (string) field: field id to grab existing information from;
+                         option (1) data from app_data["SETTINGS"] - list all key names separated by ":"
+                         option (2) data from this field - format the value "this:<value>"
+* @param (string) type: type of input field, options are: input, select, select_dict, select_dict_sort, range, boolean
+* @param (Any) options: list of possible options for select types
+                        option (1) for select use a string with comma separated values
+                        option (2) for select_dict* use a dict = { "value": "description" }
+* @param (string) data_type: type of date for verification, options are: string, integer, boolean, float, json
+* @param (string) on_change: javascript command to be executed when value changes
 */
 function birdhouse_edit_field(id, field="", type="input", options="", data_type="string", on_change="") {
     var fields = field.split(":");
@@ -16,7 +27,10 @@ function birdhouse_edit_field(id, field="", type="input", options="", data_type=
     var style  = "";
     var step   = "1";
 
-    if (field != "") {
+    if (field != "" && fields[0] == "this") {
+        data = fields[1];
+        }
+    else if (field != "") {
         if (fields.length == 1)      { data = settings[fields[0]]; }
         else if (fields.length == 2) { data = settings[fields[0]][fields[1]]; }
         else if (fields.length == 3) { data = settings[fields[0]][fields[1]][fields[2]]; }
@@ -134,12 +148,26 @@ function birdhouse_edit_field(id, field="", type="input", options="", data_type=
     return html;
 }
 
+/*
+* create a button to save all fields defined in an id list
+*
+* @param (string) id: id for the button element
+* @param (string) id_list: ":" separated list of field ids with values to be saved
+* @param (string) camera: camera id
+* @param (string) text: not used yet
+*/
 function birdhouse_edit_save(id, id_list, camera="", text="") {
     var ids = id_list.split(":");
-    var html = "<button onclick='birdhouse_edit_send(\""+id_list+"\", \""+camera+"\");' style='background:gray;width:100px;float:left;'>"+lang("SAVE")+"</button>";
+    var html = "<button id='"+id+"' onclick='birdhouse_edit_send(\""+id_list+"\", \""+camera+"\");' style='background:gray;width:100px;float:left;'>"+lang("SAVE")+"</button>";
     return html;
 }
 
+/*
+* validate if the input field with the given id contains content of a specific content type
+*
+* @param (string) id: id of field to be checked
+* @param (string) data_type: expected date type - options are: string, integer, boolean, float, json
+*/
 function birdhouse_edit_check_values(id, data_type) {
     if (!document.getElementById(id)) {
         console.error("Element '"+id+"' doesn't exist!");
@@ -184,6 +212,12 @@ function birdhouse_edit_check_values(id, data_type) {
     return [error, error_msg ];
 }
 
+/*
+* collect all data and handover to an API request to save all data from the fields in the id_list
+*
+* @param (string) id_list: ":" separated list of field ids with values to be saved
+* @param (string) camera: camera id
+*/
 function birdhouse_edit_send(id_list, camera) {
     var ids = id_list.split(":");
     var info = "";

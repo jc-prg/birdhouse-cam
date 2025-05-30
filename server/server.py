@@ -462,7 +462,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             "archive-object-detection", "archive-remove-day", "archive-remove-list", "recreate-image-config",
                             "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "WEATHER", "relay-on", "relay-off",
                             "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS", "python-pkg",
-                            "STATISTICS", "reconnect-microphone", "edit-labels", "delete-labels"]
+                            "STATISTICS", "reconnect-microphone", "edit-labels", "delete-labels", "DIARY"]
 
             param["session_id"] = elements[2]
             param["command"] = elements[3]
@@ -906,7 +906,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                           "DEVICES", "OBJECTS", "STATISTICS", "bird-names", "WEATHER",
                           "SETTINGS", "CAMERA_SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS",
                           "SETTINGS_CAMERAS", "SETTINGS_DEVICES", "SETTINGS_IMAGE", "SETTINGS_INFORMATION", "SETTINGS_STATISTICS",
-                          "status", "list"],
+                          "status", "list","DIARY"],
             "info"     : ["camera-param", "version", "reload","python-pkg"],
             "status"   : ["status", "list", "WEATHER"],
             "status_small" : ["last-answer"],
@@ -1077,6 +1077,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         if command == "INDEX":
             content = views.index_view(param=param)
+        elif command == "DIARY":
+            content = views.diary_view(param=param)
         elif command == "FAVORITES":
             content = views.favorite.list(param=param)
         elif command == "TODAY":
@@ -1227,7 +1229,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         if command in api_commands["data"] or command in api_commands["status"]:
             param_to_publish = ["entries", "entries_delete", "entries_yesterday", "entries_favorites", "groups",
                                 "archive_exists", "info", "chart_data", "weather_data", "days_available",
-                                "day_back", "day_forward", "birds"]
+                                "day_back", "day_forward", "birds","diary"]
             for key in param_to_publish:
                 if key in content:
                     api_data["data"][key] = content[key]

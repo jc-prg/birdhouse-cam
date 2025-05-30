@@ -16,6 +16,7 @@ var language_app = {
 		"APP_TRANSLATION"       : "App spezifische Übersetzungen",
 		"ARCHIVE"               : "Archiv",
 		"BIRDS"                 : "V&ouml;gel",
+        "BIRDHOUSE"             : "Vogelhaus",
 		"BIRDS_DETECTED"        : "Erkannte V&ouml;gel (und Objekte)",
 		"BACKUP_DONE"           : "Archivierung abgeschlossen.",
 		"CALENDAR"              : "Kalender",
@@ -54,6 +55,7 @@ var language_app = {
 		"DEVICE_SETTINGS_PROCEED_1" : "Weiter mit Kameras ...",
 		"DEVICE_SETTINGS_PROCEED_2" : "Weiter mit Ger&auml;ten ...",
 		"DEVICE_OVERVIEW"       : "&Uuml;berblick Ger&auml;testatus",
+		"DIARY"                 : "Tagebuch",
 		"DIFFERENT_VIDEO_DEVICE": "Achtung: Der server nutzt tempor&auml;r '{0}' statt '{1}', f&uuml;r Details bitte Logfile pr&uuml;fen.",
 		"DONE"                  : "Erledigt.",
 		"DONT_WAIT"             : "&Uuml;berspringen",
@@ -66,6 +68,7 @@ var language_app = {
 		"EDIT_LABEL"            : "Neues Label",
 		"EDIT_OBJECT_LABELS"    : "Bearbeite identifizierte Objekt-Labels",
 		"EMPTY"                 : "leer",
+		"END"                   : "Ende",
 		"ERROR_SAME_OFFSET"     : "F&uuml;r mindestens zwei Kameras ist derselbe 'Record Offset' unter 'Image Recording' identisch. W&auml;hle unterschiedliche Werte.",
 		"FAVORITES"             : "Favoriten",
 		"FAVORITES_VIDEOS"      : "Favoriten und Videos",
@@ -153,6 +156,7 @@ var language_app = {
 		"SUNRISE"               : "Sonnenaufgang",
 		"SUNSET"                : "Sonnenuntergang",
 		"TEMPERATURE"           : "Temperatur",
+        "TERMINATION"           : "Abbruch",
 		"THRESHOLD"             : "Bewegungsschwellwert",
 		"THRESHOLD_ADJUST"      : "Bewegungsschwellwert anpassen",
 		"THRESHOLD_FOR_ARCHIVE" : "Bewegungsschwellwert anpassen, um Bilder zu recyceln",
@@ -201,7 +205,14 @@ var language_app = {
         "WEATHER_95"            : "leichte oder &auml;&szlig;ige Gewitter",
         "WEATHER_96"            : "Gewitter mit leichtem Hagel",
         "WEATHER_99"            : "Gewitter mit schwerem Hagel",
-		"WIND"                  : "Wind"
+		"WIND"                  : "Wind",
+        "NEST_BUILDING"         : "Nestbau",
+        "EGG_LAYING"            : "Eier legen",
+        "BREEDING"              : "Brüten",
+        "HATCHING"              : "Schlüpfen",
+        "FEEDING"               : "Fütterung",
+        "LEAVING"               : "Ausflug",
+        "SPECIAL_EVENT"         : "Besonderes Vorkommnis"
 		},
 
 	"EN" : {
@@ -214,6 +225,7 @@ var language_app = {
 		"ARCHIVE"               : "Archive",
 		"BACKUP_DONE"           : "Archiving done.",
 		"BIRDS"                 : "Birds",
+		"BIRDHOUSE"             : "Birdhouse",
 		"BIRDS_DETECTED"        : "Detected birds (and objects)",
 		"CALENDAR"              : "Calendar",
 		"CAMERA"                : "Camera",
@@ -251,6 +263,7 @@ var language_app = {
 		"DEVICE_SETTINGS_PROCEED_1" : "Proceed with cameras ...",
 		"DEVICE_SETTINGS_PROCEED_2" : "Proceed with devices ...",
 		"DEVICE_OVERVIEW"       : "Overview device status",
+        "DIARY"                 : "Diary",
 		"DIFFERENT_VIDEO_DEVICE": "Attention: Server uses temporarily '{0}' instead of '{1}', check logfile for details.",
         "DONE"                  : "Done.",
 		"DONT_WAIT"             : "Dont wait",
@@ -263,6 +276,7 @@ var language_app = {
         "EDIT_LABEL"            : "New label",
         "EDIT_OBJECT_LABELS"    : "Edit detected object labels",
 		"EMPTY"                 : "empty",
+		"END"                   : "end",
 		"ERROR_SAME_OFFSET"     : "At least for to cameras the 'Record Offset' in 'Image Recording' is the same. Choose different values.",
 		"FAVORITES"             : "Favorites",
 		"FAVORITES_VIDEOS"      : "Favorites and videos",
@@ -350,6 +364,7 @@ var language_app = {
 		"SUNSET"                : "Sunset",
 		"SUNRISE"               : "Sunrise",
 		"TEMPERATURE"           : "Temperature",
+		"TERMINATION"           : "termination",
 		"THRESHOLD"             : "Detection threshold",
         "THRESHOLD_ADJUST"      : "Adjust detection threshold",
 		"THRESHOLD_FOR_ARCHIVE" : "Adapt similarity detection threshold to recycle images",
@@ -398,7 +413,14 @@ var language_app = {
         "WEATHER_95"            : "slight or moderate thunderstorms",
         "WEATHER_96"            : "thunderstorms with slight hail",
         "WEATHER_99"            : "thunderstorms with heavy hail",
-		"WIND"                  : "Wind"
+		"WIND"                  : "Wind",
+        "NEST_BUILDING"         : "Nest building",
+        "EGG_LAYING"            : "Egg laying",
+        "BREEDING"              : "Breeding",
+        "HATCHING"              : "Hatching",
+        "FEEDING"               : "Feeding",
+        "LEAVING"               : "Leaving",
+        "SPECIAL_EVENT"         : "Special event"
 		}
 	}
 
