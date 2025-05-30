@@ -11,6 +11,14 @@ h3        { margin : 4px; }
 
 #remote_nav { height: 100vh; }
 
+#nav        { width: 51%; z-index: 200; }
+#nav2       { width: 51%; z-index: 100; left: 50%; }
+
+#headerRight            { z-index: 101; }
+#statusLED              { z-index: 102; }
+#statusLEDload          { z-index: 103; }
+#headerRightToolTip     { z-index: 104; }
+
 /* body   { touch-action: none; } */
 
 .loading_overlay {
