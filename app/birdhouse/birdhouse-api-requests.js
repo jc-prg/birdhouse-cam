@@ -16,7 +16,7 @@ var intervalAdmin;
 * @param (boolean) wait_till_executed: set true for synchronous API request
 * @param (string) method_name: name of requesting function for logging
 */
-function birdhouse_apiRequest(method, commands, data, return_cmd, wait_till_executed, method_name) {
+function birdhouse_apiRequest(method, commands, data="", return_cmd="", wait_till_executed=false, method_name="") {
     // app_unique_stream_id -> timestamp
     // app_session_id -> pwd
 

@@ -462,7 +462,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             "archive-object-detection", "archive-remove-day", "archive-remove-list", "recreate-image-config",
                             "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "WEATHER", "relay-on", "relay-off",
                             "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS", "python-pkg",
-                            "STATISTICS", "reconnect-microphone", "edit-labels", "delete-labels", "DIARY"]
+                            "STATISTICS", "reconnect-microphone", "edit-labels", "delete-labels",
+                            "DIARY", "diary-edit-milestone", "diary-delete-milestone", "diary-edit-brood", "diary-delete-brood"]
 
             param["session_id"] = elements[2]
             param["command"] = elements[3]
@@ -632,6 +633,23 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = backup.download_files(param)
         elif param["command"] == "archive-download-list":
             response = backup.download_files(param, body_data)
+
+        elif param["command"] == "diary-edit-milestone":
+            if len(param["parameter"]) < 2:
+                param["parameter"].append("")
+            msg = "API CALL '" + param["command"] + "' under construction (" + str(self.path) + ")"
+            srv_logging.info(msg)
+            srv_logging.info(str(param))
+
+            response = views.diary.edit_milestone(param["parameter"][0], param["parameter"][1], body_data)
+
+        elif param["command"] == "diary-delete-milestone":
+            msg = "API CALL '" + param["command"] + "' under construction (" + str(self.path) + ")"
+            srv_logging.info(msg)
+            srv_logging.info(str(param))
+
+            response = views.diary.delete_milestone(param["parameter"][0], param["parameter"][1])
+
         elif param["command"] == "reconnect-camera":
             response = camera[which_cam].reconnect()
         elif param["command"] == "reconnect-microphone":

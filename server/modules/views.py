@@ -7,7 +7,7 @@ import modules.presets as presets
 from modules.presets import *
 from modules.presets import view_logging
 from modules.bh_class import BirdhouseClass
-
+from urllib.parse import unquote
 
 class BirdhouseViewTools(BirdhouseClass):
 
@@ -2094,6 +2094,126 @@ class BirdhouseViewObjects(BirdhouseClass):
         self.force_reload = False
 
 
+class BirdhouseViewDiary(BirdhouseClass):
+    """
+    class to create and update object/bird detection view
+    """
+
+    def __init__(self, config):
+        """
+        Constructor method for initializing the class.
+
+        Args:
+            config (modules.config.BirdhouseConfig): reference to main config object
+            tools (BirdhouseViewTools): reference to tooling object
+            camera (dict): reference to global camera object
+        """
+        BirdhouseClass.__init__(self, class_id="view-obj", config=config)
+
+        self.create_data = {
+            "info": {},
+            "broods": {},
+            "entries": {}
+        }
+
+        self.logging.info("Connected diary view creation handler.")
+
+    def get_data(self):
+        """
+        get diary data from the database. if not exist, return empty data set.
+        """
+        data = self.config.db_handler.read_cache("diary")
+        if data == {}:
+            data = self.create_data
+            self.config.db_handler.write(config="diary", date="", data=data, create=True)
+        return data
+
+    def edit_milestone(self, date, title, entry):
+        """
+        edit or create a milestone in the diary // under construction // --> ensure this is handled via queue in a later stage also
+
+        Args:
+            date (str): date of the milestone
+            title (str): key of the milestone, also used as title
+            entry (dict): entry with all values from the milestone
+
+        Returns:
+            dict: API response
+        """
+        self.logging.info("Create or save a milestone in the diary ("+date+"/"+title+").")
+        data = self.get_data()
+        title = unquote(title)
+        milestones = data["entries"].copy()
+        replace_values = ["brood", "value", "comment", "type"]
+
+        if date in milestones and title in milestones[date]:
+            self.logging.info("Edit Milestone  : " + date + " / " + title)
+            edited_entry = milestones[date][title]
+            self.logging.info("                : " + str(edited_entry))
+            self.logging.info("                : " + str(entry))
+            for key in replace_values:
+                edited_entry[key] = entry[key]
+
+            self.logging.info("                : " + str(edited_entry))
+            if entry["title"] != title:
+                del milestones[date][title]
+                milestones[date][entry["title"]] = edited_entry
+
+        else:
+            self.logging.info("Create Milestone  : " + date + " / " + title)
+            if date not in milestones:
+                milestones[date] = {}
+            new_entry = {}
+            for key in replace_values:
+                new_entry[key] = entry[key]
+            milestones[date][entry["title"]] = new_entry
+
+        data["entries"] = milestones.copy()
+        self.config.db_handler.write(config="diary", date="", data=data, create=True)
+
+        response = {
+            "info": "edit_milestone",
+            "date": date,
+            "title": title
+        }
+        return response
+
+    def delete_milestone(self, date, title):
+        """
+        delete a milestone in the diary // under construction // --> ensure this is handled via queue in a later stage also
+
+        Args:
+            date (str): date of the milestone
+            title (str): key of the milestone, also used as title
+
+        Returns:
+            dict: API response
+        """
+        self.logging.info("Create or save a milestone in the diary ("+date+"/"+title+").")
+        data = self.get_data()
+        title = unquote(title)
+        milestones = data["entries"].copy()
+
+        if date in milestones and title in milestones[date]:
+            del milestones[date][title]
+
+        data["entries"] = milestones.copy()
+        self.config.db_handler.write(config="diary", date="", data=data, create=True)
+
+        response = {
+            "info": "delete_milestone",
+            "date": date,
+            "title": title
+        }
+        return response
+
+    def edit_brood(self, entry_id, entry):
+        pass
+
+    def delete_brood(self, entry_id):
+        pass
+
+
 class BirdhouseViews(threading.Thread, BirdhouseClass):
     """
     Class to create, update and deliver views for the birdhouse app
@@ -2132,6 +2252,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.archive = BirdhouseViewArchive(config, self.tools, self.camera)
         self.favorite = BirdhouseViewFavorite(config, self.tools)
         self.object = BirdhouseViewObjects(config, self.tools, self.camera)
+        self.diary = BirdhouseViewDiary(config)
 
         self.favorite.load_from_archives = False
         self.archive.load_from_archives = False
@@ -2819,7 +2940,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             "active_cam": which_cam,
             "view": "diary",
             "links": self.tools.print_links_json(link_list=("favorite", "videos", "today", "backup")),
-            "diary": self.config.db_handler.read_cache("diary")
+            "diary": self.diary.get_data()
         }
         content["diary"]["birds"] = self.config.birds
 
