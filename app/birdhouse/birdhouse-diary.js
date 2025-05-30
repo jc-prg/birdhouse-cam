@@ -334,7 +334,7 @@ function diary_createCalendar(year, month) {
             });
 
         //const rowHeight = 40 + maxMilestones * 20;
-        const rowHeight = 70;
+        const rowHeight = 55;
 
         week.forEach(day => {
             const dayDiv            = document.createElement('div');

@@ -28,7 +28,7 @@
   min-width: 100%;
 }
 
-@media (min-width: 801px) {
+@media (min-width: 1001px) {
   .calendar-container {
     flex-direction: row;
     flex-wrap: nowrap;
@@ -169,7 +169,7 @@
 .type-5 { background-color: #F06292; color: #222222; }
 .type-6 { background-color: #BA68C8; color: #222222; }
 .type-7 { background-color: #FF5252; color: #222222; }
-.type-edit {background-color: #000000; color: gray; border-radius: 2px; float: right;}
+.type-edit {background-color: #000000; color: gray; border-radius: 2px; float: right; height: auto; width: auto; }
 
 .type-1 .diary-icon-image           { background-image: url('img/image_black.png'); }
 .type-1 .diary-icon-add             { background-image: url('img/add_black.png'); }
@@ -206,3 +206,20 @@
 .type-7 .diary-icon-edit            { background-image: url('img/edit_black.png'); }
 .type-7 .milestone.type-edit        { background-color: #FF5252; }
 
+@media (max-width: 1100px) {
+    .diary-icon-image { max-height: 9px; max-width: 9px; margin: 0px; }
+    .diary-icon-add   { max-height: 9px; max-width: 9px; margin: 0px; }
+    .diary-icon-edit  { max-height: 9px; max-width: 9px; margin: 0px; }
+}
+@media (max-width: 1000px) {
+    .diary-icon-image { max-height: 11px; max-width: 11px; margin: 0px; }
+    .diary-icon-add   { max-height: 11px; max-width: 11px; margin: 0px; }
+    .diary-icon-edit  { max-height: 11px; max-width: 11px; margin: 0px; }
+}
+@media (max-width: 800px) {
+    .diary-icon-image { max-height: 9px; max-width: 9px; margin: 0px; }
+    .diary-icon-add   { max-height: 9px; max-width: 9px; margin: 0px; }
+    .diary-icon-edit  { max-height: 9px; max-width: 9px; margin: 0px; }
+
+    .milestone        { max-height: 11px; max-width: 11px; margin: 1px; font-size: 9px; }
+}
