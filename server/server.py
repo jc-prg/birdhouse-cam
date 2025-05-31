@@ -985,7 +985,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "active_cam": which_cam,
                     "active_date": "",
                     "active_page": command
-                }
+                },
+                "brood": views.diary.get_current_state()
             }
             # grab recording infos for defined cameras
             for cam_id in camera:

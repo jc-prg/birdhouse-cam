@@ -154,6 +154,11 @@ strong {
   border-radius: 6px;
 }
 
+.brood-info {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
 .stage {
   height: auto;
   max-height: 18px;

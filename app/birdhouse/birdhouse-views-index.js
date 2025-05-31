@@ -142,6 +142,7 @@ index_template["overlay"] = `
 
             </div>
         </div>
+        <!--ACTIVE_BROOD-->
         </center>
     </div>
 `
@@ -162,6 +163,7 @@ index_template["overlay_admin"] = `
 
             </div>
         </div>
+        <!--ACTIVE_BROOD-->
         &nbsp;<br/>
         <!--ADMIN-->
         </center>

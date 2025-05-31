@@ -2148,6 +2148,84 @@ class BirdhouseViewDiary(BirdhouseClass):
 
         return data
 
+    def get_active_stage(self, data, today=None):
+        # Set today's date as YYYYMMDD string, or use current date if not given
+        today = today or datetime.today().strftime("%Y%m%d")
+
+        # Define valid stage types
+        valid_types = {"1", "2", "3", "4", "5", "6"}
+        stage_states = {}
+
+        # Sort the entry dates
+        for date in sorted(data["entries"]):
+            if date > today:
+                continue  # Future data is irrelevant
+
+            for event in data["entries"][date].values():
+                t = event.get("type")
+                if t not in valid_types:
+                    continue
+
+                brood = event.get("brood")
+                value = event.get("value")
+
+                key = (t, brood)
+
+                if value == "start":
+                    stage_states[key] = {
+                        "start_date": date,
+                        "ended": False
+                    }
+                elif value in ("end", "cancel") and key in stage_states:
+                    stage_states[key]["ended"] = True
+
+        # Find the most recent stage that is currently running
+        active_stage = None
+        for (stage_type, brood), state in stage_states.items():
+            if not state["ended"] and state["start_date"] <= today:
+                if active_stage is None or state["start_date"] > active_stage["start_date"]:
+                    active_stage = {
+                        "type": stage_type,
+                        "brood": brood,
+                        "start_date": state["start_date"]
+                    }
+
+        if active_stage:
+            start_date_obj = datetime.strptime(active_stage["start_date"], "%Y%m%d")
+            today_date_obj = datetime.strptime(today, "%Y%m%d")
+            days_since_start = (today_date_obj - start_date_obj).days
+
+            return {
+                "stage": active_stage["type"],
+                "brood": active_stage["brood"],
+                "brood_details": data["broods"][active_stage["brood"]],
+                "days_since_start": days_since_start
+            }
+
+        return None  # No stage is currently active
+
+    def get_current_state(self):
+        """
+        get information on current brood, if one exists
+
+        Returns:
+            dict: information on current brood
+        """
+        all_data = self.get_data()
+        milestones = all_data["entries"]
+        today = self.config.local_time().strftime('%Y%m%d')
+        data = {
+            "active": False,
+            "date": today,
+            "brood": "",
+            "bird": "",
+            "stage": "",
+            "since": ""
+        }
+        current_stage = self.get_active_stage(all_data)
+        self.logging.info(str(current_stage))
+        return current_stage
+
     def edit_milestone(self, date, title, entry):
         """
         edit or create a milestone in the diary // under construction // --> ensure this is handled via queue in a later stage also

@@ -4,47 +4,47 @@
 // function to manage the birdhouse diary
 //--------------------------------------
 
-const sample_dataset = {
-  "info": {},
-  "broods": {
-    "2025-05": {
-      "title": "Erst Brut 2025",
-      "bird":  "KOHLMEISE",
-    }
-  },
-  "entries": {
-    "20250512": {
-      "Nestbau startet": { "brood": "2025-1", "type": "1", "stage": "Nestbau", "comment": "Kohlmeisen ziehen ein", "value": "start" }
-    },
-    "20250513": {
-      "Specht": { "brood": "2025-1", "type": "7", "stage": "", "comment": "Specht inspiziert Vogelhaus" }
-    },
-    "20250516": {
-      "Eiablage startet": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "Kohlmeisen ziehen ein", "value": "start" },
-      "1 Ei":   { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "1" }
-    },
-    "20250517": {
-      "2 Eier": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "2"  }
-    },
-    "20250518": {
-      "3 Eier": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "3"  }
-    },
-    "20250519": {
-      "4 Eier": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "4"  }
-    },
-    "20250520": {
-      "5 Eier": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "5"  }
-    },
-    "20250521": {
-      "6 Eier": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "6"  },
-      "Brüten startet": { "brood": "2025-1", "type": "3", "stage": "Eier legen", "comment": "...", "value": "start" },
-      "Specht": { "brood": "2025-1", "type": "7", "stage": "", "comment": "Specht inspiziert Vogelhaus" }
-    },
-    "20250522": {
-      "7 Eier": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "7"  }
-    }
-  }
-};
+    const sample_dataset = {
+      "info": {},
+      "broods": {
+        "2025-05": {
+          "title": "Erst Brut 2025",
+          "bird":  "KOHLMEISE",
+        }
+      },
+      "entries": {
+        "20250512": {
+          "Nestbau startet": { "brood": "2025-1", "type": "1", "stage": "Nestbau", "comment": "Kohlmeisen ziehen ein", "value": "start" }
+        },
+        "20250513": {
+          "Specht": { "brood": "2025-1", "type": "7", "stage": "", "comment": "Specht inspiziert Vogelhaus" }
+        },
+        "20250516": {
+          "Eiablage startet": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "Kohlmeisen ziehen ein", "value": "start" },
+          "1 Ei":   { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "1" }
+        },
+        "20250517": {
+          "2 Eier": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "2"  }
+        },
+        "20250518": {
+          "3 Eier": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "3"  }
+        },
+        "20250519": {
+          "4 Eier": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "4"  }
+        },
+        "20250520": {
+          "5 Eier": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "5"  }
+        },
+        "20250521": {
+          "6 Eier": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "6"  },
+          "Brüten startet": { "brood": "2025-1", "type": "3", "stage": "Eier legen", "comment": "...", "value": "start" },
+          "Specht": { "brood": "2025-1", "type": "7", "stage": "", "comment": "Specht inspiziert Vogelhaus" }
+        },
+        "20250522": {
+          "7 Eier": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "7"  }
+        }
+      }
+    };
 
 var diary_data          = {};
 var stage_definition    = {};
@@ -64,6 +64,7 @@ var image_video         = "";
 var image_add           = "";
 var image_edit          = "";
 var image_delete        = "";
+var last_stage_value    = "";
 
 
 /*
@@ -96,26 +97,52 @@ function birdhouse_DIARY(data) {
     diary_renderCalendars();
 }
 
-
 /*
 * set require vars
 *
 * @param (object) data: API response
 */
-function diary_setVariables(data) {
-    currentOffset   = 0;
-    diary_data      = data["DATA"]["data"]["diary"];
-    dataset         = diary_data["entries"];
-    archive_keys    = diary_data["archive"];
-    video_keys      = diary_data["videos"];
-    //bird_class      = diary_data["birds"];
-    brood_list      = {};
+function diary_setVariables(data="") {
 
-    Object.entries(diary_data["broods"]).forEach(([key,entry]) => {
-        brood_list[key] = diary_data["broods"][key]["title"] + " (" + bird_lang(diary_data["broods"][key]["bird"]) + ")";
-        //brood_list[key] = brood_list["title"] + "(" + bird_lang(brood_list["bird"]) + ")";
-    });
+    if (data != "") {
+        currentOffset   = 0;
+        diary_data      = data["DATA"]["data"]["diary"];
+        dataset         = diary_data["entries"];
+        archive_keys    = diary_data["archive"];
+        video_keys      = diary_data["videos"];
+        //bird_class      = diary_data["birds"];
+        brood_list      = {};
 
+        Object.entries(diary_data["broods"]).forEach(([key,entry]) => {
+            brood_list[key] = diary_data["broods"][key]["title"] + " (" + bird_lang(diary_data["broods"][key]["bird"]) + ")";
+            //brood_list[key] = brood_list["title"] + "(" + bird_lang(brood_list["bird"]) + ")";
+        });
+
+        Object.entries(diary_data["birds"]).forEach(([key,entry]) => {
+            bird_definition[key] = bird_lang(key);
+            });
+
+        stage_values = {
+            "start": lang("START"),
+            "end": lang("END"),
+            "one_day": lang("ONE_DAY"),
+            "termination": lang("TERMINATION"),
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9",
+            "10": "10",
+            "11": "11",
+            "12": "12",
+            "13": "13",
+            "14": "14",
+            }
+        }
     stage_definition = {
         "1": lang("NEST_BUILDING"),
         "2": lang("EGG_LAYING"),
@@ -125,7 +152,6 @@ function diary_setVariables(data) {
         "6": lang("LEAVING"),
         "7": lang("SPECIAL_EVENT")
         };
-    stage_legend     = "";
 
     image_archive       = "<div class='diary-icon diary-archive' title='"+lang("ARCHIVE")+"'></div>";
     image_video         = "<div class='diary-icon diary-video' title='"+lang("VIDEO")+"'></div>";
@@ -133,36 +159,14 @@ function diary_setVariables(data) {
     image_edit          = "<div class='diary-icon diary-edit' title='"+lang("EDIT")+"'></div>";
     image_delete        = "<div class='diary-icon diary-delete' title='"+lang("DELETE")+"'></div>";
 
+    stage_legend        = "";
     stage_legend += "<div class='legend-entry'><div class='milestone type-0'>"+image_archive+"</div>&nbsp;" + lang("ARCHIVE") + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
     stage_legend += "<div class='legend-entry'><div class='milestone type-0'>"+image_video+"</div>&nbsp;" + lang("VIDEOS") + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
+
     Object.entries(stage_definition).forEach(([key,entry]) => {
         stage_legend += "<div class='legend-entry'><div class='milestone type-"+key+" filled'></div>&nbsp;" + entry + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
     });
-    Object.entries(diary_data["birds"]).forEach(([key,entry]) => {
-        bird_definition[key] = bird_lang(key);
-        });
-
-    stage_values = {
-        "start": lang("START"),
-        "end": lang("END"),
-        "one_day": lang("ONE_DAY"),
-        "termination": lang("TERMINATION"),
-        "1": "1",
-        "2": "2",
-        "3": "3",
-        "4": "4",
-        "5": "5",
-        "6": "6",
-        "7": "7",
-        "8": "8",
-        "9": "9",
-        "10": "10",
-        "11": "11",
-        "12": "12",
-        "13": "13",
-        "14": "14",
-        }
-}
+    }
 
 /*
 * show (and later edit) details of a milestone entry, using a appMessage
@@ -382,12 +386,37 @@ function diary_deleteEntry(date, title) {
 }
 
 /*
+* create string with details for the currently active brood
+*/
+function diary_activeBrood() {
+    var html    = "";
+    var data    = app_data["STATUS"]["brood"];
+    var details = data["brood_details"];
+
+    diary_setVariables();
+
+    if (data["stage"]) {
+        html += "<center><div class='brood-info'>";
+        html += lang("ACTIVE_BROOD", [bird_lang(details["bird"]), stage_definition[data["stage"]], data["days_since_start"]]);
+        html += "</div></center>";
+        }
+    else {
+        html += "<center><div class='brood-info'>";
+        html += lang("ACTIVE_BROOD_NO");
+        html += "</div></center>";
+        }
+
+    return html;
+    }
+
+/*
 * create the calender for a specific month and add know milestones (events)
 *
 * @param (string) year: year of month to be created
 * @param (string) mont: month to be created
 */
 function diary_createCalendar(year, month) {
+
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const monthName = firstDay.toLocaleString('default', { month: 'long' });
@@ -433,7 +462,7 @@ function diary_createCalendar(year, month) {
             }
         }
 
-    let last_stage_value = "";
+    //let last_stage_value = "";
     days.forEach(week => {
         const weekRow = document.createElement('div');
         weekRow.className = 'week-row';
@@ -546,6 +575,7 @@ function diary_createCalendar(year, month) {
 * render calendar with two months
 */
 function diary_renderCalendars() {
+    last_stage_value            = '';
     calendarContainer.innerHTML = '';
     const baseDate = new Date();
     const startDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + currentOffset - 1, 1);

@@ -84,6 +84,8 @@ function birdhouse_INDEX(data, camera, object=false) {
         var replace_tags = {};
         replace_tags["OFFLINE_URL"]     = app_error_connect_image;
         replace_tags["CAM1_ID"]         = active_camera;
+        replace_tags["ACTIVE_BROOD"]    = diary_activeBrood();
+
         if (object) { replace_tags["CAM1_URL"]        = stream_server + app_camera_source["object_"+active_cam["name"]]; }
         else        { replace_tags["CAM1_URL"]        = stream_server + app_camera_source[active_cam["name"]]; }
 
@@ -106,7 +108,7 @@ function birdhouse_INDEX(data, camera, object=false) {
         if (Object.keys(cameras).length == 1 || other_cams.length == 0)         { selected_view = "single"; }
         else if (index_template[index_view["type"]])                            { selected_view = index_view["type"]; }
         else                                                                    { selected_view = "default"; }
-        if (app_admin_allowed)                                                      { selected_view += "_admin"; }
+        if (app_admin_allowed)                                                  { selected_view += "_admin"; }
 
         html += index_template[selected_view];
         html += index_template["offline"];
