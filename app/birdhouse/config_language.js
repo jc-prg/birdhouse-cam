@@ -217,7 +217,7 @@ var language_app = {
         "HATCHING"              : "Schlüpfen",
         "FEEDING"               : "Fütterung",
         "LEAVING"               : "Ausflug",
-        "SPECIAL_EVENT"         : "Besonderes Vorkommnis"
+        "SPECIAL_EVENT"         : "Besonderes Ereignis"
 		},
 
 	"EN" : {

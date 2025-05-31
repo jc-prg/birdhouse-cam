@@ -2123,20 +2123,28 @@ class BirdhouseViewDiary(BirdhouseClass):
         get diary data from the database. if not exist, return empty data set.
         """
         data = self.config.db_handler.read_cache("diary")
+
         archive = self.config.db_handler.read_cache("backup_info")
         archive_keys = []
-
         for key in archive:
             if "entries" in archive[key]:
                 for day in archive[key]["entries"]:
                     if day not in archive_keys:
                         archive_keys.append(day)
 
+        videos = self.config.db_handler.read_cache("videos")
+        video_keys = []
+        for key in videos:
+            k_date, k_time = key.split("_")
+            if k_date not in video_keys:
+                video_keys.append(k_date)
+
         if data == {}:
             data = self.create_data
             self.config.db_handler.write(config="diary", date="", data=data, create=True)
 
         data["archive"] = archive_keys
+        data["videos"] = video_keys
 
         return data
 

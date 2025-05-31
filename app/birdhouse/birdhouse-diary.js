@@ -52,19 +52,16 @@ var stage_legend        = "";
 var stage_values        = {};
 var brood_list          = {};
 var archive_keys        = [];
+var video_keys          = [];
 var dataset             = sample_dataset["diary"];
 var calendarContainer   = undefined;
 var currentOffset       = 0;
 var btn_previous        = "<button onclick=\"diary_changeMonth(-1)\" style=\"float:left\">&nbsp;&nbsp;◀</button>";
 var btn_next            = "<button onclick=\"diary_changeMonth(1)\" style=\"float:right\">▶</button>";
-var image_archive       = "<img src='birdhouse/img/image.png' style='max-width:15px;max-height:15px;'>";
-var image_archive       = "<div class='diary-icon-image' title='"+lang("ARCHIVE")+"'></div>";
-var image_archive_b     = "<img src='birdhouse/img/image_black.png' style='max-width:15px;max-height:15px;'>";
-var image_add           = "<img src='birdhouse/img/add.png' style='max-width:15px;max-height:15px;'>";
-var image_add           = "<div class='diary-icon-add'  title='"+lang("ADD")+"'></div>";
-var image_add_b         = "<img src='birdhouse/img/add_black.png' style='max-width:15px;max-height:15px;'>";
-var image_edit          = "<img src='birdhouse/img/edit.png' style='max-width:15px;max-height:15px;'>";
-var image_edit           = "<div class='diary-icon-edit' title='"+lang("EDIT")+"'></div>";
+var image_archive       = "<div class='diary-icon diary-archive' title='"+lang("ARCHIVE")+"'></div>";
+var image_video         = "<div class='diary-icon diary-video' title='"+lang("VIDEO")+"'></div>";
+var image_add           = "<div class='diary-icon diary-add' title='"+lang("ADD")+"'></div>";
+var image_edit          = "<div class='diary-icon diary-edit' title='"+lang("EDIT")+"'></div>";
 
 
 /*
@@ -108,6 +105,7 @@ function diary_setVariables(data) {
     diary_data      = data["DATA"]["data"]["diary"];
     dataset         = diary_data["entries"];
     archive_keys    = diary_data["archive"];
+    video_keys      = diary_data["videos"];
     //bird_class      = diary_data["birds"];
     brood_list      = {};
 
@@ -128,7 +126,7 @@ function diary_setVariables(data) {
     stage_legend     = "";
 
     Object.entries(stage_definition).forEach(([key,entry]) => {
-        stage_legend += "<div class='legend-entry'><div class='milestone type-"+key+"'></div>&nbsp;" + entry + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
+        stage_legend += "<div class='legend-entry'><div class='milestone type-"+key+" filled'></div>&nbsp;" + entry + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
     });
 
     stage_values = {
@@ -342,14 +340,9 @@ function diary_createCalendar(year, month) {
             maxMilestones = Math.max(maxMilestones, count);
             });
 
-        //const rowHeight = 40 + maxMilestones * 20;
-        const rowHeight = 55;
-
         week.forEach(day => {
             const dayDiv            = document.createElement('div');
             dayDiv.className        = 'day';
-            dayDiv.style.minHeight  = `${rowHeight}px`;
-            dayDiv.style.Height     = `${rowHeight}px`;
 
             if (day) {
                 const d             = day.getDate();
@@ -374,24 +367,43 @@ function diary_createCalendar(year, month) {
                     var on_click    = "diary_editDetails(\""+dateKey+"\");"
                     edit            = "<div class='milestone type-edit' onclick='"+on_click+"'>"+image_add+"</div>";
                     }
-                if (archive_keys.includes(dateKey)) {
-                    var on_click    = "birdhousePrint_load(view=\"TODAY\", camera=\""+app_active_cam+"\", date=\""+dateKey+"\");";
-                    archive         =  "<div class='milestone type-edit' onclick='"+on_click+"'>"+image_archive+"</div>";
-                }
 
-                dayDiv.innerHTML    = `<strong>${d}${edit}${archive}</strong>`;
+                dayDiv.innerHTML    = `<strong>${d}${edit}</strong>`;
                 dayEntry            = document.createElement("div");
+                dayEntry.className  = "day-entries";
+
+                if (archive_keys.includes(dateKey)) {
+                    icon            = document.createElement("div");
+                    icon.className  = "milestone type-0";
+                    icon.title      = lang("ARCHIVE");
+                    icon.innerHTML  = image_archive;
+                    icon.onclick = () => {
+                        birdhousePrint_load("TODAY", app_active_cam, dateKey);
+                        };
+                    dayEntry.appendChild(icon);
+                    }
+                if (video_keys.includes(dateKey)) {
+                    icon            = document.createElement("div");
+                    icon.className  = "milestone type-0";
+                    icon.title      = lang("VIDEOS");
+                    icon.innerHTML  = image_video;
+                    icon.onclick = () => {
+                        birdhousePrint_page("VIDEOS");    // !!!!!! add parameters to directly open the right month (e.g. using toggles);
+                        };
+                    dayEntry.appendChild(icon);
+                    }
 
                 if (dataset[dateKey]) {
-
                     const milestones = dataset[dateKey];
                     Object.entries(milestones).forEach(([title, info]) => {
                         const milestone         = document.createElement('div');
-                        milestone.className     = `milestone type-${info.type}`;
+                        milestone.className     = `milestone type-${info.type} filled`;
                         milestone.title         = title;
-                        milestone.textContent   = ' ';
-                        if (info.type == "2" && info.value != "start" && info.value != "end"
-                            && info.value != "termination" && info.value != "one_day") { milestone.textContent = info.value; }
+                        milestone.innerHTML     = " ";
+                        if (info.type == "2" && info.value != "start" && info.value != "end" && info.value != "termination" && info.value != "one_day") {
+                                milestone.textContent = info.value;
+                                milestone.className = `milestone type-${info.type}`;
+                                }
 
                         // visualize stage by coloring the <hr/> line element
                         if (info.value == "start")   { dayDiv.firstChild.className = `stage type-${info.type}`; last_stage_value = info.type; }
