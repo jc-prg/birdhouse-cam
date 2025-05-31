@@ -94,8 +94,8 @@ nav-active {
 
 .separator_group {
   float         : left;
-  //width         : 98%;
-  width         : calc(100% - 4px);
+  box-sizing    : border-box;
+   width         : 100%;
   padding       : 4px;
   margin        : 2px;
   margin-bottom : 4px;
@@ -116,8 +116,8 @@ nav-active {
 
 .separator_group_body {
   float         : left;
-  //width         : 98%;
-  width         : calc(100% - 4px);
+  box-sizing    : border-box;
+  width         : 100%;
 }
 .separator_group_body.settings2 {
   background:
