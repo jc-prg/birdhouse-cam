@@ -158,6 +158,7 @@ function diary_setVariables(data="") {
     image_add           = "<div class='diary-icon diary-add' title='"+lang("ADD")+"'></div>";
     image_edit          = "<div class='diary-icon diary-edit' title='"+lang("EDIT")+"'></div>";
     image_delete        = "<div class='diary-icon diary-delete' title='"+lang("DELETE")+"'></div>";
+    image_info          = "<div class='diary-icon diary-info' title='"+lang("DIARY")+"' style='display:inline-block;'></div>";
 
     stage_legend        = "";
     stage_legend += "<div class='legend-entry'><div class='milestone type-0'>"+image_archive+"</div>&nbsp;" + lang("ARCHIVE") + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
@@ -397,8 +398,11 @@ function diary_activeBrood() {
 
     if (data["stage"]) {
         html += "<center><div class='brood-info'>";
+        html += "<text class='milestone type-edit' onclick='birdhousePrint_page(\"DIARY\");' style='float:none; display:inline-block;height:15px;width:15px;'>" + image_info + "</text>";
+        html += "&nbsp;";
         html += lang("ACTIVE_BROOD", [bird_lang(details["bird"]), stage_definition[data["stage"]], data["days_since_start"]]);
         html += "</div></center>";
+
         }
     else {
         html += "<center><div class='brood-info'>";

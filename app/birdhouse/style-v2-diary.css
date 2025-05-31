@@ -208,6 +208,7 @@ strong {
 .diary-icon.diary-edit    { background-image: url('img/edit.png'); }
 .diary-icon.diary-add     { background-image: url('img/add.png'); }
 .diary-icon.diary-delete  { background-image: url('img/delete.png'); }
+.diary-icon.diary-info    { background-image: url('img/info.png'); }
 
 .diary-icon.diary-archive-black { background-image: url('img/image_black.png'); }
 .diary-icon.diary-video-black   { background-image: url('img/video_black.png'); }
@@ -248,6 +249,7 @@ strong {
 .milestone.type-7           { background-color: var(--day-background); color: var(--type-7-color);   border: 1px solid var(--type-7-color);  margin: 2px; }
 .milestone.type-7.filled    { background-color: var(--type-7-color); }
 
+.milestone.in-text { float: none; }
 .milestone.type-edit { float:right; margin-right:8px; opacity: 40%; }
 .milestone.type-edit:hover { opacity: 100%; }
 
