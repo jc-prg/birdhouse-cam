@@ -34,8 +34,8 @@ from modules.bh_database import BirdhouseTEXT
 from modules.srv_support import ServerInformation, ServerHealthCheck
 from modules.statistics import BirdhouseStatistics
 
-api_description = {"name": "BirdhouseCAM", "version": "v1.5.2"}
-app_framework = "v1.5.2"
+api_description = {"name": "BirdhouseCAM", "version": "v1.6.0"}
+app_framework = "v1.6.0"
 
 
 def on_exit(signum, handler):
