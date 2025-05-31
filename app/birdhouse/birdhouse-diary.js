@@ -58,10 +58,10 @@ var calendarContainer   = undefined;
 var currentOffset       = 0;
 var btn_previous        = "<button onclick=\"diary_changeMonth(-1)\" style=\"float:left\">&nbsp;&nbsp;◀</button>";
 var btn_next            = "<button onclick=\"diary_changeMonth(1)\" style=\"float:right\">▶</button>";
-var image_archive       = "<div class='diary-icon diary-archive' title='"+lang("ARCHIVE")+"'></div>";
-var image_video         = "<div class='diary-icon diary-video' title='"+lang("VIDEO")+"'></div>";
-var image_add           = "<div class='diary-icon diary-add' title='"+lang("ADD")+"'></div>";
-var image_edit          = "<div class='diary-icon diary-edit' title='"+lang("EDIT")+"'></div>";
+var image_archive       = "";
+var image_video         = "";
+var image_add           = "";
+var image_edit          = "";
 
 
 /*
@@ -124,6 +124,11 @@ function diary_setVariables(data) {
         "7": lang("SPECIAL_EVENT")
         };
     stage_legend     = "";
+
+    image_archive       = "<div class='diary-icon diary-archive' title='"+lang("ARCHIVE")+"'></div>";
+    image_video         = "<div class='diary-icon diary-video' title='"+lang("VIDEO")+"'></div>";
+    image_add           = "<div class='diary-icon diary-add' title='"+lang("ADD")+"'></div>";
+    image_edit          = "<div class='diary-icon diary-edit' title='"+lang("EDIT")+"'></div>";
 
     stage_legend += "<div class='legend-entry'><div class='milestone type-0'>"+image_archive+"</div>&nbsp;" + lang("ARCHIVE") + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
     stage_legend += "<div class='legend-entry'><div class='milestone type-0'>"+image_video+"</div>&nbsp;" + lang("VIDEOS") + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
