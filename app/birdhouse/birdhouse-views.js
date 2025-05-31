@@ -253,8 +253,15 @@ function birdhouse_LIST(page, data, camera, header_open=true) {
 
     // all videos
     else if (active_page == "VIDEOS") {
-
+        // show calendar for videos
         html += birdhouse_LIST_calendar(groups);
+
+        // check if a date is given to open the respective image group
+        var open_video_group = "";
+        if (data["API"]["request_param"]["parameter"][0]) {
+            open_video_date  = data["API"]["request_param"]["parameter"][0];
+            open_video_group = open_video_date.substring(0,4) + "-" + open_video_date.substring(4,6);
+            }
     }
 
     // load images for detail view with swipe feature
@@ -283,29 +290,36 @@ function birdhouse_LIST(page, data, camera, header_open=true) {
 
         // include favorites if exist
         if (entries_favorite && Object.keys(entries_favorite).length > 0) {
-            html += birdhouse_ImageGroup(active_page+"_FAVORITE", lang("FAVORITES"), entries_favorite, ["all"], entry_category, true,
-                                         app_admin_allowed, video_short, same_img_size, max_image_size_LR);
+            var favorites_open = true;
+            if (open_video_group != "") { favorites_open = false; }
+
+            html += birdhouse_ImageGroup(active_page+"_FAVORITE", lang("FAVORITES"), entries_favorite, ["all"], entry_category,
+                                         favorites_open, app_admin_allowed, video_short, same_img_size, max_image_size_LR);
             entries_available = true;
             favorites = true;
             group_list.push(lang("FAVORITES"));
             }
 
         Object.keys(groups).sort().reverse().forEach( group => {
+
 			var title = group;
 			var group_entries = {};
 			for (i=0;i<groups[group].length;i++) {
 				key                = groups[group][i];
 				group_entries[key] = entries[key];
             }
+			delete group_entries["999999"];
+
+            // set which groups to start open
 			if (active_page == "ARCHIVE") {
 				title = lang("ARCHIVE") + " &nbsp; (" + group + ")";
 				if (count_groups > 0) { header_open = false; }
-				//--> doesn't work if image names double across the different groups; image IDs have to be changed (e.g. group id to be added)
             }
             else if (active_page == "VIDEOS" && favorites) {
-                header_open = false;
+                if (open_video_group == "" || open_video_group != title) { header_open = false; }
+                else                                                     { header_open = true; }
             }
-			delete group_entries["999999"];
+
 			html += birdhouse_ImageGroup(active_page + "_" + group, title, group_entries, entry_count, entry_category, header_open, app_admin_allowed,
 			                             video_short, same_img_size, max_image_size_LR);
 			group_list.push(title);
@@ -335,10 +349,11 @@ function birdhouse_LIST(page, data, camera, header_open=true) {
             entries_available = true;
             }
 
-		// set title
+		// set group title
 		if (active_date != undefined && active_date != "")  { title = active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4); }
         else if (title.length == 8)                         { title = title.substring(6,8) + "." + title.substring(4,6) + "." + title.substring(0,4); }
 
+        // create image group (if no specific groups are defined)
         if (entries != undefined &&  Object.keys(entries).length > 0) {
             html += birdhouse_ImageGroup(title, title, entries, entry_count, entry_category, header_open, app_admin_allowed, video_short, same_img_size, max_image_size_LR);
 			group_list.push(title);

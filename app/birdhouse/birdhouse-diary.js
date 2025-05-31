@@ -125,6 +125,8 @@ function diary_setVariables(data) {
         };
     stage_legend     = "";
 
+    stage_legend += "<div class='legend-entry'><div class='milestone type-0'>"+image_archive+"</div>&nbsp;" + lang("ARCHIVE") + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
+    stage_legend += "<div class='legend-entry'><div class='milestone type-0'>"+image_video+"</div>&nbsp;" + lang("VIDEOS") + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
     Object.entries(stage_definition).forEach(([key,entry]) => {
         stage_legend += "<div class='legend-entry'><div class='milestone type-"+key+" filled'></div>&nbsp;" + entry + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
     });
@@ -159,10 +161,14 @@ function diary_setVariables(data) {
 */
 function diary_showDetails(date, title, entry) {
     var tab  = new birdhouse_table();
-    var btn  = "<button onclick='diary_editDetails(\""+date+"\", \""+title+"\", \"diary_entry\");' style='background:gray;width:100px;float:left;'>"+lang("EDIT")+"</button>";
-    btn     += "<button onclick='diary_deleteEntryConfirm(\""+date+"\", \""+title+"\");' style='background:gray;width:100px;float:left;'>"+lang("DELETE")+"</button>";
+    var commands = {
+        "EDIT":   [lang("EDIT"), "diary_editDetails('"+date+"', '"+title+"', 'diary_entry');"],
+        "DELETE": [lang("DELETE"), "diary_deleteEntryConfirm('"+date+"', '"+title+"');"],
+        "CLOSE":  [lang("CLOSE"), ""]
+        };
+
     var html = "";
-    html    += "<div style='float:left;width:100%;'><h2><div class='milestone type-"+entry["type"]+"' style='vertical-align:center;'></div>";
+    html    += "<div style='float:left;width:100%;'><h2><div class='milestone type-"+entry["type"]+" filled' style='vertical-align:center;'></div>";
     html    += "<center>&nbsp;&nbsp;"+title+"</center></h2></div><div style='float:left;width:100%;'><hr/><br/></div>";
     html    += tab.start();
     html    += tab.row(lang("DATE")+":",    date + "<input id='add_key' value='"+date+"' style='display:none;'>");
@@ -172,16 +178,18 @@ function diary_showDetails(date, title, entry) {
         }
     html    += tab.row(lang("BROOD")+":",   brood_list[entry["brood"]]);
     html    += tab.row(lang("COMMENT")+":", entry["comment"]);
-    if (app_admin_allowed) {
-        html    += tab.row("",    "&nbsp;");
-        html    += tab.row("",    btn);
+    if (!app_admin_allowed) {
+        delete commands[lang("EDIT")];
+        delete commands[lang("DELETE")];
+        //html    += tab.row("",    "&nbsp;");
+        //html    += tab.row("",    btn);
         }
     html    += tab.end();
     html    += "&nbsp;<br/>";
-    html    += "<hr>";
+    html    += "&nbsp;<br/>";
     html    += "<input id='diary_entry' value='"+JSON.stringify(entry)+"' style='display:none;'>";
 
-    appMsg.confirm(html, "", "380");
+    appMsg.dialog(html, cmd="", height="300px", width=appMsg.message_width+"px", close=true, cmd_buttons=commands);
     }
 
 /*
@@ -196,6 +204,12 @@ function diary_editDetails(date, title="", entry="") {
     var fields  = "add_key,add_title,add_title_org,add_type,add_value,add_brood,add_comment";
     var save    = "diary_saveEntry(\""+date+"\", \""+title+"\", \""+fields+"\");";
     var btn     = "<button onclick='"+save+"' style='background:gray;width:100px;float:left;'>"+lang("SAVE")+"</button>";
+
+    var commands = {
+    "SAVE":   [lang("SAVE"), "diary_saveEntry('"+date+"', '"+title+"', '"+fields+"');"],
+    "CLOSE":  [lang("CANCEL"), ""]
+    };
+
     var tab     = new birdhouse_table();
     tab.style_cells["padding"] = "2px";
 
@@ -221,13 +235,13 @@ function diary_editDetails(date, title="", entry="") {
     html    += tab.row(lang("VALUE")+":",   birdhouse_edit_field(id="add_value", field="this:"+entry["value"], type="select_dict_sort", options=stage_values, data_type="string"));
     html    += tab.row(lang("BROOD")+":",   birdhouse_edit_field(id="add_brood", field="this:"+entry["brood"], type="select_dict_sort", options=brood_list, data_type="string"));
     html    += tab.row(lang("COMMENT")+":", birdhouse_edit_field(id="add_comment", field="this:"+entry["comment"], type="input", options="", data_type="string"));
-    html    += tab.row("",    "&nbsp;");
-    html    += tab.row("",    btn);
     html    += tab.end();
     html    += "&nbsp;<br/>";
+    html    += "&nbsp;<br/>";
     html    += "<input id='diary_field_list' value='"+fields+"' style='display:none;'>";
-    html    += "<hr/>";
-    appMsg.confirm(html, "", "440");
+    //appMsg.confirm(html, "", "440");
+
+    appMsg.dialog(html, cmd="", height="380px", width=appMsg.message_width+"px", close=true, cmd_buttons=commands);
     }
 
 /*
@@ -258,8 +272,8 @@ function diary_saveEntry(date, org_title, id_list){
 * @param (string) title: title / key for the entry
 */
 function diary_deleteEntryConfirm(date, title) {
-    var message = "Shall the entry &quot;"+title+"&quot; (" + date +") really be deleted?";
-    var delete_command = "diary_deleteEntry('"+date+"','"+title+"')";
+    var message         = lang("DELETE_ENTRY",["<b>"+title+"</b> ("+date+")"]);
+    var delete_command  = "diary_deleteEntry('"+date+"','"+title+"')";
     appMsg.confirm(message, delete_command, 200);
 }
 
@@ -339,8 +353,8 @@ function diary_createCalendar(year, month) {
             const count = entries ? Object.keys(entries).length : 0;
             maxMilestones = Math.max(maxMilestones, count);
             });
-
         week.forEach(day => {
+
             const dayDiv            = document.createElement('div');
             dayDiv.className        = 'day';
 
@@ -388,7 +402,7 @@ function diary_createCalendar(year, month) {
                     icon.title      = lang("VIDEOS");
                     icon.innerHTML  = image_video;
                     icon.onclick = () => {
-                        birdhousePrint_page("VIDEOS");    // !!!!!! add parameters to directly open the right month (e.g. using toggles);
+                        birdhousePrint_load("VIDEOS", app_active_cam, dateKey);    // !!!!!! add parameters to directly open the right month (e.g. using toggles);
                         };
                     dayEntry.appendChild(icon);
                     }
