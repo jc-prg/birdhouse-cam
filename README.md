@@ -1,4 +1,4 @@
-# Birdhouse Camera v1.5.2
+# Birdhouse Camera v1.6.0
 
 Raspberry Pi project to observe our birdhouse with two webcams: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, 
@@ -69,6 +69,9 @@ Find further impressions [here](info/impressions.md).
   * Filter by detected birds in archive and favorite view as well as for admins in complete view of current day
   * Batch detection for archive images - single day and multiple days incl. individual detection threshold (admin)
   * _Live detection is experimental and slow on RPi 4 (admin view)_
+* **Breeding Diary**
+  * Document breeding stages and special events (admin functionality)
+  * Calendar view and short info below the video stream
 * **Admin functionality** via app
   * Login as administrator to get access to the settings and additional functionality such as video recording or control access based on IP addresses (DENY, ALLOW)
   * Edit server settings (partly, other settings define in file .env)
