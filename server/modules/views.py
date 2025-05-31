@@ -2227,11 +2227,81 @@ class BirdhouseViewDiary(BirdhouseClass):
         }
         return response
 
-    def edit_brood(self, entry_id, entry):
-        pass
+    def edit_brood(self, entry_id, title, entry):
+        """
+        edit or create a brood in the diary // under construction // --> ensure this is handled via queue in a later stage also
 
-    def delete_brood(self, entry_id):
-        pass
+        Args:
+            entry_id (str): id of the brood
+            title (str): not used
+            entry (dict): entry with all values from the brood
+
+        Returns:
+            dict: API response
+        """
+        self.logging.info("Create or save a brood in the diary ("+entry_id+"/"+title+").")
+        data = self.get_data()
+        title = unquote(title)
+        broods = data["broods"].copy()
+        replace_values = ["title", "bird", "comment"]
+
+        if entry_id in broods:
+            self.logging.info("Edit brood  : " + entry_id + " / " + title)
+            edited_entry = broods[entry_id]
+            self.logging.info("                : " + str(edited_entry))
+            self.logging.info("                : " + str(entry))
+            for key in replace_values:
+                edited_entry[key] = entry[key]
+
+            self.logging.info("                : " + str(edited_entry))
+            if entry["id"] != entry_id:
+                del broods[entry_id]
+                broods[entry["id"]] = edited_entry
+
+        else:
+            self.logging.info("Create brood  : " + entry_id + " / " + title)
+            new_entry = {}
+            for key in replace_values:
+                new_entry[key] = entry[key]
+            broods[entry["id"]] = new_entry
+
+        data["broods"] = broods.copy()
+        self.config.db_handler.write(config="diary", date="", data=data, create=True)
+
+        response = {
+            "info": "edit_brood",
+            "entry": entry_id,
+            "title": title
+        }
+        return response
+
+    def delete_brood(self, entry_id, title=""):
+        """
+        delete a brood in the diary // under construction // --> ensure this is handled via queue in a later stage also
+
+        Args:
+            entry_id (str): brood id
+            title (str): not used
+
+        Returns:
+            dict: API response
+        """
+        self.logging.info("Create or save a milestone in the diary ("+entry_id+"/"+title+").")
+        data = self.get_data()
+        broods = data["broods"].copy()
+
+        if entry_id in broods:
+            del broods[entry_id]
+
+        data["broods"] = broods.copy()
+        self.config.db_handler.write(config="diary", date="", data=data, create=True)
+
+        response = {
+            "info": "delete_brood",
+            "entry": entry_id,
+            "title": title
+        }
+        return response
 
 
 class BirdhouseViews(threading.Thread, BirdhouseClass):

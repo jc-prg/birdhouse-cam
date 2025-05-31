@@ -633,23 +633,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = backup.download_files(param)
         elif param["command"] == "archive-download-list":
             response = backup.download_files(param, body_data)
-
+        elif param["command"] == "diary-edit-brood":
+            if len(param["parameter"]) < 2:
+                param["parameter"].append("")
+            response = views.diary.edit_brood(param["parameter"][0], param["parameter"][1], body_data)
+        elif param["command"] == "diary-delete-brood":
+            response = views.diary.delete_brood(param["parameter"][0])
         elif param["command"] == "diary-edit-milestone":
             if len(param["parameter"]) < 2:
                 param["parameter"].append("")
-            msg = "API CALL '" + param["command"] + "' under construction (" + str(self.path) + ")"
-            srv_logging.info(msg)
-            srv_logging.info(str(param))
-
             response = views.diary.edit_milestone(param["parameter"][0], param["parameter"][1], body_data)
-
         elif param["command"] == "diary-delete-milestone":
-            msg = "API CALL '" + param["command"] + "' under construction (" + str(self.path) + ")"
-            srv_logging.info(msg)
-            srv_logging.info(str(param))
-
+            if len(param["parameter"]) < 2:
+                param["parameter"].append("")
             response = views.diary.delete_milestone(param["parameter"][0], param["parameter"][1])
-
         elif param["command"] == "reconnect-camera":
             response = camera[which_cam].reconnect()
         elif param["command"] == "reconnect-microphone":

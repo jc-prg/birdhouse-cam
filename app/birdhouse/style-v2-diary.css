@@ -146,6 +146,14 @@ strong {
   margin-right: 8px;
 }
 
+.brood-list {
+  width: 80%;
+  max-width: 500px;
+  padding: 8px;
+  border: 1px solid var(--header-background);
+  border-radius: 6px;
+}
+
 .stage {
   height: auto;
   max-height: 18px;
@@ -194,11 +202,13 @@ strong {
 .diary-icon.diary-video   { background-image: url('img/video.png'); }
 .diary-icon.diary-edit    { background-image: url('img/edit.png'); }
 .diary-icon.diary-add     { background-image: url('img/add.png'); }
+.diary-icon.diary-delete  { background-image: url('img/delete.png'); }
 
 .diary-icon.diary-archive-black { background-image: url('img/image_black.png'); }
 .diary-icon.diary-video-black   { background-image: url('img/video_black.png'); }
 .diary-icon.diary-edit-black    { background-image: url('img/edit_black.png'); }
 .diary-icon.diary-add-black     { background-image: url('img/add_black.png'); }
+.diary-icon.diary-delete-black  { background-image: url('img/delete_black.png'); }
 
 /* format milestones */
 .stage.type-0               { background-color: var(--type-0-color);   color: var(--day-background); }
