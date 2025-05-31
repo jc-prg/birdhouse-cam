@@ -42,6 +42,7 @@ function app_menu_entries(data) {
         ["LINE"],
         [lang("FAVORITES"),    "script", "birdhousePrint_page('FAVORITES');"],
         [lang("VIDEOS"),       "script", "birdhousePrint_page('VIDEOS');"]
+		[lang("DIARY"),        "script", "birdhousePrint_page('DIARY');"],
         ];
 
 	if (detection_active) { app_menu.push([lang("BIRDS"),        "script", "birdhousePrint_page('OBJECTS');"]); }
@@ -56,7 +57,6 @@ function app_menu_entries(data) {
 		["LINE"],
 		[lang("TODAY_COMPLETE"),    "script", "birdhousePrint_page('TODAY_COMPLETE');"],
 		[lang("SETTINGS"),          "script", "birdhousePrint_page('SETTINGS');"],
-		[lang("DIARY"),             "script", "birdhousePrint_page('DIARY');"],
 		]);
 		if (admin_type == "LOGIN") {
     	    app_menu = app_menu.concat([

@@ -276,23 +276,3 @@ strong {
 @media (max-width: 400px) {
     .milestone          { height: 10px; width: 10px; border-radius: 5px; font-size: 8px; }
 }
-
-/*
-@media (max-width: 1100px) {
-    .diary-icon-image { max-height: 9px; max-width: 9px; margin: 2px; }
-    .diary-icon-add   { max-height: 9px; max-width: 9px; margin: 2px; }
-    .diary-icon-edit  { max-height: 9px; max-width: 9px; margin: 2px; }
-}
-@media (max-width: 1000px) {
-    .diary-icon-image { max-height: 11px; max-width: 11px; margin: 2px; }
-    .diary-icon-add   { max-height: 11px; max-width: 11px; margin: 2px; }
-    .diary-icon-edit  { max-height: 11px; max-width: 11px; margin: 2px; }
-}
-@media (max-width: 800px) {
-    .diary-icon-image { max-height: 9px; max-width: 9px; margin: 2px; }
-    .diary-icon-add   { max-height: 9px; max-width: 9px; margin: 2px; }
-    .diary-icon-edit  { max-height: 9px; max-width: 9px; margin: 2px; }
-
-    .milestone        { max-height: 11px; max-width: 11px; margin: 1px; font-size: 9px; }
-}
-*
