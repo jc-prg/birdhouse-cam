@@ -94,7 +94,8 @@ nav-active {
 
 .separator_group {
   float         : left;
-  width         : 98%;
+  //width         : 98%;
+  width         : calc(100% - 4px);
   padding       : 4px;
   margin        : 2px;
   margin-bottom : 4px;
@@ -115,7 +116,8 @@ nav-active {
 
 .separator_group_body {
   float         : left;
-  width         : 98%;
+  //width         : 98%;
+  width         : calc(100% - 4px);
 }
 .separator_group_body.settings2 {
   background:
@@ -134,6 +136,9 @@ nav-active {
 
 @media (min-width: 890px) {
 
-  .separator_group    { width: 99%; font-size: 14px; }
+  .separator_group    {
+    //width: 99%;
+    font-size: 14px;
+    }
 }
 
