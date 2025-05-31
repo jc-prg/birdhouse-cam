@@ -10,7 +10,7 @@ var language_app = {
 	"DE" : {
 	    "ACTIVITY"              : "Aktivit&auml;t",
 	    "ACTIVE"                : "aktiv",
-	    "ACTIVE_BROOD"          : "Aktuell zu Gast: {0}, seit {2} Tage(n) in der Phase &quot;{1}&quot;.",
+	    "ACTIVE_BROOD"          : "Aktuell zu Gast: {0}, seit {2} Tage(n) am {1}.",
 	    "ACTIVE_BROOD_NO"       : "Aktuell kein aktives Brutpaar.",
 	    "ALL_IMAGES"            : "Alle Bilder",
 	    "ALL_LABELS"            : "Alle Labels",
@@ -216,13 +216,13 @@ var language_app = {
         "WEATHER_96"            : "Gewitter mit leichtem Hagel",
         "WEATHER_99"            : "Gewitter mit schwerem Hagel",
 		"WIND"                  : "Wind",
-        "NEST_BUILDING"         : "Nestbau",
-        "EGG_LAYING"            : "Eier legen",
+        "NEST_BUILDING"         : "Nestbauen",
+        "EGG_LAYING"            : "Eierlegen",
         "BROOD"                 : "Brut",
         "BREEDING"              : "Brüten",
         "HATCHING"              : "Schlüpfen",
         "FEEDING"               : "Fütterung",
-        "LEAVING"               : "Ausflug",
+        "LEAVING"               : "Ausfliegen",
         "SPECIAL_EVENT"         : "Besonderes Ereignis"
 		},
 
@@ -435,14 +435,14 @@ var language_app = {
         "WEATHER_96"            : "thunderstorms with slight hail",
         "WEATHER_99"            : "thunderstorms with heavy hail",
 		"WIND"                  : "Wind",
-        "NEST_BUILDING"         : "Nest building",
-        "EGG_LAYING"            : "Egg laying",
-        "BREEDING"              : "Breeding",
-        "BROOD"                 : "Brood",
-        "HATCHING"              : "Hatching",
-        "FEEDING"               : "Feeding",
-        "LEAVING"               : "Leaving",
-        "SPECIAL_EVENT"         : "Special event"
+        "NEST_BUILDING"         : "nest building",
+        "EGG_LAYING"            : "egg laying",
+        "BREEDING"              : "breeding",
+        "BROOD"                 : "brood",
+        "HATCHING"              : "hatching",
+        "FEEDING"               : "feeding",
+        "LEAVING"               : "leaving",
+        "SPECIAL_EVENT"         : "special event"
 		}
 	}
 

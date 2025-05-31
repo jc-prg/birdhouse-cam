@@ -2115,6 +2115,10 @@ class BirdhouseViewDiary(BirdhouseClass):
             "broods": {},
             "entries": {}
         }
+        self.brood_data = {
+            "date": "",
+            "data": {}
+        }
 
         self.logging.info("Connected diary view creation handler.")
 
@@ -2149,6 +2153,18 @@ class BirdhouseViewDiary(BirdhouseClass):
         return data
 
     def get_active_stage(self, data, today=None):
+        """
+        Calculating the current date of an active brood and returning relevant information if exist
+
+        Args:
+            data (dict): diary data
+            today (str): date to be analyze (YYYYMMDD)
+
+        Returns:
+            dict|None: detail information on the current brood if exist
+        """
+        self.logging.debug("Calculating the current date of an active brood")
+
         # Set today's date as YYYYMMDD string, or use current date if not given
         today = today or datetime.today().strftime("%Y%m%d")
 
@@ -2214,17 +2230,13 @@ class BirdhouseViewDiary(BirdhouseClass):
         all_data = self.get_data()
         milestones = all_data["entries"]
         today = self.config.local_time().strftime('%Y%m%d')
-        data = {
-            "active": False,
-            "date": today,
-            "brood": "",
-            "bird": "",
-            "stage": "",
-            "since": ""
-        }
-        current_stage = self.get_active_stage(all_data)
-        self.logging.info(str(current_stage))
-        return current_stage
+
+        if self.brood_data["date"] != today:
+            self.brood_data["date"] = today
+            self.brood_data["data"] = self.get_active_stage(all_data)
+            self.logging.debug(str(self.brood_data["data"]))
+
+        return self.brood_data["data"]
 
     def edit_milestone(self, date, title, entry):
         """
