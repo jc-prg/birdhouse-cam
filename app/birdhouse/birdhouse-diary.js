@@ -178,9 +178,9 @@ function diary_showDetails(date, title, entry) {
         }
     html    += tab.row(lang("BROOD")+":",   brood_list[entry["brood"]]);
     html    += tab.row(lang("COMMENT")+":", entry["comment"]);
-    if (!app_admin_allowed) {
-        delete commands[lang("EDIT")];
-        delete commands[lang("DELETE")];
+    if (app_admin_allowed == false) {
+        delete commands["EDIT"];
+        delete commands["DELETE"];
         //html    += tab.row("",    "&nbsp;");
         //html    += tab.row("",    btn);
         }
