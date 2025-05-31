@@ -41,7 +41,7 @@ function app_menu_entries(data) {
         [lang("ARCHIVE"),      "script", "birdhousePrint_page('ARCHIVE');"],
         ["LINE"],
         [lang("FAVORITES"),    "script", "birdhousePrint_page('FAVORITES');"],
-        [lang("VIDEOS"),       "script", "birdhousePrint_page('VIDEOS');"]
+        [lang("VIDEOS"),       "script", "birdhousePrint_page('VIDEOS');"],
 		[lang("DIARY"),        "script", "birdhousePrint_page('DIARY');"],
         ];
 
