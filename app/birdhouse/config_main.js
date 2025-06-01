@@ -188,6 +188,7 @@ function app_theme_changed(theme) {
 */
 function app_screen_size_changed(width, height) {
 	console.log("Changed screen size to " + width + "x" + height);
+	repositionFloatingLowRes();
 	}
 
 /*
@@ -205,6 +206,8 @@ function app_connection_lost(error=false) {
             elementHidden("video_stream_online");
             elementVisible("lowres_today_error");
             elementHidden("lowres_today");
+            elementVisible("lowres_floating_error", "flex");
+            elementHidden("lowres_floating");
             birdhouseStatus_connectionError();
         }
         else {
@@ -215,6 +218,8 @@ function app_connection_lost(error=false) {
             elementHidden("video_stream_offline");
             elementVisible("lowres_today");
             elementHidden("lowres_today_error");
+            elementVisible("lowres_floating", "flex");
+            elementHidden("lowres_floating_error");
             birdhouseReloadView();
         }
     }

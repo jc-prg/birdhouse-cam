@@ -121,3 +121,62 @@
 .livestream_main_container.cam1cam2 { top :   -70px; }
 .livestream_2nd_container.cam1cam2  { top :     5px;  left : +25vw; }
 
+/* FLOATING LOWRES VIDEO STREAM ---------------------------------- */
+
+.floating-window {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    border-radius: 12px;
+    border: 2px solid black;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    background-color: white;
+    z-index: 9999;
+    display: none;
+    flex-direction: column;
+}
+
+.floating-header {
+    background-color: #333;
+    color: white;
+    padding: 6px 6px;
+    cursor: move;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+}
+
+.floating-header .close-btn {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.floating-image-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.floating-image-container img {
+    max-height: 150%;
+    max-width: 150%;
+    height: 150%;
+    width: 150%;
+    display: block;
+    object-fit: contain;
+    border-radius: 0 0 10px 10px;
+    opacity: 100%;
+}
+
+.floating-window::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+}

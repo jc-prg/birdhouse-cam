@@ -51,6 +51,7 @@ var app_pages_lists    = ["TODAY", "ARCHIVE", "FAVORITES", "VIDEOS", "TODAY_COMP
 var app_pages_settings = ["SETTINGS", "SETTINGS_CAMERAS", "SETTINGS_IMAGE", "SETTINGS_DEVICES", "SETTINGS_INFORMATION", "SETTINGS_STATISTICS", "SETTINGS_SERVER"];
 var app_pages_admin    = ["SETTINGS", "SETTINGS_CAMERAS", "SETTINGS_IMAGE", "SETTINGS_DEVICES", "SETTINGS_INFORMATION", "SETTINGS_STATISTICS", "SETTINGS_SERVER", "TODAY_COMPLETE"];
 var app_pages_other    = ["LOGIN", "LOGOUT"];
+var app_pages_lowres   = ["DIARY", "ARCHIVE", "VIDEOS", "OBJECTS", "WEATHER", "FAVORITES"];
 
 /*
 * additional scripts and style sheet files to be loaded
@@ -73,6 +74,7 @@ var birdhouse_js = [
     "birdhouse-status.js",
     "birdhouse-views.js",
     "birdhouse-views-index.js",
+    "birdhouse-views-overlay.js",
     "birdhouse-weather.js",
     "birdhouse-diary.js",
     "video-player-template.js",
@@ -107,6 +109,9 @@ var birdhouse_css = [
     "video-player.css"
 ];
 
+/*
+* check, if all required JavaScript modules have been loaded
+*/
 function birdhouse_modules_loaded() {
     if (app_scripts_loaded == birdhouse_js.length)  { return true; }
     else                                            { return false; }
@@ -150,6 +155,14 @@ function birdhousePrint_page(page="INDEX", param="") {
     else {
         console.warn("birdhousePrint_page: requested page '" + page + "' not found.");
         birdhousePrint_load(page="INDEX", app_active_cam, app_active_date, lang(page));
+        }
+
+    // check if floating lowres to be opened or closed
+    if (app_pages_lowres.includes(app_active_page) && !app_floating_lowres) {
+        startFloatingLowres(app_active_cam);
+        }
+    else if (!app_pages_lowres.includes(app_active_page) && app_floating_lowres) {
+        stopFloatingLowres();
         }
     }
 
@@ -418,6 +431,8 @@ function birdhouseSwitchCam() {
 
 	app_active_cam = app_available_cameras[next_cam];
 	birdhousePrint_load(view=app_active_page, camera=app_available_cameras[next_cam], date=app_active_date);
+
+	if (app_floating_lowres) { startFloatingLowres(app_active_cam); }
 }
 
 /*
@@ -439,6 +454,10 @@ function birdhouseReloadView() {
 		}
 	// if (app_active_page == "INDEX" || app_active_page == "TODAY" || app_active_page == "DEVICES") {
 	//if (app_active_page == "INDEX" || app_active_page == "IMAGE" || app_active_page == "DEVICES" || app_active_page == "CAMERAS") {
+
+	if (app_floating_lowres) {
+	    startFloatingLowres(app_floating_cam, app_floating_stream);
+	    }
 
 	if (no_reload_views.includes(app_active_page)) {
 		for (let key in app_camera_source) {

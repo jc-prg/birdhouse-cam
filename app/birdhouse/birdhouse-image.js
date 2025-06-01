@@ -22,7 +22,8 @@ function birdhouse_KillActiveStreams() {
             birdhouse_active_video_streams[key] == false;
             }
         }
-    window.stop();
+    // stop every resource loading on the current page
+    //window.stop();
     }
 
 /*
