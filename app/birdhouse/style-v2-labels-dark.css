@@ -2,48 +2,25 @@
 
 @media (prefers-color-scheme: dark) {
 
-    .detection_label {
-        background    : blue;
-        color         : white;
-    }
+    :root {
+        --label-download: darkred;
+        --label-download-text: white;
+        --label-download-glow: #777;
+        --label-download-hover: #772;
 
-    .detection_label.glow {
-          box-shadow: 0px 0px 3px 3px #777;
-          /* in order: x offset, y offset, blur size, spread size, color */
-          /* blur size and spread size are optional (they default to 0) */
-    }
+        --label-detection: blue;
+        --label-detection-text: white;
+        --label-detection-glow: #777;
+        --label-detection-hover: #772;
 
-    .detection_label:hover {
-          box-shadow: 0px 0px 2px 2px #772;
-          /* in order: x offset, y offset, blur size, spread size, color */
-          /* blur size and spread size are optional (they default to 0) */
-    }
+        --label-detection-function: #0000AA;
+        --label-detection-function-text: white;
+        --label-detection-function-glow: #777;
+        --label-detection-function-hover: #772;
 
-    .detection_label_function {
-        background    : #0000AA;
-        color         : white;
-    }
-
-    .detection_label_function.glow {
-          box-shadow: 0px 0px 3px 3px #777;
-          /* in order: x offset, y offset, blur size, spread size, color */
-          /* blur size and spread size are optional (they default to 0) */
-    }
-
-    .detection_label_function:hover {
-          box-shadow: 0px 0px 2px 2px #772;
-          /* in order: x offset, y offset, blur size, spread size, color */
-          /* blur size and spread size are optional (they default to 0) */
-    }
-
-    .other_label {
-        background    : darkgreen;
-        color         : white;
-    }
-
-    .other_label:hover {
-          box-shadow: 0px 0px 2px 2px #772;
-          /* in order: x offset, y offset, blur size, spread size, color */
-          /* blur size and spread size are optional (they default to 0) */
+        --label-other: darkgreen;
+        --label-other-text: white;
+        --label-other-glow: #772;
+        --label-other-hover: #772;
     }
 }
