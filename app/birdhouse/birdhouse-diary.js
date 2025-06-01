@@ -439,7 +439,8 @@ function diary_createCalendar(year, month) {
     const calendarGrid = document.createElement('div');
     calendarGrid.className = 'calendar';
 
-    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    //const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const weekdays = lang("WEEKDAYS_SHORT");
     weekdays.forEach(day => {
         const weekdayDiv = document.createElement('div');
         weekdayDiv.className = 'weekday';

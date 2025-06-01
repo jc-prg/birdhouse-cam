@@ -223,7 +223,8 @@ var language_app = {
         "HATCHING"              : "Schlüpfen",
         "FEEDING"               : "Fütterung",
         "LEAVING"               : "Ausfliegen",
-        "SPECIAL_EVENT"         : "Besonderes Ereignis"
+        "SPECIAL_EVENT"         : "Besonderes Ereignis",
+        "WEEKDAYS_SHORT"        : ['Mo', 'Die', 'Mi', 'Do', 'Frei', 'Sa', 'So'],
 		},
 
 	"EN" : {
@@ -442,7 +443,8 @@ var language_app = {
         "HATCHING"              : "hatching",
         "FEEDING"               : "feeding",
         "LEAVING"               : "leaving",
-        "SPECIAL_EVENT"         : "special event"
+        "SPECIAL_EVENT"         : "special event",
+        "WEEKDAYS_SHORT"        : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
 		}
 	}
 
