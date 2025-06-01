@@ -149,6 +149,12 @@ function repositionFloatingLowRes() {
     const newWidth = Math.floor(imgWidth * scale);
     const newHeight = Math.floor(imgHeight * scale);
 
+    floatingImage.style.width = newWidth + 'px';
+    floatingImage.style.height = newHeight + 'px';
+
+    floatingImageError.style.width = newWidth + 'px';
+    floatingImageError.style.height = newHeight + 'px';
+
     floatingWindow.style.display = "flex";
     floatingWindow.style.width = newWidth + 'px';
     floatingWindow.style.height = (newHeight + floatingHeader.offsetHeight) + 'px';
