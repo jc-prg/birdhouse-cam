@@ -1,25 +1,25 @@
 /* define colors */
 
 :root {
-  --day-background: #cccccc;
-  --header-background: #bbbbbb;
-  --header-text: black;
-  --header-text-stage: black;
-  --milestone-background: white;
-  --today-background: #cdaaaa;
-  --today-border: red;
-  --calendar-month: #222266;
-  --calendar-month-text: white;
-  --calendar-weekday: #22228f;
-  --calendar-weekday-text: white;
-  --type-0-color: #bbbbbb;
-  --type-1-color: #81C784;
-  --type-2-color: #4FC3F7;
-  --type-3-color: #FFEB3B;
-  --type-4-color: #FF972D;
-  --type-5-color: #F06292;
-  --type-6-color: #BA68C8;
-  --type-7-color: #FF5252;
+  --diary-day-background: #cccccc;
+  --diary-header-background: #bbbbbb;
+  --diary-header-text: black;
+  --diary-header-text-stage: black;
+  --diary-milestone-background: white;
+  --diary-today-background: #cdaaaa;
+  --diary-today-border: red;
+  --diary-calendar-month: #222266;
+  --diary-calendar-month-text: white;
+  --diary-calendar-weekday: #22228f;
+  --diary-calendar-weekday-text: white;
+  --diary-type-0-color: #bbbbbb;
+  --diary-type-1-color: #81C784;
+  --diary-type-2-color: #4FC3F7;
+  --diary-type-3-color: #FFEB3B;
+  --diary-type-4-color: #FF972D;
+  --diary-type-5-color: #F06292;
+  --diary-type-6-color: #BA68C8;
+  --diary-type-7-color: #FF5252;
 }
 
 /* calendar elements ----------------------------------*/
@@ -87,8 +87,8 @@
   font-weight: bold;
   font-size: 20px;
 
-  background-color: var(--calendar-month);
-  color: var(--calendar-month-text);
+  background-color: var(--diary-calendar-month);
+  color: var(--diary-calendar-month-text);
   border: 1px gray solid;
   border-radius: 4px;
 
@@ -102,8 +102,8 @@
 }
 
 .weekday {
-  background-color: var(--calendar-weekday);
-  color: var(--calendar-weekday-text);
+  background-color: var(--diary-calendar-weekday);
+  color: var(--diary-calendar-weekday-text);
 
   text-align: center;
   font-weight: bold;
@@ -127,16 +127,16 @@
 }
 
 .day.today {
-    border: 1px solid var(--today-border);
-    background-color: var(--today-background);
+    border: 1px solid var(--diary-today-border);
+    background-color: var(--diary-today-background);
 }
 
 /* inside elements ----------------------------------*/
 
 /* format header */
 strong {
-  background: var(--header-background);
-  color: var(--header-text);
+  background: var(--diary-header-background);
+  color: var(--diary-header-text);
 }
 
 .day > strong {
@@ -157,7 +157,7 @@ strong {
   width: 80%;
   max-width: 500px;
   padding: 8px;
-  border: 1px solid var(--header-background);
+  border: 1px solid var(--diary-header-background);
   border-radius: 6px;
 }
 
@@ -189,8 +189,8 @@ strong {
   margin: 2px;
   padding: 0px;
 
-  background-color: var(--milestone-background);
-  border-color: var(--milestone-background);
+  background-color: var(--diary-milestone-background);
+  border-color: var(--diary-milestone-background);
 
   display: flex;
   justify-content: center;  /* Horizontal alignment */
@@ -234,37 +234,37 @@ strong {
 .diary-icon.diary-delete-black  { background-image: url('img/delete_black.png'); }
 
 /* format milestones */
-.stage.type-0               { background-color: var(--type-0-color);   color: var(--header-text-stage); }
-.milestone.type-0           { background-color: var(--milestone-background); color: var(--type-0-color);   border: 1px solid var(--milestone-background);  margin: 2px; }
-.milestone.type-0.filled    { background-color: var(--type-0-color); }
+.stage.type-0               { background-color: var(--diary-type-0-color);   color: var(--diary-header-text-stage); }
+.milestone.type-0           { background-color: var(--diary-milestone-background); color: var(--diary-type-0-color);   border: 1px solid var(--diary-milestone-background);  margin: 2px; }
+.milestone.type-0.filled    { background-color: var(--diary-type-0-color); }
 
-.stage.type-1               { background-color: var(--type-1-color);   color: var(--header-text-stage); }
-.milestone.type-1           { background-color: var(--milestone-background); color: var(--type-1-color);   border: 1px solid var(--type-1-color);  margin: 2px; }
-.milestone.type-1.filled    { background-color: var(--type-1-color); }
+.stage.type-1               { background-color: var(--diary-type-1-color);   color: var(--diary-header-text-stage); }
+.milestone.type-1           { background-color: var(--diary-milestone-background); color: var(--diary-type-1-color);   border: 1px solid var(--diary-type-1-color);  margin: 2px; }
+.milestone.type-1.filled    { background-color: var(--diary-type-1-color); }
 
-.stage.type-2               { background-color: var(--type-2-color);   color: var(--header-text-stage); }
-.milestone.type-2           { background-color: var(--milestone-background); color: var(--type-2-color);   border: 1px solid var(--type-2-color);  margin: 2px; }
-.milestone.type-2.filled    { background-color: var(--type-2-color); }
+.stage.type-2               { background-color: var(--diary-type-2-color);   color: var(--diary-header-text-stage); }
+.milestone.type-2           { background-color: var(--diary-milestone-background); color: var(--diary-type-2-color);   border: 1px solid var(--diary-type-2-color);  margin: 2px; }
+.milestone.type-2.filled    { background-color: var(--diary-type-2-color); }
 
-.stage.type-3               { background-color: var(--type-3-color);   color: var(--header-text-stage); }
-.milestone.type-3           { background-color: var(--milestone-background); color: var(--type-3-color);   border: 1px solid var(--type-3-color);  margin: 2px; }
-.milestone.type-3.filled    { background-color: var(--type-3-color); }
+.stage.type-3               { background-color: var(--diary-type-3-color);   color: var(--diary-header-text-stage); }
+.milestone.type-3           { background-color: var(--diary-milestone-background); color: var(--diary-type-3-color);   border: 1px solid var(--diary-type-3-color);  margin: 2px; }
+.milestone.type-3.filled    { background-color: var(--diary-type-3-color); }
 
-.stage.type-4               { background-color: var(--type-4-color);   color: var(--header-text-stage); }
-.milestone.type-4           { background-color: var(--milestone-background); color: var(--type-4-color);   border: 1px solid var(--type-4-color);  margin: 2px; }
-.milestone.type-4.filled    { background-color: var(--type-4-color); }
+.stage.type-4               { background-color: var(--diary-type-4-color);   color: var(--diary-header-text-stage); }
+.milestone.type-4           { background-color: var(--diary-milestone-background); color: var(--diary-type-4-color);   border: 1px solid var(--diary-type-4-color);  margin: 2px; }
+.milestone.type-4.filled    { background-color: var(--diary-type-4-color); }
 
-.stage.type-5               { background-color: var(--type-5-color);   color: var(--header-text-stage); }
-.milestone.type-5           { background-color: var(--milestone-background); color: var(--type-5-color);   border: 1px solid var(--type-5-color);  margin: 2px; }
-.milestone.type-5.filled    { background-color: var(--type-5-color); }
+.stage.type-5               { background-color: var(--diary-type-5-color);   color: var(--diary-header-text-stage); }
+.milestone.type-5           { background-color: var(--diary-milestone-background); color: var(--diary-type-5-color);   border: 1px solid var(--diary-type-5-color);  margin: 2px; }
+.milestone.type-5.filled    { background-color: var(--diary-type-5-color); }
 
-.stage.type-6               { background-color: var(--type-6-color);   color: var(--header-text-stage); }
-.milestone.type-6           { background-color: var(--milestone-background); color: var(--type-6-color);   border: 1px solid var(--type-6-color);  margin: 2px; }
-.milestone.type-6.filled    { background-color: var(--type-6-color); }
+.stage.type-6               { background-color: var(--diary-type-6-color);   color: var(--diary-header-text-stage); }
+.milestone.type-6           { background-color: var(--diary-milestone-background); color: var(--diary-type-6-color);   border: 1px solid var(--diary-type-6-color);  margin: 2px; }
+.milestone.type-6.filled    { background-color: var(--diary-type-6-color); }
 
-.stage.type-7               { background-color: var(--type-7-color);   color: var(--header-text-stage); }
-.milestone.type-7           { background-color: var(--milestone-background); color: var(--type-7-color);   border: 1px solid var(--type-7-color);  margin: 2px; }
-.milestone.type-7.filled    { background-color: var(--type-7-color); }
+.stage.type-7               { background-color: var(--diary-type-7-color);   color: var(--diary-header-text-stage); }
+.milestone.type-7           { background-color: var(--diary-milestone-background); color: var(--diary-type-7-color);   border: 1px solid var(--diary-type-7-color);  margin: 2px; }
+.milestone.type-7.filled    { background-color: var(--diary-type-7-color); }
 
 .milestone.in-text          { float: none; }
 .milestone.type-edit        { float:right; margin-right:8px; opacity: 40%; }
@@ -272,25 +272,25 @@ strong {
 
 /* format edit icon depending on stage type */
 .type-1 .diary-icon.diary-add       { background-image: url('img/add_black.png'); }
-.type-1 .milestone.type-edit        { background-color: var(--type-1-color); }
+.type-1 .milestone.type-edit        { background-color: var(--diary-type-1-color); }
 
 .type-2 .diary-icon.diary-add       { background-image: url('img/add_black.png'); }
-.type-2 .milestone.type-edit        { background-color: var(--type-2-color); }
+.type-2 .milestone.type-edit        { background-color: var(--diary-type-2-color); }
 
 .type-3 .diary-icon.diary-add       { background-image: url('img/add_black.png'); }
-.type-3 .milestone.type-edit        { background-color: var(--type-3-color); }
+.type-3 .milestone.type-edit        { background-color: var(--diary-type-3-color); }
 
 .type-4 .diary-icon.diary-add       { background-image: url('img/add_black.png'); }
-.type-4 .milestone.type-edit        { background-color: var(--type-4-color); }
+.type-4 .milestone.type-edit        { background-color: var(--diary-type-4-color); }
 
 .type-5 .diary-icon.diary-add       { background-image: url('img/add_black.png'); }
-.type-5 .milestone.type-edit        { background-color: var(--type-5-color); }
+.type-5 .milestone.type-edit        { background-color: var(--diary-type-5-color); }
 
 .type-6 .diary-icon.diary-add       { background-image: url('img/add_black.png'); }
-.type-6 .milestone.type-edit        { background-color: var(--type-6-color); }
+.type-6 .milestone.type-edit        { background-color: var(--diary-type-6-color); }
 
 .type-7 .diary-icon.diary-add       { background-image: url('img/add_black.png'); }
-.type-7 .milestone.type-edit        { background-color:  var(--type-7-color); }
+.type-7 .milestone.type-edit        { background-color:  var(--diary-type-7-color); }
 
 
 /* adjust sizes depending on screen size */
