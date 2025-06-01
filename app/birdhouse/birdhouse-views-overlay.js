@@ -42,6 +42,11 @@ function startFloatingLowres(active_cam) {
     app_floating_stream = stream_url;  // url creation incl. stream id ?!
     stream_url         += "&floating_" + timestamp;
 
+    if (floatingImage != "") {
+        floatingImage.src = "";
+        floatingImage.removeAttribute('src');
+        }
+
     floatingWindow  = document.getElementById('floatingWindow');
     var content     = floatingHTML;
     content         = content.replace("<!--ACTIVE_CAM-->", active_cam);
@@ -109,11 +114,17 @@ function startFloatingLowres(active_cam) {
 * stop floating window from outside (not using the cross)
 */
 function stopFloatingLowres() {
+    floatingWindow  = document.getElementById('floatingWindow');
     floatingImage   = document.getElementById('floatingImage');
     closeBtn        = document.getElementById('closeBtn');
     closeBtn.click();
-    floatingImage.src = "";
+
     app_floating_lowres = false;
+    floatingImage.src        = "";
+    floatingImage.removeAttribute('src');
+    floatingWindow.innerHTML = "";
+    floatingWindow           = "";
+    floatingImage            = "";
 }
 
 /*
