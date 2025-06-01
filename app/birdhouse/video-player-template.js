@@ -2,7 +2,8 @@
 // HTML Template for video player
 //----------------------------------
 
-var videoplayer_script = "birdhouse/video-player.js";
+var videoplayer_script = "/birdhouse/video-player.js";
+var videoplayer_script_loaded = false;
 var videoplayer_template = `
 
   <link rel="stylesheet" href="birdhouse/video-player.css" type="text/css">

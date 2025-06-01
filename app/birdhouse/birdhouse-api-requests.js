@@ -178,7 +178,35 @@ function birdhouse_createShortVideo() {
 	        console.error("birdhouse_createShortVideo: Field 'video-id' is missing!");
 		}
 	}
-	
+
+/*
+* API request to delete shortened video
+*
+* @param (string) video_id: key of the video file
+*/
+function birdhouse_deleteShortVideo(video_id) {
+    var message = lang("DELETE_SHORT_VIDEO_MSG", [video_id]);
+    appMsg.confirm(message, "birdhouse_deleteShortVideo_exec('"+video_id+"');", 150);
+}
+function birdhouse_deleteShortVideo_exec(video_id) {
+    commands = ["delete-short-video", video_id];
+    birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_deleteShortVideo');
+}
+
+/*
+* API request to delete shortened video
+*
+* @param (string) video_id: key of the video file
+*/
+function birdhouse_deleteThumbVideo(video_id) {
+    var message = lang("DELETE_THUMBNAIL_MSG", [video_id]);
+    appMsg.confirm(message, "birdhouse_deleteThumbVideo_exec('"+video_id+"');", 150);
+}
+function birdhouse_deleteThumbVideo_exec(video_id) {
+    commands = ["delete-thumb-video", video_id];
+    birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_deleteThumbVideo');
+}
+
 /*
 * API request to create another thumbnail base on a given timecode
 */

@@ -463,7 +463,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "WEATHER", "relay-on", "relay-off",
                             "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS", "python-pkg",
                             "STATISTICS", "reconnect-microphone", "edit-labels", "delete-labels",
-                            "DIARY", "diary-edit-milestone", "diary-delete-milestone", "diary-edit-brood", "diary-delete-brood"]
+                            "DIARY", "diary-edit-milestone", "diary-delete-milestone", "diary-edit-brood", "diary-delete-brood",
+                            "delete-short-video", "delete-thumb-video"]
 
             param["session_id"] = elements[2]
             param["command"] = elements[3]
@@ -598,8 +599,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = config.queue.set_status_recycle_range(param)
         elif param["command"] == "create-short-video":
             response = camera[which_cam].video.create_video_trimmed_queue(param)
+        elif param["command"] == "delete-short-video":
+            response = camera[which_cam].video.delete_shortened_video(param)
         elif param["command"] == "create-thumb-video":
             response = camera[which_cam].video.create_video_thumb_queue(param)
+        elif param["command"] == "delete-thumb-video":
+            response = camera[which_cam].video.delete_thumbnail(param)
         elif param["command"] == "recreate-image-config":
             response = backup.create_image_config_api(param)
         elif param["command"] == "create-day-video":

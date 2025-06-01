@@ -730,6 +730,80 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
         return response
 
+    def create_video_audio_correction(self, param):
+        pass
+
+    def delete_shortened_video(self, param):
+        """
+        delete shortened video and remove references from db entry
+        Args:
+            param (dict): parameter from API request
+        Returns:
+            dict: information for API response
+        """
+        parameter = param["parameter"]
+        video_id = parameter[0]
+        response = {
+            "video_id": video_id,
+            "command": "Delete shortened video",
+            }
+
+        self.logging.info("Delete short version of video: " + str(parameter) + " ...")
+        config_file = self.config.db_handler.read_cache("videos")
+
+        if video_id in config_file:
+            video = config_file[video_id].copy()
+            file = video["video_file_short"]
+            video["video_file_short"] = ""
+            video["video_file_short_length"] = 0
+            config_file[video_id] = video
+            self.config.db_handler.write("videos", "", config_file)
+
+            cmd_delete = "rm " + str(os.path.join(self.config.db_handler.directory("videos"), file))
+            self.logging.info(cmd_delete)
+            message = os.system(cmd_delete)
+            self.logging.debug(message)
+            response["message"] = message
+        else:
+            response["error"] = "Video ID " + video_id + " not found."
+
+        return response
+
+    def delete_thumbnail(self, param):
+        """
+        delete shortened video and remove references from db entry
+        Args:
+            param (dict): parameter from API request
+        Returns:
+            dict: information for API response
+        """
+        parameter = param["parameter"]
+        video_id = parameter[0]
+        response = {
+            "video_id": video_id,
+            "command": "Delete thumbnail",
+            }
+
+        self.logging.info("Delete thumbnail of video: " + str(parameter) + " ...")
+        config_file = self.config.db_handler.read_cache("videos")
+
+        if video_id in config_file:
+            video = config_file[video_id].copy()
+            file = video["thumbnail_selected"]
+            video["thumbnail_selected"] = ""
+            config_file[video_id] = video
+            self.config.db_handler.write("videos", "", config_file)
+
+            cmd_delete = "rm " + str(os.path.join(self.config.db_handler.directory("videos"), file))
+            self.logging.info(cmd_delete)
+            message = os.system(cmd_delete)
+            self.logging.debug(message)
+            response["message"] = message
+        else:
+            response["error"] = "Video ID " + video_id + " not found."
+
+        return response
+
     def cleanup(self, output_file=""):
         """
         remove all files from last recording

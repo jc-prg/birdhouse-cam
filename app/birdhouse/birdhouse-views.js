@@ -923,6 +923,8 @@ function birdhouse_VIDEO_DETAIL( data ) {
 	var server_info = app_data["SETTINGS"]["server"];
     var tab         = new birdhouse_table();
 
+    load_videoplayer();
+
 	for (let key in video) {
 		app_active_date             = key;
         video[key]["directory"]     = "videos/";
@@ -991,16 +993,20 @@ function birdhouse_VIDEO_DETAIL( data ) {
 
 		if (app_admin_allowed) {
 		    html += tab.row("&nbsp;");
-			html += tab.row(lang("EDIT") + ":", "<button onclick=\"birdhouse_videoOverlayToggle();\" class=\"button-video-edit\">&nbsp;"+lang("SHORTEN_VIDEO")+"&nbsp;</button>&nbsp;");
+			html += tab.row(lang("EDIT") + ":",
+			    "<button onclick=\"birdhouse_videoOverlayToggle();\" class=\"button-video-edit\">&nbsp;"+lang("SHORTEN_VIDEO")+"&nbsp;</button>&nbsp;" +
+			    "<div id='player_load' onclick='load_videoplayer();' style='cursor:pointer;margin-left:20px;float:left;'><i>(Editor not loaded)</i></div>"
+			    );
+			html += tab.row(lang("DELETE") + ":",
+			    "<button onclick=\"birdhouse_deleteThumbVideo('"+key+"');\" class=\"button-video-edit\">&nbsp;"+lang("DELETE_THUMBNAIL")+"&nbsp;</button>&nbsp;" +
+			    "<button onclick=\"birdhouse_deleteShortVideo('"+key+"');\" class=\"button-video-edit\">&nbsp;"+lang("DELETE_SHORT_VIDEO")+"&nbsp;</button>&nbsp;"
+			    );
 
 			var player = "<div id='camera_video_edit_overlay' class='camera_video_edit_overlay' style='display:none'></div>";
 			player += "<div id='camera_video_edit' class='camera_video_edit' style='display:none'>";
 			player += "<div style='height:46px;width:100%'></div>";
 			var trim_command  = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_createShortVideo();";
 			var thumb_command = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_createThumbVideo();";
-
-			loadJS(videoplayer_script, "", document.body);
-
             var video_stream_server = window.location.href.split("//")[1];
             video_stream_server = video_stream_server.split("/")[0];
             video_stream_server = video_stream_server.split(":")[0];
@@ -1036,5 +1042,14 @@ function birdhouse_VIDEO_DETAIL( data ) {
 	setTextById(app_frame_content,html);
 	}
 
+function load_videoplayer() {
+    if (!videoplayer_script_loaded) {
+        loadJS(videoplayer_script, "", document.body);
+        }
+    setTimeout(function(){
+        if (videoplayer_script_loaded) { setTextById("player_load", "Editor OK"); }
+        else                           { setTextById("player_load", "Could not load Editor"); }
+        },1000);
+    }
 
 app_scripts_loaded += 1;

@@ -336,4 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 document.addEventListener('keyup', keyboardShortcuts);
 
+
 app_scripts_loaded += 1;
+videoplayer_script_loaded = true;
+
