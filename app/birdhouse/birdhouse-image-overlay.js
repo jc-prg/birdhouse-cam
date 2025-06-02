@@ -119,44 +119,90 @@ function birdhouse_imageOverlayToggle(overlay_id, select="") {
 * @param (string) imageId: id of image or even better its container to be opened in fullscreen mode
 */
 function birdhouse_imageFullscreenToggle(imageId) {
-
     const img = document.getElementById(imageId);
+    const container = document.createElement('div');
 
-    if (!document.fullscreenElement) {
-        // Create a temporary container to request fullscreen
-        const container = document.createElement('div');
-        container.style.backgroundColor = 'black';
-        container.style.width = '100%';
-        container.style.height = '100%';
-        container.style.display = 'flex';
-        container.style.justifyContent = 'center';
-        container.style.alignItems = 'center';
-        container.style.zIndex = '9000';
+    // Style the container for fullscreen
+    container.id = 'fullscreen_container';
+    container.style.position = 'fixed';
+    container.style.top = '0';
+    container.style.left = '0';
+    container.style.width = '100%';
+    container.style.height = '100%';
+    container.style.backgroundColor = 'black';
+    container.style.display = 'flex';
+    container.style.justifyContent = 'center';
+    container.style.alignItems = 'center';
+    container.style.zIndex = '9999';
+    container.style.cursor = 'zoom-out';
 
-        // Clone the image to avoid changing layout
-        const fullscreenImg = img.cloneNode();
-        fullscreenImg.style.width = '100vw';
-        fullscreenImg.style.height = '100vh';
-        fullscreenImg.style.maxWidth = '100%';
-        fullscreenImg.style.maxHeight = '100%';
-        fullscreenImg.style.objectFit = 'contain';
-        fullscreenImg.style.cursor = 'zoom-out';
-        fullscreenImg.style.border = "0px";
-        fullscreenImg.onclick = () => document.exitFullscreen();
+    // Clone the image to avoid layout disruption
+    const fullscreenImg = img.cloneNode();
+    fullscreenImg.style.width = '100vw';
+    fullscreenImg.style.height = '100vh';
+    fullscreenImg.style.maxWidth = '100%';
+    fullscreenImg.style.maxHeight = '100%';
+    fullscreenImg.style.objectFit = 'contain'; // or 'cover' based on preference
+    fullscreenImg.style.border = "0px";
 
-        container.appendChild(fullscreenImg);
-        document.body.appendChild(container);
+    // Make the cloned image clickable to exit fullscreen
+    fullscreenImg.onclick = () => document.exitFullscreen();
+    fullscreenImg.ontouchstart = () => birdhouse_exitFullscreen();
+    container.ontouchstart = () => birdhouse_exitFullscreen();
 
+    container.appendChild(fullscreenImg);
+    document.body.appendChild(container);
+
+    // Check for full-screen API support
+    if (container.requestFullscreen) {
+        // For most modern browsers
         container.requestFullscreen().then(() => {
             container.setAttribute('id', 'fullscreen_container');
         }).catch((err) => {
-            console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+            console.error(`Error entering fullscreen: ${err.message}`);
         });
-
-    } else {
-        document.exitFullscreen();
+    } else if (container.webkitRequestFullscreen) {
+        // For iOS Safari and older webkit browsers
+        container.webkitRequestFullscreen();
     }
+
+    // Exit fullscreen clean-up
+document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+        const container = document.getElementById('fullscreen_container');
+        if (container) container.remove();
+    }
+});
+
+document.addEventListener('webkitfullscreenchange', () => {
+    if (!document.webkitFullscreenElement) {
+        const container = document.getElementById('fullscreen_container');
+        if (container) container.remove();
+    }
+});
+
 }
+
+/*
+* close fullscreen mode (iPhone and default browser)
+*/
+function birdhouse_exitFullscreen() {
+
+    setTimeout(function(){
+        // Standard Fullscreen Exit
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+        // iOS Safari fullscreen exit
+        else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        }
+
+        // Clean up fullscreen container
+        const container = document.getElementById('fullscreen_container');
+        if (container) container.remove();
+        }, 500);
+    }
 
 /**
 * create overlay with playable video
