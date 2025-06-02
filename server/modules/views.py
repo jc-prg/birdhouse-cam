@@ -2105,10 +2105,9 @@ class BirdhouseViewDiary(BirdhouseClass):
 
         Args:
             config (modules.config.BirdhouseConfig): reference to main config object
-            tools (BirdhouseViewTools): reference to tooling object
-            camera (dict): reference to global camera object
+
         """
-        BirdhouseClass.__init__(self, class_id="view-obj", config=config)
+        BirdhouseClass.__init__(self, class_id="view-day", config=config)
 
         self.create_data = {
             "info": {},
@@ -2119,6 +2118,8 @@ class BirdhouseViewDiary(BirdhouseClass):
             "date": "",
             "data": {}
         }
+        self.last_update = time.time()
+        self.interval_update = 1 * 60
 
         self.logging.info("Connected diary view creation handler.")
 
@@ -2198,6 +2199,14 @@ class BirdhouseViewDiary(BirdhouseClass):
         # Find the most recent stage that is currently running
         active_stage = None
         for (stage_type, brood), state in stage_states.items():
+
+            if  active_stage is not None:
+                self.logging.debug("CHECK brood state: " + str(stage_type) + "-" + str(state) +
+                                  " | state > active: " + str(state["start_date"]) + " > " + str(active_stage["start_date"]))
+            else:
+                self.logging.debug("CHECK brood state: " + str(stage_type) + "-" + str(state) +
+                                  " | state > active: " + str(state["start_date"]) + " > None")
+
             if not state["ended"] and state["start_date"] <= today:
                 if active_stage is None or state["start_date"] > active_stage["start_date"]:
                     active_stage = {
@@ -2211,10 +2220,15 @@ class BirdhouseViewDiary(BirdhouseClass):
             today_date_obj = datetime.strptime(today, "%Y%m%d")
             days_since_start = (today_date_obj - start_date_obj).days
 
+            if active_stage["brood"] in data["broods"]:
+                brood = data["broods"][active_stage["brood"]]
+            else:
+                brood = {"title": "UNKNOWN", "bird": "BIRD", "comment": ""}
+
             return {
                 "stage": active_stage["type"],
                 "brood": active_stage["brood"],
-                "brood_details": data["broods"][active_stage["brood"]],
+                "brood_details": brood,
                 "days_since_start": days_since_start
             }
 
@@ -2231,10 +2245,16 @@ class BirdhouseViewDiary(BirdhouseClass):
         milestones = all_data["entries"]
         today = self.config.local_time().strftime('%Y%m%d')
 
-        if self.brood_data["date"] != today:
-            self.brood_data["date"] = today
+        if self.brood_data["date"] == "" or self.last_update + self.interval_update < time.time():
+
             self.brood_data["data"] = self.get_active_stage(all_data)
             self.logging.debug(str(self.brood_data["data"]))
+            self.last_update = time.time()
+
+        #if self.brood_data["date"] != today:
+        #    self.brood_data["date"] = today
+        #    self.brood_data["data"] = self.get_active_stage(all_data)
+        #    self.logging.debug(str(self.brood_data["data"]))
 
         return self.brood_data["data"]
 

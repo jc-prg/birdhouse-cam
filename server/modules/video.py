@@ -737,11 +737,14 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         * +/- offset
         * create from main file
         * save in DB entry as "video_file_audio_correction"
-        * add function, to replace main file with this one (no option to recreate short version, has to be done before or manually)
         """
         pass
 
     def replace_video_with_audio_correction(self, param):
+        """
+        * add function, to replace main video file with the corrected one
+          (no option to recreate short version, has to be done before or manually)
+        """
         pass
 
     def delete_shortened_video(self, param):

@@ -11,6 +11,7 @@ var language_app = {
 	    "ACTIVITY"              : "Aktivit&auml;t",
 	    "ACTIVE"                : "aktiv",
 	    "ACTIVE_BROOD"          : "Aktuell zu Gast: {0}, seit {2} Tage(n) am {1}.",
+	    "ACTIVE_BROOD_TODAY"    : "Aktuell zu Gast: {0}, seit heute am {1}.",
 	    "ACTIVE_BROOD_NO"       : "Aktuell kein aktives Brutpaar.",
 	    "ALL_IMAGES"            : "Alle Bilder",
 	    "ALL_LABELS"            : "Alle Labels",
@@ -234,7 +235,8 @@ var language_app = {
 	"EN" : {
 	    "ACTIVITY"              : "Activity",
 	    "ACTIVE"                : "active",
-        "ACTIVE_BROOD"          : "The {0} has been in the “{1}” phase for {2} day(s).",
+        "ACTIVE_BROOD"          : "The {0} has been in the &quot;{1}&quot; phase for {2} day(s).",
+	    "ACTIVE_BROOD_TODAY"    : "Today the {0} is starting with &quot;{1}&quot;.",
         "ACTIVE_BROOD_NO"       : "Currently no active breeding pair.",
 	    "ALL_IMAGES"            : "All images",
 	    "ALL_LABELS"            : "All labels",

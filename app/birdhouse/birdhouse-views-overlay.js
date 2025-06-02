@@ -132,6 +132,10 @@ function stopFloatingLowres() {
 */
 function repositionFloatingLowRes() {
     floatingWindow  = document.getElementById('floatingWindow');
+    floatingImage   = document.getElementById('floatingImage');
+
+    if (!floatingWindow) { return; }
+    if (!floatingImage)  { return; }
 
     const imgWidth = floatingImage.naturalWidth;
     const imgHeight = floatingImage.naturalHeight;

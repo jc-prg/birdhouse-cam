@@ -400,7 +400,12 @@ function diary_activeBrood() {
         html += "<center><div class='brood-info'>";
         html += "<text class='milestone type-edit' onclick='birdhousePrint_page(\"DIARY\");' style='float:none; display:inline-block;height:15px;width:15px;'>" + image_info + "</text>";
         html += "&nbsp;";
-        html += lang("ACTIVE_BROOD", [bird_lang(details["bird"]), stage_definition[data["stage"]], data["days_since_start"]]);
+        if (data["days_since_start"] == 0) {
+            html += lang("ACTIVE_BROOD_TODAY", [bird_lang(details["bird"]), stage_definition[data["stage"]], data["days_since_start"]]);
+            }
+        else {
+            html += lang("ACTIVE_BROOD", [bird_lang(details["bird"]), stage_definition[data["stage"]], data["days_since_start"]]);
+            }
         html += "</div></center>";
 
         }
@@ -599,5 +604,6 @@ function diary_changeMonth(delta) {
     currentOffset += delta;
     diary_renderCalendars();
     }
+
 
 app_scripts_loaded += 1;
