@@ -148,59 +148,61 @@
 /* FLOATING LOWRES VIDEO STREAM ---------------------------------- */
 
 .floating-window {
-    position: fixed;
-    right: 20px;
-    bottom: 20px;
-    border-radius: 12px;
-    border: 2px solid black;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    overflow: hidden;
-    background-color: white;
-    z-index: 8000;
-    display: none;
-    flex-direction: column;
+    position            : fixed;
+    right               : 20px;
+    bottom              : 20px;
+    border-radius       : 8px;
+    border              : 1px solid var(--frame-border);
+    box-shadow          : 0 4px 12px var(--frame-shadow);
+    overflow            : hidden;
+    background-color    : var(--app-frame-background);
+    z-index             : 8000;
+    display             : none;
+    flex-direction      : column;
 }
 
 .floating-header {
-    background-color: #333;
-    color: white;
-    padding: 6px 6px;
-    cursor: move;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 10px;
+    font-family         : var(--app-default-font);
+    background-color    : var(--app-frame-background);
+    border-bottom       : 1px solid var(--frame-border);
+    color               : var(--app-frame-text);
+    padding             : 6px 6px;
+    cursor              : move;
+    display             : flex;
+    justify-content     : space-between;
+    align-items         : center;
+    font-size           : 10px;
 }
 
 .floating-header .close-btn {
-    cursor: pointer;
-    font-weight: bold;
+    cursor              : pointer;
+    font-weight         : bold;
 }
 
 .floating-image-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+    display             : flex;
+    align-items         : center;
+    justify-content     : center;
+    overflow            : hidden;
 }
 
 .floating-image-container img {
-    max-height: 150%;
-    max-width: 150%;
-    height: 150%;
-    width: 150%;
-    display: block;
-    object-fit: contain;
-    border-radius: 0 0 10px 10px;
-    opacity: 100%;
+    max-height          : 150%;
+    max-width           : 150%;
+    height              : 150%;
+    width               : 150%;
+    display             : block;
+    object-fit          : contain;
+    border-radius       : 0 0 8px 8px;
+    opacity             : 100%;
 }
 
 .floating-window::after {
-    content: "";
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    right: 0;
-    bottom: 0;
-    background: transparent;
+    content             : "";
+    position            : absolute;
+    width               : 16px;
+    height              : 16px;
+    right               : 0;
+    bottom              : 0;
+    background          : transparent;
 }

@@ -2,6 +2,11 @@
 * define size of frames and menu (default theme, for dark theme see style-dark.css)
 */
 
+:root {
+    --frame-shadow: rgba(0, 0, 0, 0.4);
+    --frame-border: white;
+}
+
 /* HEADER ELEMENTS -------------------------------- */
 
 .headerRight {

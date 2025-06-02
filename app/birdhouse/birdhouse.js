@@ -423,6 +423,7 @@ function birdhouseHeaderFunctions() {
 * toggle between available cameras and trigger view reload
 */
 function birdhouseSwitchCam() {
+
 	var current_cam = 0;
 	for (i=0;i<app_available_cameras.length;i++) {
 		if (app_available_cameras[i] == app_active_cam) { current_cam = i; }
@@ -435,7 +436,10 @@ function birdhouseSwitchCam() {
 	app_active_cam = app_available_cameras[next_cam];
 	birdhousePrint_load(view=app_active_page, camera=app_available_cameras[next_cam], date=app_active_date);
 
-	if (app_floating_lowres) { startFloatingLowres(app_active_cam); }
+	if (app_floating_lowres) {
+	    startFloatingLowres(app_active_cam);
+	    repositionFloatingLowres();
+	    }
 }
 
 /*

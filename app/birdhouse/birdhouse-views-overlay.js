@@ -11,7 +11,7 @@ var floatingHTML = `<div class="floating-header" id="dragHeader"><!--ACTIVE_CAM-
                     <div class="floating-image-container" id="lowres_floating_error" style="display:none;">
                         <div class="thumbnail error" id="lowres_floating_error_2" style="width:100%;height:100%;display:flex;justify-align:center;align-items:center;text-align:center;"><!--CONNECTION_ERROR--></div>
                     </div>
-                    <div class="floating-image-container" id="lowres_floating" style="">
+                    <div class="floating-image-container" id="lowres_floating" style="cursor:zoom-in;" onclick="birdhousePrint_page('INDEX');">
                       <img id="floatingImage" src="<!--STREAM_URL-->" alt="Floating Image">
                     </div>`;
 

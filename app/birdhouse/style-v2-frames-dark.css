@@ -2,6 +2,11 @@
 
 @media (prefers-color-scheme: dark) {
 
+    :root {
+        --frame-shadow: rgba(1, 1, 1, 0.4);
+        --frame-border: black;
+    }
+
     /* FRAME ELEMENTS --------------------------------- */
 
     .frame_column      {
