@@ -152,8 +152,8 @@
     right               : 20px;
     bottom              : 20px;
     border-radius       : 8px;
-    border              : 1px solid var(--frame-border);
-    box-shadow          : 0 4px 12px var(--frame-shadow);
+    border              : 1px solid var(--frames-border);
+    box-shadow          : 0 4px 12px var(--frames-shadow);
     overflow            : hidden;
     background-color    : var(--app-frame-background);
     z-index             : 8000;

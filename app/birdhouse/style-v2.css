@@ -1,13 +1,22 @@
-/* configuration of default HTML elements */ 
+/* configuration of default HTML elements */
 
-a         { color  : blue; }
-a:link    { color  : blue; }
-a:visited { color  : darkblue; }
-a:hover   { color  : darkblue; font-weight : bold; }
+:root {
+    --bh-link: blue;
+    --bh-link-visited: darkblue;
+    --bh-link-hover: darkblue;
+}
+
+a         { color  : var(--bh-link); }
+a:link    { color  : var(--bh-link); }
+a:visited { color  : var(--bh-link-visited); }
+a:hover   { color  : var(--bh-link-hover); font-weight : bold; }
 
 h1        { margin : 4px; }
 h2        { margin : 4px; }
 h3        { margin : 4px; }
+
+body      { background: var(--app-loading-overlay); }
+/* body   { touch-action: none; } */
 
 #remote_nav { height: 100vh; }
 
@@ -19,19 +28,18 @@ h3        { margin : 4px; }
 #statusLEDload          { z-index: 103; }
 #headerRightToolTip     { z-index: 104; }
 
-/* body   { touch-action: none; } */
 
 .loading_overlay {
     position        : absolute;
     top             : 0px;
     left            : 0px;
     z-index         : 200;
-    background      : lightgray;
-    border          : solid 0px lightgray;
+    background      : var(--app-loading-overlay);
+    border          : solid 0px var(--app-loading-overlay);
     height          : 100%;
     width           : 100%;
     border-radius   : 0px;
-    border          :0px;
+    border          : 0px;
     display         : flex; /* Add flexbox */
     justify-content : center; /* Center horizontally */
     align-items     : center; /* Center vertically */

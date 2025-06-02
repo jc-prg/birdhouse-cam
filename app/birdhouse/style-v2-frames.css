@@ -3,8 +3,8 @@
 */
 
 :root {
-    --frame-shadow: rgba(0, 0, 0, 0.4);
-    --frame-border: white;
+    --frames-shadow: rgba(0, 0, 0, 0.4);
+    --frames-border: white;
 }
 
 /* HEADER ELEMENTS -------------------------------- */
@@ -18,7 +18,7 @@
   color		           : gray;
   z-index		       : 93;
   text-align           : right;
-  font-family          : sans-serif;
+  font-family          : var(--app-default-font);
   font-size            : 10px;
   vertical-align       : middle;
 }
@@ -28,7 +28,7 @@
   top                   :  30px;
   right                 : 200px;
   z-index               : 100;
-  font-family           : sans-serif;
+  font-family           : var(--app-default-font);
 }
 
 .header_icon {
