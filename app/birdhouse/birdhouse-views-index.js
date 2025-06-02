@@ -191,7 +191,7 @@ index_template["overlay"] = `
                     <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class="streams_index_second <!--CAM2_LOWRES_POS-->">
                 </a>
 
-                <div class="fullscreen-button-container">
+                <div class="fullscreen-button-container <!--CAM2_LOWRES_POS-->">
                     <button data-title="Full screen (f)" class="fullscreen-button" id="fullscreen-button-index" onclick="birdhouse_imageFullscreenToggle('stream_<!--CAM1_ID-->');">
                        <svg>
                           <use id="fs_show" href="#fullscreen"></use>
@@ -233,7 +233,7 @@ index_template["overlay_admin"] = `
                     <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class="streams_index_second <!--CAM2_LOWRES_POS-->">
                 </a>
 
-                <div class="fullscreen-button-container">
+                <div class="fullscreen-button-container <!--CAM2_LOWRES_POS-->">
                     <button data-title="Full screen (f)" class="fullscreen-button" id="fullscreen-button-index" onclick="birdhouse_imageFullscreenToggle('stream_<!--CAM1_ID-->');">
                        <svg>
                           <use id="fs_show" href="#fullscreen"></use>

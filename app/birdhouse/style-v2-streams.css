@@ -89,6 +89,11 @@
     padding-right: 5px;
 }
 
+.fullscreen-button-container.lower_right {
+    top: 0px;
+    right: 0px;
+}
+
 #fullscreen-button-index {
     object-fit: contain;
     opacity: 30%;
