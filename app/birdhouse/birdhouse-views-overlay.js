@@ -119,12 +119,13 @@ function stopFloatingLowres() {
     closeBtn        = document.getElementById('closeBtn');
     closeBtn.click();
 
-    app_floating_lowres = false;
+    app_floating_lowres      = false;
     floatingImage.src        = "";
     floatingImage.removeAttribute('src');
     floatingWindow.innerHTML = "";
-    floatingWindow           = "";
+    //floatingWindow           = "";
     floatingImage            = "";
+    initialized              = false;
 }
 
 /*

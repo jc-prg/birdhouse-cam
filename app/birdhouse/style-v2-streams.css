@@ -80,6 +80,20 @@
 
 
 /* VIDEO STREAMS ---------------------------------- */
+
+#fullscreen-button-index {
+    position: absolute;
+    bottom: 10px;
+    right: 5px;
+    object-fit: contain;
+    opacity: 30%;
+}
+#fullscreen-button-index:hover {
+    opacity: 100%;
+}
+
+
+/* VIDEO STREAMS ---------------------------------- */
 /* configuration of streaming HTML elements */
 
 .livestream_main_container {
@@ -132,7 +146,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     overflow: hidden;
     background-color: white;
-    z-index: 9999;
+    z-index: 8000;
     display: none;
     flex-direction: column;
 }

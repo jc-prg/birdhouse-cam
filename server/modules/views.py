@@ -2251,11 +2251,6 @@ class BirdhouseViewDiary(BirdhouseClass):
             self.logging.debug(str(self.brood_data["data"]))
             self.last_update = time.time()
 
-        #if self.brood_data["date"] != today:
-        #    self.brood_data["date"] = today
-        #    self.brood_data["data"] = self.get_active_stage(all_data)
-        #    self.logging.debug(str(self.brood_data["data"]))
-
         return self.brood_data["data"]
 
     def edit_milestone(self, date, title, entry):

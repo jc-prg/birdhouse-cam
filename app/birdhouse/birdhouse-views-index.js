@@ -161,13 +161,33 @@ index_template["overlay_admin"] = `
                     <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class="streams_index_second <!--CAM2_LOWRES_POS-->">
                 </a>
 
+                <button data-title="Full screen (f)" class="fullscreen-button" id="fullscreen-button-index" onclick="birdhouse_imageFullscreenToggle('stream_<!--CAM1_ID-->');">
+                   <svg>
+                      <use id="fs_show" href="#fullscreen"></use>
+                      <use id="fs_hide" href="#fullscreen-exit" class="hidden"></use>
+                   </svg>
+                </button>
+
             </div>
         </div>
         <!--ACTIVE_BROOD-->
         &nbsp;<br/>
         <!--ADMIN-->
         </center>
+
     </div>
+
+  <svg style="display: none">
+    <defs>
+      <symbol id="fullscreen" viewBox="0 0 24 24">
+      <path d="M14.016 5.016h4.969v4.969h-1.969v-3h-3v-1.969zM17.016 17.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 9.984v-4.969h4.969v1.969h-3v3h-1.969zM6.984 14.016v3h3v1.969h-4.969v-4.969h1.969z"></path>
+      </symbol>
+
+      <symbol id="fullscreen-exit" viewBox="0 0 24 24">
+      <path d="M15.984 8.016h3v1.969h-4.969v-4.969h1.969v3zM14.016 18.984v-4.969h4.969v1.969h-3v3h-1.969zM8.016 8.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 15.984v-1.969h4.969v4.969h-1.969v-3h-3z"></path>
+      </symbol>
+    </defs>
+  </svg>
 `
 
 //-------------------------------------------------

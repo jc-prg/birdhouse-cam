@@ -21,13 +21,12 @@ var videoplayer_template = `
       </video>
 
       <div class="video-controls hidden" id="video-controls">
-      <!--
         <div class="video-progress">
           <progress id="progress-bar" value="0" min="0"></progress>
           <input class="seek" id="seek" value="0" min="0" type="range" step="1">
           <div class="seek-tooltip" id="seek-tooltip">00:00</div>
         </div>
-      -->
+
         <div class="bottom-controls">
           <div class="left-controls">
             <button data-title="Play (k)" id="play">

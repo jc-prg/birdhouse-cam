@@ -78,7 +78,7 @@ var birdhouse_js = [
     "birdhouse-weather.js",
     "birdhouse-diary.js",
     "video-player-template.js",
-    //"video-player.js",
+    "video-player.js",
 ];
 
 var birdhouse_css = [
@@ -157,9 +157,12 @@ function birdhousePrint_page(page="INDEX", param="") {
         birdhousePrint_load(page="INDEX", app_active_cam, app_active_date, lang(page));
         }
 
+    console.log("--> check lowres: " + app_active_page + " / lowres: " + app_floating_lowres);
+
     // check if floating lowres to be opened or closed
-    if (app_pages_lowres.includes(app_active_page) && !app_floating_lowres) {
+    if (app_pages_lowres.includes(app_active_page) && app_floating_lowres == false) {
         startFloatingLowres(app_active_cam);
+        setTimeout(function(){repositionFloatingLowRes();},500);
         }
     else if (!app_pages_lowres.includes(app_active_page) && app_floating_lowres) {
         stopFloatingLowres();

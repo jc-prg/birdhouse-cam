@@ -113,6 +113,51 @@ function birdhouse_imageOverlayToggle(overlay_id, select="") {
         }
     }
 
+/*
+* open image in fullscreen mode
+*
+* @param (string) imageId: id of image or even better its container to be opened in fullscreen mode
+*/
+function birdhouse_imageFullscreenToggle(imageId) {
+
+    const img = document.getElementById(imageId);
+
+    if (!document.fullscreenElement) {
+        // Create a temporary container to request fullscreen
+        const container = document.createElement('div');
+        container.style.backgroundColor = 'black';
+        container.style.width = '100%';
+        container.style.height = '100%';
+        container.style.display = 'flex';
+        container.style.justifyContent = 'center';
+        container.style.alignItems = 'center';
+        container.style.zIndex = '9000';
+
+        // Clone the image to avoid changing layout
+        const fullscreenImg = img.cloneNode();
+        fullscreenImg.style.width = '100vw';
+        fullscreenImg.style.height = '100vh';
+        fullscreenImg.style.maxWidth = '100%';
+        fullscreenImg.style.maxHeight = '100%';
+        fullscreenImg.style.objectFit = 'contain';
+        fullscreenImg.style.cursor = 'zoom-out';
+        fullscreenImg.style.border = "0px";
+        fullscreenImg.onclick = () => document.exitFullscreen();
+
+        container.appendChild(fullscreenImg);
+        document.body.appendChild(container);
+
+        container.requestFullscreen().then(() => {
+            container.setAttribute('id', 'fullscreen_container');
+        }).catch((err) => {
+            console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+        });
+
+    } else {
+        document.exitFullscreen();
+    }
+}
+
 /**
 * create overlay with playable video
 *
