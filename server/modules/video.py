@@ -272,6 +272,9 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             bool: recording to be stopped due to maximum length
         """
         self.thread_prio_process(start=False, pid=self.id)
+        if not "stamp_start" in self.info:
+            self.info["stamp_start"] = self.config.local_time().timestamp()
+
         if self.info["status"] == "recording":
             max_time = float(self.info["stamp_start"] + self.max_length)
             if max_time < float(self.config.local_time().timestamp()):

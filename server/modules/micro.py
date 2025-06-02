@@ -415,6 +415,10 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.last_active = time.time()
         self.restart_stream = False
 
+        if not self.record_start_time:
+            self.record_start_time = time.time()
+            self.logging.error("Audio recording start time not defined (any more), couldn't calculate duration.")
+
         duration = time.time() - self.record_start_time
         samples = len(self.recording_frames) * self.CHUNK
         sample_rate = round(samples / duration, 1)
@@ -457,13 +461,20 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.config.record_audio_info["sample_rate_real"] = sample_rate
         self.logging.debug(str(self.config.record_audio_info))
 
-        wf = wave.open(self.recording_filename, 'wb')
-        wf.setnchannels(self.CHANNELS)
-        wf.setsampwidth(self.audio.get_sample_size(self.FORMAT))
-        #wf.setframerate(self.RATE)
-        wf.setframerate(sample_rate)
-        wf.writeframes(b''.join(self.recording_frames))
-        wf.close()
+        try:
+            wf = wave.open(self.recording_filename, 'wb')
+            wf.setnchannels(self.CHANNELS)
+            wf.setsampwidth(self.audio.get_sample_size(self.FORMAT))
+            #wf.setframerate(self.RATE)
+            wf.setframerate(sample_rate)
+            wf.writeframes(b''.join(self.recording_frames))
+            wf.close()
+        except Exception as e:
+            self.logging.error("Error writing audio file: " + str(e))
+            self.recording_processing = False
+            self.recording_frames = []
+            self.recording_filename = []
+            self.config.record_audio_info["status"] = "error"
 
         self.config.record_audio_info["length"] = len(self.recording_frames) * self.CHUNK / self.BITS_PER_SAMPLE / float(self.RATE)
         self.config.record_audio_info["status"] = "finished"
