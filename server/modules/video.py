@@ -305,7 +305,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
 
             self.info["image_size"] = self.image_size
 
-            if float(self.info["length"]) > 1:
+            if "length" in self.info and float(self.info["length"]) > 1:
                 self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
             else:
                 self.info["framerate"] = 0
