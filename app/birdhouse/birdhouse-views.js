@@ -86,13 +86,8 @@ function birdhouse_INDEX(data, camera, object=false) {
         replace_tags["CAM1_ID"]         = active_camera;
         replace_tags["ACTIVE_BROOD"]    = diary_activeBrood();
 
-console.error(app_camera_source["object_"+active_cam["name"]]);
-console.error(app_camera_source[active_cam["name"]]);
-console.error("--");
-
+        // ???? should be solved earlier, is just a workaround :-(
         if (app_camera_source[active_cam["name"]].indexOf("http:") > -1) {stream_server = "";};
-
-
 
         if (object) { replace_tags["CAM1_URL"]        = stream_server + app_camera_source["object_"+active_cam["name"]]; }
         else        { replace_tags["CAM1_URL"]        = stream_server + app_camera_source[active_cam["name"]]; }
