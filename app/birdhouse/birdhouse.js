@@ -117,7 +117,7 @@ function birdhouse_modules_loaded() {
     else                                            { return false; }
 }
 
-setTimeout(function(){appFW.appError = "error_log2";}, 2000);
+setTimeout(function(){ appApiLogging = "error_log2"; }, 2000);
 
 /*
 * print a specific page, uses existing vars app_active_cam and app_active_date
