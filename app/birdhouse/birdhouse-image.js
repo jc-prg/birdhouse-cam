@@ -846,8 +846,8 @@ function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false, sourc
     var stream_link   = stream_url;
     var stream_id_ext = camera;
 
-    if (stream_link.indexOf("http:") > -1 || stream_link.indexOf("https:") > -1) {}
-    else { stream_link = stream_server + stream_link; }
+    if (stream_link.indexOf("http:") > -1 || stream_link.indexOf("https:") > -1)    {}
+    else                                                                            { stream_link = stream_server + stream_link; }
 
     if (new_uid)  {
         app_unique_stream_id += 1;
@@ -866,7 +866,10 @@ function birdhouse_StreamURL(camera, stream_url, stream_id, new_uid=false, sourc
     console.debug("NEW Stream ID: " + stream_id_ext + " (" + source + ")");
 
 	stream_link = stream_link.replaceAll("//", '/');
-	stream_link = stream_link.replace(":/","://");
+	stream_link = stream_link.replaceAll(":/","://");
+
+console.error(stream_link + " | " + stream_url);
+
     return [stream_link, stream_id_ext];
     }
 
