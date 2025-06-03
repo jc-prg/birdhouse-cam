@@ -4,6 +4,17 @@
 // main functions 
 //--------------------------------------
 
+window.onerror = function (message, source, lineno, colno, error) {
+    alert(JSON.stringify({
+                message,
+                source,
+                lineno,
+                colno,
+                stack: error?.stack
+            }));
+}
+
+
 var color_code = {
 	"star"    : "lime",
 	"detect"  : "DodgerBlue",
