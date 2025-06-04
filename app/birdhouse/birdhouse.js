@@ -438,8 +438,10 @@ function birdhouseSwitchCam() {
 	birdhousePrint_load(view=app_active_page, camera=app_available_cameras[next_cam], date=app_active_date);
 
 	if (app_floating_lowres) {
-	    startFloatingLowres(app_active_cam);
-	    repositionFloatingLowres();
+ 	    setTimeout(function(){
+            startFloatingLowres(app_active_cam);
+            repositionFloatingLowres();
+            }, 1000);
 	    }
 }
 
