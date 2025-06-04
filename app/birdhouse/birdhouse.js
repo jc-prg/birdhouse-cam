@@ -395,6 +395,7 @@ function birdhouseHeaderFunctions() {
 	var download_info   = "<img class='header_icon' src='birdhouse/img/download-white.png' onclick='archivDownload_requestList();' style='position:relative;right:22px;top:-2px;'>";
 	download_info       = "<text class='download_label' id='collect4download_amount2' onclick='archivDownload_requestList();'>0</text>" + download_info;
 	var switch_cam      = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();' style='position:relative;top:-4px;'>";
+	switch_cam         += "<div id='selected_cam' style='display:none;'>"+app_active_cam+"</div>";
 	var reload_view     = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
 	var active_cam      = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active_cam.toUpperCase()+"</text>";
 
@@ -424,6 +425,9 @@ function birdhouseHeaderFunctions() {
 * toggle between available cameras and trigger view reload
 */
 function birdhouseSwitchCam() {
+    var selected_cam = "";
+    selected_cam = ("selected_cam");
+    if (selected_cam == "") { selected_cam = app_active_cam};
 
 	var current_cam = 0;
 	for (i=0;i<app_available_cameras.length;i++) {
@@ -435,6 +439,7 @@ function birdhouseSwitchCam() {
 	console.log("---> birdhouseSwitchCam: "+app_active_cam+"->"+app_available_cameras[next_cam]);
 
 	app_active_cam = app_available_cameras[next_cam];
+    setTextById("selected_cam", app_active_cam);
 	birdhousePrint_load(view=app_active_page, camera=app_available_cameras[next_cam], date=app_active_date);
 
 	if (app_floating_lowres) {
