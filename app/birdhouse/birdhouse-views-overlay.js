@@ -34,6 +34,8 @@ var app_floating_stream = "";
 */
 function startFloatingLowres(active_cam) {
 
+    if (app_floating_lowres) { stopFloatingLowres(); }
+
 	var cameras       = app_data["SETTINGS"]["devices"]["cameras"];
     var stream_url = RESTurl + cameras[app_active_cam]["video"]["stream_lowres"];
     var timestamp = new Date().getTime();
