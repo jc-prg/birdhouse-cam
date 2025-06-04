@@ -403,6 +403,9 @@ function diary_activeBrood() {
         if (data["days_since_start"] == 0) {
             html += lang("ACTIVE_BROOD_TODAY", [bird_lang(details["bird"]), stage_definition[data["stage"]], data["days_since_start"]]);
             }
+        else if (data["days_since_start"] == 1) {
+            html += lang("ACTIVE_BROOD_1DAY", [bird_lang(details["bird"]), stage_definition[data["stage"]], data["days_since_start"]]);
+            }
         else {
             html += lang("ACTIVE_BROOD", [bird_lang(details["bird"]), stage_definition[data["stage"]], data["days_since_start"]]);
             }
