@@ -133,7 +133,7 @@ function stopFloatingLowres() {
 /*
 * reposition the floating window to its initial position, e.g.m when resizing the browser window
 */
-function repositionFloatingLowRes() {
+function repositionFloatingLowres() {
     floatingWindow  = document.getElementById('floatingWindow');
     floatingImage   = document.getElementById('floatingImage');
 

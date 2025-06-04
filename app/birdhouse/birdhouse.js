@@ -163,7 +163,7 @@ function birdhousePrint_page(page="INDEX", param="") {
     // check if floating lowres to be opened or closed
     if (app_pages_lowres.includes(app_active_page) && app_floating_lowres == false) {
         startFloatingLowres(app_active_cam);
-        setTimeout(function(){repositionFloatingLowRes();},500);
+        setTimeout(function(){repositionFloatingLowres();},500);
         }
     else if (!app_pages_lowres.includes(app_active_page) && app_floating_lowres) {
         stopFloatingLowres();
@@ -440,7 +440,7 @@ function birdhouseSwitchCam() {
 	if (app_floating_lowres) {
  	    setTimeout(function(){
             startFloatingLowres(app_active_cam);
-            repositionFloatingLowRes();
+            //repositionFloatingLowres();
             }, 1000);
 	    }
 }

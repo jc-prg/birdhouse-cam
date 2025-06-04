@@ -189,7 +189,7 @@ function app_theme_changed(theme) {
 function app_screen_size_changed(width, height) {
 	console.log("Changed screen size to " + width + "x" + height);
 	if (app_floating_lowres) {
-        repositionFloatingLowRes();
+        repositionFloatingLowres();
         }
 	}
 
