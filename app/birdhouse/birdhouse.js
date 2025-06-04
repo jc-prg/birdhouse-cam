@@ -440,7 +440,7 @@ function birdhouseSwitchCam() {
 	if (app_floating_lowres) {
  	    setTimeout(function(){
             startFloatingLowres(app_active_cam);
-            repositionFloatingLowres();
+            repositionFloatingLowRes();
             }, 1000);
 	    }
 }
