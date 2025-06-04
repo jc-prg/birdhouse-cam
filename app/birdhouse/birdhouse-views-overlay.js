@@ -126,6 +126,8 @@ function stopFloatingLowres() {
     //floatingWindow           = "";
     floatingImage            = "";
     initialized              = false;
+
+    window.stop();
 }
 
 /*

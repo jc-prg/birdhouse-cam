@@ -461,8 +461,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             "last-answer", "favorit", "recycle", "update-views", "update-views-complete",
                             "archive-object-detection", "archive-remove-day", "archive-remove-list", "recreate-image-config",
                             "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "WEATHER", "relay-on", "relay-off",
-                            "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS", "python-pkg",
-                            "STATISTICS", "reconnect-microphone", "edit-labels", "delete-labels",
+                            "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS", "SETTINGS_STATISTICS", "STATISTICS",
+                            "python-pkg", "reconnect-microphone", "edit-labels", "delete-labels",
                             "DIARY", "diary-edit-milestone", "diary-delete-milestone", "diary-edit-brood", "diary-delete-brood",
                             "delete-short-video", "delete-thumb-video"]
 

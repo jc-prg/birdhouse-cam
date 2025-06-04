@@ -177,6 +177,7 @@
 .floating-header .close-btn {
     cursor              : pointer;
     font-weight         : bold;
+    color               : var(app-frame-text);
 }
 
 .floating-image-container {

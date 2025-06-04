@@ -240,7 +240,6 @@ input[type=range] {
   cursor: pointer;
   //display: block;
   position: relative;
-  top: -20px;
 }
 
 input[type=range]:focus {
