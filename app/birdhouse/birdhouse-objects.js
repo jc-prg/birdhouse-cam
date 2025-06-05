@@ -57,7 +57,7 @@ function birdhouse_OBJECTS( data ) {
         var entry_information = "";
 
         if (value["detections"]["favorite"] > 0 ) {
-            var onclick = "birdhousePrint_load(\"FAVORITES\",\""+app_active_cam+"\", \"all-dates\", \""+key+"\");";
+            var onclick = "birdhousePrint_load(\"FAVORITES\",\""+app_active.cam+"\", \"all-dates\", \""+key+"\");";
             favorite_label += "<div class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + lang("FAVORITES") + "&nbsp;(" + value["detections"]["favorite"] + ")&nbsp;&nbsp;</div>";
             }
         else  { value["detections"]["favorite"] = 0; }
@@ -102,7 +102,7 @@ function birdhouse_OBJECTS( data ) {
         }
 
 	birdhouse_frameHeader(title);
-	setTextById(app_frame_content, html);
+	setTextById(app_frame.content, html);
     }
 
 /*

@@ -16,11 +16,11 @@ function birdhouse_WEATHER( data ) {
 	var weather	        = data["WEATHER"];
 
     if (settings["localization"]["weather_active"] == false) {
-        setTextById(app_frame_content, "&nbsp;<br/><center>" + lang("NO_WEATHER_CHANGE_SETTINGS") + "</center><br/>&nbsp;");
+        setTextById(app_frame.content, "&nbsp;<br/><center>" + lang("NO_WEATHER_CHANGE_SETTINGS") + "</center><br/>&nbsp;");
         return;
     }
     if (!weather["forecast"] || !weather["current"] || !weather["forecast"]["today"] || weather["info_status"]["running"] == "error") {
-        setTextById(app_frame_content, "&nbsp;<br/><center><font color='red'><b>" + lang("WEATHER_DATA_ERROR") + "</b></font></center><br/>&nbsp;");
+        setTextById(app_frame.content, "&nbsp;<br/><center><font color='red'><b>" + lang("WEATHER_DATA_ERROR") + "</b></font></center><br/>&nbsp;");
         console.warn("Error with weather data!")
         console.warn(weather);
         return;
@@ -163,8 +163,8 @@ function birdhouse_WEATHER( data ) {
 
     var title = "<div id='status_error_WEATHER' style='float:left'><div id='black'></div></div>";
     title += "<center><h2>" + lang("WEATHER") + "&nbsp;&nbsp;&nbsp;&nbsp;</h2></center>";
-    setTextById(app_frame_header, title);
-	setTextById(app_frame_content, html_weather);
+    setTextById(app_frame.header, title);
+	setTextById(app_frame.content, html_weather);
 }
 
 /*

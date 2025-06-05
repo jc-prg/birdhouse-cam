@@ -62,7 +62,7 @@ function birdhouse_loginDialog(login_type="default") {
 */
 function birdhouse_loginCheck(pwd, login_type="") {
     console.log("Check password: " + pwd + " / " + login_type);
-    if (login_type == "INDEX" && app_active_page == "INDEX") { login_type == ""; }
+    if (login_type == "INDEX" && app_active.page == "INDEX") { login_type == ""; }
     birdhouse_apiRequest("POST", ["check-pwd", pwd, login_type], "", birdhouse_loginReturn, "", "birdhouse_loginCheck");
 }
 
@@ -105,7 +105,7 @@ function birdhouse_logout() {
 */
 function birdhouse_logoutMsg() {
 
-    birdhousePrint_load("INDEX", app_active_cam);
+    birdhousePrint_load("INDEX", app_active.cam);
     birdhouse_settings.toggle(true);
     appSettings.hide();
     birdhouse_adminAnswer(false);
@@ -453,7 +453,7 @@ function birdhouse_archiveDayDelete_exec(date_stamp) {
 */
 function birdhouse_archiveDayDelete_done(data) {
     window.setTimeout(function(){
-        app_active_page='ARCHIVE';
+        app_active.page='ARCHIVE';
         birdhouseReloadView();
         appMsg.alert(lang("DONE") + "<br/>" + lang("MIGHT_TAKE_A_WHILE"));
         },5000);

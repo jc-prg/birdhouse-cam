@@ -47,11 +47,11 @@ function birdhouse_app_settings (name="Settings") {
     */
     this.create = function (type="SETTINGS") {
         this.setting_type = type;
-        app_active_page = type;
+        app_active.page = type;
         birdhouse_genericApiRequest("GET", ["status"], birdhouseStatus_print);
         if (app_data["STATUS"]["server"]["initial_setup"]) {
             html = "<center><br/>&nbsp;&nbsp;<br/><img src='"+app_loading_image+"' width='250'><br/>&nbsp;<br/>"+lang("PLEASE_WAIT")+"<br/>&nbsp;&nbsp;<br/>&nbsp;&nbsp;<br/></center>";
-            setTextById(app_frame_content, html);
+            setTextById(app_frame.content, html);
             }
       	setTimeout(function(){
       	    birdhouse_settings.create_exec(type);
@@ -137,15 +137,15 @@ function birdhouse_app_settings (name="Settings") {
             }
 
         if (this.setting_type == "INFO_ONLY") {
-            setTextById(app_frame_header, "<center><h2>" + lang("INFORMATION")) + "</h2></center>";
+            setTextById(app_frame.header, "<center><h2>" + lang("INFORMATION")) + "</h2></center>";
             setTextById("frame2", html)
             }
         else if (this.setting_type == "SETTINGS" || this.setting_type == "PROCESSING") {
             html += "<br/>&nbsp<br/>";
             html += this.settings();
 
-            setTextById(app_frame_header, "<center><h2>" + lang("SETTINGS")) + "</h2></center>";
-            setTextById(app_frame_content, html);
+            setTextById(app_frame.header, "<center><h2>" + lang("SETTINGS")) + "</h2></center>";
+            setTextById(app_frame.content, html);
             }
 		}
 
@@ -165,14 +165,14 @@ function birdhouse_app_settings (name="Settings") {
             this.set.clear_content_frames();
             this.set.write(1, lang("SETTINGS"), this.settings());
             this.set.show_entry(-1);
-            app_active_page = "SETTINGS_SERVER";
+            app_active.page = "SETTINGS_SERVER";
             }
         else if (type == "SETTINGS_INFORMATION") {
             this.setting_type = type;
             this.set.write(1, lang("INFORMATION"), this.information());
             this.set.write(2, "", "");
             this.set.show_entry(2);
-            app_active_page = "SETTINGS_INFORMATION";
+            app_active.page = "SETTINGS_INFORMATION";
             }
         else if (default_settings.includes(type)) {
             this.setting_type = type;
@@ -500,11 +500,11 @@ function birdhouse_app_settings (name="Settings") {
 	    var html_entry = "";
         html_entry = this.tab.start();
         html_entry += this.tab.row("Reload Interval:", app_reload_interval + "s");
-        html_entry += this.tab.row("Active Camera:&nbsp;", app_active_cam);
+        html_entry += this.tab.row("Active Camera:&nbsp;", app_active.cam);
         html_entry += this.tab.row("Active Client Streams:&nbsp;", "<font id='show_stream_count_client'>0 Streams</font>");
-        html_entry += this.tab.row("Available Cameras:&nbsp;", app_available_cameras.length);
-        html_entry += this.tab.row("Active Page:&nbsp;", app_active_page);
-        html_entry += this.tab.row("Active Date:&nbsp;", app_active_date);
+        html_entry += this.tab.row("Available Cameras:&nbsp;", app_available.cameras.length);
+        html_entry += this.tab.row("Active Page:&nbsp;", app_active.page);
+        html_entry += this.tab.row("Active Date:&nbsp;", app_active.date);
         html_entry += this.tab.row("Unique stream URL:&nbsp;", app_unique_stream_url);
         html_entry += this.tab.row("Unique stream ID:&nbsp;",	app_unique_stream_id);
         html_entry += this.tab.end();

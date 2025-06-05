@@ -90,8 +90,8 @@ function birdhouse_DIARY(data) {
         html = calendar;
         }
 
-    setTextById(app_frame_header, "<center><h2>" + lang("BIRDHOUSE") + " " + lang("DIARY") + "</h2></center>");
-    setTextById(app_frame_content, html);
+    setTextById(app_frame.header, "<center><h2>" + lang("BIRDHOUSE") + " " + lang("DIARY") + "</h2></center>");
+    setTextById(app_frame.content, html);
 
     calendarContainer = document.getElementById("calendarContainer");
     diary_renderCalendars();
@@ -527,7 +527,7 @@ function diary_createCalendar(year, month) {
                     icon.title      = lang("ARCHIVE");
                     icon.innerHTML  = image_archive;
                     icon.onclick = () => {
-                        birdhousePrint_load("TODAY", app_active_cam, dateKey);
+                        birdhousePrint_load("TODAY", app_active.cam, dateKey);
                         };
                     dayEntry.appendChild(icon);
                     }
@@ -537,7 +537,7 @@ function diary_createCalendar(year, month) {
                     icon.title      = lang("VIDEOS");
                     icon.innerHTML  = image_video;
                     icon.onclick = () => {
-                        birdhousePrint_load("VIDEOS", app_active_cam, dateKey);    // !!!!!! add parameters to directly open the right month (e.g. using toggles);
+                        birdhousePrint_load("VIDEOS", app_active.cam, dateKey);    // !!!!!! add parameters to directly open the right month (e.g. using toggles);
                         };
                     dayEntry.appendChild(icon);
                     }

@@ -433,7 +433,7 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
     console.debug("Image: " + title + " - " + entry_id);
     console.debug(entry);
 
-	var image_data        = birdhouse_ImageDisplayData(title, entry_id, entry, app_active_page, admin, video_short);
+	var image_data        = birdhouse_ImageDisplayData(title, entry_id, entry, app_active.page, admin, video_short);
     var lowres            = image_data["lowres"];
     var hires             = image_data["hires"];
     var description       = image_data["description"];
@@ -469,7 +469,7 @@ function birdhouse_Image(title, entry_id, entry, header_open=true, admin=false, 
 
 		var onclick_star    = "birdhouse_setFavorite(index=\""+img_id+"\",status=document.getElementById(\"s_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\",img_id=\""+img_id2+"\");";
 		var onclick_recycle = "birdhouse_setRecycle(index=\""+img_id+"\",status=document.getElementById(\"d_"+img_id2+"_value\").innerHTML,lowres_file=\""+img_name+"\",img_id=\""+img_id2+"\");";
-		if (app_active_page == "TODAY" || app_active_page == "TODAY_COMPLETE") {
+		if (app_active.page == "TODAY" || app_active.page == "TODAY_COMPLETE") {
 		    onclick_recycle    += "birdhouse_recycleRange(group_id=\""+group_id+"\", index=\""+img_id+"\", status=document.getElementById(\"d_"+img_id2+"_value\").innerHTML, lowres_file=\""+img_name+"\")";
 		    }
 		star                = "<div id='s_"+img_id2+"_value' style='display:none;'>"+img_star_r+"</div>   <img class='star_img'    id='s_"+img_id2+"' src='"+img_dir+"star"+img_star+".png'       onclick='"+onclick_star+"'/>";
@@ -649,7 +649,7 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
                 });
 
             if (app_admin_allowed) {
-                var cmd_edit_labels = "onclick=birdhouse_labels_edit('"+app_active_date+"','"+entry_id+"','"+app_active_cam+"','');";
+                var cmd_edit_labels = "onclick=birdhouse_labels_edit('"+app_active.date+"','"+entry_id+"','"+app_active.cam+"','');";
                 image_data["description_hires"] += "[div class=detection_label style=cursor:default "+cmd_edit_labels+"][img src='/birdhouse/img/edit.png' style='max-height:10px;max-width:10px;'][/div]";
                 }
 
@@ -679,7 +679,7 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
         image_data["same_img_size"] = true;
         }
     else if (entry["type"] == "addon") {
-		var [lowres, stream_uid]    = birdhouse_StreamURL(app_active_cam, entry["stream"], "stream_list_5", true, "THUMBNAIL #1");
+		var [lowres, stream_uid]    = birdhouse_StreamURL(app_active.cam, entry["stream"], "stream_list_5", true, "THUMBNAIL #1");
 		image_data["lowres"]        = lowres;
 		image_data["hires_stream"]  = entry["stream_hires"];
 		image_data["onclick"]       = "birdhousePrint_load(view=\"INDEX\", camera = \""+entry["camera"]+"\");";
@@ -803,7 +803,7 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
 		entry["lowres"]           = image_file;
 
 		if (admin) {
-			var cmd_edit = "birdhousePrint_load(view=\"VIDEO_DETAIL\", camera=\""+app_active_cam+"\", date=\""+entry["date_start"]+"\");"
+			var cmd_edit = "birdhousePrint_load(view=\"VIDEO_DETAIL\", camera=\""+app_active.cam+"\", date=\""+entry["date_start"]+"\");"
 			image_data["description"] += "<br/><a onclick='"+cmd_edit+"' style='cursor:pointer;'>"+lang("EDIT")+"</a>"+note;
             }
 
@@ -815,7 +815,7 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
         }
 
     // further image properties -> img_id2
-    if (entry["type"] == "addon")                                           { image_data["img_id2"] = "stream_lowres_" + app_active_cam; }
+    if (entry["type"] == "addon")                                           { image_data["img_id2"] = "stream_lowres_" + app_active.cam; }
     else if (entry["type"] == "detection")                                  { image_data["img_id2"] = "stream_detect_" + entry["id"]; }
     else                                                                    { image_data["img_id2"] += entry["directory"] + entry["lowres"];
                                                                               image_data["img_id2"] = image_data["img_id2"].replaceAll( "/", "_"); }
