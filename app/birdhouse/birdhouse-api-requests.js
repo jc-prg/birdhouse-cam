@@ -73,14 +73,17 @@ function birdhouse_loginCheck(pwd, login_type="") {
 */
 function birdhouse_loginReturn(data) {
     if (data["check-pwd"]) {
-        birdhousePrint_load();
         birdhouse_adminAnswer(true);
         app_admin_allowed = true;
         app_session_id = data["session-id"];
         appFW.appList = app_session_id+"/status";
         appMsg.alert(lang("LOGIN_SUCCESS"));
+
+        birdhouseReloadView();
         setTimeout(function(){ appMsg.hide(); }, 2000);
-        if (data["return-page"] != "") { birdhousePrint_page(data["return-page"].toUpperCase()); }
+
+        //birdhousePrint_load();
+        //if (data["return-page"] != "") { birdhousePrint_page(data["return-page"].toUpperCase()); }
     }
     else {
         appMsg.alert(lang("LOGIN_FAILED"));

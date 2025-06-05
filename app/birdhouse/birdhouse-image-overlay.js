@@ -188,20 +188,22 @@ document.addEventListener('webkitfullscreenchange', () => {
 */
 function birdhouse_exitFullscreen() {
 
-    setTimeout(function(){
-        // Standard Fullscreen Exit
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        }
-        // iOS Safari fullscreen exit
-        else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        }
+    if (document.getElementById('fullscreen_container')) {
+        setTimeout(function(){
+            // Standard Fullscreen Exit
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+            // iOS Safari fullscreen exit
+            else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
 
-        // Clean up fullscreen container
-        const container = document.getElementById('fullscreen_container');
-        if (container) container.remove();
-        }, 500);
+            // Clean up fullscreen container
+            const container = document.getElementById('fullscreen_container');
+            if (container) container.remove();
+            }, 500);
+        }
     }
 
 /**

@@ -101,7 +101,7 @@ function formatTime(timeInSeconds) {
   if (!timeInSeconds) { timeInSeconds = 0; }
 
   const result       = new Date(timeInSeconds * 1000).toISOString().substr(11, 12);
-  const totalseconds = (Math.round(timeInSeconds * 10)/10)
+  const totalseconds = (Math.round(timeInSeconds * 100)/100)
   return {
     minutes: result.substr(3, 2),
     seconds: result.substr(6, 2),
@@ -134,6 +134,7 @@ function updateTimeElapsed() {
 // the current playback is by updating the progress bar
 function updateProgress() {
   seek.value = Math.floor(video.currentTime*100/video.duration);
+  seek.value = Math.round(video.currentTime*100/video.duration*100)/100;
   progressBar.value = Math.round(video.currentTime/video.duration*100)/100;
 }
 
@@ -143,8 +144,8 @@ function updateProgress() {
 // the progress bar is clicked at that point
 function updateSeekTooltip(event) {
   const skipTo = Math.round(
-    (event.offsetX / event.target.clientWidth) * video.duration
-  );
+    (event.offsetX / event.target.clientWidth) * video.duration * 100
+  )/100;
 
   const t = formatTime(skipTo);
   seekTooltip.textContent = `${t.minutes}:${t.seconds}`;

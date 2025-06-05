@@ -52,6 +52,7 @@ var app_pages_settings = ["SETTINGS", "SETTINGS_CAMERAS", "SETTINGS_IMAGE", "SET
 var app_pages_admin    = ["SETTINGS", "SETTINGS_CAMERAS", "SETTINGS_IMAGE", "SETTINGS_DEVICES", "SETTINGS_INFORMATION", "SETTINGS_STATISTICS", "SETTINGS_SERVER", "TODAY_COMPLETE"];
 var app_pages_other    = ["LOGIN", "LOGOUT"];
 var app_pages_lowres   = ["DIARY", "ARCHIVE", "VIDEOS", "OBJECTS", "WEATHER", "FAVORITES"];
+var app_pages_cam_id   = ["INDEX", "TODAY", "ARCHIVE", "TODAY_COMPLETE"];
 
 /*
 * additional scripts and style sheet files to be loaded
@@ -124,6 +125,7 @@ function birdhouse_modules_loaded() {
 *
 * @param (string) page: available: INDEX, TODAY, TODAY_COMPLETE, ARCHIVE, OBJECT, SETTINGS, FAVORITES, VIDEOS, INFO, ...
 */
+//function birdhousePrint_page(page="INDEX", camera="", date="", param="") {
 function birdhousePrint_page(page="INDEX", param="") {
 	window.scrollTo(0,0);
     for (let camera in app_data["SETTINGS"]["devices"]["cameras"]) { birdhouseDevices_cameraSettingsLoad(camera, false); }
@@ -159,15 +161,6 @@ function birdhousePrint_page(page="INDEX", param="") {
         }
 
     console.log("--> check lowres: " + app_active_page + " / lowres: " + app_floating_lowres);
-
-    // check if floating lowres to be opened or closed
-    if (app_pages_lowres.includes(app_active_page) && app_floating_lowres == false) {
-        startFloatingLowres(app_active_cam);
-        //setTimeout(function(){repositionFloatingLowres();},500);
-        }
-    else if (!app_pages_lowres.includes(app_active_page) && app_floating_lowres) {
-        stopFloatingLowres();
-        }
     }
 
 /*
@@ -176,9 +169,8 @@ function birdhousePrint_page(page="INDEX", param="") {
 * @param (string) view: view to be requested; available: INDEX, TODAY, TODAY_COMPLETE, ARCHIVE, OBJECT, FAVORITES, VIDEOS, VIDEO_DETAIL, SETTINGS, SETTINGS_SERVER, ...
 * @param (string) camera: camera id of active camera
 * @param (string) data: active date, to be combined with view TODAY in format YYYYMMDD
-* @param (string) label: active label, will simulate a click on a object/bird label when loaded the complete view
 */
-function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
+function birdhousePrint_load(view="INDEX", camera="", date="") {
     var login_timeout = 3000;
 
 	if (app_first_load || app_2nd_load) {
@@ -235,8 +227,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 	if (camera != "" && date != "")	{ commands.push(date); commands.push(camera); app_active_cam = camera; }
 	else if (camera != "")          { commands.push(camera); app_active_cam = camera; }
 	else                            { commands.push(app_active_cam); }
-	//if (label != "")                { commands.push(label); }
-	
+
 	console.log("---> birdhousePrint_Load: " + view + " / " + camera + " /  " +date + " / "+ JSON.stringify(commands));
 	birdhouse_genericApiRequest("GET", commands, birdhousePrint);
 	}
@@ -254,9 +245,15 @@ function birdhousePrint(data) {
     if (data["DATA"] != {} && data["DATA"]["active"]) {
         var data_active     = data["DATA"]["active"];
         var date            = data_active["active_date"];
-        var camera          = data_active["active_cam"];
-        if (camera == "") 	{ camera = app_active_cam; }
-        else			    { app_active_cam = camera; }
+        var page            = data_active["active_page"];
+        if (app_pages_cam_id.includes(page)) {
+            var camera          = data_active["active_cam"];
+            if (camera == "") 	{ camera = app_active_cam; }
+            else			    { app_active_cam = camera; }
+            }
+        else {
+            var camera      = app_active_cam;
+            }
 
         birdhouseAudioStream_load(app_data["SETTINGS"]["devices"]["microphones"]);
         birdhouseSetMainVars(data);
@@ -270,6 +267,7 @@ function birdhousePrint(data) {
     var success = true;
 	console.log("---> birdhousePrint: "+app_active_page+" / "+camera+" / "+date);
 
+    // load selected view
     if (app_pages_lists.includes(app_active_page))          { birdhouse_LIST(app_active_page, data, camera); }
     else if (app_pages_settings.includes(app_active_page))  { birdhouse_SETTINGS(app_active_page, data); }
 	else if (app_active_page == "INDEX")                    { birdhouse_INDEX(data, camera); }
@@ -278,6 +276,14 @@ function birdhousePrint(data) {
 	else if (app_active_page == "OBJECTS")                  { birdhouse_OBJECTS(data); }
 	else if (app_active_page == "WEATHER")                  { birdhouse_WEATHER(data); }
 	else                                                    { birdhousePrint_page("INDEX"); success = false; }
+
+    // check if floating lowres to be opened or closed
+    if (app_pages_lowres.includes(app_active_page) && app_floating_lowres == false) {
+        startFloatingLowres(app_active_cam);
+        }
+    else if (!app_pages_lowres.includes(app_active_page) && app_floating_lowres) {
+        stopFloatingLowres();
+        }
 
 	if (success == false)   { app_active_page = app_last_active_page; }
 	else                    { app_last_active_page = app_active_page; }
