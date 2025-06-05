@@ -128,8 +128,7 @@ function app_status(data) {
 
 	if (reload) {
         birdhouse_loadSettings();
-		birdhousePrint_load("INDEX","cam1");
-		//app_active.cam = "cam1";
+		birdhousePrint_page("INDEX","cam1");
 		reload = false;
 		}
 	else {

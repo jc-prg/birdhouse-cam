@@ -404,7 +404,7 @@ function birdhouse_LIST(page, data, camera, header_open=true) {
 
 	// Set title
 	if (active_page == "TODAY" && active_date != "")    {
-	    var archive_title = "<span style='cursor:pointer' onclick='app_active.page=\"ARCHIVE\";birdhouseReloadView();'>";
+	    var archive_title = "<span style='cursor:pointer' onclick='birdhousePrint_page(\"ARCHIVE\");'>";
 	    archive_title    += "<u>" + lang("ARCHIVE") + "</u>";
 	    archive_title    += "</span>";
 	    page_title        = archive_title + " " + active_date.substring(6,8) + "." + active_date.substring(4,6) + "." + active_date.substring(0,4);
@@ -756,11 +756,11 @@ function birdhouse_LIST_chart_weather(data, active_page, camera) {
 	var link_day_back      = "";
 	var link_day_forward   = "";
 	if (data_list["data"]["day_back"] != "")    {
-	    var onclick_back    = "birdhousePrint_load(view=\"TODAY\", camera=\""+camera+"\", date=\""+data_list["data"]["day_back"]+"\");";
+	    var onclick_back    = "birdhousePrint_page(page=\"TODAY\", cam=\""+camera+"\", date=\""+data_list["data"]["day_back"]+"\");";
 	    link_day_back       = "<div onclick='" + onclick_back + "' class='button-back-and-forth' style='float:right;'>" + lang("DAY_BACK") + " &#187;</div>";
 	    }
 	if (data_list["data"]["day_forward"] != "") {
-	    var onclick_forward = "birdhousePrint_load(view=\"TODAY\", camera=\""+camera+"\", date=\""+data_list["data"]["day_forward"]+"\");";
+	    var onclick_forward = "birdhousePrint_page(page=\"TODAY\", cam=\""+camera+"\", date=\""+data_list["data"]["day_forward"]+"\");";
 	    link_day_forward    = "<div onclick='" + onclick_forward + "' class='button-back-and-forth' style='float:left;'>&#171; " + lang("DAY_FORWARD") + "</div>";
 	    }
 
@@ -1041,6 +1041,7 @@ function birdhouse_VIDEO_DETAIL( data ) {
     html += tab.end();
     html += "</div>";
 
+	birdhouse_frameHeader(lang("EDIT_VIDEO"));
 	setTextById(app_frame.content,html);
     load_videoplayer();
 	}

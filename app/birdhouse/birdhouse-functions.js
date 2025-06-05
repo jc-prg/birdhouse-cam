@@ -441,7 +441,7 @@ function birdhouse_Links(link_list) {
 	var keys = Object.keys(link_list);
 	for (var i=0;i<keys.length;i++) { if (keys[i] != "active_cam") {
 		var key     = keys[i];
-		var onclick = "birdhousePrint_load(view=\""+link_list[key]["link"]+"\", camera=\""+app_active.cam+"\");";
+		var onclick = "birdhousePrint_print(page=\""+link_list[key]["link"]+"\", cam=\""+app_active.cam+"\");";
 		html += "<a style='cursor:pointer;' onclick='"+onclick+"'>"+lang(link_list[key]["link"])+"</a> ";
 		if (i+1 < keys.length) { html += " | "; }
 		} }

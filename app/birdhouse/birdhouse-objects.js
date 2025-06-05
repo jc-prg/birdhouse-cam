@@ -57,7 +57,8 @@ function birdhouse_OBJECTS( data ) {
         var entry_information = "";
 
         if (value["detections"]["favorite"] > 0 ) {
-            var onclick = "birdhousePrint_load(\"FAVORITES\",\""+app_active.cam+"\", \"all-dates\", \""+key+"\");";
+            //var onclick = "birdhousePrint_load(\"FAVORITES\",\""+app_active.cam+"\", \"all-dates\", \""+key+"\");";
+            var onclick = "birdhousePrint_page(page=\"FAVORITES\",cam=\""+app_active.cam+"\", date=\"all-dates\", label=\""+key+"\");";
             favorite_label += "<div class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + lang("FAVORITES") + "&nbsp;(" + value["detections"]["favorite"] + ")&nbsp;&nbsp;</div>";
             }
         else  { value["detections"]["favorite"] = 0; }
@@ -68,7 +69,8 @@ function birdhouse_OBJECTS( data ) {
             for (var k=0;k<date_list.length;k++) {
                 var stamp      = date_list[k];
                 var date       = stamp.substring(6,8) + "." + stamp.substring(4,6) + "." + stamp.substring(2,4);
-                var onclick    = "birdhousePrint_load(view=\"TODAY\", camera=\""+camera+"\", date=\""+stamp+"\", label=\""+key+"\");";
+                //var onclick    = "birdhousePrint_load(view=\"TODAY\", camera=\""+camera+"\", date=\""+stamp+"\", label=\""+key+"\");";
+                var onclick    = "birdhousePrint_page(page=\"TODAY\", cam=\""+camera+"\", date=\""+stamp+"\", label=\""+key+"\");";
                 default_dates += "<div class='other_label' onclick='"+onclick+"'>&nbsp;" + camera + ": " + date + "&nbsp;</div>";
                 day_count += 1;
 

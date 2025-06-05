@@ -190,7 +190,7 @@ function birdhouse_app_settings (name="Settings") {
             this.set.write(1, "", this.loading);
             this.set.write(2, "", "");
             this.set.show_entry(2);
-            birdhousePrint_load(type, app_data);
+            birdhousePrint_page(type, app_data);
             }
         }
 
@@ -210,6 +210,7 @@ function birdhouse_app_settings (name="Settings") {
             "api_info"              : false,
             "app_info_02"           : false,
             "display_info"          : false,
+            "app_active_history"    : false,
             "app_under_construction": false,
             "api_performance"       : false,
             "server_performance"    : false,
@@ -236,6 +237,9 @@ function birdhouse_app_settings (name="Settings") {
 
         html_entry = this.server_information();
         html += birdhouse_OtherGroup( "server_info", "Server &nbsp;<div id='server_info_header'></div>", html_entry, open_settings["server_info"] );
+
+        html_entry = this.app_active_history();
+        html += birdhouse_OtherGroup( "app_active_history", "View history &nbsp;<div id='server_info_header'></div>", html_entry, open_settings["app_active_history"] );
 
         html_entry = this.display_information();
         html += birdhouse_OtherGroup( "display_info", "Display", html_entry, open_settings["display_info"] );
@@ -726,6 +730,20 @@ function birdhouse_app_settings (name="Settings") {
         html_entry += this.tab.end();
         return html_entry;
 	}
+
+    /*
+    * show app_active_history
+    */
+    this.app_active_history = function () {
+        var html = "";
+        for (var i=0;i<app_active_history.length;i++) {
+            var item = app_active_history[i];
+            var onclick = "birdhousePrint_page(\""+item.page+"\",\""+item.cam+"\",\""+item.date+"\")";
+            html += "<b>" + i + ".</b> &nbsp; <text onclick='"+onclick+"' style='cursor:pointer;'>" + item.page + " / " + item.cam + " / " + item.date + "</text><br/>";
+            }
+        return html;
+        }
+
 
     /*
     * create setting view to show several direct links to video streams or categories (such as INDEX, SETTINGS, INFO, ...

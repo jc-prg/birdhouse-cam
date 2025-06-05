@@ -15,7 +15,7 @@ index_template["single"] = `
         <div class="streams_wrapper">
             <div class="streams_index_overlay">
 
-                <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
+                <a onclick="birdhousePrint_page(page='TODAY', cam='<!--CAM1_ID-->');" style="cursor:pointer;">
                     <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="streams_index_main">
                 </a>
 
@@ -51,7 +51,7 @@ index_template["single_admin"] = `
         <div class="streams_wrapper">
             <div class="streams_index_overlay">
 
-                <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
+                <a onclick="birdhousePrint_page(page='TODAY', cam='<!--CAM1_ID-->');" style="cursor:pointer;">
                     <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="streams_index_main">
                 </a>
 
@@ -154,7 +154,7 @@ index_template["picture-in-picture"] = `
     <div id="video_stream_online" style="display:block;">
         <center>
             <div class="livestream_main_container cam1">
-                <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
+                <a onclick="birdhousePrint_page(page='TODAY', cam='<!--CAM1_ID-->');" style="cursor:pointer;">
                     <img src="<!--CAM1_PIP_URL-->" id="stream_pip_<!--CAM1_ID-->" class="livestream_main">
                 </a>
             </div>
@@ -183,11 +183,11 @@ index_template["overlay"] = `
         <div class="streams_wrapper">
             <div class="streams_index_overlay">
 
-                <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
+                <a onclick="birdhousePrint_page(page='TODAY', cam='<!--CAM1_ID-->');" style="cursor:pointer;">
                     <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="streams_index_main">
                 </a>
 
-                <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM2_ID-->');" style="cursor:pointer;">
+                <a onclick="birdhousePrint_page(page='INDEX', cam='<!--CAM2_ID-->');" style="cursor:pointer;">
                     <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class="streams_index_second <!--CAM2_LOWRES_POS-->">
                 </a>
 
@@ -225,11 +225,11 @@ index_template["overlay_admin"] = `
         <div class="streams_wrapper">
             <div class="streams_index_overlay">
 
-                <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
+                <a onclick="birdhousePrint_page(page='TODAY', cam='<!--CAM1_ID-->');" style="cursor:pointer;">
                     <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="streams_index_main">
                 </a>
 
-                <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM2_ID-->');" style="cursor:pointer;">
+                <a onclick="birdhousePrint_page(page='INDEX', cam='<!--CAM2_ID-->');" style="cursor:pointer;">
                     <img src="<!--CAM2_LOWRES_URL-->" id="stream_lowres_<!--CAM2_ID-->" class="streams_index_second <!--CAM2_LOWRES_POS-->">
                 </a>
 
@@ -269,14 +269,14 @@ index_template["default"] = `
     <div id="video_stream_online" style="display:block;">
         <center>
             <div class="livestream_2nd_container cam1cam2">
-                <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
+                <a onclick="birdhousePrint_page(page='INDEX', cam='<!--CAM1_ID-->');" style="cursor:pointer;">
                     <img src="<!--CAM2_LOWRES_URL-->" id="stream_<!--CAM2_ID-->" class="livestream_2nd">
                 </a>
             </div>
         </center>
         <center>
             <div class="livestream_main_container cam1cam2">
-                <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
+                <a onclick="birdhousePrint_page(page='TODAY', cam='<!--CAM1_ID-->');" style="cursor:pointer;">
                     <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="livestream_main">
                 </a>
             </div>
@@ -288,14 +288,14 @@ index_template["default_admin"] = `
     <div id="video_stream_online" style="display:block;">
         <center>
             <div class="livestream_2nd_container cam1cam2">
-                <a onclick="birdhousePrint_load(view='INDEX', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
+                <a onclick="birdhousePrint_page(page='INDEX', cam='<!--CAM1_ID-->');" style="cursor:pointer;">
                     <img src="<!--CAM2_LOWRES_URL-->" id="stream_<!--CAM2_ID-->" class="livestream_2nd">
                 </a>
             </div>
         </center>
         <center>
             <div class="livestream_main_container cam1cam2">
-                <a onclick="birdhousePrint_load(view='TODAY', camera='<!--CAM1_ID-->');" style="cursor:pointer;">
+                <a onclick="birdhousePrint_page(page='TODAY', cam='<!--CAM1_ID-->');" style="cursor:pointer;">
                     <img src="<!--CAM1_URL-->" id="stream_<!--CAM1_ID-->" class="livestream_main">
                 </a>
                 <!--ADMIN-->

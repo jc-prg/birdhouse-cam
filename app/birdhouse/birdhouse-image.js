@@ -682,7 +682,7 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
 		var [lowres, stream_uid]    = birdhouse_StreamURL(app_active.cam, entry["stream"], "stream_list_5", true, "THUMBNAIL #1");
 		image_data["lowres"]        = lowres;
 		image_data["hires_stream"]  = entry["stream_hires"];
-		image_data["onclick"]       = "birdhousePrint_load(view=\"INDEX\", camera = \""+entry["camera"]+"\");";
+		image_data["onclick"]       = "birdhousePrint_page(page=\"INDEX\", cam=\""+entry["camera"]+"\");";
 		image_data["description"]   = lang("LIVESTREAM");
         }
     else if (entry["type"] == "camera") {
@@ -713,7 +713,7 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
     	    }
         else {
             image_data["lowres"]      = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);
-            image_data["onclick"]     = "birdhousePrint_load(view=\"TODAY\", camera = \""+entry["camera"]+"\", date=\""+entry["datestamp"]+"\");";
+            image_data["onclick"]     = "birdhousePrint_page(page=\"TODAY\", cam=\""+entry["camera"]+"\", date=\""+entry["datestamp"]+"\");";
 
             if (entry["count_cam"] != entry["count"]) {
                 image_data["description"]  += "<b>" + entry["date"] + "</b>"+image_data["detect_sign"]+"<br/>" + entry["count_cam"] + " / " + entry["count"];
@@ -803,7 +803,7 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
 		entry["lowres"]           = image_file;
 
 		if (admin) {
-			var cmd_edit = "birdhousePrint_load(view=\"VIDEO_DETAIL\", camera=\""+app_active.cam+"\", date=\""+entry["date_start"]+"\");"
+			var cmd_edit = "birdhousePrint_page(page=\"VIDEO_DETAIL\", cam=\""+app_active.cam+"\", date=\""+entry["date_start"]+"\");"
 			image_data["description"] += "<br/><a onclick='"+cmd_edit+"' style='cursor:pointer;'>"+lang("EDIT")+"</a>"+note;
             }
 

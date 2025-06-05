@@ -105,10 +105,13 @@ function birdhouse_logout() {
 */
 function birdhouse_logoutMsg() {
 
-    birdhousePrint_load("INDEX", app_active.cam);
+    birdhouse_adminAnswer(false);
     birdhouse_settings.toggle(true);
     appSettings.hide();
-    birdhouse_adminAnswer(false);
+
+    if (app_pages_admin.includes(app_active.page))  { birdhousePrint_page("INDEX", app_active.cam); }
+    else                                            { birdhouseReloadView(); }
+
     appMsg.alert(lang("LOGOUT_MSG"));
 }
 

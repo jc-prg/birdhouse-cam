@@ -527,7 +527,7 @@ function diary_createCalendar(year, month) {
                     icon.title      = lang("ARCHIVE");
                     icon.innerHTML  = image_archive;
                     icon.onclick = () => {
-                        birdhousePrint_load("TODAY", app_active.cam, dateKey);
+                        birdhousePrint_page("TODAY", app_active.cam, dateKey);
                         };
                     dayEntry.appendChild(icon);
                     }
@@ -537,7 +537,7 @@ function diary_createCalendar(year, month) {
                     icon.title      = lang("VIDEOS");
                     icon.innerHTML  = image_video;
                     icon.onclick = () => {
-                        birdhousePrint_load("VIDEOS", app_active.cam, dateKey);    // !!!!!! add parameters to directly open the right month (e.g. using toggles);
+                        birdhousePrint_page("VIDEOS", app_active.cam, dateKey);    // !!!!!! add parameters to directly open the right month (e.g. using toggles);
                         };
                     dayEntry.appendChild(icon);
                     }

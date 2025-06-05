@@ -14,13 +14,14 @@ var color_code = {
 	"data"    : "gray"
 	}
 
-loadingImage              = "birdhouse/img/bird.gif";
-var app_loading_image     = "birdhouse/img/bird.gif";
+loadingImage               = "birdhouse/img/bird.gif";
+var app_loading_image      = "birdhouse/img/bird.gif";
 
-var app_available         = { cameras: [], sensors : [], micros: [] };
-var app_frame             = { header: "frame1", content: "frame2", info: "frame3", index: "frame4" };
-var app_active            = { cam: "cam1", page: "", date: "", mic: "" };
-var app_active_history    = [];
+var app_available          = { cameras: [], sensors : [], micros: [] };
+var app_frame              = { header: "frame1", content: "frame2", info: "frame3", index: "frame4" };
+var app_active             = { cam: "cam1", page: "", date: "", mic: "" };
+var app_active_history     = [];
+var app_active_history_max = 10;
 
 var app_last_active_page  = "";
 var app_camera_source     = {};
@@ -39,7 +40,7 @@ var app_scripts_loaded  = 0;
 var app_first_load      = true;
 var app_2nd_load        = true;
 
-var app_pages_content  = ["INDEX", "TODAY", "ARCHIVE", "FAVORITES", "VIDEOS", "TODAY_COMPLETE", "OBJECTS", "WEATHER", "DIARY"];
+var app_pages_content  = ["INDEX", "TODAY", "ARCHIVE", "FAVORITES", "VIDEOS", "TODAY_COMPLETE", "OBJECTS", "WEATHER", "DIARY", "VIDEO_DETAIL"];
 var app_pages_lists    = ["TODAY", "ARCHIVE", "FAVORITES", "VIDEOS", "TODAY_COMPLETE"];
 var app_pages_settings = ["SETTINGS", "SETTINGS_CAMERAS", "SETTINGS_IMAGE", "SETTINGS_DEVICES", "SETTINGS_INFORMATION", "SETTINGS_STATISTICS", "SETTINGS_SERVER"];
 var app_pages_admin    = ["SETTINGS", "SETTINGS_CAMERAS", "SETTINGS_IMAGE", "SETTINGS_DEVICES", "SETTINGS_INFORMATION", "SETTINGS_STATISTICS", "SETTINGS_SERVER", "TODAY_COMPLETE"];
@@ -117,43 +118,68 @@ function birdhouse_modules_loaded() {
 * print a specific page, uses existing vars app_active.cam and app_active.date
 *
 * @param (string) page: available: INDEX, TODAY, TODAY_COMPLETE, ARCHIVE, OBJECT, SETTINGS, FAVORITES, VIDEOS, INFO, ...
+* @param (string) camera: camera ID (or other param)
+* @param (string) date: selected date
+* @param (string) label: selected label, e.g., detected object
 */
-//function birdhousePrint_page(page="INDEX", camera="", date="", param="") {
-function birdhousePrint_page(page="INDEX", param="") {
+function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
+    // scroll to the top
 	window.scrollTo(0,0);
+
+    // set app_active values
+    if (page == "") { page = app_active.page; }
+    if (!app_pages_other.includes(page)) {
+        if (page != "") { app_active.page = page; }
+        if (cam != "")  { app_active.cam  = cam; }
+        if (date != "") { app_active.date = date; }
+        }
+
+	// clear possible active update processes
     for (let camera in app_data["SETTINGS"]["devices"]["cameras"]) { birdhouseDevices_cameraSettingsLoad(camera, false); }
 
+    // load content pages
     if (app_pages_content.includes(page)) {
-        console.log("Load content page: " + page);
+        console.log("Load content page: " + page + " / " + cam + " / " + date + " / " + label);
         birdhouse_settings.toggle(true);
         appSettings.hide();
         app_active.page = page;
-        birdhousePrint_load(page, app_active.cam, app_active.date, lang(page));
+        birdhousePrint_load(page, app_active.cam, app_active.date, label);
         }
+
+    // load setting pages
     else if (app_pages_settings.includes(page)) {
+
         console.log("Load settings page: " + page);
+        app_active = { page: page, cam: "", date: "" };
         if (page != "SETTINGS") { appSettings.create(page); }
         else                    { appSettings.create(); }
-        app_active.page = page;
         appSettings.clear_content_frames();
         }
+
+    // load other pages such as LOGIN and LOGOUT
     else if (app_pages_other.includes(page)) {
         console.log("Load other page: " + page);
-        if (param == "") { param = "INDEX"; }
         if (page == "LOGIN") {
-            birdhouse_loginDialog(param);
+            if (cam == "") { cam = "INDEX"; }
+            birdhouse_loginDialog(cam);
             }
         else if (page == "LOGOUT") {
             birdhouse_logout();
             if (app_pages_admin.includes(app_active.page)) { birdhousePrint_page("INDEX"); }
             }
         }
+
+    // load last page (as page not known)
     else {
         console.warn("birdhousePrint_page: requested page '" + page + "' not found.");
-        birdhousePrint_load(page="INDEX", app_active.cam, app_active.date, lang(page));
+        birdhousePrint_load(page="INDEX");
         }
 
-    console.log("--> check lowres: " + app_active.page + " / lowres: " + app_floating_lowres);
+    var now_time         = new Date();
+    var state_copy       = { ...app_active };
+    state_copy.timestamp = now_time;
+    app_active_history.unshift(state_copy);
+    if (app_active_history.length > app_active_history_max) { app_active_history.pop(); }
     }
 
 /*
@@ -162,8 +188,9 @@ function birdhousePrint_page(page="INDEX", param="") {
 * @param (string) view: view to be requested; available: INDEX, TODAY, TODAY_COMPLETE, ARCHIVE, OBJECT, FAVORITES, VIDEOS, VIDEO_DETAIL, SETTINGS, SETTINGS_SERVER, ...
 * @param (string) camera: camera id of active camera
 * @param (string) data: active date, to be combined with view TODAY in format YYYYMMDD
+* @param (string) label: selected label, e.g., detected object
 */
-function birdhousePrint_load(view="INDEX", camera="", date="") {
+function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
     var login_timeout = 3000;
 
 	if (app_first_load || app_2nd_load) {
@@ -220,6 +247,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="") {
 	if (camera != "" && date != "")	{ commands.push(date); commands.push(camera); app_active.cam = camera; }
 	else if (camera != "")          { commands.push(camera); app_active.cam = camera; }
 	else                            { commands.push(app_active.cam); }
+	if (label != "")                { commands.push(label); }
 
 	console.log("---> birdhousePrint_Load: " + view + " / " + camera + " /  " +date + " / "+ JSON.stringify(commands));
 	birdhouse_genericApiRequest("GET", commands, birdhousePrint);
@@ -439,7 +467,7 @@ function birdhouseSwitchCam() {
 
 	app_active.cam = app_available.cameras[next_cam];
     setTextById("selected_cam", app_active.cam);
-	birdhousePrint_load(view=app_active.page, camera=app_available.cameras[next_cam], date=app_active.date);
+	birdhousePrint_page(page=app_active.page, cam=app_available.cameras[next_cam], date=app_active.date);
 
 	if (app_floating_lowres) {
  	    setTimeout(function(){
@@ -462,12 +490,9 @@ function birdhouseReloadView() {
 
     console.warn("RELOAD -> " + app_active.page);
 
-	//if (app_active.page != "INDEX" && app_active.page != "IMAGE" && app_active.page != "DEVICES" && app_active.page != "CAMERAS") {
 	if (!no_reload_views.includes(app_active.page)) {
-		birdhousePrint_load(view=app_active.page, camera=app_active.cam, date=app_active.date);
+		birdhousePrint_page(page=app_active.page, cam=app_active.cam, date=app_active.date);
 		}
-	// if (app_active.page == "INDEX" || app_active.page == "TODAY" || app_active.page == "DEVICES") {
-	//if (app_active.page == "INDEX" || app_active.page == "IMAGE" || app_active.page == "DEVICES" || app_active.page == "CAMERAS") {
 
 	if (app_floating_lowres) {
 	    startFloatingLowres(app_floating_cam, app_floating_stream);
