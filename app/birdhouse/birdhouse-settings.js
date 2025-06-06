@@ -190,7 +190,7 @@ function birdhouse_app_settings (name="Settings") {
             this.set.write(1, "", this.loading);
             this.set.write(2, "", "");
             this.set.show_entry(2);
-            birdhousePrint_page(type, app_data);
+            birdhousePrint_load(type);
             }
         }
 

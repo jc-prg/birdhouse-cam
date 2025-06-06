@@ -139,7 +139,7 @@ function birdhouseStatus_print(data) {
     if (pages_settings.includes(app_active.page))           { birdhouseStatus_sensors(data); }
     else if (pages_content.includes(app_active.page))       { birdhouseStatus_sensors(data, "content"); }
 
-    document.getElementById(app_frame.info).style.display = "block";
+    //document.getElementById(app_frame.info).style.display = "block";
     html = "<center><i><font color='gray'>";
     html += weather_footer.join("&nbsp;&nbsp;/&nbsp;&nbsp;");
     html += "</font></i></center>";

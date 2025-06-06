@@ -22,6 +22,7 @@ var app_frame              = { header: "frame1", content: "frame2", info: "frame
 var app_active             = { cam: "cam1", page: "", date: "", mic: "" };
 var app_active_history     = [];
 var app_active_history_max = 10;
+var app_frame_info = "frame3";
 
 var app_last_active_page  = "";
 var app_camera_source     = {};
@@ -426,7 +427,9 @@ function birdhouseHeaderFunctions() {
 	var switch_cam      = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();' style='position:relative;top:-4px;'>";
 	switch_cam         += "<div id='selected_cam' style='display:none;'>"+app_active.cam+"</div>";
 	var reload_view     = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
-	var active_cam      = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active.cam.toUpperCase()+"</text>";
+	var active_cam      = app_active.cam;
+	try { active_cam = app_active.cam.toUpperCase(); } catch(err) { console.warn(err.message); console.warn(app_active); }
+	active_cam      = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+active_cam+"</text>";
 
     if (app_active.mic && mic_config && mic_config["codec"] && mic_config["codec"] == "mp3")
                                          { var active_mic  = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+app_active.mic.toUpperCase()+"</text>"  + audio_stream; }
@@ -488,7 +491,7 @@ function birdhouseReloadView() {
 	birdhouse_overlayHide();
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 
-	var no_reload_views = ["INDEX", "IMAGE", "DEVICES", "CAMERAS", "SETTINGS", "SERVER", "INFORMATION"];
+	var no_reload_views = ["INDEX", "SETTINGS_IMAGE", "SETTINGS_DEVICES"];
 
     console.warn("RELOAD -> " + app_active.page);
 

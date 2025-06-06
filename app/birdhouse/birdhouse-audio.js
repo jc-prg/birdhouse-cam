@@ -184,7 +184,7 @@ function birdhouseAudioStream_toggle(mic="", add_id="", codec) {
             document.getElementById(id).play();
         }
         catch(err) {
-            console.warning(err.message);
+            console.warn(err.message);
         }
         setTimeout(function(){
             if (document.getElementById("stream_"+mic).paused) {
