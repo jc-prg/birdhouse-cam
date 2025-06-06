@@ -183,7 +183,7 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
         birdhouse_settings.toggle(true);
         appSettings.hide();
         app_active.page = page;
-        birdhousePrint_load(page, app_active.cam, app_active.date, label);
+        birdhousePrint_load(page, cam, date, label);
         }
 
     // load setting pages
