@@ -105,6 +105,13 @@
 
 /* Styling for smaller screens */
 @media (max-width: 900px) {
+    .nav-container {
+        bottom: 30px;
+        }
+
+    .nav-container-top {
+        bottom: 30px;
+        }
     .nav-bar {
         width: 34px;
         height: 34px;
