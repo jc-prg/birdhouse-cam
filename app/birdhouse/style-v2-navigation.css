@@ -136,4 +136,8 @@
         margin-right: 0px;
     }
 
+    .nav-bar .controls span {
+        padding: 6px;
+        margin-top: 4px;
+    }
 }
