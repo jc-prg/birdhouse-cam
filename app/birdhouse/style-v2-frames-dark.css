@@ -3,7 +3,7 @@
 @media (prefers-color-scheme: dark) {
 
     :root {
-        --frames-shadow: rgba(1, 1, 1, 0.4);
+        --frames-shadow: rgba(230, 230, 230, 0.1);
         --frames-border: black;
     }
 
