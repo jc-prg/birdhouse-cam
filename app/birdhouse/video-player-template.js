@@ -125,7 +125,7 @@ var videoplayer_template = `
       <div class="camera_video_trim_part">
         <button class="button-video-edit" onclick="javascript:<!--JAVASCRIPT_SHORTEN-->">&nbsp;<!--SHORTEN-->&nbsp;</button>
         <button class="button-video-edit" onclick="javascript:<!--JAVASCRIPT_THUMBNAIL-->">&nbsp;<!--THUMBNAIL-->&nbsp;</button>
-        <button class="button-video-edit" onclick="javascript:toggleVideoEdit(false)">&nbsp;<!--CANCEL-->&nbsp;</button>
+        <button class="button-video-edit" onclick="javascript:toggleVideoEdit(false)">&nbsp;<!--CLOSE-->&nbsp;</button>
       </div>
     </div>
   </center>

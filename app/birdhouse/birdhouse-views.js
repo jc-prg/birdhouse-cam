@@ -1021,6 +1021,7 @@ function birdhouse_VIDEO_DETAIL( data ) {
 			video_values["ACTIVE"]                  = app_active.cam;
 			video_values["LENGTH"]                  = video[key]["length"];
 			video_values["THUMBNAIL"]               = lang("THUMBNAIL");
+			video_values["CLOSE"]                   = lang("CLOSE");
 			video_values["SHORTEN"]                 = lang("SHORTEN");
 			video_values["CANCEL"]                  = lang("CANCEL");
 			video_values["FILE_THUMBNAIL"]          = "";

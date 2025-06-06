@@ -162,7 +162,7 @@ var language_app = {
 		"SHORTEN_VIDEO"         : "Video bearbeiten",
 		"SHORT_VERSION"         : "Gek&uuml;rzte Version",
 		"SHOW"                  : "Anzeigen",
-        "SHORTEN"               : "k&uuml;rzen",
+        "SHORTEN"               : "K&uuml;rzen",
 		"SOURCE"                : "Quelle",
         "START"                 : "Start",
 		"STATUS"                : "Status",
