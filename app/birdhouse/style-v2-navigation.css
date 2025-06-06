@@ -137,7 +137,10 @@
     }
 
     .nav-bar .controls span {
-        padding: 10px;
+        padding: 9px;
         margin-top: 4px;
+    }
+    .arrow-up {
+        margin-right: 0px;
     }
 }
