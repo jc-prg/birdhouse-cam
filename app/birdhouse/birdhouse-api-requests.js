@@ -79,8 +79,10 @@ function birdhouse_loginReturn(data) {
         appFW.appList = app_session_id+"/status";
         appMsg.alert(lang("LOGIN_SUCCESS"));
 
-        birdhouseReloadView();
-        setTimeout(function(){ appMsg.hide(); }, 2000);
+        setTimeout(function(){
+            birdhouseReloadView();
+            appMsg.hide();
+            }, 2000);
 
         //birdhousePrint_load();
         //if (data["return-page"] != "") { birdhousePrint_page(data["return-page"].toUpperCase()); }
