@@ -229,8 +229,9 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
     if (!page_history) {
         var now_time         = new Date();
         var state_copy       = { ...app_active };
-        state_copy.timestamp = now_time;
-        app_active_history.unshift(state_copy);
+        if (app_active_history.length == 0 || state_copy != app_active_history[0]) {
+            app_active_history.unshift(state_copy);
+            }
         if (app_active_history.length > app_active_history_max) { app_active_history.pop(); }
         app_active_history_pos = 0;
         }
