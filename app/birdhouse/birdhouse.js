@@ -159,6 +159,7 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
         app_active.page    = app_active_history[app_active_history_pos].page;
         app_active.cam     = app_active_history[app_active_history_pos].cam;
         app_active.date    = app_active_history[app_active_history_pos].date;
+        page = app_active.page;
 
         if (app_active_history.length > 1) {
             if (app_active_history_pos+1 < app_active_history.length) { elementVisible("moveBack"); elementHidden("moveBack_off"); }
@@ -227,7 +228,6 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
         }
 
     if (!page_history) {
-        var now_time         = new Date();
         var state_copy       = { ...app_active };
         if (app_active_history.length == 0 || state_copy != app_active_history[0]) {
             app_active_history.unshift(state_copy);
