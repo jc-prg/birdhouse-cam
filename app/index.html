@@ -1,6 +1,6 @@
 <?xml version=„1.0“ encoding=„utf-8“?>
 <!doctype html>
-<html>
+<html xmlns="http://www.w3.org/1999/html">
 <head>
     <title id="title">jc://app/</title>
 
@@ -39,112 +39,108 @@
 </head>
 <body>
 
-<div id="loading_overlay" class="loading_overlay">
-    <img src="framework/img/loading3.gif" height="100px" width="100px" />
-</div>
-
-<!-- APP specific html elements // START -->
-
-<div class="floating-window" id="floatingWindow">
-</div>
-
-<!-- APP specific  html elements // END -->
-
-<nav id="nav2"></nav>
-<nav id="nav">
-<nav-logo id="rest_status"></nav-logo>
-    <nav-title id="navTitle" style="display:block;z-index:101;">...</nav-title>
-    <nav-active id="navActive" style="display:none;z-index:100;">+++</nav-active>
-    <ul>
-      <li id="navi"><div onClick="javascript:appClickMenu();"  id="navi-click"><img src="framework/img/button.png" /></div>
-        <ul id='menuItems' style="visibility:hidden;"><!-- drop down menu - filled by script --></ul>
-      </li>
-    </ul>
-</nav>
-
-<div id="statusLED"><div id="red"></div></div>
-<div id="headerRight" class="headerRight"></div>
-<div id="headerRightToolTip" class="headerToolTip"></div>
-<div id="statusLEDload"><img src="framework/img/loading3.gif"></div>
-<div id="app_background" class="app_background" style="width:100%;">
-
-<div style="height:45px;"></div>
-<div id='reload_info'  style="width:100%;display:none;"></div>
-<div id='remote_block' style="width:100%">
-  <div class='frame_block'>
-    <div class='remote_nav' id='remote_nav'><nav-b id="nav-b">
-     <ul>
-      <li>
-        <ul id='menuItems2'><!-- fixed menu for wide screens - filled by script --></ul>
-      </li>
-     </ul>
+    <div id="loading_overlay" class="loading_overlay">
+        <img src="framework/img/loading3.gif" height="100px" width="100px" />
     </div>
-    <div id='frames'></div>
-    <div id='setting_frames'></div>
-  </div>
-</div>
-
-<div id="appMsg"></div>
-<div id="ontop"        style="display:none"></div>
-<div id="theme_check"  style="display:none"></div>
-<div id="videoplayer"></div>
-<div id="move_up" onclick="window.scrollTo(0,0);"><div id="move_up_arrow"></div></div>
-<div id="preload_icons" style="display:none;">
-    <img src="birdhouse/img/reload-white.png" />
-    <img src="birdhouse/img/switch-camera-white.png" />
-    <img src="birdhouse/img/icon_bird_mute.png" />
-    <img src="birdhouse/img/icon_bird_sing.png" />
-</div>
 
 <!-- APP specific html elements // START -->
 
-<div id="overlay" class="overlay" onclick="birdhouse_overlayHide();"></div>
-<div id="overlay_parent" class="overlay_parent">
-  <div id="overlay_content" class="overlay_content" onclick="birdhouse_overlayHide();"><!--overlay--></div>
-</div>
-<script id="videoplayer-script"></script>
+    <div class="floating-window" id="floatingWindow"></div>
+    <div id="navigation"></div>
 
 <!-- APP specific  html elements // END -->
 
-<script>
+    <nav id="nav2"></nav>
+    <nav id="nav">
+    <nav-logo id="rest_status"></nav-logo>
+        <nav-title id="navTitle" style="display:block;z-index:101;">...</nav-title>
+        <nav-active id="navActive" style="display:none;z-index:100;">+++</nav-active>
+        <ul>
+          <li id="navi"><div onClick="javascript:appClickMenu();"  id="navi-click"><img src="framework/img/button.png" /></div>
+            <ul id='menuItems' style="visibility:hidden;"><!-- drop down menu - filled by script --></ul>
+          </li>
+        </ul>
+    </nav>
 
-    loadScripts("/modules/",   modules_js,    true);
-    loadCss("/modules/",       modules_css,   true);
+    <div id="statusLED"><div id="red"></div></div>
+    <div id="headerRight" class="headerRight"></div>
+    <div id="headerRightToolTip" class="headerToolTip"></div>
+    <div id="statusLEDload"><img src="framework/img/loading3.gif"></div>
+    <div id="app_background" class="app_background" style="width:100%;">
 
-    loadScripts("/framework/", app_js,        true);
-    loadCss("/framework/",     app_css,       true);
+        <div style="height:45px;"></div>
+        <div id='reload_info'  style="width:100%;display:none;"></div>
+        <div id='remote_block' style="width:100%">
+            <div class='frame_block'>
+                <div class='remote_nav' id='remote_nav'><nav-b id="nav-b">
+                    <ul>
+                        <li>
+                            <ul id='menuItems2'><!-- fixed menu for wide screens - filled by script --></ul>
+                        </li>
+                    </ul>
+                </div>
+                <div id='frames'></div>
+                <div id='setting_frames'></div>
+            </div>
+        </div>
 
-    loadScripts("/birdhouse/", birdhouse_js,  true);
-    loadCss("/birdhouse/",     birdhouse_css, true);
+        <div id="appMsg"></div>
+        <div id="ontop"        style="display:none"></div>
+        <div id="theme_check"  style="display:none"></div>
+        <div id="videoplayer"></div>
+        <div id="move_up" onclick="window.scrollTo(0,0);"><div id="move_up_arrow"></div></div>
+        <div id="preload_icons" style="display:none;">
+            <img src="birdhouse/img/reload-white.png" />
+            <img src="birdhouse/img/switch-camera-white.png" />
+            <img src="birdhouse/img/icon_bird_mute.png" />
+            <img src="birdhouse/img/icon_bird_sing.png" />
+        </div>
 
-    function wait_until_loaded() {
-        console.log("Scripts loaded: " + app_scripts_loaded + "/" + birdhouse_js.length);
+<!-- APP specific html elements // START -->
 
-        if (birdhouse_modules_loaded() && modules_loaded() && framework_modules_loaded()) {
-            elementHidden("loading_overlay");
-            startApp();
+        <div id="overlay" class="overlay" onclick="birdhouse_overlayHide();"></div>
+        <div id="overlay_parent" class="overlay_parent">
+            <div id="overlay_content" class="overlay_content" onclick="birdhouse_overlayHide();"><!--overlay--></div>
+        </div>
+        <script id="videoplayer-script"></script>
+
+<!-- APP specific  html elements // END -->
+
+        <script>
+
+            loadScripts("/modules/",   modules_js,    true);
+            loadCss("/modules/",       modules_css,   true);
+
+            loadScripts("/framework/", app_js,        true);
+            loadCss("/framework/",     app_css,       true);
+
+            loadScripts("/birdhouse/", birdhouse_js,  true);
+            loadCss("/birdhouse/",     birdhouse_css, true);
+
+            function wait_until_loaded() {
+            console.log("Scripts loaded: " + app_scripts_loaded + "/" + birdhouse_js.length);
+
+            if (birdhouse_modules_loaded() && modules_loaded() && framework_modules_loaded()) {
+                elementHidden("loading_overlay");
+                startApp();
+                }
+            else {
+                if (birdhouse_modules_loaded() == false)    { console.warn("Birdhouse not yet loaded: " + birdhouse_modules_loaded()); }
+                if (modules_loaded() == false)              { console.warn("Modules not yet loaded: " + modules_loaded()); }
+                if (framework_modules_loaded() == false)    { console.warn("Framework not yet loaded: " + framework_modules_loaded()); }
+
+                setTimeout( function() {
+                    wait_until_loaded();
+                    }, 500 );
+                }
             }
-        else {
-            if (birdhouse_modules_loaded() == false)    { console.warn("Birdhouse not yet loaded: " + birdhouse_modules_loaded()); }
-            if (modules_loaded() == false)              { console.warn("Modules not yet loaded: " + modules_loaded()); }
-            if (framework_modules_loaded() == false)    { console.warn("Framework not yet loaded: " + framework_modules_loaded()); }
 
-            setTimeout( function() {
-                wait_until_loaded();
-                }, 500 );
-            }
-        }
+            wait_until_loaded();
 
-    wait_until_loaded();
+        </script>
 
-</script>
-
-&nbsp;<br/>
-&nbsp;<br/>
-&nbsp;<br/>
-&nbsp;<br/>
-&nbsp;<br/>
-    <div id="error_log2" style="border:1px solid red;background:white;color:black;display:block;padding:5px;border-radius:5px;display:none;"></div>
-</div>
+        &nbsp;<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;<br/>
+        <div id="error_log2" style="border:1px solid red;background:white;color:black;display:block;padding:5px;border-radius:5px;display:none;"></div>
+    </div>
 </body>
 </html>

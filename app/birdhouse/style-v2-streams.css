@@ -150,7 +150,7 @@
 .floating-window {
     position            : fixed;
     right               : 20px;
-    bottom              : 20px;
+    bottom              : 100px;
     border-radius       : 8px;
     border              : 1px solid var(--frames-border);
     box-shadow          : 0 4px 12px var(--frames-shadow);

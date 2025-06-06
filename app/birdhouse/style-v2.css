@@ -15,7 +15,7 @@ h1        { margin : 4px; }
 h2        { margin : 4px; }
 h3        { margin : 4px; }
 
-body      { background: var(--app-loading-overlay); }
+body      { background: var(--app-background); }
 /* body   { touch-action: none; } */
 
 #remote_nav { height: 100vh; }
@@ -44,3 +44,4 @@ body      { background: var(--app-loading-overlay); }
     justify-content : center; /* Center horizontally */
     align-items     : center; /* Center vertically */
 }
+

@@ -24,6 +24,17 @@ var offsetX = 0, offsetY = 0, isDragging = false;
 var app_floating_lowres = false;
 var app_floating_cam    = "";
 var app_floating_stream = "";
+var app_floating_bottom = 100;
+var app_floating_left   = 20;
+
+
+/*
+*
+*/
+function toggleFloatingLowRes() {
+    if (app_floating_lowres)    { stopFloatingLowres(); }
+    else                        { startFloatingLowres(); }
+}
 
 /*
 * start load floating image with given active cam and streaming URL
@@ -32,9 +43,10 @@ var app_floating_stream = "";
 * @param (string) active_cam: id of active cam (displayed in the header)
 * @param (string) stream_url: complete streaming URL to be displayed
 */
-function startFloatingLowres(active_cam) {
+function startFloatingLowres(active_cam="") {
 
-    if (app_floating_lowres) { stopFloatingLowres(); }
+    if (app_floating_lowres)    { stopFloatingLowres(); }
+    if (active_cam == "")       { active_cam = app_active.cam; }
 
 	var cameras       = app_data["SETTINGS"]["devices"]["cameras"];
     var stream_url = RESTurl + cameras[active_cam]["video"]["stream_lowres"];
@@ -92,8 +104,8 @@ function startFloatingLowres(active_cam) {
         floatingWindow.style.width = newWidth + 'px';
         floatingWindow.style.height = (newHeight + floatingHeader.offsetHeight) + 'px';
 
-        floatingWindow.style.left = (screenW - newWidth - 20) + 'px';
-        floatingWindow.style.top = (screenH - newHeight - floatingHeader.offsetHeight - 20) + 'px';
+        floatingWindow.style.left = (screenW - newWidth  - app_floating_left) + 'px';
+        floatingWindow.style.top = (screenH - newHeight - floatingHeader.offsetHeight - app_floating_bottom) + 'px';
         floatingWindow.style.right = 'auto';
         floatingWindow.style.bottom = 'auto';
 
@@ -168,8 +180,8 @@ function repositionFloatingLowres() {
     floatingWindow.style.width = newWidth + 'px';
     floatingWindow.style.height = (newHeight + floatingHeader.offsetHeight) + 'px';
 
-    floatingWindow.style.left = (screenW - newWidth - 20) + 'px';
-    floatingWindow.style.top = (screenH - newHeight - floatingHeader.offsetHeight - 20) + 'px';
+    floatingWindow.style.left = (screenW - newWidth - app_floating_left) + 'px';
+    floatingWindow.style.top = (screenH - newHeight - floatingHeader.offsetHeight - app_floating_bottom) + 'px';
     floatingWindow.style.right = 'auto';
     floatingWindow.style.bottom = 'auto';
 }

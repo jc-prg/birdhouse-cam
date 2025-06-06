@@ -112,8 +112,20 @@ function birdhouseStatus_print(data) {
     var body = document.body, html = document.documentElement;
     var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
 
-    if (height > 1.5 * document.body.clientHeight)          { elementVisible("move_up"); }
-    else                                                    { elementHidden("move_up"); }
+    // Navigation element to scroll to the top off the page
+    //if (height > 1.5 * document.body.clientHeight)          { elementVisible("move_up"); }
+    //else                                                    { elementHidden("move_up"); }
+    if (height > 1.2 * document.body.clientHeight)          { elementVisible("moveUp"); elementHidden("moveUp_off"); }
+    else                                                    { elementVisible("moveUp_off"); elementHidden("moveUp"); }
+
+    // Navigation element to move back and forth in the view history
+    if (app_active_history.length > 1) {
+        if (app_active_history_pos+1 < app_active_history.length) { elementVisible("moveBack"); elementHidden("moveBack_off"); }
+        else                                                      { elementVisible("moveBack_off"); elementHidden("moveBack"); }
+        if (app_active_history_pos > 0)                           { elementVisible("moveForth"); elementHidden("moveForth_off"); }
+        else                                                      { elementVisible("moveForth_off"); elementHidden("moveForth"); }
+        }
+
 
     if (appSettings.loaded_index)                           { setTextById("device_status_short", birdhouseDevices("", data, "short")); appSettings.loaded_index = false; }
 
