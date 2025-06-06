@@ -1,4 +1,4 @@
-# Birdhouse Camera v1.6.0
+# Birdhouse Camera v1.7.0
 
 Raspberry Pi project to observe our birdhouse with two webcams: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, 
@@ -39,9 +39,10 @@ Find further impressions [here](info/impressions.md).
 
 * **Birdhouse web-app for Browser and SmartPhone** (English and big parts in German)
 * **Watching live stream** with 1 or 2 cameras (RPi4 recommend for fluent stream) 
-  * _INSIDE_: Raspberry Pi camera with IR light  or USB camera that supports IR light 
+  * _INSIDE_: Raspberry Pi camera with IR light or USB camera that supports IR light 
   * _OUTSIDE_: USB webcam (optimal viewing angle dependens on distance between birdhouse and camera)
   * Light switch support, using the JQC3F relay, e.g., for an IR light inside the birdhouse
+  * View lowres of active camera in every other view 
 * **Continuously recording photos**
   * e.g. every 20 seconds from sunrise to 20:00 local time (configurable in the device settings)
   * Similarity detection, filter photos with movement in a defined area (visualize differences)
@@ -55,7 +56,7 @@ Find further impressions [here](info/impressions.md).
 * **Recording and streaming videos** (admin)
   * create mp4 video incl. audio, works with iOS devices
   * Create video from all pictures of the current day
-  * Trim videos, select thumbnail
+  * Trim videos, select thumbnail (not on iOS)
 * **Recording and visualizing weather data**:
   * via internet for a defined location (python_weather OR [Open Meteo](https://open-meteo.com/))
   * from sensors connected to the Raspberry Pi (DHT11/DHT22)
@@ -78,7 +79,6 @@ Find further impressions [here](info/impressions.md).
   * Edit camera and image settings (contrast, saturation, hue, brightness, ...)
   * Edit device settings, reconnect devices (devices must be added via config file)
   * Statistics (streams & frame rates, viewing time, CPU usage & temperature, HDD usage, ...)
-  * See the number of currently active streams
   * Download archived data (hires, config-files, object detection as YOLOv11)
 * **Forwarding web-app** as entry point for one or more birdhouses using IPv6 addresses
 
