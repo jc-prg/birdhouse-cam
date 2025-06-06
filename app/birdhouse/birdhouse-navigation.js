@@ -1,6 +1,12 @@
 
-var img_plus  = '<img id="streamToggle_black" src="birdhouse/img/plus.png" class="nav-img-2">';
-var img_minus = '<img id="streamToggle_black" src="birdhouse/img/minus.png" class="nav-img-2">';
+var img_plus       = '<img id="streamToggle_black" src="birdhouse/img/plus.png" class="nav-img-2">';
+var img_minus      = '<img id="streamToggle_black" src="birdhouse/img/minus.png" class="nav-img-2">';
+var img_up_full    = '<img id="streamToggle_black" src="birdhouse/img/nav-up-full.png" class="nav-img-3">';
+var img_up         = '<img id="streamToggle_black" src="birdhouse/img/nav-up.png" class="nav-img-3">';
+var img_back_full  = '<img id="streamToggle_black" src="birdhouse/img/nav-back-full.png" class="nav-img-3">';
+var img_back       = '<img id="streamToggle_black" src="birdhouse/img/nav-back.png" class="nav-img-3">';
+var img_forth_full = '<img id="streamToggle_black" src="birdhouse/img/nav-forth-full.png" class="nav-img-3">';
+var img_forth      = '<img id="streamToggle_black" src="birdhouse/img/nav-forth.png" class="nav-img-3">';
 
 var app_navigation = `<div class="nav-container">
                 <div class="nav-bar" id="nav-bar-1">
@@ -11,14 +17,14 @@ var app_navigation = `<div class="nav-container">
                             <img id="streamToggle_black" src="birdhouse/img/camera_black.png" class="nav-img" style="display:none;">
                         </span>
 
-                        <span id="moveUp_off" class="nav-off">&#9651;</span>
-                        <span id="moveUp" class="nav-on" style="display:none;" onclick="window.scrollTo(0,0);">&#9650;</span>
+                        <span id="moveUp_off" class="nav-off">`+img_up+`</span>
+                        <span id="moveUp" class="nav-on" style="display:none;" onclick="window.scrollTo(0,0);">`+img_up_full+`</span>
 
-                        <span id="moveForth_off" class="nav-off">&#9665;</span>
-                        <span id="moveForth" class="nav-on" style="display:none;" onclick="birdhousePrint_page('PAGE_HISTORY|-1');">&#9664;</span>
+                        <span id="moveForth_off" class="nav-off">`+img_forth+`</span>
+                        <span id="moveForth" class="nav-on" style="display:none;" onclick="birdhousePrint_page('PAGE_HISTORY|-1');">`+img_forth_full+`</span>
 
-                        <span id="moveBack_off" class="nav-off">&#9655;</span>
-                        <span id="moveBack" class="nav-on" style="display:none;" onclick="birdhousePrint_page('PAGE_HISTORY|1');">&#9654;</span>
+                        <span id="moveBack_off" class="nav-off">`+img_back+`</span>
+                        <span id="moveBack" class="nav-on" style="display:none;" onclick="birdhousePrint_page('PAGE_HISTORY|1');">`+img_back_full+`</span>
                     </div>
                 </div>
             </div>
