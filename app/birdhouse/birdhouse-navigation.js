@@ -55,8 +55,8 @@ function birdhouse_loadNavigation() {
     }
 
 function birdhouse_toggleNavigation() {
-    if (navBar1.className.indexOf("expanded") > 0) { navBar1.classList.remove('expanded'); navBar2.innerHTML = "+"; }
-    else                                           { navBar1.classList.add('expanded'); navBar2.innerHTML = "-"; }
+    if (navBar1.className.indexOf("expanded") > 0) { navBar1.classList.remove('expanded'); navBar2.innerHTML = img_plus; }
+    else                                           { navBar1.classList.add('expanded'); navBar2.innerHTML = img_minus; }
     }
 
 birdhouse_loadNavigation();
