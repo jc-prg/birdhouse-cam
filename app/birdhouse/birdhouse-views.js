@@ -994,7 +994,7 @@ function birdhouse_VIDEO_DETAIL( data ) {
 
 		if (app_admin_allowed) {
 		    html += tab.row("&nbsp;");
-			html += tab.row(lang("EDIT") + ":",
+			html += tab.row(lang("EDIT_VIDEO_2") + ":",
 			    "<button onclick=\"birdhouse_videoOverlayToggle();\" class=\"button-video-edit\">&nbsp;"+lang("SHORTEN_VIDEO")+"&nbsp;</button>&nbsp;"
 			    );
 			if (thumbnail || short) {

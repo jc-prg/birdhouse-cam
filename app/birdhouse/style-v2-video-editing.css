@@ -114,14 +114,26 @@
 
 .camera_video_trim {
     width      : 800px;
-    max-width  : 80vw;
+    max-width  : 79vw;
     min-height : 40px;
-    display    : block;
+    display    : flex;
+    flex-wrap  : wrap;
 
     background-color : darkgray;
     border           : solid 1px white;
     border-radius    : 4px;
     padding          : 4px;
     margin           : 4px;
+}
+
+.camera_video_trim::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.camera_video_trim_part {
+  margin-bottom: 8px;
+  float: left;
 }
 
