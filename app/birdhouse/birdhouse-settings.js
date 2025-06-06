@@ -739,7 +739,9 @@ function birdhouse_app_settings (name="Settings") {
         for (var i=0;i<app_active_history.length;i++) {
             var item = app_active_history[i];
             var onclick = "birdhousePrint_page(\""+item.page+"\",\""+item.cam+"\",\""+item.date+"\")";
+            if (i == app_active_history_pos) { html += "<font color='green'>"; }
             html += "<b>" + i + ".</b> &nbsp; <text onclick='"+onclick+"' style='cursor:pointer;'>" + item.page + " / " + item.cam + " / " + item.date + "</text><br/>";
+            if (i == app_active_history_pos) { html += "</font>"; }
             }
         return html;
         }
