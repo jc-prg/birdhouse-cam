@@ -7,18 +7,11 @@
       --diary-header-text: white;
       --diary-header-text-stage: black;
       --diary-milestone-background: #222222;
+      --diary-image-background: none;
       --diary-today-background: #450000;
       --diary-today-border: red;
       --diary-calendar-month: #000066;
       --diary-calendar-weekday: #00008f;
-      --diary-type-0-color: #222222;
-      --diary-type-1-color: #81C784;
-      --diary-type-2-color: #4FC3F7;
-      --diary-type-3-color: #FFEB3B;
-      --diary-type-4-color: #FF972D;
-      --diary-type-5-color: #F06292;
-      --diary-type-6-color: #BA68C8;
-      --diary-type-7-color: #FF5252;
     }
 
     .diary-icon.diary-archive { background-image: url('img/image.png'); }

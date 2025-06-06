@@ -79,7 +79,6 @@ function birdhouse_loginReturn(data) {
         appFW.appList = app_session_id+"/status";
         appMsg.alert(lang("LOGIN_SUCCESS"));
 
-        birdhousePrint_page();
         setTimeout(function(){
             appMsg.hide();
             }, 2000);

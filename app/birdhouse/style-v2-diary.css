@@ -6,12 +6,14 @@
   --diary-header-text: black;
   --diary-header-text-stage: black;
   --diary-milestone-background: white;
+  --diary-image-background: none;
   --diary-today-background: #cdaaaa;
   --diary-today-border: red;
   --diary-calendar-month: #222266;
   --diary-calendar-month-text: white;
   --diary-calendar-weekday: #22228f;
   --diary-calendar-weekday-text: white;
+  /*
   --diary-type-0-color: #bbbbbb;
   --diary-type-1-color: #81C784;
   --diary-type-2-color: #4FC3F7;
@@ -20,6 +22,15 @@
   --diary-type-5-color: #F06292;
   --diary-type-6-color: #BA68C8;
   --diary-type-7-color: #FF5252;
+*/
+  --diary-type-0-color: #bbbbbb;
+  --diary-type-1-color: #48D1CC;
+  --diary-type-2-color: #3CB371;
+  --diary-type-3-color: #9ACD32;
+  --diary-type-4-color: #FFEB3B;
+  --diary-type-5-color: #FF8C00;
+  --diary-type-6-color: #FF5252;
+  --diary-type-7-color: #FF00FF;
 }
 
 /* calendar elements ----------------------------------*/
@@ -235,7 +246,7 @@ strong {
 
 /* format milestones */
 .stage.type-0               { background-color: var(--diary-type-0-color);   color: var(--diary-header-text-stage); }
-.milestone.type-0           { background-color: var(--diary-milestone-background); color: var(--diary-type-0-color);   border: 1px solid var(--diary-milestone-background);  margin: 2px; }
+.milestone.type-0           { background-color: var(--diary-image-background); color: var(--diary-type-0-color);   border: 1px solid var(--diary-image-background);  margin: 2px; }
 .milestone.type-0.filled    { background-color: var(--diary-type-0-color); }
 
 .stage.type-1               { background-color: var(--diary-type-1-color);   color: var(--diary-header-text-stage); }
