@@ -400,7 +400,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             success = False
         return success
 
-    def create_video_image(self, image, delay=""):
+    def save_video_image(self, image, delay=""):
         """
         Save image with predefined filename in temp directory
 

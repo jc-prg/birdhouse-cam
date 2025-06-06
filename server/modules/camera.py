@@ -1459,6 +1459,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.record_image_error = False
         self.record_image_error_msg = []
         self.record_temp_threshold = None
+        self.record_wait_for_new_image = False
         self.recording = False
 
         self.camera_stream_raw = None
@@ -1772,44 +1773,47 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             start_time_control = time.time()
             stamp = current_time.strftime('%H%M%S')
 
-            if self.config.update["camera_" + self.id]:
-                self.logging.info("Camera '" + self.id + "' updated (1): " + str(self.config.update["camera_" + self.id]))
-                self.config_update = self.config.update["camera_" + self.id]
-                self.config.update["camera_" + self.id] = False
+            if not self.video.recording:
+                if self.config.update["camera_" + self.id]:
+                    self.logging.info("Camera '" + self.id + "' updated (1): " + str(self.config.update["camera_" + self.id]))
+                    self.config_update = self.config.update["camera_" + self.id]
+                    self.config.update["camera_" + self.id] = False
 
-            if self.config.update_config["camera_" + self.id]:
-                self.logging.info("Camera '" + self.id + "' updated (2): " + str(self.config.update_config["camera_" + self.id]))
-                self.config_update_small = self.config.update_config["camera_" + self.id]
-                self.config.update_config["camera_" + self.id] = False
-                self.logging.info("update " + str(self.config_update) + " | small " + str(self.config_update_small) + " | reload " + str(self.reload_camera))
+                if self.config.update_config["camera_" + self.id]:
+                    self.logging.info("Camera '" + self.id + "' updated (2): " + str(self.config.update_config["camera_" + self.id]))
+                    self.config_update_small = self.config.update_config["camera_" + self.id]
+                    self.config.update_config["camera_" + self.id] = False
+                    self.logging.info("update " + str(self.config_update) + " | small " + str(self.config_update_small) + " | reload " + str(self.reload_camera))
 
             if self.active:
                 start_time_processing = time.time()
 
-                # reset some settings end of the day
-                if self.date_last != self.config.local_time().strftime("%Y-%m-%d"):
-                    self.record_temp_threshold = None
-                    self.date_last = self.config.local_time().strftime("%Y-%m-%d")
+                if not self.video.recording:
+                    # reset some settings end of the day
+                    if self.date_last != self.config.local_time().strftime("%Y-%m-%d"):
+                        self.record_temp_threshold = None
+                        self.date_last = self.config.local_time().strftime("%Y-%m-%d")
 
-                # if error reload from time to time
-                if self.if_reconnect_on_error():
-                    self.reconnect(directly=False)
+                    # if error reload from time to time
+                    if self.if_reconnect_on_error():
+                        self.reconnect(directly=False)
 
-                # check if camera is paused, wait with all processes ...
-                if not self._paused:
-                    count_paused = 0
+                    # check if camera is paused, wait with all processes ...
+                    if not self._paused:
+                        count_paused = 0
 
-                while self._paused and self._running:
-                    if count_paused == 0:
-                        self.logging.info("Recording images with " + self.id + " paused ...")
-                        count_paused += 1
-                    time.sleep(1)
+                    while self._paused and self._running:
+                        if count_paused == 0:
+                            self.logging.info("Recording images with " + self.id + " paused ...")
+                            count_paused += 1
+                        time.sleep(1)
 
                 # Image and / or video recording ...
                 if not self.error and not self.config_update and not self.reload_camera:
 
                     # Video recording
                     if self.video.recording:
+                        self.slow_down_streams(False)
                         self.video_recording(current_time)
 
                     # Image recording (only while not recording video)
@@ -1822,39 +1826,43 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     # Check and record active streams
                     self.measure_usage()
 
-                # Slow down if other process with higher priority is running or error
-                if (self.if_other_prio_process(self.id)
-                        or self.if_only_lowres()
-                        or self.video.processing
-                        or self.error or not self.active):
+                if not self.video.recording:
 
-                    self.logging.debug("prio=" + str(self.if_other_prio_process(self.id)) + "; " +
-                                       "lowres=" + str(self.if_only_lowres()) + "; " +
-                                       "processing=" + str(self.video.processing) + "; " +
-                                       "error=" + str(self.error) + "; " +
-                                       "active=" + str(self.active))
-                    self.slow_down_streams(True)
-                else:
-                    self.slow_down_streams(False)
+                    # Slow down if other process with higher priority is running or error
+                    if (self.if_other_prio_process(self.id)
+                            or self.if_only_lowres()
+                            or self.video.processing
+                            or self.error or not self.active):
+
+                        self.logging.debug("prio=" + str(self.if_other_prio_process(self.id)) + "; " +
+                                           "lowres=" + str(self.if_only_lowres()) + "; " +
+                                           "processing=" + str(self.video.processing) + "; " +
+                                           "error=" + str(self.error) + "; " +
+                                           "active=" + str(self.active))
+                        self.slow_down_streams(True)
+                    else:
+                        self.slow_down_streams(False)
 
                 self.config.set_processing_performance("camera_processing_image", self.id, start_time_processing)
 
-            # start or reload camera connection
-            if self.config_update_small:
-                self.logging.info("Updating configuration for CAMERA '" + self.id + "' (" +
-                                  self.param["name"] + "/" + str(self.param["active"]) + ") ...")
-                self.update_main_config(reload=False)
+            if not self.video.recording:
 
-            if self.config_update or self.reload_camera:
-                start_time_update = time.time()
-                self.logging.info("Updating configuration and reconnecting CAMERA '" + self.id + "' (" +
-                                  self.param["name"] + "/" + str(self.param["active"]) + ") ...")
-                self.update_main_config()
-                self.set_streams_active(active=True)
-                self.reconnect(directly=True)
-                self.config.set_processing_performance("camera_reconnect", self.id, start_time_update)
+                # start or reload camera connection
+                if self.config_update_small:
+                    self.logging.info("Updating configuration for CAMERA '" + self.id + "' (" +
+                                      self.param["name"] + "/" + str(self.param["active"]) + ") ...")
+                    self.update_main_config(reload=False)
 
-            self.config.set_processing_performance("camera_control", self.id, start_time_control)
+                if self.config_update or self.reload_camera:
+                    start_time_update = time.time()
+                    self.logging.info("Updating configuration and reconnecting CAMERA '" + self.id + "' (" +
+                                      self.param["name"] + "/" + str(self.param["active"]) + ") ...")
+                    self.update_main_config()
+                    self.set_streams_active(active=True)
+                    self.reconnect(directly=True)
+                    self.config.set_processing_performance("camera_reconnect", self.id, start_time_update)
+
+                self.config.set_processing_performance("camera_control", self.id, start_time_control)
 
             # Define thread priority and waiting time depending on running tasks
             if self.active and self.record and not self.video.recording and not self.error:
@@ -1966,18 +1974,18 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             image_time = self.camera_streams["camera_hires"].read_stream_image_time()
             image_delay = time.time() - image_time
 
-            if self.image_last_id == 0 or self.image_last_id != image_id:
+            if self.image_last_id == 0 or self.image_last_id != image_id or not self.record_wait_for_new_image:
                 image = self.camera_streams["camera_hires"].read_stream("record")
                 self.image_last_id = image_id
             else:
                 return
 
-            self.video.image_size = self.image_size
-            self.video.create_video_image(image=image, delay=image_delay)
+            #self.video.image_size = self.image_size
+            self.video.save_video_image(image=image, delay=image_delay)
 
-            if self.image_size == [0, 0]:
-                self.image_size = self.image.size_raw(image)
-                self.video.image_size = self.image_size
+            #if self.image_size == [0, 0]:
+            #    self.image_size = self.image.size_raw(image)
+            #    self.video.image_size = self.image_size
 
             self.logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(
                 current_time.strftime("%H:%M:%S")))

@@ -115,7 +115,8 @@ function birdhouse_modules_loaded() {
 //setTimeout(function(){ appApiLogging = "error_log2"; elementVisible("error_log2"); }, 2000);
 
 /*
-* print a specific page, uses existing vars app_active.cam and app_active.date
+* load a specific page or view, uses existing parameter or vars app_active.cam and app_active.date
+* this function decides depending on the view, whether to load data or just to generate the view
 *
 * @param (string) page: available: INDEX, TODAY, TODAY_COMPLETE, ARCHIVE, OBJECT, SETTINGS, FAVORITES, VIDEOS, INFO, ...
 * @param (string) camera: camera ID (or other param)
@@ -183,7 +184,8 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
     }
 
 /*
-* request loading of a specific view -> calls birdhousePrint() with returned data
+* request loading date for a specific view -> calls birdhousePrint() with returned data, should be called
+* using birdhousePrint_page() all the times
 *
 * @param (string) view: view to be requested; available: INDEX, TODAY, TODAY_COMPLETE, ARCHIVE, OBJECT, FAVORITES, VIDEOS, VIDEO_DETAIL, SETTINGS, SETTINGS_SERVER, ...
 * @param (string) camera: camera id of active camera
@@ -254,7 +256,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 	}
 
 /*
-* coordinate complete view creation (depending data returned to an API request)
+* create views with specific data, should only be called by birdhousePrint_load()
 *
 * @param (dict) data: data returned from API
 */
@@ -478,7 +480,7 @@ function birdhouseSwitchCam() {
 }
 
 /*
-* trigger view reload while keeping all the current settings (view, camera, date, ...)
+* trigger view reload while keeping all the current settings (page, camera, date, ...)
 */
 function birdhouseReloadView() {
 	console.log("----> birdhouseReloadView: "+app_active.page+"/"+app_active.cam+"/"+app_active.date);
@@ -490,15 +492,15 @@ function birdhouseReloadView() {
 
     console.warn("RELOAD -> " + app_active.page);
 
-	if (!no_reload_views.includes(app_active.page)) {
-		birdhousePrint_page(page=app_active.page, cam=app_active.cam, date=app_active.date);
-		}
-
 	if (app_floating_lowres) {
 	    startFloatingLowres(app_floating_cam, app_floating_stream);
 	    }
 
-	if (no_reload_views.includes(app_active.page)) {
+	if (!no_reload_views.includes(app_active.page)) {
+		birdhousePrint_page(page=app_active.page, cam=app_active.cam, date=app_active.date);
+		}
+
+	else if (no_reload_views.includes(app_active.page)) {
 		for (let key in app_camera_source) {
 		    console.log("---> active:"+app_active.cam + " / key:" + key +" --- " + app_camera_source[key]);
 
