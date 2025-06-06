@@ -479,8 +479,8 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.config.record_audio_info["length"] = len(self.recording_frames) * self.CHUNK / self.BITS_PER_SAMPLE / float(self.RATE)
         self.config.record_audio_info["status"] = "finished"
         self.recording_frames = []
-        self.logging.info("Stopped recording of '" + self.recording_filename + "'.")
         self.recording_processing = False
+        self.logging.info("Stopped recording of '" + str(self.recording_filename) + "'.")
 
     def encode_mp3(self, frames, quality=7):
         """
