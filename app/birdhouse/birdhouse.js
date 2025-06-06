@@ -189,7 +189,7 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
         birdhouse_settings.toggle(true);
         appSettings.hide();
         app_active.page = page;
-        birdhousePrint_load(app_active.page, app_active.cam, app_active.date, label);
+        birdhousePrint_load(view=app_active.page, camera=app_active.cam, date=app_active.date, label=label, page_call=true);
         }
 
     // load setting pages
@@ -206,10 +206,11 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
     else if (app_pages_other.includes(page)) {
         console.log("Load other page: " + page);
         if (page == "LOGIN") {
-            if (cam == "") { cam = "INDEX"; }
+            if (cam == "")  { page = "INDEX"; }
+            else            { page = cam; }
             birdhouse_loginDialog(cam);
             setTimeout(function(){
-                birdhousePrint_page(app_active.page, app_active.cam, app_active.date);
+                birdhousePrint_page(page, app_active.cam, app_active.date);
                 }, 2000);
             }
         else if (page == "LOGOUT") {
@@ -224,7 +225,7 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
     // load last page (as page not known)
     else {
         console.warn("birdhousePrint_page: requested page '" + page + "' not found.");
-        birdhousePrint_load(page="INDEX");
+        birdhousePrint_load(page="INDEX", camera="", date="", label="", page_call=false);
         }
 
     if (!page_history) {
@@ -246,7 +247,7 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
 * @param (string) data: active date, to be combined with view TODAY in format YYYYMMDD
 * @param (string) label: selected label, e.g., detected object
 */
-function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
+function birdhousePrint_load(view="INDEX", camera="", date="", label="", page_call=false) {
     var login_timeout = 3000;
 
 	if (app_first_load || app_2nd_load) {
@@ -254,10 +255,15 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 	    else                { app_2nd_load = false; }
 
         // if parameters given in the URL try to load pages directly (and login, if settings)
-	    if (window.location.href.indexOf("?") > 0) {
+	    if (window.location.href.indexOf("?") > 0 && page_call == false) {
 	        params = getUrlParams(window.location.href);
-	        if (params["page"] && (app_pages_lists.includes(params["page"].toUpperCase()) || app_pages_settings.includes(params["page"].toUpperCase()))) {
+
+	        if (params["page"] && (app_pages_content.includes(params["page"].toUpperCase()) || app_pages_settings.includes(params["page"].toUpperCase()))) {
 	            page = params["page"].toUpperCase();
+
+	            if (params["cam"])     { camera = params["cam"]; }
+	            if (params["camera"])  { camera = params["camera"]; }
+	            if (params["date"])    { date = params["date"]; }
 
 	            if (app_pages_admin.includes(page) && params["session_id"] == undefined && params["pwd"] == undefined) {
                     setTimeout(function() {
@@ -277,7 +283,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="") {
 	                return;
 	                }
 
-	            birdhousePrint_page(page);
+	            birdhousePrint_page(page, camera, date);
                 history.pushState({page: 1}, view, "/");
                 console.log("Load page directly: " + page);
                 return;

@@ -34,7 +34,7 @@ var language_app = {
 		"CREATE_DAY"            : "Video vom Tag erzeugen",
 		"CREATE_DAY_DONE"       : "Video vom Tag erzeugt.",
 		"CREATE_DAY_ERROR"      : "Fehler beim Erzeugen des Videos.",
-		"CREATE_DAY_STARTED"    : "Erstellung eines Video vom Tag gestartet.",
+		"CREATE_DAY_STARTED"    : "Erstellung eines Videos vom Tag gestartet.",
 		"CREATE_IMG_CONFIG_DONE": "Neuerstellung der Bilddatenbank erfolgt.",
 		"CONNECTION_ERROR"      : "Keine Verbindung zum Server",
 		"COLLECTED_IMAGES"      : "Ausgew&auml;hlte Bilder",
