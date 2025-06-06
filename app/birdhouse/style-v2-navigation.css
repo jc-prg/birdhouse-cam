@@ -118,7 +118,7 @@
         border-radius: 13px;
     }
     .nav-bar.expanded {
-        width: 200px;
+        width: 190px;
     }
     .nav-img {
         height: 20px;
@@ -137,7 +137,7 @@
     }
 
     .nav-bar .controls span {
-        padding: 6px;
+        padding: 10px;
         margin-top: 4px;
     }
 }
