@@ -228,9 +228,13 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
         birdhousePrint_load(page="INDEX", camera="", date="", label="", page_call=false);
         }
 
+    this.compare = function (obj1, obj2) {
+        return Object.keys(obj1).every(key => obj1[key] === obj2[key]);
+        }
+
     if (!page_history) {
         var state_copy       = { ...app_active };
-        if (app_active_history.length == 0 || state_copy != app_active_history[0]) {
+        if (app_active_history.length == 0 || !this.compare(state_copy, app_active_history[0])) {
             app_active_history.unshift(state_copy);
             }
         if (app_active_history.length > app_active_history_max) { app_active_history.pop(); }
