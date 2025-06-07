@@ -10,9 +10,9 @@ var language_app = {
 	"DE" : {
 	    "ACTIVITY"              : "Aktivit&auml;t",
 	    "ACTIVE"                : "aktiv",
-	    "ACTIVE_BROOD"          : "Aktuell zu Gast: {0}, seit {2} Tagen am {1}.",
-	    "ACTIVE_BROOD_1DAY"     : "Aktuell zu Gast: {0}, seit einem Tag am {1}.",
-	    "ACTIVE_BROOD_TODAY"    : "Aktuell zu Gast: {0}, seit heute am {1}.",
+	    "ACTIVE_BROOD"          : "{0}: seit {2} Tagen am {1}.",
+	    "ACTIVE_BROOD_1DAY"     : "{0}: seit einem Tag am {1}.",
+	    "ACTIVE_BROOD_TODAY"    : "{0}: seit heute am {1}.",
 	    "ACTIVE_BROOD_NO"       : "Aktuell kein aktives Brutpaar.",
 	    "ALL_IMAGES"            : "Alle Bilder",
 	    "ALL_LABELS"            : "Alle Labels",

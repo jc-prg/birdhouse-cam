@@ -468,8 +468,11 @@ function birdhouseSetMainStatus(data) {
 function birdhouseHeaderFunctions() {
 
     if (app_active.mic != "") {
+        var audio_stream    = "";
         var mic_config      = app_data["SETTINGS"]["devices"]["microphones"][app_active.mic];
-	    var audio_stream    = "<img id='stream_toggle_header' class='header_icon_wide' src='birdhouse/img/icon_bird_mute.png' onclick='birdhouseAudioStream_toggle(\"\",\"\",\""+mic_config["codec"]+"\");'>";
+        if (mic_config) {
+	        audio_stream    = "<img id='stream_toggle_header' class='header_icon_wide' src='birdhouse/img/icon_bird_mute.png' onclick='birdhouseAudioStream_toggle(\"\",\"\",\""+mic_config["codec"]+"\");'>";
+	        }
 	    }
 	else {
 	    var audio_stream    = "";

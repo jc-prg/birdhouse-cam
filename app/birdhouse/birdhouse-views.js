@@ -1048,28 +1048,30 @@ function birdhouse_VIDEO_DETAIL( data ) {
     html += "<div id='video_analysis'></div>";
     html += "<div id='audio_analysis'></div>";
 
-    var chart_video = birdhouseChart_create(label="", titles=analysis["video"]["titles"],
-                                      data=analysis["video"]["data"],
-                                      type="line",
-                                      sort_keys=true,
-                                      id="video_chart",
-                                      size="", set_colors=[],
-                                      set_menu="right"
-                                      );
-    var chart_audio = birdhouseChart_create(label="", titles=analysis["audio"]["titles"],
-                                      data=analysis["audio"]["data"],
-                                      type="line",
-                                      sort_keys=true,
-                                      id="audio_chart",
-                                      size="", set_colors=[],
-                                      set_menu="right"
-                                      );
-
 	birdhouse_frameHeader(lang("EDIT_VIDEO"));
 	setTextById(app_frame.content,html);
 
-    if (analysis != undefined && analysis != {}) { setTextById("video_analysis", chart_video); }
-    if (analysis != undefined && analysis != {}) { setTextById("audio_analysis", chart_audio); }
+    if (analysis) {
+        var chart_video = birdhouseChart_create(label="", titles=analysis["video"]["titles"],
+                                          data=analysis["video"]["data"],
+                                          type="line",
+                                          sort_keys=true,
+                                          id="video_chart",
+                                          size="", set_colors=[],
+                                          set_menu="right"
+                                          );
+        var chart_audio = birdhouseChart_create(label="", titles=analysis["audio"]["titles"],
+                                          data=analysis["audio"]["data"],
+                                          type="line",
+                                          sort_keys=true,
+                                          id="audio_chart",
+                                          size="", set_colors=[],
+                                          set_menu="right"
+                                          );
+        if (analysis != undefined && analysis != {}) { setTextById("video_analysis", chart_video); }
+        if (analysis != undefined && analysis != {}) { setTextById("audio_analysis", chart_audio); }
+        }
+
     load_videoplayer();
 	}
 
