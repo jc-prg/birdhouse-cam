@@ -1459,8 +1459,12 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.record_image_error = False
         self.record_image_error_msg = []
         self.record_temp_threshold = None
-        self.record_wait_for_new_image = True
         self.recording = False
+
+        self.record_video_wait = False
+        self.record_video_max_fps = self.param["image"]["framerate"]
+        self.record_video_min_wait = 1 / self.record_video_max_fps
+        self.record_video_last = 0
 
         self.camera_stream_raw = None
         self.camera_streams = {}
@@ -1865,13 +1869,21 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 self.config.set_processing_performance("camera_control", self.id, start_time_control)
 
             # Define thread priority and waiting time depending on running tasks
-            if self.active and self.record and not self.video.recording and not self.error:
+            if self.video.recording:
+                if self.record_video_last > 0:
+                    wait = self.record_video_min_wait - (time.time() - self.record_video_last)
+                    if wait > 0:
+                        time.sleep(wait)
+                self.record_video_last = time.time()
+                #self.thread_wait(wait_time=self.record_video_min_wait)
+
+            elif self.active and self.record and not self.error:
                 self.thread_set_priority(2)
                 self.thread_wait()
+
             elif not self.active or self.error:
                 self.thread_set_priority(7)
-                if self.video.recording:
-                    self.thread_wait(wait_time=0.04)
+                self.thread_wait()
 
             self.thread_control()
 
@@ -1974,7 +1986,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             image_time = self.camera_streams["camera_hires"].read_stream_image_time()
             image_delay = time.time() - image_time
 
-            if self.image_last_id == 0 or self.image_last_id != image_id or not self.record_wait_for_new_image:
+            if self.image_last_id == 0 or self.image_last_id != image_id or not self.record_video_wait:
                 image = self.camera_streams["camera_hires"].read_stream("record")
                 self.image_last_id = image_id
             else:
@@ -1997,6 +2009,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         start recording and set current image size
         """
         if not self.video.if_running():
+            self.record_video_last = 0
             self.video.start()
             self.video.image_size = self.image_size
 
@@ -2971,6 +2984,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.detect_settings = self.param["object_detection"]
         self.camera_scan_source = None
         self.camera_light_mode = ""
+        self.record_video_max_fps = self.param["image"]["framerate"]
+        self.record_video_min_wait = 1 / self.record_video_max_fps
 
         self.image_size = [0, 0]
         self.image_size_lowres = [0, 0]
