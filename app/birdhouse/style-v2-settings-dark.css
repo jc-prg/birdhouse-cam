@@ -2,14 +2,9 @@
 
 @media (prefers-color-scheme: dark) {
 
-    /* SETTINGS ELEMENTS --------------------------------- */
-
-    .setting_bg {
-        border           : #333333 1px solid;
-        }
-
-    .setting_bg.header.empty2 {
-        background-color : #111111;
-        }
-
+    :root {
+        --setting-bg-background: #cccccc;
+        --setting-bg-border: #111111;
+        --setting-bg-header-empty: #111111;
+    }
 }

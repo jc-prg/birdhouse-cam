@@ -2,6 +2,63 @@
 * define style of elements in the setting section (default theme, for dark theme see style-dark.css)
 */
 
+:root {
+    --setting-bg-background: #cccccc;
+    --setting-bg-border: #aaaaaa;
+    --setting-bg-header-empty: white;
+    --setting-bg-line: white;
+
+    --setting-btn-index-background: #333399;
+    --setting-btn-index-border: #5555AA;
+    --setting-btn-index-info-background: #111122;
+    --setting-btn-index-info-border: #222244;
+    --setting-btn-index-header: gray;
+    --setting-btn-index-header-selected: white;
+
+    --setting-btn-background: lightgray;
+    --setting-btn-system-background: #117711;
+    --setting-btn-system-border: #55AA55;
+    --setting-btn-attention-background: #771111;
+    --setting-btn-attention-border: AA5555;
+    --setting-btn-other-background: #111177;
+    --setting-btn-other-border: #5555AA;
+
+    --setting-error-msg-background: #FFFFDD;
+    --setting-error-msg-border: red;
+    --setting-error-msg-text: unset;
+    --setting-error-msg-link: unset;
+
+    --error-log-background: khaki;
+    --error-log-border: red;
+    --error-log-text: black;
+    --error-log-link: darkred;
+
+    --dashboard-value-text: #ffffee;
+    --dashboard-default-text: #eeeeee;
+
+    --dashboard-default-background: #333399;
+    --dashboard-default-border: #5555AA;
+    --dashboard-blue-background: #333399;
+    --dashboard-blue-border: #5555AA;
+    --dashboard-red-background: #993333;
+    --dashboard-red-border: #AA5555;
+    --dashboard-orange-background: #996644;
+    --dashboard-orange-border: #AA8855;
+    --dashboard-green-background: #339933;
+    --dashboard-green-border: #55AA55;
+    --dashboard-gray-background: #3C3C3C;
+    --dashboard-gray-border: #555555;
+
+    --dashboard-offline-background: #3C3C3C;
+    --dashboard-offline-border: #555555;
+    --dashboard-ok-background: #448844;
+    --dashboard-ok-border: #55AA55;
+    --dashboard-warn-background: #AA7744;
+    --dashboard-warn-border: #AA8855;
+    --dashboard-alarm-background: #993333;
+    --dashboard-alarm-border: #AA5555;
+}
+
 /* SETTINGS ELEMENTS --------------------------------- */
 
 .setting_bg {
@@ -12,7 +69,8 @@
 
     opacity         : 0.9;
     border-radius   : 5px;
-    background-color: #cccccc;
+    border          : var(--setting-bg-border) 1px solid;
+    background-color: var(--setting-bg-background);
     font-family     : sans-serif;
     font-size       : 12px;
     }
@@ -38,7 +96,7 @@
     }
 
 .setting_bg.header.empty2 {
-    background-color: white;
+    background-color: var(--setting-bg-header-empty);
     border          : 0px;
     height          : 105px;
     width           : 100%;
@@ -78,7 +136,7 @@
     height          : 2px;
     margin          : 6px;
     margin-bottom   : 12px;
-    border          : 1px solid white;
+    border          : 1px solid var(--setting-bg-line);
     }
 
 
@@ -104,13 +162,13 @@
     margin          :   1%;
     padding         :   5px;
     float           :  left;
-    background      : #333399;
-    border          : solid 2px #5555AA;
+    background      : var(--setting-btn-index-background);
+    border          : solid 2px var(--setting-btn-index-border);
     }
 
 .settings_button_index.info {
-    background      : #111122;
-    border          : solid 0px #5555AA;
+    background      : var(--setting-btn-index-info-background);
+    border          : solid 2px var(--setting-btn-index-info-border);
     cursor          : default;
     }
 
@@ -118,7 +176,7 @@
     width           : 60px;
     height          : 40px;
     margin          :  2px;
-    border          : 1px solid gray;
+    border          : 1px solid var(--setting-btn-index-header);
     }
 
 .settings_button_index.header.invisible {
@@ -128,7 +186,7 @@
     }
 
 .settings_button_index.selected {
-    border          : 1px solid white;
+    border          : 1px solid var(--setting-btn-index-header-selected);
     }
 
 .settings_button_index     { margin : 3px; width : calc(50% - 6px); height : 120px; }
@@ -149,7 +207,7 @@
 /* SETTING BUTTONS #2 ---------------------------------------------------------------------- */
 
 .button-settings-api {
-    background-color    : lightgray;
+    background-color    : var(--setting-btn-background);
     color               : black;
     width               : 90px;
     height              : 40px;
@@ -166,18 +224,18 @@
     margin          :   3px;
     padding         :   5px;
     float           :  left;
-    background      : #117711;
-    border          : solid 2px #55AA55;
+    background      : var(--setting-btn-system-background);
+    border          : solid 2px var(--setting-btn-system-border);
     }
 
 .button-settings-system.attention {
-    background      : #771111;
-    border          : solid 2px #AA5555;
+    background      : var(--setting-btn-attention-background);
+    border          : solid 2px var(--setting-btn-attention-border);
     }
 
 .button-settings-system.other {
-    background      : #111177;
-    border          : solid 2px #5555AA;
+    background      : var(--setting-btn-other-background);
+    border          : solid 2px var(--setting-btn-other-border);
     }
 
 @media (max-width: 706px)   { .button-settings-system { width : calc(33.333% - 6px); } }
@@ -215,7 +273,6 @@
     .camera_info_image #loading_img { display: none; }
 }
 
-
 /* SETTING INFO DASHBOARD ITEMS ------------------------------------------------------------- */
 
 .dashboard_container {
@@ -227,26 +284,27 @@
     height          :  90px;
     padding         :   3px;
     float           :  left;
-    background      : #333399;
-    border          : solid 2px #5555AA;
+    background      : var(--dashboard-default-background);
+    border          : solid 2px var(--dashboard-default-border);
     border-radius   : 5px;
     overflow        : hidden;
     }
 
-.dashboard_item.default { background : #333399; border : solid 2px #5555AA; }
-.dashboard_item.blue    { background : #333399; border : solid 2px #5555AA; }
-.dashboard_item.red     { background : #993333; border : solid 2px #AA5555; }
-.dashboard_item.orange  { background : #996644; border : solid 2px #AA8855; }
-.dashboard_item.green   { background : #339933; border : solid 2px #55AA55; }
-.dashboard_item.gray    { background : #3C3C3C; border : solid 2px #555555; }
+.dashboard_item.default { background : var(--dashboard-default-background); border : solid 2px var(--dashboard-default-border); }
+.dashboard_item.blue    { background : var(--dashboard-blue-background); border : solid 2px var(--dashboard-blue-border); }
+.dashboard_item.red     { background : var(--dashboard-red-background); border : solid 2px var(--dashboard-red-border); }
+.dashboard_item.orange  { background : var(--dashboard-orange-background); border : solid 2px var(--dashboard-orange-border); }
+.dashboard_item.green   { background : var(--dashboard-green-background); border : solid 2px var(--dashboard-green-border); }
+.dashboard_item.gray    { background : var(--dashboard-gray-background); border : solid 2px var(--dashboard-gray-border); }
 
-.dashboard_item.offline { background : #3C3C3C; border : solid 2px #555555; }
-.dashboard_item.ok      { background : #448844; border : solid 2px #55AA55; }
-.dashboard_item.warn    { background : #AA7744; border : solid 2px #AA8855; }
-.dashboard_item.alarm   { background : #993333; border : solid 2px #AA5555; }
+.dashboard_item.offline { background : var(--dashboard-offline-background); border : solid 2px var(--dashboard-offline-border); }
+.dashboard_item.ok      { background : var(--dashboard-ok-background); border : solid 2px var(--dashboard-ok-border); }
+.dashboard_item.warn    { background : var(--dashboard-warn-background); border : solid 2px var(--dashboard-warn-border); }
+.dashboard_item.alarm   { background : var(--dashboard-alarm-background); border : solid 2px var(--dashboard-alarm-border); }
+
 
 .dashboard_content {
-    color           : #eeeeee;
+    color           : var(--dashboard-default-text);
     font-size       : 12px;
     width           : 100%;
     padding         : 3px;
@@ -255,7 +313,7 @@
     }
 
 .dashboard_content.title        {}
-.dashboard_content.value        { font-size : 36px; font-weight: bold; color : #ffffee; line-height: 1.1;  }
+.dashboard_content.value        { font-size : 36px; font-weight: bold; color: var(--dashboard-value-text); line-height: 1.1;  }
 .dashboard_content.description  { font-style: italic; }
 
 @media (max-width: 706px)   {
@@ -278,46 +336,45 @@
 /* ERROR MSG --------------------------------- */
 
 .settings_error_msg {
-    font-family : sans-serif;
-    font-size   : 8px;
-    width       : 95%;
-    height      : 100px;
-    margin      : 3px;
-
-    background-color    : #FFFFDD;
+    font-family         : sans-serif;
+    font-size           : 8px;
+    width               : 95%;
+    height              : 100px;
+    margin              : 3px;
+    color               : var(--setting-error-msg-text);
+    background-color    : var(--setting-error-msg-background);
     border-radius       : 3px;
-    border              : solid 1px red;
+    border              : solid 1px var(--setting-error-msg-border);
+}
+.settings_error_msg a {
+    color               : var(--setting-error-msg-link);
 }
 
 #error_log {
-        font-size  : 12px;
-        text-align : left;
-        overflow   : auto;
-
-        width      : 97%;
-        height     : 200px;
-        float      : left;
-        margin     : 2px;
-        padding    : 2px;
-
-	font-face	: sanserif;
-	font-size	: 10px;
-	color		: black;
-
-        border          : red;
-        border-radius   : 5px;
-        border-style    : solid;
-        border-width    : 1px;
-        background-color: khaki;
-        opacity         : 0.9;
-        z-index         : 80;
-
-	position: relative;
-	top: 0px;
+    font-size       : 12px;
+    text-align      : left;
+    overflow        : auto;
+    width           : 97%;
+    height          : 200px;
+    float           : left;
+    margin          : 2px;
+    padding         : 2px;
+    font-face       : sanserif;
+    font-size       : 10px;
+    color           : var(--error-log-text);
+    background-color: var(--error-log-background);
+    border          : var(--error-log-border);
+    border-radius   : 5px;
+    border-style    : solid;
+    border-width    : 1px;
+    opacity         : 0.9;
+    z-index         : 80;
+    position        : relative;
+    top             : 0px;
 }
 
 #error_log a {
-    color: darkred;
+    color: var(--error-log-link);
 }
 
 #error_msg {
@@ -333,7 +390,8 @@
 	border     : 2px solid #cccccc;
 	border-radius:10px;
 
-        font-family: Helvetica;
-        text-align : center;
+    font-family: Helvetica;
+    text-align : center;
 /*        overflow   : auto; */
 }
+
