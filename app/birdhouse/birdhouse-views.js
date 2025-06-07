@@ -925,6 +925,7 @@ function birdhouse_VIDEO_DETAIL( data ) {
 	var video       = data["DATA"]["data"]["entries"];
 	var server_info = app_data["SETTINGS"]["server"];
     var tab         = new birdhouse_table();
+    var analysis    = {};
 
 	for (let key in video) {
 		app_active.date             = key;
@@ -938,6 +939,9 @@ function birdhouse_VIDEO_DETAIL( data ) {
 		var video_name          = video[key]["date"];
 		var video_stream        = birdhouse_Image("Complete", key, video[key]);
 		var video_stream_short  = "";
+
+		analysis                = video[key]["fps"];
+        console.error(analysis);
 
         //console.log("---> video: " + key + ", " + JSON.stringify(video[key]));
 		//console.log(video_stream);
@@ -1041,9 +1045,31 @@ function birdhouse_VIDEO_DETAIL( data ) {
 		}
     html += tab.end();
     html += "</div>";
+    html += "<div id='video_analysis'></div>";
+    html += "<div id='audio_analysis'></div>";
+
+    var chart_video = birdhouseChart_create(label="", titles=analysis["video"]["titles"],
+                                      data=analysis["video"]["data"],
+                                      type="line",
+                                      sort_keys=true,
+                                      id="video_chart",
+                                      size="", set_colors=[],
+                                      set_menu="right"
+                                      );
+    var chart_audio = birdhouseChart_create(label="", titles=analysis["audio"]["titles"],
+                                      data=analysis["audio"]["data"],
+                                      type="line",
+                                      sort_keys=true,
+                                      id="audio_chart",
+                                      size="", set_colors=[],
+                                      set_menu="right"
+                                      );
 
 	birdhouse_frameHeader(lang("EDIT_VIDEO"));
 	setTextById(app_frame.content,html);
+
+    if (analysis != undefined && analysis != {}) { setTextById("video_analysis", chart_video); }
+    if (analysis != undefined && analysis != {}) { setTextById("audio_analysis", chart_audio); }
     load_videoplayer();
 	}
 

@@ -48,6 +48,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                                                    birdhouse_directories["audio_temp"])
         self.recording_default_filename = "recording_" + self.id + ".wav"
         self.recording_frames = []
+        self.recording_timestamp = []
         self.record_start_time = None
 
         self.last_active = time.time()
@@ -124,6 +125,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                         self.count += 1
                         if self.recording:
                             self.recording_frames.append(self.chunk)
+                            self.recording_timestamp.append(time.time())
 
                 except Exception as err:
                     self.logging.debug("Could not read chunk: " + str(err))
@@ -390,6 +392,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.last_active = time.time()
         self.record_start_time = time.time()
         self.recording_frames = []
+        self.recording_timestamp = []
         self.recording_filename = os.path.join(str(self.recording_default_path), filename)
         self.recording_start = True
         self.config.record_audio_info = {
@@ -422,6 +425,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         duration = time.time() - self.record_start_time
         samples = len(self.recording_frames) * self.CHUNK
         sample_rate = round(samples / duration, 1)
+        self.config.record_audio_info["audio_fps"] = self.recording_timestamp
 
         self.logging.info("Stopping recording of '" + self.recording_filename + "' ...")
         self.logging.debug(" --> Chunks: " + str(len(self.recording_frames)) + " | length: " + str(round(duration,1)) + "s")
@@ -439,6 +443,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.recording = False
         self.recording_processing = False
         self.recording_frames = []
+        self.recording_timestamp = []
         self.recording_filename = ""
         self.record_start_time = None
 
@@ -479,6 +484,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.config.record_audio_info["length"] = len(self.recording_frames) * self.CHUNK / self.BITS_PER_SAMPLE / float(self.RATE)
         self.config.record_audio_info["status"] = "finished"
         self.recording_frames = []
+        self.recording_timestamp = []
         self.recording_processing = False
         self.logging.info("Stopped recording of '" + str(self.recording_filename) + "'.")
 

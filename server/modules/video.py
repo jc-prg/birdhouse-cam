@@ -8,6 +8,8 @@ from modules.bh_class import BirdhouseCameraClass
 from modules.bh_ffmpeg import BirdhouseFfmpegTranscoding
 from modules.image import BirdhouseImageSupport
 
+from modules.presets import birdhouse_env
+
 
 class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
     """
@@ -39,6 +41,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.record_audio_filename = ""
         self.record_video_info = None
         self.record_start_time = None
+        self.record_timestamps_before = []
+        self.record_timestamps_after = []
         self.image_size = [0, 0]
         self.recording = False
         self.processing = False
@@ -55,7 +59,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.info = {
             "start": 0,
             "start_stamp": 0,
-            "status": "ready"
+            "status": "ready",
+            "video_fps": {}
         }
         self._running = False
 
@@ -166,6 +171,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.record_audio_filename = audio_filename
         self.processing_cancel = False
         self.info["status"] = "recording"
+        self.record_timestamps_before = []
+        self.record_timestamps_after = []
 
         if self.camera.active and not self.camera.error and not self.recording:
             self.logging.info("Starting video recording (camera=" + self.id + " / micro=" + micro + ") ...")
@@ -203,6 +210,9 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         self.thread_prio_process(start=False, pid=self.id)
         response = {"command": ["cancel recording"]}
+        self.record_timestamps_before = []
+        self.record_timestamps_after = []
+
         if self.camera.active and not self.camera.error and self.processing:
             self.logging.info("Cancel video processing (" + self.id + ") ...")
             filename = self.ffmpeg.cancel_process()
@@ -238,6 +248,31 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.info["stamp_end"] = current_time.timestamp()
             self.info["status"] = "processing"
             self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 2)
+            self.info["fps"] = self.record_stop_fps_details()
+
+            initial_stamp = self.record_timestamps_after[0]
+            if "av_sync" in birdhouse_env and birdhouse_env["av_sync"] == True:
+                count = 0
+                last_after = last_fps = 0
+                self.info["video_fps"] = {
+                    "titles": ["fps", "fps_diff", "saving duration"],
+                    "data": {}
+                }
+                for before, after in zip(self.record_timestamps_before, self.record_timestamps_after):
+                    duration = after - before
+                    fps = 0
+                    if last_after != 0:
+                        fps = 1 / (after - last_after)
+                        fps_diff = fps - last_fps
+                    if count > 2:
+                        stamp = after - initial_stamp
+                        self.info["video_fps"]["data"][str(round(stamp, 2)).zfill(7)] = [round(fps, 5), round(fps_diff, 5), round(duration, 5)]
+                    last_after = after
+                    last_fps = fps
+                    count += 1
+            else:
+                del self.info["video_fps"]
+
             if float(self.info["length"]) > 1:
                 self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 2)
             else:
@@ -252,6 +287,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             success = self.create_video()
             if success:
                 self.info["audio"] = self.config.record_audio_info
+
                 if "stamp_start" in self.info["audio"]:
                     self.info["audio"]["delay"] = self.info["stamp_start"] - self.info["audio"]["stamp_start"]
                 self.info["status"] = "finished"
@@ -263,6 +299,55 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         elif not self.recording:
             response["error"] = "camera isn't recording " + self.camera.id
         return response
+
+    def record_stop_fps_details(self):
+        """
+        analyze fps for audio and video during the recording
+
+        Returns:
+            dict: details in a format that can be used for chart.js
+        """
+        fps_details = {"video":{}, "audio":{}}
+        if "av_sync" in birdhouse_env and birdhouse_env["av_sync"] == True:
+            initial_stamp = self.record_timestamps_after[0]
+            count = last_after = last_fps = 0
+            fps_details["video"] = {
+                "titles": ["video_fps", "video_fps_diff", "img_saving"],
+                "data": {}
+            }
+            for before, after in zip(self.record_timestamps_before, self.record_timestamps_after):
+                duration = after - before
+                fps = 0
+                if last_after != 0:
+                    fps = 1 / (after - last_after)
+                    fps_diff = fps - last_fps
+                if count > 2:
+                    stamp = after - initial_stamp
+                    fps_details["video"]["data"][str(round(stamp, 2)).zfill(7)] = [round(fps, 5), round(fps_diff, 5),
+                                                                                     round(duration, 5)]
+                last_after = after
+                last_fps = fps
+                count += 1
+
+            initial_stamp = self.config.record_audio_info["audio_fps"][0]
+            count = last_timestamp = last_fps = 0
+            fps_details["audio"] = {
+                "titles": ["audio_fps", "audio_fps_diff"],
+                "data": {}
+            }
+            for timestamp in self.config.record_audio_info["audio_fps"]:
+                if last_timestamp != 0:
+                    fps = 1 / (timestamp - last_timestamp)
+                    fps_diff = fps - last_fps
+                    self.logging.info(" ---> " + str(fps) + " / " + str(timestamp))
+                if count > 2:
+                    stamp = timestamp - initial_stamp
+                    fps_details["audio"]["data"][str(round(stamp, 2)).zfill(7)] = [round(fps, 5), round(fps_diff, 5)]
+                last_timestamp = timestamp
+                last_fps = fps
+                count += 1
+
+        return fps_details
 
     def record_stop_auto(self):
         """
@@ -408,6 +493,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             image (numpy.ndarray): image data
             delay (float): timestamp when image was created
         """
+        timestamp_start = time.time()
+
         self.info["image_count"] += 1
         self.info["image_files"] = self.filename("vimages")
         self.info["video_file"] = self.filename("video")
@@ -421,6 +508,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             result = cv2.imwrite(str(path), image)
             if self.info["image_count"] == 1:
                 self.logging.info("--> Record fist image: saved=" + str(time.time()) + " / delay=" + str(delay))
+            self.record_timestamps_before.append(timestamp_start)
+            self.record_timestamps_after.append(time.time())
             return result
         except Exception as e:
             self.info["image_count"] -= 1

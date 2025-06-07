@@ -37,6 +37,7 @@ def set_global_configuration():
         "admin_ip4_allow": "ADMIN_IP4_ALLOW",
         "admin_password": "ADMIN_PASSWORD",
         "admin_login": "ADMIN_LOGIN",
+        "av_sync": "AV_SYNC_ANALYSIS",
         "couchdb_server": "COUCHDB_SERVER",
         "couchdb_user": "COUCHDB_USER",
         "couchdb_password": "COUCHDB_PASSWORD",
@@ -80,9 +81,9 @@ def set_global_configuration():
         birdhouse_env[key] = get_env(birdhouse_env_keys[key])
         if birdhouse_env[key] is None:
             print('Value in .env not found: ' + str(birdhouse_env_keys[key]))
-
+    #"av_sync_analysis",
     for key in ["database_cleanup", "rpi_active", "rpi_64bit", "detection_active", "log_to_file",
-                "test_video_devices", "database_cache", "database_cache_archive",
+                "test_video_devices", "database_cache", "database_cache_archive", "av_sync",
                 "statistics_threads","statistics_error", "webdav_show"]:
         if birdhouse_env[key] is not None:
             birdhouse_env[key] = str(birdhouse_env[key]).lower() in ("true", "1", "yes", "on")
