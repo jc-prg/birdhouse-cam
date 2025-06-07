@@ -125,16 +125,19 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             # read data from device and store in a var
             if self.connected and not self.error and not self._paused:
                 try:
-                    self.chunk = self.stream.read(self.CHUNK, exception_on_overflow=False)
-                    self.logging.debug("Read chunk of '" + self.id + "' (" + str(len(self.chunk)) + ") ...")
-                    if len(self.chunk) > 0:
+                    this_chunk = self.stream.read(self.CHUNK, exception_on_overflow=False)
+                    self.logging.info("Read chunk of '" + self.id + "' (" + str(len(this_chunk)) + ") ...")
+                    if len(this_chunk) > 0:
                         self.count += 1
+                        self.chunk = this_chunk
                         if self.recording:
-                            self.recording_frames.append(self.chunk)
+                            self.recording_frames.append(this_chunk)
                             self.recording_timestamp.append(time.time())
+                    elif self.recording:
+                        self.logging.info("---> got empty chunk")
 
                 except Exception as err:
-                    self.logging.debug("Could not read chunk: " + str(err))
+                    self.logging.info("---> Could not read chunk: " + str(err))
                     self.raise_error("Could not read chunk: " + str(err))
                     self.recording = False
                     self.count = 0
