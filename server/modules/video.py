@@ -321,6 +321,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                 if last_after != 0:
                     fps = 1 / (after - last_after)
                     fps_diff = fps - last_fps
+                    self.logging.debug(" ---> " + str(fps) + " / " + str(after))
                 if count > 2:
                     stamp = after - initial_stamp
                     fps_details["video"]["data"][str(round(stamp, 2)).zfill(7)] = [round(fps, 5), round(fps_diff, 5),
@@ -339,7 +340,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                 if last_timestamp != 0:
                     fps = 1 / (timestamp - last_timestamp)
                     fps_diff = fps - last_fps
-                    self.logging.info(" ---> " + str(fps) + " / " + str(timestamp))
+                    self.logging.debug(" ---> " + str(fps) + " / " + str(timestamp))
                 if count > 2:
                     stamp = timestamp - initial_stamp
                     fps_details["audio"]["data"][str(round(stamp, 2)).zfill(7)] = [round(fps, 5), round(fps_diff, 5)]

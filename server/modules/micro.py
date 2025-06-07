@@ -78,13 +78,10 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.logging.info("Start microphone handler for '" + self.id + "' ...")
         self.connect()
         self.count = 0
+        local_start_time = 0
+        chunk_interval = 0
 
         while self._running:
-            self.logging.debug("Micro thread '" + self.id +
-                               "' - connected=" + str(self.connected) +
-                               " - last_active=" + str(round(time.time() - self.last_active, 2)) + "s; timeout=" +
-                               str(round(self.timeout, 2)) + "s - pause=" + str(self._paused) + " - (" + str(self.count) + ")")
-
             if self.recording_processing_start:
                 self.logging.debug("Request to stop recording for '" + self.id + "' ...")
                 time.sleep(self.param["record_audio_delay"])
@@ -96,6 +93,11 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                 self.record_process()
 
             if not self.recording:
+                self.logging.debug("Micro thread '" + self.id +
+                                   "' - connected=" + str(self.connected) +
+                                   " - last_active=" + str(round(time.time() - self.last_active, 2)) + "s; timeout=" +
+                                   str(round(self.timeout, 2)) + "s - pause=" + str(self._paused) + " - (" + str(self.count) + ")")
+
                 # Pause if not used for a while
                 if time.time() - self.last_active > self.timeout:
                     self._paused = True
@@ -116,6 +118,10 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                     self.connect()
                     self.config.update["micro_" + self.id] = False
 
+            elif self.recording and local_start_time == 0:
+                local_start_time = time.time()
+                chunk_interval = self.CHUNK / self.RATE
+
             # read data from device and store in a var
             if self.connected and not self.error and not self._paused:
                 try:
@@ -135,9 +141,14 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
 
             else:
                 self.count = 0
-                time.sleep(0.1)
+                self.thread_wait()
 
-            if not self.recording:
+            if self.recording:
+                elapsed_time = time.time() - local_start_time
+                expected_time = len(self.recording_frames) * chunk_interval
+                if elapsed_time < expected_time:
+                    time.sleep(expected_time - elapsed_time)
+            else:
                 self.thread_control()
 
         try:
@@ -145,7 +156,6 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                 if not self.stream.is_stopped():
                     self.stream.stop_stream()
                 self.stream.close()
-
         except Exception as e:
             self.logging.error("Could not stop stream: " + str(e))
 
