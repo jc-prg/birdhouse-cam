@@ -991,7 +991,7 @@ function birdhouse_AnswerReconnect(data) {
 function birdhouse_AnswerEditSend(data) {
 	setTimeout(function() {
 	    appMsg.alert(lang("DONE"));
-	    bird houseReloadView();
+	    birdhouseReloadView();
 	    }, 4000);
 	}
 
