@@ -485,8 +485,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 last_is_cam = False
 
             elif param["command"] not in param_no_cam:
-                if param["which_cam"] not in views.camera:
+                if param["which_cam"] not in views.camera and param["which_cam"] != "INDEX":
                     srv_logging.warning("Unknown camera requested: " + param["which_cam"] + " (" + self.path + ")")
+                    param["which_cam"] = "cam1"
+                    last_is_cam = False
+                elif param["which_cam"] == "INDEX":
+                    srv_logging.debug("Invalid API request due to logout.")
                     param["which_cam"] = "cam1"
                     last_is_cam = False
             elif "command" in param and param["command"] in param_no_cam:
