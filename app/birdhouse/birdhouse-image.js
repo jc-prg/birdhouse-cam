@@ -617,6 +617,11 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
         image_data["hires_detect"]    = "";
         image_data["detect_sign"]     = "";
         image_data["favorite"]        = false;
+        image_data["hires_max"]       = false;
+
+        if (entry["hires_max_resolution"] && entry["hires_max_resolution"] == true) {
+            image_data["hires_max"]   = true;
+            }
 
         if (entry["favorit"] && (entry["favorit"] == 1 || entry["favorit"] == "1")) {
             image_data["favorite"]    = true;
@@ -665,11 +670,14 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
             let onclick_diff        = "birdhouse_imageOverlay(\""+diff_image+"\",\"Difference Detection - "+entry["description"]+"\");";
             let onclick_difference  = entry["time"] +" (<u onclick='"+onclick_diff+"' style='cursor:pointer;'>";
             onclick_difference     += entry["similarity"] + "%</u>)";
-    		image_data["description"]     = onclick_difference;
+    		image_data["description"] = onclick_difference;
             }
 
         image_data["onclick"]      = "birdhouse_overlayShowById(\"" + entry_id + "\");";
         image_data["description"] += image_data["detect_sign"];
+        if (image_data["hires_max"]) {
+            image_data["description"] = "<b>"+lang("FOTO")+"</b>: " + image_data["description"];
+            }
         }
     else if (entry["type"] == "label") {
 		image_data["lowres"]        = birdhouse_ImageURL(img_url + entry["directory"] + entry["lowres"]);

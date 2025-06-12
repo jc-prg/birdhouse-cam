@@ -134,7 +134,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             if self.connected and not self.error and not self._paused:
                 try:
                     this_chunk = self.stream.read(self.CHUNK, exception_on_overflow=False)
-                    self.logging.info("Read chunk of '" + self.id + "' (set:" + str(self.CHUNK) + "/read:" + str(len(this_chunk)) + ") ...")
+                    self.logging.debug("Read chunk of '" + self.id + "' (set:" + str(self.CHUNK) + "/read:" + str(len(this_chunk)) + ") ...")
                     if len(this_chunk) > 0:
                         self.count += 1
                         self.chunk = this_chunk

@@ -9,6 +9,20 @@ var index_lowres_position = {
 
 //-------------------------------------------------
 
+index_fullscreen_image = `
+    <svg style="display: none">
+        <defs>
+          <symbol id="fullscreen" viewBox="0 0 24 24">
+          <path d="M14.016 5.016h4.969v4.969h-1.969v-3h-3v-1.969zM17.016 17.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 9.984v-4.969h4.969v1.969h-3v3h-1.969zM6.984 14.016v3h3v1.969h-4.969v-4.969h1.969z"></path>
+          </symbol>
+
+          <symbol id="fullscreen-exit" viewBox="0 0 24 24">
+          <path d="M15.984 8.016h3v1.969h-4.969v-4.969h1.969v3zM14.016 18.984v-4.969h4.969v1.969h-3v3h-1.969zM8.016 8.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 15.984v-1.969h4.969v4.969h-1.969v-3h-3z"></path>
+          </symbol>
+        </defs>
+      </svg>
+`;
+
 index_template["single"] = `
     <div id="video_stream_online">
         <center>
@@ -32,18 +46,7 @@ index_template["single"] = `
         </div>
         </center>
     </div>
-    <svg style="display: none">
-        <defs>
-          <symbol id="fullscreen" viewBox="0 0 24 24">
-          <path d="M14.016 5.016h4.969v4.969h-1.969v-3h-3v-1.969zM17.016 17.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 9.984v-4.969h4.969v1.969h-3v3h-1.969zM6.984 14.016v3h3v1.969h-4.969v-4.969h1.969z"></path>
-          </symbol>
-
-          <symbol id="fullscreen-exit" viewBox="0 0 24 24">
-          <path d="M15.984 8.016h3v1.969h-4.969v-4.969h1.969v3zM14.016 18.984v-4.969h4.969v1.969h-3v3h-1.969zM8.016 8.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 15.984v-1.969h4.969v4.969h-1.969v-3h-3z"></path>
-          </symbol>
-        </defs>
-      </svg>
-`
+` + index_fullscreen_image;
 
 index_template["single_admin"] = `
     <div id="video_stream_online">
@@ -69,18 +72,7 @@ index_template["single_admin"] = `
         <!--ADMIN-->
         </center>
     </div>
-    <svg style="display: none">
-        <defs>
-          <symbol id="fullscreen" viewBox="0 0 24 24">
-          <path d="M14.016 5.016h4.969v4.969h-1.969v-3h-3v-1.969zM17.016 17.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 9.984v-4.969h4.969v1.969h-3v3h-1.969zM6.984 14.016v3h3v1.969h-4.969v-4.969h1.969z"></path>
-          </symbol>
-
-          <symbol id="fullscreen-exit" viewBox="0 0 24 24">
-          <path d="M15.984 8.016h3v1.969h-4.969v-4.969h1.969v3zM14.016 18.984v-4.969h4.969v1.969h-3v3h-1.969zM8.016 8.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 15.984v-1.969h4.969v4.969h-1.969v-3h-3z"></path>
-          </symbol>
-        </defs>
-      </svg>
-`
+` + index_fullscreen_image;
 
 index_template["picture-in-picture_admin"]  = index_template["single_admin"].replace("CAM1_URL", "CAM1_PIP_URL")
 index_template["picture-in-picture"]        = index_template["single"].replace("CAM1_URL", "CAM1_PIP_URL")
@@ -93,9 +85,12 @@ index_template["admin"] = `
     <table border="0" width="100%">
     <tr>
     <td width="35%" align="center" valign="top">
-            <button id="rec_start_<!--CAM1_ID-->"  onclick="birdhouse_recordStart('<!--CAM1_ID-->');"   class="button-video-record">&#9679;
-            </button><button id="rec_stop_<!--CAM1_ID-->"   onclick="birdhouse_recordStop('<!--CAM1_ID-->');"    class="button-video-record" disabled="disabled">&#9632;
-            </button><button id="rec_cancel_<!--CAM1_ID-->" onclick="birdhouse_recordCancel('<!--CAM1_ID-->');"  class="button-video-record" disabled="disabled" style="font-size:20px;padding:0px;line-height:0.8;"><b>&times;</b></button><br/>&nbsp;<br/>
+            <button id="rec_start_<!--CAM1_ID-->"  onclick="birdhouse_recordStart('<!--CAM1_ID-->');"   class="button-video-record">&#9679;</button>
+            <button id="rec_stop_<!--CAM1_ID-->"   onclick="birdhouse_recordStop('<!--CAM1_ID-->');"    class="button-video-record" disabled="disabled">&#9632;</button>
+            <button id="rec_cancel_<!--CAM1_ID-->" onclick="birdhouse_recordCancel('<!--CAM1_ID-->');"  class="button-video-record" disabled="disabled" style="font-size:20px;padding:0px;line-height:0.8;"><b>&times;</b></button><br/>
+            &nbsp;<br/>
+            <button id="foto_<!--CAM1_ID-->" onclick="birdhouse_recordFoto('<!--CAM1_ID-->');"  class="button-video-record" style="width:100px;"<b>Foto</b></button><br/>
+            &nbsp;<br/>
             <div id="button_object_detection" style="display:none;"><button onclick="<!--OBJECT-->" class="button-video-record" style="width:100px;">Objects <!--OBJECT_BUTTON--></button></div>
     </td>
     <td>
@@ -161,19 +156,7 @@ index_template["picture-in-picture"] = `
         </center>
         <br>&nbsp;<br>
     </div>
-
-  <svg style="display: none">
-    <defs>
-      <symbol id="fullscreen" viewBox="0 0 24 24">
-      <path d="M14.016 5.016h4.969v4.969h-1.969v-3h-3v-1.969zM17.016 17.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 9.984v-4.969h4.969v1.969h-3v3h-1.969zM6.984 14.016v3h3v1.969h-4.969v-4.969h1.969z"></path>
-      </symbol>
-
-      <symbol id="fullscreen-exit" viewBox="0 0 24 24">
-      <path d="M15.984 8.016h3v1.969h-4.969v-4.969h1.969v3zM14.016 18.984v-4.969h4.969v1.969h-3v3h-1.969zM8.016 8.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 15.984v-1.969h4.969v4.969h-1.969v-3h-3z"></path>
-      </symbol>
-    </defs>
-  </svg>
-`
+` + index_fullscreen_image;
 
 //-------------------------------------------------
 
@@ -205,19 +188,7 @@ index_template["overlay"] = `
         <!--ACTIVE_BROOD-->
         </center>
     </div>
-
-  <svg style="display: none">
-    <defs>
-      <symbol id="fullscreen" viewBox="0 0 24 24">
-      <path d="M14.016 5.016h4.969v4.969h-1.969v-3h-3v-1.969zM17.016 17.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 9.984v-4.969h4.969v1.969h-3v3h-1.969zM6.984 14.016v3h3v1.969h-4.969v-4.969h1.969z"></path>
-      </symbol>
-
-      <symbol id="fullscreen-exit" viewBox="0 0 24 24">
-      <path d="M15.984 8.016h3v1.969h-4.969v-4.969h1.969v3zM14.016 18.984v-4.969h4.969v1.969h-3v3h-1.969zM8.016 8.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 15.984v-1.969h4.969v4.969h-1.969v-3h-3z"></path>
-      </symbol>
-    </defs>
-  </svg>
-`
+` + index_fullscreen_image;
 
 index_template["overlay_admin"] = `
     <div id="video_stream_online">
@@ -249,19 +220,7 @@ index_template["overlay_admin"] = `
         </center>
 
     </div>
-
-  <svg style="display: none">
-    <defs>
-      <symbol id="fullscreen" viewBox="0 0 24 24">
-      <path d="M14.016 5.016h4.969v4.969h-1.969v-3h-3v-1.969zM17.016 17.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 9.984v-4.969h4.969v1.969h-3v3h-1.969zM6.984 14.016v3h3v1.969h-4.969v-4.969h1.969z"></path>
-      </symbol>
-
-      <symbol id="fullscreen-exit" viewBox="0 0 24 24">
-      <path d="M15.984 8.016h3v1.969h-4.969v-4.969h1.969v3zM14.016 18.984v-4.969h4.969v1.969h-3v3h-1.969zM8.016 8.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 15.984v-1.969h4.969v4.969h-1.969v-3h-3z"></path>
-      </symbol>
-    </defs>
-  </svg>
-`
+` + index_fullscreen_image;
 
 //-------------------------------------------------
 

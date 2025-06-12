@@ -804,6 +804,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif param["command"] == "reset-image-presets":
             response = camera[which_cam].reset_image_presets()
             srv_logging.info(str(param))
+        elif param["command"] == "create-max-resolution-image":
+            camera[which_cam].image_recording(max_resolution=True)
+            response = {"info": "create-max-resolution-image"}
         elif param["command"] == "--template-to-implement-new-POST-command--":
             msg = "API CALL '" + param["command"] + "' not implemented yet (" + str(self.path) + ")"
             srv_logging.info(msg)

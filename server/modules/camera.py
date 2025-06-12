@@ -1764,7 +1764,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         Start recording for livestream, save images every x seconds, reload camera and connected devices.
         """
-        similarity = 0
         count_paused = 0
         sensor_last = ""
 
@@ -1823,7 +1822,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     # Image recording (only while not recording video)
                     elif self.record:
                         start_time_record = time.time()
-                        self.image_recording(current_time, stamp, similarity, sensor_last)
+                        self.image_recording(current_time, stamp, sensor_last)
                         self.config.set_processing_performance("camera_recording_image", self.id, start_time_record)
                         self.image_recording_auto_light()
 
@@ -2022,22 +2021,30 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         return self.video.record_cancel()
 
-    def image_recording(self, current_time, stamp, similarity, sensor_last):
+    def image_recording(self, current_time="", stamp="", sensor_last="", max_resolution=False):
         """
         record images as defined in settings
 
         Args:
             current_time (datetime): current time in datetime format
             stamp (str): time stamp of measurement
-            similarity (float): similarity value (not used at the moment)
             sensor_last (str): last time stamp of sensor measurement
+            max_resolution (bool): if true, use the maximum resolution of the camera that is available; in the recording is done even if not the right time
         """
         if self.error:
             return
 
+        if max_resolution:
+            self.logging.info("Recording an image with maximum resolution")
+            current_resolution = self.camera.get_resolution()
+            self.camera.set_resolution(width=self.max_resolution[0], height=self.max_resolution[1])
+            current_time = self.config.local_time()
+            stamp = current_time.strftime("%H%M%S")
+            time.sleep(2)
+
         self.logging.debug(" ...... check if recording")
         start_time = time.time()
-        if self.image_recording_active(current_time=current_time):
+        if self.image_recording_active(current_time=current_time) or max_resolution:
 
             self.logging.debug(" ...... record now!")
             image_hires = self.camera_streams["camera_hires"].read_image()
@@ -2059,7 +2066,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 height, width, color = image_hires.shape
                 preview_scale = self.param["image"]["preview_scale"]
 
-                if self.previous_image is not None:
+                if self.previous_image is not None and not max_resolution:
                     similarity = self.image.compare_raw(image_1st=image_compare,
                                                         image_2nd=self.previous_image,
                                                         detection_area=self.param["similarity"]["detection_area"])
@@ -2085,6 +2092,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     "type": "image",
                     "weather": {}
                 }
+                if max_resolution:
+                    image_info["hires_max_resolution"] = max_resolution
+                    image_info["favorit"] = "1"
+
                 self.previous_image = image_compare
                 sensor_data = {"activity": round(100 - float(similarity), 1)}
 
@@ -2109,7 +2120,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             image_info["info"]["duration_1"] = round(time.time() - start_time, 3)
             self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
 
-            if int(self.config.local_time().strftime("%M")) % 5 == 0 and sensor_stamp != sensor_last:
+            if int(self.config.local_time().strftime("%M")) % 5 == 0 and sensor_stamp != sensor_last and sensor_last != "":
                 self.logging.debug("Write sensor data to file ...")
                 self.config.queue.entry_add(config="sensor", date="", key=sensor_stamp, entry=sensor_data)
 
@@ -2140,6 +2151,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             del image_hires, image_lowres, image_compare
             time.sleep(self._interval)
             self.previous_stamp = stamp
+
+        if max_resolution:
+            self.camera.set_resolution(width=current_resolution[0], height=current_resolution[1])
+
 
     def image_recording_active(self, current_time=-1, check_in_general=False):
         """

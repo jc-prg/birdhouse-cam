@@ -475,6 +475,15 @@ function birdhouse_archiveDayDelete_done(data) {
     }
 
 /*
+* API request to record an image in maximum resolution
+*/
+function birdhouse_recordFoto(camera) {
+    commands = ["create-max-resolution-image", camera];
+    birdhouse_apiRequest('POST',commands,"",birdhouse_AnswerOther,"","birdhouse_recordFoto");
+}
+
+
+/*
 * API request to start video recording for the given camera
 *
 * @param (string) camera: camera ID, e.g., "cam1" or "cam2"
