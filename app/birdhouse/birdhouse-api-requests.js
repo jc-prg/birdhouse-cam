@@ -989,8 +989,10 @@ function birdhouse_AnswerReconnect(data) {
 * @param (object) data: API response
 */
 function birdhouse_AnswerEditSend(data) {
-	//console.log(data);
-	appMsg.alert(lang("DONE"));
+	setTimeout(function() {
+	    appMsg.alert(lang("DONE"));
+	    bird houseReloadView();
+	    }, 4000);
 	}
 
 /*
