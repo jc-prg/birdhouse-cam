@@ -77,7 +77,9 @@ function birdhouse_loginReturn(data) {
         app_admin_allowed = true;
         app_session_id = data["session-id"];
         appFW.appList = app_session_id+"/status";
+
         appMsg.alert(lang("LOGIN_SUCCESS"));
+        birdhousePrint_page(app_active.page, app_active.cam, app_active.date);
 
         setTimeout(function(){
             appMsg.hide();
@@ -95,22 +97,24 @@ function birdhouse_logout() {
     app_session_id = "";
     appFW.appList = "status";
     app_admin_allowed = false;
-    birdhouse_apiRequest("POST", ["check-pwd", '--logout--'], "", birdhouse_logoutMsg, "", "birdhouse_logout");
+    birdhouse_apiRequest("POST", ["check-pwd", '--logout--'], "", birdhouse_logoutReturn, "", "birdhouse_logout");
     }
 
 /*
 * show message when server-side logout has been done
 */
-function birdhouse_logoutMsg() {
+function birdhouse_logoutReturn() {
 
     birdhouse_adminAnswer(false);
     birdhouse_settings.toggle(true);
     appSettings.hide();
 
-    if (app_pages_admin.includes(app_active.page))  { birdhousePrint_page("INDEX", app_active.cam); }
-    else                                            { birdhouseReloadView(); }
+    setTimeout(function(){
+    birdhousePrint_page(app_active.page, app_active.cam, app_active.date);
 
     appMsg.alert(lang("LOGOUT_MSG"));
+        appMsg.hide();
+        }, 4000);
 }
 
 /*
@@ -250,7 +254,17 @@ function birdhouse_editVideoTitle(title, video_id, camera) {
     title    = document.getElementById(title).value;
     if (title == "") { title = "EMPTY_TITLE_FIELD"; }
 	commands = ["edit-video-title", video_id, title, camera];
-	birdhouse_apiRequest('POST', commands, '', birdhouse_AnswerOther,'','birdhouse_editVideoTitle');
+	birdhouse_apiRequest('POST', commands, '', birdhouse_editVideoTitleReturn,'','birdhouse_editVideoTitle');
+}
+
+/*
+* React when edit video title is done and reload view with a little delay
+*/
+function birdhouse_editVideoTitleReturn(data) {
+    setTimeout(function() {
+        appMsg.alert(lang("DONE"));
+        birdhouseReloadView();
+        }, 6000);
 }
 
 /*

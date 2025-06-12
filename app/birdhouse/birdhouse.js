@@ -208,17 +208,12 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
         if (page == "LOGIN") {
             if (cam == "")  { page = "INDEX"; }
             else            { page = cam; }
+            app_active.cam = page;
             birdhouse_loginDialog(cam);
-            setTimeout(function(){
-                birdhousePrint_page(page, app_active.cam, app_active.date);
-                }, 2000);
             }
         else if (page == "LOGOUT") {
-            birdhouse_logout();
             if (app_pages_admin.includes(app_active.page)) { app_active.page = "INDEX"; }
-            setTimeout(function(){
-                birdhousePrint_page(app_active.page, app_active.cam, app_active.date);
-                }, 2000);
+            birdhouse_logout();
             }
         }
 
