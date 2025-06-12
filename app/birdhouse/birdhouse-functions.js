@@ -283,6 +283,7 @@ function birdhouse_view_images_threshold(threshold) {
     group_list = document.getElementById("group_list").innerHTML.split(" ");
     image_list = [];
     image_list_active = [];
+    image_list_inactive = [];
     for (var i=0;i<group_list.length;i++) {
         image_ids_in_group = document.getElementById("group_ids_"+group_list[i]).innerHTML.split(" ");
         image_list = image_list.concat(image_ids_in_group);
@@ -295,10 +296,13 @@ function birdhouse_view_images_threshold(threshold) {
                     elementVisible(image_container);
                 }
                 else {
+                    image_list_inactive.push(image_ids_in_group[a]);
                     elementHidden(image_container);
                 }
             }
         }
+        if (threshold == 100)  { setTextById("threshold-info", "Total: " + image_list_active.length + " images"); }
+        else                   { setTextById("threshold-info", "Try: " + image_list_active.length + " selected images"); }
     }
 
     console.log("info_set_threshold: THRESHOLD=" + threshold + "%, FOUND=" + image_list_active.length + ", TOTAL=" + image_list.length)

@@ -678,7 +678,9 @@ function birdhouse_LIST_admin_threshold_slider(camera, active_page, active_date)
     threshold_slider           += "<div style='float:left;'><button class='bh-slider-button' onclick='"+threshold_onclick_try+"' style='float:none;'>Try</button>";
     threshold_slider           += "<button class='bh-slider-button' onclick='"+threshold_onclick_reset+"' style='float:none;'>Reset</button>";
     threshold_slider           += "<button class='bh-slider-button' onclick='"+threshold_onclick_set+"' style='float:none;'>"+threshold_onclick_set_cmd+"</button></div>";
+    threshold_slider           += "<br/>&nbsp;<div id='threshold-info'>&nbsp;</div>";
 
+    setTimeout(function(){ birdhouse_view_images_threshold(100);}, 500);
     return threshold_slider;
 }
 
