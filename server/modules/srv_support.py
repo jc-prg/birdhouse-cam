@@ -33,7 +33,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             self.thread_set_priority(5)
 
             self._initial = True
-            self._interval_check = 60 * 5
+            self._interval_check = 60 * 1
             self._min_live_time = 65
             self._thread_info = {}
             self._health_status = None
@@ -79,23 +79,33 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
                 self._thread_info = {}
                 for key in self.config.thread_status:
                     if self.config.thread_status[key]["thread"]:
-                        self._thread_info[key] = time.time() - self.config.thread_status[key]["status"]["health_signal"]
+                        self._thread_info[key] = {}
+                        self._thread_info[key]["time"] = time.time() - self.config.thread_status[key]["status"]["health_signal"]
+                        self._thread_info[key]["process"] = (self.config.thread_status[key]["status"]["processing"] or
+                                                             self.config.thread_status[key]["status"]["recording"])
 
                 if self._initial:
                     self._initial = False
                     self.logging.debug("... checking the following threads: " + str(self._thread_info.keys()))
 
+                warning = []
                 problem = []
                 for key in self._thread_info:
-                    if self._thread_info[key] > self._min_live_time:
+                    if self._thread_info[key]["process"]:
+                        warning.append(key + " (process is running)")
+                    elif self._thread_info[key]["time"] > self._min_live_time:
                         problem.append(key + " (" + str(round(self._thread_info[key], 1)) + "s)")
 
+                self._health_status = ""
+                if len(warning) > 0:
+                    self.logging.info("... some threads are processing at the moment.")
+                    self.logging.info("  -> " + ", ".join(problem))
+                    self._health_status += "PROCESSING: " + ", ".join(problem) + "<br/>"
                 if len(problem) > 0:
-                    self.logging.warning(
-                        "... not all threads are running as expected: ")
+                    self.logging.warning("... not all threads are running as expected: ")
                     self.logging.warning("  -> " + ", ".join(problem))
-                    self._health_status = "NOT RUNNING: " + ", ".join(problem)
-                else:
+                    self._health_status += "NOT RUNNING: " + ", ".join(problem) + "<br/>"
+                if len(warning) == 0 and len(problem) == 0:
                     self.logging.info("... OK.")
                     self._health_status = "OK"
 

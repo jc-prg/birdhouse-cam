@@ -44,12 +44,16 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.record_timestamps_before = []
         self.record_timestamps_after = []
         self.image_size = [0, 0]
+        self.max_length = 60
+        self.delete_temp_files = True   # usually set to True, can temporarily be used to keep recorded files for analysis
+
+        self._recording = False
+        self._processing = False
+
         self.recording = False
         self.processing = False
         self.processing_cancel = False
         self.processing_day_video = False
-        self.max_length = 60
-        self.delete_temp_files = True   # usually set to True, can temporarily be used to keep recorded files for analysis
 
         self.config.set_processing("video-recording", self.id, False)
 
@@ -80,6 +84,9 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         while self._running:
             time.sleep(1)
             count += 1
+            self._processing = (self.processing or self.processing_day_video)
+            self._recording = self.recording
+
             if count >= self.queue_wait:
                 count = 0
 

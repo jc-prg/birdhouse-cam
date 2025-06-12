@@ -39,6 +39,9 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.first_micro = first_micro
         self.is_reconnect = False
 
+        self._recording = False
+        self._processing = False
+
         self.recording = False
         self.recording_start = False
         self.recording_processing = False
@@ -83,6 +86,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         chunk_interval = 0
 
         while self._running:
+
             if self.recording_processing_start:
                 self.logging.debug("Request to stop recording for '" + self.id + "' ...")
                 time.sleep(self.param["record_audio_delay"])
@@ -92,6 +96,9 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             # start processing if trigger is set
             if self.recording_processing:
                 self.record_process()
+
+            self._recording = self.recording
+            self._processing = self.recording_processing
 
             if not self.recording:
                 self.logging.debug("Micro thread '" + self.id +
