@@ -161,8 +161,8 @@ function diary_setVariables(data="") {
     image_info          = "<div class='diary-icon diary-info' title='"+lang("DIARY")+"' style='display:inline-block;'></div>";
 
     stage_legend        = "";
-    stage_legend += "<div class='legend-entry'><div class='milestone type-0'>"+image_archive+"</div>&nbsp;" + lang("ARCHIVE") + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
-    stage_legend += "<div class='legend-entry'><div class='milestone type-0'>"+image_video+"</div>&nbsp;" + lang("VIDEOS") + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
+    stage_legend       += "<div class='legend-entry'><div class='milestone type-0'>"+image_archive+"</div>&nbsp;" + lang("ARCHIVE") + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
+    stage_legend       += "<div class='legend-entry'><div class='milestone type-0'>"+image_video+"</div>&nbsp;" + lang("VIDEOS") + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
 
     Object.entries(stage_definition).forEach(([key,entry]) => {
         stage_legend += "<div class='legend-entry'><div class='milestone type-"+key+" filled'></div>&nbsp;" + entry + "&nbsp;&nbsp;&nbsp;&nbsp;</div>";
@@ -549,7 +549,7 @@ function diary_createCalendar(year, month) {
                         milestone.className     = `milestone type-${info.type} filled`;
                         milestone.title         = title;
                         milestone.innerHTML     = " ";
-                        if (info.type == "2" && info.value != "start" && info.value != "end" && info.value != "termination" && info.value != "one_day") {
+                        if (info.value != "" && info.value != "start" && info.value != "end" && info.value != "termination" && info.value != "one_day") {
                                 milestone.textContent = info.value;
                                 milestone.className = `milestone type-${info.type}`;
                                 }
