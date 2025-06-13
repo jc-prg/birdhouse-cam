@@ -309,6 +309,9 @@ function birdhouse_app_settings (name="Settings") {
         html_entry += this.tab.row("Language:&nbsp;",           birdhouse_edit_field(id="set_language", field="localization:language", type="select", options="EN,DE") );
         html_entry += this.tab.row("Timezone:&nbsp;",           birdhouse_edit_field(id="set_timezone", field="localization:timezone", type="select", options=timezones, data_type="string") );
         html_entry += this.tab.row("<hr/>");
+        html_entry += this.tab.row("Closed:&nbsp;",             birdhouse_edit_field(id="set_closed", field="maintenance:closed", type="select", options="true,false", data_type="boolean") );
+        html_entry += this.tab.row("Closing message:&nbsp;",    birdhouse_edit_field(id="set_close_msg", field="maintenance:message", type="input") );
+        html_entry += this.tab.row("<hr/>");
         html_entry += this.tab.row("Backup-Time:&nbsp;",        birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
         html_entry += this.tab.row("BU Index Favorite:&nbsp;",  birdhouse_edit_field(id="set_preview_fav", field="backup:preview_fav", type="select", options="true,false", data_type="boolean") );
         html_entry += this.tab.row("BU Index Time:&nbsp;",      birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
@@ -318,7 +321,7 @@ function birdhouse_app_settings (name="Settings") {
         html_entry += this.tab.row("LowRes Position (CAM1):&nbsp;",    birdhouse_edit_field(id="set_index_lowres", field="views:index:lowres_pos_cam1", type="select_dict_sort", options=index_lowres_position, data_type="integer") );
         html_entry += this.tab.row("LowRes Position (CAM2):&nbsp;",    birdhouse_edit_field(id="set_index_lowres2", field="views:index:lowres_pos_cam2", type="select_dict_sort", options=index_lowres_position, data_type="integer") );
 
-        var id_list = "set_preview_fav:set_initial_setup:set_language:";
+        var id_list = "set_preview_fav:set_initial_setup:set_language:set_closed:set_close_msg:";
         id_list    += "set_timezone:set_title:set_backup:set_preview:set_rpi:set_index_lowres:set_index_view:set_index_lowres2";
         //id_list    += ":set_db_server:set_db_clean_up:set_db_type:set_ip4_video_port:set_weather_location:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:";
 

@@ -1179,6 +1179,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         request_times["1_api-commands"] = round(time.time() - request_start, 4)
 
+        # add maintenance information
+        if "maintenance" in config.param:
+            api_response["API"]["maintenance"] = config.param["maintenance"]
+            api_response["SETTINGS"]["maintenance"] = config.param["maintenance"]
+
         # collect data for WEATHER section
         if command in api_commands["weather"]:
             if config.weather is not None:

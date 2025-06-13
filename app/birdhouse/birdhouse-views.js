@@ -27,6 +27,17 @@ function birdhouse_INDEX(data, camera, object=false) {
 	var stream_ui1, stream_uid2 = "";
     var lowres_pos_cam1 = 0;
 
+    if (app_birdhouse_closed && !app_admin_allowed) {
+        var message = app_data["API"]["maintenance"]["message"];
+        html += "&nbsp;<br/>";
+        html += "<center><i>" + message + "</i></center>";
+        html += "<br/>&nbsp;";
+        setTextById(app_frame.content, html);
+        setTextById(app_frame.header, "<center><h2>" + title + "</h2></center>");
+        setTextById(app_frame.index, "");
+        return;
+    }
+
 	if (active_camera == "cam1" && index_view["lowres_pos_cam1"])       { lowres_position = index_view["lowres_pos_cam1"]; }
 	else if (active_camera == "cam2" && index_view["lowres_pos_cam2"])  { lowres_position = index_view["lowres_pos_cam2"]; }
 	else                                                                { lowres_position = index_view["lowres_position"]; }

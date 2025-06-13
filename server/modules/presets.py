@@ -660,6 +660,10 @@ birdhouse_preset = {
         "timezone": "UTC+1",
         "weather_active": True
     },
+    "maintenance": {
+        "closed": False,
+        "message": ""
+    },
     "server": {  # set vars in the .env file
         "ip4_admin_deny": [""],
         "ip4_address": "",

@@ -14,33 +14,34 @@ var color_code = {
 	"data"    : "gray"
 	}
 
-loadingImage               = "birdhouse/img/bird.gif";
-var app_loading_image      = "birdhouse/img/bird.gif";
+loadingImage                = "birdhouse/img/bird.gif";
+var app_loading_image       = "birdhouse/img/bird.gif";
 
-var app_available          = { cameras: [], sensors : [], micros: [] };
-var app_frame              = { header: "frame1", content: "frame2", info: "frame3", index: "frame4" };
-var app_active             = { cam: "cam1", page: "", date: "", mic: "" };
-var app_active_history     = [];
-var app_active_history_max = 10;
-var app_active_history_pos = 0;
-var app_frame_info = "frame3";
+var app_available           = { cameras: [], sensors : [], micros: [] };
+var app_frame               = { header: "frame1", content: "frame2", info: "frame3", index: "frame4" };
+var app_active              = { cam: "cam1", page: "", date: "", mic: "" };
+var app_active_history      = [];
+var app_active_history_max  = 10;
+var app_active_history_pos  = 0;
+var app_frame_info          = "frame3";
 
-var app_last_active_page  = "";
-var app_camera_source     = {};
-var app_recycle_range     = {};
-var app_admin_allowed     = false;
-var app_session_id        = "";
-var app_session_id_count  = 0;
-var app_data              = {};
-var app_bird_names        = {};
+var app_birdhouse_closed    = false;
+var app_last_active_page    = "";
+var app_camera_source       = {};
+var app_recycle_range       = {};
+var app_admin_allowed       = false;
+var app_session_id          = "";
+var app_session_id_count    = 0;
+var app_data                = {};
+var app_bird_names          = {};
 
-var app_collect4download  = false;
-var app_collect_list      = [];
-var app_header_opened     = {};
+var app_collect4download    = false;
+var app_collect_list        = [];
+var app_header_opened       = {};
 
-var app_scripts_loaded  = 0;
-var app_first_load      = true;
-var app_2nd_load        = true;
+var app_scripts_loaded      = 0;
+var app_first_load          = true;
+var app_2nd_load            = true;
 
 var app_pages_content  = ["INDEX", "TODAY", "ARCHIVE", "FAVORITES", "VIDEOS", "TODAY_COMPLETE", "OBJECTS", "WEATHER", "DIARY", "VIDEO_DETAIL"];
 var app_pages_lists    = ["TODAY", "ARCHIVE", "FAVORITES", "VIDEOS", "TODAY_COMPLETE"];
