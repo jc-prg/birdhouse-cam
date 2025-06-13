@@ -45,3 +45,99 @@ body      { background: var(--app-background); }
     align-items     : center; /* Center vertically */
 }
 
+.closing-message {
+    max-width: 70%;
+    padding: 40px;
+    marding: 40px;
+    border: 1px solid white;
+    border-radius: 10px;
+    font-size: 18px;
+    background: var(--app-dashboard-default);
+}
+
+
+/* CONTROL PANEL INDEX VIEW ADMIN -------------------------- */
+
+.control-panel-container {
+  font-family: sans-serif;
+  margin-right: 10px;
+  margin-bottom: 20px;
+/*
+  background: #1e1e2f;
+  color: white;
+  height: 100vh;
+  */
+}
+
+
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  background: #2a2a3c;
+  padding: 15px;
+  padding-right: 8px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.4);
+}
+
+.control-panel-row {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.control-panel-button {
+  background: #3b3b4f;
+  border: none;
+  width: 33.3%;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s;
+  min-height: 64px;
+}
+
+.control-panel-button:hover {
+  background: #50506a;
+}
+
+.control-panel-button svg {
+  width: 32px;
+  height: 32px;
+  fill: white;
+  transition: fill 0.3s;
+}
+
+/* Start button hover turns icon red */
+.control-panel-button.start:hover svg {
+  fill: #ff4d4d;
+}
+
+.control-panel-button span {
+  font-size: 12px;
+  text-align: center;
+}
+
+.control-panel-button.two {
+  width: 50%;
+}
+
+.control-panel-button-description {
+  display: none;
+}
+
+/* for smaller devices */
+
+@media (max-width: 600px) {
+
+    .control-panel      { gap: 10px; padding: 10px; padding-right: 4px; }
+    .control-panel-row  { gap: 5px; }
+    .control-panel-button svg   { width: 24px; height: 24px; }
+    .control-panel-button       { min-height: 50px; }
+
+}

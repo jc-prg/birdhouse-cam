@@ -29,8 +29,10 @@ function birdhouse_INDEX(data, camera, object=false) {
 
     if (app_birdhouse_closed && !app_admin_allowed) {
         var message = app_data["API"]["maintenance"]["message"].replaceAll("[br]", "<br/>");
-        html += "&nbsp;<br/>";
+        html += "&nbsp;<br/>&nbsp;<br/>";
+        html += "<center><div class='closing-message'>";
         html += "<center><i>" + message + "</i></center>";
+        html += "</div></center>";
         html += "<br/>&nbsp;";
         setTextById(app_frame.content, html);
         setTextById(app_frame.header, "<center><h2>" + title + "</h2></center>");
