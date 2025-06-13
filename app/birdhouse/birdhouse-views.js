@@ -28,7 +28,7 @@ function birdhouse_INDEX(data, camera, object=false) {
     var lowres_pos_cam1 = 0;
 
     if (app_birdhouse_closed && !app_admin_allowed) {
-        var message = app_data["API"]["maintenance"]["message"];
+        var message = app_data["API"]["maintenance"]["message"].replaceAll("[br/]", "<br/>");
         html += "&nbsp;<br/>";
         html += "<center><i>" + message + "</i></center>";
         html += "<br/>&nbsp;";
