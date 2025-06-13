@@ -31,6 +31,8 @@ function birdhouse_INDEX(data, camera, object=false) {
         var message = app_data["API"]["maintenance"]["message"].replaceAll("[br]", "<br/>");
         html += "&nbsp;<br/>&nbsp;<br/>";
         html += "<center><div class='closing-message'>";
+        html += "<img src='" + app_loading_image + "' style='width:150px;'>";
+        html += "<br/>&nbsp;";
         html += "<center><i>" + message + "</i></center>";
         html += "</div></center>";
         html += "<br/>&nbsp;";
