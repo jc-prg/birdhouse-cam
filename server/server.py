@@ -33,6 +33,8 @@ from modules.bh_class import BirdhouseClass
 from modules.bh_database import BirdhouseTEXT
 from modules.srv_support import ServerInformation, ServerHealthCheck
 from modules.statistics import BirdhouseStatistics
+import faulthandler
+faulthandler.enable()
 
 api_description = {"name": "BirdhouseCAM", "version": "v1.8.0"}
 app_framework = "v1.8.0"
