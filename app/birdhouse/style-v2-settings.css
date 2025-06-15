@@ -132,7 +132,7 @@
     }
 
 .setting_line {
-    width           : 98%;
+    width           : calc(100% - 14px);
     height          : 2px;
     margin          : 6px;
     margin-bottom   : 12px;

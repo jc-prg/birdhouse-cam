@@ -127,21 +127,18 @@ function birdhouse_edit_field(id, field="", type="input", options="", data_type=
         html += "</div>";
         }
     else if (type == "toggle") {
-        on_set   = "document.getElementById(\""+id+"\").value = document.getElementById(\""+id+"_\"+this.value).innerHTML;";
-        on_set   += "this.className=\"bh-slider set\";";
+        var on_set       = "document.getElementById(\""+id+"\").value = document.getElementById(\""+id+"_\"+this.value).innerHTML;";
+        on_set          += "this.className=\"bh-slider set\";";
+        var toggle_data  = "";
+        var toggle_color = "undef";
+        var range        = options.split(":");
 
-        range = options.split(":");
-        step  = "1";
+        if (data == "false" || data == false)           { toggle_data = 0; toggle_color = "off"; }
+        else if (data == "true" || data == true)        { toggle_data = 1; toggle_color = "on"; }
+        else                                            { toggle_data = data; }
 
-        style = "width:100px";
-        if (range[0] == 0 && range[1] == 1)             { style = "width:50px;"; }
-        if (range[0] == "false" & range[1] == "true")   { style = "width:50px;"; }
-        if (data == "false" || data == false)       { var toggle_data = 0; }
-        else if (data == "true" || data == true)    { var toggle_data = 1; }
-        else                                        { var toggle_data = data; }
-
-        html += "<div class='bh-slidecontainer' style='float:left;width:60px;height:auto;'>";
-        html += "<input id='"+id+"_range' class='bh-slider undef' type='range' name='' min='0' max='1' step='1' value='"+toggle_data+"' style='"+style+"' onchange='"+on_set+on_change+"'>";
+        html += "<div class='bh-slidecontainer' style='float:left;width:60px;height:auto;margin-bottom:5px;'>";
+        html += "<input id='"+id+"_range' class='bh-slider "+toggle_color+"' type='range' name='' min='0' max='1' step='1' value='"+toggle_data+"' style='width:50px;' onchange='"+on_set+on_change+"'>";
         html += "<div style='display:none;'><div id='"+id+"_0'>" + range[0] + "</div><div id='"+id+"_1'>" + range[1] + "</div></div>";
 
         html += "</div><div style='float:left;margin-left:12px;display:none;'>";

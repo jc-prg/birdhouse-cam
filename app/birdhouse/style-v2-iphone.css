@@ -40,7 +40,7 @@
 @media only screen and (device-width : 402px) {
 
     .setting_bg.header.empty            { height: 46px; }
-    .settings_button_index.header       { width: 48px; }
+    .settings_button_index.header       { width: 34px; padding: 6px; padding-bottom: 2px; height: 32px; min-height: unset; }
     .settings_button_index.header img   { max-width: 90%; max-height: 90% }
 }
 

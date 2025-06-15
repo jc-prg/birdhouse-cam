@@ -432,6 +432,21 @@ function birdhouse_LIST(page, data, camera, header_open=true) {
 	if (active_page == "TODAY_COMPLETE")                        { page_status = "status_error_record_" + app_active.cam; }
 	if (active_page != "FAVORITES" && active_page != "VIDEOS")  { page_title += "  (" + camera_settings[app_active.cam]["name"] + ")"; }
 
+
+	if (active_page == "TODAY" && active_date != "")    {
+        var data_list         = data["DATA"];
+        var link_day_back      = "";
+        var link_day_forward   = "";
+        if (data_list["data"]["day_back"] != "")    {
+            var onclick_back    = "birdhousePrint_page(page=\"TODAY\", cam=\""+camera+"\", date=\""+data_list["data"]["day_back"]+"\");";
+            page_title         += "<span onclick='" + onclick_back + "' style='float:right;cursor:pointer;' title='"+lang("DAY_BACK")+"'>&#187;</span>";
+            }
+        if (data_list["data"]["day_forward"] != "") {
+            var onclick_forward = "birdhousePrint_page(page=\"TODAY\", cam=\""+camera+"\", date=\""+data_list["data"]["day_forward"]+"\");";
+            page_title         += "<span onclick='" + onclick_forward + "' style='float:left;cursor:pointer;' title='"+lang("DAY_FORWARD")+"'>&#171;</span>";
+            }
+    }
+
 	birdhouse_frameHeader(page_title, page_status);
 	setTextById(app_frame.content, html);
 
@@ -773,17 +788,6 @@ function birdhouse_LIST_chart_weather(data, active_page, camera) {
 	var chart_data        = data_list["data"]["chart_data"];
 	var sensors           = app_data["SETTINGS"]["devices"]["sensors"];
 
-	var link_day_back      = "";
-	var link_day_forward   = "";
-	if (data_list["data"]["day_back"] != "")    {
-	    var onclick_back    = "birdhousePrint_page(page=\"TODAY\", cam=\""+camera+"\", date=\""+data_list["data"]["day_back"]+"\");";
-	    link_day_back       = "<div onclick='" + onclick_back + "' class='button-back-and-forth' style='float:right;'>" + lang("DAY_BACK") + " &#187;</div>";
-	    }
-	if (data_list["data"]["day_forward"] != "") {
-	    var onclick_forward = "birdhousePrint_page(page=\"TODAY\", cam=\""+camera+"\", date=\""+data_list["data"]["day_forward"]+"\");";
-	    link_day_forward    = "<div onclick='" + onclick_forward + "' class='button-back-and-forth' style='float:left;'>&#171; " + lang("DAY_FORWARD") + "</div>";
-	    }
-
     for (var x=0;x<chart_data["titles"].length;x++) {
         if (chart_data["titles"][x].indexOf(":")>-1) {
             var sensor = chart_data["titles"][x].split(":");
@@ -820,18 +824,13 @@ function birdhouse_LIST_chart_weather(data, active_page, camera) {
     chart    += birdhouseWeather_OverviewChart(weather_data); // + "<br/>";
 
     if (chartJS_loaded) {
-        if (active_page == "TODAY") {
-            chart += "<hr/><div style='width:100%;'>" + link_day_forward + " &nbsp; " + link_day_back + "</div><br/>&nbsp;";
-            }
-        else {
-            chart += "<br/>&nbsp;";
-            }
-        html     += birdhouse_OtherGroup( "chart", lang("WEATHER"), chart, true );
+        chart += "<br/>&nbsp;";
+        html  += birdhouse_OtherGroup( "chart", lang("WEATHER"), chart, false );
         }
     else {
         var chart = birdhouseWeather_OverviewChart(weather_data);
         chart += "<br/>&nbsp;";
-        html     += birdhouse_OtherGroup( "chart", lang("WEATHER") + " " + lang("NO_INTERNET_CHART"), chart, false );
+        html  += birdhouse_OtherGroup( "chart", lang("WEATHER") + " " + lang("NO_INTERNET_CHART"), chart, false );
         }
     return html;
 }

@@ -58,6 +58,13 @@ body      { background: var(--app-background); }
 
 /* CONTROL PANEL INDEX VIEW ADMIN -------------------------- */
 
+
+:root {
+    --control-panel-background: #2a2a3c;
+    --control-panel-button-background: #3b3b4f;
+    --control-panel-button-background-hover: #50506a;
+}
+
 .control-panel-container {
   font-family: sans-serif;
   margin-right: 10px;
@@ -74,7 +81,7 @@ body      { background: var(--app-background); }
   display: flex;
   flex-direction: column;
   gap: 15px;
-  background: #2a2a3c;
+  background: var(--control-panel-background);
   padding: 15px;
   padding-right: 8px;
   border-radius: 12px;
@@ -88,7 +95,7 @@ body      { background: var(--app-background); }
 }
 
 .control-panel-button {
-  background: #3b3b4f;
+  background: var(--control-panel-button-background);
   border: none;
   width: 33.3%;
   border-radius: 8px;
@@ -102,8 +109,23 @@ body      { background: var(--app-background); }
   min-height: 54px;
 }
 
+.control-panel-button svg {
+  fill: white;
+  stroke: white;
+}
+
 .control-panel-button:hover {
-  background: #50506a;
+  background: var(--control-panel-button-background-hover);
+}
+
+.control-panel-button:disabled:hover {
+  background: var(--control-panel-button-background);
+  cursor: not-allowed;
+}
+
+.control-panel-button:disabled svg {
+  fill: #999;
+  stroke: #999;
 }
 
 .control-panel-button svg {
@@ -135,8 +157,8 @@ body      { background: var(--app-background); }
 
 @media (max-width: 600px) {
 
-    .control-panel      { gap: 10px; padding: 10px; padding-right: 4px; }
-    .control-panel-row  { gap: 5px; }
+    .control-panel              { gap: 10px; padding: 10px; padding-right: 4px; }
+    .control-panel-row          { gap: 5px; }
     .control-panel-button svg   { width: 24px; height: 24px; }
     .control-panel-button       { min-height: 50px; }
 

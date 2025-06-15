@@ -492,13 +492,17 @@ function birdhouse_recordStart(camera) {
     commands = ["start-recording", camera];
     birdhouse_apiRequest('POST',commands,"","","","birdhouse_recordStart");
 
-    b_start  = document.getElementById("rec_start_"+camera);
+    b_start  = document.getElementById("rec2_start_"+camera);
     b_start.disabled = "disabled";
-    b_start.style.color = "red";
-    b_stop   = document.getElementById("rec_stop_"+camera);
+    b_start.style.backgroundColor = "darkred";
+    b_stop   = document.getElementById("rec2_stop_"+camera);
     b_stop.disabled = "";
-    b_cancel = document.getElementById("rec_cancel_"+camera);
+    b_cancel = document.getElementById("rec2_cancel_"+camera);
     b_cancel.disabled = "";
+    b_foto = document.getElementById("rec2_foto_"+camera);
+    b_foto.disabled = "disabled";
+    b_object = document.getElementById("rec2_object_"+camera);
+    b_object.disabled = "disabled";
 }
 
 /*
@@ -510,13 +514,17 @@ function birdhouse_recordStop(camera) {
     commands = ["stop-recording", camera];
     birdhouse_apiRequest('POST',commands,"","","","birdhouse_recordStop");
 
-    b_start  = document.getElementById("rec_start_"+camera);
+    b_start  = document.getElementById("rec2_start_"+camera);
     b_start.disabled = "";
-    b_start.style.color = "white";
-    b_stop   = document.getElementById("rec_stop_"+camera);
+    b_start.style.backgroundColor = "var(--control-panel-button-background)";
+    b_stop   = document.getElementById("rec2_stop_"+camera);
     b_stop.disabled = "disabled";
-    b_cancel = document.getElementById("rec_cancel_"+camera);
+    b_cancel = document.getElementById("rec2_cancel_"+camera);
     b_cancel.disabled = "disabled";
+    b_foto = document.getElementById("rec2_foto_"+camera);
+    b_foto.disabled = "";
+    b_object = document.getElementById("rec2_object_"+camera);
+    b_object.disabled = "";
 }
 
 /*
@@ -528,13 +536,17 @@ function birdhouse_recordCancel(camera) {
     commands = ["cancel-recording", camera];
     birdhouse_apiRequest('POST',commands,"","","","birdhouse_recordCancel");
 
-    b_start  = document.getElementById("rec_start_"+camera);
+    b_start  = document.getElementById("rec2_start_"+camera);
     b_start.disabled = "";
-    b_start.style.color = "white";
-    b_stop   = document.getElementById("rec_stop_"+camera);
+    b_start.style.backgroundColor = "var(--control-panel-button-background)";
+    b_stop   = document.getElementById("rec2_stop_"+camera);
     b_stop.disabled = "disabled";
-    b_cancel = document.getElementById("rec_cancel_"+camera);
+    b_cancel = document.getElementById("rec2_cancel_"+camera);
     b_cancel.disabled = "disabled";
+    b_foto = document.getElementById("rec2_foto_"+camera);
+    b_foto.disabled = "";
+    b_object = document.getElementById("rec2_object_"+camera);
+    b_object.disabled = "";
 }
 
 /*
