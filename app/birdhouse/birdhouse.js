@@ -547,7 +547,7 @@ function birdhouseReloadView() {
 
 	var no_reload_views = ["INDEX", "SETTINGS_IMAGE", "SETTINGS_DEVICES"];
 
-    console.warn("RELOAD -> " + app_active.page);
+    console.log("RELOAD -> " + app_active.page);
 
 	if (app_floating_lowres) {
 	    startFloatingLowres(app_floating_cam, app_floating_stream);

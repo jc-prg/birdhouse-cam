@@ -756,14 +756,6 @@ function birdhouseStatus_detection(data) {
         else                                          { setStatusColor("status_error_" + key + "_object", "red"); }
         });
 
-    var cameras   = app_data["STATUS"]["devices"]["cameras"];
-    Object.keys(cameras).forEach(key => {
-        b_object = document.getElementById("rec2_object_"+key);
-        if (b_object) {
-            if (status["active"] == false)  { b_object.disabled = "disabled"; }
-            else                            { b_object.disabled = ""; }
-            }
-        });
     }
 
 /*
@@ -782,6 +774,10 @@ function birdhouseStatus_recordVideo(data) {
         b_cancel = document.getElementById("rec2_cancel_"+key);
         b_object = document.getElementById("rec2_object_"+key);
         b_foto   = document.getElementById("rec2_foto_"+key);
+        var object_detection = false;
+        if (app_data["SETTINGS"]["devices"]["cameras"][key]) {
+            object_detection = app_data["SETTINGS"]["devices"]["cameras"][key]["object_detection"]["active"];
+        }
 
         if (p_video != undefined) {
             p_video_info += key.toUpperCase() + ": ";
@@ -807,9 +803,9 @@ function birdhouseStatus_recordVideo(data) {
 
         if (b_start != undefined) {
             if (!value["active"])           { b_start.disabled = "disabled"; }
-            else if (value["recording"])    { b_start.disabled = "disabled"; b_foto.disabled = "disabled"; b_object.disabled = "disabled"; b_start.style.backgroundColor = "darkred"; }
-            else if (value["processing"])   { b_start.disabled = "disabled"; b_foto.disabled = "disabled"; b_object.disabled = "disabled"; }
-            else                            { b_start.disabled = "";  b_foto.disabled = ""; b_object.disabled = ""; }
+            else if (value["recording"])    { b_start.disabled = "disabled"; b_start.style.backgroundColor = "darkred"; }
+            else if (value["processing"])   { b_start.disabled = "disabled"; }
+            else                            { b_start.disabled = ""; }
             }
         if (b_stop != undefined) {
             if (value["recording"])         { b_stop.disabled = ""; }
@@ -820,6 +816,17 @@ function birdhouseStatus_recordVideo(data) {
             else if (!value["recording"] && !value["processing"]) { b_cancel.disabled = "disabled"; }
             else                                                  { b_cancel.disabled = "disabled"; }
             }
+        if (b_foto != undefined) {
+            if (value["recording"])         { b_foto.disabled = "disabled"; }
+            else if (value["processing"])   { b_foto.disabled = "disabled"; }
+            else                            { b_foto.disabled = ""; }
+        }
+        if (b_object != undefined) {
+            if (object_detection == false)  { b_object.disabled = "disabled"; }
+            else if (value["recording"])    { b_object.disabled = "disabled"; }
+            else if (value["processing"])   { b_object.disabled = "disabled"; }
+            else                            { b_object.disabled = ""; }
+        }
     });
 
     if (p_video_info == "") { p_video_info = "inactive"; }

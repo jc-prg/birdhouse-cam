@@ -213,7 +213,6 @@ function birdhouse_edit_check_values(id, data_type) {
         }
     }
     if (data_type == "float") {
-        console.log(parseFloat(value));
         if (isNaN(parseFloat(value))) {
             error = true;
             error_msg += id.toUpperCase() + " isn't a float number.\n";

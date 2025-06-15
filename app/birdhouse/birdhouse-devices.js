@@ -278,7 +278,8 @@ function birdhouseDevices_cameras(data, subset="") {
                 html_entry += tab.row("- Detection Status:",     loading_info);
                 html_entry += tab.end();
 
-                id_list += "set_detect_size_"+camera+":set_detect_threshold_"+camera+":set_detect_classes_"+camera+":set_detect_models_"+camera+":";
+                //id_list += "set_detect_size_"+camera+":set_detect_threshold_"+camera+":set_detect_classes_"+camera+":set_detect_models_"+camera+":";
+                id_list += "set_detect_size_"+camera+":set_detect_threshold_"+camera+":set_detect_models_"+camera+":";
                 id_list += "set_detect_active_"+camera+":set_detect_similarity_"+camera+":";
                 html_temp += birdhouse_OtherGroup( camera+"_detect_object", "Image Object Detection", html_entry, false );
                 }

@@ -432,11 +432,11 @@ function birdhouse_app_settings (name="Settings") {
 
         if (show == "maintenance" || show == "all") {
             if (show == "all") { html_entry = this.tab.row("Maintenance commands ..."); }
-            api_call    = this.button_system("birdhouse_forceBackup();",                    "<b>Backup data</b><br/> of TODAY now");
+            api_call    = this.button_system("birdhouse_forceBackup();",                    "<b>Backup TODAY's data now</b><br/> (images and configs)");
             api_call   += this.button_system("birdhouse_forceUpdateViews(\"all\");",        "<b>Update views</b><br/> (favorite, archive, objects)");
-            api_call   += this.button_system("birdhouse_forceUpdateViews(\"all\",true);",   "<b>Update views</b>,<br/> complete reload from archive data");
-            api_call   += this.button_system("birdhouse_recreateImageConfig();",            "<b>Recreate data</b><br/> for TODAY based on recorded images");
-            api_call   += this.button_system("birdhouse_removeDataToday();",                "<b>Delete data</b><br/> for TODAY (images and configs)");
+            api_call   += this.button_system("birdhouse_forceUpdateViews(\"all\",true);",   "<b>Update views completely</b><br/> by recreating from archived data");
+            api_call   += this.button_system("birdhouse_recreateImageConfig();",            "<b>Recreate TODAY's data</b><br/> based on recorded images");
+            api_call   += this.button_system("birdhouse_removeDataToday();",                "<b>Delete TODAY's data</b><br/> (images and configs)");
             api_call   += this.button_system("birdhouse_checkTimeout();",                   "Test / demonstrate <b>Timeout</b>", "other");
 
             if (server_settings["server_mode"] == "DOCKER" && server_settings["server_restart"] != "no" && server_settings["server_restart"] != "on-failure") {
