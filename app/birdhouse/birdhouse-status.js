@@ -127,7 +127,12 @@ function birdhouseStatus_print(data) {
         }
 
 
-    if (appSettings.loaded_index)                           { setTextById("device_status_short", birdhouseDevices("", data, "short")); appSettings.loaded_index = false; }
+    if (appSettings.loaded_index)                           {
+        setTextById("device_status_short", birdhouseDevices("", data, "short"));
+
+        setTextById("app_open_close", birdhouse_settings.settings_app_open_close());
+        appSettings.loaded_index = false;
+        }
 
     if (pages_settings.includes(app_active.page))           { birdhouseStatus_system(data); }
     if (pages_settings.includes(app_active.page))           { birdhouseStatus_processing(data); }

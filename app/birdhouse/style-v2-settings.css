@@ -11,7 +11,7 @@
     --setting-btn-index-background: #333399;
     --setting-btn-index-border: #5555AA;
     --setting-btn-index-info-background: #111122;
-    --setting-btn-index-info-border: #222244;
+    --setting-btn-index-info-border: #339;
     --setting-btn-index-header: gray;
     --setting-btn-index-header-selected: white;
 
@@ -170,6 +170,7 @@
     background      : var(--setting-btn-index-info-background);
     border          : solid 2px var(--setting-btn-index-info-border);
     cursor          : default;
+    padding         : 5px;
     }
 
 .settings_button_index.header {
@@ -189,18 +190,18 @@
     border          : 1px solid var(--setting-btn-index-header-selected);
     }
 
-.settings_button_index     { margin : 3px; width : calc(50% - 6px); height : 120px; }
+.settings_button_index     { margin : 3px; width : calc(50% - 20px); height : 120px; }
 .settings_button_index img { max-width: 90%; }
 .settings_icon_big         { max-width : 120px; max-height : 60px; }
 
 
 @media (min-width: 705px) {
-  .settings_button_index    { margin : 3px; width : calc(33.333% - 6px); height : 140px; }
+  .settings_button_index    { margin : 3px; width : calc(33.333% - 20px); height : 140px; }
   .settings_icon_big        { max-width : 120px; max-height : 60px; }
   }
 
 @media (min-width: 1250px) {
-  .settings_button_index    { margin : 3px; width : calc(25% - 6px); height : 140px; }
+  .settings_button_index    { margin : 3px; width : calc(25% - 20px); height : 140px; }
   .settings_icon_big        { max-width : 140px; max-height : 80px; }
   }
 

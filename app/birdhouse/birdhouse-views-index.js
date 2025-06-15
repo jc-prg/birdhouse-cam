@@ -23,6 +23,73 @@ index_fullscreen_image = `
       </svg>
 `;
 
+//-------------------------------------------------
+
+
+//index_template["control_panel"] = `
+index_template["control-panel"] = `
+  <div class="control-panel">
+    <div class="control-panel-row">
+      <button class="control-panel-button start" title="Start Recording" id="rec2_start_<!--CAM1_ID-->"  onclick="birdhouse_recordStart('<!--CAM1_ID-->');">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="6" />
+        </svg>
+        <span class="control-panel-button-description">Start</span>
+      </button>
+      <button class="control-panel-button" title="Stop Recording" id="rec2_stop_<!--CAM1_ID-->" onclick="birdhouse_recordStop('<!--CAM1_ID-->');">
+        <svg viewBox="0 0 24 24">
+          <rect x="6" y="6" width="12" height="12"/>
+        </svg>
+        <span class="control-panel-button-description">Stop</span>
+      </button>
+      <button class="control-panel-button" title="Cancel" id="rec2_cancel_<!--CAM1_ID-->" onclick="birdhouse_recordCancel('<!--CAM1_ID-->');">
+        <svg viewBox="0 0 24 24">
+          <line x1="6" y1="6" x2="18" y2="18" stroke="white" stroke-width="2"/>
+          <line x1="6" y1="18" x2="18" y2="6" stroke="white" stroke-width="2"/>
+        </svg>
+        <span class="control-panel-button-description">Cancel</span>
+      </button>
+    </div>
+    <div class="control-panel-row">
+      <!-- HiRes Picture -->
+      <button class="control-panel-button two" title="Take HiRes Picture" id="rec2_foto_<!--CAM1_ID-->" onclick="birdhouse_recordFoto('<!--CAM1_ID-->');">
+        <svg viewBox="0 0 24 24">
+          <path d="M21 6h-3.17l-1.83-2H8L6.17 6H3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1zM12 17a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>
+        </svg>
+        <span class="control-panel-button-description">HiRes</span>
+      </button>
+      <button class="control-panel-button two" title="Toggle Object Detection" onclick="<!--OBJECT--> toggleDetection();">
+        <span id="eye-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12c-2.8 0-5-2.2-5-5s2.2-5 5-5
+            5 2.2 5 5-2.2 5-5 5zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+          </svg>
+        </span>
+        <span class="control-panel-button-description">Detect</span>
+      </button>
+    </div>
+  </div>
+`;
+
+  let detectionOn = true;
+  function toggleDetection() {
+    const icon = document.getElementById('eye-icon');
+    detectionOn = !detectionOn;
+    icon.innerHTML = detectionOn
+      ? `<svg viewBox="0 0 24 24" width="32" height="32" fill="white">
+           <path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12c-2.8 0-5-2.2-5-5s2.2-5 5-5
+           5 2.2 5 5-2.2 5-5 5zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+         </svg>`
+      : `<svg viewBox="0 0 24 24" width="32" height="32" fill="none">
+           <path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12c-2.8 0-5-2.2-5-5s2.2-5 5-5
+           5 2.2 5 5-2.2 5-5 5zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+           <line x1="3" y1="21" x2="21" y2="3" stroke="white" stroke-width="2"/>
+         </svg>`;
+  }
+
+
+//-------------------------------------------------
+
 index_template["single"] = `
     <div id="video_stream_online">
         <center>
@@ -82,16 +149,19 @@ index_template["picture-in-picture"]        = index_template["single"].replace("
 index_template["admin"] = `
 
     <center>
-    <table border="0" width="100%">
+    <table border="0">
     <tr>
-    <td width="35%" align="center" valign="top">
+    <td align="center" valign="top">
+            <!--
             <button id="rec_start_<!--CAM1_ID-->"  onclick="birdhouse_recordStart('<!--CAM1_ID-->');"   class="button-video-record">&#9679;</button>
             <button id="rec_stop_<!--CAM1_ID-->"   onclick="birdhouse_recordStop('<!--CAM1_ID-->');"    class="button-video-record" disabled="disabled">&#9632;</button>
             <button id="rec_cancel_<!--CAM1_ID-->" onclick="birdhouse_recordCancel('<!--CAM1_ID-->');"  class="button-video-record" disabled="disabled" style="font-size:20px;padding:0px;line-height:0.8;"><b>&times;</b></button><br/>
             &nbsp;<br/>
-            <button id="foto_<!--CAM1_ID-->" onclick="birdhouse_recordFoto('<!--CAM1_ID-->');"  class="button-video-record" style="width:100px;"<b>Foto</b></button><br/>
+            <button id="rec_foto_<!--CAM1_ID-->" onclick="birdhouse_recordFoto('<!--CAM1_ID-->');"  class="button-video-record" style="width:100px;"<b>Foto</b></button><br/>
             &nbsp;<br/>
             <div id="button_object_detection" style="display:none;"><button onclick="<!--OBJECT-->" class="button-video-record" style="width:100px;">Objects <!--OBJECT_BUTTON--></button></div>
+            -->
+            <div class="control-panel-container">`+index_template["control-panel"]+`</div>
     </td>
     <td>
         <table border="0" width="100%">
@@ -274,5 +344,8 @@ index_template["offline"] = `
         </center>
     </div>
 `
+
+
+//-------------------------------------------------
 
 app_scripts_loaded += 1;

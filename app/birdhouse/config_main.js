@@ -105,6 +105,9 @@ function app_setting_entries() {
     appSettings.add_entry("SETTINGS_INFORMATION",   lang("SETTINGS_INFORMATION"),   "info",                      "birdhouse_settings.create_new('SETTINGS_INFORMATION');");
     appSettings.add_entry("SETTINGS_STATISTICS",    lang("SETTINGS_STATISTICS"),    "birdhouse/img/statistics",  "birdhouse_settings.create_new('SETTINGS_STATISTICS');");
     appSettings.add_entry("SETTINGS_SERVER",        lang("SETTINGS_SERVER"),        "settings",                  "birdhouse_settings.create_new('SETTINGS_SERVER');");
+
+    appSettings.add_entry("CLOSE", "<div id='app_open_close'><b>"+lang("CLOSE_BIRDHOUSE")+"</b><br/>"+lang("PLEASE_WAIT")+" ...</div>",  "",   "");
+
     }
 
 /*

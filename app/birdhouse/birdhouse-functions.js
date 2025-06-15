@@ -45,6 +45,11 @@ function birdhouse_edit_field(id, field="", type="input", options="", data_type=
     if (type == "input") {
         html += "<input id='"+id+"' value='"+data+"' style='"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");' onchange='"+on_change+"'>";
         }
+    else if (type == "input_text") {
+        html += "<textarea id='"+id+"' style='min-height:35px;min-width:250px;"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");' onchange='"+on_change+"'>";
+        html += data;
+        html += "</textarea>";
+        }
     else if (type == "select_dict" || type == "select_dict_sort") {
 
         if (type == "select_dict_sort") {
@@ -119,6 +124,28 @@ function birdhouse_edit_field(id, field="", type="input", options="", data_type=
         html += "<input id='"+id+"_range' class='bh-slider undef' type='range' name='' min='0' max='1' step='1' style='"+style+"' onchange='"+on_set+on_change+"'>";
         html += "</div><div style='float:left;margin-left:12px;'>";
         html += "<input id='"+id+"' class='bh-slider-value' style='width:30px;' onchange='"+on_value+"'>";
+        html += "</div>";
+        }
+    else if (type == "toggle") {
+        on_set   = "document.getElementById(\""+id+"\").value = document.getElementById(\""+id+"_\"+this.value).innerHTML;";
+        on_set   += "this.className=\"bh-slider set\";";
+
+        range = options.split(":");
+        step  = "1";
+
+        style = "width:100px";
+        if (range[0] == 0 && range[1] == 1)             { style = "width:50px;"; }
+        if (range[0] == "false" & range[1] == "true")   { style = "width:50px;"; }
+        if (data == "false" || data == false)       { var toggle_data = 0; }
+        else if (data == "true" || data == true)    { var toggle_data = 1; }
+        else                                        { var toggle_data = data; }
+
+        html += "<div class='bh-slidecontainer' style='float:left;width:60px;height:auto;'>";
+        html += "<input id='"+id+"_range' class='bh-slider undef' type='range' name='' min='0' max='1' step='1' value='"+toggle_data+"' style='"+style+"' onchange='"+on_set+on_change+"'>";
+        html += "<div style='display:none;'><div id='"+id+"_0'>" + range[0] + "</div><div id='"+id+"_1'>" + range[1] + "</div></div>";
+
+        html += "</div><div style='float:left;margin-left:12px;display:none;'>";
+        html += "<input id='"+id+"' class='bh-slider-value' style='width:30px;' value='"+data+"' disabled>";
         html += "</div>";
         }
     else if (type == "range") {

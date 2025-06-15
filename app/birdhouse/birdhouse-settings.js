@@ -56,14 +56,13 @@ function birdhouse_app_settings (name="Settings") {
       	setTimeout(function(){
       	    birdhouse_settings.create_exec(type);
 		}, 500);
-		//birdhouse_KillActiveStreams();
-    	window.scrollTo(0,0);
     }
 
     /*
     * get data and coordinate creation of all or selected setting category (old view)
     */
 	this.create_exec = function (type="") {
+        window.scrollTo(0,0);
 
         this.tab = new birdhouse_table();
         this.tab.style_rows["height"] = "27px";
@@ -152,7 +151,7 @@ function birdhouse_app_settings (name="Settings") {
     /*
     * prepare frame and initiate loading of selected setting category (new view with categories and tiles)
     */
-    this.create_new = function (type="") {
+    this.create_new = function (type="", direct_access="") {
         this.set.show(true);
         window.scrollTo(0, 0);
 
@@ -163,7 +162,7 @@ function birdhouse_app_settings (name="Settings") {
             this.setting_type = "SETTINGS_SERVER";
             this.set.clear_frames();
             this.set.clear_content_frames();
-            this.set.write(1, lang("SETTINGS"), this.settings());
+            this.set.write(1, lang("SETTINGS"), this.settings(direct_access));
             this.set.show_entry(-1);
             app_active.page = "SETTINGS_SERVER";
             }
@@ -259,42 +258,83 @@ function birdhouse_app_settings (name="Settings") {
     /*
     * create setting view to edit overarching app settings and see overarching server settings (from .env)
     */
-    this.settings = function () {
+    this.settings = function (direct_access="") {
+
+console.error(direct_access);
 
         var html        = "";
         var tab         = new birdhouse_table();
         var settings    = app_data["SETTINGS"];
         var initial     = app_data["STATUS"]["server"]["initial_setup"];
         var timezones   = "UTC-12,UTC-11,UTC-10,UTC-9,UTC-8,UTC-7,UTC-6,UTC-5,UTC-4,UTC-3,UTC-2,UTC-1,UTC+0,UTC+1,UTC+2,UTC+3,UTC+4,UTC+5,UTC+6,UTC+7,UTC+8,UTC+9,UTC+10,UTC+11,UTC+12"
-
-        if (initial == false) {
+        var settings_open = {
+            "SRV_MAINTENANCE": true,
+            "APP_SETTINGS": false,
+            "APP_SETTINGS_ACCESS": false,
+            "SRV_SETTINGS": false,
+            "API_CALLS": false,
+            "APP_CONSTRUCTION": false,
+        }
+        if (direct_access != "") {
+            Object.keys(settings_open).forEach(key => { settings_open[key] = false; });
+            settings_open[direct_access] = true;
+            }
+        if (initial == true) {
+            settings_open["SRV_MAINTENANCE"] = false;
+            settings_open["APP_SETTINGS"]    = true;
+            }
+        else {
             html_entry = this.api_calls(show="maintenance");
             html_entry += "&nbsp;<br/>";
-            html += birdhouse_OtherGroup( "SRV_MAINTENANCE", "Maintenance", html_entry, true, "settings" );
+            html += birdhouse_OtherGroup( "SRV_MAINTENANCE", "Maintenance", html_entry, settings_open["SRV_MAINTENANCE"], "settings" );
             }
+
         html += "<div style='display:none'>Edit initial setup: <select id='set_initial_setup'><option selected>false</option></select>";
         html += "<input id='set_initial_setup_data' value='server:initial_setup'>";
         html += "<input id='set_initial_setup_data_type' value='boolean'></div>";
 
         html_entry = this.settings_app_detail();
-        var main_settings_open = false;
-        if (initial) { main_settings_open = true; }
-        html += birdhouse_OtherGroup( "APP_SETTINGS", "APP Settings", html_entry, main_settings_open, "settings" );
+        html += birdhouse_OtherGroup( "APP_SETTINGS", "APP Settings", html_entry, settings_open["APP_SETTINGS"], "settings" );
+
+        html_entry = this.settings_app_access();
+        html += birdhouse_OtherGroup( "APP_SETTINGS_ACCESS", "APP Access", html_entry, settings_open["APP_SETTINGS_ACCESS"], "settings" );
 
         if (initial == false) {
             html_entry = this.server_side_settings();
-            html += birdhouse_OtherGroup( "SRV_SETTINGS", "SERVER settings <i>(edit in &quot;.env&quot;)</i>", html_entry, false, "settings" );
+            html += birdhouse_OtherGroup( "SRV_SETTINGS", "SERVER settings <i>(edit in &quot;.env&quot;)</i>", html_entry, settings_open["SRV_SETTINGS"], "settings" );
 
             html_entry = this.api_calls(show="api");
             html_entry += "&nbsp;<br/>";
-            html += birdhouse_OtherGroup( "api_calls", "Development: API Calls", html_entry, false, "settings" );
+            html += birdhouse_OtherGroup( "API_CALLS", "Development: API Calls", html_entry, settings_open["API_CALLS"], "settings" );
 
             html_entry = this.app_under_construction();
-            html += birdhouse_OtherGroup( "app_under_construction", "Development: Direct Links", html_entry, false, "settings" );
+            html += birdhouse_OtherGroup( "APP_CONSTRUCTION", "Development: Direct Links", html_entry, settings_open["APP_CONSTRUCTION"], "settings" );
             }
 
         return html;
         }
+
+    /*
+    * create dialog to open or close the birdhouse for visitors
+    */
+    this.settings_app_open_close = function () {
+        var html_entry  = "";
+        var id_list = "set_closed:";
+        var button1  = "<button id='init_b1' onclick='birdhouse_edit_send(\""+id_list+"\", \"\");' style='background:var(--setting-btn-index-background);'>&nbsp;"+lang("SAVE")+"&nbsp;</button>";
+        var button2  = "<button id='init_b2' onclick='birdhouse_settings.create_new(\"SETTINGS_SERVER\",\"APP_SETTINGS_ACCESS\");' style='background:var(--setting-btn-index-background);'>&nbsp;"+lang("EDIT")+"&nbsp;</button>";
+        var data    = app_data["SETTINGS"]["maintenance"];
+        html_entry += "<center>";
+        html_entry += "<table><tr>";
+        html_entry += "<td>"+birdhouse_edit_field(id="set_closed", field="maintenance:closed", type="toggle", options="false:true", data_type="boolean") +"</td><td>" + lang("CLOSE_BIRDHOUSE") + "</td>";
+        html_entry += "</tr></table>";
+        html_entry += this.tab.end();
+        html_entry += "<br/>";
+        html_entry += button1 + "&nbsp;" + button2;
+        html_entry += "</center>";
+
+        return html_entry;
+    }
+
 
     /*
     * create dialog to edit main settings for the app
@@ -309,9 +349,6 @@ function birdhouse_app_settings (name="Settings") {
         html_entry += this.tab.row("Language:&nbsp;",           birdhouse_edit_field(id="set_language", field="localization:language", type="select", options="EN,DE") );
         html_entry += this.tab.row("Timezone:&nbsp;",           birdhouse_edit_field(id="set_timezone", field="localization:timezone", type="select", options=timezones, data_type="string") );
         html_entry += this.tab.row("<hr/>");
-        html_entry += this.tab.row("Closed:&nbsp;",             birdhouse_edit_field(id="set_closed", field="maintenance:closed", type="select", options="true,false", data_type="boolean") );
-        html_entry += this.tab.row("Closing message:&nbsp;",    birdhouse_edit_field(id="set_close_msg", field="maintenance:message", type="input") );
-        html_entry += this.tab.row("<hr/>");
         html_entry += this.tab.row("Backup-Time:&nbsp;",        birdhouse_edit_field(id="set_backup", field="backup:time", type="input") );
         html_entry += this.tab.row("BU Index Favorite:&nbsp;",  birdhouse_edit_field(id="set_preview_fav", field="backup:preview_fav", type="select", options="true,false", data_type="boolean") );
         html_entry += this.tab.row("BU Index Time:&nbsp;",      birdhouse_edit_field(id="set_preview", field="backup:preview", type="input") );
@@ -321,7 +358,7 @@ function birdhouse_app_settings (name="Settings") {
         html_entry += this.tab.row("LowRes Position (CAM1):&nbsp;",    birdhouse_edit_field(id="set_index_lowres", field="views:index:lowres_pos_cam1", type="select_dict_sort", options=index_lowres_position, data_type="integer") );
         html_entry += this.tab.row("LowRes Position (CAM2):&nbsp;",    birdhouse_edit_field(id="set_index_lowres2", field="views:index:lowres_pos_cam2", type="select_dict_sort", options=index_lowres_position, data_type="integer") );
 
-        var id_list = "set_preview_fav:set_initial_setup:set_language:set_closed:set_close_msg:";
+        var id_list = "set_preview_fav:set_initial_setup:set_language:";
         id_list    += "set_timezone:set_title:set_backup:set_preview:set_rpi:set_index_lowres:set_index_view:set_index_lowres2";
         //id_list    += ":set_db_server:set_db_clean_up:set_db_type:set_ip4_video_port:set_weather_location:set_ip4:set_port:set_ip4_audio:set_ip4_video:set_ip4_deny:";
 
@@ -344,6 +381,27 @@ function birdhouse_app_settings (name="Settings") {
             html_entry += this.tab.row("", birdhouse_edit_save("set_main",id_list));
             }
 
+        html_entry += this.tab.row("&nbsp;");
+        html_entry += this.tab.end();
+
+        return html_entry;
+        }
+
+    /*
+    * create dialog to edit app access for visitors
+    */
+    this.settings_app_access = function () {
+        var html_entry  = "";
+        var settings    = app_data["SETTINGS"];
+        var timezones   = "UTC-12,UTC-11,UTC-10,UTC-9,UTC-8,UTC-7,UTC-6,UTC-5,UTC-4,UTC-3,UTC-2,UTC-1,UTC+0,UTC+1,UTC+2,UTC+3,UTC+4,UTC+5,UTC+6,UTC+7,UTC+8,UTC+9,UTC+10,UTC+11,UTC+12"
+
+        html_entry = this.tab.start();
+        html_entry += this.tab.row(lang("CLOSE_BIRDHOUSE") + ":&nbsp;", birdhouse_edit_field(id="set_closed", field="maintenance:closed", type="select", options="true,false", data_type="boolean") );
+        html_entry += this.tab.row("Message:&nbsp;", birdhouse_edit_field(id="set_close_msg", field="maintenance:message", type="input_text") );
+
+        var id_list = "set_closed:set_close_msg:";
+        html_entry += this.tab.row("&nbsp;");
+        html_entry += this.tab.row("", birdhouse_edit_save("set_main",id_list));
         html_entry += this.tab.row("&nbsp;");
         html_entry += this.tab.end();
 

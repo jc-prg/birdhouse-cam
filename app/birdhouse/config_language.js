@@ -234,6 +234,10 @@ var language_app = {
         "LEAVING"               : "Ausfliegen",
         "SPECIAL_EVENT"         : "Besonderes Ereignis",
         "WEEKDAYS_SHORT"        : ['Mo', 'Die', 'Mi', 'Do', 'Frei', 'Sa', 'So'],
+        "OPENED"                : "ge&ouml;ffnet",
+        "CLOSED"                : "geschlossen",
+        "CLOSE_BIRDHOUSE"       : "Vogelhaus f&uuml;r Besucher schlie&szlig;en",
+        "CLOSED_DEFAULT_MSG"    : "Das Vogelhaus ist aktuell f&uuml;r Besucher geschlossen.",
 		},
 
 	"EN" : {
@@ -463,6 +467,10 @@ var language_app = {
         "LEAVING"               : "leaving",
         "SPECIAL_EVENT"         : "special event",
         "WEEKDAYS_SHORT"        : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        "OPENED"                : "opened",
+        "CLOSED"                : "closed",
+        "CLOSE_BIRDHOUSE"       : "Close birdhouse for visitors",
+        "CLOSED_DEFAULT_MSG"    : "This birdhouse is closed for visitors at the moment.",
 		}
 	}
 
