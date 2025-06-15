@@ -260,8 +260,6 @@ function birdhouse_app_settings (name="Settings") {
     */
     this.settings = function (direct_access="") {
 
-console.error(direct_access);
-
         var html        = "";
         var tab         = new birdhouse_table();
         var settings    = app_data["SETTINGS"];
