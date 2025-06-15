@@ -2021,7 +2021,85 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         return self.video.record_cancel()
 
-    def image_recording(self, current_time="", stamp="", sensor_last="", max_resolution=False):
+    def image_recording_max(self):
+        """
+        record image in the max resolution
+        """
+        if self.error:
+            return
+
+        current_time = self.config.local_time()
+        stamp = current_time.strftime("%H%M%S")
+        try:
+            current_resolution = self.camera.get_resolution()
+            self.logging.info("Recording an image with maximum resolution: max=" + str(self.max_resolution) + "; current=" +str(current_resolution))
+            self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, self.max_resolution[0])
+            self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, self.max_resolution[1])
+            time.sleep(1)
+            image_max_res = self.camera.read()
+            self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, current_resolution[0])
+            self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, current_resolution[1])
+            time.sleep(1)
+            image_org_res = self.camera.read()
+        except Exception as e:
+            self.logging.info("Could not grab a max resolution image: " + str(e))
+            image_max_res = None
+            return
+
+        self.logging.debug(" ...... check if recording")
+        start_time = time.time()
+        image_hires = image_max_res
+
+        # if no error format and analyze image
+        if image_hires is not None and not self.image.error and image_hires is not None and len(image_hires) > 0:
+
+            image_lowres = self.image.resize_raw(raw=image_hires, scale_percent=self.param["image"]["preview_scale"])
+            self.brightness = self.image.get_brightness_raw(image_hires)
+            height, width, color = image_hires.shape
+            preview_scale = self.param["image"]["preview_scale"]
+
+            similarity = "100"
+            image_info = {"camera": self.id, "compare": (0,0),
+                          "date": current_time.strftime("%d.%m.%Y"), "datestamp": current_time.strftime("%Y%m%d"),
+                          "detections": [], "hires": self.img_support.filename("hires", stamp, self.id),
+                          "hires_size": [width, height], "hires_brightness": self.brightness, "info": {},
+                          "lowres": self.img_support.filename("lowres", stamp, self.id),
+                          "lowres_size": [round(width * preview_scale / 100), round(height * preview_scale / 100)],
+                          "similarity": similarity, "sensor": {}, "time": current_time.strftime("%H:%M:%S"),
+                          "type": "image", "weather": {}, "hires_max_resolution": True, "favorit": "1"}
+
+        # else if error save at least sensor data
+        else:
+            self.record_image_error = True
+            if image_hires is None:
+                self.record_image_error_msg = ["img_error='empty image from camera, but no camera error' (None)"]
+            else:
+                self.record_image_error_msg = ["img_error=" + str(self.image.error) +
+                                               "; img_len=" + str(len(image_hires))]
+            return
+
+        self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
+
+        # if no error save image files
+        if not self.error and not self.image.error and image_hires is not None:
+            path_lowres = os.path.join(self.config.db_handler.directory("images"),
+                                       self.img_support.filename("lowres", stamp, self.id))
+            path_hires = os.path.join(self.config.db_handler.directory("images"),
+                                      self.img_support.filename("hires", stamp, self.id))
+            self.logging.debug("WRITE: " + str(path_lowres))
+            self.image.write(filename=path_hires, image=image_hires)
+            self.image.write(filename=path_lowres, image=image_lowres)
+
+            self.record_image_error = False
+            self.record_image_error_msg = []
+            self.record_image_last = time.time()
+            self.record_image_last_string = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+
+        del image_hires, image_lowres
+        time.sleep(self._interval)
+        self.previous_stamp = stamp
+
+    def image_recording(self, current_time="", stamp="", sensor_last=""):
         """
         record images as defined in settings
 
@@ -2029,43 +2107,21 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             current_time (datetime): current time in datetime format
             stamp (str): time stamp of measurement
             sensor_last (str): last time stamp of sensor measurement
-            max_resolution (bool): if true, use the maximum resolution of the camera that is available; in the recording is done even if not the right time
         """
         if self.error:
             return
 
-        if max_resolution:
-            current_time = self.config.local_time()
-            stamp = current_time.strftime("%H%M%S")
-            try:
-                current_resolution = self.camera.get_resolution()
-                self.logging.info("Recording an image with maximum resolution: max=" + str(self.max_resolution) + "; current=" +str(current_resolution))
-                self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, self.max_resolution[0])
-                self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, self.max_resolution[1])
-                time.sleep(2)
-                ret, image_max_res = self.camera.stream.read()
-                self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, current_resolution[0])
-                self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, current_resolution[1])
-            except Exception as e:
-                self.logging.info("Could not grab a max resolution image: " + str(e))
-                image_max_res = None
-        else:
-            image_max_res = None
-
         self.logging.debug(" ...... check if recording")
         start_time = time.time()
-        if self.image_recording_active(current_time=current_time) or max_resolution:
+        if self.image_recording_active(current_time=current_time):
 
-            if image_max_res is not None:
-                self.logging.debug(" ...... record now!")
-                image_hires = self.camera_streams["camera_hires"].read_image()
+            self.logging.debug(" ...... record now!")
+            image_hires = self.camera_streams["camera_hires"].read_image()
 
-                # retry once if image could not be read
-                if image_hires is None or self.image.error or len(image_hires) == 0:
-                    self.image.error = False
-                    image_hires = self.camera_streams["camera_hires"].read_image(return_error_image=False)
-            else:
-                image_hires = image_max_res
+            # retry once if image could not be read
+            if image_hires is None or self.image.error or len(image_hires) == 0:
+                self.image.error = False
+                image_hires = self.camera_streams["camera_hires"].read_image(return_error_image=False)
 
             # if no error format and analyze image
             if image_hires is not None and not self.image.error and image_hires is not None and len(image_hires) > 0:
@@ -2079,7 +2135,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 height, width, color = image_hires.shape
                 preview_scale = self.param["image"]["preview_scale"]
 
-                if self.previous_image is not None and not max_resolution:
+                if self.previous_image is not None:
                     similarity = self.image.compare_raw(image_1st=image_compare,
                                                         image_2nd=self.previous_image,
                                                         detection_area=self.param["similarity"]["detection_area"])
@@ -2105,9 +2161,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     "type": "image",
                     "weather": {}
                 }
-                if max_resolution:
-                    image_info["hires_max_resolution"] = max_resolution
-                    image_info["favorit"] = "1"
 
                 self.previous_image = image_compare
                 sensor_data = {"activity": round(100 - float(similarity), 1)}
