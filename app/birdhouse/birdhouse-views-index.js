@@ -52,13 +52,13 @@ index_template["control-panel"] = `
     </div>
     <div class="control-panel-row">
       <!-- HiRes Picture -->
-      <button class="control-panel-button two" title="Take HiRes Picture" id="rec2_foto_<!--CAM1_ID-->" onclick="birdhouse_recordFoto('<!--CAM1_ID-->');">
+      <button class="control-panel-button two" title="BETA: Take HiRes Picture" id="rec2_foto_<!--CAM1_ID-->" onclick="birdhouse_recordFoto('<!--CAM1_ID-->');">
         <svg viewBox="0 0 24 24">
           <path d="M21 6h-3.17l-1.83-2H8L6.17 6H3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1zM12 17a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>
         </svg>
         <span class="control-panel-button-description">HiRes</span>
       </button>
-      <button class="control-panel-button two" title="Toggle Object Detection" id="rec2_object_<!--CAM1_ID-->" onclick="<!--OBJECT--> toggleDetection();">
+      <button class="control-panel-button two" title="BETA: Toggle Object Detection" id="rec2_object_<!--CAM1_ID-->" onclick="<!--OBJECT--> toggleDetection();">
         <span id="eye-icon">
           <svg viewBox="0 0 24 24">
             <path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12c-2.8 0-5-2.2-5-5s2.2-5 5-5
