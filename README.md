@@ -1,14 +1,15 @@
-# Birdhouse Camera v1.7.0
+# Birdhouse Camera v1.8.0
 
-Raspberry Pi project to observe our birdhouse with two webcams: live stream, record images, 
+Raspberry Pi project to observe a birdhouse with one or two cameras: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, 
 app in English and German, ...
 
 1. [Impressions](#impressions)
-2. [Main Features](#main-features)
-3. [Birdhouse](#birdhouse)
-4. [Technology](#technology)
-5. [Installation](#installation)
+2. [Important note](#Important-note)
+3. [Crafting a Birdhouse](#crafting-a-birdhouse)
+4. [Used Technology](#used-technology)
+5. [Main Software Features](#main-software-features)
+6. [Installation](#installation)
    * [Getting sources](#getting-sources)
    * [Software installation](#software-installation)
    * [First run and device configuration](#first-run-and-device-configuration)
@@ -17,9 +18,9 @@ app in English and German, ...
    * [Optimizing system configuration](#optimizing-system-configuration)
    * [Sample proxy server configuration](#Sample-proxy-server-configuration)
    * [Server performance recommendations](#server-performance-recommendations)
-6. [Train bird detection](#Train-bird-detection)
-7. [Helping stuff](#helping-stuff)
-8. [Other sources](#other-sources)
+7. [Train bird detection](#Train-bird-detection)
+8. [Helping stuff](#helping-stuff)
+9. [Other sources](#other-sources)
 
 
 
@@ -34,8 +35,40 @@ app in English and German, ...
 
 Find further impressions [here](info/impressions.md).
 
+## Important Note
 
-## Main Features
+Observing birds and their brood in a birdhouse can be very exciting and you'll learn a lot. But keep in mind that you 
+observe what happens in nature. That might include that chicks will not make it. This might be not for the faint of heart.
+
+
+## Crafting a Birdhouse
+
+Here are some options. Calculate with a little bit more space in the height for the camera inside the birdhouse. 
+If you want to use a camera without IR light include a small semi-transparent window, e.g., within the roof of the birdhouse.
+
+* English instructions: [Simple birdhouse](https://suncatcherstudio.com/birds/birdhouse-plans-simple/)
+* German instructions: [NABU - Nistkästen selber bauen](https://www.nabu.de/tiere-und-pflanzen/voegel/helfen/nistkaesten/index.html)
+
+In addition, do some research to find out where in your environment the birdhouse is best hung.
+
+
+## Used Technology
+
+* IT Hardware
+  * Raspberry Pi 4 (recommended for two cameras and/or object detection) or Raspberry Pi 3B+ (if only inside view)
+  * Micro SD with 64 GByte
+  * USB camera for outside view and/or inside view (recommendation for inside view: HBVCAM-F20216HD 92° viewing angle, requires a semi-transparent window in the birdhouse to get enough light inside)
+  * _optional:_ PiCamera with IR for the inside view (wide-angle min. 100°)
+  * _optional:_ Small USB Microphone
+  * _optional:_ DHT11 / DHT22 Sensor (DHT22 if used for temperatures below 0 °C)
+  * _optional:_ JQC3F relay to switch on/off a camera light (e.g. IR light of the RPi camera)
+* Software
+  * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, YOLOv8
+  * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
+  * HTML, CSS, JavaScript, [ChartJS](https://www.chartjs.org/)
+  * [jc://modules/](https://github.com/jc-prg/modules/), [jc://app-framework/](https://github.com/jc-prg/app-framework/)
+
+## Main Software Features
 
 * **Birdhouse web-app for Browser and SmartPhone** (English and big parts in German)
 * **Watching live stream** with 1 or 2 cameras (RPi4 recommend for fluent stream) 
@@ -78,33 +111,10 @@ Find further impressions [here](info/impressions.md).
   * Edit server settings (partly, other settings define in file .env)
   * Edit camera and image settings (contrast, saturation, hue, brightness, ...)
   * Edit device settings, reconnect devices (devices must be added via config file)
+  * Allow or block open access for visitors (close birdhouse with a self defined message)
   * Statistics (streams & frame rates, viewing time, CPU usage & temperature, HDD usage, ...)
   * Download archived data (hires, config-files, object detection as YOLOv11)
 * **Forwarding web-app** as entry point for one or more birdhouses using IPv6 addresses
-
-## Birdhouse
-
-Here are some options. Calculate with a little bit more space in the height for the camera inside the birdhouse. 
-If you want to use a camera without IR light include a small semi-transparent window, e.g., within the roof of the birdhouse.
-
-* English instructions: [Simple birdhouse](https://suncatcherstudio.com/birds/birdhouse-plans-simple/)
-* German instructions: [NABU - Nistkästen selber bauen](https://www.nabu.de/tiere-und-pflanzen/voegel/helfen/nistkaesten/index.html)
-
-## Technology
-
-* IT Hardware
-  * Raspberry Pi 4 (recommended for two cameras and/or object detection) or Raspberry Pi 3B+ (if only inside view)
-  * Micro SD with 64 GByte
-  * USB camera for outside view and/or inside view (recommendation for inside view: HBVCAM-F20216HD 92° viewing angle, requires a semi-transparent window in the birdhouse to get enough light inside)
-  * _optional:_ PiCamera with IR for the inside view (wide-angle min. 100°)
-  * _optional:_ Small USB Microphone
-  * _optional:_ DHT11 / DHT22 Sensor (DHT22 if used for temperatures below 0 °C)
-  * _optional:_ JQC3F relay to switch on/off a camera light (e.g. IR light of the RPi camera)
-* Software
-  * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, YOLOv8
-  * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
-  * HTML, CSS, JavaScript, [ChartJS](https://www.chartjs.org/)
-  * [jc://modules/](https://github.com/jc-prg/modules/), [jc://app-framework/](https://github.com/jc-prg/app-framework/)
 
 ## Installation
 
@@ -381,7 +391,7 @@ performance.
 
 * **Raspberry Pi v3** (1 GB): 1 camera with ~5fps @ 1024x768, AV recording, no bird detection
 * **Raspberry Pi v4** (4 GB): 2 cameras with ~8fps @ 1024x768 + ~8fps @ 1280x720, AV recording, bird detection (YOLOv11) for one camera
-* **Raspberry Pi v5**: not tested yet
+* **Raspberry Pi v5**: not tested yet, but should work even better :-)
 
 #### Ways to increase server performance
 
