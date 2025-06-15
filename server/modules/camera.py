@@ -2043,6 +2043,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                 image_max_res = self.image.rotate_raw(image_max_res, self.param["image"]["rotation"])
             self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, current_resolution[0])
             self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, current_resolution[1])
+            time.sleep(1)
             self.config.camera_capture_active = False
         except Exception as e:
             self.logging.info("Could not grab a max resolution image: " + str(e))
