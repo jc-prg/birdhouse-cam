@@ -2035,24 +2035,37 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             return
 
         if max_resolution:
-            self.logging.info("Recording an image with maximum resolution")
-            current_resolution = self.camera.get_resolution()
-            self.camera.set_resolution(width=self.max_resolution[0], height=self.max_resolution[1])
             current_time = self.config.local_time()
             stamp = current_time.strftime("%H%M%S")
-            time.sleep(2)
+            try:
+                self.logging.info("Recording an image with maximum resolution")
+                current_resolution = self.camera.get_resolution()
+                self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, self.max_resolution[0])
+                self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, self.max_resolution[1])
+                time.sleep(2)
+                ret, image_max_res = self.camera.stream.read()
+                self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, current_resolution[0])
+                self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, current_resolution[1])
+            except Exception as e:
+                self.logging.info("Could not grab a max resolution image: " + str(e))
+                image_max_res = None
+        else:
+            image_max_res = None
 
         self.logging.debug(" ...... check if recording")
         start_time = time.time()
         if self.image_recording_active(current_time=current_time) or max_resolution:
 
-            self.logging.debug(" ...... record now!")
-            image_hires = self.camera_streams["camera_hires"].read_image()
+            if image_max_res is not None:
+                self.logging.debug(" ...... record now!")
+                image_hires = self.camera_streams["camera_hires"].read_image()
 
-            # retry once if image could not be read
-            if image_hires is None or self.image.error or len(image_hires) == 0:
-                self.image.error = False
-                image_hires = self.camera_streams["camera_hires"].read_image(return_error_image=False)
+                # retry once if image could not be read
+                if image_hires is None or self.image.error or len(image_hires) == 0:
+                    self.image.error = False
+                    image_hires = self.camera_streams["camera_hires"].read_image(return_error_image=False)
+            else:
+                image_hires = image_max_res
 
             # if no error format and analyze image
             if image_hires is not None and not self.image.error and image_hires is not None and len(image_hires) > 0:
@@ -2151,10 +2164,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             del image_hires, image_lowres, image_compare
             time.sleep(self._interval)
             self.previous_stamp = stamp
-
-        if max_resolution:
-            self.camera.set_resolution(width=current_resolution[0], height=current_resolution[1])
-
 
     def image_recording_active(self, current_time=-1, check_in_general=False):
         """
