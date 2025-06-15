@@ -2071,11 +2071,10 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             if image_hires is not None and not self.image.error and image_hires is not None and len(image_hires) > 0:
 
                 image_lowres = self.image.resize_raw(raw=image_hires, scale_percent=self.param["image"]["preview_scale"])
-                if not max_resolution:
-                    if self.image_compare_lowres:
-                        image_compare = self.image.convert_to_gray_raw(image_lowres)
-                    else:
-                        image_compare = self.image.convert_to_gray_raw(image_hires)
+                if self.image_compare_lowres:
+                    image_compare = self.image.convert_to_gray_raw(image_lowres)
+                else:
+                    image_compare = self.image.convert_to_gray_raw(image_hires)
                 self.brightness = self.image.get_brightness_raw(image_hires)
                 height, width, color = image_hires.shape
                 preview_scale = self.param["image"]["preview_scale"]
