@@ -1470,12 +1470,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         frame_id = frame_raw = frame_raw_pip = None
 
         self.stream_video_header()
+        config.camera_capture_active = False
         while stream_active:
 
             config.video_frame_count += 1
 
             if camera[which_cam].get_stream_kill(stream_id_ext, stream_id_int) or config.thread_ctrl["shutdown"]:
                 stream_active = False
+
+            while config.camera_capture_active:
+                time.sleep(0.1)
 
             if config.update["camera_" + which_cam]:
                 camera[which_cam].reconnect()

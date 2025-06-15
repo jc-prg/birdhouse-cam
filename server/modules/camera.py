@@ -2031,19 +2031,23 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         current_time = self.config.local_time()
         stamp = current_time.strftime("%H%M%S")
         try:
+            self.config.camera_capture_active = True
+            time.sleep(1)
             current_resolution = self.camera.get_resolution()
             self.logging.info("Recording an image with maximum resolution: max=" + str(self.max_resolution) + "; current=" +str(current_resolution))
             self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, self.max_resolution[0])
             self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, self.max_resolution[1])
             time.sleep(1)
             image_max_res = self.camera.read()
+            if image_max_res is not None and self.param["image"]["rotation"] != 0:
+                image_max_res = self.image.rotate_raw(image_max_res, self.param["image"]["rotation"])
             self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, current_resolution[0])
             self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, current_resolution[1])
-            time.sleep(1)
-            image_org_res = self.camera.read()
+            self.config.camera_capture_active = False
         except Exception as e:
             self.logging.info("Could not grab a max resolution image: " + str(e))
             image_max_res = None
+            self.config.camera_capture_active = False
             return
 
         self.logging.debug(" ...... check if recording")

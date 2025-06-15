@@ -1712,6 +1712,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.user_activity_last = 0
         self.record_audio_info = {}
         self.camera_scan = {}
+        self.camera_capture_active = False
 
         self.processing_information = {}
         self.processing_performance = {}
