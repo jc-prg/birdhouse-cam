@@ -2038,8 +2038,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             current_time = self.config.local_time()
             stamp = current_time.strftime("%H%M%S")
             try:
-                self.logging.info("Recording an image with maximum resolution")
                 current_resolution = self.camera.get_resolution()
+                self.logging.info("Recording an image with maximum resolution: max=" + str(self.max_resolution) + "; current=" +str(current_resolution))
                 self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, self.max_resolution[0])
                 self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, self.max_resolution[1])
                 time.sleep(2)
@@ -2071,10 +2071,11 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             if image_hires is not None and not self.image.error and image_hires is not None and len(image_hires) > 0:
 
                 image_lowres = self.image.resize_raw(raw=image_hires, scale_percent=self.param["image"]["preview_scale"])
-                if self.image_compare_lowres:
-                    image_compare = self.image.convert_to_gray_raw(image_lowres)
-                else:
-                    image_compare = self.image.convert_to_gray_raw(image_hires)
+                if not max_resolution:
+                    if self.image_compare_lowres:
+                        image_compare = self.image.convert_to_gray_raw(image_lowres)
+                    else:
+                        image_compare = self.image.convert_to_gray_raw(image_hires)
                 self.brightness = self.image.get_brightness_raw(image_hires)
                 height, width, color = image_hires.shape
                 preview_scale = self.param["image"]["preview_scale"]
