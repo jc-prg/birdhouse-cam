@@ -94,7 +94,10 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
                     if self._thread_info[key]["process"]:
                         warning.append(key + " (process is running)")
                     elif self._thread_info[key]["time"] > self._min_live_time:
-                        problem.append(key + " (" + str(round(self._thread_info[key], 1)) + "s)")
+                        if isinstance(self._thread_info[key], float):
+                            problem.append(key + " (" + str(round(self._thread_info[key], 1)) + "s)")
+                        else:
+                            problem.append(key + "(" + str(self._thread_info[key]) + ")")
 
                 self._health_status = ""
                 if len(warning) > 0:
