@@ -164,6 +164,7 @@
     float           :  left;
     background      : var(--setting-btn-index-background);
     border          : solid 2px var(--setting-btn-index-border);
+    font-size       : 10px;
     }
 
 .settings_button_index.info {
@@ -190,14 +191,26 @@
     border          : 1px solid var(--setting-btn-index-header-selected);
     }
 
+.settings_button_index_btn {
+    background:var(--setting-btn-index-background);
+    font-size: 8px;
+    margin: 2px;
+    }
+
 .settings_button_index     { margin : 3px; width : calc(50% - 20px); height : 120px; }
 .settings_button_index img { max-width: 90%; }
 .settings_icon_big         { max-width : 120px; max-height : 60px; }
 
 
+@media (min-width: 400px) {
+  .settings_button_index_btn { font-size: 10px; }
+  .settings_button_index     { font-size: 12px; }
+  }
+
 @media (min-width: 705px) {
-  .settings_button_index    { margin : 3px; width : calc(33.333% - 20px); height : 140px; }
-  .settings_icon_big        { max-width : 120px; max-height : 60px; }
+  .settings_button_index     { margin : 3px; width : calc(33.333% - 20px); height : 140px; }
+  .settings_icon_big         { max-width : 120px; max-height : 60px; }
+  .settings_button_index_btn { font-size: 12px; }
   }
 
 @media (min-width: 1250px) {

@@ -322,8 +322,8 @@ function birdhouse_app_settings (name="Settings") {
     this.settings_app_open_close = function () {
         var html_entry  = "";
         var id_list = "set_closed:";
-        var button1  = "<button id='init_b1' onclick='birdhouse_edit_send(\""+id_list+"\", \"\");' style='background:var(--setting-btn-index-background);'>&nbsp;"+lang("SAVE")+"&nbsp;</button>";
-        var button2  = "<button id='init_b2' onclick='birdhouse_settings.create_new(\"SETTINGS_SERVER\",\"APP_SETTINGS_ACCESS\");' style='background:var(--setting-btn-index-background);'>&nbsp;"+lang("EDIT")+"&nbsp;</button>";
+        var button1  = "<button id='init_b1' class='settings_button_index_btn' onclick='birdhouse_edit_send(\""+id_list+"\", \"\");'>&nbsp;"+lang("SAVE")+"&nbsp;</button>";
+        var button2  = "<button id='init_b2' class='settings_button_index_btn' onclick='birdhouse_settings.create_new(\"SETTINGS_SERVER\",\"APP_SETTINGS_ACCESS\");'>&nbsp;"+lang("EDIT")+"&nbsp;</button>";
         var data    = app_data["SETTINGS"]["maintenance"];
         html_entry += "<center>";
         html_entry += "<table><tr>";
