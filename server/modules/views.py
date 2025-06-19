@@ -533,6 +533,17 @@ class BirdhouseViewFavorite(BirdhouseClass):
             content = self.config.db_handler.read_cache("favorites")
             if "entries" not in content or "groups" not in content:
                 content = self.views
+            else:
+                for stamp in content["entries"]:
+                    for key in ["detection_threshold", "hires_brightness", "weather", "info", "sensor", "size","audio","fps"]:
+                        if key in content["entries"][stamp]:
+                            del content["entries"][stamp][key]
+
+                    if "detections" in content["entries"][stamp]:
+                        content["entries"][stamp]["detections"] = [
+                            {k: det[k] for k in ("label", "class") if k in det}
+                            for det in content["entries"][stamp]["detections"]
+                        ]
         else:
             content = self.views
 
