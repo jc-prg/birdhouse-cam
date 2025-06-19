@@ -140,9 +140,9 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
     // set app_active values
     if (page == "") { page = app_active.page; }
     if (!app_pages_other.includes(page)) {
-        if (page != "") { app_active.page = page; }
-        if (cam != "")  { app_active.cam  = cam; }
-        if (date != "") { app_active.date = date; }
+        if (page != "")              { app_active.page = page; }
+        if (date != "")              { app_active.date = date; }
+        if (cam.indexOf("cam") >= 0) { app_active.cam  = cam; }
         }
 
     // navigate in history views
@@ -207,9 +207,9 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
     else if (app_pages_other.includes(page)) {
         console.log("Load other page: " + page);
         if (page == "LOGIN") {
-            if (cam == "")  { page = "INDEX"; }
-            else            { page = cam; }
-            app_active.cam = page;
+            if (cam == "")                  { page = "INDEX"; }
+            else                            { page = cam; }
+            if (page.indexOf("cam") >= 0)   { app_active.cam = page; }
             birdhouse_loginDialog(cam);
             }
         else if (page == "LOGOUT") {
@@ -306,10 +306,10 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="", page_ca
 	if (view == "SETTINGS") { birdhousePrint_page(view); return; }
 
 	var commands = [view];
-	if (camera != "" && date != "")	{ commands.push(date); commands.push(camera); app_active.cam = camera; }
-	else if (camera != "")          { commands.push(camera); app_active.cam = camera; }
-	else                            { commands.push(app_active.cam); }
-	if (label != "")                { commands.push(label); }
+	if (camera.indexOf("cam") >= 0 && date != "") { commands.push(date); commands.push(camera); app_active.cam = camera; }
+	else if (camera.indexOf("cam") >= 0)          { commands.push(camera); app_active.cam = camera; }
+	else                                          { commands.push(app_active.cam); }
+	if (label != "")                              { commands.push(label); }
 
 	console.log("---> birdhousePrint_Load: " + view + " / " + camera + " /  " +date + " / "+ JSON.stringify(commands));
 	birdhouse_genericApiRequest("GET", commands, birdhousePrint);
@@ -331,8 +331,8 @@ function birdhousePrint(data) {
         var page            = data_active["active_page"];
         if (app_pages_cam_id.includes(page)) {
             var camera          = data_active["active_cam"];
-            if (camera == "") 	{ camera = app_active.cam; }
-            else			    { app_active.cam = camera; }
+            if (camera == "") 	                    { camera = app_active.cam; }
+            else if (camera.indexOf("cam") >= 0)    { app_active.cam = camera; }
             }
         else {
             var camera      = app_active.cam;
