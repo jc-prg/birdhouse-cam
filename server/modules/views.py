@@ -2990,12 +2990,12 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                         if "camera" in files_all[stamp] and files_all[stamp]["camera"] == which_cam:
                             entries_by_hours[hour].append(stamp)
 
-            if "today_complete_"+hour in self.view_cache and len(self.view_cache["today_complete_"+hour]) == len(entries_by_hours[hour]):
+            if "today_complete_"+which_cam+"_"+hour in self.view_cache and len(self.view_cache["today_complete_"+which_cam+"_"+hour]) == len(entries_by_hours[hour]):
                 entries_from_cache[hour] = True
             else:
                 entries_from_cache[hour] = False
 
-            self.view_cache["today_complete_"+hour] = entries_by_hours[hour]
+            self.view_cache["today_complete_"+which_cam+"_"+hour] = entries_by_hours[hour]
 
         for hour in hours:
             files_part = {}
@@ -3038,63 +3038,16 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                             for det in files_part[stamp]["detections"]
                         ]
 
-                self.view_cache["today_complete_" + hour + "_data"] = files_part
+                self.view_cache["today_complete_"+which_cam+"_"+hour+"_data"] = files_part
 
-            elif "today_complete_"+hour+"_data" in self.view_cache:
-                files_part = self.view_cache["today_complete_"+hour+"_data"]
-
-            if len(files_part) > 0:
-                content["groups"][hour + ":00"] = []
-                for entry in files_part:
-                    content["entries"][entry] = files_part[entry]
-                    content["groups"][hour + ":00"].append(entry)
-
-
-        """
-        # Today
-        for hour in hours:
-            hour_min = hour + "0000"
-            hour_max = str(int(hour) + 1) + "0000"
-            files_part = {}
-            count_diff = 0
-            stamps = list(reversed(sorted(files_all.keys())))
-            for stamp in stamps:
-                if int(time_now) >= int(stamp) >= int(hour_min) and int(stamp) < int(hour_max):
-                    if "datestamp" in files_all[stamp] and files_all[stamp]["datestamp"] == date_today:
-                        if "camera" in files_all[stamp] and files_all[stamp]["camera"] == which_cam:
-                            threshold = self.camera[which_cam].param["similarity"]["threshold"]
-                            if "similarity" in files_all[stamp] and float(files_all[stamp]["similarity"]) < float(
-                                    threshold):
-                                if float(files_all[stamp]["similarity"]) > 0:
-                                    count_diff += 1
-                            files_part[stamp] = files_all[stamp]
-                            if "type" not in files_part[stamp]:
-                                files_part[stamp]["type"] = "image"
-                            files_part[stamp]["detect"] = self.camera[which_cam].img_support.differs(
-                                file_info=files_part[stamp])
-                            files_part[stamp]["category"] = category + stamp
-                            files_part[stamp]["directory"] = "/" + self.config.db_handler.directory("images",
-                                                                                                    "", False) + "/"
-                            count += 1
-
-                            if "lowres_size" in files_part[stamp]:
-                                if files_part[stamp]["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
-                                    content["max_image_size"]["lowres"][0] = files_part[stamp]["lowres_size"][0]
-                                if files_part[stamp]["lowres_size"][1] > content["max_image_size"]["lowres"][1]:
-                                    content["max_image_size"]["lowres"][1] = files_part[stamp]["lowres_size"][1]
-
-                            if "hires_size" in files_part[stamp]:
-                                if files_part[stamp]["hires_size"][0] > content["max_image_size"]["hires"][0]:
-                                    content["max_image_size"]["hires"][0] = files_part[stamp]["hires_size"][0]
-                                if files_part[stamp]["lowres_size"][1] > content["max_image_size"]["hires"][1]:
-                                    content["max_image_size"]["hires"][1] = files_all[stamp]["hires_size"][1]
+            elif "today_complete_"+which_cam+"_"+hour+"_data" in self.view_cache:
+                files_part = self.view_cache["today_complete_"+which_cam+"_"+hour+"_data"]
 
             if len(files_part) > 0:
                 content["groups"][hour + ":00"] = []
                 for entry in files_part:
                     content["entries"][entry] = files_part[entry]
                     content["groups"][hour + ":00"].append(entry)
-"""
 
         content["view_count"] = ["all", "star", "object", "detect", "recycle"]
         content["subtitle"] = presets.birdhouse_pages["today_complete"][0] + " (" + self.camera[
@@ -3143,15 +3096,15 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         if self.config.db_handler.exists("videos"):
             files_all = self.config.db_handler.read_cache(config="videos")
 
-            if not "video_list_data" in self.view_cache:
+            if not "video_list_data_"+which_cam in self.view_cache:
                 use_view_cache = False
-                self.view_cache["video_list_data"] = files_all
-            elif self.view_cache["video_list_data"] != files_all:
+                self.view_cache["video_list_data_"+which_cam] = files_all
+            elif self.view_cache["video_list_data_"+which_cam] != files_all:
                 use_view_cache = False
-                self.view_cache["video_list_data"] = files_all
+                self.view_cache["video_list_data_"+which_cam] = files_all
             else:
                 use_view_cache = True
-                content = self.view_cache["video_list"]
+                content = self.view_cache["video_list_"+which_cam]
 
             if not use_view_cache:
                 for file in files_all:
@@ -3188,7 +3141,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                         content["entries"][entry_id] = files_videos[entry_id].copy()
                         content["groups"][group].append(entry_id)
 
-                self.view_cache["video_list"] = content
+                self.view_cache["video_list_"+which_cam] = content
 
         content["view_count"] = ["all", "star", "detect", "recycle"]
         content["subtitle"] = presets.birdhouse_pages["videos"][0]
