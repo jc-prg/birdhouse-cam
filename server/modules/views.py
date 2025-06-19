@@ -2687,15 +2687,15 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 if "to_be_deleted" in files_all[stamp] and int(files_all[stamp]["to_be_deleted"]) == 1:
                     continue
 
-                #for key in ["detection_threshold", "hires_brightness", "weather", "info", "sensor", "size"]:
-                #    if key in files_all[stamp]:
-                #        del files_all[stamp][key]
+                for key in ["detection_threshold", "hires_brightness", "weather", "info", "sensor", "size"]:
+                    if key in files_all[stamp]:
+                        del files_all[stamp][key]
 
-                #if "detections" in files_all[stamp]:
-                #    files_all[stamp]["detections"] = [
-                #        {k: det[k] for k in ("label", "class") if k in det}
-                #        for det in files_all[stamp]["detections"]
-                #    ]
+                if "detections" in files_all[stamp]:
+                    files_all[stamp]["detections"] = [
+                        {k: det[k] for k in ("label", "class") if k in det}
+                        for det in files_all[stamp]["detections"]
+                    ]
 
                 if ((int(stamp) < int(time_now) or time_now == "000000")
                         and files_all[stamp]["datestamp"] == date_today) or backup:
