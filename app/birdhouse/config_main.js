@@ -160,6 +160,8 @@ function app_status(data) {
         birdhouseStatus_print(data);
         }
 
+    birdhouseSetMainVars(data);
+    birdhouseSetMainStatus(data);
 	app_last_load = Date.now();
 	}
 	

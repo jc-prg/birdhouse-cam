@@ -308,19 +308,21 @@ function birdhouse_view_images_threshold(threshold) {
     image_list_active = [];
     image_list_inactive = [];
     for (var i=0;i<group_list.length;i++) {
-        image_ids_in_group = document.getElementById("group_ids_"+group_list[i]).innerHTML.split(" ");
-        image_list = image_list.concat(image_ids_in_group);
-        for (a=0;a<image_ids_in_group.length;a++) {
-            if (image_list[a] != "") {
-                image_threshold = document.getElementById(image_ids_in_group[a]+"_similarity");
-                image_container = image_ids_in_group[a] + "_container";
-                if (image_threshold && image_threshold.value+0 <= threshold+0) {
-                    image_list_active.push(image_ids_in_group[a]);
-                    elementVisible(image_container);
-                }
-                else {
-                    image_list_inactive.push(image_ids_in_group[a]);
-                    elementHidden(image_container);
+        if (document.getElementById("group_ids_"+group_list[i])) {
+            image_ids_in_group = document.getElementById("group_ids_"+group_list[i]).innerHTML.split(" ");
+            image_list = image_list.concat(image_ids_in_group);
+            for (a=0;a<image_ids_in_group.length;a++) {
+                if (image_list[a] != "") {
+                    image_threshold = document.getElementById(image_ids_in_group[a]+"_similarity");
+                    image_container = image_ids_in_group[a] + "_container";
+                    if (image_threshold && image_threshold.value+0 <= threshold+0) {
+                        image_list_active.push(image_ids_in_group[a]);
+                        elementVisible(image_container);
+                    }
+                    else {
+                        image_list_inactive.push(image_ids_in_group[a]);
+                        elementHidden(image_container);
+                    }
                 }
             }
         }

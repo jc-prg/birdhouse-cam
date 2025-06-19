@@ -2452,6 +2452,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.favorite.load_from_archives = False
         self.archive.load_from_archives = False
         self.object.load_from_archives = False
+        self.view_cache = {}
 
     def run(self):
         """
@@ -2674,6 +2675,16 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     files_all[stamp]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
                 if "to_be_deleted" in files_all[stamp] and int(files_all[stamp]["to_be_deleted"]) == 1:
                     continue
+
+                for key in ["detection_threshold", "hires_brightness", "weather", "info", "sensor", "size"]:
+                    if key in files_all[stamp]:
+                        del files_all[stamp][key]
+
+                if "detections" in files_all[stamp]:
+                    files_all[stamp]["detections"] = [
+                        {k: det[k] for k in ("label", "class") if k in det}
+                        for det in files_all[stamp]["detections"]
+                    ]
 
                 if ((int(stamp) < int(time_now) or time_now == "000000")
                         and files_all[stamp]["datestamp"] == date_today) or backup:
@@ -2953,6 +2964,82 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                       "20", "21", "22", "23"])
         hours.sort(reverse=True)
 
+
+        # group entries by hours and check cache
+        entries_by_hours = {}
+        entries_from_cache = {}
+        for hour in hours:
+            entries_by_hours[hour] = []
+            hour_min = hour + "0000"
+            hour_max = str(int(hour) + 1) + "0000"
+            stamps = list(reversed(sorted(files_all.keys())))
+            for stamp in stamps:
+                if int(time_now) >= int(stamp) >= int(hour_min) and int(stamp) < int(hour_max):
+                    if "datestamp" in files_all[stamp] and files_all[stamp]["datestamp"] == date_today:
+                        if "camera" in files_all[stamp] and files_all[stamp]["camera"] == which_cam:
+                            entries_by_hours[hour].append(stamp)
+
+            if "today_complete_"+hour in self.view_cache and len(self.view_cache["today_complete_"+hour]) == len(entries_by_hours[hour]):
+                entries_from_cache[hour] = True
+            else:
+                entries_from_cache[hour] = False
+
+            self.view_cache["today_complete_"+hour] = entries_by_hours[hour]
+
+        for hour in hours:
+            files_part = {}
+            count_diff = 0
+            if not entries_from_cache[hour]:
+                for stamp in entries_by_hours[hour]:
+                    threshold = self.camera[which_cam].param["similarity"]["threshold"]
+                    if "similarity" in files_all[stamp] and float(files_all[stamp]["similarity"]) < float(
+                            threshold):
+                        if float(files_all[stamp]["similarity"]) > 0:
+                            count_diff += 1
+                    files_part[stamp] = files_all[stamp]
+                    if "type" not in files_part[stamp]:
+                        files_part[stamp]["type"] = "image"
+                    files_part[stamp]["detect"] = self.camera[which_cam].img_support.differs(file_info=files_part[stamp])
+                    files_part[stamp]["category"] = category + stamp
+                    files_part[stamp]["directory"] = "/" + self.config.db_handler.directory("images",
+                                                                                            "", False) + "/"
+                    count += 1
+
+                    if "lowres_size" in files_part[stamp]:
+                        if files_part[stamp]["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
+                            content["max_image_size"]["lowres"][0] = files_part[stamp]["lowres_size"][0]
+                        if files_part[stamp]["lowres_size"][1] > content["max_image_size"]["lowres"][1]:
+                            content["max_image_size"]["lowres"][1] = files_part[stamp]["lowres_size"][1]
+
+                    if "hires_size" in files_part[stamp]:
+                        if files_part[stamp]["hires_size"][0] > content["max_image_size"]["hires"][0]:
+                            content["max_image_size"]["hires"][0] = files_part[stamp]["hires_size"][0]
+                        if files_part[stamp]["lowres_size"][1] > content["max_image_size"]["hires"][1]:
+                            content["max_image_size"]["hires"][1] = files_all[stamp]["hires_size"][1]
+
+                    for key in ["detection_threshold", "hires_brightness", "weather", "info", "sensor"]:
+                        if key in files_part[stamp]:
+                            del files_part[stamp][key]
+
+                    if "detections" in files_part[stamp]:
+                        files_part[stamp]["detections"] = [
+                            {k: det[k] for k in ("label", "class") if k in det}
+                            for det in files_part[stamp]["detections"]
+                        ]
+
+                self.view_cache["today_complete_" + hour + "_data"] = files_part
+
+            elif "today_complete_"+hour+"_data" in self.view_cache:
+                files_part = self.view_cache["today_complete_"+hour+"_data"]
+
+            if len(files_part) > 0:
+                content["groups"][hour + ":00"] = []
+                for entry in files_part:
+                    content["entries"][entry] = files_part[entry]
+                    content["groups"][hour + ":00"].append(entry)
+
+
+        """
         # Today
         for hour in hours:
             hour_min = hour + "0000"
@@ -2996,6 +3083,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                 for entry in files_part:
                     content["entries"][entry] = files_part[entry]
                     content["groups"][hour + ":00"].append(entry)
+"""
 
         content["view_count"] = ["all", "star", "object", "detect", "recycle"]
         content["subtitle"] = presets.birdhouse_pages["today_complete"][0] + " (" + self.camera[
@@ -3035,45 +3123,61 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             dict: video view definition for API response
         """
         which_cam = param["which_cam"]
-        content = {"active_cam": which_cam, "view": "list_videos"}
+        content = {"active_cam": which_cam, "view": "list_videos", "entries": {}, "groups":{}}
 
         files_show = {}
         files_delete = {}
         files_favorite = {}
-        content["entries"] = {}
-        content["groups"] = {}
 
         if self.config.db_handler.exists("videos"):
             files_all = self.config.db_handler.read_cache(config="videos")
-            for file in files_all:
-                files_all[file]["directory"] = "http://" + birdhouse_env["server_audio"]  ### need for action
-                files_all[file]["directory"] += ":" + str(birdhouse_env["port_video"]) + "/"
-                files_all[file]["type"] = "video"
-                files_all[file]["path"] = self.config.directories["videos"]
-                files_all[file]["category"] = "/videos/" + file
-                if "to_be_deleted" in files_all[file] and int(files_all[file]["to_be_deleted"]) == 1:
-                    files_delete[file] = files_all[file]
-                else:
-                    files_show[file] = files_all[file]
-                    if "favorit" in files_all[file] and int(files_all[file]["favorit"]) == 1:
-                        files_favorite[file] = files_all[file]
 
-            if len(files_show) > 0:
-                content["entries"] = files_show
-            if len(files_delete) > 0 and param["admin_allowed"]:
-                content["entries_delete"] = files_delete
-            if len(files_favorite) > 0:
-                content["entries_favorites"] = files_favorite
+            if not "video_list_data" in self.view_cache:
+                use_view_cache = False
+                self.view_cache["video_list_data"] = files_all
+            elif self.view_cache["video_list_data"] != files_all:
+                use_view_cache = False
+                self.view_cache["video_list_data"] = files_all
+            else:
+                use_view_cache = True
+                content = self.view_cache["video_list"]
 
-        # videos
-        files_videos = content["entries"].copy()
-        if len(files_videos) > 0:
-            for entry_id in files_videos:
-                group = entry_id[0:4] + "-" + entry_id[4:6]
-                if group not in content["groups"]:
-                    content["groups"][group] = []
-                content["entries"][entry_id] = files_videos[entry_id].copy()
-                content["groups"][group].append(entry_id)
+            if not use_view_cache:
+                for file in files_all:
+                    files_all[file]["directory"] = "http://" + birdhouse_env["server_audio"]  ### need for action
+                    files_all[file]["directory"] += ":" + str(birdhouse_env["port_video"]) + "/"
+                    files_all[file]["type"] = "video"
+                    files_all[file]["path"] = self.config.directories["videos"]
+                    files_all[file]["category"] = "/videos/" + file
+                    if "to_be_deleted" in files_all[file] and int(files_all[file]["to_be_deleted"]) == 1:
+                        files_delete[file] = files_all[file]
+                    else:
+                        files_show[file] = files_all[file]
+                        if "favorit" in files_all[file] and int(files_all[file]["favorit"]) == 1:
+                            files_favorite[file] = files_all[file]
+
+                    for key in ["audio", "date_start", "date_end", "stamp_start", "stamp_end", "image_count", "image_files",
+                                "elapsed", "frames", "percent", "fps", "audio_fps", "video_fps"]:
+                        if key in files_all[file]:
+                            del files_all[file][key]
+
+                if len(files_show) > 0:
+                    content["entries"] = files_show
+                if len(files_delete) > 0 and param["admin_allowed"]:
+                    content["entries_delete"] = files_delete
+                if len(files_favorite) > 0:
+                    content["entries_favorites"] = files_favorite
+
+                files_videos = content["entries"].copy()
+                if len(files_videos) > 0:
+                    for entry_id in files_videos:
+                        group = entry_id[0:4] + "-" + entry_id[4:6]
+                        if group not in content["groups"]:
+                            content["groups"][group] = []
+                        content["entries"][entry_id] = files_videos[entry_id].copy()
+                        content["groups"][group].append(entry_id)
+
+                self.view_cache["video_list"] = content
 
         content["view_count"] = ["all", "star", "detect", "recycle"]
         content["subtitle"] = presets.birdhouse_pages["videos"][0]

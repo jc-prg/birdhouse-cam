@@ -936,16 +936,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                           "SETTINGS_CAMERAS", "SETTINGS_DEVICES", "SETTINGS_IMAGE", "SETTINGS_INFORMATION", "SETTINGS_STATISTICS",
                           "status", "list","DIARY"],
             "info"     : ["camera-param", "version", "reload","python-pkg"],
-            "status"   : ["status", "list", "WEATHER"],
+            "status"   : ["status", "list", "WEATHER", "INDEX"],
             "status_small" : ["last-answer"],
-            "settings" : ["status", "list"],
+            "settings" : ["status", "list", "INDEX"],
             "weather"  : ["WEATHER"]
         }
         no_extra_command = ["WEATHER", "SETTINGS", "CAMERA_SETTINGS","IMAGE_SETTINGS","DEVICE_SETTINGS"]
         weather_status = {}
 
         # prepare data structure and set some initial values
-        if command in api_commands["status"] or command in api_commands["data"]:
+        if command in api_commands["status"]: # or command in api_commands["data"]:
             api_response["STATUS"] = {
                 "admin_allowed": self.admin_allowed(),
                 "api-call": status,
@@ -1100,7 +1100,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             }
             if command == "TODAY" and len(param["parameter"]) > 0:
                 api_data["active"]["active_date"] = param["parameter"][0]
-                api_response["STATUS"]["view"]["active_date"] = param["parameter"][0]
+                #api_response["STATUS"]["view"]["active_date"] = param["parameter"][0]
 
         request_times["0_initial"] = round(time.time() - request_start, 4)
 
@@ -1184,7 +1184,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         # add maintenance information
         if "maintenance" in config.param:
             api_response["API"]["maintenance"] = config.param["maintenance"]
-            api_response["SETTINGS"]["maintenance"] = config.param["maintenance"]
+            if command in api_commands["settings"]:
+                api_response["SETTINGS"]["maintenance"] = config.param["maintenance"]
 
         # collect data for WEATHER section
         if command in api_commands["weather"]:
@@ -1192,7 +1193,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 api_response["WEATHER"] = config.weather.get_weather_info("all")
 
         # collect data for STATUS section
-        if command in api_commands["status"] or command in api_commands["data"]:
+        if command in api_commands["status"]: # or command in api_commands["data"]:
             weather_status = config.weather.get_weather_info("status")
             weather_current = config.weather.get_weather_info("current_extended")
 
@@ -1242,25 +1243,25 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             }
             api_response["SETTINGS"]["server"] = server_config
 
-        if self.admin_allowed():
-            api_response["SETTINGS"]["webdav"] = {
-                "active": sys_info.webdav_available,
-                "show": birdhouse_env["webdav_show"],
-                "port": birdhouse_env["webdav_port"],
-                "user": birdhouse_env["webdav_user"],
-                "pwd": birdhouse_env["webdav_pwd"],
-            }
-        else:
-            api_response["SETTINGS"]["webdav"] = {
-                "active": sys_info.webdav_available,
-                "port": birdhouse_env["webdav_port"],
-                "show": birdhouse_env["webdav_show"],
-                "user": "",
-                "pwd": "",
-            }
+            if self.admin_allowed():
+                api_response["SETTINGS"]["webdav"] = {
+                    "active": sys_info.webdav_available,
+                    "show": birdhouse_env["webdav_show"],
+                    "port": birdhouse_env["webdav_port"],
+                    "user": birdhouse_env["webdav_user"],
+                    "pwd": birdhouse_env["webdav_pwd"],
+                }
+            else:
+                api_response["SETTINGS"]["webdav"] = {
+                    "active": sys_info.webdav_available,
+                    "port": birdhouse_env["webdav_port"],
+                    "show": birdhouse_env["webdav_show"],
+                    "user": "",
+                    "pwd": "",
+                }
 
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
-        if command in api_commands["data"] or command in api_commands["status"]:
+        if command in api_commands["data"]:# or command in api_commands["status"]:
             param_to_publish = ["entries", "entries_delete", "entries_yesterday", "entries_favorites", "groups",
                                 "archive_exists", "info", "chart_data", "weather_data", "days_available",
                                 "day_back", "day_forward", "birds","diary"]
@@ -1286,8 +1287,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             request_times["5_config"] = round(time.time() - request_start, 4)
 
             # get device data
-            api_response["STATUS"]["devices"] = sys_info.get_device_status()
-            request_times["6_devices_status"] = round(time.time() - request_start, 4)
+            if command in api_commands["status"]:
+                api_response["STATUS"]["devices"] = sys_info.get_device_status()
+                request_times["6_devices_status"] = round(time.time() - request_start, 4)
 
             # get microphone data and create streaming information
             micro_data = config.param["devices"]["microphones"].copy()
@@ -1325,7 +1327,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     sensor_data[key]["values"] = sensor[key].get_values()
             request_times["9_status_sensor"] = round(time.time() - request_start, 4)
 
-            api_response["SETTINGS"]["devices"] = {
+            if command in api_commands["settings"]:
+                api_response["SETTINGS"]["devices"] = {
                 "cameras": camera_data,
                 "sensors": sensor_data,
                 "microphones": micro_data,

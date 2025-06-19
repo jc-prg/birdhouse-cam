@@ -82,6 +82,7 @@
 
 .thumbnail {
     width           : 137px;
+    min-height      : 80px;
     margin-bottom   : 5px;
     border          : 1px solid white;
     cursor          : zoom-in;
