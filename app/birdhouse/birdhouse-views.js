@@ -939,14 +939,16 @@ function birdhouse_LIST_label(entries, active_page, empty=true) {
 */
 function birdhouse_VIDEO_DETAIL( data ) {
 
-	var html        = "";
-    var title       = lang("VIDEO_DETAIL");
-	var video       = data["DATA"]["data"]["entries"];
-	var server_info = app_data["SETTINGS"]["server"];
-    var tab         = new birdhouse_table();
-    var analysis    = {};
+	var html         = "";
+    var title        = lang("VIDEO_DETAIL");
+	var video        = data["DATA"]["data"]["entries"];
+	var server_info  = app_data["SETTINGS"]["server"];
+    var tab          = new birdhouse_table();
+    var analysis     = undefined;
+    var video_exists = false;
 
 	for (let key in video) {
+	    video_exists                = true;
 		app_active.date             = key;
         video[key]["directory"]     = "videos/";
         video[key]["path"]          = "videos/";
@@ -958,9 +960,7 @@ function birdhouse_VIDEO_DETAIL( data ) {
 		var video_name          = video[key]["date"];
 		var video_stream        = birdhouse_Image("Complete", key, video[key]);
 		var video_stream_short  = "";
-
 		analysis                = video[key]["fps"];
-        console.error(analysis);
 
         //console.log("---> video: " + key + ", " + JSON.stringify(video[key]));
 		//console.log(video_stream);
@@ -1009,6 +1009,7 @@ function birdhouse_VIDEO_DETAIL( data ) {
 		html += tab.row(lang("FRAMERATE")   + ": ", video[key]["framerate"]   + " fps");
 		html += tab.row(lang("FRAME_COUNT") + ": ", video[key]["image_count"]);
 		html += tab.row(lang("IMAGESIZE")   + ": ", video[key]["image_size"]);
+
 //		html += lang("FILES")  + ": " + video[key]["video_file"]  + "<br/>";
 		if (short) {
 //			html += lang("FILES")  + ": " + video[key]["video_file_short"]  + "<br/>";
@@ -1018,7 +1019,7 @@ function birdhouse_VIDEO_DETAIL( data ) {
 		if (app_admin_allowed) {
 		    html += tab.row("&nbsp;");
 			html += tab.row(lang("EDIT_VIDEO_2") + ":",
-			    "<button onclick=\"birdhouse_videoOverlayToggle();\" class=\"button-video-edit\">&nbsp;"+lang("SHORTEN_VIDEO")+"&nbsp;</button>&nbsp;"
+			    "<button onclick=\"birdhouse_videoOverlayToggle();this.blur();\" class=\"button-video-edit\">&nbsp;"+lang("SHORTEN_VIDEO")+"&nbsp;</button>&nbsp;"
 			    );
 			if (thumbnail || short) {
 			    var delete_buttons = "";
@@ -1031,7 +1032,7 @@ function birdhouse_VIDEO_DETAIL( data ) {
 			player += "<div id='camera_video_edit' class='camera_video_edit' style='display:none'>";
 			player += "<div style='height:46px;width:100%'></div>";
 			var trim_command  = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_createShortVideo();";
-			var thumb_command = "appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_createThumbVideo();";
+			var thumb_command = "setTCin();appMsg.wait_small('"+lang("PLEASE_WAIT")+"');birdhouse_createThumbVideo();";
             var video_stream_server = window.location.href.split("//")[1];
             video_stream_server = video_stream_server.split("/")[0];
             video_stream_server = video_stream_server.split(":")[0];
@@ -1044,7 +1045,7 @@ function birdhouse_VIDEO_DETAIL( data ) {
 			video_values["ACTIVE"]                  = app_active.cam;
 			video_values["LENGTH"]                  = video[key]["length"];
 			video_values["THUMBNAIL"]               = lang("THUMBNAIL");
-			video_values["CLOSE"]                   = lang("CLOSE");
+			video_values["CLOSE"]                   = lang("CLOSE") + " (ESC)";
 			video_values["SHORTEN"]                 = lang("SHORTEN");
 			video_values["CANCEL"]                  = lang("CANCEL");
 			video_values["FILE_THUMBNAIL"]          = "";
@@ -1062,39 +1063,46 @@ function birdhouse_VIDEO_DETAIL( data ) {
 			setTextById("videoplayer",player);
 			}
 		}
+
     html += tab.end();
     html += "</div>";
     html += "<div id='video_analysis'></div>";
     html += "<div id='audio_analysis'></div>";
 
+    if (!video_exists) {
+        html += "<center>&nbsp;<br/><i>" + lang("NO_ENTRIES") + "</i><br/>&nbsp;</center>";
+        }
+
 	birdhouse_frameHeader(lang("EDIT_VIDEO"));
 	setTextById(app_frame.content,html);
 
-    if (analysis) {
-        var chart_video = birdhouseChart_create(label="", titles=analysis["video"]["titles"],
-                                          data=analysis["video"]["data"],
-                                          type="line",
-                                          sort_keys=true,
-                                          id="video_chart",
-                                          size="", set_colors=[],
-                                          set_menu="right"
-                                          );
-        var chart_audio = birdhouseChart_create(label="", titles=analysis["audio"]["titles"],
-                                          data=analysis["audio"]["data"],
-                                          type="line",
-                                          sort_keys=true,
-                                          id="audio_chart",
-                                          size="", set_colors=[],
-                                          set_menu="right"
-                                          );
-        if (analysis != undefined && analysis != {}) { setTextById("video_analysis", chart_video); }
-        if (analysis != undefined && analysis != {}) { setTextById("audio_analysis", chart_audio); }
-        }
+    if (video_exists) {
+        if (analysis) {
+            var chart_video = birdhouseChart_create(label="", titles=analysis["video"]["titles"],
+                                              data=analysis["video"]["data"],
+                                              type="line",
+                                              sort_keys=true,
+                                              id="video_chart",
+                                              size="", set_colors=[],
+                                              set_menu="right"
+                                              );
+            var chart_audio = birdhouseChart_create(label="", titles=analysis["audio"]["titles"],
+                                              data=analysis["audio"]["data"],
+                                              type="line",
+                                              sort_keys=true,
+                                              id="audio_chart",
+                                              size="", set_colors=[],
+                                              set_menu="right"
+                                              );
+            if (analysis != undefined && analysis != {}) { setTextById("video_analysis", chart_video); }
+            if (analysis != undefined && analysis != {}) { setTextById("audio_analysis", chart_audio); }
+            }
 
-    load_videoplayer();
+        load_videoplayer();
+        }
 	}
 
-function load_videoplayer() {
+    function load_videoplayer() {
     videoSetVars();
     }
 

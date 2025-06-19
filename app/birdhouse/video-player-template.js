@@ -57,11 +57,6 @@ var videoplayer_template = `
           </div>
 
           <div class="right-controls">
-            <button data-title="PIP (p)" class="pip-button" id="pip-button">
-              <svg>
-                <use href="#pip"></use>
-              </svg>
-            </button>
             <button data-title="Full screen (f)" class="fullscreen-button" id="fullscreen-button">
               <svg>
                 <use href="#fullscreen"></use>
@@ -116,16 +111,16 @@ var videoplayer_template = `
         <input  class="input-video-edit"  id="video-id"   type="text" disabled value="<!--VIDEOID-->" style="display:none;">
         <input  class="input-video-edit"  id="active-cam" type="text" disabled value="<!--ACTIVE-->" style="display:none;">
 
-        <button class="button-video-edit" onclick="setTCin();">&nbsp;&nbsp;IN&nbsp;&nbsp;</button>
+        <button class="button-video-edit" onclick="setTCin();">&nbsp;&nbsp;<u>I</u>N&nbsp;&nbsp;</button>
         <input  class="input-video-edit"  id="tc-in" type="text" value="0" style="background:#FFDDDD;">
 
-        <button class="button-video-edit" onclick="setTCout();">&nbsp;OUT&nbsp;</button>
+        <button class="button-video-edit" onclick="setTCout();">&nbsp;<u>O</u>UT&nbsp;</button>
         <input  class="input-video-edit"  id="tc-out" type="text" value="<!--LENGTH-->" style="background:#FFDDDD;">
         <div    class="div-video-edit">&nbsp;&nbsp;&nbsp;</div>
       <div class="camera_video_trim_part">
         <button class="button-video-edit" onclick="javascript:<!--JAVASCRIPT_SHORTEN-->">&nbsp;<!--SHORTEN-->&nbsp;</button>
         <button class="button-video-edit" onclick="javascript:<!--JAVASCRIPT_THUMBNAIL-->">&nbsp;<!--THUMBNAIL-->&nbsp;</button>
-        <button class="button-video-edit" onclick="javascript:toggleVideoEdit(false)">&nbsp;<!--CLOSE-->&nbsp;</button>
+        <button class="button-video-edit" onclick="javascript:toggleVideoEdit(false);">&nbsp;<!--CLOSE-->&nbsp;</button>
       </div>
     </div>
   </center>

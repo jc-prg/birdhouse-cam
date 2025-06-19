@@ -499,20 +499,23 @@ function iOS() {
 * Show / hide video editing overlay (toggle depending on current status)
 */
 function toggleVideoEdit() {
+
         video_edit1 = document.getElementById("camera_video_edit");
         video_edit2 = document.getElementById("camera_video_edit_overlay");
         if (video_edit1 != null) {
         	if (video_edit1.style.display == "none") {
         		video_edit1.style.display = "block"; 
         		video_edit2.style.display = "block"; 
+                videoSetVars();
         		}
         	else {
         		video_edit1.style.display = "none"; 
         		video_edit2.style.display = "none";
 
-               var video = document.getElementById("video");
-               if (video != undefined) { video.pause(); }
-        		}
+                var video = document.getElementById("video");
+                if (video != undefined) { video.pause(); }
+                videoRemoveEventListeners();
+        	    }
         	}
 	else {
 	        console.error("toggleVideoEdit: Video edit doesn't exist.");

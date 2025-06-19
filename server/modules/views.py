@@ -3167,7 +3167,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                         if "favorit" in files_all[file] and int(files_all[file]["favorit"]) == 1:
                             files_favorite[file] = files_all[file]
 
-                    for key in ["audio", "date_start", "date_end", "stamp_start", "stamp_end", "image_count", "image_files",
+                    for key in ["audio", "date_end", "stamp_start", "stamp_end", "image_count", "image_files",
                                 "elapsed", "frames", "percent", "fps", "audio_fps", "video_fps"]:
                         if key in files_all[file]:
                             del files_all[file][key]

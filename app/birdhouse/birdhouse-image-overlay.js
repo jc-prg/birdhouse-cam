@@ -249,19 +249,7 @@ function birdhouse_videoOverlay(filename, description="", swipe=false) {
 * @param (boolean) status - if left empty toggle, else actively show or hide
 */
 function birdhouse_videoOverlayToggle(status="") {
-        video_edit1 = document.getElementById("camera_video_edit");
-        video_edit2 = document.getElementById("camera_video_edit_overlay");
-        if (video_edit1 != null) {
-        	if (status == "") {
-	        	if (video_edit1.style.display == "none")    { video_edit1.style.display = "block"; video_edit2.style.display = "block"; }
-        		else                                        { video_edit1.style.display = "none";  video_edit2.style.display = "none"; }
-        		}
-        	else if (status == false) { video_edit1.style.display = "none";  video_edit2.style.display = "none"; }
-        	else if (status == true)  { video_edit1.style.display = "block"; video_edit2.style.display = "block"; }
-        	}
-	else {
-	        console.error("birdhouse_videoOverlayToggle: Video edit doesn't exist.");
-		}
+    toggleVideoEdit(status);
 	}
 
 /**
