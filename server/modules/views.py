@@ -2646,7 +2646,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         # else read files from current day and create vars, links ...
         elif self.config.db_handler.exists(config="images"):
             backup = False
-            files_all = self.config.db_handler.read_cache(config="images")
+            files_all_temp = self.config.db_handler.read_cache(config="images")
+            files_all = files_all_temp.copy()
             files_weather = self.config.db_handler.read_cache(config="weather")
             files_sensor = self.config.db_handler.read_cache(config="sensor")
             files_video = self.config.db_handler.read_cache(config="videos")
