@@ -439,11 +439,11 @@ function birdhouse_LIST(page, data, camera, header_open=true) {
         var link_day_forward   = "";
         if (data_list["data"]["day_back"] != "")    {
             var onclick_back    = "birdhousePrint_page(page=\"TODAY\", cam=\""+camera+"\", date=\""+data_list["data"]["day_back"]+"\");";
-            page_title         += "<span onclick='" + onclick_back + "' style='float:right;cursor:pointer;' title='"+lang("DAY_BACK")+"'>&#187;</span>";
+            page_title         += "<span onclick='" + onclick_back + "' style='float:left;cursor:pointer;' title='"+lang("DAY_BACK")+"'>&#171;</span>";
             }
         if (data_list["data"]["day_forward"] != "") {
             var onclick_forward = "birdhousePrint_page(page=\"TODAY\", cam=\""+camera+"\", date=\""+data_list["data"]["day_forward"]+"\");";
-            page_title         += "<span onclick='" + onclick_forward + "' style='float:left;cursor:pointer;' title='"+lang("DAY_FORWARD")+"'>&#171;</span>";
+            page_title         += "<span onclick='" + onclick_forward + "' style='float:right;cursor:pointer;' title='"+lang("DAY_FORWARD")+"'>&#187;</span>";
             }
     }
 

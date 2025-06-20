@@ -2961,7 +2961,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         count = 0
         category = "/current/"
-        files_all = self.config.db_handler.read_cache(config="images")
+        files_all_temp = self.config.db_handler.read_cache(config="images")
+        files_all = files_all_temp.copy()
         data_weather = self.config.db_handler.read_cache(config="weather")
         data_sensor = self.config.db_handler.read_cache(config="sensor")
 
@@ -3008,7 +3009,7 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                             threshold):
                         if float(files_all[stamp]["similarity"]) > 0:
                             count_diff += 1
-                    files_part[stamp] = files_all[stamp]
+                    files_part[stamp] = files_all[stamp].copy()
                     if "type" not in files_part[stamp]:
                         files_part[stamp]["type"] = "image"
                     files_part[stamp]["detect"] = self.camera[which_cam].img_support.differs(file_info=files_part[stamp])

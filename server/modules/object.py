@@ -503,12 +503,16 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                         detections[detection["label"]]["default"][camera].append(stamp)
 
                     if "thumbnail" not in detections[detection["label"]] and "confidence" in detection:
+                        if not "confidence" in detection:
+                            detection["confidence"] = -1
                         detections[detection["label"]]["thumbnail"] = {
                             "stamp": stamp,
                             "confidence": detection["confidence"],
                             "threshold": threshold
                         }
                     elif is_favorite or len(detections[detection["label"]]["favorite"]) == 0:
+                        if not "confidence" in detection:
+                            detection["confidence"] = -1
                         detections[detection["label"]]["thumbnail"] = {
                             "stamp": stamp,
                             "confidence": detection["confidence"],
@@ -518,6 +522,8 @@ class BirdhouseObjectDetection(threading.Thread, BirdhouseCameraClass):
                     elif (len(detections[detection["label"]]["favorite"]) == 0 and "confidence" in detection and
                           detections[detection["label"]]["thumbnail"]["confidence"] < detection["confidence"]):
 
+                        if not "confidence" in detection:
+                            detection["confidence"] = -1
                         detections[detection["label"]]["thumbnail"] = {
                             "stamp": stamp,
                             "confidence": detection["confidence"],

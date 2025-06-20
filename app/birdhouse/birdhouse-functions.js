@@ -319,7 +319,7 @@ function birdhouse_view_images_threshold(threshold) {
                         image_list_active.push(image_ids_in_group[a]);
                         elementVisible(image_container);
                     }
-                    else {
+                    else if (image_container.indexOf("_FAV") < 0) {
                         image_list_inactive.push(image_ids_in_group[a]);
                         elementHidden(image_container);
                     }

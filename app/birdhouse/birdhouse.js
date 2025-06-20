@@ -161,6 +161,8 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
         app_active.cam     = app_active_history[app_active_history_pos].cam;
         app_active.date    = app_active_history[app_active_history_pos].date;
         page = app_active.page;
+        cam = app_active.cam;
+        date = app_active.date;
 
         if (app_active_history.length > 1) {
             if (app_active_history_pos+1 < app_active_history.length) { elementVisible("moveBack"); elementHidden("moveBack_off"); }
@@ -229,7 +231,10 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
         return Object.keys(obj1).every(key => obj1[key] === obj2[key]);
         }
 
+    // add currently loaded page to the history (if not navigation in the history)
     if (!page_history) {
+        console.log("--> add page to history: " + app_active.page + "|" + app_active.cam + "|" + app_active.date);
+
         var state_copy       = { ...app_active };
         if (app_active_history.length == 0 || !this.compare(state_copy, app_active_history[0])) {
             app_active_history.unshift(state_copy);
@@ -433,8 +438,8 @@ function birdhouseSetMainVars(data) {
     }
 
 /*
-* This function sets main status variables based on the provided data. It checks if certain data properties are defined
-* and active, and if so, it populates the active page, micro, and date, and if logged in as admin.
+* This function sets main status variables based on the provided data.
+* It checks if certain data properties are defined and active.
 *
 * @param (dict) data: data returned from API
 */
