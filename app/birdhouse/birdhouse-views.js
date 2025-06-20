@@ -343,8 +343,13 @@ function birdhouse_LIST(page, data, camera, header_open=true) {
                 else                                                     { header_open = true; }
             }
 
-			html += birdhouse_ImageGroup(active_page + "_" + group, title, group_entries, entry_count, entry_category, header_open, app_admin_allowed,
+			html += birdhouse_ImageGroup(active_page + "_" + group, title, group_entries, entry_count, entry_category,
+			                             header_open, app_admin_allowed,
 			                             video_short, same_img_size, max_image_size_LR);
+
+			if (active_page == "TODAY_COMPLETE") {
+			    title = "TODAY_COMPLETE_" + title;
+			    }
 			group_list.push(title);
 			count_groups += 1;
         });
