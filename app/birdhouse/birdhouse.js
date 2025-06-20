@@ -213,6 +213,11 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
             if (cam == "")                  { page = "INDEX"; }
             else                            { page = cam; }
             if (page.indexOf("cam") >= 0)   { app_active.cam = page; }
+
+            app_session_id = "";
+            appFW.appList = "status";
+            app_admin_allowed = false;
+
             birdhouse_loginDialog(cam);
             }
         else if (page == "LOGOUT") {
