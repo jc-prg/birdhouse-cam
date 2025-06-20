@@ -189,8 +189,9 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
         console.log("Load content page: " + page + " / " + cam + " / " + date + " / " + label);
         birdhouse_settings.toggle(true);
         appSettings.hide();
-        app_active.page = page;
-        birdhousePrint_load(view=app_active.page, camera=app_active.cam, date=app_active.date, label=label, page_call=true);
+        //app_active.page = page;
+        //birdhousePrint_load(view=app_active.page, camera=app_active.cam, date=app_active.date, label=label, page_call=true);
+        birdhousePrint_load(view=page, camera=cam, date=date, label=label, page_call=true);
         }
 
     // load setting pages
