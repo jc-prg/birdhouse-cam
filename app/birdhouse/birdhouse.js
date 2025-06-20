@@ -446,14 +446,6 @@ function birdhouseSetMainStatus(data) {
 
 	app_active.mic = app_available.micros[0];
 
-	if (status_view["active_page"] != "" && status_view["active_page"] != undefined && status_view["active_page"] != "status")
-	                                                        { app_active.page = status_view["active_page"]; }
-	else if (status_view["active_page"] != "status")        { app_active.page = "INDEX"; }
-
-	if (status_view["active_date"] != "" && status_view["active_date"] != undefined)
-	                                                        { app_active.date = status_view["active_date"]; }
-	else                                                    { app_active.date = ""; }
-
     if (data["SETTINGS"] && data["SETTINGS"]["localization"] && data["SETTINGS"]["localization"]["language"]) {
         LANG_old = LANG;
         LANG = data["SETTINGS"]["localization"]["language"];
@@ -485,7 +477,7 @@ function birdhouseHeaderFunctions() {
 	download_info       = "<text class='download_label' id='collect4download_amount2' onclick='archivDownload_requestList();'>0</text>" + download_info;
 	var switch_cam      = "<img class='header_icon' src='birdhouse/img/switch-camera-white.png' onclick='birdhouseSwitchCam();' style='position:relative;top:-4px;'>";
 	switch_cam         += "<div id='selected_cam' style='display:none;'>"+app_active.cam+"</div>";
-	var reload_view     = "<img class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
+	var reload_view     = "<img id='reload_page' class='header_icon' src='birdhouse/img/reload-white.png' onclick='birdhouseReloadView();'>";
 	var active_cam      = app_active.cam;
 	try { active_cam = app_active.cam.toUpperCase(); } catch(err) { console.warn(err.message); console.warn(app_active); }
 	active_cam      = "<text style='position:relative;left:22px;top:2px;font-size:7px;'>"+active_cam+"</text>";

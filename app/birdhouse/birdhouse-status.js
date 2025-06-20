@@ -86,7 +86,7 @@ function birdhouseStatus_connectionError() {
 * @param (dict) data: response from API status request
 */
 function birdhouseStatus_print(data) {
-    //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
+
     console.debug("Update Status ("+app_active.page+") ...");
     setTextById("navActive", app_active.page);
 
@@ -103,8 +103,16 @@ function birdhouseStatus_print(data) {
     var pages_content   = ["INDEX", "OBJECTS", "FAVORITES", "ARCHIVE", "TODAY", "TODAY_COMPLETE", "WEATHER"];
     var pages_settings  = ["SETTINGS", "SETTINGS_CAMERAS", "SETTINGS_DEVICES", "SETTINGS_IMAGE", "SETTINGS_STATISTICS", "SETTINGS_INFORMATION"];
 
+    // reload title
+    var reload_icon = document.getElementById("reload_page");
+    if (reload_icon) {
+        var page = app_active.page;
+        if (app_active.date != "" && page == "TODAY") { page = "ARCHIVE"; }
+        if (app_active.date != "") { reload_icon.title = page+" | "+app_active.cam+" | "+app_active.date; }
+        else                       { reload_icon.title = page+" | "+app_active.cam; }
+    }
+
     // set latest status data to var app_data
-    //app_data       = data;
     weather_footer = [];
     app_server_error = false;
 
@@ -113,8 +121,6 @@ function birdhouseStatus_print(data) {
     var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
 
     // Navigation element to scroll to the top off the page
-    //if (height > 1.5 * document.body.clientHeight)          { elementVisible("move_up"); }
-    //else                                                    { elementHidden("move_up"); }
     if (height > 1.2 * document.body.clientHeight)          { elementVisible("moveUp"); elementHidden("moveUp_off"); }
     else                                                    { elementVisible("moveUp_off"); elementHidden("moveUp"); }
 
