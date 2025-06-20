@@ -936,9 +936,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                           "SETTINGS_CAMERAS", "SETTINGS_DEVICES", "SETTINGS_IMAGE", "SETTINGS_INFORMATION", "SETTINGS_STATISTICS",
                           "status", "list","DIARY"],
             "info"     : ["camera-param", "version", "reload","python-pkg"],
-            "status"   : ["status", "list", "WEATHER", "INDEX"],
+            "status"   : ["status", "list", "WEATHER", "INDEX", "STATISTICS"],
             "status_small" : ["last-answer"],
-            "settings" : ["status", "list", "INDEX"],
+            "settings" : ["status", "list", "INDEX", "STATISTICS"],
             "weather"  : ["WEATHER"]
         }
         no_extra_command = ["WEATHER", "SETTINGS", "CAMERA_SETTINGS","IMAGE_SETTINGS","DEVICE_SETTINGS"]
