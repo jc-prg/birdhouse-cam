@@ -331,9 +331,7 @@ function birdhouse_view_images_threshold(threshold) {
     }
 
     console.log("info_set_threshold: THRESHOLD=" + threshold + "%, FOUND=" + image_list_active.length + ", TOTAL=" + image_list.length + ", GROUPS=" + group_list.length);
-    console.error(group_list);
     setTextById("info_set_threshold", "Threshold = " + threshold + "%: " + image_list_active.length + " of " + image_list.length + " selected.");
-    //alert("birdhouse_view_images_threshold: threshold=" + threshold + "; all=" + image_list.length + "; select=" + image_list_active.length);
 }
 
 /*
